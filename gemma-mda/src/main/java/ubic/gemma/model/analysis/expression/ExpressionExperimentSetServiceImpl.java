@@ -20,13 +20,28 @@ package ubic.gemma.model.analysis.expression;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.swing.text.html.HTMLDocument.Iterator;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.persistence.Persister;
+import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @version $Id$
@@ -35,6 +50,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 @Service
 public class ExpressionExperimentSetServiceImpl extends
         ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceBase {
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    
+    @Autowired 
+    private TaxonService taxonService;
+    
+    @Autowired
+    private Persister persisterHelper;
 
     /*
      * (non-Javadoc)
@@ -62,6 +89,11 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public Collection<ExpressionExperimentSet> loadMySets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects() {
+        return this.getValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
     }
 
     @Override
@@ -182,7 +214,252 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids ) {
-        return this.getExpressionExperimentSetDao().loadValueObjects( ids );
+    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+        return this.getExpressionExperimentSetDao().loadLightValueObjects( ids );
+    }
+
+    @Override
+    public ExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
+        if(set == null){
+            return null;
+        }
+        int size = set.getExperiments().size();
+        assert size > 1; // should be due to the query.
+
+        ExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
+        vo.setName( set.getName() );
+        vo.setId( set.getId() );
+        Taxon taxon = set.getTaxon();
+        if ( taxon == null ) {
+            // happens in test databases that aren't properly populated.
+            // log.debug( "No taxon provided" );
+        } else {
+            vo.setTaxonId( taxon.getId() );
+            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
+            // downstream object. This is
+            // basically a thaw.
+        }
+
+        vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
+
+        vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
+        vo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( set ) );
+        vo.setPublik( securityService.isPublic( set ) );
+        vo.setShared( securityService.isShared( set ) );
+
+        // if the set is used in an analysis, it should not be modifiable
+        if ( this.getAnalyses( set ).size() > 0 ) {
+            vo.setModifiable( false );
+        } else {
+            vo.setModifiable( true );
+        }
+
+        /*
+         * getExperimentsInSet to get the security-filtered ees.
+         */
+        vo.getExpressionExperimentIds().addAll( EntityUtils.getIds( this.getExperimentsInSet( set.getId() ) ) );
+
+        vo.setNumExperiments( size );
+        return vo;
+    }
+
+    @Override
+    public ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject eesvo ){
+        /*
+         * Sanity check.
+         */
+        Collection<ExpressionExperimentSet> dups = findByName( eesvo.getName() );
+        if ( dups == null || !dups.isEmpty() ) {
+            throw new IllegalArgumentException( "Sorry, there is already a set with that name (" + eesvo.getName() + ")" );
+        }
+
+        ExpressionExperimentSet newSet = ExpressionExperimentSet.Factory.newInstance();
+        newSet.setName( eesvo.getName() );
+        newSet.setDescription( eesvo.getDescription() );
+
+        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( eesvo
+                .getExpressionExperimentIds() );
+
+        newSet.getExperiments().addAll( datasetsAnalyzed );
+
+        if ( eesvo.getTaxonId() != null )
+            newSet.setTaxon( taxonService.load( eesvo.getTaxonId() ) );
+        else {
+            /*
+             * Figure out the taxon from the experiments. FIXME: mustn't be heterogeneous.
+             */
+
+            Taxon taxon = expressionExperimentService.getTaxon( newSet.getExperiments().iterator().next().getId() );
+            newSet.setTaxon( taxon );
+
+        }
+
+        if ( newSet.getTaxon() == null ) {
+            throw new IllegalArgumentException( "No such taxon with id=" + eesvo.getTaxonId() );
+        }
+
+        
+        // TODO should I use persist or create??
+        // ExpressionExperimentSet newEESet = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
+
+        ExpressionExperimentSet newEESet = create(newSet);
+        
+        // make groups private by default
+        if ( eesvo.isPublik() ) {
+            securityService.makePublic( newEESet );
+        } else {
+            securityService.makePrivate( newEESet );
+        }
+        
+        return convertToValueObject( newEESet );
+        
+    }
+    
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets ) {
+        Collection<ExpressionExperimentSetValueObject> vos = new ArrayList<ExpressionExperimentSetValueObject>();
+        java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
+        while(iter.hasNext()){
+            vos.add( this.convertToValueObject( iter.next() ) );
+        }
+        return vos;
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjectsWithTaxon() {
+        Collection<ExpressionExperimentSet> sets = this.loadAllExperimentSetsWithTaxon();
+        // filtered by security.
+        List<ExpressionExperimentSetValueObject> results = new ArrayList<ExpressionExperimentSetValueObject>();
+
+        // should be a small number of items.
+        for ( ExpressionExperimentSet set : sets ) {
+            ExpressionExperimentSetValueObject vo = this.convertToValueObject( set );
+            results.add( vo );
+        }
+
+        // TODO why are we trying to sort a collection?? Does this need to be a list?
+
+        Collections.sort( results );
+
+        return results;
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
+
+        Collection<ExpressionExperimentValueObject> ees = this.getExperimentValueObjectsInSet( id );
+        return ees;
+
+    }
+
+    @Override
+    public ExpressionExperimentSetValueObject getValueObject( Long id ) {
+        ExpressionExperimentSet eeSet = this.load( id );
+        return convertToValueObject( eeSet );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
+        Collection<ExpressionExperimentSet> eeSets = this.load( ids );
+        return this.getValueObjects( eeSets );
+    }
+    
+    /**
+     * update the members of the experiment set with the given ids
+     * @param groupId set to update
+     * @param eeIds new set member ids
+     * @return error message or null if no errors
+     */
+    @Override
+    public String updateMembers( Long groupId, Collection<Long> eeIds ) {
+
+        String msg = null;
+        if ( eeIds.isEmpty() ) {
+            throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
+
+        }
+        ExpressionExperimentSet eeSet = this.load( groupId );
+        
+        if ( eeSet == null ) {
+            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded. "+
+                       "Either it does not exist or you do not have permission to view it." );
+        }
+        
+        Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
+
+        // check that new member ids are valid
+        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+
+        if ( experiments.isEmpty() ) {
+            throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
+                    + " provided)" );
+        }
+        if ( experiments.size() < eeIds.size() ) {
+            throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
+                    + experiments.size() + " out of " + eeIds.size() + " provided)" );
+        }
+
+        assert experiments.size() == eeIds.size();
+        boolean exists = false;
+        for ( ExpressionExperiment experiment : experiments ) {
+
+            for ( BioAssaySet bas : eeSet.getExperiments() ) {
+                if ( bas.getId().equals( experiment.getId() ) ) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if ( !exists ) {
+                eeSet.getExperiments().add( experiment );
+                updatedExperimentlist.add( experiment );
+            } else {
+                updatedExperimentlist.add( experiment );
+            }
+
+            exists = false;
+        }
+
+        eeSet.getExperiments().clear();
+        eeSet.getExperiments().addAll( updatedExperimentlist );
+
+        this.update( eeSet );
+
+        return msg;
+    }
+    
+    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
+            DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
+
+        Long groupId = eeSetVO.getId();
+        ExpressionExperimentSet eeSet = this.load( groupId );
+        if ( eeSet == null ) {
+            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
+        }
+
+        eeSet.setDescription( eeSetVO.getDescription() );
+        if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
+        this.update( eeSet );
+
+        return new DatabaseBackedExpressionExperimentSetValueObject( eeSet );
+
+    }
+    
+    @Override
+    public void delete( ExpressionExperimentSetValueObject eesvo ) {
+        try {
+            delete( load( eesvo.getId() ) );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public void update( ExpressionExperimentSetValueObject eesvo ) {
+        try {
+            update( load( eesvo.getId() ) );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 }

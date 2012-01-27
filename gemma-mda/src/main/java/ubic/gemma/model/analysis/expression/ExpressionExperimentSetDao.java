@@ -78,6 +78,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @param ids
      * @return
      */
-    Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
 
 }

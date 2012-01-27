@@ -18,7 +18,9 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 
 /**
  * <p>
@@ -53,6 +55,18 @@ public abstract class ExpressionExperimentSetServiceBase implements
      */
     public void delete( final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         try {
+            
+            if ( expressionExperimentSet == null ) {
+                throw new IllegalArgumentException( "Cannot delete null set");
+            }
+            Long id = expressionExperimentSet.getId();
+            if ( id == null || id < 0 ) {
+                throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
+            }
+            if ( getAnalyses( expressionExperimentSet ).size() > 0 ) {
+                throw new IllegalArgumentException( "Sorry, can't delete this set, it is associated with active analyses." );
+            }
+            
             this.handleDelete( expressionExperimentSet );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
@@ -142,6 +156,17 @@ public abstract class ExpressionExperimentSetServiceBase implements
      */
     public void update( final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         try {
+            if ( expressionExperimentSet == null ) {
+                throw new IllegalArgumentException( "Cannot update null set");
+            }
+            if ( expressionExperimentSet.getId() == null ) {
+                throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + expressionExperimentSet.getId() + ")" );
+            }
+
+            if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
+                throw new IllegalArgumentException( "You must provide a name" );
+            }
+            
             this.handleUpdate( expressionExperimentSet );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(

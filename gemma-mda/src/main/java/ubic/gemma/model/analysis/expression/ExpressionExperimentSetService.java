@@ -22,9 +22,11 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * @author paul
@@ -89,10 +91,17 @@ public interface ExpressionExperimentSetService {
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
-     * @return ExpressionExperimentSets that have more than 1 experiment in them.
+     * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
+    
+    /**
+     * Security filtering is handled by the call to load the set entities
+     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllExperimentSetsWithTaxon()
+     * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjectsWithTaxon();
 
     /**
      * @return sets belonging to current user -- only if they have more than one experiment!
@@ -159,6 +168,82 @@ public interface ExpressionExperimentSetService {
      * @param ids
      * @return
      */
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids );
+    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
 
+    /**
+     * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have access to it
+     * @param set an expressionExperimentSet entity to create a value object for
+     * @return
+     */    
+    public ExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set );
+    
+    /**
+     * Get a value object for the id param
+     * @param id
+     * @return null if id doesn't match an experiment set
+     */
+    public ExpressionExperimentSetValueObject getValueObject( Long id );
+    
+    /**
+     * Get a value object for the id param
+     * @param id
+     * @return null if id doesn't match an experiment set
+     */    
+    public Collection<ExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets );
+    /**
+     * Get a value objects for the ids
+     * @param ids
+     * @return value objects or an empty set
+     */    
+    public Collection<ExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids );
+
+    /**
+     * Get the member experiment value objects for the set id
+     * @param ids
+     * @return value objects or an empty set
+     */        
+    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id );
+
+    /**
+     * load the user's sets
+     * @return
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects();
+
+    /**
+     * Updates the database record for the param experiment set value object 
+     * (permission permitting) with the members specified of the set, not the 
+     * name or description etc.
+     * @param groupId
+     * @param eeIds
+     * @return
+     */
+    public String updateMembers( Long groupId, Collection<Long> eeIds );
+    
+    /**
+     * Updates the database record for the param experiment set value object 
+     * (permission permitting) with the value object's name and description.
+     * @param eeSetVO
+     * @return
+     */
+    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
+            DatabaseBackedExpressionExperimentSetValueObject eeSetVO );
+    
+    /**
+     * create an entity in the database based on the value object parameter
+     * 
+     * @param eesvo
+     * @return value object converted from the newly created entity
+     */
+    public ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject eesvo );
+    
+    /**
+     * Security is handled within method, when the set is loaded
+     */
+    public void delete( ExpressionExperimentSetValueObject eesvo );
+
+    /**
+     * Update corresponding entity based on value object
+     */
+    public void update( ExpressionExperimentSetValueObject eesvo );
 }

@@ -152,7 +152,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadValueObjects(java.util.Collection)
      */
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
         Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
 
         Collection<? extends ExpressionExperimentSet> entities = this.load( ids );
