@@ -61,11 +61,12 @@ public class GeneSetSearch {
         return geneSetService.findByGene( gene );
     }
 
+        
     /**
      * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
      * 
      * @param goId
-     * @param taxon
+     * @param taxon     
      * @return a GeneSet or null if nothing is found
      */
     public GeneSet findByGoId( String goId, Taxon taxon ) {
@@ -77,6 +78,18 @@ public class GeneSetSearch {
 
         return goTermToGeneSet( goTerm, taxon );
     }
+    
+    /**
+     * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
+     * not persistent
+     * 
+     * @param goTermName
+     * @param taxon     
+     * @return a collection with the hits
+     */
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
+        return findByGoTermName(goTermName, taxon, null);
+    }
 
     /**
      * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
@@ -84,17 +97,27 @@ public class GeneSetSearch {
      * 
      * @param goTermName
      * @param taxon
+     * @param maxGoTermsProcessed
      * @return a collection with the hits
      */
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed) {
         Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
                 .strip( goTermName ) );
 
         Collection<GeneSet> results = new HashSet<GeneSet>();
+        
+        Integer termsProcessed=0;
 
         for ( OntologyResource t : matches ) {
             GeneSet converted = goTermToGeneSet( t, taxon );
             if ( converted != null ) results.add( converted );
+            
+            if (maxGoTermsProcessed != null){
+                termsProcessed++;
+                if (termsProcessed>maxGoTermsProcessed){
+                    return results;
+                }
+            }
         }
 
         return results;
@@ -118,7 +141,7 @@ public class GeneSetSearch {
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         return geneSetService.findByName( StringUtils.strip( name ), taxon );
     }
-
+    
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */

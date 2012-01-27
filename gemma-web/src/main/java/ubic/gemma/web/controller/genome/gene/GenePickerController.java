@@ -312,6 +312,11 @@ public class GenePickerController {
             return this.searchGenesAndGeneGroupsBlankQuery( taxonId );
 
         }
+        
+        Integer maxGeneralSearchResults = 500;
+        
+        Integer maxGoTermsProcessed = 50;
+        
 
         /*
          * GET GENES AND GENESETS
@@ -322,6 +327,7 @@ public class GenePickerController {
         settings.setGeneralSearch( true ); // add a general search, needed for finding GO groups
         settings.setSearchGenes( true ); // add searching for genes
         settings.setSearchGeneSets( true ); // add searching for geneSets
+        settings.setMaxResults( maxGeneralSearchResults );
         if ( taxon != null ) settings.setTaxon( taxon ); // this doesn't work yet
         Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
         List<SearchResult> geneSetSearchResults = new ArrayList<SearchResult>();
@@ -400,39 +406,41 @@ public class GenePickerController {
             }
         }
 
+        
+        boolean skipGetGoGroups = false;
+        
+        //if there is an exact match for a gene, then don't do GO search
+        for (SearchResultDisplayObject srdo: genes){
+            
+            if ( srdo.getName().trim().equalsIgnoreCase(query.trim()) ){
+                skipGetGoGroups=true;
+                break;
+            }
+            
+        }
+        
+        
         /*
          * GET GO GROUPS
          */
+                
         List<GeneSet> goSets = new ArrayList<GeneSet>();
         ArrayList<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
-        Collection<Taxon> taxonsForGo = new ArrayList<Taxon>();
-        // if taxon isn't set, get go groups for each possible taxon
-        if ( taxon == null ) {
-            taxonsForGo.addAll( taxonService.loadAll() );
-        } else {
-            taxonsForGo.add( taxon );
-        }
-
-        for ( Taxon taxonForGo : taxonsForGo ) {
-            if ( query.toUpperCase().startsWith( "GO" ) ) {
-                GeneSet goSet = this.geneSetSearch.findByGoId( query, taxonForGo );
-                if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
-                    GOGroupValueObject ggvo = new GOGroupValueObject( goSet, query, query );
-                    ggvo.setTaxonId( taxonForGo.getId() );
-                    ggvo.setTaxonName( taxonForGo.getCommonName() );
-                    SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
-                    sdo.setUserOwned( false );
-                    sdo.setTaxonId( taxonForGo.getId() );
-                    sdo.setTaxonName( taxonForGo.getCommonName() );
-                    goSRDOs.add( sdo );
-                    goSets.add( goSet );
-                }
+        
+        if ( !skipGetGoGroups ) {
+            Collection<Taxon> taxonsForGo = new ArrayList<Taxon>();
+            // if taxon isn't set, get go groups for each possible taxon
+            if ( taxon == null ) {
+                taxonsForGo.addAll( taxonService.loadAll() );
             } else {
-                for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxonForGo ) ) {
-                    // don't bother adding empty GO groups
-                    // (should probably do this check elsewhere in case it speeds things up)
-                    if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                        GOGroupValueObject ggvo = new GOGroupValueObject( geneSet, null, query );
+                taxonsForGo.add( taxon );
+            }
+
+            for ( Taxon taxonForGo : taxonsForGo ) {
+                if ( query.toUpperCase().startsWith( "GO" ) ) {
+                    GeneSet goSet = this.geneSetSearch.findByGoId( query, taxonForGo );
+                    if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
+                        GOGroupValueObject ggvo = new GOGroupValueObject( goSet, query, query );
                         ggvo.setTaxonId( taxonForGo.getId() );
                         ggvo.setTaxonName( taxonForGo.getCommonName() );
                         SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
@@ -440,14 +448,29 @@ public class GenePickerController {
                         sdo.setTaxonId( taxonForGo.getId() );
                         sdo.setTaxonName( taxonForGo.getCommonName() );
                         goSRDOs.add( sdo );
-                        goSets.add( geneSet );
+                        goSets.add( goSet );
+                    }
+                } else {
+                    for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxonForGo, maxGoTermsProcessed ) ) {
+                        // don't bother adding empty GO groups
+                        // (should probably do this check elsewhere in case it speeds things up)
+                        if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
+                            GOGroupValueObject ggvo = new GOGroupValueObject( geneSet, null, query );
+                            ggvo.setTaxonId( taxonForGo.getId() );
+                            ggvo.setTaxonName( taxonForGo.getCommonName() );
+                            SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
+                            sdo.setUserOwned( false );
+                            sdo.setTaxonId( taxonForGo.getId() );
+                            sdo.setTaxonName( taxonForGo.getCommonName() );
+                            goSRDOs.add( sdo );
+                            goSets.add( geneSet );
+                        }
                     }
                 }
             }
+
+            Collections.sort( goSRDOs );
         }
-
-        Collections.sort( goSRDOs );
-
         /*
          * ALL RESULTS BY TAXON GROUPS
          */
