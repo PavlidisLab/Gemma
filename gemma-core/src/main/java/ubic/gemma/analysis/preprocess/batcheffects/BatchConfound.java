@@ -144,9 +144,12 @@ public class BatchConfound {
             Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
             int numBioMaterials = bmToFv.keySet().size();
 
+            assert numBioMaterials > 0 : "No biomaterials for " + ef;
+
             double p = Double.NaN;
             double chiSquare = Double.NaN;
             int df;
+
             int numBatches = batchFactor.getFactorValues().size();
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
 
@@ -154,11 +157,15 @@ public class BatchConfound {
                 IntArrayList batches = new IntArrayList( numBioMaterials );
                 int j = 0;
                 for ( Long bmId : bmToFv.keySet() ) {
+
+                    assert factorValues.size() > 0 : "Biomaterial to factorValue is empty for " + ef;
+
                     factorValues.set( j, bmToFv.get( bmId ) );
                     long batch = batchMembership.get( bmId );
                     batches.set( j, batchIndexes.get( batch ) );
                     j++;
                 }
+
                 p = KruskalWallis.test( factorValues, batches );
                 df = KruskalWallis.dof( factorValues, batches );
                 chiSquare = KruskalWallis.kwStatistic( factorValues, batches );
