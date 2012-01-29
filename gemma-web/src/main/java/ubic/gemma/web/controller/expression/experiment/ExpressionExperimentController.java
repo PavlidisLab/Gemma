@@ -303,7 +303,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private OntologyService ontologyService;
 
     @Autowired
-    private Persister  persisterHelper = null;
+    private Persister persisterHelper = null;
 
     @Autowired
     private SearchService searchService;
@@ -608,19 +608,19 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
         SearchResultDisplayObject newSRDO = null;
         for ( ExpressionExperimentSet set : sets ) {
-           expressionExperimentSetService.thaw( set );
-                if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-                    newSRDO = new SearchResultDisplayObject( set );
-                    newSRDO.setUserOwned( securityService.isPrivate( set ) );
-                    ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
-                    .setPublik( securityService.isPublic( set ) );
-                    setResults.add( new SearchResultDisplayObject( set ) );
-                }
+            expressionExperimentSetService.thaw( set );
+            if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
+                newSRDO = new SearchResultDisplayObject( set );
+                newSRDO.setUserOwned( securityService.isPrivate( set ) );
+                ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() ).setPublik( securityService
+                        .isPublic( set ) );
+                setResults.add( new SearchResultDisplayObject( set ) );
+            }
         }
 
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager.getModifiedExperimentSets( taxonId )
-                                                                            : sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
+                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
@@ -632,7 +632,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 sessionSets.add( srdo );
             }
         }
-        
+
         // keep sets in proper order (user's groups first, then public ones)
         Collections.sort( sessionSets );
         displayResults.addAll( sessionSets );
@@ -753,13 +753,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     break;
                 }
             }
-            
+
         }
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            if(!ExperimentalDesignUtils.isBatch( ef )){
-                descriptive.append( ef.getName() + " ("+ ef.getDescription() +"), " );
+            if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+                descriptive.append( ef.getName() + " (" + ef.getDescription() + "), " );
             }
         }
 
@@ -943,11 +943,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         // experiment sets this ee belongs to
-        Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService.find( ee );
-        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
-        // only include those sets with taxon values
-        eesets = expressionExperimentSetService.validateForFrontEnd( eesets );
-        eesvos.addAll( DatabaseBackedExpressionExperimentSetValueObject.convert2ValueObjects( eesets, false ) );
+        Collection<ExpressionExperimentSetValueObject> eesvos = expressionExperimentSetService
+                .loadLightValueObjects( EntityUtils.getIds( expressionExperimentSetService.find( ee ) ) );
+
         finalResult.setExpressionExperimentSets( eesvos );
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
@@ -1195,8 +1193,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         Taxon taxon = taxonService.load( taxonId );
         if ( taxon == null ) {
-            log.info( "Attempted to browse experiments by taxon with id = "+taxonId+
-                    ", but this id is invalid. Browsing without taxon restriction." );
+            log.info( "Attempted to browse experiments by taxon with id = " + taxonId
+                    + ", but this id is invalid. Browsing without taxon restriction." );
             return browse( batch );
         }
         List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
@@ -1324,7 +1322,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
             } else if ( taxon != null ) {
                 records = expressionExperimentService.loadAllTaxon( taxon );
-            }  else {
+            } else {
                 records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
             }
         }
@@ -1873,10 +1871,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     private String batchConfound( ExpressionExperiment ee ) {
         Collection<BatchConfoundValueObject> confounds;
-        try{
+        try {
             confounds = BatchConfound.test( ee );
-        }
-        catch (Exception e){
+        } catch ( Exception e ) {
             return null;
         }
         StringBuilder buf = new StringBuilder();

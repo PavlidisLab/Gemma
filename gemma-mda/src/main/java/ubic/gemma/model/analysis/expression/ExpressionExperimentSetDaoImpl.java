@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -153,17 +152,25 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      */
     @Override
     public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+
         Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+
+        if ( ids == null || ids.isEmpty() ) {
+            return result;
+        }
 
         Collection<? extends ExpressionExperimentSet> entities = this.load( ids );
 
+        if ( entities.isEmpty() ) return result;
+
         List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select e.id, count(e.experiments) from ExpressionExperimentSet e where e.id in (:ids)", "ids", ids );
+                "select e.id, count(i) from ExpressionExperimentSetImpl e join e.experiments i where e.id in (:ids)",
+                "ids", ids );
 
         Map<Long, Integer> sizes = new HashMap<Long, Integer>();
         for ( Object object : o ) {
             Object[] oa = ( Object[] ) object;
-            sizes.put( ( Long ) oa[0], ( Integer ) oa[1] );
+            sizes.put( ( Long ) oa[0], ( ( Long ) oa[1] ).intValue() );
         }
 
         for ( ExpressionExperimentSet eeSet : entities ) {
