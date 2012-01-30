@@ -111,10 +111,11 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
-			geneName: geneName,
-			geneSymbol: geneSymbol,
-			taxonName: taxonName,
-			geneId: geneId,
+			geneName: this.geneName,
+			geneSymbol: this.geneSymbol,
+			taxonName: this.taxonName,
+			geneId: this.geneId,
+			geneNcbiId: this.geneNcbiId,
 
 			evidencePhenotypeColumnRenderer: function(value, metadata, record, row, col, ds) {
 				var phenotypesHtml = '';
