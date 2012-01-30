@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +37,13 @@ import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetDao;
+import ubic.gemma.model.genome.gene.GeneSetImpl;
+import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.GeneSetMember.Factory;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
 

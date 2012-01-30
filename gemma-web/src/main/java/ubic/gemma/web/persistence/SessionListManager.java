@@ -34,11 +34,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.genome.gene.service.GeneSetService;
 
 /**
  * TODO Document Me

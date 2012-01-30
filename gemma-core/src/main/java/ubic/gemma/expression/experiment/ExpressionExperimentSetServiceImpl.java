@@ -213,7 +213,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
         return this.getExpressionExperimentSetDao().loadLightValueObjects( ids );
     }
 

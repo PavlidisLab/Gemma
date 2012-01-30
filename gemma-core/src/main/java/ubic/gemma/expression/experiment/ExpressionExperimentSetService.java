@@ -169,7 +169,7 @@ public interface ExpressionExperimentSetService {
      * @param ids
      * @return
      */
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
+    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
     
     /**
      * Get a value object for the id param

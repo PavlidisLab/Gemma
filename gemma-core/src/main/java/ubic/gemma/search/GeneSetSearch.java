@@ -27,12 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
@@ -55,7 +55,7 @@ public class GeneSetSearch {
     /**
      * @param gene
      * @return
-     * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.genome.gene.service.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     public Collection<GeneSet> findByGene( Gene gene ) {
         return geneSetService.findByGene( gene );
@@ -127,7 +127,7 @@ public class GeneSetSearch {
     /**
      * @param name
      * @return
-     * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String)
+     * @see ubic.gemma.genome.gene.service.GeneSetService#findByName(java.lang.String)
      */
     public Collection<GeneSet> findByName( String name ) {
         return geneSetService.findByName( StringUtils.strip( name ) );

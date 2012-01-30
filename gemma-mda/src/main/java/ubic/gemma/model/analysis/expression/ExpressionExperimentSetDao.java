@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression;
 
 import java.util.Collection;
 
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -79,6 +78,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @param ids
      * @return
      */
-    Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
 
 }
