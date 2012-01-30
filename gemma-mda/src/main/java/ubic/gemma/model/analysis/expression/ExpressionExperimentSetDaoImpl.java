@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -151,9 +152,8 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadValueObjects(java.util.Collection)
      */
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
-
-        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> result = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
 
         if ( ids == null || ids.isEmpty() ) {
             return result;
@@ -174,7 +174,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
         }
 
         for ( ExpressionExperimentSet eeSet : entities ) {
-            ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
+            DatabaseBackedExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
             vo.setNumExperiments( sizes.get( eeSet.getId() ) );
             vo.setName( eeSet.getName() );
             vo.setTaxonId( eeSet.getTaxon().getId() );

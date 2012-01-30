@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 public class TaxonServiceImpl extends TaxonServiceBase {
 
     /**
-     * @see TaxonService#create(Taxon)
+     * @see TaxonService#createDatabaseEntity(Taxon)
      */
     protected Taxon handleCreate( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().create( taxon );

@@ -159,14 +159,14 @@ public class ExpressionExperimentSetController extends BaseController {
      * @throws IllegalArgumentException if the id param is null
      * @throws AccessDeniedException if the id param is not null but the loading function returns a null value
      */
-    public ExpressionExperimentSetValueObject load( Long id ) {
+    public DatabaseBackedExpressionExperimentSetValueObject load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Cannot load an experiment set with a null id." );
         }
         Collection<Long> ids = new ArrayList<Long>( 1 );
         ids.add( id );
 
-        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.getValueObjectsFromIds( ids );// filtered
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> sets = expressionExperimentSetService.getValueObjectsFromIds( ids );// filtered
         // by
         // security.
         if ( sets == null || sets.size() < 1 ) {
@@ -344,7 +344,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public String updateMembers( Long groupId, Collection<Long> eeIds ) {
 
-        return expressionExperimentSetService.updateMembers( groupId, eeIds );
+        return expressionExperimentSetService.updateDatabaseEntityMembers( groupId, eeIds );
 
     }
 
@@ -357,7 +357,7 @@ public class ExpressionExperimentSetController extends BaseController {
     public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
             DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
 
-        return expressionExperimentSetService.updateNameDesc( eeSetVO );
+        return expressionExperimentSetService.updateDatabaseEntityNameDesc( eeSetVO );
 
     }
 
@@ -418,7 +418,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        return expressionExperimentSetService.create(obj);
+        return expressionExperimentSetService.createDatabaseEntity(obj);
     }
 
     /**
@@ -430,7 +430,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     private boolean remove( DatabaseBackedExpressionExperimentSetValueObject obj ) {
         try {
-            expressionExperimentSetService.delete( obj );
+            expressionExperimentSetService.deleteDatabaseEntity( obj );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -442,7 +442,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     private void update( DatabaseBackedExpressionExperimentSetValueObject obj ) {
         try {
-            expressionExperimentSetService.update( obj );
+            expressionExperimentSetService.updateDatabaseEntity( obj );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }

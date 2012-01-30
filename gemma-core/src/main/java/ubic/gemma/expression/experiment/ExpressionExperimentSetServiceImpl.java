@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -55,7 +56,10 @@ public class ExpressionExperimentSetServiceImpl extends
     private ExpressionExperimentService expressionExperimentService;
     
     @Autowired 
-    private TaxonService taxonService;
+    private TaxonService taxonService;    
+    
+    @Autowired 
+    private ExpressionExperimentReportService expressionExperimentReportService;
     
 
     /*
@@ -87,7 +91,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects() {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadMySetValueObjects() {
         return this.getValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
     }
 
@@ -209,19 +213,19 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
         return this.getExpressionExperimentSetDao().loadLightValueObjects( ids );
     }
 
-    @Override
-    public ExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
+    
+    private DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
         if(set == null){
             return null;
         }
         int size = set.getExperiments().size();
         assert size > 1; // should be due to the query.
 
-        ExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
+        DatabaseBackedExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
         vo.setName( set.getName() );
         vo.setId( set.getId() );
         Taxon taxon = set.getTaxon();
@@ -259,7 +263,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject eesvo ){
+    public DatabaseBackedExpressionExperimentSetValueObject createDatabaseEntity( ExpressionExperimentSetValueObject eesvo ){
         /*
          * Sanity check.
          */
@@ -311,8 +315,8 @@ public class ExpressionExperimentSetServiceImpl extends
     }
     
     @Override
-    public Collection<ExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets ) {
-        Collection<ExpressionExperimentSetValueObject> vos = new ArrayList<ExpressionExperimentSetValueObject>();
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets ) {
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> vos = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
         java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
         while(iter.hasNext()){
             vos.add( this.convertToValueObject( iter.next() ) );
@@ -338,23 +342,35 @@ public class ExpressionExperimentSetServiceImpl extends
 
         return results;
     }
-
+    
+    @Override
+    public Collection<Long> getExperimentIdsInSet( Long id ) {
+        ExpressionExperimentSet eeSet = load( id ); // secure
+        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
+        Collection<Long> eeids = new HashSet<Long>();
+        for ( BioAssaySet ee : datasets ) {
+            eeids.add( ee.getId() );
+        }
+        return eeids;
+    }
+    
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
-
-        Collection<ExpressionExperimentValueObject> ees = this.getExperimentValueObjectsInSet( id );
-        return ees;
-
+        
+        Collection<Long> eeids = getExperimentIdsInSet( id );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
+        expressionExperimentReportService.fillReportInformation( result );
+        return result;
     }
 
     @Override
-    public ExpressionExperimentSetValueObject getValueObject( Long id ) {
+    public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id ) {
         ExpressionExperimentSet eeSet = this.load( id );
         return convertToValueObject( eeSet );
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
         Collection<ExpressionExperimentSet> eeSets = this.load( ids );
         return this.getValueObjects( eeSets );
     }
@@ -366,7 +382,7 @@ public class ExpressionExperimentSetServiceImpl extends
      * @return error message or null if no errors
      */
     @Override
-    public String updateMembers( Long groupId, Collection<Long> eeIds ) {
+    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds ) {
 
         String msg = null;
         if ( eeIds.isEmpty() ) {
@@ -423,7 +439,7 @@ public class ExpressionExperimentSetServiceImpl extends
         return msg;
     }
     
-    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
+    public DatabaseBackedExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
             DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
 
         Long groupId = eeSetVO.getId();
@@ -441,7 +457,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
     
     @Override
-    public void delete( ExpressionExperimentSetValueObject eesvo ) {
+    public void deleteDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo ) {
         try {
             delete( load( eesvo.getId() ) );
         } catch ( Exception e ) {
@@ -450,7 +466,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
-    public void update( ExpressionExperimentSetValueObject eesvo ) {
+    public void updateDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo ) {
         try {
             update( load( eesvo.getId() ) );
         } catch ( Exception e ) {

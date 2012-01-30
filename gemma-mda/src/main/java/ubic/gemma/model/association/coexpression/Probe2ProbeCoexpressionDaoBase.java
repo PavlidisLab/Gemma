@@ -52,7 +52,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     }
 
     /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#create(List)
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#createDatabaseEntity(List)
      */
     public Collection<? extends Probe2ProbeCoexpression> create(
             final Collection<? extends Probe2ProbeCoexpression> links ) {
@@ -255,7 +255,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #create(List)}
+     * Performs the core logic for {@link #createDatabaseEntity(List)}
      */
     protected abstract Collection<? extends Probe2ProbeCoexpression> handleCreate(
             Collection<? extends Probe2ProbeCoexpression> links ) throws Exception;

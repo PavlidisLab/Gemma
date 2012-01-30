@@ -23,6 +23,9 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -90,7 +93,7 @@ public interface GeneSetService {
      * Loads the geneset with the given id
      * 
      * @param id
-     * @return geneSet witht he given ID
+     * @return geneSet witht he given ID or null
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public GeneSet load( Long id );
@@ -168,5 +171,88 @@ public interface GeneSetService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet geneset );
+    
+    /**
+     * Get a value object for the id param
+     * @param id
+     * @return null if id doesn't match an experiment set
+     */
+    public DatabaseBackedGeneSetValueObject getValueObject( Long id );
+    
+    /**
+     * create an entity in the database based on the value object parameter
+     * 
+     * @param gsvo
+     * @return value object converted from the newly created entity
+     */
+    public GeneSetValueObject createDatabaseEntity( GeneSetValueObject gsvo );
+    
 
+    /**
+     * Given a Gemma Gene Id, find all the gene groups it is a member of
+     * (filtering is handled when gene sets are loaded)
+     * @param geneId
+     * @return collection of geneSetValueObject
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId );
+
+
+    /**
+     * Updates the database record for the param experiment set value object 
+     * (permission permitting) with the value object's name and description.
+     * @param eeSetVO
+     * @return
+     */
+    public DatabaseBackedGeneSetValueObject updateDatabaseEntityNameDesc(
+            DatabaseBackedGeneSetValueObject geneSetVO );
+    
+    /**
+     * Updates the database record for the param gene set value object 
+     * (permission permitting) with the members specified of the set, not the 
+     * name or description etc.
+     * @param groupId
+     * @param gene ids
+     * @return
+     */
+    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds );
+
+    public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity( Collection<DatabaseBackedGeneSetValueObject> geneSetVos );
+    
+    /**
+     * Security is handled within method, when the set is loaded
+     */
+    public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO );
+
+    public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos );
+
+    /**
+     * Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId );
+
+    /**
+     * Get the gene value objects for the members of the group param
+     * 
+     * @param groupId
+     * @return
+     */
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId );
+    
+    /**
+     * @param query string to match to gene sets
+     * @param taxonId
+     * @return collection of GeneSetValueObjects that match name query
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId );
+
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * @param geneSetVos
+     * @return
+     */
+    public TaxonValueObject getGeneSetTaxon( GeneSetValueObject geneSetVO );
 }

@@ -943,9 +943,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         // experiment sets this ee belongs to
-        Collection<ExpressionExperimentSetValueObject> eesvos = expressionExperimentSetService
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> dbEEsVOs = expressionExperimentSetService
                 .loadLightValueObjects( EntityUtils.getIds( expressionExperimentSetService.find( ee ) ) );
 
+        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+        eesvos.addAll( dbEEsVOs );
+        
         finalResult.setExpressionExperimentSets( eesvos );
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );

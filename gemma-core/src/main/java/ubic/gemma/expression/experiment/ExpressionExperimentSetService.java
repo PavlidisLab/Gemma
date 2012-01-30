@@ -169,34 +169,27 @@ public interface ExpressionExperimentSetService {
      * @param ids
      * @return
      */
-    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
-
-    /**
-     * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have access to it
-     * @param set an expressionExperimentSet entity to create a value object for
-     * @return
-     */    
-    public ExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set );
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
     
     /**
      * Get a value object for the id param
      * @param id
      * @return null if id doesn't match an experiment set
      */
-    public ExpressionExperimentSetValueObject getValueObject( Long id );
+    public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id );
     
     /**
      * Get a value object for the id param
      * @param id
      * @return null if id doesn't match an experiment set
      */    
-    public Collection<ExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets );
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets );
     /**
      * Get a value objects for the ids
      * @param ids
      * @return value objects or an empty set
      */    
-    public Collection<ExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids );
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids );
 
     /**
      * Get the member experiment value objects for the set id
@@ -209,7 +202,7 @@ public interface ExpressionExperimentSetService {
      * load the user's sets
      * @return
      */
-    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects();
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadMySetValueObjects();
 
     /**
      * Updates the database record for the param experiment set value object 
@@ -219,7 +212,7 @@ public interface ExpressionExperimentSetService {
      * @param eeIds
      * @return
      */
-    public String updateMembers( Long groupId, Collection<Long> eeIds );
+    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds );
     
     /**
      * Updates the database record for the param experiment set value object 
@@ -227,7 +220,7 @@ public interface ExpressionExperimentSetService {
      * @param eeSetVO
      * @return
      */
-    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
+    public DatabaseBackedExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
             DatabaseBackedExpressionExperimentSetValueObject eeSetVO );
     
     /**
@@ -236,15 +229,17 @@ public interface ExpressionExperimentSetService {
      * @param eesvo
      * @return value object converted from the newly created entity
      */
-    public ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject eesvo );
+    public DatabaseBackedExpressionExperimentSetValueObject createDatabaseEntity( ExpressionExperimentSetValueObject eesvo );
     
     /**
      * Security is handled within method, when the set is loaded
      */
-    public void delete( ExpressionExperimentSetValueObject eesvo );
+    public void deleteDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo );
 
     /**
      * Update corresponding entity based on value object
      */
-    public void update( ExpressionExperimentSetValueObject eesvo );
+    public void updateDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo );
+
+    public Collection<Long> getExperimentIdsInSet( Long id );
 }

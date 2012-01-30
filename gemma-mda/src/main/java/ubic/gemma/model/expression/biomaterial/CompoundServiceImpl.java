@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial.CompoundServiceBase {
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#create(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see ubic.gemma.model.expression.biomaterial.CompoundService#createDatabaseEntity(ubic.gemma.model.expression.biomaterial.Compound)
      */
     protected ubic.gemma.model.expression.biomaterial.Compound handleCreate(
             ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {

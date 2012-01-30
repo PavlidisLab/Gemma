@@ -18,13 +18,27 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.search.GeneSetSearch;
+import ubic.gemma.security.SecurityService;
 
 /**
  * Service for managing gene sets
@@ -35,8 +49,22 @@ import ubic.gemma.model.genome.Taxon;
 @Service
 public class GeneSetServiceImpl implements GeneSetService {
 
+    private static final Double DEFAULT_SCORE = 0.0;
+
     @Autowired
     private GeneSetDao geneSetDao = null;
+
+    @Autowired
+    private GeneService geneService;
+
+    @Autowired
+    private GeneSetSearch geneSetSearch;
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -197,6 +225,405 @@ public class GeneSetServiceImpl implements GeneSetService {
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 
+    }
+
+    /**
+     * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have
+     * access to it
+     * 
+     * @param set an expressionExperimentSet entity to create a value object for
+     * @return
+     */
+    private DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
+        if ( gs == null ) {
+            return null;
+        }
+        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+
+        gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
+        gsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );
+        gsvo.setPublik( securityService.isPublic( gs ) );
+        gsvo.setShared( securityService.isShared( gs ) );
+
+        return gsvo;
+    }
+
+    /**
+     * @param sets
+     * @return
+     */
+    private Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
+        // Create valueobject (need to add security info or would move this out into the valueobject...
+        List<DatabaseBackedGeneSetValueObject> result = new ArrayList<DatabaseBackedGeneSetValueObject>();
+        for ( GeneSet gs : sets ) {
+
+            DatabaseBackedGeneSetValueObject gsvo = convertToValueObject( gs );
+            result.add( gsvo );
+        }
+
+        Collections.sort( result, new Comparator<GeneSetValueObject>() {
+            @Override
+            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
+                return -o1.getSize().compareTo( o2.getSize() );
+            }
+        } );
+
+        return result;
+    }
+
+    @Override
+    public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
+        GeneSet geneSet = load( id );
+        return convertToValueObject( geneSet );
+    }
+
+    /**
+     * @param geneSetVo
+     * @return
+     */
+    public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
+        GeneSet newGeneSet = GeneSet.Factory.newInstance();
+        newGeneSet.setName( geneSetVo.getName() );
+        newGeneSet.setDescription( geneSetVo.getDescription() );
+
+        // If no gene Ids just create group and return.
+        GeneSet gset = create( newGeneSet );
+
+        Collection<Long> geneIds = geneSetVo.getGeneIds();
+
+        if ( geneIds != null && !geneIds.isEmpty() ) {
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+            for ( Gene g : genes ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+            }
+
+            update( gset );
+        }
+
+        // make groups private by default
+        if ( geneSetVo.isPublik() ) {
+            securityService.makePublic( gset );
+        } else {
+            securityService.makePrivate( gset );
+        }
+
+        return convertToValueObject( load( gset.getId() ) );
+    }
+
+    /**
+     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
+     * 
+     * @param geneId
+     * @return collection of geneSetValueObject
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+
+        Gene gene = geneService.load( geneId );
+
+        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
+
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
+        return gsvos;
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice. Cannot update name or description, just members
+     * 
+     * @param groupId id of the gene set being updated
+     * @param geneIds
+     */
+    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
+
+        String msg = null;
+
+        GeneSet gset = load( groupId );
+        if ( gset == null ) {
+            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        }
+        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+        if ( geneIds.isEmpty() ) {
+            throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+        }
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+        if ( genes.isEmpty() ) {
+            throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                    + " provided)" );
+        }
+        if ( genes.size() < geneIds.size() ) {
+            throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                    + " out of " + geneIds.size() + " provided)" );
+        }
+
+        assert genes.size() == geneIds.size();
+
+        for ( Gene g : genes ) {
+
+            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+            // Gene not in list create memember and add it.
+            if ( gsm == null ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+                updatedGenelist.add( gmember );
+            } else {
+                updatedGenelist.add( gsm );
+            }
+        }
+
+        gset.getMembers().clear();
+        gset.getMembers().addAll( updatedGenelist );
+
+        update( gset );
+
+        return msg;
+
+    }
+
+    /**
+     * AJAX Updates the database entity (permission permitting) with the fields of the param value object
+     * 
+     * @param groupId
+     * @param geneIds
+     * @return value objects for the updated entities
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
+            Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
+
+        Collection<GeneSet> updated = new HashSet<GeneSet>();
+        for ( DatabaseBackedGeneSetValueObject geneSetVo : geneSetVos ) {
+
+            Long groupId = geneSetVo.getId();
+            GeneSet gset = load( groupId );
+            if ( gset == null ) {
+                throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+            }
+            Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+            Collection<Long> geneIds = geneSetVo.getGeneIds();
+
+            if ( geneIds.isEmpty() ) {
+                throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+
+            }
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+            if ( genes.isEmpty() ) {
+                throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                        + " provided)" );
+            }
+            if ( genes.size() < geneIds.size() ) {
+                throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                        + " out of " + geneIds.size() + " provided)" );
+            }
+
+            assert genes.size() == geneIds.size();
+
+            for ( Gene g : genes ) {
+
+                GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+                // Gene not in list create memember and add it.
+                if ( gsm == null ) {
+                    GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                    gmember.setGene( g );
+                    gmember.setScore( DEFAULT_SCORE );
+                    gset.getMembers().add( gmember );
+                    updatedGenelist.add( gmember );
+                } else {
+                    updatedGenelist.add( gsm );
+                }
+
+            }
+
+            gset.getMembers().clear();
+            gset.getMembers().addAll( updatedGenelist );
+            gset.setDescription( geneSetVo.getDescription() );
+            gset.setName( geneSetVo.getName() );
+            update( gset );
+
+            /*
+             * Make sure we return the latest.
+             */
+            updated.add( load( gset.getId() ) );
+        }
+        return convertToValueObjects( updated );
+
+    }
+
+    /**
+     * AJAX Updates the database entity (permission permitting) with the name and description fields of the param value
+     * object
+     * 
+     * @param valueObject of database entity to update
+     * @return value objects for the updated entities
+     */
+    @Override
+    public DatabaseBackedGeneSetValueObject updateDatabaseEntityNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
+
+        Long groupId = geneSetVO.getId();
+        GeneSet gset = load( groupId );
+        if ( gset == null ) {
+            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        }
+
+        gset.setDescription( geneSetVO.getDescription() );
+        if ( geneSetVO.getName() != null && geneSetVO.getName().length() > 0 ) gset.setName( geneSetVO.getName() );
+        update( gset );
+
+        return new DatabaseBackedGeneSetValueObject( gset );
+
+    }
+
+    @Override
+    public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO ) {
+        GeneSet gset = load( geneSetVO.getId() );
+        if ( gset != null ) remove( gset );
+    }
+
+    @Override
+    public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos ) {
+        for ( DatabaseBackedGeneSetValueObject geneSetValueObject : vos ) {
+            deleteDatabaseEntity( geneSetValueObject );
+        }
+    }
+
+    /**
+     * Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
+
+        Taxon tax = null;
+        if ( taxonId != null ) {
+            tax = taxonService.load( taxonId );
+            if ( tax == null ) {
+                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+            }
+        }
+
+        Collection<GeneSet> geneSets = new HashSet<GeneSet>();
+        if ( privateOnly ) {
+            try {
+                geneSets = loadMyGeneSets( tax );
+                geneSets.retainAll( securityService.choosePrivate( geneSets ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+
+        } else {
+            geneSets = loadAll( tax );
+        }
+
+        Collection<DatabaseBackedGeneSetValueObject> result = convertToValueObjects( geneSets );
+        return result;
+    }
+
+    /**
+     * Get the gene value objects for the members of the group param
+     * 
+     * @param groupId
+     * @return
+     */
+    @Override
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+
+        Collection<GeneValueObject> results = null;
+
+        GeneSet gs = load( groupId );
+        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
+
+        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
+
+        return results;
+
+    }
+
+    /**
+     * @param query string to match to gene sets
+     * @param taxonId
+     * @return collection of GeneSetValueObjects that match name query
+     */
+    @Override
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<GeneSetValueObject>();
+        }
+        Collection<GeneSet> foundGeneSets = null;
+        Taxon tax = null;
+        if ( taxonId == null ) {
+            // throw new IllegalArgumentException( "Taxon must not be null" );
+            foundGeneSets = geneSetSearch.findByName( query );
+        } else {
+
+            tax = taxonService.load( taxonId );
+
+            if ( tax == null ) {
+                // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+                foundGeneSets = geneSetSearch.findByName( query );
+            } else {
+                foundGeneSets = geneSetSearch.findByName( query, tax );
+            }
+        }
+
+        /*
+         * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
+         * on to search the Gene Ontology.
+         */
+
+        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String,
+        // Taxon)
+
+        if ( foundGeneSets.isEmpty() && tax != null ) {
+            if ( query.toUpperCase().startsWith( "GO" ) ) {
+                GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
+                if ( goSet != null ) foundGeneSets.add( goSet );
+            } else {
+                foundGeneSets.addAll( geneSetSearch.findByGoTermName( query, tax ) );
+            }
+        }
+
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+//        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
+        gsvos.addAll( convertToValueObjects( foundGeneSets ) );
+        return gsvos;
+    }
+
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * @param geneSetVos
+     * @return
+     */
+    @Override
+    public TaxonValueObject getGeneSetTaxon( GeneSetValueObject geneSetVO ) {
+
+        TaxonValueObject taxonVO = null;
+        // get taxon from members
+        for ( Long l : geneSetVO.getGeneIds() ) {
+            Gene gene = geneService.load( l );
+
+            if ( gene != null && gene.getTaxon() != null ) {
+                taxonVO = TaxonValueObject.fromEntity( gene.getTaxon() );
+                break;// assuming that the taxon will be the same for all genes in the set so no need to load all genes
+                      // from set
+            }
+        }
+
+        return taxonVO;
     }
 
 }
