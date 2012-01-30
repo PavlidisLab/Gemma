@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -31,6 +33,7 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleCreate(ubic.gemma.model.expression
      * .experiment.ExperimentalDesign)
@@ -42,6 +45,7 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleFind(ubic.gemma.model.expression.
      * experiment.ExperimentalDesign)
      */
@@ -75,8 +79,8 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getExperimentalDesignDao().loadAll();
+    protected java.util.Collection<ExperimentalDesign> handleLoadAll() throws java.lang.Exception {
+        return ( Collection<ExperimentalDesign> ) this.getExperimentalDesignDao().loadAll();
     }
 
     @Override

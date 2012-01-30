@@ -154,7 +154,11 @@ public class BatchConfound {
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
 
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
+                factorValues.setSize( numBioMaterials );
+
                 IntArrayList batches = new IntArrayList( numBioMaterials );
+                batches.setSize( numBioMaterials );
+
                 int j = 0;
                 for ( Long bmId : bmToFv.keySet() ) {
 

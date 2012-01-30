@@ -23,7 +23,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
@@ -38,11 +40,13 @@ import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
+import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -70,6 +74,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @Autowired
     GenericAncovaAnalyzer analyzer;
 
+    @Autowired
+    ExperimentalDesignImporter experimentalDesignImporter;
+
+    @Autowired
+    ExperimentalFactorService experimentalFactorService;
+
     ExpressionExperiment ee = null;
 
     /*
@@ -88,13 +98,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                     + "gds994Short" ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
+
+            processedDataVectorService.createProcessedDataVectors( ee );
         }
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
         ee = expressionExperimentService.thawLite( ee );
-        processedDataVectorService.createProcessedDataVectors( ee );
         differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
-
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -175,6 +185,76 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee, analyses.iterator().next(),
                 factorsToUse );
         assertTrue( numDeleted > 0 );
+    }
+
+    /**
+     * Test inspired by bug 2605
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAnalyzeWithSubsetWhenOneIsNotUsableAndWithInteractionInTheOther() throws Exception {
+        ee = expressionExperimentService.findByShortName( "GSE32136" );
+        String path = getTestFileBasePath();
+        if ( ee == null ) {
+
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+            processedDataVectorService.createProcessedDataVectors( ee );
+
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            experimentalFactorService.delete( experimentalFactor );
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" );
+        assertNotNull( is );
+        experimentalDesignImporter.importDesign( ee, is );
+
+        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+
+        experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        assertEquals( 3, experimentalFactors.size() );
+
+        // Wshew, done with setting it up.
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        ExperimentalFactor subsetFactor = null;
+        for ( ExperimentalFactor ef : experimentalFactors ) {
+            if ( ef.getName().equals( "PooledTreatment" ) ) {
+                subsetFactor = ef;
+            } else {
+                factors.add( ef );
+            }
+        }
+
+        assertNotNull( subsetFactor );
+        assertEquals( 2, factors.size() );
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        config.setFactorsToInclude( factors );
+        config.setSubsetFactor( subsetFactor );
+        HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<Collection<ExperimentalFactor>>();
+        ifacts.add( factors );
+        config.setInteractionsToInclude( ifacts );
+
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+
+        assertEquals( "Should have quietly ignored one of the subsets that is not analyzable", 1, analyses.size() );
+
+        DifferentialExpressionAnalysis analysis = analyses.iterator().next();
+        assertEquals( "Subsetting as not done correctly", subsetFactor, analysis.getSubsetFactorValue()
+                .getExperimentalFactor() );
+        assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
     }
 
     /**

@@ -26,7 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -222,7 +222,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
-                session.lock( bioMaterial, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
                 Hibernate.initialize( bioMaterial );
                 Hibernate.initialize( bioMaterial.getSourceTaxon() );
                 Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
@@ -256,5 +256,14 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioMaterialImpl b join b.factorValues fv where fv = :f", "f", fv );
+    }
+
+    @Override
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct bm from ExpressionExperimentImpl e join e.bioAssays b join b.samplesUsed bm where e = :ee",
+                        "ee", experiment );
     }
 }

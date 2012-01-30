@@ -36,54 +36,60 @@ public interface ExperimentalFactorService {
 
     public static final String BATCH_FACTOR_NAME = "batch";
     public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
-    
+
     /**
      * @param factors
      * @return
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExperimentalFactor create( ExperimentalFactor experimentalFactor );
 
     /**
-     * 
+     * Delete the factor, its associated factor values and all differential expression analyses in which it is used
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalFactor load( java.lang.Long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExperimentalFactor> load( Collection<Long> ids );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExperimentalFactor> loadAll();
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExperimentalFactor experimentalFactor );
 
 }

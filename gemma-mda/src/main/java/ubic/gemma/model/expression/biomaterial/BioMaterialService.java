@@ -34,7 +34,7 @@ public interface BioMaterialService {
     /**
      * Copies a bioMaterial.
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public BioMaterial copy( BioMaterial bioMaterial );
 
     /**
@@ -45,13 +45,13 @@ public interface BioMaterialService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public BioMaterial create( BioMaterial bioMaterial );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     /**
@@ -61,31 +61,31 @@ public interface BioMaterialService {
     @Secured("GROUP_USER")
     public boolean exists( BioMaterial bioMaterial );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment getExpressionExperiment( Long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public BioMaterial load( Long id );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioMaterial> loadAll();
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioMaterial> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void remove( BioMaterial bioMaterial );
 
     /**
@@ -93,19 +93,22 @@ public interface BioMaterialService {
      * Updates the given biomaterial to the database.
      * </p>
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioMaterial bioMaterial );
 
     /**
      * @param bioMaterial
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     public void thaw( BioMaterial bioMaterial );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioMaterial> findByFactorValue( FactorValue fv );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
 }

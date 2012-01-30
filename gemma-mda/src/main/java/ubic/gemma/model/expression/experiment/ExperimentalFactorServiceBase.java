@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalFactorService</code>, provides
@@ -33,6 +35,9 @@ public abstract class ExperimentalFactorServiceBase implements
 
     @Autowired
     private ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao;
+
+    @Autowired
+    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#create(ubic.gemma.model.expression.experiment.ExperimentalFactor)
@@ -116,14 +121,6 @@ public abstract class ExperimentalFactorServiceBase implements
     }
 
     /**
-     * Sets the reference to <code>experimentalFactor</code>'s DAO.
-     */
-    public void setExperimentalFactorDao(
-            ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao ) {
-        this.experimentalFactorDao = experimentalFactorDao;
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#update(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     public void update( final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
@@ -134,6 +131,10 @@ public abstract class ExperimentalFactorServiceBase implements
                     "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.update(ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor)' --> "
                             + th, th );
         }
+    }
+
+    protected DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+        return differentialExpressionAnalysisDao;
     }
 
     /**

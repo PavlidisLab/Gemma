@@ -53,8 +53,8 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
     @Override
     public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() ).append(
-                this.getExperimentalFactor() ).append( this.getMeasurement() );
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
+                .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
                 if ( c instanceof VocabCharacteristic )
@@ -90,14 +90,12 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
     }
 
     private boolean checkGuts( FactorValue that ) {
-        if ( this.getValue() != null ) {
-            if ( that.getValue() == null ) return false;
-            if ( this.getValue().equals( that.getValue() ) ) return true;
-        }
 
-        if ( this.getMeasurement() != null ) {
-            if ( that.getMeasurement() == null ) return false;
-            if ( this.getMeasurement().equals( that.getMeasurement() ) ) return true;
+        if ( this.getExperimentalFactor() != null ) {
+            if ( that.getExperimentalFactor() == null ) return false;
+            if ( !this.getExperimentalFactor().equals( that.getExperimentalFactor() ) ) {
+                return false;
+            }
         }
 
         if ( this.getCharacteristics().size() > 0 ) {
@@ -116,10 +114,19 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
                 if ( !match ) return false;
             }
 
-            return true;
         }
 
-        // everything is empy...
+        if ( this.getMeasurement() != null ) {
+            if ( that.getMeasurement() == null ) return false;
+            if ( !this.getMeasurement().equals( that.getMeasurement() ) ) return false;
+        }
+
+        if ( this.getValue() != null ) {
+            if ( that.getValue() == null ) return false;
+            if ( !this.getValue().equals( that.getValue() ) ) return false;
+        }
+
+        // everything is empty...
         return true;
     }
 }

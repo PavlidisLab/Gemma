@@ -88,4 +88,6 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      */
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
 }

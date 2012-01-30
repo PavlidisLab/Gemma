@@ -248,6 +248,9 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         Collection<ExperimentalFactor> efsToUse = getFactorsToUse( expressionExperiment, experimentalFactors );
 
         if ( subsetFactor != null ) {
+            /*
+             * Note that the interaction term might still get used (if selected), we just don't decide here.
+             */
             return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
 

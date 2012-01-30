@@ -20,11 +20,11 @@ package ubic.gemma.loader.expression.simple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
@@ -37,6 +37,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -104,15 +105,13 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        mos.startInitializationThread( true );
-        while ( !mos.isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for mgedontology to load" );
+        if ( !mos.isOntologyLoaded() ) {
+            mos.startInitializationThread( true );
+            while ( !mos.isOntologyLoaded() ) {
+                Thread.sleep( 1000 );
+                log.info( "Waiting for mgedontology to load" );
+            }
         }
-        // Taxon salmon = Taxon.Factory.newInstance();
-        // salmon.setCommonName( "salmonid" );
-        // salmon.setIsSpecies( true );
-        // salmon.setIsGenesUsable( true );
 
         Taxon salmon = taxonService.findByCommonName( "salmonid" );
 
@@ -129,6 +128,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setShortName( randomName() );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
         ad.setName( "foobly foo" );
         ad.setPrimaryTaxon( salmon );
 
@@ -167,30 +167,20 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
-        /*
-         * FIXME: this should be a single service call, However, it's not that easy to do. If you run this in a single
-         * transaction, you invariably get session errors. See {@link ExperimentalDesignController}
-         */
+        experimentalFactorService.delete( toDelete );
+
+        ee = this.expressionExperimentService.load( ee.getId() );
+        ee = this.expressionExperimentService.thawLite( ee );
+
+        assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                boolean removed = false;
-                for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
-                    if ( fIt.next().getExperimentalFactor().equals( toDelete ) ) {
-                        fIt.remove();
-                        removed = true;
-                    }
-                }
-                if ( removed ) {
-                    bioMaterialService.update( bm );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertTrue( !fv.getExperimentalFactor().equals( toDelete ) );
                 }
             }
         }
-        ee.getExperimentalDesign().getExperimentalFactors().remove( toDelete );
-        experimentalFactorService.delete( toDelete );
-        experimentalDesignService.update( ee.getExperimentalDesign() );
-
-        assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
     }
 
@@ -214,8 +204,8 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
                     assertNotNull( c.getValue() );
                     assertNotNull( c.getCategoryUri() );
                 } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
-                            .getMeasurement() );
+                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
+                            fv.getMeasurement() );
                 }
                 seenFactorValueIds.add( fv.getId() );
             }

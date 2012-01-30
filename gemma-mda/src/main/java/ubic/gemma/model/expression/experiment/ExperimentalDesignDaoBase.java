@@ -36,8 +36,8 @@ public abstract class ExperimentalDesignDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<ExperimentalDesign> create( final int transform,
-            final java.util.Collection<ExperimentalDesign> entities ) {
+    public java.util.Collection<? extends ExperimentalDesign> create( final int transform,
+            final java.util.Collection<? extends ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.create - 'entities' can not be null" );
         }
@@ -72,7 +72,8 @@ public abstract class ExperimentalDesignDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(java.util.Collection)
      */
 
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends ExperimentalDesign> create(
+            final java.util.Collection<? extends ExperimentalDesign> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -119,8 +120,7 @@ public abstract class ExperimentalDesignDaoBase extends HibernateDaoSupport impl
     public Object find( final int transform,
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         return this
-                .find(
-                        transform,
+                .find( transform,
                         "from ubic.gemma.model.expression.experiment.ExperimentalDesign as experimentalDesign where experimentalDesign.experimentalDesign = :experimentalDesign",
                         experimentalDesign );
     }

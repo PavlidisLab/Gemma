@@ -324,44 +324,9 @@ public class BatchInfoPopulationService {
             return;
         }
 
-        /*
-         * FIXME this code is basically copied from ExperimentalFactorController and should be moved down into a
-         * Model-level service.
-         */
         log.info( "Removing existing batch factor: " + toRemove );
-
-        /*
-         * First, check to see if there are any diff results that use this factor.
-         */
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                .findByFactor( toRemove );
-        for ( DifferentialExpressionAnalysis a : analyses ) {
-            differentialExpressionAnalysisService.delete( a );
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-
-                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
-                for ( FactorValue factorValue : bm.getFactorValues() ) {
-                    if ( toRemove.equals( factorValue.getExperimentalFactor() ) ) {
-                        factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    }
-                }
-                // if there are factors to remove
-                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                    bioMaterialService.update( bm );
-                }
-            }
-        }
-
-        ed.getExperimentalFactors().remove( toRemove );
-        // delete the experimental factor this cascades to values.
         experimentalFactorService.delete( toRemove );
-        experimentalDesignService.update( ed );
+
     }
 
     /**

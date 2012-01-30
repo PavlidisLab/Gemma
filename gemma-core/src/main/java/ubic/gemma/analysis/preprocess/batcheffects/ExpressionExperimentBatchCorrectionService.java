@@ -113,6 +113,7 @@ public class ExpressionExperimentBatchCorrectionService {
         }
 
         Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
+
         for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
             if ( batchConfoundValueObject.getP() < 0.01 ) {
                 log.info( "Batch confound detected: " + ee );
@@ -315,8 +316,8 @@ public class ExpressionExperimentBatchCorrectionService {
     private ObjectMatrix<BioMaterial, String, Object> orderMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix,
             ObjectMatrix<BioMaterial, String, Object> designU ) {
 
-        ObjectMatrix<BioMaterial, String, Object> result = new ObjectMatrixImpl<BioMaterial, String, Object>( designU
-                .rows(), designU.columns() );
+        ObjectMatrix<BioMaterial, String, Object> result = new ObjectMatrixImpl<BioMaterial, String, Object>(
+                designU.rows(), designU.columns() );
 
         List<BioMaterial> rowNames = matrix.getColNames();
 
@@ -341,8 +342,8 @@ public class ExpressionExperimentBatchCorrectionService {
     private ObjectMatrix<BioMaterial, String, Object> convertFactorValuesToStrings(
             ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
 
-        ObjectMatrix<BioMaterial, String, Object> designU = new ObjectMatrixImpl<BioMaterial, String, Object>( design
-                .rows(), design.columns() );
+        ObjectMatrix<BioMaterial, String, Object> designU = new ObjectMatrixImpl<BioMaterial, String, Object>(
+                design.rows(), design.columns() );
         designU.setRowNames( design.getRowNames() );
         List<String> colNames = new ArrayList<String>();
         for ( int i = 0; i < design.rows(); i++ ) {

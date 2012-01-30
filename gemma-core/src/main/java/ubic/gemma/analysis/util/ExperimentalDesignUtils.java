@@ -153,8 +153,7 @@ public class ExperimentalDesignUtils {
      */
     public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisUtil
-                .getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisUtil.getBioMaterialsForBioAssays( dmatrix );
         samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
         return samplesUsed;
     }
@@ -336,9 +335,10 @@ public class ExperimentalDesignUtils {
         }
         if ( !found ) {
             /*
-             * TODO: we should detect this and omit such incomplete factors.
+             * TODO: It would be better to throw a more specific catchable exception, so the caller can decide what to
+             * do.
              */
-            throw new IllegalStateException( "Biomaterial did not have a matching factor value for: " + factor );
+            throw new IllegalStateException( samp + " did not have a matching factor value for: " + factor );
         }
         return value;
     }

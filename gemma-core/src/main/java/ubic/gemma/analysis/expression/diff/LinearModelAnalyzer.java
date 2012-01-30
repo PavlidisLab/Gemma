@@ -311,7 +311,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
 
-            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix ); // enforce ordering
 
             /*
              * Do the analysis, by subsets if requested
@@ -1240,17 +1240,30 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         }
 
         for ( BioMaterial sample : samplesUsed ) {
+            boolean ok = false;
             for ( FactorValue fv : sample.getFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
                     subSetSamples.get( fv ).add( sample );
+                    ok = true;
+                    break;
                 }
+            }
+            if ( !ok ) {
+                throw new IllegalArgumentException(
+                        "Cannot subset on a factor unless each sample has a value for it. Missing value for: " + sample
+                                + " " + sample.getBioAssaysUsedIn() );
             }
         }
 
         Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<FactorValue, ExpressionDataDoubleMatrix>();
         for ( FactorValue fv : subSetSamples.keySet() ) {
             List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
+
+            if ( samplesInSubset.isEmpty() ) {
+                throw new IllegalArgumentException( "The subset was empty for fv: " + fv );
+            }
             assert samplesInSubset.size() < samplesUsed.size();
+
             samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset,
                     config.getFactorsToInclude() );
             ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );

@@ -119,7 +119,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExperimentalDesign> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -197,7 +197,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExperimentalDesign> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalDesign)}

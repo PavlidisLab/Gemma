@@ -239,59 +239,70 @@ public class ExperimentalDesignController extends BaseController {
         // log.info("Start processing " + System.currentTimeMillis());
 
         if ( e == null || e.getId() == null ) return;
-        ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
 
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        Collection<ExperimentalFactor> toDelete = experimentalFactorService.load( efIds );
 
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
-        }
+        delete( toDelete );
 
-        Collection<ExperimentalFactor> experimentalFactorsToRemove = new HashSet<ExperimentalFactor>();
-        /*
-         * FIXME push this code into a service elsewhere.
-         */
+    }
 
-        for ( Long efId : efIds ) {
-            ExperimentalFactor experimentalFactor = experimentalFactorService.load( efId );
-            experimentalFactorsToRemove.add( experimentalFactor );
-
-            /*
-             * First, check to see if there are any diff results that use this factor.
-             */
-            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                    .findByFactor( experimentalFactor );
-            for ( DifferentialExpressionAnalysis a : analyses ) {
-                differentialExpressionAnalysisService.delete( a );
-            }
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-
-                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
-                for ( FactorValue factorValue : bm.getFactorValues() ) {
-                    if ( experimentalFactorsToRemove.contains( factorValue.getExperimentalFactor() ) ) {
-                        factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    }
-                }
-                // if there are factors to remove
-                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                    bioMaterialService.update( bm );
-                }
-            }
-        }
-
-        ed.getExperimentalFactors().removeAll( experimentalFactorsToRemove );
-        // delete the experimental factor this cascades to values.
-        for ( ExperimentalFactor factorRemove : experimentalFactorsToRemove ) {
+    /**
+     * @param toDelete
+     */
+    private void delete( Collection<ExperimentalFactor> toDelete ) {
+        for ( ExperimentalFactor factorRemove : toDelete ) {
             experimentalFactorService.delete( factorRemove );
         }
-        experimentalDesignService.update( ed );
-
+        
+        
+        // /*
+        // * FIXME this can be done with experimentalFactorService.delete.
+        // */
+        // Long experimentalDesignId = null;
+        // for ( ExperimentalFactor experimentalFactor : toDelete ) {
+        // experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
+        // /*
+        // * First, check to see if there are any diff results that use this factor.
+        // */
+        // Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+        // .findByFactor( experimentalFactor );
+        // for ( DifferentialExpressionAnalysis a : analyses ) {
+        // differentialExpressionAnalysisService.delete( a );
+        // }
+        // }
+        //
+        // ExperimentalDesign ed = this.experimentalDesignService.load( experimentalDesignId );
+        // ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        //
+        // if ( ee == null ) {
+        // throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
+        // }
+        //
+        // ee = expressionExperimentService.thawLite( ee );
+        //
+        // for ( BioAssay ba : ee.getBioAssays() ) {
+        // for ( BioMaterial bm : ba.getSamplesUsed() ) {
+        //
+        // Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+        // for ( FactorValue factorValue : bm.getFactorValues() ) {
+        // if ( toDelete.contains( factorValue.getExperimentalFactor() ) ) {
+        // factorValuesToRemoveFromBioMaterial.add( factorValue );
+        // }
+        // }
+        // // if there are factors to remove
+        // if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+        // bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+        // bioMaterialService.update( bm );
+        // }
+        // }
+        // }
+        //
+        // ed.getExperimentalFactors().removeAll( toDelete );
+        // // delete the experimental factor this cascades to values.
+        // for ( ExperimentalFactor factorRemove : toDelete ) {
+        // experimentalFactorService.delete( factorRemove );
+        // }
+        // experimentalDesignService.update( ed );
     }
 
     /**
@@ -422,56 +433,6 @@ public class ExperimentalDesignController extends BaseController {
             }
         }
         return result;
-    }
-
-    /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param characteristicService
-     */
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
-    }
-
-    public void setExperimentalDesignImporter( ExperimentalDesignImporter experimentalDesignImporter ) {
-        this.experimentalDesignImporter = experimentalDesignImporter;
-    }
-
-    public void setFactorValueDeletion( FactorValueDeletion factorValueDeletion ) {
-        this.factorValueDeletion = factorValueDeletion;
-    }
-
-    /**
-     * @param experimentalDesignService
-     */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
-    }
-
-    /**
-     * @param experimentalFactorService the experimentalFactorService to set
-     */
-    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param factorValueService the factorValueService to set
-     */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
     }
 
     /**

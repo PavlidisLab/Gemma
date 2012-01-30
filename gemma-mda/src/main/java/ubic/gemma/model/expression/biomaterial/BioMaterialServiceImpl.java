@@ -160,4 +160,9 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
     }
+
+    @Override
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
+        return this.getBioMaterialDao().findByExperiment( experiment );
+    }
 }

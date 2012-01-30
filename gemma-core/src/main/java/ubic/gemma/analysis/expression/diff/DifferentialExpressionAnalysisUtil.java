@@ -163,6 +163,7 @@ public class DifferentialExpressionAnalysisUtil {
         /*
          * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
          */
+        boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
         for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
@@ -175,7 +176,7 @@ public class DifferentialExpressionAnalysisUtil {
 
                         counts.put( fv, counts.get( fv ) + 1 );
                         if ( counts.get( fv ) > 1 ) {
-                            return true;
+                            replicatesok = true;
                         }
 
                     }
@@ -183,8 +184,12 @@ public class DifferentialExpressionAnalysisUtil {
             }
         }
 
-        return false;
+        if ( counts.size() < 2 ) {
+            log.warn( experimentalFactor + " has only one level used in the current set, it cannot be analyzed" );
+            return false;
+        }
 
+        return replicatesok;
     }
 
     /**
