@@ -114,7 +114,7 @@ public class GeneSetController {
         Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
 
         for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
-            TaxonValueObject tax = geneSetService.getGeneSetTaxon( gsvo );
+            TaxonValueObject tax = geneSetService.getTaxonVOforGeneSetVO( gsvo );
             gsvo.setTaxonId( tax.getId() );
             gsvo.setTaxonName( tax.getCommonName() );
 

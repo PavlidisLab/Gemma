@@ -107,7 +107,7 @@ public class TaxonValueObject {
     public static TaxonValueObject fromEntity( Taxon taxon ) {
         TaxonValueObject vo = new TaxonValueObject();
         vo.setScientificName( taxon.getScientificName() );
-
+        vo.setId( taxon.getId() );
         vo.setCommonName( taxon.getCommonName() );
 
         if ( taxon.getExternalDatabase() != null ) {

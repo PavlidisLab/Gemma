@@ -23,14 +23,18 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.ontology.providers.GeneOntologyService;
@@ -43,6 +47,8 @@ import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 @Component
 public class GeneSetSearch {
 
+    private static Log log = LogFactory.getLog( GeneSetSearch.class );
+    
     @Autowired
     private Gene2GOAssociationService gene2GoService;
 
@@ -52,6 +58,9 @@ public class GeneSetSearch {
     @Autowired
     private GeneSetService geneSetService;
 
+    @Autowired
+    private TaxonService taxonService;
+    
     /**
      * @param gene
      * @return
@@ -61,12 +70,45 @@ public class GeneSetSearch {
         return geneSetService.findByGene( gene );
     }
 
-        
     /**
      * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
      * 
      * @param goId
-     * @param taxon     
+     * @param taxon
+     * @return a GeneSet or null if nothing is found
+     */
+    public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
+
+
+        // shouldn't need to set the taxon here, should be taken care of when creating the value object
+        Taxon taxon = null;
+        
+        if ( taxonId != null ) {
+           taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                log.warn( "No such taxon with id=" + taxonId );
+            } else {
+                GeneSet result = findByGoId( goId, taxonService.load(taxonId) );
+                if ( result == null ) {
+                    log.warn( "No matching gene set found for: " + goId );
+                    return null;
+                }
+                GOGroupValueObject ggvo = new GOGroupValueObject( result, goId, goId );
+                
+                ggvo.setTaxonId( taxon.getId() );
+                ggvo.setTaxonName( taxon.getCommonName() );
+            
+                return ggvo;
+            } 
+        }
+        return null;
+    }
+
+    /**
+     * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
+     * 
+     * @param goId
+     * @param taxon
      * @return a GeneSet or null if nothing is found
      */
     public GeneSet findByGoId( String goId, Taxon taxon ) {
@@ -78,17 +120,17 @@ public class GeneSetSearch {
 
         return goTermToGeneSet( goTerm, taxon );
     }
-    
+
     /**
      * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
      * not persistent
      * 
      * @param goTermName
-     * @param taxon     
+     * @param taxon
      * @return a collection with the hits
      */
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
-        return findByGoTermName(goTermName, taxon, null);
+        return findByGoTermName( goTermName, taxon, null );
     }
 
     /**
@@ -100,21 +142,21 @@ public class GeneSetSearch {
      * @param maxGoTermsProcessed
      * @return a collection with the hits
      */
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed) {
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed ) {
         Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
                 .strip( goTermName ) );
 
         Collection<GeneSet> results = new HashSet<GeneSet>();
-        
-        Integer termsProcessed=0;
+
+        Integer termsProcessed = 0;
 
         for ( OntologyResource t : matches ) {
             GeneSet converted = goTermToGeneSet( t, taxon );
             if ( converted != null ) results.add( converted );
-            
-            if (maxGoTermsProcessed != null){
+
+            if ( maxGoTermsProcessed != null ) {
                 termsProcessed++;
-                if (termsProcessed>maxGoTermsProcessed){
+                if ( termsProcessed > maxGoTermsProcessed ) {
                     return results;
                 }
             }
@@ -141,7 +183,7 @@ public class GeneSetSearch {
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         return geneSetService.findByName( StringUtils.strip( name ), taxon );
     }
-    
+
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */
@@ -185,6 +227,47 @@ public class GeneSetSearch {
 
     private String uri2goid( OntologyResource t ) {
         return t.getUri().replaceFirst( ".*/GO#", "" );
+    }
+    
+
+    /**
+     * Similar to method of same name in GeneSetController.java but here: - no taxon needed - GO groups always searched
+     * - GeneSet objects returned instead of GeneSetValueObjects
+     * 
+     * @param query string to match to a gene set.
+     * @param taxonId
+     * @return collection of GeneSet
+     */
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) {
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<GeneSet>();
+        }
+        Collection<GeneSet> foundGeneSets = null;
+        Taxon tax = null;
+        tax = taxonService.load( taxonId );
+
+        if ( tax == null ) {
+            // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+            foundGeneSets = findByName( query );
+        } else {
+            foundGeneSets = findByName( query, tax );
+        }
+
+        foundGeneSets.clear(); // for testing general search
+
+        /*
+         * SEARCH GENE ONTOLOGY
+         */
+
+        if ( query.toUpperCase().startsWith( "GO" ) ) {
+            GeneSet goSet = findByGoId( query, tax );
+            if ( goSet != null ) foundGeneSets.add( goSet );
+        } else {
+            foundGeneSets.addAll( findByGoTermName( query, tax ) );
+        }
+
+        return foundGeneSets;
     }
 
 }

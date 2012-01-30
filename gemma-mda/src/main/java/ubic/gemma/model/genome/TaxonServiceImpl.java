@@ -18,9 +18,22 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author keshav
@@ -29,6 +42,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class TaxonServiceImpl extends TaxonServiceBase {
 
+    private static Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+  
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    
+    private static Comparator<TaxonValueObject> TAXON_COMPARATOR = new Comparator<TaxonValueObject>() {
+        public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
+            return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
+        }
+    };
+    
     /**
      * @see TaxonService#createDatabaseEntity(Taxon)
      */
@@ -102,6 +129,82 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     @Override
     protected void handleThaw( Taxon taxon ) throws Exception {
         this.getTaxonDao().thaw( taxon );        
+    }
+    
+    @Override
+    public TaxonValueObject loadValueObject( Long id ){
+        return TaxonValueObject.fromEntity( load( id ) );
+    }
+    
+    @Override
+    public Collection<TaxonValueObject> loadAllValueObjects( ){
+        Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
+        for(Taxon tax : loadAll()){
+            result.add( TaxonValueObject.fromEntity( tax ));
+        }
+        
+        return result;
+    }
+    /**
+     * @return Taxon that are species. (only returns usable taxa)
+     */
+    @Override
+    public Collection<TaxonValueObject> getTaxaSpecies() {
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        for ( TaxonValueObject taxon : loadAllValueObjects() ) {
+            if ( taxon.getIsSpecies() ) {
+                taxaSpecies.add( taxon );
+            }
+        }
+        return taxaSpecies;
+    }
+
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    @Override
+    public Collection<TaxonValueObject> getTaxaWithGenes() {
+        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        for ( TaxonValueObject taxon : loadAllValueObjects() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( taxon );
+            }
+        }
+        return taxaWithGenes;
+    }
+
+    /**
+     * @return collection of taxa that have expression experiments available.
+     */
+    @Override
+    public Collection<TaxonValueObject> getTaxaWithDatasets() {
+        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+
+        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
+
+        for ( Taxon taxon : loadAll() ) {
+            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
+                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaWithDatasets;
+    }
+    
+
+    /**
+     * @return List of taxa with array designs in gemma
+     */
+    @Override
+    public Collection<TaxonValueObject> getTaxaWithArrays() {
+        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+
+        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
+            //taxonService.thaw( taxon );
+            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
+        }
+
+        log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
+        return taxaWithArrays;
     }
 
 }

@@ -253,7 +253,15 @@ public interface GeneSetService {
     /**
      * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
      * @param geneSetVos
-     * @return
+     * @return the taxon or null if the gene set param was null
      */
-    public TaxonValueObject getGeneSetTaxon( GeneSetValueObject geneSetVO );
+    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO );
+    
+
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * @param geneSetVos
+     * @return the taxon or null if the gene set param was null
+     */
+    public Taxon getTaxonForGeneSet( GeneSet geneSet );
 }

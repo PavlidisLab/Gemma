@@ -18,7 +18,11 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.TaxonValueObject;
 
 /**
  * @author kelsey
@@ -41,7 +45,10 @@ public interface TaxonService {
 
     public Taxon load( Long id );
 
+    public TaxonValueObject loadValueObject( Long id );
+
     public java.util.Collection<Taxon> loadAll();
+
 
     @Secured( { "GROUP_USER" })
     public void remove( Taxon taxon );
@@ -50,5 +57,24 @@ public interface TaxonService {
     public void update( Taxon taxon );
 
     public void thaw( Taxon taxon );
+    
+    public java.util.Collection<TaxonValueObject> loadAllValueObjects();
+    /**
+     * @return Taxon that are species. (only returns usable taxa)
+     */
+    public Collection<TaxonValueObject> getTaxaSpecies();
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    public Collection<TaxonValueObject> getTaxaWithGenes();
+    /**
+     * @return collection of taxa that have expression experiments available.
+     */
+    public Collection<TaxonValueObject> getTaxaWithDatasets(); 
+
+    /**
+     * @return List of taxa with array designs in gemma
+     */
+    public Collection<TaxonValueObject> getTaxaWithArrays();
 
 }

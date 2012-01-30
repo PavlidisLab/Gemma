@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.GeneSetMember.Factory;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
 
@@ -613,11 +612,13 @@ public class GeneSetServiceImpl implements GeneSetService {
     /**
      * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
      * @param geneSetVos
-     * @return
+     * @return the taxon or null if the gene set param was null
      */
     @Override
-    public TaxonValueObject getGeneSetTaxon( GeneSetValueObject geneSetVO ) {
+    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
 
+        if(geneSetVO == null) return null;
+        
         TaxonValueObject taxonVO = null;
         // get taxon from members
         for ( Long l : geneSetVO.getGeneIds() ) {
@@ -633,4 +634,19 @@ public class GeneSetServiceImpl implements GeneSetService {
         return taxonVO;
     }
 
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * @param geneSet
+     * @return the taxon or null if the gene set param was null
+     */
+    public Taxon getTaxonForGeneSet( GeneSet geneSet ) {
+        if(geneSet == null) return null;
+        Taxon tmpTax = null;
+        tmpTax = geneSet.getMembers().iterator().next().getGene().getTaxon();
+        // check top-level parent
+        while ( tmpTax != null && tmpTax.getParentTaxon() != null ) {
+            tmpTax = tmpTax.getParentTaxon();
+        }
+        return tmpTax;
+    }
 }
