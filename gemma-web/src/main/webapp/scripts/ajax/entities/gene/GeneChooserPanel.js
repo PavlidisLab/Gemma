@@ -254,7 +254,9 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 							}.createDelegate(this),
 
 							errorHandler : function(e) {
-								this.getEl().unmask();
+								if (this.getEl && this.getEl()) {
+									this.getEl().unmask();
+								}
 								Ext.Msg.alert('There was an error', e);
 							}
 						});
