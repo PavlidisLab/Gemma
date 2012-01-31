@@ -26,10 +26,6 @@
 			expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
 	</aop:config>
-	<aop:config>
-		<aop:pointcut id="blockUpdateHack" expression="ubic.gemma.util.SystemArchitectureAspect.blockUpdateHack()" />
-		<aop:advisor advice-ref="txAdvice" pointcut-ref="blockUpdateHack" />
-	</aop:config>
 
 	<bean id="transactionManager"
 		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
