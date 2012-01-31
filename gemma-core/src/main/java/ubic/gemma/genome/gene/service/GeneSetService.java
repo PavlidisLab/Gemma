@@ -100,7 +100,7 @@ public interface GeneSetService {
     public GeneSet load( Long id );
 
     /**
-     * Load all the GeneSets that the user are the permissions to see.
+     * Load all the GeneSets that the user has permission to see.
      * 
      * @param id
      * @return
@@ -172,6 +172,7 @@ public interface GeneSetService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet geneset );
+    
     
     /**
      * Get a value object for the id param

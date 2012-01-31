@@ -151,9 +151,9 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     @Override
     public Collection<TaxonValueObject> getTaxaSpecies() {
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
-        for ( TaxonValueObject taxon : loadAllValueObjects() ) {
+        for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsSpecies() ) {
-                taxaSpecies.add( taxon );
+                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
             }
         }
         return taxaSpecies;
@@ -165,9 +165,9 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     @Override
     public Collection<TaxonValueObject> getTaxaWithGenes() {
         SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
-        for ( TaxonValueObject taxon : loadAllValueObjects() ) {
+        for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( taxon );
+                taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
             }
         }
         return taxaWithGenes;
