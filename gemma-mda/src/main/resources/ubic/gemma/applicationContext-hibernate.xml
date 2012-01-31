@@ -26,6 +26,10 @@
 			expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
 	</aop:config>
+	<aop:config>
+		<aop:pointcut id="blockUpdateHack" expression="ubic.gemma.util.SystemArchitectureAspect.blockUpdateHack()" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="blockUpdateHack" />
+	</aop:config>
 
 	<bean id="transactionManager"
 		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
@@ -41,6 +45,7 @@
 			<tx:method name="get*" read-only="true" />
 			<tx:method name="browse*" read-only="true" />
 			<tx:method name="find*" read-only="true" />
+			<tx:method name="search*" read-only="true" />
 			<tx:method name="load*" read-only="true" />
 			<tx:method name="thaw*" read-only="true" />
 			<tx:method name="is*" read-only="true" />

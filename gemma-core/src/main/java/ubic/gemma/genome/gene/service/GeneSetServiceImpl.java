@@ -77,6 +77,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
         return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
@@ -126,6 +127,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> load( Collection<Long> ids ) {
         return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
@@ -147,6 +149,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
@@ -167,9 +170,10 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMyGeneSets() {
-        return loadAll();
+        return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets();
     }
 
     /*
@@ -177,14 +181,16 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadAll( tax );
+        return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets( tax );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMySharedGeneSets() {
-        return loadAll();
+        return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
     }
 
     /*

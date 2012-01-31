@@ -242,4 +242,19 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         this.getHibernateTemplate().update( entity );
     }
 
+    @Override
+    public Collection<? extends GeneSet> loadMyGeneSets() {
+        return loadAll( );
+    }
+
+    @Override
+    public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
+        return loadAll( tax );
+    }
+
+    @Override
+    public Collection<? extends GeneSet> loadMySharedGeneSets() {
+        return loadAll();
+    }
+
 }

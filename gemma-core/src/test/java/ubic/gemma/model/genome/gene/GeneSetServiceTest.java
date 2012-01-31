@@ -199,8 +199,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         assertNotNull( gmember.getId() );
 
         //Adding transaction bounding to gene set member load so that a thaw is not needed.
-        //Session session = hibernateSupport.getSessionFactory().openSession();
-        Session session = hibernateSupport.getSessionFactory().getCurrentSession();
+        Session session = hibernateSupport.getSessionFactory().openSession();
+        //Session session = hibernateSupport.getSessionFactory().getCurrentSession();
         Transaction tx = session.beginTransaction();
         
         // add one.

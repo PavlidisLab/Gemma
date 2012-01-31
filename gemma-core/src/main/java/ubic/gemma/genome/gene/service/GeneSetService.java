@@ -60,59 +60,66 @@ public interface GeneSetService {
     /**
      * Return all sets that contain the given gene
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param gene
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByGene( Gene gene );
 
     /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param name
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByName( String name );
 
     /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param name
      * @param taxon
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByName( String name, Taxon taxon );
 
     /**
      * Load all the genesets with the given IDs
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param ids
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> load( Collection<Long> ids );
 
     /**
      * Loads the geneset with the given id
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param id
      * @return geneSet witht he given ID or null
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public GeneSet load( Long id );
 
     /**
      * Load all the GeneSets that the user has permission to see.
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param id
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> loadAll();
 
     /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param tax
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> loadAll( Taxon tax );
 
     /**
@@ -123,54 +130,61 @@ public interface GeneSetService {
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
      * processConfigAttribute. (in Gemma-core)
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<GeneSet> loadMyGeneSets();
 
     /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param tax
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<GeneSet> loadMyGeneSets( Taxon tax );
 
     /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<GeneSet> loadMySharedGeneSets();
 
     /**
      * Given a collection of genesets remove them all from the db
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param sets
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     public void remove( Collection<GeneSet> sets );
 
     /**
      * IF the user has permisson to remove the Set, set will be removed.
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param geneset
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void remove( GeneSet geneset );
 
     /**
      * Update all the genesets given in the Collection
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param sets
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     public void update( Collection<GeneSet> sets );
 
     /**
      * Update the given geneset with the new information in the DB
      * 
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @param geneset
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet geneset );
     
     
