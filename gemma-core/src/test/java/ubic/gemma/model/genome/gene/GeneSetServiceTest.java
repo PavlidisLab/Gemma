@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.util.Collection;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -196,12 +198,20 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gmember = gset.getMembers().iterator().next();
         assertNotNull( gmember.getId() );
 
+        //Adding transaction bounding to gene set member load so that a thaw is not needed.
+        //Session session = hibernateSupport.getSessionFactory().openSession();
+        Session session = hibernateSupport.getSessionFactory().getCurrentSession();
+        Transaction tx = session.beginTransaction();
+        
         // add one.
         gset = geneSetService.load( gset.getId() );
         gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g3 );
         gmember.setScore( 0.66 );
         gset.getMembers().add( gmember );
+        
+        tx.commit();
+        session.close();
 
         assertEquals( 2, gset.getMembers().size() );
 
