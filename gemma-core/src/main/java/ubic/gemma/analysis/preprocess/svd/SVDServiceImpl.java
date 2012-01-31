@@ -30,8 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
@@ -267,7 +265,6 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
-        // bad = bioAssayDimensionService.thaw( bad );
         List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
 
         SVDValueObject svo;
@@ -299,8 +296,6 @@ public class SVDServiceImpl implements SVDService {
             analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
                     svdBioMaterials );
         }
-
-        // saveValueObject( svo );
 
         return svo;
     }
@@ -408,7 +403,11 @@ public class SVDServiceImpl implements SVDService {
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                // FIXME might need to deal with missing values here too.
+                svo.setPCFactorCorrelationPval( componentNumber, ef,
+                        CorrelationStats.spearmanPvalue( factorCorrelation, eigenGene.size() ) );
             } else {
+
                 Collection<Integer> groups = new HashSet<Integer>();
                 IntArrayList groupings = new IntArrayList( fvs.length );
                 int k = 0;
@@ -551,12 +550,14 @@ public class SVDServiceImpl implements SVDService {
             Map<Long, Double> factorPv = factorPvals.get( cmp );
             for ( Long efId : factorPv.keySet() ) {
                 Double pvalue = factorPv.get( efId );
+                ExperimentalFactor ef = factors.get( efId );
+
                 if ( pvalue < importanceThreshold ) {
                     assert factors.containsKey( efId );
-                    ExperimentalFactor ef = factors.get( efId );
-
                     log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
                     importantFactors.add( ef );
+                } else {
+                    log.info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
                 }
             }
         }
