@@ -44,6 +44,9 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -253,8 +256,7 @@ public class ExperimentalDesignController extends BaseController {
         for ( ExperimentalFactor factorRemove : toDelete ) {
             experimentalFactorService.delete( factorRemove );
         }
-        
-        
+
         // /*
         // * FIXME this can be done with experimentalFactorService.delete.
         // */
@@ -733,13 +735,34 @@ public class ExperimentalDesignController extends BaseController {
                 }
 
                 if ( !found ) {
+
                     /*
-                     * What happens if there is no value set for this factor already? Have to load the factor, create a
-                     * factor value. But there should be one
+                     * Have to load the factor, create a factor value.
                      */
-                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo
-                            + " didn't have a value for continuous factor=" + factorId
-                            + ", and one cannot be added at this time." );
+
+                    ExperimentalFactor ef = experimentalFactorService.load( factorId );
+
+                    FactorValue fv = FactorValue.Factory.newInstance();
+                    fv.setExperimentalFactor( ef );
+                    fv.setValue( factorValueString );
+                    Measurement m = Measurement.Factory.newInstance();
+                    m.setType( MeasurementType.ABSOLUTE );
+                    m.setValue( fv.getValue() );
+                    try {
+                        Double.parseDouble( fv.getValue() ); // check if it is a number, don't need the value.
+                        m.setRepresentation( PrimitiveType.DOUBLE );
+                    } catch ( NumberFormatException e ) {
+                        m.setRepresentation( PrimitiveType.STRING );
+                    }
+
+                    fv.setMeasurement( m );
+
+                    fv = factorValueService.create( fv );
+
+                    ef.getFactorValues().add( fv );
+
+                    experimentalFactorService.update( ef );
+
                 }
 
             }
