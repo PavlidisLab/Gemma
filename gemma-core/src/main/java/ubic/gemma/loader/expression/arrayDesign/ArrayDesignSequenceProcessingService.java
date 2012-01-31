@@ -223,7 +223,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        // bs = this.bioSequenceService.thaw( bs );
+        bs = this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
