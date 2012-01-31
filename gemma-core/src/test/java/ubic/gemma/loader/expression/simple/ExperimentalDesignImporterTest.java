@@ -135,6 +135,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         experimentalDesignImporter.importDesign( ee, is, false );
 
+        ee = eeService.thawLite( ee );
+
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
@@ -154,6 +156,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
 
         experimentalDesignImporter.importDesign( ee, is, true );
+
+        ee = eeService.thawLite( ee );
 
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
@@ -187,6 +191,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
                 .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
 
         parser.importDesign( ee, is, false );
+        ee = eeService.thawLite( ee );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {

@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
@@ -109,6 +110,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Autowired
     FactorValueService factorValueServiceService = null;
 
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+
     /*
      * (non-Javadoc)
      * 
@@ -142,12 +146,11 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * order, expression factors first then biomaterial details.
      * </p>
      * 
-     * @param is File to process
      * @param Expression experiment the one to add the experimental design
-     * @param boolean a bit redundant dry run
-     * @param boolean if validation should be strict. This is useful for testing.
-     * @see ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
-     *      .ExpressionExperiment, java.io.InputStream, boolean)
+     * @param is File to process
+     * @param dryRunboolean a bit redundant dry run
+     * @see ubic.gemma.loader.expression.simple.ExperimentalDesignImporter
+     *      #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
         log.debug( "Parsing input file" );
@@ -191,7 +194,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         // build up the composite: create experimental factor then add the experimental value
         addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
                 factorValueLines );
-        
+
         experimentalDesignService.update( experimentalDesign );
 
         // a bit tricky as there is an assumption that the first biomaterial in the bioassay set is the relevent one;
@@ -199,51 +202,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         Collection<BioMaterial> bioMaterialsWithFactorValues = addFactorValuesToBioMaterialsInExpressionExperiment(
                 experiment, experimentBioMaterials, experimentalDesign, factorValueLines, headerFields );
 
-        // // Save to DB
-        // experimentalDesignService.update( experimentalDesign );
-        // for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-        // for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-        // this.factorValueServiceService.update( factorValue );
-        // }
-        // }
-
         for ( BioMaterial bioMaterial : bioMaterialsWithFactorValues ) {
             this.bioMaterialService.update( bioMaterial );
 
             // just a debugging sanity check.
             BioMaterial bbm = this.bioMaterialService.load( bioMaterial.getId() );
-            log.info( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
+            log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
                     + StringUtils.join( bbm.getFactorValues(), " ; " ) );
         }
 
-    }
-
-    /**
-     * @param bioMaterialService
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param experimentalDesignService
-     */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
-    }
-
-    /**
-     * @param factor value service
-     */
-    public void setFactorValueService( FactorValueService factorValueServiceService ) {
-        this.factorValueServiceService = factorValueServiceService;
-    }
-
-    /**
-     * @param mgedOntologyService
-     */
-    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
-        this.mgedOntologyService = mgedOntologyService;
     }
 
     /**

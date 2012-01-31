@@ -1,505 +1,505 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527425687_111873_349" name="service" metamodelReference="_11_5_e240333_1154527425687_111873_349_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_rMKEcUePEeGxK4ZEagyaQg" source="attributes">
-    <details xmi:id="_rMKEckePEeGxK4ZEagyaQg" key="version" value="0"/>
+  <eAnnotations xmi:id="_M-fLhEu4EeGhtIxlutwgyA" source="attributes">
+    <details xmi:id="_M-fLhUu4EeGhtIxlutwgyA" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_rMKEc0ePEeGxK4ZEagyaQg" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_rMKEdEePEeGxK4ZEagyaQg" name="service_0" nsURI="http:///service_0_rKEZwEePEeGxK4ZEagyaQg.profile.uml2" nsPrefix="service_0">
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKEdUePEeGxK4ZEagyaQg" name="service__SpringRemotingProtocol">
-        <eAnnotations xmi:id="_rMKEdkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKEd0ePEeGxK4ZEagyaQg" key="documentation" value="The available Spring remoting protocol types. "/>
+  <eAnnotations xmi:id="_M-fLhku4EeGhtIxlutwgyA" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_M-fLh0u4EeGhtIxlutwgyA" name="service_0" nsURI="http:///service_0_M-WoIEu4EeGhtIxlutwgyA.profile.uml2" nsPrefix="service_0">
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fLiEu4EeGhtIxlutwgyA" name="service__SpringRemotingProtocol">
+        <eAnnotations xmi:id="_M-fLiUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fLiku4EeGhtIxlutwgyA" key="documentation" value="The available Spring remoting protocol types. "/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKEeEePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKEeUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094066218_826639_10"/>
+        <eLiterals xmi:id="_M-fLi0u4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fLjEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094066218_826639_10"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEekePEeGxK4ZEagyaQg" name="none" value="1">
-          <eAnnotations xmi:id="_rMKEe0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_213374_70"/>
+        <eLiterals xmi:id="_M-fLjUu4EeGhtIxlutwgyA" name="none" value="1">
+          <eAnnotations xmi:id="_M-fLjku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_213374_70"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEfEePEeGxK4ZEagyaQg" name="rmi" value="2">
-          <eAnnotations xmi:id="_rMKEfUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_349718_71"/>
+        <eLiterals xmi:id="_M-fLj0u4EeGhtIxlutwgyA" name="rmi" value="2">
+          <eAnnotations xmi:id="_M-fLkEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_349718_71"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEfkePEeGxK4ZEagyaQg" name="httpinvoker" value="3">
-          <eAnnotations xmi:id="_rMKEf0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_455110_72"/>
+        <eLiterals xmi:id="_M-fLkUu4EeGhtIxlutwgyA" name="httpinvoker" value="3">
+          <eAnnotations xmi:id="_M-fLkku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_455110_72"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEgEePEeGxK4ZEagyaQg" name="burlap" value="4">
-          <eAnnotations xmi:id="_rMKEgUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_114029_73"/>
+        <eLiterals xmi:id="_M-fLk0u4EeGhtIxlutwgyA" name="burlap" value="4">
+          <eAnnotations xmi:id="_M-fLlEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_114029_73"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEgkePEeGxK4ZEagyaQg" name="hessian" value="5">
-          <eAnnotations xmi:id="_rMKEg0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_753466_74"/>
+        <eLiterals xmi:id="_M-fLlUu4EeGhtIxlutwgyA" name="hessian" value="5">
+          <eAnnotations xmi:id="_M-fLlku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_753466_74"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKEhEePEeGxK4ZEagyaQg" name="service__EjbTransactionType">
-        <eAnnotations xmi:id="_rMKEhUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKEhkePEeGxK4ZEagyaQg" key="documentation" value="Represents the possible EJB transaction types."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fLl0u4EeGhtIxlutwgyA" name="service__EjbTransactionType">
+        <eAnnotations xmi:id="_M-fLmEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fLmUu4EeGhtIxlutwgyA" key="documentation" value="Represents the possible EJB transaction types."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKEh0ePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKEiEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094064062_523925_8"/>
+        <eLiterals xmi:id="_M-fLmku4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fLm0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094064062_523925_8"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEiUePEeGxK4ZEagyaQg" name="NotSupported" value="1">
-          <eAnnotations xmi:id="_rMKEikePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_616847_77"/>
+        <eLiterals xmi:id="_M-fLnEu4EeGhtIxlutwgyA" name="NotSupported" value="1">
+          <eAnnotations xmi:id="_M-fLnUu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_616847_77"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEi0ePEeGxK4ZEagyaQg" name="Supports" value="2">
-          <eAnnotations xmi:id="_rMKEjEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_618413_78"/>
+        <eLiterals xmi:id="_M-fLnku4EeGhtIxlutwgyA" name="Supports" value="2">
+          <eAnnotations xmi:id="_M-fLn0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_618413_78"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEjUePEeGxK4ZEagyaQg" name="Required" value="3">
-          <eAnnotations xmi:id="_rMKEjkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_458612_79"/>
+        <eLiterals xmi:id="_M-fLoEu4EeGhtIxlutwgyA" name="Required" value="3">
+          <eAnnotations xmi:id="_M-fLoUu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_458612_79"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEj0ePEeGxK4ZEagyaQg" name="RequiresNew" value="4">
-          <eAnnotations xmi:id="_rMKEkEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_216523_80"/>
+        <eLiterals xmi:id="_M-fLoku4EeGhtIxlutwgyA" name="RequiresNew" value="4">
+          <eAnnotations xmi:id="_M-fLo0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_216523_80"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEkUePEeGxK4ZEagyaQg" name="Mandatory" value="5">
-          <eAnnotations xmi:id="_rMKEkkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_444979_81"/>
+        <eLiterals xmi:id="_M-fLpEu4EeGhtIxlutwgyA" name="Mandatory" value="5">
+          <eAnnotations xmi:id="_M-fLpUu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_444979_81"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEk0ePEeGxK4ZEagyaQg" name="Never" value="6">
-          <eAnnotations xmi:id="_rMKElEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_200031_82"/>
+        <eLiterals xmi:id="_M-fLpku4EeGhtIxlutwgyA" name="Never" value="6">
+          <eAnnotations xmi:id="_M-fLp0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_200031_82"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKElUePEeGxK4ZEagyaQg" name="service__SpringTransactionType">
-        <eAnnotations xmi:id="_rMKElkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKEl0ePEeGxK4ZEagyaQg" key="documentation" value="Represents the possible Spring transaction types."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fLqEu4EeGhtIxlutwgyA" name="service__SpringTransactionType">
+        <eAnnotations xmi:id="_M-fLqUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fLqku4EeGhtIxlutwgyA" key="documentation" value="Represents the possible Spring transaction types."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKEmEePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKEmUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094067140_919000_11"/>
+        <eLiterals xmi:id="_M-fLq0u4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fLrEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094067140_919000_11"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEmkePEeGxK4ZEagyaQg" name="PROPAGATION_MANDATORY" value="1">
-          <eAnnotations xmi:id="_rMKEm0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEnEePEeGxK4ZEagyaQg" key="documentation" value="Support a current transaction, throw an exception if none exists."/>
+        <eLiterals xmi:id="_M-fLrUu4EeGhtIxlutwgyA" name="PROPAGATION_MANDATORY" value="1">
+          <eAnnotations xmi:id="_M-fLrku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLr0u4EeGhtIxlutwgyA" key="documentation" value="Support a current transaction, throw an exception if none exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEnUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_784968_62"/>
+          <eAnnotations xmi:id="_M-fLsEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_784968_62"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEnkePEeGxK4ZEagyaQg" name="PROPAGATION_NESTED" value="2">
-          <eAnnotations xmi:id="_rMKEn0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEoEePEeGxK4ZEagyaQg" key="documentation" value="Execute within a nested transaction if a current transaction exists, or behave like PROPAGATION_REQUIRED else."/>
+        <eLiterals xmi:id="_M-fLsUu4EeGhtIxlutwgyA" name="PROPAGATION_NESTED" value="2">
+          <eAnnotations xmi:id="_M-fLsku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLs0u4EeGhtIxlutwgyA" key="documentation" value="Execute within a nested transaction if a current transaction exists, or behave like PROPAGATION_REQUIRED else."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEoUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_931637_63"/>
+          <eAnnotations xmi:id="_M-fLtEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_931637_63"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEokePEeGxK4ZEagyaQg" name="PROPAGATION_NEVER" value="3">
-          <eAnnotations xmi:id="_rMKEo0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEpEePEeGxK4ZEagyaQg" key="documentation" value="Execute non-transactionally, throw an exception if a transaction exists."/>
+        <eLiterals xmi:id="_M-fLtUu4EeGhtIxlutwgyA" name="PROPAGATION_NEVER" value="3">
+          <eAnnotations xmi:id="_M-fLtku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLt0u4EeGhtIxlutwgyA" key="documentation" value="Execute non-transactionally, throw an exception if a transaction exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEpUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_170854_64"/>
+          <eAnnotations xmi:id="_M-fLuEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_170854_64"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEpkePEeGxK4ZEagyaQg" name="PROPAGATION_NOT_SUPPORTED" value="4">
-          <eAnnotations xmi:id="_rMKEp0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEqEePEeGxK4ZEagyaQg" key="documentation" value="Execute non-transactionally, suspending the current transaction if one exists."/>
+        <eLiterals xmi:id="_M-fLuUu4EeGhtIxlutwgyA" name="PROPAGATION_NOT_SUPPORTED" value="4">
+          <eAnnotations xmi:id="_M-fLuku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLu0u4EeGhtIxlutwgyA" key="documentation" value="Execute non-transactionally, suspending the current transaction if one exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEqUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_364595_65"/>
+          <eAnnotations xmi:id="_M-fLvEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_364595_65"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEqkePEeGxK4ZEagyaQg" name="PROPAGATION_REQUIRED" value="5">
-          <eAnnotations xmi:id="_rMKEq0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKErEePEeGxK4ZEagyaQg" key="documentation" value="Support a current transaction, create a new one if none exists."/>
+        <eLiterals xmi:id="_M-fLvUu4EeGhtIxlutwgyA" name="PROPAGATION_REQUIRED" value="5">
+          <eAnnotations xmi:id="_M-fLvku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLv0u4EeGhtIxlutwgyA" key="documentation" value="Support a current transaction, create a new one if none exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKErUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_374965_66"/>
+          <eAnnotations xmi:id="_M-fLwEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_374965_66"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKErkePEeGxK4ZEagyaQg" name="PROPAGATION_REQUIRES_NEW" value="6">
-          <eAnnotations xmi:id="_rMKEr0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEsEePEeGxK4ZEagyaQg" key="documentation" value="Create a new transaction, suspending the current transaction if one exists."/>
+        <eLiterals xmi:id="_M-fLwUu4EeGhtIxlutwgyA" name="PROPAGATION_REQUIRES_NEW" value="6">
+          <eAnnotations xmi:id="_M-fLwku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLw0u4EeGhtIxlutwgyA" key="documentation" value="Create a new transaction, suspending the current transaction if one exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEsUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_590090_67"/>
+          <eAnnotations xmi:id="_M-fLxEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_590090_67"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEskePEeGxK4ZEagyaQg" name="PROPAGATION_SUPPORTS" value="7">
-          <eAnnotations xmi:id="_rMKEs0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEtEePEeGxK4ZEagyaQg" key="documentation" value="Support a current transaction, execute non-transactionally if none exists."/>
+        <eLiterals xmi:id="_M-fLxUu4EeGhtIxlutwgyA" name="PROPAGATION_SUPPORTS" value="7">
+          <eAnnotations xmi:id="_M-fLxku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fLx0u4EeGhtIxlutwgyA" key="documentation" value="Support a current transaction, execute non-transactionally if none exists."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEtUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_784722_68"/>
+          <eAnnotations xmi:id="_M-fLyEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_1fe00f9_1119337557859_784722_68"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKEtkePEeGxK4ZEagyaQg" name="service__EjbViewType">
-        <eAnnotations xmi:id="_rMKEt0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKEuEePEeGxK4ZEagyaQg" key="documentation" value="Represents the type of an Ejb view (local/remote)."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fLyUu4EeGhtIxlutwgyA" name="service__EjbViewType">
+        <eAnnotations xmi:id="_M-fLyku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fLy0u4EeGhtIxlutwgyA" key="documentation" value="Represents the type of an Ejb view (local/remote)."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKEuUePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKEukePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094064750_925973_9"/>
+        <eLiterals xmi:id="_M-fLzEu4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fLzUu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094064750_925973_9"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKEu0ePEeGxK4ZEagyaQg" name="local" value="1">
-          <eAnnotations xmi:id="_rMKEvEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKEvUePEeGxK4ZEagyaQg" key="documentation" value="Represents a 'local' view type (that is interfaces are NOT capable of remote communication)."/>
+        <eLiterals xmi:id="_M-fLzku4EeGhtIxlutwgyA" name="local" value="1">
+          <eAnnotations xmi:id="_M-fLz0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fL0Eu4EeGhtIxlutwgyA" key="documentation" value="Represents a 'local' view type (that is interfaces are NOT capable of remote communication)."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKEvkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_2_12ab03bf_1122060139625_842625_1"/>
+          <eAnnotations xmi:id="_M-fL0Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_2_12ab03bf_1122060139625_842625_1"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrgEePEeGxK4ZEagyaQg" name="remote" value="2">
-          <eAnnotations xmi:id="_rMKrgUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrgkePEeGxK4ZEagyaQg" key="documentation" value="Represents a 'remote' view type (that is interfaces are capable of remote communication)."/>
+        <eLiterals xmi:id="_M-fL0ku4EeGhtIxlutwgyA" name="remote" value="2">
+          <eAnnotations xmi:id="_M-fL00u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fL1Eu4EeGhtIxlutwgyA" key="documentation" value="Represents a 'remote' view type (that is interfaces are capable of remote communication)."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKrg0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_0_2_12ab03bf_1122060139625_253621_2"/>
+          <eAnnotations xmi:id="_M-fL1Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_0_2_12ab03bf_1122060139625_253621_2"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrhEePEeGxK4ZEagyaQg" name="both" value="3">
-          <eAnnotations xmi:id="_rMKrhUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrhkePEeGxK4ZEagyaQg" key="documentation" value="Allow both local and remote interfaces."/>
+        <eLiterals xmi:id="_M-fL1ku4EeGhtIxlutwgyA" name="both" value="3">
+          <eAnnotations xmi:id="_M-fL10u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fL2Eu4EeGhtIxlutwgyA" key="documentation" value="Allow both local and remote interfaces."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKrh0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141265094492_464382_162"/>
+          <eAnnotations xmi:id="_M-fL2Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141265094492_464382_162"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKriEePEeGxK4ZEagyaQg" name="service__EjbMdbSubscriptionDurabilityType">
-        <eAnnotations xmi:id="_rMKriUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKrikePEeGxK4ZEagyaQg" key="documentation" value="Topic subscription durability options."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fL2ku4EeGhtIxlutwgyA" name="service__EjbMdbSubscriptionDurabilityType">
+        <eAnnotations xmi:id="_M-fL20u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fL3Eu4EeGhtIxlutwgyA" key="documentation" value="Topic subscription durability options."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKri0ePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrjEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094060375_132910_3"/>
+        <eLiterals xmi:id="_M-fL3Uu4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fL3ku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094060375_132910_3"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrjUePEeGxK4ZEagyaQg" name="Durable" value="1">
-          <eAnnotations xmi:id="_rMKrjkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_139601_88"/>
+        <eLiterals xmi:id="_M-fL30u4EeGhtIxlutwgyA" name="Durable" value="1">
+          <eAnnotations xmi:id="_M-fL4Eu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_139601_88"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrj0ePEeGxK4ZEagyaQg" name="NonDurable" value="2">
-          <eAnnotations xmi:id="_rMKrkEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_611101_89"/>
+        <eLiterals xmi:id="_M-fL4Uu4EeGhtIxlutwgyA" name="NonDurable" value="2">
+          <eAnnotations xmi:id="_M-fL4ku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_611101_89"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKrkUePEeGxK4ZEagyaQg" name="service__EjbMdbDestinationType">
-        <eAnnotations xmi:id="_rMKrkkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKrk0ePEeGxK4ZEagyaQg" key="documentation" value="The available list of destination types for JMS message driven bean."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fL40u4EeGhtIxlutwgyA" name="service__EjbMdbDestinationType">
+        <eAnnotations xmi:id="_M-fL5Eu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fL5Uu4EeGhtIxlutwgyA" key="documentation" value="The available list of destination types for JMS message driven bean."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKrlEePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrlUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094059625_887870_2"/>
+        <eLiterals xmi:id="_M-fL5ku4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fL50u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094059625_887870_2"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrlkePEeGxK4ZEagyaQg" name="javax.jms.Queue" value="1">
-          <eAnnotations xmi:id="_rMKrl0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_370274_91"/>
+        <eLiterals xmi:id="_M-fL6Eu4EeGhtIxlutwgyA" name="javax.jms.Queue" value="1">
+          <eAnnotations xmi:id="_M-fL6Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_370274_91"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrmEePEeGxK4ZEagyaQg" name="javax.jms.Topic" value="2">
-          <eAnnotations xmi:id="_rMKrmUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_780857_92"/>
+        <eLiterals xmi:id="_M-fL6ku4EeGhtIxlutwgyA" name="javax.jms.Topic" value="2">
+          <eAnnotations xmi:id="_M-fL60u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_780857_92"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKrmkePEeGxK4ZEagyaQg" name="service__EjbMdbAcknowledgeMode">
-        <eAnnotations xmi:id="_rMKrm0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKrnEePEeGxK4ZEagyaQg" key="documentation" value="The acknowledge mode for JMS message driven bean.  Default is AUTO_ACKNOWLEDGE."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fL7Eu4EeGhtIxlutwgyA" name="service__EjbMdbAcknowledgeMode">
+        <eAnnotations xmi:id="_M-fL7Uu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fL7ku4EeGhtIxlutwgyA" key="documentation" value="The acknowledge mode for JMS message driven bean.  Default is AUTO_ACKNOWLEDGE."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKrnUePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrnkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094054109_869688_1"/>
+        <eLiterals xmi:id="_M-fL70u4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fL8Eu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094054109_869688_1"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrn0ePEeGxK4ZEagyaQg" name="AUTO_ACKNOWLEDGE" value="1">
-          <eAnnotations xmi:id="_rMKroEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_472200_94"/>
+        <eLiterals xmi:id="_M-fL8Uu4EeGhtIxlutwgyA" name="AUTO_ACKNOWLEDGE" value="1">
+          <eAnnotations xmi:id="_M-fL8ku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_472200_94"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKroUePEeGxK4ZEagyaQg" name="DUPS_OK_ACKNOWLEDGE" value="2">
-          <eAnnotations xmi:id="_rMKrokePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_934031_95"/>
+        <eLiterals xmi:id="_M-fL80u4EeGhtIxlutwgyA" name="DUPS_OK_ACKNOWLEDGE" value="2">
+          <eAnnotations xmi:id="_M-fL9Eu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833711_934031_95"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKro0ePEeGxK4ZEagyaQg" name="service__EjbTransactionManagement">
-        <eAnnotations xmi:id="_rMKrpEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKrpUePEeGxK4ZEagyaQg" key="documentation" value="The options for transaction demaracation strategies."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fL9Uu4EeGhtIxlutwgyA" name="service__EjbTransactionManagement">
+        <eAnnotations xmi:id="_M-fL9ku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fL90u4EeGhtIxlutwgyA" key="documentation" value="The options for transaction demaracation strategies."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKrpkePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrp0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094063359_579040_7"/>
+        <eLiterals xmi:id="_M-fL-Eu4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fL-Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094063359_579040_7"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrqEePEeGxK4ZEagyaQg" name="BEAN" value="1">
-          <eAnnotations xmi:id="_rMKrqUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_439318_97"/>
+        <eLiterals xmi:id="_M-fL-ku4EeGhtIxlutwgyA" name="BEAN" value="1">
+          <eAnnotations xmi:id="_M-fL-0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_439318_97"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrqkePEeGxK4ZEagyaQg" name="CONTAINER" value="2">
-          <eAnnotations xmi:id="_rMKrq0ePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_448535_98"/>
+        <eLiterals xmi:id="_M-fL_Eu4EeGhtIxlutwgyA" name="CONTAINER" value="2">
+          <eAnnotations xmi:id="_M-fL_Uu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_448535_98"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKrrEePEeGxK4ZEagyaQg" name="service__EjbServiceType">
-        <eAnnotations xmi:id="_rMKrrUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKrrkePEeGxK4ZEagyaQg" key="documentation" value="The type of session EJB.  Supported values are Stateful or Stateless."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fL_ku4EeGhtIxlutwgyA" name="service__EjbServiceType">
+        <eAnnotations xmi:id="_M-fL_0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMAEu4EeGhtIxlutwgyA" key="documentation" value="The type of session EJB.  Supported values are Stateful or Stateless."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKrr0ePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrsEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094062546_383611_6"/>
+        <eLiterals xmi:id="_M-fMAUu4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fMAku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094062546_383611_6"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrsUePEeGxK4ZEagyaQg" name="Stateful" value="1">
-          <eAnnotations xmi:id="_rMKrskePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrs0ePEeGxK4ZEagyaQg" key="documentation" value="Stateful session bean."/>
+        <eLiterals xmi:id="_M-fMA0u4EeGhtIxlutwgyA" name="Stateful" value="1">
+          <eAnnotations xmi:id="_M-fMBEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMBUu4EeGhtIxlutwgyA" key="documentation" value="Stateful session bean."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKrtEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_173542_100"/>
+          <eAnnotations xmi:id="_M-fMBku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_173542_100"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrtUePEeGxK4ZEagyaQg" name="Stateless" value="2">
-          <eAnnotations xmi:id="_rMKrtkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrt0ePEeGxK4ZEagyaQg" key="documentation" value="Stateless session bean."/>
+        <eLiterals xmi:id="_M-fMB0u4EeGhtIxlutwgyA" name="Stateless" value="2">
+          <eAnnotations xmi:id="_M-fMCEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMCUu4EeGhtIxlutwgyA" key="documentation" value="Stateless session bean."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKruEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_372498_101"/>
+          <eAnnotations xmi:id="_M-fMCku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_372498_101"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKruUePEeGxK4ZEagyaQg" name="service__EjbPersistenceUnitType">
-        <eAnnotations xmi:id="_rMKrukePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKru0ePEeGxK4ZEagyaQg" key="documentation" value="Represents the possible persistence unit types.  Either set to a transaction scope or extended persistence context."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fMC0u4EeGhtIxlutwgyA" name="service__EjbPersistenceUnitType">
+        <eAnnotations xmi:id="_M-fMDEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMDUu4EeGhtIxlutwgyA" key="documentation" value="Represents the possible persistence unit types.  Either set to a transaction scope or extended persistence context."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKrvEePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrvUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094061125_76394_4"/>
+        <eLiterals xmi:id="_M-fMDku4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fMD0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094061125_76394_4"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrvkePEeGxK4ZEagyaQg" name="TRANSACTION" value="1">
-          <eAnnotations xmi:id="_rMKrv0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrwEePEeGxK4ZEagyaQg" key="documentation" value="Transaction scoped persistence context."/>
+        <eLiterals xmi:id="_M-fMEEu4EeGhtIxlutwgyA" name="TRANSACTION" value="1">
+          <eAnnotations xmi:id="_M-fMEUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMEku4EeGhtIxlutwgyA" key="documentation" value="Transaction scoped persistence context."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKrwUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_469514_103"/>
+          <eAnnotations xmi:id="_M-fME0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_469514_103"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrwkePEeGxK4ZEagyaQg" name="EXTENDED" value="2">
-          <eAnnotations xmi:id="_rMKrw0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKrxEePEeGxK4ZEagyaQg" key="documentation" value="Long lived extended persistence context."/>
+        <eLiterals xmi:id="_M-fMFEu4EeGhtIxlutwgyA" name="EXTENDED" value="2">
+          <eAnnotations xmi:id="_M-fMFUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMFku4EeGhtIxlutwgyA" key="documentation" value="Long lived extended persistence context."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_rMKrxUePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_373799_104"/>
+          <eAnnotations xmi:id="_M-fMF0u4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141264833726_373799_104"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKrxkePEeGxK4ZEagyaQg" name="service__EjbServiceFlushMode">
-        <eAnnotations xmi:id="_rMKrx0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKryEePEeGxK4ZEagyaQg" key="documentation" value="The available options for session bean operation flush mode."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fMGEu4EeGhtIxlutwgyA" name="service__EjbServiceFlushMode">
+        <eAnnotations xmi:id="_M-fMGUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMGku4EeGhtIxlutwgyA" key="documentation" value="The available options for session bean operation flush mode."/>
         </eAnnotations>
-        <eLiterals xmi:id="_rMKryUePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKrykePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094061843_611098_5"/>
+        <eLiterals xmi:id="_M-fMG0u4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fMHEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094061843_611098_5"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKry0ePEeGxK4ZEagyaQg" name="AUTO" value="1">
-          <eAnnotations xmi:id="_rMKrzEePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_576649_164"/>
+        <eLiterals xmi:id="_M-fMHUu4EeGhtIxlutwgyA" name="AUTO" value="1">
+          <eAnnotations xmi:id="_M-fMHku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_576649_164"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrzUePEeGxK4ZEagyaQg" name="COMMIT" value="2">
-          <eAnnotations xmi:id="_rMKrzkePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_438509_165"/>
+        <eLiterals xmi:id="_M-fMH0u4EeGhtIxlutwgyA" name="COMMIT" value="2">
+          <eAnnotations xmi:id="_M-fMIEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_438509_165"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKrz0ePEeGxK4ZEagyaQg" name="NEVER" value="3">
-          <eAnnotations xmi:id="_rMKr0EePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_927562_166"/>
+        <eLiterals xmi:id="_M-fMIUu4EeGhtIxlutwgyA" name="NEVER" value="3">
+          <eAnnotations xmi:id="_M-fMIku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_9_5_1_192d044b_1141265142007_927562_166"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMKr0UePEeGxK4ZEagyaQg" name="service__Interceptor">
-        <eAnnotations xmi:id="_rMKr0kePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMKr00ePEeGxK4ZEagyaQg" key="documentation" value="Specified that a callback listener class for either the entity, session or message driven bean is to be created.  In EJB3, the entity, session or message driven bean is annotated to indicate the callback listener class.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMI0u4EeGhtIxlutwgyA" name="service__Interceptor">
+        <eAnnotations xmi:id="_M-fMJEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMJUu4EeGhtIxlutwgyA" key="documentation" value="Specified that a callback listener class for either the entity, session or message driven bean is to be created.  In EJB3, the entity, session or message driven bean is annotated to indicate the callback listener class.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMKr1EePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_642587_132"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMKr1UePEeGxK4ZEagyaQg" name="_andromdaserviceinterceptordefault" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMKr1kePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMKr10ePEeGxK4ZEagyaQg" key="documentation" value="Indicates that this interceptor class is a default interceptor for all business methods of session or message driven beans within the deployment.&#xA;Applies to cartridges: EJB3"/>
+        <eAnnotations xmi:id="_M-fMJku4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_642587_132"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMJ0u4EeGhtIxlutwgyA" name="_andromdaserviceinterceptordefault" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMKEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMKUu4EeGhtIxlutwgyA" key="documentation" value="Indicates that this interceptor class is a default interceptor for all business methods of session or message driven beans within the deployment.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rMKr2EePEeGxK4ZEagyaQg" name="service__TernaryBoolean">
-        <eLiterals xmi:id="_rMKr2UePEeGxK4ZEagyaQg" name="default">
-          <eAnnotations xmi:id="_rMKr2kePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094355078_618877_133"/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_M-fMKku4EeGhtIxlutwgyA" name="service__TernaryBoolean">
+        <eLiterals xmi:id="_M-fMK0u4EeGhtIxlutwgyA" name="default">
+          <eAnnotations xmi:id="_M-fMLEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094355078_618877_133"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKr20ePEeGxK4ZEagyaQg" name="true" value="1">
-          <eAnnotations xmi:id="_rMKr3EePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094343515_886343_131"/>
+        <eLiterals xmi:id="_M-fMLUu4EeGhtIxlutwgyA" name="true" value="1">
+          <eAnnotations xmi:id="_M-fMLku4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094343515_886343_131"/>
         </eLiterals>
-        <eLiterals xmi:id="_rMKr3UePEeGxK4ZEagyaQg" name="false" value="2">
-          <eAnnotations xmi:id="_rMKr3kePEeGxK4ZEagyaQg" source="enumerationLiteral" references="_11_6_e240333_1161094349359_513659_132"/>
+        <eLiterals xmi:id="_M-fML0u4EeGhtIxlutwgyA" name="false" value="2">
+          <eAnnotations xmi:id="_M-fMMEu4EeGhtIxlutwgyA" source="enumerationLiteral" references="_11_6_e240333_1161094349359_513659_132"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSkEePEeGxK4ZEagyaQg" name="service__PreDestroy">
-        <eAnnotations xmi:id="_rMLSkUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSkkePEeGxK4ZEagyaQg" key="documentation" value="Implies that the associated operation is a lifecycle callback handler and will be invoked when the bean is removed from the pool or destroyed.  For stateful session beans, this occurs before the @Remove annotated method is invoked.  In the EJB3 cartridge, it annotates the operation with @PreDestroy.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMMUu4EeGhtIxlutwgyA" name="service__PreDestroy">
+        <eAnnotations xmi:id="_M-fMMku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMM0u4EeGhtIxlutwgyA" key="documentation" value="Implies that the associated operation is a lifecycle callback handler and will be invoked when the bean is removed from the pool or destroyed.  For stateful session beans, this occurs before the @Remove annotated method is invoked.  In the EJB3 cartridge, it annotates the operation with @PreDestroy.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSk0ePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_886205_126"/>
+        <eAnnotations xmi:id="_M-fMNEu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_886205_126"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSlEePEeGxK4ZEagyaQg" name="service__UserTransaction">
-        <eAnnotations xmi:id="_rMLSlUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSlkePEeGxK4ZEagyaQg" key="documentation" value="Specifies a resource reference injection which will define a @Resource annotation and declare a javax.transaction.UserTransaction injection.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMNUu4EeGhtIxlutwgyA" name="service__UserTransaction">
+        <eAnnotations xmi:id="_M-fMNku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMN0u4EeGhtIxlutwgyA" key="documentation" value="Specifies a resource reference injection which will define a @Resource annotation and declare a javax.transaction.UserTransaction injection.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSl0ePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_845675_121"/>
+        <eAnnotations xmi:id="_M-fMOEu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_845675_121"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSmEePEeGxK4ZEagyaQg" name="service__PersistenceContext">
-        <eAnnotations xmi:id="_rMLSmUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSmkePEeGxK4ZEagyaQg" key="documentation" value="Modelled on a target class of a dependency from a bean to represent injection of a new persistence context into the session EJB.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMOUu4EeGhtIxlutwgyA" name="service__PersistenceContext">
+        <eAnnotations xmi:id="_M-fMOku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMO0u4EeGhtIxlutwgyA" key="documentation" value="Modelled on a target class of a dependency from a bean to represent injection of a new persistence context into the session EJB.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSm0ePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_422538_129"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSnEePEeGxK4ZEagyaQg" name="_andromdaservicepersistencecontextunittype" ordered="false" lowerBound="1" eType="_rMKruUePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLSnUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSnkePEeGxK4ZEagyaQg" key="documentation" value="Specifies whether a transaction scoped or extended persistence context is to be used.  This can be modelled on a session bean or a class modelled with a PersistenceContext stereotype.&#xA;Applies to cartridges: EJB3"/>
+        <eAnnotations xmi:id="_M-fMPEu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_422538_129"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMPUu4EeGhtIxlutwgyA" name="_andromdaservicepersistencecontextunittype" ordered="false" lowerBound="1" eType="_M-fMC0u4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMPku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMP0u4EeGhtIxlutwgyA" key="documentation" value="Specifies whether a transaction scoped or extended persistence context is to be used.  This can be modelled on a session bean or a class modelled with a PersistenceContext stereotype.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSn0ePEeGxK4ZEagyaQg" name="_andromdaservicepersistencecontextunitname" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSoEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSoUePEeGxK4ZEagyaQg" key="documentation" value="Specify the name of the persistence unit.  Only set if more than one persistence unit exists.  This can be modelled on a session bean or a class modelled with a PersistenceContext stereotype.&#xA;Applies to cartridge: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMQEu4EeGhtIxlutwgyA" name="_andromdaservicepersistencecontextunitname" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMQUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMQku4EeGhtIxlutwgyA" key="documentation" value="Specify the name of the persistence unit.  Only set if more than one persistence unit exists.  This can be modelled on a session bean or a class modelled with a PersistenceContext stereotype.&#xA;Applies to cartridge: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSokePEeGxK4ZEagyaQg" name="_andromdaservicepersistencecontextdatasource" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSo0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSpEePEeGxK4ZEagyaQg" key="documentation" value="Specifies the persistence context datasource.  The default is derived from the application andromda descriptor.  This can be modelled on a session bean or a class with a PersistenceContext stereotype.  eg. java:/jdbc/TestDS"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMQ0u4EeGhtIxlutwgyA" name="_andromdaservicepersistencecontextdatasource" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMREu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMRUu4EeGhtIxlutwgyA" key="documentation" value="Specifies the persistence context datasource.  The default is derived from the application andromda descriptor.  This can be modelled on a session bean or a class with a PersistenceContext stereotype.  eg. java:/jdbc/TestDS"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSpUePEeGxK4ZEagyaQg" name="service__RunAs">
-        <eAnnotations xmi:id="_rMLSpkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSp0ePEeGxK4ZEagyaQg" key="documentation" value="Specifies whether the identity of the actor applies a run-as identity to the bean when making calls.  The Actor's name or corresponding @andromda.role.name contains the logical role name.  Only applicable on an the dependency between an Actor and a bean.  Applies the runAs identity to session bean and message driven beans.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMRku4EeGhtIxlutwgyA" name="service__RunAs">
+        <eAnnotations xmi:id="_M-fMR0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMSEu4EeGhtIxlutwgyA" key="documentation" value="Specifies whether the identity of the actor applies a run-as identity to the bean when making calls.  The Actor's name or corresponding @andromda.role.name contains the logical role name.  Only applicable on an the dependency between an Actor and a bean.  Applies the runAs identity to session bean and message driven beans.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSqEePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_662921_123"/>
+        <eAnnotations xmi:id="_M-fMSUu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_662921_123"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSqUePEeGxK4ZEagyaQg" name="service__PrePassivate">
-        <eAnnotations xmi:id="_rMLSqkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSq0ePEeGxK4ZEagyaQg" key="documentation" value="Implies a lifecycle callback method for statefull session bean instances ONLY.  It signals the intent of the container to passivate the instance.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMSku4EeGhtIxlutwgyA" name="service__PrePassivate">
+        <eAnnotations xmi:id="_M-fMS0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMTEu4EeGhtIxlutwgyA" key="documentation" value="Implies a lifecycle callback method for statefull session bean instances ONLY.  It signals the intent of the container to passivate the instance.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSrEePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_299020_125"/>
+        <eAnnotations xmi:id="_M-fMTUu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_299020_125"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSrUePEeGxK4ZEagyaQg" name="service__PostActivate">
-        <eAnnotations xmi:id="_rMLSrkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSr0ePEeGxK4ZEagyaQg" key="documentation" value="Implies a lifecycle callback method for statefull session bean instances ONLY.  It signals that the stateful session bean instance has just been reactivated.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMTku4EeGhtIxlutwgyA" name="service__PostActivate">
+        <eAnnotations xmi:id="_M-fMT0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMUEu4EeGhtIxlutwgyA" key="documentation" value="Implies a lifecycle callback method for statefull session bean instances ONLY.  It signals that the stateful session bean instance has just been reactivated.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLSsEePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_269174_128"/>
+        <eAnnotations xmi:id="_M-fMUUu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_269174_128"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLSsUePEeGxK4ZEagyaQg" name="service__Service">
-        <eAnnotations xmi:id="_rMLSskePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLSs0ePEeGxK4ZEagyaQg" key="documentation" value="Indicates this bean is a session bean."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMUku4EeGhtIxlutwgyA" name="service__Service">
+        <eAnnotations xmi:id="_M-fMU0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMVEu4EeGhtIxlutwgyA" key="documentation" value="Indicates this bean is a session bean."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLStEePEeGxK4ZEagyaQg" source="stereotype" references="_9_0_1fe00f9_1119337557859_21792_59"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLStUePEeGxK4ZEagyaQg" name="_andromdaservicesecurityrealm" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLStkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSt0ePEeGxK4ZEagyaQg" key="documentation" value="The security domain used for role based authorization.  The application server uses the security realm to match allowed roles.  This tag would specify a custom security realm different to the application wide default.&#xA;Applies to cartridges: EJB3"/>
+        <eAnnotations xmi:id="_M-fMVUu4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119337557859_21792_59"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMVku4EeGhtIxlutwgyA" name="_andromdaservicesecurityrealm" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMV0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMWEu4EeGhtIxlutwgyA" key="documentation" value="The security domain used for role based authorization.  The application server uses the security realm to match allowed roles.  This tag would specify a custom security realm different to the application wide default.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSuEePEeGxK4ZEagyaQg" name="_andromdaservicetype" ordered="false" lowerBound="1" eType="_rMKrrEePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLSuUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSukePEeGxK4ZEagyaQg" key="documentation" value="Represents the type of session EJB.  This can be used to override the default which is determined by the existence of instance variables in the session bean.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMWUu4EeGhtIxlutwgyA" name="_andromdaservicetype" ordered="false" lowerBound="1" eType="_M-fL_ku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMWku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMW0u4EeGhtIxlutwgyA" key="documentation" value="Represents the type of session EJB.  This can be used to override the default which is determined by the existence of instance variables in the session bean.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSu0ePEeGxK4ZEagyaQg" name="_andromdaspringserviceconfigonly" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLSvEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSvUePEeGxK4ZEagyaQg" key="documentation" value="Whether or not only the spring configuration support should be generated (no java classes)."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMXEu4EeGhtIxlutwgyA" name="_andromdaspringserviceconfigonly" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMXUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMXku4EeGhtIxlutwgyA" key="documentation" value="Whether or not only the spring configuration support should be generated (no java classes)."/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSvkePEeGxK4ZEagyaQg" name="_andromdaspringserviceinterceptors" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSv0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSwEePEeGxK4ZEagyaQg" key="documentation" value="A comma separated list of interceptor names."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSwUePEeGxK4ZEagyaQg" name="_andromdaspringserviceremoteport" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSwkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSw0ePEeGxK4ZEagyaQg" key="documentation" value="Sets the port this service will be exported on. You must also tag the service using @andromda.spring.service.remote.port."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMX0u4EeGhtIxlutwgyA" name="_andromdaspringserviceinterceptors" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMYEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMYUu4EeGhtIxlutwgyA" key="documentation" value="A comma separated list of interceptor names."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSxEePEeGxK4ZEagyaQg" name="_andromdaspringserviceremotingtype" ordered="false" lowerBound="1" eType="_rMKEdUePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLSxUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSxkePEeGxK4ZEagyaQg" key="documentation" value="Services marked with this stereotype will be exported using Spring's remoting architecture."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSx0ePEeGxK4ZEagyaQg" name="_andromdaservicejndiremote" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSyEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSyUePEeGxK4ZEagyaQg" key="documentation" value="Specifies the JNDI name of the remote interface bound to the session bean.&#xA;Applies to cartridge: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMYku4EeGhtIxlutwgyA" name="_andromdaspringserviceremoteport" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMY0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMZEu4EeGhtIxlutwgyA" key="documentation" value="Sets the port this service will be exported on. You must also tag the service using @andromda.spring.service.remote.port."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSykePEeGxK4ZEagyaQg" name="_andromdaservicejndilocal" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLSy0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSzEePEeGxK4ZEagyaQg" key="documentation" value="Specifies the JNDI name of the local interface bound to the session bean.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMZUu4EeGhtIxlutwgyA" name="_andromdaspringserviceremotingtype" ordered="false" lowerBound="1" eType="_M-fLiEu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMZku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMZ0u4EeGhtIxlutwgyA" key="documentation" value="Services marked with this stereotype will be exported using Spring's remoting architecture."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMaEu4EeGhtIxlutwgyA" name="_andromdaservicejndiremote" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMaUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMaku4EeGhtIxlutwgyA" key="documentation" value="Specifies the JNDI name of the remote interface bound to the session bean.&#xA;Applies to cartridge: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLSzUePEeGxK4ZEagyaQg" name="_andromdaejbtransactionmanagement" ordered="false" lowerBound="1" eType="_rMKro0ePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLSzkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLSz0ePEeGxK4ZEagyaQg" key="documentation" value="The transaction demarcation strategy.  By default, this does not need to be set for CONTAINER managed transactions.  Only set for BEAN managed transactions.  Can be set on session and message-driven beans.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMa0u4EeGhtIxlutwgyA" name="_andromdaservicejndilocal" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMbEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMbUu4EeGhtIxlutwgyA" key="documentation" value="Specifies the JNDI name of the local interface bound to the session bean.&#xA;Applies to cartridges: EJB3"/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMbku4EeGhtIxlutwgyA" name="_andromdaejbtransactionmanagement" ordered="false" lowerBound="1" eType="_M-fL9Uu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMb0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMcEu4EeGhtIxlutwgyA" key="documentation" value="The transaction demarcation strategy.  By default, this does not need to be set for CONTAINER managed transactions.  Only set for BEAN managed transactions.  Can be set on session and message-driven beans.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLS0EePEeGxK4ZEagyaQg" name="_andromdaserviceprivate" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rMLS0UePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rMLS0kePEeGxK4ZEagyaQg" key="documentation" value="Whether or not this service is private."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMcUu4EeGhtIxlutwgyA" name="_andromdaserviceprivate" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMcku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMc0u4EeGhtIxlutwgyA" key="documentation" value="Whether or not this service is private."/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS00ePEeGxK4ZEagyaQg" name="service__DataSource">
-        <eAnnotations xmi:id="_rMLS1EePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLS1UePEeGxK4ZEagyaQg" key="documentation" value="Specifies a resource reference injection which will define a @Resource annotation and declare a javax.sql.DataSource injection.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMdEu4EeGhtIxlutwgyA" name="service__DataSource">
+        <eAnnotations xmi:id="_M-fMdUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMdku4EeGhtIxlutwgyA" key="documentation" value="Specifies a resource reference injection which will define a @Resource annotation and declare a javax.sql.DataSource injection.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLS1kePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_676122_133"/>
+        <eAnnotations xmi:id="_M-fMd0u4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_676122_133"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS10ePEeGxK4ZEagyaQg" name="service__Timeout">
-        <eAnnotations xmi:id="_rMLS2EePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLS2UePEeGxK4ZEagyaQg" key="documentation" value="Represents whether the session bean operation is a timeout callback method for the Timer Service.&#xA;Applies to cartridge: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMeEu4EeGhtIxlutwgyA" name="service__Timeout">
+        <eAnnotations xmi:id="_M-fMeUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMeku4EeGhtIxlutwgyA" key="documentation" value="Represents whether the session bean operation is a timeout callback method for the Timer Service.&#xA;Applies to cartridge: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLS2kePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_822470_122"/>
+        <eAnnotations xmi:id="_M-fMe0u4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_822470_122"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS20ePEeGxK4ZEagyaQg" name="service__ResourceRef">
-        <eAnnotations xmi:id="_rMLS3EePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLS3UePEeGxK4ZEagyaQg" key="documentation" value="Set on dependency relationship to represent injection of a new javax.sql.DataSource into the session EJB. The name associated with the @Resource annotation, used as the JNDI name lookup for the datasource is the name of the class.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMfEu4EeGhtIxlutwgyA" name="service__ResourceRef">
+        <eAnnotations xmi:id="_M-fMfUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMfku4EeGhtIxlutwgyA" key="documentation" value="Set on dependency relationship to represent injection of a new javax.sql.DataSource into the session EJB. The name associated with the @Resource annotation, used as the JNDI name lookup for the datasource is the name of the class.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLS3kePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_27265_124"/>
+        <eAnnotations xmi:id="_M-fMf0u4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_27265_124"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS30ePEeGxK4ZEagyaQg" name="service__PostConstruct">
-        <eAnnotations xmi:id="_rMLS4EePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLS4UePEeGxK4ZEagyaQg" key="documentation" value="Implies that the associated operation is a lifecycle callback handler and will be invoked when the bean is first created, after any dependency injection is required.  In the EJB3 cartridge, it annotates the operation with @PostConstruct.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMgEu4EeGhtIxlutwgyA" name="service__PostConstruct">
+        <eAnnotations xmi:id="_M-fMgUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMgku4EeGhtIxlutwgyA" key="documentation" value="Implies that the associated operation is a lifecycle callback handler and will be invoked when the bean is first created, after any dependency injection is required.  In the EJB3 cartridge, it annotates the operation with @PostConstruct.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLS4kePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_22970_127"/>
+        <eAnnotations xmi:id="_M-fMg0u4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_22970_127"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS40ePEeGxK4ZEagyaQg" name="service__ServiceRef">
-        <eAnnotations xmi:id="_rMLS5EePEeGxK4ZEagyaQg" source="stereotype" references="_9_0_1fe00f9_1119337557859_652828_60"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMhEu4EeGhtIxlutwgyA" name="service__ServiceRef">
+        <eAnnotations xmi:id="_M-fMhUu4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119337557859_652828_60"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rMLS5UePEeGxK4ZEagyaQg" name="service__MessageDriven">
-        <eAnnotations xmi:id="_rMLS5kePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rMLS50ePEeGxK4ZEagyaQg" key="documentation" value="Specifies a message driven EJB.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMhku4EeGhtIxlutwgyA" name="service__MessageDriven">
+        <eAnnotations xmi:id="_M-fMh0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMiEu4EeGhtIxlutwgyA" key="documentation" value="Specifies a message driven EJB.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rMLS6EePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_475801_130"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rMLS6UePEeGxK4ZEagyaQg" name="_andromdaejbmdbpoolsizemin" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rMLS6kePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5oEePEeGxK4ZEagyaQg" key="documentation" value="Set the message driven bean's minimum pool size.  This must be an integer and greater than 0, otherwise will not be set.&#xA;Applies to cartridges: EJB3"/>
+        <eAnnotations xmi:id="_M-fMiUu4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_475801_130"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMiku4EeGhtIxlutwgyA" name="_andromdaejbmdbpoolsizemin" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMi0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMjEu4EeGhtIxlutwgyA" key="documentation" value="Set the message driven bean's minimum pool size.  This must be an integer and greater than 0, otherwise will not be set.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5oUePEeGxK4ZEagyaQg" name="_andromdaejbmdbdestinationtype" ordered="false" lowerBound="1" eType="_rMKrkUePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5okePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5o0ePEeGxK4ZEagyaQg" key="documentation" value="The destination type of the JMS message driven bean.  Possible values are javax.jms.Queue or javax.jms.Topic.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMjUu4EeGhtIxlutwgyA" name="_andromdaejbmdbdestinationtype" ordered="false" lowerBound="1" eType="_M-fL40u4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMjku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMj0u4EeGhtIxlutwgyA" key="documentation" value="The destination type of the JMS message driven bean.  Possible values are javax.jms.Queue or javax.jms.Topic.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5pEePEeGxK4ZEagyaQg" name="_andromdaejbmdbselector" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rML5pUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5pkePEeGxK4ZEagyaQg" key="documentation" value="Specifies the JMS message selector used when determining the messages a JMS message driven bean is to receive.&#xA;Applies to cartridges: EJB3"/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5p0ePEeGxK4ZEagyaQg" name="_andromdaejbmdbsubscriptiondurability" ordered="false" lowerBound="1" eType="_rMKriEePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5qEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5qUePEeGxK4ZEagyaQg" key="documentation" value="Specifies the JMS message driven bean subscription durability.  Queues are always durable.  The durability only needs to be specified on topics.  By default, topics are non-durable.&#xA;Applies to cartridges: EJB3"/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5qkePEeGxK4ZEagyaQg" name="_andromdaejbmdbpoolsizemax" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rML5q0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5rEePEeGxK4ZEagyaQg" key="documentation" value="Set the message driven bean's maximum pool size.  This must be an integer and greater than 0, otherwise will not be set.  It can be used to setup a singleton message driven bean by setting this value to 1.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMkEu4EeGhtIxlutwgyA" name="_andromdaejbmdbselector" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMkUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMkku4EeGhtIxlutwgyA" key="documentation" value="Specifies the JMS message selector used when determining the messages a JMS message driven bean is to receive.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5rUePEeGxK4ZEagyaQg" name="_andromdaejbmdbdestination" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_rML5rkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5r0ePEeGxK4ZEagyaQg" key="documentation" value="Specifies the destination queue or topic name this message driven bean is associated with.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMk0u4EeGhtIxlutwgyA" name="_andromdaejbmdbsubscriptiondurability" ordered="false" lowerBound="1" eType="_M-fL2ku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMlEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMlUu4EeGhtIxlutwgyA" key="documentation" value="Specifies the JMS message driven bean subscription durability.  Queues are always durable.  The durability only needs to be specified on topics.  By default, topics are non-durable.&#xA;Applies to cartridges: EJB3"/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMlku4EeGhtIxlutwgyA" name="_andromdaejbmdbpoolsizemax" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMl0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMmEu4EeGhtIxlutwgyA" key="documentation" value="Set the message driven bean's maximum pool size.  This must be an integer and greater than 0, otherwise will not be set.  It can be used to setup a singleton message driven bean by setting this value to 1.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5sEePEeGxK4ZEagyaQg" name="_andromdaejbmdbacknowledgemode" ordered="false" lowerBound="1" eType="_rMKrmkePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5sUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5skePEeGxK4ZEagyaQg" key="documentation" value="Specifies the acknowledge mode for JMS message driven bean.  Only needs to be specified if DUPS_OK_ACKNOWLEDGE mode is required.  Default is AUTO_ACKNOWLEDGE.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMmUu4EeGhtIxlutwgyA" name="_andromdaejbmdbdestination" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_M-fMmku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMm0u4EeGhtIxlutwgyA" key="documentation" value="Specifies the destination queue or topic name this message driven bean is associated with.&#xA;Applies to cartridges: EJB3"/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMnEu4EeGhtIxlutwgyA" name="_andromdaejbmdbacknowledgemode" ordered="false" lowerBound="1" eType="_M-fL7Eu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMnUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMnku4EeGhtIxlutwgyA" key="documentation" value="Specifies the acknowledge mode for JMS message driven bean.  Only needs to be specified if DUPS_OK_ACKNOWLEDGE mode is required.  Default is AUTO_ACKNOWLEDGE.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rML5s0ePEeGxK4ZEagyaQg" name="service__Listener">
-        <eAnnotations xmi:id="_rML5tEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_rML5tUePEeGxK4ZEagyaQg" key="documentation" value="Specified that a callback listener class for either the entity, session or message driven bean is to be created.  In EJB3, the entity, session or message driven bean is annotated to indicate the callback listener class.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMn0u4EeGhtIxlutwgyA" name="service__Listener">
+        <eAnnotations xmi:id="_M-fMoEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_M-fMoUu4EeGhtIxlutwgyA" key="documentation" value="Specified that a callback listener class for either the entity, session or message driven bean is to be created.  In EJB3, the entity, session or message driven bean is annotated to indicate the callback listener class.&#xA;Applies to cartridges: EJB3"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_rML5tkePEeGxK4ZEagyaQg" source="stereotype" references="_9_5_1_192d044b_1141264862929_698681_131"/>
+        <eAnnotations xmi:id="_M-fMoku4EeGhtIxlutwgyA" source="stereotype" references="_9_5_1_192d044b_1141264862929_698681_131"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rML5t0ePEeGxK4ZEagyaQg" name="service__ServiceElement">
-        <eAnnotations xmi:id="_rML5uEePEeGxK4ZEagyaQg" source="stereotype" references="_11_6_e240333_1161095301156_165990_140"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5uUePEeGxK4ZEagyaQg" name="_andromdaservicesecuritydenyAll" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5ukePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5u0ePEeGxK4ZEagyaQg" key="documentation" value="If set to true on a session bean operation, then NO roles are permitted to execute that operation.  If set to true on a session bean, then NO roles are permitted to execute all operations in that session bean.  This tag will override any roles that may have been specified.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMo0u4EeGhtIxlutwgyA" name="service__ServiceElement">
+        <eAnnotations xmi:id="_M-fMpEu4EeGhtIxlutwgyA" source="stereotype" references="_11_6_e240333_1161095301156_165990_140"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMpUu4EeGhtIxlutwgyA" name="_andromdaservicesecuritydenyAll" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMpku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMp0u4EeGhtIxlutwgyA" key="documentation" value="If set to true on a session bean operation, then NO roles are permitted to execute that operation.  If set to true on a session bean, then NO roles are permitted to execute all operations in that session bean.  This tag will override any roles that may have been specified.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5vEePEeGxK4ZEagyaQg" name="_andromdaservicesecuritypermitAll" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5vUePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5vkePEeGxK4ZEagyaQg" key="documentation" value="If set to true on a session bean operation, then all roles are permitted to execute that operation.  If set to true on a session bean then all roles are permitted to execute all operations in that session bean.  This tag will override the specified roles.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMqEu4EeGhtIxlutwgyA" name="_andromdaservicesecuritypermitAll" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMqUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMqku4EeGhtIxlutwgyA" key="documentation" value="If set to true on a session bean operation, then all roles are permitted to execute that operation.  If set to true on a session bean then all roles are permitted to execute all operations in that session bean.  This tag will override the specified roles.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5v0ePEeGxK4ZEagyaQg" name="_andromdaspringtransactiontype" ordered="false" lowerBound="1" eType="_rMKElUePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5wEePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5wUePEeGxK4ZEagyaQg" key="documentation" value="Stores the transaction type of a Spring service operation."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMq0u4EeGhtIxlutwgyA" name="_andromdaspringtransactiontype" ordered="false" lowerBound="1" eType="_M-fLqEu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMrEu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMrUu4EeGhtIxlutwgyA" key="documentation" value="Stores the transaction type of a Spring service operation."/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5wkePEeGxK4ZEagyaQg" name="_andromdaejbviewType" ordered="false" lowerBound="1" eType="_rMKEtkePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5w0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5xEePEeGxK4ZEagyaQg" key="documentation" value="Defines the view type for a Session EJB.  Can be 'remote' or 'local' or 'both'.&#xA;This tag is now available at the operation level as well as the class level.&#xA;Applies to cartridges: EJB, EJB3, Hibernate, Spring"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMrku4EeGhtIxlutwgyA" name="_andromdaejbviewType" ordered="false" lowerBound="1" eType="_M-fLyUu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMr0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMsEu4EeGhtIxlutwgyA" key="documentation" value="Defines the view type for a Session EJB.  Can be 'remote' or 'local' or 'both'.&#xA;This tag is now available at the operation level as well as the class level.&#xA;Applies to cartridges: EJB, EJB3, Hibernate, Spring"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5xUePEeGxK4ZEagyaQg" name="_andromdaejbtransactiontype" ordered="false" lowerBound="1" eType="_rMKEhEePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5xkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5x0ePEeGxK4ZEagyaQg" key="documentation" value="Stores the transaction type on an EJB service operation or the EJB service bean.  This can also be modelled on message-driven beans with limitation.&#xA;IMPORTANT: The EJB 3.0 spec defines that the transaction management type cannot be specified for EJB 3.0 entities.  These entities execute within the transactional context of the caller, which is the session bean.&#xA;Applies to cartridges: EJB, EJB3, Hibernate, Spring"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMsUu4EeGhtIxlutwgyA" name="_andromdaejbtransactiontype" ordered="false" lowerBound="1" eType="_M-fLl0u4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMsku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMs0u4EeGhtIxlutwgyA" key="documentation" value="Stores the transaction type on an EJB service operation or the EJB service bean.  This can also be modelled on message-driven beans with limitation.&#xA;IMPORTANT: The EJB 3.0 spec defines that the transaction management type cannot be specified for EJB 3.0 entities.  These entities execute within the transactional context of the caller, which is the session bean.&#xA;Applies to cartridges: EJB, EJB3, Hibernate, Spring"/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rML5yEePEeGxK4ZEagyaQg" name="service__ServiceOperation">
-        <eAnnotations xmi:id="_rML5yUePEeGxK4ZEagyaQg" source="stereotype" references="_11_6_e240333_1161095557078_347609_156"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5ykePEeGxK4ZEagyaQg" name="_andromdaserviceinterceptorexcludeClass" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5y0ePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5zEePEeGxK4ZEagyaQg" key="documentation" value="Specifies to the container to exclude the invocation of the class interceptors for the applied business method.&#xA;Applies to cartridges: EJB3"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-fMtEu4EeGhtIxlutwgyA" name="service__ServiceOperation">
+        <eAnnotations xmi:id="_M-fMtUu4EeGhtIxlutwgyA" source="stereotype" references="_11_6_e240333_1161095557078_347609_156"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMtku4EeGhtIxlutwgyA" name="_andromdaserviceinterceptorexcludeClass" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMt0u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMuEu4EeGhtIxlutwgyA" key="documentation" value="Specifies to the container to exclude the invocation of the class interceptors for the applied business method.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML5zUePEeGxK4ZEagyaQg" name="_andromdaserviceinterceptorexcludeDefault" ordered="false" lowerBound="1" eType="_rMKr2EePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML5zkePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML5z0ePEeGxK4ZEagyaQg" key="documentation" value="Specifies to the container to exclude the invocation of the default interceptors for the applied business method.&#xA;Applies to cartridge: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMuUu4EeGhtIxlutwgyA" name="_andromdaserviceinterceptorexcludeDefault" ordered="false" lowerBound="1" eType="_M-fMKku4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMuku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMu0u4EeGhtIxlutwgyA" key="documentation" value="Specifies to the container to exclude the invocation of the default interceptors for the applied business method.&#xA;Applies to cartridge: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_rML50EePEeGxK4ZEagyaQg" name="_andromdaservicepersistenceflushmode" ordered="false" lowerBound="1" eType="_rMKrxkePEeGxK4ZEagyaQg">
-          <eAnnotations xmi:id="_rML50UePEeGxK4ZEagyaQg" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_rML50kePEeGxK4ZEagyaQg" key="documentation" value="Represents the flush mode for session operations to determine when the database changes are reflected to the database in a transaction.  Typically set in a stateful session bean where a transaction spans several method operations.&#xA;Applies to cartridges: EJB3"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-fMvEu4EeGhtIxlutwgyA" name="_andromdaservicepersistenceflushmode" ordered="false" lowerBound="1" eType="_M-fMGEu4EeGhtIxlutwgyA">
+          <eAnnotations xmi:id="_M-fMvUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_M-fMvku4EeGhtIxlutwgyA" key="documentation" value="Represents the flush mode for session operations to determine when the database changes are reflected to the database in a transaction.  Typically set in a stateful session bean where a transaction spans several method operations.&#xA;Applies to cartridges: EJB3"/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
@@ -829,7 +829,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399546_709533_281"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399546_105640_288" memberEnd="_11_5_e240333_1154527399546_643359_289 _11_5_e240333_1154527399546_4681_290">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399546_105640_288" memberEnd="_11_5_e240333_1154527399546_4681_290 _11_5_e240333_1154527399546_643359_289">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527399546_4681_290" name="extension_Listener" visibility="private" type="_9_5_1_192d044b_1141264862929_698681_131" association="_11_5_e240333_1154527399546_105640_288" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527399546_161040_292" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399546_302505_291"/>
@@ -853,7 +853,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399546_491916_276"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399484_506791_135" memberEnd="_11_5_e240333_1154527399484_103703_136 _11_5_e240333_1154527399484_726820_137">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399484_506791_135" memberEnd="_11_5_e240333_1154527399484_726820_137 _11_5_e240333_1154527399484_103703_136">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527399484_726820_137" name="extension_ResourceRef" visibility="private" type="_9_5_1_192d044b_1141264862929_27265_124" association="_11_5_e240333_1154527399484_506791_135" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527399484_31028_139" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399484_534244_138"/>
@@ -871,7 +871,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399546_487354_301"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399515_941328_249" memberEnd="_11_5_e240333_1154527399515_341234_250 _11_5_e240333_1154527399515_171755_251">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399515_941328_249" memberEnd="_11_5_e240333_1154527399515_171755_251 _11_5_e240333_1154527399515_341234_250">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527399515_171755_251" name="extension_Service" visibility="private" type="_9_0_1fe00f9_1119337557859_21792_59" association="_11_5_e240333_1154527399515_941328_249" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527399515_275880_253" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399515_970255_252"/>
@@ -883,7 +883,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399515_830859_241"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399468_375851_104" memberEnd="_11_5_e240333_1154527399468_460950_106 _11_5_e240333_1154527399468_536404_105">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399468_375851_104" memberEnd="_11_5_e240333_1154527399468_536404_105 _11_5_e240333_1154527399468_460950_106">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527399468_460950_106" name="extension_PostActivate" visibility="private" type="_9_5_1_192d044b_1141264862929_269174_128" association="_11_5_e240333_1154527399468_375851_104" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527399468_838681_108" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399468_306497_107"/>
@@ -895,7 +895,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399500_543525_224"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399546_194828_308" memberEnd="_11_5_e240333_1154527399546_554636_310 _11_5_e240333_1154527399546_150097_309">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527399546_194828_308" memberEnd="_11_5_e240333_1154527399546_150097_309 _11_5_e240333_1154527399546_554636_310">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527399546_554636_310" name="extension_UserTransaction" visibility="private" type="_9_5_1_192d044b_1141264862929_845675_121" association="_11_5_e240333_1154527399546_194828_308" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527399546_7506_312" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527399546_26232_311"/>
@@ -918,7 +918,7 @@
     <ownedLiteral xmi:id="_11_6_e240333_1161094343515_886343_131" name="true"/>
     <ownedLiteral xmi:id="_11_6_e240333_1161094349359_513659_132" name="false"/>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161095327375_796746_146" memberEnd="_11_6_e240333_1161095327375_608427_148 _11_6_e240333_1161095327375_178918_147">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161095327375_796746_146" memberEnd="_11_6_e240333_1161095327375_178918_147 _11_6_e240333_1161095327375_608427_148">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_6_e240333_1161095327375_608427_148" name="extension_SecuredElement" visibility="private" type="_11_6_e240333_1161095301156_165990_140" association="_11_6_e240333_1161095327375_796746_146" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_6_e240333_1161095327375_295978_150" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161095327375_705089_149"/>
@@ -930,7 +930,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161095327390_980718_154"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161095598406_333504_162" memberEnd="_11_6_e240333_1161095598406_123937_163 _11_6_e240333_1161095598406_623959_164">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161095598406_333504_162" memberEnd="_11_6_e240333_1161095598406_623959_164 _11_6_e240333_1161095598406_123937_163">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_6_e240333_1161095598406_623959_164" name="extension_InterceptorOperation" visibility="private" type="_11_6_e240333_1161095557078_347609_156" association="_11_6_e240333_1161095598406_333504_162" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_6_e240333_1161095598421_506510_166" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161095598406_181307_165"/>
