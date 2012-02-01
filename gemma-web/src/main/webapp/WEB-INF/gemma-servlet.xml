@@ -1087,7 +1087,6 @@
 								<value>removeUserAndSessionGroups</value>
 								<value>loadAllSessionGroups</value>
 								<value>addSessionGroups</value>
-								<value>addNonModificationBasedSessionBoundGroups</value>
 								<value>canCurrentUserEditGroup</value>
 							</list>
 						</property>
@@ -1279,7 +1278,6 @@
 								<value>create</value>
 								<value>load</value>
 								<value>addSessionGroups</value>
-								<value>addNonModificationBasedSessionBoundGroups</value>
 								<value>addUserAndSessionGroups</value>
 								<value>remove</value>
 								<value>removeSessionGroups</value>
