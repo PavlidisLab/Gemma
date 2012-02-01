@@ -474,6 +474,10 @@ public class ExperimentalDesignVisualizationService {
     private void prepare( Collection<DoubleVectorValueObject> dedvs ) {
 
         for ( DoubleVectorValueObject vec : dedvs ) {
+            if ( vec == null ) {
+                log.debug( "DoubleVectorValueObject is null" );
+                continue;
+            }
             ExpressionExperiment ee = vec.getExpressionExperiment();
 
             if ( cachedLayouts.containsKey( ee ) ) {
