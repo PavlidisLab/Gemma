@@ -268,7 +268,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			if (this.visDifWindow != null)
 				this.visDifWindow.close();
 
-			var title = "Visualization of probes in:  " + ee.shortName;
+			var title = "Visualization of Probes ";
 
 			/*
 			 * FIXME properly handle subsets.
