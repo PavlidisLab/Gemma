@@ -2,6 +2,14 @@
 Ext.namespace('Gemma.HelpText','Gemma.StatusText','Gemma.Widget');
 
 // TT = tooltip
+Gemma.EvidenceCodes = {
+	expText: 'Inferred from Experiment',
+	expTT: 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.',
+	icText: 'Inferred by Curator',
+	icTT: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.',
+	tasText: 'Traceable Author Statement',
+	tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.'
+};
 
 Gemma.StatusText = {
 	Loading: {
@@ -354,15 +362,7 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	PhenotypeEvidenceGridPanel:{
 		specificallyRelatedTT: 'Marks evidence related specifically to your phenotype search',
-		negativeEvidenceTT: 'Denotes evidence against association',
-		EvidenceCodes: {
-			expText: 'Inferred from Experiment',
-			expTT: 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.',
-			icText: 'Inferred by Curator',
-			icTT: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.',
-			tasText: 'Traceable Author Statement',
-			tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.'
-		}
+		negativeEvidenceTT: 'Denotes evidence against association'
 	},
 	PhenotypePanel:{
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
@@ -371,10 +371,6 @@ Gemma.HelpText.WidgetDefaults = {
     			'<b>geneColumnRenderer</b> should not be set <br />' +
     			'in config. Otherwise, all of them should be set.',
 		
-	},
-	PhenotypePanelSearchField:{
-		setupErrorTitle: 'Error in Gemma.PhenotypePanelSearchField',
-		setupErrorText: 'You should set all these configs: <b>getSelectionModel</b>, <b>getStore</b>, <b>filterFields</b> and <b>emptyText</b>.'
 	},
 	ProbeLevelDiffExGrid: {
 		// skipped, only had column TTs

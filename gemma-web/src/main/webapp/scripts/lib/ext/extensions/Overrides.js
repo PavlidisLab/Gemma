@@ -227,6 +227,16 @@ Ext.override(Ext.grid.GridPanel,{
 	}
 });
 
+// Override the class so that tooltip will be rendered automatically when renderToolTip is set to true.
+Ext.override(Ext.grid.Column,{
+    renderer : function(value, metaData, record, rowIndex, colIndex, store){
+    	if (this.renderToolTip && metaData) {
+		    metaData.attr = 'ext:qtip="' + value + '"';
+		    return value;
+    	}
+        return value;
+    }
+});
 
 
 /**

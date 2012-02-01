@@ -109,14 +109,17 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			minHeight: 150
 		});
 		
-		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
+		this.add(new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
-			geneName: this.geneName,
-			geneSymbol: this.geneSymbol,
-			taxonName: this.taxonName,
-			geneId: this.geneId,
-			geneNcbiId: this.geneNcbiId,
-
+			hasStoreProxy: true,
+			hasRelevanceColumn: false,			
+			currentGene: {
+	    		id: this.geneId,
+	    		ncbiId: this.geneNcbiId,
+	    		officialSymbol: this.geneSymbol,
+	    		officialName: this.geneName,
+	    		taxonCommonName: this.geneTaxonName
+    		},
 			evidencePhenotypeColumnRenderer: function(value, metadata, record, row, col, ds) {
 				var phenotypesHtml = '';
 				for (var i = 0; i < record.data.phenotypes.length; i++) {
@@ -125,23 +128,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				}					
 				return phenotypesHtml;
 			}
-		});
-		phenotypeEvidenceGridPanel.setProxy(
-			new Ext.data.DWRProxy({
-		        apiActionToHandlerMap: {
-	    	        read: {
-	        	        dwrFunction: GeneController.loadGeneEvidence,
-	            	    getDwrArgsFunction: function(request){
-	            	    	return [ geneId ];
-		                }
-	    	        }
-		        }
-	    	})
-		);
-		phenotypeEvidenceGridPanel.load();		
-		phenotypeEvidenceGridPanel.setColumnHidden(1, true); // Make the Relevance column hidden in the Gene page.
-
-		this.add(phenotypeEvidenceGridPanel);
+		}));
 		
 		this.on('render', function(){
 			this.setActiveTab(0);
