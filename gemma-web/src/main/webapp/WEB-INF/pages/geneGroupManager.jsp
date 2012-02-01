@@ -1,5 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true"/>
+
 <head>
 	<title>Manage Gene Groups</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
