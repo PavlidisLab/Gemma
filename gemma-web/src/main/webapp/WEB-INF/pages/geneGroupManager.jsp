@@ -1,7 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<input type="hidden" id="reloadOnLogout" value="true">
-<input type="hidden" id="reloadOnLogin" value="true"/>
 
 <head>
 	<title>Manage Gene Groups</title>
@@ -11,6 +9,8 @@
 </head>
 <body>
 
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true"/>
 
 	<h2>
 		Manage Gene Groups
