@@ -175,7 +175,7 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         /*
          * Update the correlation heatmaps.
          */
-        sampleSoexpressionMatrixService.create( expExp );
+        sampleSoexpressionMatrixService.findOrCreate( expExp );
 
         for ( BioAssay ba : assaysToRemove ) {
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );

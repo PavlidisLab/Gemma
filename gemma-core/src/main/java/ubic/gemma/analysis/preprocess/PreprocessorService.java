@@ -205,7 +205,7 @@ public class PreprocessorService {
      * @param ee
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        sampleCoexpressionMatrixService.create( ee );
+        sampleCoexpressionMatrixService.findOrCreate( ee );
     }
 
     @Autowired

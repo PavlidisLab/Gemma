@@ -137,7 +137,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        sampleCoexpressionMatrixService.create( ee );
+        sampleCoexpressionMatrixService.findOrCreate( ee );
     }
 
     /**

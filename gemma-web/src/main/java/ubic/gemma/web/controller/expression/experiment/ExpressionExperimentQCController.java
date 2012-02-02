@@ -88,6 +88,8 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.analysis.preprocess.OutlierDetails;
+import ubic.gemma.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
@@ -217,16 +219,26 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService
-                .create( ee );
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
 
-        // TODO
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix,
+                15, 0.9 );
+
+        if ( !outliers.isEmpty() ) {
+            for ( OutlierDetails details : outliers ) {
+                // TODO
+                details.getBioAssay();
+            }
+        }
 
         return null; // nothing to return;
     }
 
     @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
 
     /**
      * @param id of experiment
@@ -253,7 +265,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.create( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
 
         List<String> stringNames = new ArrayList<String>();
         for ( BioAssay ba : omatrix.getRowNames() ) {
@@ -507,6 +519,8 @@ public class ExpressionExperimentQCController extends BaseController {
                 if ( !readHeader ) {
                     for ( int i = 1; i < split.length; i++ ) {
                         String factorName = split[i];
+                        // note that this might include
+                        // DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID
                         factorNames.add( factorName );
                     }
                     readHeader = true;

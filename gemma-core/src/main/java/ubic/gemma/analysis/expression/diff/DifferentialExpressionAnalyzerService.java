@@ -68,6 +68,8 @@ import ubic.gemma.persistence.Persister;
 @Component
 public class DifferentialExpressionAnalyzerService {
 
+    public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
+
     public enum AnalysisType {
         GENERICLM, OSTTEST, OWA, TTEST, TWA, TWIA
     }
@@ -487,7 +489,9 @@ public class DifferentialExpressionAnalyzerService {
 
             // these will be headings on the
             for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName();
+                // Make a unique column heading.
+                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName() + FACTOR_NAME_MANGLING_DELIMITER
+                        + factor.getId();
             }
             factorNames.add( factorName );
 
@@ -525,7 +529,6 @@ public class DifferentialExpressionAnalyzerService {
             if ( i == 0 ) {
                 pvalueDists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
                 pvalueDists.setColumnNames( factorNames );
-
             }
 
             double[] binHeights = h.getArray();

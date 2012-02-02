@@ -53,13 +53,13 @@ public class OutlierDetectionService {
     private static Log log = LogFactory.getLog( OutlierDetectionService.class );
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    GenericAncovaAnalyzer lma;
+    private GenericAncovaAnalyzer lma;
 
     @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private SVDService svdService;

@@ -55,7 +55,7 @@ public class SampleCoexpressionMatrixServiceTest extends BaseSpringContextTest {
         // log.info( matrix );
         check( matrix );
 
-        matrix = sampleCoexpressionMatrixService.create( ee );
+        matrix = sampleCoexpressionMatrixService.findOrCreate( ee );
 
         check( matrix );
     }

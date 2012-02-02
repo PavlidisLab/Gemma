@@ -74,9 +74,11 @@ public class SampleCoexpressionMatrixService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
+     * Creates the matrix, or loads it if it already exists.
+     * 
      * @param expressionExperiment
      */
-    public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment expressionExperiment ) {
+    public DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment ) {
         return create( expressionExperiment, false );
     }
 
