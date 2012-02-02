@@ -104,14 +104,9 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
         }
        return false;
     }
-   
+    @Override
     public Collection<Long> getMemberIds() {
         return this.getGeneIds();
-    }
-    
-    public void setMemberIds(Collection<Long> members) {
-         //This is here because of bug 2507 (to get rid of a dwr warning)        
     } 
-    
 
 }
