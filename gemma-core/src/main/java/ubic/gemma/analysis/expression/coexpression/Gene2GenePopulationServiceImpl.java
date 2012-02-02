@@ -250,41 +250,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         completeNodeDegreeComputations( useDB );
     }
 
-    @Override
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    @Override
-    public void setGene2GeneCoexpressionService( Gene2GeneCoexpressionService gene2GeneCoexpressionService ) {
-        this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
-    }
-
-    @Override
-    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
-    }
-
-    @Override
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    @Override
-    public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
-        this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
-    }
-
-    @Override
-    public void setProtocolService( ProtocolService protocolService ) {
-        this.protocolService = protocolService;
-    }
-
-    @Override
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
     /**
      * Finalize the node degree computation and persist it.
      * 

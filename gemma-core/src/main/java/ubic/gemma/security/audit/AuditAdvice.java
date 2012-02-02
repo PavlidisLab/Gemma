@@ -62,7 +62,6 @@ import ubic.gemma.persistence.CrudUtilsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
