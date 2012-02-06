@@ -781,6 +781,8 @@
     <dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />	
     <dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" />	
     
+    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject" />	
+    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceStatusValueObject" />	
     <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject" />	
     <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject" />	
     <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject" />	

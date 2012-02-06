@@ -19,6 +19,7 @@ import java.util.Set;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceStatusValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
@@ -37,9 +38,9 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
-     * @return The Gene updated with the new evidence and phenotypes
+     * @return Status of the operation
      */
-    public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence );
+    public EvidenceStatusValueObject create( String geneNCBI, EvidenceValueObject evidence );
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -90,14 +91,15 @@ public interface PhenotypeAssociationManagerService {
      * Modify an existing evidence
      * 
      * @param evidenceValueObject the evidence with modified fields
+     * @return Status of the operation
      */
-    public void update( EvidenceValueObject evidenceValueObject );
+    public EvidenceStatusValueObject update( EvidenceValueObject evidenceValueObject );
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
      * 
      * @param searchQuery query typed by the user
-     * @param geneId the id of the chosen gene 
+     * @param geneId the id of the chosen gene
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );

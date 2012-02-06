@@ -63,12 +63,12 @@ public interface PhenotypeAssociationService {
      * find all phenotypes in Gemma
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Set<PhenotypeAssociation> loadAll();
+    public Collection<PhenotypeAssociation> loadAll();
 
     /**
      * @return all the characteristics (phenotypes) used in the system.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Set<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
@@ -113,7 +113,7 @@ public interface PhenotypeAssociationService {
     public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
 
     /** load all valueURI of Phenotype in the database */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Set<String> loadAllPhenotypesUri();
 
     /** find PhenotypeAssociations associated with a BibliographicReference */

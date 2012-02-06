@@ -12,6 +12,7 @@ public class BibliographicPhenotypesValueObject {
 
     private String geneNCBI = "";
     private String geneName = "";
+    private Long evidenceDatabaseID = null;
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
 
     public BibliographicPhenotypesValueObject() {
@@ -30,6 +31,7 @@ public class BibliographicPhenotypesValueObject {
         super();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId().toString();
         this.geneName = phenotypeAssociation.getGene().getName();
+        this.evidenceDatabaseID = phenotypeAssociation.getId();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
             this.phenotypesValues.add( new CharacteristicValueObject( ( VocabCharacteristic ) cha ) );
         }
@@ -71,6 +73,14 @@ public class BibliographicPhenotypesValueObject {
 
     public void setGeneNCBI( String geneNCBI ) {
         this.geneNCBI = geneNCBI;
+    }
+
+    public Long getEvidenceDatabaseID() {
+        return this.evidenceDatabaseID;
+    }
+
+    public void setEvidenceDatabaseID( Long evidenceDatabaseID ) {
+        this.evidenceDatabaseID = evidenceDatabaseID;
     }
 
 }

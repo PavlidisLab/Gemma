@@ -77,8 +77,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all phenotypes */
     @SuppressWarnings("unchecked")
     @Override
-    public Set<PhenotypeAssociation> loadAll() {
-        return ( Set<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
+    public Collection<PhenotypeAssociation> loadAll() {
+        return ( Collection<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
     }
 
     /** create a GenericExperiment */

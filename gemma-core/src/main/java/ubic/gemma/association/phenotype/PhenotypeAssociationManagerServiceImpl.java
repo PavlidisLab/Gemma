@@ -62,16 +62,20 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceStatusValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.security.SecurityService;
+import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Service
@@ -107,6 +111,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
 
+    @Autowired
+    private SecurityService securityService;
+
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
@@ -134,14 +141,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
-     * @return The Gene updated with the new evidence and phenotypes
+     * @return Status of the operation
      */
     @Override
-    public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
+    public EvidenceStatusValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
         if ( evidence.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot create an Evidence with no Phenotype" );
         }
+
+        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
 
         Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
@@ -153,7 +162,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( evidenceFound.equals( evidence ) ) {
                 // the evidence already exists, no need to create it again
                 log.warn( "Trying to create an Evidence already present in the database" );
-                return null;
+
+                evidenceStatusValueObject.setEvidenceAlreadyInDatabase( true );
+                return evidenceStatusValueObject;
             }
         }
 
@@ -168,7 +179,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             buildTree( evidence.getPhenotypesValueUri() );
         }
 
-        return new GeneEvidenceValueObject( gene );
+        if ( evidence.getSecurityInfoValueObject() != null ) {
+            // evidence is not public
+            if ( evidence.getSecurityInfoValueObject().getIsPublic() == false ) {
+                this.securityService.makePrivate( phenotypeAssociation );
+            }
+        }
+
+        return evidenceStatusValueObject;
     }
 
     /**
@@ -234,8 +252,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .get( firstPhenotypesValuesUri ) );
         phenotypesWithChildren.remove( firstPhenotypesValuesUri );
 
-        Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = GeneEvidenceValueObject
-                .convert2GeneEvidenceValueObjects( genes );
+        Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = convert2GeneEvidenceValueObjects( genes );
 
         Collection<GeneEvidenceValueObject> genesVO = null;
 
@@ -308,17 +325,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public EvidenceValueObject load( Long id ) {
-        return EvidenceValueObject.convert2ValueObjects( this.associationService.load( id ) );
+
+        PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
+        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
+        setEvidencePermissions( phenotypeAssociation, evidenceValueObject );
+
+        return evidenceValueObject;
     }
 
     /**
      * Modify an existing evidence
      * 
      * @param evidenceValueObject the evidence with modified fields
+     * @return Status of the operation
      */
     @Override
     // TODO to test and to be modified
-    public void update( EvidenceValueObject modifedEvidenceValueObject ) {
+    public EvidenceStatusValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
         if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
@@ -327,6 +350,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( modifedEvidenceValueObject.getDatabaseId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
         }
+
+        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
 
         // new phenotypes found on the evidence that will be comapred to current phenotypes in the database
         Set<String> updatedPhenotypesValuesUri = modifedEvidenceValueObject.getPhenotypesValueUri();
@@ -337,6 +362,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // 1- load the evidence from the database and populate specific information for the type of evidence
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .loadEvidenceAndPopulate( modifedEvidenceValueObject );
+
+        // check for the race condition
+        if ( phenotypeAssociation.getStatus().getLastUpdateDate().toString() != modifedEvidenceValueObject
+                .getLastUpdateDate() ) {
+            evidenceStatusValueObject.setLastUpdateDateDifferent( true );
+            return evidenceStatusValueObject;
+        }
 
         // 2- populate simple values common to all evidences
         this.phenotypeAssoManagerServiceHelper.populatePheAssoWithoutPhenotypes( phenotypeAssociation,
@@ -380,10 +412,27 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // update all changes to database
         this.associationService.update( phenotypeAssociation );
 
+        // make private or public
+        if ( modifedEvidenceValueObject.getSecurityInfoValueObject() != null ) {
+
+            // was private becomes public
+            if ( this.securityService.isPrivate( phenotypeAssociation )
+                    && modifedEvidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                this.securityService.makePublic( phenotypeAssociation );
+            }
+            // was public becomes private
+            else if ( this.securityService.isPublic( phenotypeAssociation )
+                    && !modifedEvidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                this.securityService.makePrivate( phenotypeAssociation );
+            }
+        }
+
         // remake part of the tree (added or removed phenotypes)
         if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
             buildTree( detectChangedPhenotypesValuesUri );
         }
+
+        return evidenceStatusValueObject;
     }
 
     /**
@@ -558,8 +607,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             genes.add( ( Gene ) sr.getResultObject() );
         }
 
-        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = GeneEvidenceValueObject
-                .convert2GeneEvidenceValueObjects( genes );
+        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = convert2GeneEvidenceValueObjects( genes );
 
         Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidenceValueObject>();
 
@@ -648,18 +696,30 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
                         .getBibliographicPhenotypes() ) {
 
+                    // we are using validate in update
+                    if ( evidence.getDatabaseId() != null ) {
+                        // dont compare evidence to itself since it already exists
+                        if ( evidence.getDatabaseId() == bibliographicPhenotypesValueObject.getEvidenceDatabaseID() ) {
+                            continue;
+                        }
+                    }
+
                     // look if the gene have already been annotated
                     if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
 
                         validateEvidenceValueObject.setSameGeneAnnotated( true );
 
-                        // if one of the phenotype is already on the gene
-                        for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
-                                .getPhenotypesValues() ) {
+                        boolean containsExact = true;
 
-                            if ( evidence.getPhenotypes().contains( phenotypeAlreadyPresent ) ) {
-                                validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
+                        for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+
+                            if ( !bibliographicPhenotypesValueObject.getPhenotypesValues().contains( phenotype ) ) {
+                                containsExact = false;
                             }
+                        }
+
+                        if ( containsExact ) {
+                            validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
                         }
 
                         if ( evidence.getPhenotypes().containsAll(
@@ -960,6 +1020,61 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         return allPhenotypesFoundInOntology;
+    }
+
+    private Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes ) {
+        Collection<GeneEvidenceValueObject> converted = new HashSet<GeneEvidenceValueObject>();
+        if ( genes == null ) return converted;
+
+        for ( Gene g : genes ) {
+            if ( g != null ) {
+
+                Collection<EvidenceValueObject> evidenceFromPhenotype = new HashSet<EvidenceValueObject>();
+
+                for ( PhenotypeAssociation phenotypeAssociation : g.getPhenotypeAssociations() ) {
+
+                    EvidenceValueObject evidenceValueObject = EvidenceValueObject
+                            .convert2ValueObjects( phenotypeAssociation );
+
+                    setEvidencePermissions( phenotypeAssociation, evidenceValueObject );
+
+                    // find the security information for the object
+                    if ( evidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                        // TODO
+                        // evidenceFromPhenotype.add( evidenceValueObject );
+                    }
+                    // TODO
+                    evidenceFromPhenotype.add( evidenceValueObject );
+                }
+
+                if ( !evidenceFromPhenotype.isEmpty() ) {
+                    converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), null, g.getNcbiGeneId(), g
+                            .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(),
+                            g.getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidenceFromPhenotype ) );
+                }
+            }
+        }
+
+        return converted;
+    }
+
+    /** determine permissions for an PhenotypeAssociation */
+    private void setEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
+
+        Boolean currentUserHasWritePermission = false;
+        String owner = null;
+        Boolean isPublic = this.securityService.isPublic( p );
+        Boolean isShared = this.securityService.isShared( p );
+        Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
+
+        if ( currentUserIsOwner || isPublic ) {
+            currentUserHasWritePermission = this.securityService.isEditable( p );
+            owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
+        }
+
+        evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,
+                currentUserIsOwner, isPublic, isShared, owner ) );
+
     }
 
 }

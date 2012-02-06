@@ -37,26 +37,6 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     /** Added field for the Candidate Gene Management System */
     private Collection<EvidenceValueObject> evidence;
 
-    public static Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes ) {
-        Collection<GeneEvidenceValueObject> converted = new HashSet<GeneEvidenceValueObject>();
-        if ( genes == null ) return converted;
-
-        for ( Gene g : genes ) {
-            if ( g != null ) {
-
-                Collection<EvidenceValueObject> evidenceFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
-                        .getPhenotypeAssociations() );
-
-                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
-                        .getNcbiGeneId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
-                        .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
-                        evidenceFromPhenotype ) );
-            }
-        }
-
-        return converted;
-    }
-
     public GeneEvidenceValueObject( Gene gene ) {
         super( gene );
         this.evidence = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
@@ -78,9 +58,9 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     public void setEvidence( Collection<EvidenceValueObject> evidence ) {
         this.evidence = evidence;
     }
-    
+
     /** Given a geneVO finds all valueRI of phenotypes for that gene */
-    public Set<String> findAllPhenotpyesOnGene () {
+    public Set<String> findAllPhenotpyesOnGene() {
 
         Set<String> allPhenotypesOnGene = new HashSet<String>();
 
