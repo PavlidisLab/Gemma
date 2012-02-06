@@ -206,7 +206,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 			// if the GO id failed to match a set, use the hard coded back up list of genes
 			// (this might happen if Berkeleybop is down, see bug 2534)
 			if (geneSet === null) {
-				geneSet = chooser.makeSessionBoundGeneSet(backupGeneIds, taxonId, 'Backup gene list for ' + goName, 'GO database unavailable, using backup list');
+				geneSet = myscope.makeSessionBoundGeneSet(backupGeneIds, taxonId, 'Backup gene list for ' + goName, 'GO database unavailable, using backup list');
 			}
 			
 			var record = new Gemma.GeneAndGeneGroupComboRecord({
@@ -225,6 +225,19 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 			myscope.fireEvent('geneExampleReady', record);
 			
 		});
+	},
+	
+	// TODO this is duplicated code from GeneSearchAndPreview; should be combined somewhere!
+	makeSessionBoundGeneSet: function(geneIds, taxonId, name, description){
+		var newGeneSet = new SessionBoundGeneSetValueObject();
+		newGeneSet.modified = false;
+		newGeneSet.geneIds = geneIds;
+		newGeneSet.taxonId = taxonId;
+		newGeneSet.name = name,//'From Symbol List';
+		newGeneSet.description = description, // 'Group made from gene symbols entered.';
+		newGeneSet.size = geneIds.length;
+		newGeneSet.id = null;
+		return newGeneSet;
 	},
 	
 	runExampleQuery: function(exampleConfig){
