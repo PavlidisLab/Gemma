@@ -1,5 +1,5 @@
-
 Ext.namespace('Gemma');
+
 Gemma.MIN_STRINGENCY = 2;
 
 // this is the value used for CLASSIC coexpression and

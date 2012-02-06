@@ -326,7 +326,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 	initComponent : function() {
 
-		/** get components* */
 		// experiment chooser panels
 		this.experimentChoosers = new Ext.Panel({
 					// width: 319,
@@ -356,8 +355,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.addGeneChooser();
 
 		/**
-		 * ***** BUTTONS
-		 * *******************************************************************************
+		 * ***** BUTTONS ******
 		 */
 		this.coexToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Coexpression</span>",
@@ -371,6 +369,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.coexToggle.toggle(true);
 			this.diffExToggle.toggle(false);
 		}, this);
+		
 		this.diffExToggle = new Ext.Button({
 			text: "<span style=\"font-size:1.3em\">Differential Expression</span>",
 			scale: 'medium',
@@ -395,8 +394,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					width : 490,
 					style : 'margin: 0 7px',
 					defaults : {
-						border : false
-						
+						border : false					
 					},
 					items : [{
 								html : 'Test for ',
@@ -473,11 +471,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				border: true,
 				searchBar: this.searchBar,
 				listeners: {
-					render: function(c){
-						var floatType = Ext.isIE ? 'styleFloat' : 'cssFloat'; // work
-						// around
-						// Ext
-						// bug
+					render: function(c) {			
+						// Ext bug workaround 						
+						var floatType = Ext.isIE ? 'styleFloat' : 'cssFloat'; 
 						c.header.child('span').applyStyles(floatType + ':left;padding:5px 5px 0 0');
 						this.searchBar.render(c.header, 1);
 						// this.searchBar.wrap.applyStyles(floatType + ':left');
