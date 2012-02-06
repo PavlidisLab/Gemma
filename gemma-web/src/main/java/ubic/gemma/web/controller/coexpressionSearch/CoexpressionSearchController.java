@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,6 +49,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.diff.DifferentialExpressionSearchController;
 import ubic.gemma.web.view.TextView;
 
 /**
@@ -54,8 +57,10 @@ import ubic.gemma.web.view.TextView;
  * @version $Id$
  */
 @Controller
-public class CoexpressionSearchController extends BaseFormController {
+public class CoexpressionSearchController {
 
+    private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
+    
     private static final int DEFAULT_STRINGENCY = 2;
 
     private static final int MAX_GENES_PER_QUERY = 20;
@@ -416,76 +421,77 @@ public class CoexpressionSearchController extends BaseFormController {
         return new CoexpressionMetaValueObject();
     }
 
+
+// TODO: Dead code?
     /*
      * Handle case of text export of the results.
      * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
-
-        if ( request.getParameter( "export" ) != null ) {
-
-            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-            Collection<Gene> genes = geneService.loadMultiple( geneIds );
-            genes = geneService.thawLite( genes );
-
-            boolean queryGenesOnly = request.getParameter( "q" ) != null;
-            int stringency = DEFAULT_STRINGENCY;
-            try {
-                stringency = Integer.parseInt( request.getParameter( "s" ) );
-            } catch ( Exception e ) {
-                log.warn( "invalid stringency; using default " + stringency );
-            }
-            Collection<Long> eeIds = new HashSet<Long>();
-            Long eeSetId = null;
-
-            String eeSetIdString = request.getParameter( "a" );
-            if ( StringUtils.isNotBlank( eeSetIdString ) ) {
-                try {
-                    eeSetId = Long.parseLong( eeSetIdString );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid eeSet id: " + eeSetIdString );
-                    return new ModelAndView( this.getFormView() );
-                }
-
-                ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-                if ( eeSet == null ) {
-                    throw new IllegalArgumentException( "Cannot load EE set with id=" + eeSetId );
-                }
-
-                eeIds = EntityUtils.getIds( eeSet.getExperiments() );
-            } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
-                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request
-                        .getParameter( "an" ) );
-                if ( eeSets.size() == 1 ) {
-                    eeSetId = eeSets.iterator().next().getId();
-
-                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-                    for ( BioAssaySet b : eeSet.getExperiments() ) {
-                        eeIds.add( b.getId() );
-                    }
-                } else {
-                    log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
-                    return new ModelAndView( this.getFormView() );
-                }
-            } else {
-                eeIds = extractIds( request.getParameter( "ee" ) );
-            }
-
-            CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency,
-                    MAX_RESULTS, queryGenesOnly, false );
-            ModelAndView mav = new ModelAndView( new TextView() );
-            String output = result.toString();
-            mav.addObject( "text", output.length() > 0 ? output : "no results" );
-            return mav;
-
-        }
-        return new ModelAndView( this.getFormView() );
-
-    }
+     */   
+//    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+//            throws Exception {
+//
+//        if ( request.getParameter( "export" ) != null ) {
+//
+//            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+//            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+//            genes = geneService.thawLite( genes );
+//
+//            boolean queryGenesOnly = request.getParameter( "q" ) != null;
+//            int stringency = DEFAULT_STRINGENCY;
+//            try {
+//                stringency = Integer.parseInt( request.getParameter( "s" ) );
+//            } catch ( Exception e ) {
+//                log.warn( "invalid stringency; using default " + stringency );
+//            }
+//            Collection<Long> eeIds = new HashSet<Long>();
+//            Long eeSetId = null;
+//
+//            String eeSetIdString = request.getParameter( "a" );
+//            if ( StringUtils.isNotBlank( eeSetIdString ) ) {
+//                try {
+//                    eeSetId = Long.parseLong( eeSetIdString );
+//                } catch ( NumberFormatException e ) {
+//                    log.warn( "Invalid eeSet id: " + eeSetIdString );
+//                    return new ModelAndView( this.getFormView() );
+//                }
+//
+//                ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+//                if ( eeSet == null ) {
+//                    throw new IllegalArgumentException( "Cannot load EE set with id=" + eeSetId );
+//                }
+//
+//                eeIds = EntityUtils.getIds( eeSet.getExperiments() );
+//            } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
+//                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request
+//                        .getParameter( "an" ) );
+//                if ( eeSets.size() == 1 ) {
+//                    eeSetId = eeSets.iterator().next().getId();
+//
+//                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+//                    for ( BioAssaySet b : eeSet.getExperiments() ) {
+//                        eeIds.add( b.getId() );
+//                    }
+//                } else {
+//                    log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
+//                    return new ModelAndView( this.getFormView() );
+//                }
+//            } else {
+//                eeIds = extractIds( request.getParameter( "ee" ) );
+//            }
+//
+//            CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency,
+//                    MAX_RESULTS, queryGenesOnly, false );
+//            ModelAndView mav = new ModelAndView( new TextView() );
+//            String output = result.toString();
+//            mav.addObject( "text", output.length() > 0 ? output : "no results" );
+//            return mav;
+//
+//        }
+//        return new ModelAndView( this.getFormView() );
+//
+//    }
 
     private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
 

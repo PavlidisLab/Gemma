@@ -25,12 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
@@ -62,10 +61,8 @@ import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.view.TextView;
 import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService;
 import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject;
 
@@ -75,17 +72,29 @@ import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueOb
  * @author keshav
  * @version $Id$ *
  */
-public class DifferentialExpressionSearchController extends BaseFormController {
+@Controller
+public class DifferentialExpressionSearchController {
 
+    private static Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
+    
     private static final double DEFAULT_THRESHOLD = 0.01;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    private GeneDifferentialExpressionService geneDifferentialExpressionService = null;
-    private GeneService geneService = null;
-    private ExpressionExperimentService expressionExperimentService = null;
-    private ExpressionExperimentSetService expressionExperimentSetService = null;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    
+    @Autowired
+    private GeneDifferentialExpressionService geneDifferentialExpressionService;
+    
+    @Autowired
+    private GeneService geneService;
+    
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
     private SearchService searchService;
@@ -760,65 +769,88 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         return filteredIds;
     }
 
-    /*
-     * Handles the case exporting results as text.
-     * 
-     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+// TODO: Dead code?
+//    /*
+//     * Handles the case exporting results as text.
+//     * 
+//     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+//     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
+//     */
+//    @Override
+//    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+//            throws Exception {
+//
+//        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
+//
+//        // -------------------------
+//        // Download diff expression data for a specific diff expresion search
+//
+//        double threshold = DEFAULT_THRESHOLD;
+//        try {
+//            threshold = Double.parseDouble( request.getParameter( "t" ) );
+//        } catch ( NumberFormatException e ) {
+//            log.warn( "invalid threshold; using default " + threshold );
+//        }
+//
+//        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+//
+//        Long eeSetId = null;
+//        Collection<Long> eeIds = null;
+//        try {
+//            eeSetId = Long.parseLong( request.getParameter( "a" ) );
+//        } catch ( NumberFormatException e ) {
+//            //
+//        }
+//        if ( eeSetId == null ) {
+//            eeIds = extractIds( request.getParameter( "ees" ) );
+//        }
+//
+//        String fs = request.getParameter( "fm" );
+//        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
+//
+//        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
+//        command.setGeneIds( geneIds );
+//        command.setEeSetId( eeSetId );
+//        command.setEeIds( eeIds );
+//        command.setSelectedFactors( selectedFactors );
+//        command.setThreshold( threshold );
+//
+//        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
+//
+//        ModelAndView mav = new ModelAndView( new TextView() );
+//
+//        StringBuilder buf = new StringBuilder();
+//
+//        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
+//            buf.append( demavo );
+//        }
+//
+//        String output = buf.toString();
+//
+//        mav.addObject( "text", output.length() > 0 ? output : "no results" );
+//        return mav;
+//
+//    }
+//    
+//    
+//    /**
+//     * Returns a collection of {@link Long} ids from strings.
+//     * 
+//     * @param idString
+//     * @return
+//     */
+//    protected Collection<Long> extractIds( String idString ) {
+//        Collection<Long> ids = new ArrayList<Long>();
+//        if ( idString != null ) {
+//            for ( String s : idString.split( "," ) ) {
+//                try {
+//                    ids.add( Long.parseLong( s.trim() ) );
+//                } catch ( NumberFormatException e ) {
+//                    log.warn( "invalid id " + s );
+//                }
+//            }
+//        }
+//        return ids;
+//    }
 
-        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
-
-        // -------------------------
-        // Download diff expression data for a specific diff expresion search
-
-        double threshold = DEFAULT_THRESHOLD;
-        try {
-            threshold = Double.parseDouble( request.getParameter( "t" ) );
-        } catch ( NumberFormatException e ) {
-            log.warn( "invalid threshold; using default " + threshold );
-        }
-
-        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-
-        Long eeSetId = null;
-        Collection<Long> eeIds = null;
-        try {
-            eeSetId = Long.parseLong( request.getParameter( "a" ) );
-        } catch ( NumberFormatException e ) {
-            //
-        }
-        if ( eeSetId == null ) {
-            eeIds = extractIds( request.getParameter( "ees" ) );
-        }
-
-        String fs = request.getParameter( "fm" );
-        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
-
-        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
-        command.setGeneIds( geneIds );
-        command.setEeSetId( eeSetId );
-        command.setEeIds( eeIds );
-        command.setSelectedFactors( selectedFactors );
-        command.setThreshold( threshold );
-
-        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
-
-        ModelAndView mav = new ModelAndView( new TextView() );
-
-        StringBuilder buf = new StringBuilder();
-
-        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
-            buf.append( demavo );
-        }
-
-        String output = buf.toString();
-
-        mav.addObject( "text", output.length() > 0 ? output : "no results" );
-        return mav;
-
-    }
 }
