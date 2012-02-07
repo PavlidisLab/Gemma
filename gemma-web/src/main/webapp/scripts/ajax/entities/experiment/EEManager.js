@@ -345,8 +345,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done', 'fail']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-														this.fireEvent('deleted', payload);
-													});
+														this.fireEvent('deleted', redirectHome);
+													}.createDelegate(this));
 										}.createDelegate(this),
 										errorHandler : function(error) {
 											Ext.Msg.alert("Deletion failed", error);
@@ -1006,9 +1006,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			 */
 		};
 		
-		this.on('deleted', function(){
+		this.on('deleted', function(redirectHome){
 			if (redirectHome) {
 				window.location = '/Gemma/home.html';
+				
 			} else {
 				/* after deletion, clear bottom details pane */
 				Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
