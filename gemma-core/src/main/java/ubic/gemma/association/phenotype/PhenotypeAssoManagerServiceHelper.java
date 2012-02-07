@@ -169,7 +169,7 @@ public class PhenotypeAssoManagerServiceHelper {
     // load evidence from the database and populate it with the updated information
     public PhenotypeAssociation loadEvidenceAndPopulate( EvidenceValueObject evidenceValueObject ) {
 
-        Long id = evidenceValueObject.getDatabaseId();
+        Long id = evidenceValueObject.getId();
 
         PhenotypeAssociation result = null;
 

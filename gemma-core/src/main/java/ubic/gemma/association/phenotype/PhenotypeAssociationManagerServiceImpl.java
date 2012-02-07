@@ -346,7 +346,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
         }
 
-        if ( modifedEvidenceValueObject.getDatabaseId() == null ) {
+        if ( modifedEvidenceValueObject.getId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
         }
 
@@ -696,9 +696,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         .getBibliographicPhenotypes() ) {
 
                     // we are using validate in update
-                    if ( evidence.getDatabaseId() != null ) {
+                    if ( evidence.getId() != null ) {
                         // dont compare evidence to itself since it already exists
-                        if ( evidence.getDatabaseId() == bibliographicPhenotypesValueObject.getEvidenceDatabaseID() ) {
+                        if ( evidence.getId() == bibliographicPhenotypesValueObject.getEvidenceDatabaseID() ) {
                             continue;
                         }
                     }

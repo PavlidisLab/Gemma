@@ -91,7 +91,7 @@ public abstract class EvidenceValueObject {
         return evidence;
     }
 
-    private Long databaseId = null;
+    private Long id = null;
     private String description = "";
     private CharacteristicValueObject associationType = null;
     private String evidenceCode = null;
@@ -119,7 +119,7 @@ public abstract class EvidenceValueObject {
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
         this.className = this.getClass().getSimpleName();
-        this.databaseId = phenotypeAssociation.getId();
+        this.id = phenotypeAssociation.getId();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
@@ -162,8 +162,12 @@ public abstract class EvidenceValueObject {
         return this.externalUrl;
     }
 
-    public Long getDatabaseId() {
-        return this.databaseId;
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public String getDescription() {
