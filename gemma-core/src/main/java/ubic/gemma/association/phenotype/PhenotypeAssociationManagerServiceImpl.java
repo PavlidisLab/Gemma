@@ -364,7 +364,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // check for the race condition
         if ( phenotypeAssociation.getStatus().getLastUpdateDate().toString() != modifedEvidenceValueObject
-                .getLastUpdateDate() ) {
+                .getLastUpdatedDate() ) {
             evidenceStatusValueObject.setLastUpdateDateDifferent( true );
             return evidenceStatusValueObject;
         }
@@ -698,7 +698,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // we are using validate in update
                     if ( evidence.getId() != null ) {
                         // dont compare evidence to itself since it already exists
-                        if ( evidence.getId() == bibliographicPhenotypesValueObject.getEvidenceDatabaseID() ) {
+                        if ( evidence.getId().equals( bibliographicPhenotypesValueObject.getEvidenceId() ) ) {
                             continue;
                         }
                     }
@@ -1068,7 +1068,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( currentUserIsOwner || isPublic ) {
             currentUserHasWritePermission = this.securityService.isEditable( p );
-          //  owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
+            // owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
         }
 
         evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,

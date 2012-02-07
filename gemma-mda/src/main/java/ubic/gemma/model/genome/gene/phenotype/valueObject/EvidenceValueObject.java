@@ -107,7 +107,7 @@ public abstract class EvidenceValueObject {
 
     private Set<CharacteristicValueObject> phenotypes = null;
 
-    private String lastUpdateDate = null;
+    private String lastUpdatedDate = null;
 
     private SecurityInfoValueObject securityInfoValueObject = null;
 
@@ -143,7 +143,7 @@ public abstract class EvidenceValueObject {
             this.phenotypes.add( characteristicVO );
         }
 
-        this.lastUpdateDate = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
+        this.lastUpdatedDate = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
     }
 
     protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
@@ -241,12 +241,12 @@ public abstract class EvidenceValueObject {
         return this.evidenceSource;
     }
 
-    public String getLastUpdateDate() {
-        return this.lastUpdateDate;
+    public String getLastUpdatedDate() {
+        return this.lastUpdatedDate;
     }
 
-    public void setLastUpdateDate( String lastUpdateDate ) {
-        this.lastUpdateDate = lastUpdateDate;
+    public void setLastUpdatedDate( String lastUpdatedDate ) {
+        this.lastUpdatedDate = lastUpdatedDate;
     }
 
     public SecurityInfoValueObject getSecurityInfoValueObject() {
