@@ -75,7 +75,6 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Service
@@ -1069,7 +1068,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( currentUserIsOwner || isPublic ) {
             currentUserHasWritePermission = this.securityService.isEditable( p );
-            owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
+          //  owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
         }
 
         evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,
