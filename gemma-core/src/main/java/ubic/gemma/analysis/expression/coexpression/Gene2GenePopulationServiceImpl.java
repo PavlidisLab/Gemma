@@ -323,18 +323,20 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     /**
      * @param queryGene
      * @param expressionExperiments
+     * @see completeNodeDegreeComputations(boolean) for the final computation.
      */
     private void computeNodeDegree( Gene queryGene, Collection<BioAssaySet> expressionExperiments ) {
 
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
 
+        /*
+         * The values are relative ranks based on probes. The ranks are "per data set". We assume these are uniform
+         * under the null, like pvalues. There are a lot of ties, but this really shouldn't matter. I
+         */
+
         if ( nodeDegrees == null || nodeDegrees.isEmpty() ) return;
 
-        /*
-         * The values we get are the Fisher's p-values for the node degrees of the individual probe-level data. High
-         * values mean high node degree.
-         */
         GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
         n.setGene( queryGene );
         n.setNumTests( nodeDegrees.size() );
@@ -343,7 +345,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         DoubleArrayList vals = new DoubleArrayList( array );
 
         /*
-         * Because everything is rank transformed, we use the median and mad. Later we re-rank everything anyway.
+         * Because everything is rank transformed, we use the median and mad. Later we re-rank everything anyway. We
+         * compute a p-value based on Fisher's method (see above about assuming the ranks are uniform under the null).
+         * This is a bit screwey, because we're going to have a lot of really bad p-values. The final distribution of
+         * pvalues is really messed up. But we're going to just use ranks anyway.
          */
         double pvalue = MetaAnalysis.fisherCombinePvalues( vals );
 

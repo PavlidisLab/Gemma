@@ -137,7 +137,8 @@ public class GeneCoexpressionService {
 
         assert !inputEeIds.isEmpty();
 
-        return getFilteredCannedAnalysisResults2( eeSet, inputEeIds, genes, stringency, maxResults, queryGenesOnly, skipDetails);
+        return getFilteredCannedAnalysisResults2( eeSet, inputEeIds, genes, stringency, maxResults, queryGenesOnly,
+                skipDetails );
 
     }
 
@@ -269,8 +270,22 @@ public class GeneCoexpressionService {
             Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 
             for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
-                c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ).getRank() );
-                c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ).getRank() );
+
+                GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get( idMap.get( c.getQueryGene()
+                        .getId() ) );
+                if ( queryGeneNodeDegree.getNumTests() < 20 ) {
+                    c.setQueryGeneNodeDegree( 0.5 );
+                } else {
+                    c.setQueryGeneNodeDegree( queryGeneNodeDegree.getRank() );
+                }
+
+                GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( idMap.get( c.getFoundGene()
+                        .getId() ) );
+                if ( foundGeneNodeDegree.getNumTests() < 20 ) {
+                    c.setQueryGeneNodeDegree( 0.5 );
+                } else {
+                    c.setFoundGeneNodeDegree( foundGeneNodeDegree.getRank() );
+                }
             }
         } else {
             for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
@@ -299,7 +314,7 @@ public class GeneCoexpressionService {
         expressionExperimentSetService.thaw( eeSet );
         Collection<Long> allEEIdsInSet = EntityUtils.getIds( eeSet.getExperiments() );
 
-        return coexpressionSearchQuick( allEEIdsInSet, queryGenes, stringency, maxResults, queryGenesOnly , skipDetails);
+        return coexpressionSearchQuick( allEEIdsInSet, queryGenes, stringency, maxResults, queryGenesOnly, skipDetails );
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -620,11 +635,11 @@ public class GeneCoexpressionService {
 
         List<ExpressionExperimentValueObject> eevos = null;
         List<Long> filteredEeIds = null;
-        
+
         eevos = getSortedEEvos( eeIds );
 
         if ( eevos.isEmpty() ) {
-           throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
+            throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
         }
 
         filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
@@ -733,13 +748,14 @@ public class GeneCoexpressionService {
                 timer2.stop();
                 timer2.reset();
                 timer2.start();
-                
-                List<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g, positionToIDMap );
+
+                List<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g,
+                        positionToIDMap );
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
                 cvo.setSupportingExperiments( supportingDatasets );
 
-                List<Long> testingDatasets;                
+                List<Long> testingDatasets;
                 List<Long> specificDatasets;
                 if ( !skipDetails ) {
 
@@ -751,7 +767,6 @@ public class GeneCoexpressionService {
                      * were 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the
                      * analyzer.
                      */
-                    
 
                     specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g, positionToIDMap );
 
@@ -806,8 +821,8 @@ public class GeneCoexpressionService {
                     allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
                 } else {
-                    
-                    int numSupportingDatasets = supportingDatasets.size();                    
+
+                    int numSupportingDatasets = supportingDatasets.size();
                     if ( numSupportingDatasets < stringency ) {
                         continue;
                     }
@@ -1332,8 +1347,7 @@ public class GeneCoexpressionService {
      * @param g2gs
      * @return
      */
-    private List<Long> getRelevantEEidsForBitVector( List<Long> positionToIDMap,
-            Collection<Gene2GeneCoexpression> g2gs ) {
+    private List<Long> getRelevantEEidsForBitVector( List<Long> positionToIDMap, Collection<Gene2GeneCoexpression> g2gs ) {
         Collection<Long> relevantEEIds = new HashSet<Long>();
         List<Long> relevantEEIdList = new ArrayList<Long>();
         for ( Gene2GeneCoexpression g2g : g2gs ) {

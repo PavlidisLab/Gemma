@@ -224,39 +224,6 @@ public class LinkAnalysisService {
 
     }
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setCsService( CompositeSequenceService csService ) {
-        this.csService = csService;
-    }
-
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
-    }
-
-    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
-        this.expressionDataMatrixService = expressionDataMatrixService;
-    }
-
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
-    }
-
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    public void setPpService( Probe2ProbeCoexpressionService ppService ) {
-        this.ppService = ppService;
-    }
-
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
-
     /**
      * @param ee
      * @param eeDoubleMatrix
@@ -328,6 +295,8 @@ public class LinkAnalysisService {
         Map<Long, Integer> pId2ND = new HashMap<Long, Integer>();
         DoubleArrayList vals = new DoubleArrayList();
         int j = la.getDataMatrix().rows();
+
+        // pull out the raw node degrees.
         for ( int i = 0; i < j; i++ ) {
             int pd = la.getProbeDegree( i );
             long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
@@ -335,15 +304,16 @@ public class LinkAnalysisService {
             vals.add( pd );
         }
 
-        Map<Long, Double> pId2NDRank = new HashMap<Long, Double>();
-
+        // Note: There will be a lot of ties, especially at low node degrees.
         DoubleArrayList ranks = Rank.rankTransform( vals );
+
+        // convert to relative ranks.
+        Map<Long, Double> pId2NDRank = new HashMap<Long, Double>();
         for ( int i = 0; i < j; i++ ) {
             long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
             double rank = ranks.get( i );
             rank = rank / j;
             pId2NDRank.put( id, rank );
-
         }
 
         boolean gotDegrees = false;

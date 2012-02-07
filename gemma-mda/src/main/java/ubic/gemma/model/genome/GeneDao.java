@@ -184,7 +184,8 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      * @param gene
      * @param ees
-     * @return
+     * @return map of bioassay set to the node degree computed for the gene at the probe level. The value returned is
+     *         the node degree rank.
      */
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
@@ -216,9 +217,10 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      */
     public Gene thaw( Gene gene );
-    
+
     /**
      * Only thaw the Aliases, very light version
+     * 
      * @param gene
      */
     public Gene thawAliases( Gene gene );

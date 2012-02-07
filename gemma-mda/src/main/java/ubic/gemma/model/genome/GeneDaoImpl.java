@@ -471,6 +471,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
+
+        /*
+         * Typically this is being run for all data sets for a taxon, so this unconstrained query is okay.
+         */
         Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
 
         if ( ees.isEmpty() ) throw new IllegalArgumentException( "You must provide at least one experiment" );
@@ -479,17 +483,23 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return null;
         }
 
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "select  pca.experimentAnalyzed, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
-                        + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps)",
-                new String[] { "ps", "ees" }, new Object[] { probes, ees } );
+        List<?> r = this.getHibernateTemplate()
+                .findByNamedParam(
+                        /* Note the avg() ... group by operation here on the rank */
+                        "select pca.experimentAnalyzed, avg(p.nodeDegreeRank) from ProbeCoexpressionAnalysisImpl pca "
+                                + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps) "
+                                + "group by pca.experimentAnalyzed", new String[] { "ps", "ees" },
+                        new Object[] { probes, ees } );
 
         Map<BioAssaySet, Double> result = new HashMap<BioAssaySet, Double>();
         for ( Object o : r ) {
             Object[] oa = ( Object[] ) o;
             BioAssaySet ee = ( BioAssaySet ) oa[0];
+
+            // See query above: this is the mean for the probes for the gene.
             Double nodeDegreeRank = ( Double ) oa[1];
             if ( nodeDegreeRank == null ) continue; // should not happen!
+
             result.put( ee, nodeDegreeRank );
         }
 
