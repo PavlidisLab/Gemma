@@ -108,7 +108,7 @@ Ext.onReady(function() {
 									text : 'Add',
 									tooltip : 'Add a new user',
 									disabled : true,
-									icon : 'images/icons/add.png',
+									icon : '/Gemma/images/icons/add.png',
 									cls : 'x-btn-text-icon',
 									handler : function() {
 										userGrid.getStore().insert(0, new record({
@@ -125,7 +125,7 @@ Ext.onReady(function() {
 									text : 'Remove',
 									disabled : true,
 									tooltip : 'Remove selected user',
-									icon : 'images/icons/delete.png',
+									icon : '/Gemma/images/icons/delete.png',
 									cls : 'x-btn-text-icon',
 									handler : function() {
 										var sm = userGrid.getSelectionModel();
@@ -148,7 +148,7 @@ Ext.onReady(function() {
 								{
 									text : 'Save',
 									tooltip : 'Save the selected user',
-									icon : 'images/icons/database_save.png',
+									icon : "/Gemma/images/icons/database_save.png",
 									cls : 'x-btn-text-icon',
 									handler : function() {
 										var sm = userGrid.getSelectionModel();
