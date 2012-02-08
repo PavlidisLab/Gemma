@@ -363,8 +363,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .loadEvidenceAndPopulate( modifedEvidenceValueObject );
 
         // check for the race condition
-        if ( phenotypeAssociation.getStatus().getLastUpdateDate().toString() != modifedEvidenceValueObject
-                .getLastUpdatedDate() ) {
+        if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
+                .equals( modifedEvidenceValueObject.getLastUpdatedDate() ) ) {
             evidenceStatusValueObject.setLastUpdateDateDifferent( true );
             return evidenceStatusValueObject;
         }
