@@ -43,27 +43,22 @@ Gemma.CytoscapePanelUtil.decimalPlaceRounder = function (number) {
 
 Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
 
-    // no data for some genes
-    if (nodeDegree == null) {
-        return null;
-    }
-    return nodeDegree * 10;
-    /*
-     * //this should stay zero for the opacity use var
-     * lowVis = 0; if (nodeDegree > 0.9989) { return lowVis +
-     * 10; } else if (nodeDegree > 0.9899) { return lowVis +
-     * 9; } else if (nodeDegree > 0.8999) { return lowVis +
-     * 8; } else if (nodeDegree > 0.8499) { return lowVis +
-     * 7; } else if (nodeDegree > 0.7999) { return lowVis +
-     * 6; } else if (nodeDegree > 0.1999) { //this should be
-     * bland colour return lowVis + 5; } else if (nodeDegree >
-     * 0.1499) { return lowVis + 4; } else if (nodeDegree >
-     * 0.0999) { return lowVis + 4; } else if (nodeDegree >
-     * 0.0499) { return lowVis + 3; } else if (nodeDegree >
-     * 0.0099) { return lowVis + 2; } else if (nodeDegree >
-     * 0.0009) { return lowVis + 1; } else { return lowVis; }
-     * 
-     */
+	 // no data for some genes
+	 if (nodeDegree == null) {
+	     return null;
+	 }	
+
+	 
+	 if (nodeDegree > 0.6) {
+	     return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
+	 } else if (nodeDegree > 0.4) {
+		 return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
+	 } else if (nodeDegree > 0.2) {
+		 return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
+	 } else  {
+		 return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
+	 } 
+     
 };
 
 Gemma.CytoscapePanelUtil.restrictResultsStringency = function (displayStringency) {

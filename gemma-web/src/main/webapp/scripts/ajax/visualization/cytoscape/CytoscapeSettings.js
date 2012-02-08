@@ -37,6 +37,27 @@ Gemma.CytoscapeSettings = {
     
     zoomLevelBiggerFont: 0.7,    
     zoomLevelBiggestFont: 0.4,
+    
+    nodeDegreeColor: {
+    	lightest:{
+    		name: "lightest",
+    		value: "#DEDEDE"
+    	},
+    	light:{
+    		name: "light",
+    		value: "#969696"
+    	},
+    	dark:{
+    		name: "dark",
+    		value: "#5E5E5E"
+    	},
+    	darkest:{
+    		name: "darkest",
+    		value: "#000000"
+    	},    		
+    	
+    }
+    
 
 };
 
@@ -157,14 +178,15 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
         },
 
         labelFontColor: {
-            continuousMapper: {
+        	discreteMapper: {
                 attrName: "nodeDegreeBin",
-                minValue: Gemma.CytoscapeSettings.labelFontColor,
-                maxValue: Gemma.CytoscapeSettings.labelFontColorFade,
-                maxAttrValue: 11
-
+                entries: [
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.value},
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.light.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.light.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.dark.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.dark.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.darkest.value }
+                ]
             }
-
         },
 
         labelFontName: Gemma.CytoscapeSettings.labelFontName,
@@ -190,12 +212,15 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
 
         },
         color: {
-
-            continuousMapper: {
+        	
+        	discreteMapper: {
                 attrName: "nodeDegreeBin",
-                minValue: Gemma.CytoscapeSettings.nodeColor,
-                maxValue: Gemma.CytoscapeSettings.nodeColorFade,
-                maxAttrValue: 11
+                entries: [
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.value},
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.light.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.light.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.dark.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.dark.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.darkest.value }
+                ]
             }
         },
 

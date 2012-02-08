@@ -32,7 +32,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
             type: 'number'
         }, {
             name: 'nodeDegreeBin',
-            type: 'number'
+            type: 'string'
         }, {
             name: 'officialName',
             type: 'string'
@@ -53,7 +53,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
             name: 'supportsign',
             type: 'string'
         }, {
-            name: 'nodeDegreeBin',
+            name: 'nodeDegree',
             type: 'number'
         }]
 
@@ -73,10 +73,10 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         this.currentLayout = this.defaultForceDirectedLayout;
 
         this.visualization["edgeOpacityMapper"] = function (data) {
-            if (data["nodeDegreeBin"] == null) {
+            if (data["nodeDegree"] == null) {
                 return 0.05;
             }
-            return 1.05 - data["nodeDegreeBin"] / 10;
+            return 1.05 - data["nodeDegree"];
         };
 
         //this is called every time that the graph is re-drawn(after visualization.draw is called i.e. after a search).
@@ -228,7 +228,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
                         negativesupport: knowngenes[i].negSupp,
                         support: support,
                         supportsign: supportsign,
-                        nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(Gemma.CytoscapePanelUtil.getMaxWithNull(
+                        nodeDegree: Gemma.CytoscapePanelUtil.decimalPlaceRounder(Gemma.CytoscapePanelUtil.getMaxWithNull(
                         knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
                     });
                     edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
