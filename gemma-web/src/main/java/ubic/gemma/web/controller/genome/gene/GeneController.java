@@ -205,7 +205,7 @@ public class GeneController extends BaseController {
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
+        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );

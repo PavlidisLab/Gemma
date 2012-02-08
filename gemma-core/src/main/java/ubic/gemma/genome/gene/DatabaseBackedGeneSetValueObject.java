@@ -37,12 +37,6 @@
 
 package ubic.gemma.genome.gene;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import ubic.gemma.model.genome.gene.GeneSet;
 
 /**
@@ -58,33 +52,6 @@ public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
      */
     private static final long serialVersionUID = -1360523793656012770L;
 
-    /**
-     * sorts results by size
-     * 
-     * @param genesets
-     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
-     * @return
-     */
-    public static Collection<DatabaseBackedGeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets,
-            boolean includeOnesWithoutGenes ) {
-        List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
-
-        for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
-                continue;
-            }
-            
-            results.add( new DatabaseBackedGeneSetValueObject( gs ) );
-        }
-
-        Collections.sort( results, new Comparator<GeneSetValueObject>() {
-            @Override
-            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
-                return -o1.getSize().compareTo( o2.getSize() );
-            }
-        } );
-        return results;
-    }
     /**
      * default constructor to satisfy java bean contract
      */

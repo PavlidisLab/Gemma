@@ -7,7 +7,7 @@
  * - ColumnModel to allow adding and removing columns
  * - vbox to handle collapsible elements
  * - sliders to make them work in IE9
- * 
+ * - grid to make cell text selectable
  * 
  */
 
@@ -523,3 +523,4 @@ Ext.override(Ext.dd.DragTracker, {
         this.fireEvent('drag', this, e);
     }
 });
+

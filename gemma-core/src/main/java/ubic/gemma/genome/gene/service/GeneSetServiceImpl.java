@@ -59,7 +59,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private GeneSetDao geneSetDao = null;
-
+    
     @Autowired
     private GeneService geneService;
 
@@ -246,7 +246,8 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param set an expressionExperimentSet entity to create a value object for
      * @return
      */
-    private DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
+    @Override
+    public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
         if ( gs == null ) {
             return null;
         }
@@ -261,67 +262,101 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     /**
+     * results will be sorted by size
+     * gene sets that lack genes will be included
+     * @see ubic.gemma.genome.gene.service.GeneSetServiceImpl.convertToValueObjects(Collection<GeneSet>, boolean) if you don't want empty sets returned
      * @param sets
      * @return
      */
-    private Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
-        // Create valueobject (need to add security info or would move this out into the valueobject...
-        List<DatabaseBackedGeneSetValueObject> result = new ArrayList<DatabaseBackedGeneSetValueObject>();
-        for ( GeneSet gs : sets ) {
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
+
+        return convertToValueObjects(sets, true);
+    }
+
+    /**
+     * 
+     * 
+     * @param genesets
+     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
+     * @return
+     */
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> genesets,
+            boolean includeOnesWithoutGenes ) {
+        List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
+
+        for ( GeneSet gs : genesets ) {
+            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
+                continue;
+            }
 
             DatabaseBackedGeneSetValueObject gsvo = convertToValueObject( gs );
-            result.add( gsvo );
+            results.add( gsvo );
         }
 
-        Collections.sort( result, new Comparator<GeneSetValueObject>() {
+        Collections.sort( results, new Comparator<GeneSetValueObject>() {
             @Override
             public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
                 return -o1.getSize().compareTo( o2.getSize() );
             }
         } );
-
-        return result;
+        return results;
     }
-
+    
     @Override
     public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
         GeneSet geneSet = load( id );
         return convertToValueObject( geneSet );
     }
 
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
+        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
+        for(Long id: ids){
+            vos.add( getValueObject( id ) );
+        }
+        return vos;
+    }
+
     /**
      * @param geneSetVo
      * @return
      */
+    @Override
     public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
         GeneSet newGeneSet = GeneSet.Factory.newInstance();
         newGeneSet.setName( geneSetVo.getName() );
         newGeneSet.setDescription( geneSetVo.getDescription() );
 
-        // If no gene Ids just create group and return.
-        GeneSet gset = create( newGeneSet );
 
         Collection<Long> geneIds = geneSetVo.getGeneIds();
 
+        // If no gene Ids just create group and return.
         if ( geneIds != null && !geneIds.isEmpty() ) {
             Collection<Gene> genes = geneService.loadMultiple( geneIds );
+            Collection<GeneSetMember> geneMembers = new HashSet<GeneSetMember>();
             for ( Gene g : genes ) {
                 GeneSetMember gmember = GeneSetMember.Factory.newInstance();
                 gmember.setGene( g );
                 gmember.setScore( DEFAULT_SCORE );
-                gset.getMembers().add( gmember );
+                geneMembers.add( gmember );
             }
 
-            update( gset );
+            newGeneSet.setMembers( geneMembers );
         }
 
+        GeneSet gset = create( newGeneSet );
+        
         // make groups private by default
+        // can't do this to newGeneSet variable because the entity's id needs to be non-null
         if ( geneSetVo.isPublik() ) {
             securityService.makePublic( gset );
         } else {
             securityService.makePrivate( gset );
         }
 
+        
         return convertToValueObject( load( gset.getId() ) );
     }
 
@@ -331,6 +366,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param geneId
      * @return collection of geneSetValueObject
      */
+    @Override
     public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
         Gene gene = geneService.load( geneId );
@@ -338,7 +374,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
 
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
+        gsvos.addAll( convertToValueObjects( genesets, false ) );
         return gsvos;
     }
 
@@ -349,6 +385,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param groupId id of the gene set being updated
      * @param geneIds
      */
+    @Override
     public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
 
         String msg = null;
@@ -408,6 +445,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param geneIds
      * @return value objects for the updated entities
      */
+    @Override
     public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
             Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
 
@@ -645,6 +683,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param geneSet
      * @return the taxon or null if the gene set param was null
      */
+    @Override
     public Taxon getTaxonForGeneSet( GeneSet geneSet ) {
         if(geneSet == null) return null;
         Taxon tmpTax = null;

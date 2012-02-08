@@ -279,4 +279,29 @@ public interface GeneSetService {
      * @return the taxon or null if the gene set param was null
      */
     public Taxon getTaxonForGeneSet( GeneSet geneSet );
+    
+    /**
+     * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have
+     * access to it
+     * 
+     * @param set an expressionExperimentSet entity to create a value object for
+     * @return
+     */
+    public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs );
+    
+    /**
+     * results will be sorted by size
+     * gene sets that lack genes will be included
+     * @see ubic.gemma.genome.gene.service.GeneSetServiceImpl.convertToValueObjects(Collection<GeneSet>, boolean) if you don't want empty sets returned
+     * @param sets
+     * @return
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets );
+    
+    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> genesets,
+            boolean includeOnesWithoutGenes );
+
+    public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> id );
+
+
 }

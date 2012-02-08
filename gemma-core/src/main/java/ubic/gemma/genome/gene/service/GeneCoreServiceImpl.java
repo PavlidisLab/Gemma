@@ -8,11 +8,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -27,13 +27,16 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 
 /** core service for Gene */
-@Component
+@Service
 public class GeneCoreServiceImpl implements GeneCoreService {
 
     private static Log log = LogFactory.getLog( GeneCoreService.class );
-
+    
     @Autowired
     private GeneService geneService = null;
+    
+    @Autowired
+    private GeneSetService geneSetService = null;
 
     @Autowired
     private GeneSetSearch geneSetSearch;
@@ -83,7 +86,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
+        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );

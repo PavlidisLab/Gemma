@@ -347,8 +347,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-            vos = DatabaseBackedGeneSetValueObject.convert2ValueObjects(
-                    geneSetService.load( EntityUtils.getIds( results ) ), false );
+            vos = geneSetService.getValueObjects( EntityUtils.getIds( results ) );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
                     .load( EntityUtils.getIds( results ) ) );
