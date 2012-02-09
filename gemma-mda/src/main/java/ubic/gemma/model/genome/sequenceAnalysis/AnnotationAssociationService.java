@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -51,4 +52,10 @@ public interface AnnotationAssociationService {
     @Secured( { "GROUP_USER" })
     public void update( Collection<AnnotationAssociation> anCollection );
 
+    /**
+     * Remove root terms, like "molecular_function", "biological_process" and "cellular_component"
+     * 
+     * @param associations
+     */
+    Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations );
 }

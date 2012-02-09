@@ -22,8 +22,10 @@ import java.util.Collection;
 import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -84,12 +86,18 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> findByAlias( String search );
-
+    
     /**
      * @param accession
      * @return
      */
     public Gene findByNCBIId( Integer accession );
+
+    /**
+     * @param accession
+     * @return
+     */
+    public GeneValueObject findByNCBIIdValueObject( Integer accession );
 
     /**
      * @param officialName
@@ -271,6 +279,13 @@ public interface GeneService {
      */
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
 
+
+    /**
+     * @param ids
+     * @return
+     */
+    public GeneValueObject loadValueObject( Long id );
+
     /**
      * @param genes
      */
@@ -321,5 +336,16 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
+
+    /**
+     * 
+     * @param geneId
+     * @return empty collection if no products
+     */
+    public Collection<GeneProductValueObject> getProducts( Long geneId );
+
+    public GeneDetailsValueObject loadGenePhenotypes( Long geneId );
+
+    public Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
 }

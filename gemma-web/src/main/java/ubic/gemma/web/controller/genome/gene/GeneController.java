@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,31 +36,19 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.image.aba.AllenBrainAtlasService;
 import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneAlias;
-import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.image.aba.ImageValueObject;
@@ -82,25 +68,13 @@ public class GeneController extends BaseController {
     private AllenBrainAtlasService allenBrainAtlasService = null;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService = null;
-
-    @Autowired
-    private GeneOntologyService geneOntologyService;
-
-    @Autowired
     private HomologeneService homologeneService = null;
-
-    @Autowired
-    private TaxonService taxonService = null;
 
     @Autowired
     private GeneService geneService = null;
 
     @Autowired
     private GeneSetService geneSetService = null;
-
-    @Autowired
-    private GeneSetSearch geneSetSearch;
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService = null;
@@ -115,34 +89,7 @@ public class GeneController extends BaseController {
      * @return
      */
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
-        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
-        Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
-        Gene g = geneService.load( geneId );
-
-        if ( g == null ) {
-            throw new IllegalArgumentException( "No such gene could be loaded with id=" + geneId );
-        }
-
-        Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
-
-        for ( Gene2GOAssociation assoc : associations ) {
-
-            if ( assoc.getOntologyEntry() == null ) continue;
-
-            AnnotationValueObject annot = new AnnotationValueObject();
-
-            annot.setId( assoc.getOntologyEntry().getId() );
-            annot.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-            annot.setTermUri( assoc.getOntologyEntry().getValue() );
-            annot.setEvidenceCode( assoc.getEvidenceCode().getValue() );
-            annot.setDescription( assoc.getOntologyEntry().getDescription() );
-            annot.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
-            annot.setClassName( assoc.getOntologyEntry().getCategory() );
-
-            ontos.add( annot );
-        }
-        cleanup( ontos );
-        return ontos;
+        return geneService.findGOTerms( geneId );
     }
 
     /**
@@ -151,14 +98,9 @@ public class GeneController extends BaseController {
      * @param geneDelegator
      * @return
      */
-    public Collection<GeneProduct> getProducts( Long geneId ) {
+    public Collection<GeneProductValueObject> getProducts( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
-        Gene gene = geneService.load( geneId );
-
-        if ( gene == null ) throw new IllegalArgumentException( "No gene with id " + geneId );
-
-        gene = geneService.thaw( gene );
-        return gene.getProducts();
+        return geneService.getProducts( geneId );
     }
 
     /**
@@ -178,41 +120,8 @@ public class GeneController extends BaseController {
     }
 
     public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {
-        Gene gene = geneService.load( geneId );
-        // need to thaw for aliases (at least)
-        gene = geneService.thaw( gene );
-
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( gene.getId() );
-        Collection<GeneValueObject> initialResults = geneService.loadValueObjects( ids );
-
-        if ( initialResults.size() == 0 ) {
-            return null;
-        }
-
-        GeneValueObject initialResult = initialResults.iterator().next();
-        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
-
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
-        }
-        details.setAliases( aliasStrs );
-
-        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount );
-
-        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
-        details.setGeneSets( gsvos );
-
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
-        details.setHomologues( homologues );
-
-        return details;
+        
+        return geneService.loadGenePhenotypes( geneId );
     }
 
     /**
@@ -234,12 +143,12 @@ public class GeneController extends BaseController {
 
         Long id = null;
 
-        Gene gene = null;
+        GeneValueObject gene = null;
 
         try {
             id = Long.parseLong( idString );
             assert id != null;
-            gene = geneService.load( id );
+            gene = geneService.loadValueObject( id );
             if ( gene == null ) {
                 addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
                 return new ModelAndView( "index" );
@@ -249,7 +158,7 @@ public class GeneController extends BaseController {
 
             if ( StringUtils.isNotBlank( ncbiId ) ) {
                 try {
-                    gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
+                    gene = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
                 } catch ( NumberFormatException e1 ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene" } );
                     return new ModelAndView( "index" );
@@ -272,10 +181,8 @@ public class GeneController extends BaseController {
         mav.addObject( "geneId", id );
         mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
         mav.addObject( "geneOfficialName", gene.getOfficialName() );
-        mav.addObject( "geneNcbiId", gene.getNcbiGeneId());
-        if(gene.getTaxon() != null){
-            mav.addObject( "geneTaxonCommonName", gene.getTaxon().getCommonName() );
-        }
+        mav.addObject( "geneNcbiId", gene.getNcbiId());
+        mav.addObject( "geneTaxonCommonName", gene.getTaxonCommonName());
 
         return mav;
     }
@@ -289,7 +196,7 @@ public class GeneController extends BaseController {
     public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
-        Collection<Gene> genes = new ArrayList<Gene>();
+        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
         // if no IDs are specified, then show an error message
         if ( sId == null ) {
             addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
@@ -301,7 +208,7 @@ public class GeneController extends BaseController {
 
             for ( int i = 0; i < idList.length; i++ ) {
                 Long id = Long.parseLong( idList[i] );
-                Gene gene = geneService.load( id );
+                GeneValueObject gene = geneService.loadValueObject( id );
                 if ( gene == null ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
                 }
@@ -327,7 +234,7 @@ public class GeneController extends BaseController {
 
         // gene id.
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        Gene gene = geneService.load( id );
+        GeneValueObject gene = geneService.loadValueObject( id );
         if ( gene == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene with id: " + request.getParameter( "id" ) } );
             StringBuffer requestURL = request.getRequestURL();
@@ -361,21 +268,6 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    /**
-     * Remove root terms.
-     * 
-     * @param associations
-     */
-    private void cleanup( Collection<AnnotationValueObject> associations ) {
-        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
-            String term = it.next().getTermName();
-            if ( term == null ) continue;
-            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
-                    || term.equals( "cellular_component" ) ) {
-                it.remove();
-            }
-        }
-    }
 
     // /**
     // * @param gene
@@ -417,15 +309,13 @@ public class GeneController extends BaseController {
      */
     public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
         Collection<ImageValueObject> images = new ArrayList<ImageValueObject>();
-        Gene gene = geneService.load( geneId );
-        // need to thaw for aliases (at least)
-        gene = geneService.thaw( gene );
+        GeneValueObject gene = geneService.loadValueObject( geneId );
+
         String queryGeneSymbol = gene.getOfficialSymbol();
-        final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
-        Gene mouseGene = gene;
+        GeneValueObject mouseGene = gene;
         boolean usingHomologue = false;
-        if ( !gene.getTaxon().equals( mouse ) ) {
-            mouseGene = this.homologeneService.getHomologue( gene, mouse );
+        if ( !gene.getTaxonCommonName().equals( "mouse" ) ) {
+            mouseGene = this.homologeneService.getHomologueValueObject( geneId, "mouse" );
             usingHomologue = true;
         }
 
@@ -489,17 +379,15 @@ public class GeneController extends BaseController {
                     + geneSetIds + "}" );
             return mav;
         }
-        Collection<Gene> genes = new ArrayList<Gene>();
+        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
         if ( geneIds != null ) {
             for ( Long id : geneIds ) {
-                genes.add( geneService.load( id ) );
+                genes.add( geneService.loadValueObject( id ) );
             }
         }
         if ( geneSetIds != null ) {
             for ( Long id : geneSetIds ) {
-                for ( GeneSetMember gsm : geneSetService.load( id ).getMembers() ) {
-                    genes.add( gsm.getGene() );
-                }
+                genes.addAll( geneSetService.getGenesInGroup( id ) );
             }
         }
 
@@ -518,7 +406,7 @@ public class GeneController extends BaseController {
      * @param vectors
      * @return
      */
-    private String format4File( Collection<Gene> genes, String geneSetName ) {
+    private String format4File( Collection<GeneValueObject> genes, String geneSetName ) {
         StringBuffer strBuff = new StringBuffer();
         strBuff.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
@@ -528,8 +416,8 @@ public class GeneController extends BaseController {
 
         // add header
         strBuff.append( "Gene Symbol\tGene Name\tNCBI ID\n" );
-        for ( Gene gene : genes ) {
-            strBuff.append( gene.getOfficialSymbol() + "\t" + gene.getOfficialName() + "\t" + gene.getNcbiGeneId() );
+        for ( GeneValueObject gene : genes ) {
+            strBuff.append( gene.getOfficialSymbol() + "\t" + gene.getOfficialName() + "\t" + gene.getNcbiId() );
             strBuff.append( "\n" );
         }
 

@@ -1,10 +1,13 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -80,5 +83,27 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
     public void update( Collection<AnnotationAssociation> anCollection ) {
         this.getAnnotationAssociationDao().update( anCollection );
 
+    }
+
+    /**
+     * Remove root terms, like "molecular_function", "biological_process" and "cellular_component"
+     * Also removes any null objects.
+     * 
+     * @param associations
+     * @return cleaned up associations
+     */
+    @Override
+    public Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations ) {
+        Collection<AnnotationValueObject> cleanedUp = new ArrayList<AnnotationValueObject>();
+        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
+            AnnotationValueObject avo = it.next();
+            String term = avo.getTermName();
+            if ( term == null ) continue;
+            if ( ! (term.equals( "molecular_function" ) || term.equals( "biological_process" )
+                    || term.equals( "cellular_component" )) ) {
+                cleanedUp.add( avo );
+            }
+        }
+        return cleanedUp;
     }
 }

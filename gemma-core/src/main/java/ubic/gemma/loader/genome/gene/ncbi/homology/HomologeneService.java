@@ -41,7 +41,9 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -72,6 +74,9 @@ public class HomologeneService {
 
     @Autowired
     private GeneService geneService;
+    
+    @Autowired
+    private TaxonService taxonService;
 
     private Map<Long, Collection<Long>> group2Gene = new HashMap<Long, Collection<Long>>(); // Homology group ID to
 
@@ -83,6 +88,7 @@ public class HomologeneService {
     private AtomicBoolean ready = new AtomicBoolean( false );
 
     private AtomicBoolean running = new AtomicBoolean( false );
+
 
     /**
      * @param gene
@@ -359,6 +365,45 @@ public class HomologeneService {
         }
 
         return this.gene2Group.get( ncbiID );
+    }
+    
+
+    /**
+     * @param geneId
+     * @param taxonId desired taxon to find homolouge in
+     * @return Finds the homologue of the given gene for the taxon specified, or null if there is no homologue
+     */
+
+    public GeneValueObject getHomologueValueObject( Long geneId, String taxonCommonName ) {
+
+        Gene gene = geneService.load( geneId );
+        final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
+        Gene geneToReturn = null;
+        if ( gene.getTaxon().getId() == mouse.getId() ) {
+            geneToReturn = gene;
+        }else{
+            geneToReturn = getHomologue( gene, mouse );
+        }
+
+        if ( geneToReturn == null ) return null;
+        return new GeneValueObject( geneToReturn );
+    }
+
+    /**
+     * @param geneId
+     * @return Collection of genes found in Gemma that are homologous with the given gene. Empty if no homologues or
+     *         gene lacks homologue information, or null if not ready.
+     */
+
+    public Collection<GeneValueObject> getHomologueValueObjects( Long geneId ) {
+
+        Gene gene = geneService.load( geneId );
+        
+        Collection<Gene> genes = getHomologues( gene );
+        if(genes == null) return null;
+        
+        return GeneValueObject.convert2ValueObjects( getHomologues( gene ) );
+
     }
 
 }

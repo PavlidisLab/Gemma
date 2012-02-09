@@ -19,15 +19,25 @@
 
 package ubic.gemma.model.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.genome.gene.GeneDetailsValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -37,6 +47,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
+import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.search.GeneSetSearch;
 
 /**
  * @author pavlidis
@@ -48,6 +61,24 @@ import ubic.gemma.model.genome.Taxon;
 public class GeneServiceImpl extends GeneServiceBase {
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
+
+    @Autowired
+    GeneSetService geneSetService;
+
+    @Autowired
+    GeneSetSearch geneSetSearch;
+
+    @Autowired
+    HomologeneService homologeneService;
+
+    @Autowired
+    Gene2GOAssociationService gene2GOAssociationService;
+
+    @Autowired
+    GeneOntologyService geneOntologyService;
+
+    @Autowired
+    AnnotationAssociationService annotationAssociationService;
 
     @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
@@ -135,22 +166,24 @@ public class GeneServiceImpl extends GeneServiceBase {
             // gene products in advance to remove the outliers. Currently this method is assuming the 1st gene product
             // is not the outlier.
             if ( !currentStrand.equalsIgnoreCase( strand ) ) {
-                log.warn( "Gene products for "
-                        + gene.getOfficialSymbol()
-                        + " , Id="
-                        + gene.getId()
-                        + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
-                        + gp.getId() );
+                log
+                        .warn( "Gene products for "
+                                + gene.getOfficialSymbol()
+                                + " , Id="
+                                + gene.getId()
+                                + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
+                                + gp.getId() );
                 continue;
             }
 
             if ( !currentChromosone.equals( chromosome ) ) {
-                log.warn( "Gene products for "
-                        + gene.getOfficialSymbol()
-                        + " , Id="
-                        + gene.getId()
-                        + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
-                        + gp.getId() );
+                log
+                        .warn( "Gene products for "
+                                + gene.getOfficialSymbol()
+                                + " , Id="
+                                + gene.getId()
+                                + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
+                                + gp.getId() );
 
                 continue;
             }
@@ -191,6 +224,15 @@ public class GeneServiceImpl extends GeneServiceBase {
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
         return GeneValueObject.convert2ValueObjects( g );
+    }
+
+    @Override
+    public GeneValueObject loadValueObject( Long id ) {
+        Collection<Long> ids = new ArrayList<Long>( 1 );
+        ids.add( id );
+        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
+        if ( g == null || g.isEmpty() ) return null;
+        return GeneValueObject.convert2ValueObjects( g ).iterator().next();
     }
 
     @Override
@@ -428,6 +470,95 @@ public class GeneServiceImpl extends GeneServiceBase {
     @Override
     public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon ) {
         return this.getGeneDao().loadKnownGenesWithProducts( taxon );
+    }
+
+    @Override
+    public Collection<GeneProductValueObject> getProducts( Long geneId ) {
+        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
+        Gene gene = load( geneId );
+
+        if ( gene == null ) throw new IllegalArgumentException( "No gene with id " + geneId );
+
+        Collection<GeneProductValueObject> result = new ArrayList<GeneProductValueObject>();
+        for ( GeneProduct gp : gene.getProducts() ) {
+            result.add( new GeneProductValueObject( gp ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {
+        Gene gene = load( geneId );
+
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( gene.getId() );
+        Collection<GeneValueObject> initialResults = loadValueObjects( ids );
+
+        if ( initialResults.size() == 0 ) {
+            return null;
+        }
+
+        GeneValueObject initialResult = initialResults.iterator().next();
+        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
+
+        Collection<GeneAlias> aliasObjs = gene.getAliases();
+        Collection<String> aliasStrs = new ArrayList<String>();
+        for ( GeneAlias ga : aliasObjs ) {
+            aliasStrs.add( ga.getAlias() );
+        }
+        details.setAliases( aliasStrs );
+
+        Long compositeSequenceCount = getCompositeSequenceCountById( geneId );
+        details.setCompositeSequenceCount( compositeSequenceCount );
+
+        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
+        details.setGeneSets( gsvos );
+
+        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        details.setHomologues( homologues );
+
+        return details;
+    }
+
+    @Override
+    public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
+        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
+        Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
+        Gene g = load( geneId );
+
+        if ( g == null ) {
+            throw new IllegalArgumentException( "No such gene could be loaded with id=" + geneId );
+        }
+
+        Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
+
+        for ( Gene2GOAssociation assoc : associations ) {
+
+            if ( assoc.getOntologyEntry() == null ) continue;
+
+            AnnotationValueObject annot = new AnnotationValueObject();
+
+            annot.setId( assoc.getOntologyEntry().getId() );
+            annot.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
+            annot.setTermUri( assoc.getOntologyEntry().getValue() );
+            annot.setEvidenceCode( assoc.getEvidenceCode().getValue() );
+            annot.setDescription( assoc.getOntologyEntry().getDescription() );
+            annot.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
+            annot.setClassName( assoc.getOntologyEntry().getCategory() );
+
+            ontos.add( annot );
+        }
+        return annotationAssociationService.removeRootTerms( ontos );
+    }
+
+    @Override
+    public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
+        Gene gene = findByNCBIId( accession );
+        return new GeneValueObject( gene );
     }
 
 }
