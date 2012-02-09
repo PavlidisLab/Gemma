@@ -25,11 +25,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.genome.GffParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 

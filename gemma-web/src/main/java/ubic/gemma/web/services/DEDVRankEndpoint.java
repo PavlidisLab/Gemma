@@ -29,11 +29,11 @@ import org.w3c.dom.Element;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given a collection of gene IDs, a collection of experiment IDs, and the method, the service will return a list of

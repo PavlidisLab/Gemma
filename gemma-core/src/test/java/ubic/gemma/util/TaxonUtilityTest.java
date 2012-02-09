@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

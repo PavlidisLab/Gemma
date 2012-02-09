@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
+import ubic.gemma.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;

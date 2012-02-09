@@ -33,10 +33,10 @@ import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 

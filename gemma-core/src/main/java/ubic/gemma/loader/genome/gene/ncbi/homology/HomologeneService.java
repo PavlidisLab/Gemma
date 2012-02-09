@@ -38,11 +38,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.ConfigUtils;
 

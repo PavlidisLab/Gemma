@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
-import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -47,6 +45,12 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneAlias;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.GeneSetSearch;

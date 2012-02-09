@@ -28,10 +28,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author keshav

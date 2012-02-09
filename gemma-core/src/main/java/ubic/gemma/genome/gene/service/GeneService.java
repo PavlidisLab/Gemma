@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author kelsey

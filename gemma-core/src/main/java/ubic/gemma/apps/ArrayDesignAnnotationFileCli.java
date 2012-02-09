@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService.OutputType;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -45,7 +46,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**

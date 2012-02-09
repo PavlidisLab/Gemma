@@ -28,8 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given a collection of Gemma gene IDs, will return the matching NCBI Ids. The result is a 2D array mapping the gene

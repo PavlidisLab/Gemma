@@ -26,9 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given a gene id, will return physical location (chromosome #, nucleotide range: start and end) Note: There may be >1

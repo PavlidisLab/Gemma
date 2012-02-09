@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -39,7 +40,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 

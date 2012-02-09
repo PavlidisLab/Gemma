@@ -135,4 +135,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Override
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet entity );
+
+    public int getGeneCount( Long id );
+
+    public Collection<GeneSetValueObject> loadLightValueObjects( Collection<Long> ids );
 }

@@ -19,7 +19,10 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.SessionFactory;
@@ -257,4 +260,55 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         return loadAll();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     */
+    @Override
+    public Collection<GeneSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
+        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
+
+        if ( ids == null || ids.isEmpty() ) {
+            return result;
+        }
+
+        Collection<? extends GeneSet> entities = this.load( ids );
+
+        if ( entities.isEmpty() ) return result;
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select g.id, count(i) from GeneSetImpl g join g.genes i where g.id in (:ids)",
+                "ids", ids );
+
+        Map<Long, Integer> sizes = new HashMap<Long, Integer>();
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            sizes.put( ( Long ) oa[0], ( ( Long ) oa[1] ).intValue() );
+        }
+
+        for ( GeneSet geneSet : entities ) {
+            GeneSetValueObject vo = new GeneSetValueObject();
+            vo.setNumGenes( sizes.get( geneSet.getId() ) );
+            vo.setName( geneSet.getName() );
+            vo.setDescription( geneSet.getDescription() );
+            result.add( vo );
+        }
+        return result;
+    }
+    
+    @Override
+    public int getGeneCount( Long id ) {
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select g.id, count(i) from GeneSetImpl g join g.genes i where g.id in (:ids)",
+                "ids", id );
+
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            return ( ( Long ) oa[1] ).intValue();
+        }
+        
+        return 0;
+
+    }
 }

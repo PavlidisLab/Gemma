@@ -17,7 +17,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.genome.gene;
+package ubic.gemma.model.genome.gene;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -48,6 +48,7 @@ public class GeneSetValueObject implements Serializable {
     private Integer size;
     private String taxonName;
     private Long taxonId;
+    private int numGenes;
     
     /**
      * default constructor to satisfy java bean contract
@@ -222,5 +223,19 @@ public class GeneSetValueObject implements Serializable {
      */
     public boolean isCurrentUserIsOwner() {
         return currentUserIsOwner;
+    }
+
+    /**
+     * @param numGenes the numGenes to set
+     */
+    public void setNumGenes( int numGenes ) {
+        this.numGenes = numGenes;
+    }
+
+    /**
+     * @return the numGenes
+     */
+    public int getNumGenes() {
+        return numGenes;
     }
 }

@@ -29,8 +29,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 

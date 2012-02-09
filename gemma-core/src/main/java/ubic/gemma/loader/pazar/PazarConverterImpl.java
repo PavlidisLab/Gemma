@@ -21,10 +21,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.pazar.model.PazarRecord;
 import ubic.gemma.model.association.PazarAssociation;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author paul

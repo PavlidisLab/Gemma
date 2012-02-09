@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import java.util.Collection;
 import java.util.Map;

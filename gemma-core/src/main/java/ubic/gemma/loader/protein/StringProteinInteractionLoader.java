@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
 import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.protein.string.StringProteinProteinInteractionObjectGenerator;
@@ -41,7 +42,6 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.Persister;
 
 /**

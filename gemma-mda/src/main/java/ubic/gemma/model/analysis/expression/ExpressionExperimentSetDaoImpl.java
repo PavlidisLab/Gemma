@@ -183,4 +183,20 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
         return result;
     }
 
+    @Override
+    public int getExperimentCount( Long id ) {
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select e.id, count(i) from ExpressionExperimentSetImpl e join e.experiments i where e.id in (:ids)",
+                "ids", id );
+
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            return ( ( Long ) oa[1] ).intValue();
+        }
+        
+        return 0;
+
+    }
+
 }

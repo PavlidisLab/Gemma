@@ -80,4 +80,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      */
     Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
 
+    int getExperimentCount( Long id );
+
 }

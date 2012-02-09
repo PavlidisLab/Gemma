@@ -40,6 +40,7 @@ package ubic.gemma.genome.gene;
 import java.util.Collection;
 
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 /**
  * TODO Document Me

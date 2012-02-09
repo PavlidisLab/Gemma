@@ -32,16 +32,15 @@ import org.springframework.stereotype.Service;
 import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
@@ -253,6 +252,8 @@ public class GeneSetServiceImpl implements GeneSetService {
         }
         DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
 
+        this.geneSetDao.getGeneCount( gs.getId() );
+        
         gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
         gsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );
         gsvo.setPublik( securityService.isPublic( gs ) );
@@ -287,11 +288,12 @@ public class GeneSetServiceImpl implements GeneSetService {
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
+            DatabaseBackedGeneSetValueObject gsvo = convertToValueObject( gs );
+            
+            if ( !includeOnesWithoutGenes && gsvo.getNumGenes() <= 0) {
                 continue;
             }
 
-            DatabaseBackedGeneSetValueObject gsvo = convertToValueObject( gs );
             results.add( gsvo );
         }
 

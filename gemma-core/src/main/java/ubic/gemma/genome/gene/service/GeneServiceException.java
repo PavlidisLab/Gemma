@@ -16,12 +16,12 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
- * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.model.genome.gene.GeneService}.
+ * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.genome.gene.service.GeneService}.
  */
 public class GeneServiceException extends java.lang.RuntimeException {
     /**
