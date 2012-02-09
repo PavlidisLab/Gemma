@@ -110,6 +110,19 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
 			this.toggleRow(i);	 
 		}
     },
+	
+	
+    expandAll : function( ){
+        for ( var i=0; this.grid.getView().getRow( i ); ++i ) {
+			this.expandRow(i);	 
+		}
+    },
+	
+    collapseAll : function( ){
+        for ( var i=0; this.grid.getView().getRow( i ); ++i ) {
+			this.collapseRow(i);	 
+		}
+    },
 
     toggleRow : function(row){
         if(typeof row == 'number'){

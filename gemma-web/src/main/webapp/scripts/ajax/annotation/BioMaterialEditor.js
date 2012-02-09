@@ -68,6 +68,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	loadMask : true,
 	autoExpandColumn : 'bm-column',
 	fvMap : {},
+	rowsExpanded: false,
 
 	/**
 	 * See ExperimentalDesignController.getExperimentalFactors and ExperimentalFactorValueObject AND
@@ -257,9 +258,18 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		 * Event handlers for toolbar buttons.
 		 * 
 		 */
-		this.getTopToolbar().on("toggleExpand", function() {
-					this.rowExpander.toggleAll();
-				}, this);
+		this.getTopToolbar().on("toggleExpand", function(){
+			if (this.rowsExpanded) {
+				this.rowExpander.collapseAll();
+				this.getTopToolbar().expandButton.setText("Expand all");
+				this.rowsExpanded = false;
+			} else {
+				this.rowExpander.expandAll();
+				this.getTopToolbar().expandButton.setText("Collapse all");
+				this.rowsExpanded = true;
+			}
+			
+		}, this);
 
 		this.getTopToolbar().on("refresh", function() {
 					if (this.store.getModifiedRecords().length > 0) {
@@ -570,7 +580,8 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 						});
 
 				var expandButton = new Ext.Toolbar.Button({
-							text : "Expand/collapse all",
+							ref: 'expandButton',
+							text : "Expand all",
 							tooltip : "Show/hide all biomaterial details",
 							handler : function() {
 								this.fireEvent("toggleExpand");
