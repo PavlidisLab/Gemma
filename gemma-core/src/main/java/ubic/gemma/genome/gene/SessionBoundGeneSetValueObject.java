@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 /**
  * TODO Document Me

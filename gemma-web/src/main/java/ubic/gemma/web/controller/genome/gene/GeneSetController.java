@@ -33,11 +33,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.web.persistence.SessionListManager;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.security.SecurityService;
 
