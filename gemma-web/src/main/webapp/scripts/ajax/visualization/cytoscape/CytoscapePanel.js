@@ -125,6 +125,8 @@ Ext.Panel, {
                         geneIds: this.currentQueryGeneIds,
                         queryGenesOnly: false
                     });
+                    
+                    this.display.updateStringency(stringencyValue);
 
                     this.loadMask.show();
                     ExtCoexpressionSearchController.doSearchQuick2(
