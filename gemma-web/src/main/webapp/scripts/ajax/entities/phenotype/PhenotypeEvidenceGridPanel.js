@@ -21,6 +21,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	hasRelevanceColumn: true,
     currentPhenotypes: null,
     currentGene: null,
+	deferLoadToRender: false,
     initComponent: function() {
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
 
@@ -369,8 +370,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		});
 		this.superclass().initComponent.call(this);
 		
-		if (this.currentGene != null && this.currentGene.id != '') {
-			this.loadGene(this.currentGene.id);
+		if (!this.deferLoadToRender) {
+			if (this.currentGene != null && this.currentGene.id != '') {
+				this.loadGene(this.currentGene.id);
+			}
+			
+		} else {
+			this.on('render', function(){
+				if (this.currentGene != null && this.currentGene.id != '') {
+					this.loadGene(this.currentGene.id);
+				}
+			});
 		}
+		
     }
 });

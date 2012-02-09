@@ -98,7 +98,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		this.add({
 			xtype: 'geneproductgrid',
 			geneid: geneId,
-			title: 'Gene Products'
+			title: 'Gene Products',
+			deferLoadToRender: true
 		});
 		
 		this.add({
@@ -106,13 +107,15 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			xtype: 'genegogrid',
 			border: true,
 			geneid: this.geneId,
-			minHeight: 150
+			minHeight: 150,
+			deferLoadToRender: true
 		});
 		
 		this.add(new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
 			hasStoreProxy: true,
-			hasRelevanceColumn: false,			
+			hasRelevanceColumn: false,
+			deferLoadToRender: true,
 			currentGene: {
 	    		id: this.geneId,
 	    		ncbiId: this.geneNcbiId,

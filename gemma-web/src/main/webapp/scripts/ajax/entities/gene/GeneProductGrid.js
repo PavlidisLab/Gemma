@@ -20,6 +20,8 @@ Ext.namespace('Gemma');
  */
 Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
+			deferLoadToRender: false,
+
 			record : Ext.data.Record.create([{
 						name : "id"
 					}, {
@@ -63,10 +65,19 @@ Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				Gemma.GeneProductGrid.superclass.initComponent.call(this);
 
 				this.getStore().setDefaultSort('type', 'name');
-
-				this.getStore().load({
-							params : [this.geneid]
-						});
+				
+				if (!this.deferLoadToRender) {
+					this.getStore().load({
+						params: [this.geneid]
+					})
+				} else {
+					this.on('render',function(){
+						this.getStore().load({
+							params: [this.geneid]
+						})
+					});
+				}
+				;
 			}
 
 		});

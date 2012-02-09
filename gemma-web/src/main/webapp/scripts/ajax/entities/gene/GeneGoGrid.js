@@ -5,7 +5,7 @@ Ext.namespace('Gemma');
  * @extends Gemma.GemmaGridPanel
  */
 Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
-	
+	deferLoadToRender:false,
 	viewConfig : {
 		forceFit : true
 	},
@@ -52,10 +52,18 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				Gemma.GeneGOGrid.superclass.initComponent.call(this);
 
 				this.getStore().setDefaultSort('termUri');
-
-				this.getStore().load({
-							params : [this.geneid]
-						});
+								
+				if (!this.deferLoadToRender) {
+					this.getStore().load({
+						params: [this.geneid]
+					})
+				} else {
+					this.on('render',function(){
+						this.getStore().load({
+							params: [this.geneid]
+						})
+					});
+				}
 			}
 
 		});
