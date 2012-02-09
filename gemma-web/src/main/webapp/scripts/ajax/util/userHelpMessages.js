@@ -101,8 +101,8 @@ Gemma.HelpText.WidgetDefaults = {
 			supportColumnText:  'The number in the support column corresponds to the amount of dataset support.  Positive support is denoted by green text. Negative support is denoted by red text',
 			visualiseColumnTitle: 'Visualise',
 			visualiseColumnText: 'what does this do',
-			nodeDegreeColumnTitle: 'Node Degree',
-			nodeDegreeColumnText: 'Node degree measures the specificity of the coexpression of the gene. Genes with non-specific coexpression have higher node degrees.',
+			nodeDegreeColumnTitle: 'Specificity',
+			nodeDegreeColumnText: 'Specificity measures the coexpression of the gene with all other genes in their taxon. Genes with higher specificity show less coexpression with all other genes in their taxon.',
 			stringencyTitle: 'Stringency',
 			stringencyText: 'Use the stringency control to add/remove genes with more/less dataset support that confirms coexpression',
 			cytoNodeDegreeTitle: 'node deg 2nd',
@@ -178,9 +178,9 @@ Gemma.HelpText.WidgetDefaults = {
 		saveAsSVGTT: 'Open a window with this graph as a SVG data',
 		refreshLayoutText: 'Refresh Layout',
 		refreshLayoutTT: 'Refresh the layout of the graph',
-		nodeDegreeEmphasisText: 'Node Degree Emphasis',
-		nodeDegreeEmphasisTT: 'Node degree is represented by the darkness of a gene node. The closer the node degree of a gene is'+
-								' to 1, the lighter it is and the more that gene shows coexpression with all other genes in that taxon',
+		nodeDegreeEmphasisText: 'Specificity Emphasis',
+		nodeDegreeEmphasisTT: 'Specificity is represented by the darkness of a gene node. The higher the specificity of a gene is'+
+								', the darker it is and the less it shows coexpression with all other genes in that taxon',
 		lowStringencyWarning: 'Lowering the stringency to this level will run a new search to retrieve low stringency results. '+
 							'Low stringency results may not be meaningful for the number of datasets your are searching in.',
 		exportPNGWindowTitle: 'Right-click the image and save the image as file.',

@@ -40,19 +40,19 @@ Gemma.CytoscapeSettings = {
     
     nodeDegreeColor: {
     	lightest:{
-    		name: "lightest",
+    		name: "Lowest",
     		value: "#DEDEDE"
     	},
     	light:{
-    		name: "light",
+    		name: "Low",
     		value: "#969696"
     	},
     	dark:{
-    		name: "dark",
+    		name: "High",
     		value: "#5E5E5E"
     	},
     	darkest:{
-    		name: "darkest",
+    		name: "Highest",
     		value: "#000000"
     	},    		
     	
@@ -67,7 +67,7 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: "Official Name:${officialName}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {
@@ -156,7 +156,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: "Official Name:${officialName}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {

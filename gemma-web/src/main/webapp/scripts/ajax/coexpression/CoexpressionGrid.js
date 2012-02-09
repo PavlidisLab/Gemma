@@ -122,11 +122,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						hidden: true
 					}, {
 						id : 'nodeDegree',
-						header : "Node Degree",
+						header : "Specificity",
 						dataIndex : "foundGeneNodeDegree",
 						width : 60,
 						renderer : this.nodeDegreeStyler.createDelegate(this),
-						tooltip : "nodeDegree",
+						tooltip : "Specificity",
 						sortable : true
 						
 					}];
@@ -165,11 +165,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortable : true
 					}, {
 						id : 'nodeDegree',
-						header : "Node Degree",
+						header : "Specificity",
 						dataIndex : "foundGeneNodeDegree",
 						width : 60,
 						renderer : this.nodeDegreeStyler.createDelegate(this),
-						tooltip : "nodeDegree",
+						tooltip : "Specificity",
 						sortable : true
 						
 					}, {
@@ -843,7 +843,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			displayedNodeDegree = d.foundGeneNodeDegree;
 		}
 		
-		return Ext.util.Format.number(displayedNodeDegree, '0.00');
+		//return Ext.util.Format.number(displayedNodeDegree, '0.00');
+		return Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(displayedNodeDegree);
 	},
 
 	/**
@@ -1409,7 +1410,7 @@ Gemma.CoexpressionGrid.DownloadWindow = Ext.extend (Ext.Window, {
 	
 	makeHeaderRow : function () {
 		var row = [];		
-		row.push ("Query Gene", "Query Gene NCBI Id","Coexpressed Gene", "Coexpressed Gene NCBI Id" ,"Node Degree","Positive Support", "Negative Support");
+		row.push ("Query Gene", "Query Gene NCBI Id","Coexpressed Gene", "Coexpressed Gene NCBI Id" ,"Specificity","Positive Support", "Negative Support");
 		
 		return row.join('\t')+"\n";		
 	},
