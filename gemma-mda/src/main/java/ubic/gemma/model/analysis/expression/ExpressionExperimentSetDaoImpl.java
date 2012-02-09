@@ -145,44 +145,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                         "eeset", expressionExperimentSet );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadValueObjects(java.util.Collection)
-     */
-    @Override
-    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids ) {
-        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
-
-        if ( ids == null || ids.isEmpty() ) {
-            return result;
-        }
-
-        Collection<? extends ExpressionExperimentSet> entities = this.load( ids );
-
-        if ( entities.isEmpty() ) return result;
-
-        List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select e.id, count(i) from ExpressionExperimentSetImpl e join e.experiments i where e.id in (:ids)",
-                "ids", ids );
-
-        Map<Long, Integer> sizes = new HashMap<Long, Integer>();
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            sizes.put( ( Long ) oa[0], ( ( Long ) oa[1] ).intValue() );
-        }
-
-        for ( ExpressionExperimentSet eeSet : entities ) {
-            ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
-            vo.setNumExperiments( sizes.get( eeSet.getId() ) );
-            vo.setName( eeSet.getName() );
-            vo.setTaxonId( eeSet.getTaxon().getId() );
-            vo.setDescription( eeSet.getDescription() );
-            result.add( vo );
-        }
-        return result;
-    }
-
     @Override
     public int getExperimentCount( Long id ) {
 

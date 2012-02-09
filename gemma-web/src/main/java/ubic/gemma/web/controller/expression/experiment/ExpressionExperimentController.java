@@ -504,7 +504,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // tag search result display objects appropriately
             for ( SearchResultDisplayObject srdo : experimentSets ) {
                 Long id = ( srdo.getResultValueObject() instanceof DatabaseBackedExpressionExperimentSetValueObject ) ? ( ( ExpressionExperimentSetValueObject ) srdo
-                        .getResultValueObject() ).getId() : new Long( -1 );
+                        .getResultValueObject() ).getId()
+                        : new Long( -1 );
                 srdo.setUserOwned( isSetOwnedByUser.get( id ) );
             }
         }
@@ -562,8 +563,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 if ( taxon != null && entry.getValue().size() > 0 ) {
                     FreeTextExpressionExperimentResultsValueObject ftvo = new FreeTextExpressionExperimentResultsValueObject(
                             "All " + taxon.getCommonName() + " results for '" + query + "'", "All "
-                                    + taxon.getCommonName() + " experiments found for your query", taxon.getId(),
-                            taxon.getCommonName(), entry.getValue(), query );
+                                    + taxon.getCommonName() + " experiments found for your query", taxon.getId(), taxon
+                                    .getCommonName(), entry.getValue(), query );
                     displayResults.add( new SearchResultDisplayObject( ftvo ) );
                 }
             }
@@ -620,7 +621,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // get any session-bound groups
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
-                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
+                .getModifiedExperimentSets( taxonId )
+                : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
@@ -911,8 +913,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult
-                    .setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            finalResult.setPrimaryCitation( CitationValueObject
+                    .convert2CitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {
@@ -943,9 +945,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         // experiment sets this ee belongs to
-        Collection<ExpressionExperimentSetValueObject> eesvos = expressionExperimentSetService
-                .loadLightValueObjects( EntityUtils.getIds( expressionExperimentSetService.find( ee ) ) );
-        
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> dbEEsvos = expressionExperimentSetService
+                .getValueObjectsFromIds( EntityUtils.getIds( expressionExperimentSetService.find( ee ) ) );
+        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+        eesvos.addAll( dbEEsvos );
         finalResult.setExpressionExperimentSets( eesvos );
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
@@ -1165,8 +1168,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
+                        records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -1211,8 +1214,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         int count = records.size();
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
+                        records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -1405,7 +1408,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
                     .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
             Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
+                    .getIds( wn.getUpdatedExpressionExperiments() )
+                    : new ArrayList<Long>();
 
             int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
                     .getNewExpressionExperiments().size() : 0;
@@ -1506,8 +1510,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new EntityNotFoundException( id + " not found" );
         }
         request.setAttribute( "id", id );
-        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays",
-                bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
+        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService
+                .thaw( expressionExperiment.getBioAssays() ) );
 
         addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
@@ -1571,7 +1575,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping({ "/showExpressionExperiment.html", "/" })
+    @RequestMapping( { "/showExpressionExperiment.html", "/" })
     public ModelAndView showExpressionExperiment( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch timer = new StopWatch();
@@ -2100,8 +2104,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( filterDataForUser ) {
             try {
 
-                securedEEs = new ArrayList<ExpressionExperiment>(
-                        expressionExperimentService.loadMySharedExpressionExperiments() ); // limit won't really
+                securedEEs = new ArrayList<ExpressionExperiment>( expressionExperimentService
+                        .loadMySharedExpressionExperiments() ); // limit won't really
                 // work! Most experiments
                 // are filtered out.
 

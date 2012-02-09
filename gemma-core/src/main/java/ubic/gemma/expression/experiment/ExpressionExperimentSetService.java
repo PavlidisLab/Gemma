@@ -161,16 +161,7 @@ public interface ExpressionExperimentSetService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
-
-    /**
-     * Load a light-weight representation of the value objects for the given IDs (the IDs must be filtered for security
-     * _first_). The sizes of the set, but not the set members, are loaded.
-     * 
-     * @param ids
-     * @return
-     */
-    public Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
-    
+  
     /**
      * Get a value object for the id param
      * @param id

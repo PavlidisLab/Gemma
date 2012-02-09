@@ -138,5 +138,4 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     public int getGeneCount( Long id );
 
-    public Collection<GeneSetValueObject> loadLightValueObjects( Collection<Long> ids );
 }

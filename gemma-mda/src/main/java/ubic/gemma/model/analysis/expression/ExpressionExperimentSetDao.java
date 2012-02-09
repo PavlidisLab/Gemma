@@ -71,15 +71,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      */
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
 
-    /**
-     * Load a light-weight representation of the value objects for the given IDs (the IDs must be filtered for security
-     * _first_). The sizes of the set, but not the set members, are loaded.
-     * 
-     * @param ids
-     * @return
-     */
-    Collection<ExpressionExperimentSetValueObject> loadLightValueObjects( Collection<Long> ids );
-
     int getExperimentCount( Long id );
 
 }
