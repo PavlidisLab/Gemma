@@ -24,7 +24,7 @@
 	<aop:config>
 		<aop:pointcut id="serviceMethod"
 			expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
-		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" order="1" />
 	</aop:config>
 
 	<bean id="transactionManager"
