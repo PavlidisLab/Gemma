@@ -32,7 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -71,7 +71,7 @@ import ubic.gemma.util.EntityUtils;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 @Lazy
 public class GeneCoexpressionService {
 
