@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.genome.gene.service;
+package ubic.gemma.model.genome.gene;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
