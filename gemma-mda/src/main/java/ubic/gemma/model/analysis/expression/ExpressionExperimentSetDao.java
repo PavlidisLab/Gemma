@@ -20,9 +20,10 @@ package ubic.gemma.model.analysis.expression;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -33,42 +34,50 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
     /**
      * Locate expressionExperimentSets that contain the given bioAssaySet.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
     /**
      * 
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
     /**
-     * <p>
      * Get analyses that use this set. Note that if this collection is not empty, modification of the
      * expressionexperimentset should be disallowed.
-     * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
             ExpressionExperimentSet expressionExperimentSet );
 
     /**
+     * Get the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set
+     * is not (due to security filters). Use this insead of expressionExperimentSet.getExperiments.
+     * 
+     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService.getExperimentsInSet
      * @param id
      * @return
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService.getExperimentsInSet
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
-     * @return ExpressionExperimentSets that have more than 1 experiment in them.
+     * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
      * @param expressionExperimentSet
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
 
     int getExperimentCount( Long id );
