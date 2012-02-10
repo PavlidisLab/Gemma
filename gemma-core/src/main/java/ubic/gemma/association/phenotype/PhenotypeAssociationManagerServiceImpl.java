@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -128,11 +129,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }
 
-    // set the cache that keeps count of how many genes in gemma for each phenotype found, cache reset each 3 days
+    // set the cache that keeps count of how many genes in gemma for each phenotype found, cache reset each 2 days
     @PostConstruct
     protected void init() {
         this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
-                false, 72 * 3600, 72 * 3600 ) );
+                false, 48 * 3600, 48 * 3600 ) );
     }
 
     /**
@@ -143,15 +144,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
-    public EvidenceStatusValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
+    public EvidenceStatusValueObject create( EvidenceValueObject evidence ) {
 
         if ( evidence.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot create an Evidence with no Phenotype" );
         }
+        if ( evidence.getGeneNCBI() == null ) {
+            throw new IllegalArgumentException( "Cannot create an Evidence not linked to a Gene" );
+        }
 
         EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
 
-        Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
+        Gene gene = this.geneService.findByNCBIId( evidence.getGeneNCBI() );
 
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
                 .getPhenotypeAssociations() );
@@ -195,9 +199,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
-    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( String geneNCBI ) {
+    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI ) {
 
-        Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
+        Gene gene = this.geneService.findByNCBIId( geneNCBI );
 
         if ( gene == null ) {
             return new HashSet<EvidenceValueObject>();
@@ -327,7 +331,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
         EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
-        setEvidencePermissions( phenotypeAssociation, evidenceValueObject );
+        findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
         return evidenceValueObject;
     }
@@ -342,25 +346,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     // TODO to test and to be modified
     public EvidenceStatusValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
+        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
+
         if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
+        }
+
+        if ( modifedEvidenceValueObject.getGeneNCBI() == null ) {
+            throw new IllegalArgumentException( "Evidence not linked to a Gene" );
         }
 
         if ( modifedEvidenceValueObject.getId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
         }
 
-        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
-
-        // new phenotypes found on the evidence that will be comapred to current phenotypes in the database
-        Set<String> updatedPhenotypesValuesUri = modifedEvidenceValueObject.getPhenotypesValueUri();
-
-        // keeps track of deleted or added phenotypes to remake the HashMap present in the cache
-        Set<String> detectChangedPhenotypesValuesUri = new HashSet<String>();
-
-        // 1- load the evidence from the database and populate specific information for the type of evidence
-        PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
-                .loadEvidenceAndPopulate( modifedEvidenceValueObject );
+        PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
 
         // check for the race condition
         if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
@@ -369,49 +369,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return evidenceStatusValueObject;
         }
 
-        // 2- populate simple values common to all evidences
-        this.phenotypeAssoManagerServiceHelper.populatePheAssoWithoutPhenotypes( phenotypeAssociation,
-                modifedEvidenceValueObject );
-
-        // 3 - populate the new phenotypes
-        // the final phenotypes to update the evidence with
-        Collection<Characteristic> updatedPhenotypes = new HashSet<Characteristic>();
-
-        // for each phenotypes determine if it is new or delete
-        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-
-            if ( cha instanceof VocabCharacteristicImpl ) {
-                String valueUri = ( ( VocabCharacteristicImpl ) cha ).getValueUri();
-
-                // this phenotype been deleted
-                if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
-                    // delete phenotype from the database
-                    this.characteristicService.delete( cha.getId() );
-                    detectChangedPhenotypesValuesUri.add( ( ( VocabCharacteristicImpl ) cha ).getValueUri() );
-                }
-                // this phenotype is already on the evidence
-                else {
-                    updatedPhenotypes.add( cha );
-                    updatedPhenotypesValuesUri.remove( valueUri );
-                }
-            }
+        // evidence type changed
+        if ( !phenotypeAssociation.getClass().getSimpleName().equals( modifedEvidenceValueObject.getClass() ) ) {
+            remove( modifedEvidenceValueObject.getId() );
+            return create( modifedEvidenceValueObject );
         }
 
-        // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
-        for ( String valueUri : updatedPhenotypesValuesUri ) {
-            Characteristic cha = valueUri2Characteristic( valueUri );
-            updatedPhenotypes.add( cha );
-            detectChangedPhenotypesValuesUri.add( valueUri );
-        }
+        // verify and modify the phenotypes part of an evidence
+        Set<String> detectChangedPhenotypes = populateModifiedPhenotypes( modifedEvidenceValueObject,
+                phenotypeAssociation );
 
-        // set the correct new phenotypes
-        phenotypeAssociation.getPhenotypes().clear();
-        phenotypeAssociation.getPhenotypes().addAll( updatedPhenotypes );
+        // modify all other values needed
+        this.phenotypeAssoManagerServiceHelper
+                .populateModifiedValues( modifedEvidenceValueObject, phenotypeAssociation );
 
-        // update all changes to database
         this.associationService.update( phenotypeAssociation );
 
-        // make private or public
+        // change the security to public or private if needed
         if ( modifedEvidenceValueObject.getSecurityInfoValueObject() != null ) {
 
             // was private becomes public
@@ -428,7 +402,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // remake part of the tree (added or removed phenotypes)
         if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            buildTree( detectChangedPhenotypesValuesUri );
+            buildTree( detectChangedPhenotypes );
         }
 
         return evidenceStatusValueObject;
@@ -1035,15 +1009,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     EvidenceValueObject evidenceValueObject = EvidenceValueObject
                             .convert2ValueObjects( phenotypeAssociation );
 
-                    setEvidencePermissions( phenotypeAssociation, evidenceValueObject );
+                    findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
                     // find the security information for the object
                     if ( evidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
-                        // TODO
-                        // evidenceFromPhenotype.add( evidenceValueObject );
+                        evidenceFromPhenotype.add( evidenceValueObject );
                     }
-                    // TODO
-                    evidenceFromPhenotype.add( evidenceValueObject );
                 }
 
                 if ( !evidenceFromPhenotype.isEmpty() ) {
@@ -1058,7 +1029,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** determine permissions for an PhenotypeAssociation */
-    private void setEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
+    private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
 
         Boolean currentUserHasWritePermission = false;
         String owner = null;
@@ -1067,13 +1038,61 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
 
         if ( currentUserIsOwner || isPublic ) {
+
             currentUserHasWritePermission = this.securityService.isEditable( p );
-            // owner = new SidValueObject( this.securityService.getOwner( p ) ).getAuthority();
+            owner = ( ( PrincipalSid ) this.securityService.getOwner( p ) ).getPrincipal();
         }
 
         evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,
                 currentUserIsOwner, isPublic, isShared, owner ) );
 
+    }
+
+    private Set<String> populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,
+            PhenotypeAssociation phenotypeAssociation ) {
+
+        // new phenotypes found on the evidence that will be compared to current phenotypes in the database
+        Set<String> updatedPhenotypesValuesUri = evidenceValueObject.getPhenotypesValueUri();
+
+        // keeps track of deleted or added phenotypes to remake the HashMap present in the cache
+        Set<String> detectChangedPhenotypesValuesUri = new HashSet<String>();
+
+        // 3 - populate the new phenotypes
+        // the final phenotypes to update the evidence with
+        Collection<Characteristic> updatedPhenotypes = new HashSet<Characteristic>();
+
+        // for each phenotypes determine if it is new or delete
+        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+
+            if ( cha instanceof VocabCharacteristicImpl ) {
+                String valueUri = ( ( VocabCharacteristicImpl ) cha ).getValueUri();
+
+                // this phenotype been deleted
+                if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
+                    // delete phenotype from the database
+                    this.characteristicService.delete( cha.getId() );
+                    detectChangedPhenotypesValuesUri.add( ( ( VocabCharacteristicImpl ) cha ).getValueUri() );
+                }
+                // this phenotype is already on the evidence
+                else {
+                    updatedPhenotypes.add( cha );
+                    updatedPhenotypesValuesUri.remove( valueUri );
+                }
+            }
+        }
+
+        // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
+        for ( String valueUri : updatedPhenotypesValuesUri ) {
+            Characteristic cha = valueUri2Characteristic( valueUri );
+            updatedPhenotypes.add( cha );
+            detectChangedPhenotypesValuesUri.add( valueUri );
+        }
+
+        // set the correct new phenotypes
+        phenotypeAssociation.getPhenotypes().clear();
+        phenotypeAssociation.getPhenotypes().addAll( updatedPhenotypes );
+
+        return detectChangedPhenotypesValuesUri;
     }
 
 }

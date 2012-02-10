@@ -40,7 +40,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return Status of the operation
      */
-    public EvidenceStatusValueObject create( String geneNCBI, EvidenceValueObject evidence );
+    public EvidenceStatusValueObject create( EvidenceValueObject evidence );
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -48,7 +48,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( String geneNCBI );
+    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
 
     /**
      * Return all evidence for a specific gene id

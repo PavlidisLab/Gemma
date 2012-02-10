@@ -32,8 +32,8 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
     public DiffExpressionEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult,
-            EvidenceSourceValueObject evidenceSource ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource );
+            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
         this.differentialExpressionAnalysisResult = differentialExpressionAnalysisResult;
     }
 

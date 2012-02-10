@@ -26,8 +26,8 @@ public class GenericEvidenceValueObject extends EvidenceValueObject {
 
     public GenericEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
-            EvidenceSourceValueObject evidenceSource ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource );
+            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
     }
 
     /** Entity to Value Object */

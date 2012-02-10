@@ -143,13 +143,11 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             EvidenceValueObject evidence = new LiteratureEvidenceValueObject( description, associationType,
                     new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    evidenceSource );
-
-            String geneId = phenoAss.getGeneID();
+                    evidenceSource, new Integer( phenoAss.getGeneID() ) );
 
             try {
 
-                this.phenotypeAssociationService.create( geneId, evidence );
+                this.phenotypeAssociationService.create( evidence );
                 System.out.println( "Evidence " + evidenceNumber + " created" );
 
             } catch ( Exception e ) {

@@ -365,13 +365,11 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
                     new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    relevantPublicationsPubmed, characteristics, evidenceSource );
-
-            String geneId = phenoAss.getGeneID();
+                    relevantPublicationsPubmed, characteristics, evidenceSource, new Integer( phenoAss.getGeneID() ) );
 
             try {
 
-                this.phenotypeAssociationService.create( geneId, evidence );
+                this.phenotypeAssociationService.create( evidence );
                 System.out.println( "Evidence " + evidenceNumber + " created" );
 
             } catch ( Exception e ) {

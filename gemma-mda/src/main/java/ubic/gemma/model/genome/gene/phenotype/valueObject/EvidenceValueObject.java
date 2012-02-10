@@ -50,20 +50,20 @@ public abstract class EvidenceValueObject {
     public static Collection<EvidenceValueObject> convert2ValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<EvidenceValueObject> returnEvidence = new HashSet<EvidenceValueObject>();
+        Collection<EvidenceValueObject> returnEvidenceVO = new HashSet<EvidenceValueObject>();
 
-        if ( phenotypeAssociations != null && phenotypeAssociations.size() > 0 ) {
+        if ( phenotypeAssociations != null ) {
 
             for ( PhenotypeAssociation phe : phenotypeAssociations ) {
 
                 EvidenceValueObject evidence = convert2ValueObjects( phe );
 
                 if ( evidence != null ) {
-                    returnEvidence.add( evidence );
+                    returnEvidenceVO.add( evidence );
                 }
             }
         }
-        return returnEvidence;
+        return returnEvidenceVO;
     }
 
     /**
@@ -98,18 +98,19 @@ public abstract class EvidenceValueObject {
     private Boolean isNegativeEvidence = new Boolean( false );
 
     private String className = "";
-    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
-    private Double relevance = new Double( 0 );
-
+    private Set<CharacteristicValueObject> phenotypes = null;
     private EvidenceSourceValueObject evidenceSource = null;
 
+    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
+    private Double relevance = new Double( 0 );
     private String externalUrl = "";
 
-    private Set<CharacteristicValueObject> phenotypes = null;
-
+    // last modified date of the evidence
     private String lastUpdatedDate = null;
-
+    // security for the evidence
     private SecurityInfoValueObject securityInfoValueObject = null;
+    // linked to what gene
+    private Integer geneNCBI = null;
 
     public EvidenceValueObject() {
         super();
@@ -133,22 +134,24 @@ public abstract class EvidenceValueObject {
             this.associationType.setValue( phenotypeAssociation.getAssociationType().getValue() );
             this.associationType.setCategory( phenotypeAssociation.getAssociationType().getCategory() );
         }
+
         this.phenotypes = new TreeSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
-            CharacteristicValueObject characteristicVO = null;
-            characteristicVO = new CharacteristicValueObject( ( VocabCharacteristicImpl ) c );
+            CharacteristicValueObject characteristicVO = new CharacteristicValueObject( ( VocabCharacteristicImpl ) c );
             characteristicVO.setId( c.getId() );
             this.phenotypes.add( characteristicVO );
         }
 
         this.lastUpdatedDate = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
+        this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
+
     }
 
     protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
-            EvidenceSourceValueObject evidenceSource ) {
+            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
         super();
         this.description = description;
         this.associationType = associationType;
@@ -156,6 +159,7 @@ public abstract class EvidenceValueObject {
         this.isNegativeEvidence = isNegativeEvidence;
         this.phenotypes = phenotypes;
         this.evidenceSource = evidenceSource;
+        this.geneNCBI = geneNCBI;
     }
 
     public String getExternalUrl() {
@@ -257,6 +261,14 @@ public abstract class EvidenceValueObject {
         this.securityInfoValueObject = securityInfoValueObject;
     }
 
+    public Integer getGeneNCBI() {
+        return this.geneNCBI;
+    }
+
+    public void setGeneNCBI( Integer geneNCBI ) {
+        this.geneNCBI = geneNCBI;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -269,6 +281,7 @@ public abstract class EvidenceValueObject {
         }
 
         result = result + ( ( this.evidenceSource == null ) ? 0 : this.evidenceSource.hashCode() );
+        result = result + ( ( this.geneNCBI == null ) ? 0 : this.geneNCBI.hashCode() );
 
         return prime * result;
     }
@@ -293,6 +306,10 @@ public abstract class EvidenceValueObject {
         if ( this.evidenceSource == null ) {
             if ( other.evidenceSource != null ) return false;
         } else if ( !this.evidenceSource.equals( other.evidenceSource ) ) return false;
+
+        if ( this.geneNCBI == null ) {
+            if ( other.geneNCBI != null ) return false;
+        } else if ( !this.geneNCBI.equals( other.geneNCBI ) ) return false;
 
         return true;
     }

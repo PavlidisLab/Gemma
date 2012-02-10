@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.analysis.Investigation;
@@ -74,7 +75,7 @@ public class PhenotypeAssoManagerServiceHelper {
     private PhenotypeAssociationService phenotypeAssociationService;
 
     @Autowired
-    private Persister  persisterHelper;
+    private Persister persisterHelper;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -84,6 +85,9 @@ public class PhenotypeAssoManagerServiceHelper {
 
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
+
+    @Autowired
+    private GeneService geneService;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
@@ -132,6 +136,7 @@ public class PhenotypeAssoManagerServiceHelper {
         phe.setDescription( evidenceValueObject.getDescription() );
         phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
+        phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
         if ( evidenceValueObject.getAssociationType() != null ) {
             VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
@@ -167,28 +172,42 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     // load evidence from the database and populate it with the updated information
-    public PhenotypeAssociation loadEvidenceAndPopulate( EvidenceValueObject evidenceValueObject ) {
+    public void populateModifiedValues( EvidenceValueObject evidenceValueObject,
+            PhenotypeAssociation phenotypeAssociation ) {
 
-        Long id = evidenceValueObject.getId();
+        // 1- modify common values to all evidences
+        phenotypeAssociation.setDescription( evidenceValueObject.getDescription() );
+        phenotypeAssociation.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
+        phenotypeAssociation.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
+        phenotypeAssociation.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
-        PhenotypeAssociation result = null;
+        if ( evidenceValueObject.getAssociationType() != null ) {
+            VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
 
-        if ( evidenceValueObject instanceof LiteratureEvidenceValueObject ) {
+            associationType.setValue( evidenceValueObject.getAssociationType().getValue() );
+            associationType.setCategory( evidenceValueObject.getAssociationType().getCategory() );
+            associationType.setValueUri( evidenceValueObject.getAssociationType().getValueUri() );
+            associationType.setCategoryUri( evidenceValueObject.getAssociationType().getCategoryUri() );
+
+            phenotypeAssociation.setAssociationType( associationType );
+        }
+
+        // 2- modify specific values depending on evidence type
+        if ( phenotypeAssociation instanceof LiteratureEvidence ) {
+
+            LiteratureEvidence literatureEvidence = ( LiteratureEvidence ) phenotypeAssociation;
 
             LiteratureEvidenceValueObject literatureVO = ( LiteratureEvidenceValueObject ) evidenceValueObject;
-            LiteratureEvidence literatureEvidence = this.phenotypeAssociationService.loadLiteratureEvidence( id );
 
             String primaryPubMed = literatureVO.getCitationValueObject().getPubmedAccession();
 
             // primary bibliographic reference
             literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
 
-            result = literatureEvidence;
-
-        } else if ( evidenceValueObject instanceof ExperimentalEvidenceValueObject ) {
+        } else if ( phenotypeAssociation instanceof ExperimentalEvidence ) {
 
             ExperimentalEvidenceValueObject experimentalVO = ( ExperimentalEvidenceValueObject ) evidenceValueObject;
-            ExperimentalEvidence experimentalEvidence = this.phenotypeAssociationService.loadExperimentalEvidence( id );
+            ExperimentalEvidence experimentalEvidence = ( ExperimentalEvidence ) phenotypeAssociation;
             Investigation experiment = experimentalEvidence.getExperiment();
 
             // ***************************************************************
@@ -266,25 +285,13 @@ public class PhenotypeAssoManagerServiceHelper {
             // relevant bibliographic references
             experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
 
-            result = experimentalEvidence;
-
-        } else if ( evidenceValueObject instanceof GenericEvidenceValueObject ) {
+        } else if ( phenotypeAssociation instanceof GenericEvidence ) {
             // nothing special to do
-            result = this.phenotypeAssociationService.loadGenericEvidence( id );
-        } else if ( evidenceValueObject instanceof UrlEvidenceValueObject ) {
+        } else if ( phenotypeAssociation instanceof UrlEvidence ) {
             // nothing special to do
-            result = this.phenotypeAssociationService.loadUrlEvidence( id );
         } else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
             // TODO
         }
-
-        if ( result == null ) return null;
-
-        if ( evidenceValueObject.getEvidenceSource() != null ) {
-            result.getEvidenceSource().setAccession( evidenceValueObject.getEvidenceSource().getAccession() );
-        }
-
-        return result;
     }
 
     /**

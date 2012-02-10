@@ -69,7 +69,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         characteristics.add( caracteristic );
 
         this.evidence = new ExperimentalEvidenceValueObject( "test Description", null, new Boolean( true ), "IC",
-                phenotypes, this.primaryPubmed, relevantPublication, characteristics, null );
+                phenotypes, this.primaryPubmed, relevantPublication, characteristics, null, new Integer( this.geneNCBI ) );
 
         // Make sure a Gene exist in the database with the NCBI id
         this.gene = makeGene( this.geneNCBI );

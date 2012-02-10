@@ -120,7 +120,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** counts gene on a TreeCharacteristicValueObject */
     public void countGeneOccurence( PhenotypeAssociationService associationService ) {
 
-        setOccurence( associationService.countGenesWithPhenotype( getAllChildrenUri() ) );
+        setOccurence( associationService.countGenesWithPublicPhenotype( getAllChildrenUri() ) );
 
         // count for each node of the tree
         for ( TreeCharacteristicValueObject tree : getChildren() ) {
@@ -143,7 +143,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** counts gene on a TreeCharacteristicValueObject */
     private void countGeneOccurence( PhenotypeAssociationService associationService, TreeCharacteristicValueObject tc ) {
 
-        tc.setOccurence( associationService.countGenesWithPhenotype( tc.getAllChildrenUri() ) );
+        tc.setOccurence( associationService.countGenesWithPublicPhenotype( tc.getAllChildrenUri() ) );
 
         // count for each node of the tree
         for ( TreeCharacteristicValueObject tree : tc.getChildren() ) {

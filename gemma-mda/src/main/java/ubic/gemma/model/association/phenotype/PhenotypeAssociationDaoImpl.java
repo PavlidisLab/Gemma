@@ -55,24 +55,28 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * count the number of Genes with a phenotype
+     * count the number of Genes with a public phenotype
      */
     @Override
-    public Long countGenesWithPhenotype( Collection<String> phenotypesUri ) {
+    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri ) {
 
-        String endQuery = "";
+        // type of evidence
+        String queryEvidenceTypes = "('" + LiteratureEvidenceImpl.class.getName() + "','"
+                + GenericEvidenceImpl.class.getName() + "','" + ExperimentalEvidenceImpl.class.getName() + "','"
+                + DifferentialExpressionEvidenceImpl.class.getName() + "','" + UrlEvidenceImpl.class.getName() + "')";
+
+        String endQuery = queryEvidenceTypes + " and value_uri in(";
 
         for ( String phenotypeUri : phenotypesUri ) {
 
-            endQuery = endQuery + " value_uri='" + phenotypeUri + "' OR";
+            endQuery = endQuery + "'" + phenotypeUri + "', ";
         }
 
         endQuery = endQuery.substring( 0, endQuery.length() - 2 ) + ")";
 
         long value = 0;
 
-        // TODO make hsql query
-        String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where"
+        String queryString = "select count(distinct gene_fk) from acl_entry join acl_object_identity ON acl_entry.acl_object_identity = acl_object_identity.id join CHARACTERISTIC on CHARACTERISTIC.phenotype_association_fk =acl_object_identity.object_id_identity join PHENOTYPE_ASSOCIATION on PHENOTYPE_ASSOCIATION.id =acl_object_identity.object_id_identity join acl_class on acl_class.id=acl_object_identity.object_id_class where sid=4 and mask=1 and acl_class.class in "
                 + endQuery;
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );

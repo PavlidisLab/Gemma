@@ -155,11 +155,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /**
-     * count the number of Genes with a phenotype
+     * count the number of Genes with public phenotype
      */
     @Override
-    public Long countGenesWithPhenotype( Collection<String> phenotypesURI ) {
-        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypesURI );
+    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesURI ) {
+        return this.phenotypeAssociationDao.countGenesWithPublicPhenotype( phenotypesURI );
     }
 
 }

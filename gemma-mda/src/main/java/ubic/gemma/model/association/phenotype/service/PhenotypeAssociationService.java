@@ -108,9 +108,9 @@ public interface PhenotypeAssociationService {
     public void update( PhenotypeAssociation evidence );
 
     /**
-     * count the number of Genes with a phenotype
+     * count the number of Genes with public phenotype
      */
-    public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
+    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesURI );
 
     /** load all valueURI of Phenotype in the database */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })

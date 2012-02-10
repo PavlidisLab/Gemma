@@ -31,8 +31,8 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
     public LiteratureEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
-            String pubmedID, EvidenceSourceValueObject evidenceSource ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource );
+            String pubmedID, EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
 
         this.citationValueObject = new CitationValueObject();
         this.citationValueObject.setPubmedAccession( pubmedID );
