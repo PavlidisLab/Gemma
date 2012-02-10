@@ -326,6 +326,7 @@
       		<dwr:include method="scheduleDiffExpSearchTask" />   
 			<dwr:include method="getDiffExpSearchTaskProgress" />
 			<dwr:include method="getDiffExpSearchResult" />
+			<dwr:include method="getDifferentialExpressionWithoutBatch" />
 		</dwr:remote>
   	</bean>  
 
