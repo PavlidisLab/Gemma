@@ -264,7 +264,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     public int getGeneCount( Long id ) {
 
         List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select g.id, count(i) from GeneSetImpl g join g.genes i where g.id in (:ids)",
+                "select g.id, count(i) from GeneSetImpl g join g.members i where g.id in (:ids)",
                 "ids", id );
 
         for ( Object object : o ) {
