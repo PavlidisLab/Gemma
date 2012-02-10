@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,8 +29,10 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -42,8 +45,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -53,6 +59,10 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.monitor.Monitored;
 
 /**
@@ -67,6 +77,11 @@ public class ExpressionExperimentServiceImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @Autowired
+    private SearchService searchService;
+
+    @Autowired
+    private OntologyService ontologyService;
     /*
      * (non-Javadoc)
      * 
@@ -857,5 +872,70 @@ public class ExpressionExperimentServiceImpl extends
 
         return troubleMap;
     }
+    
+    /**
+     * returns ids of search results
+     * @param searchString
+     * @return collection of ids or an empty collection
+     */
+    @Override
+    public Collection<Long> filter( String searchString ) {
+        
+        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
+                .expressionExperimentSearch( searchString ) );
+
+        assert searchResultsMap != null;
+        
+        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+
+        Collection<Long> ids = new ArrayList<Long>(searchResults.size());
+        
+        for(SearchResult s : searchResults){
+            ids.add( s.getId() );
+        }
+        
+        return ids;
+    }
+
+    /**
+     * Get the terms associated this expression experiment.
+     */
+    public Collection<AnnotationValueObject> getAnnotations( Long eeId ){
+        ExpressionExperiment expressionExperiment = load( eeId );
+        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
+        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setId( c.getId() );
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                annotationValue.setClassUri( vc.getCategoryUri() );
+                String className = getLabelFromUri( vc.getCategoryUri() );
+                if ( className != null ) annotationValue.setClassName( className );
+                annotationValue.setTermUri( vc.getValueUri() );
+                String termName = getLabelFromUri( vc.getValueUri() );
+                if ( termName != null ) annotationValue.setTermName( termName );
+                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+            } else {
+                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
+            }
+            annotations.add( annotationValue );
+        }
+        return annotations;
+    }
+
+    /**
+     * @param uri
+     * @return
+     */
+    private String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null ) return resource.getLabel();
+
+        return null;
+    }
+
 
 }

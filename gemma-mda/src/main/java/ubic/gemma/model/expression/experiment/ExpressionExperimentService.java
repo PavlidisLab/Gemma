@@ -23,10 +23,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.lang.model.element.AnnotationValue;
+
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -73,6 +76,15 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExpressionExperiment expressionExperiment );
+
+
+    /**
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically, though this behavior could be changed)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void delete( Long id );
 
     /**
      * 
@@ -224,6 +236,11 @@ public interface ExpressionExperimentService {
      * Get the map of ids to number of terms associated with each expression experiment.
      */
     public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
+
+    /**
+     * Get the terms associated this expression experiment.
+     */
+    public Collection<AnnotationValueObject> getAnnotations( Long eeId );
 
     /**
      * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
@@ -493,4 +510,11 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
 
+
+    /**
+     * returns ids of search results
+     * @param searchString
+     * @return collection of ids or an empty collection
+     */
+    public Collection<Long> filter( String searchString );
 }

@@ -115,6 +115,20 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     }
 
     /**
+     * @see ExpressionExperimentService#delete(ExpressionExperiment)
+     */
+    public void delete( final Long id ) {
+        try {
+            final ExpressionExperiment ee = this.load( id );
+            this.handleDelete( ee );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ExpressionExperimentService#find(ExpressionExperiment)
      */
     public ExpressionExperiment find( final ExpressionExperiment expressionExperiment ) {

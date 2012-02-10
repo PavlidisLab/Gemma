@@ -197,6 +197,17 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     @Override
+    public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        Collection<ExpressionExperimentSet> eesets = this.getExpressionExperimentSetDao().find( bioAssaySet );
+        for(ExpressionExperimentSet eeset : eesets ){
+            ids.add( eeset.getId() );
+        }
+        
+        return ids;
+    }
+
+    @Override
     public boolean isValidForFrontEnd( ExpressionExperimentSet eeSet ) {
         return ( eeSet.getTaxon() != null );
     }

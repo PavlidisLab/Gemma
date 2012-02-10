@@ -233,4 +233,6 @@ public interface ExpressionExperimentSetService {
     public void updateDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo );
 
     public Collection<Long> getExperimentIdsInSet( Long id );
+
+    public Collection<Long> findIds( BioAssaySet bioAssaySet );
 }
