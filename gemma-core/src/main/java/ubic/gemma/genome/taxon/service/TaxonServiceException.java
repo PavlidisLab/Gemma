@@ -16,19 +16,19 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.experiment;
+package ubic.gemma.genome.taxon.service;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
+
 /**
- * The default exception thrown for unexpected errors occurring within
- * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentService}.
+ * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.genome.taxon.service.TaxonService}.
  */
-public class ExpressionExperimentServiceException extends java.lang.RuntimeException {
+public class TaxonServiceException extends java.lang.RuntimeException {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -5233628783939332140L;
+    private static final long serialVersionUID = 2093387665684821728L;
 
     /**
      * Finds the root cause of the parent exception by traveling up the exception tree
@@ -67,36 +67,36 @@ public class ExpressionExperimentServiceException extends java.lang.RuntimeExcep
     }
 
     /**
-     * The default constructor for <code>ExpressionExperimentServiceException</code>.
+     * The default constructor for <code>TaxonServiceException</code>.
      */
-    public ExpressionExperimentServiceException() {
+    public TaxonServiceException() {
     }
 
     /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * Constructs a new instance of <code>TaxonServiceException</code>.
      * 
      * @param message the throwable message.
      */
-    public ExpressionExperimentServiceException( String message ) {
+    public TaxonServiceException( String message ) {
         super( message );
     }
 
     /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * Constructs a new instance of <code>TaxonServiceException</code>.
      * 
      * @param message the throwable message.
      * @param throwable the parent of this Throwable.
      */
-    public ExpressionExperimentServiceException( String message, Throwable throwable ) {
+    public TaxonServiceException( String message, Throwable throwable ) {
         super( message, findRootCause( throwable ) );
     }
 
     /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * Constructs a new instance of <code>TaxonServiceException</code>.
      * 
      * @param throwable the parent Throwable
      */
-    public ExpressionExperimentServiceException( Throwable throwable ) {
+    public TaxonServiceException( Throwable throwable ) {
         super( findRootCause( throwable ) );
     }
 }

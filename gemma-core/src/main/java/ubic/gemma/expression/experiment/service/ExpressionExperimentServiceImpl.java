@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.experiment;
+package ubic.gemma.expression.experiment.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,6 +57,10 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
@@ -69,11 +73,11 @@ import ubic.gemma.util.monitor.Monitored;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService
+ * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService
  */
 @Service
 public class ExpressionExperimentServiceImpl extends
-        ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
+        ubic.gemma.expression.experiment.service.ExpressionExperimentServiceBase {
 
     private Log log = LogFactory.getLog( this.getClass() );
 

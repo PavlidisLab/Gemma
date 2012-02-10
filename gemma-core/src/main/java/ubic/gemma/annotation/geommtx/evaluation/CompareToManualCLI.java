@@ -46,10 +46,10 @@ import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
 import ubic.GEOMMTx.util.SetupParameters;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 

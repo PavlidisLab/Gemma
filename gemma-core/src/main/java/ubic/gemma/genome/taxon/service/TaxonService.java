@@ -16,13 +16,14 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome;
+package ubic.gemma.genome.taxon.service;
 
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey

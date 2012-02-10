@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.VectorMergingService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -40,7 +41,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author paul

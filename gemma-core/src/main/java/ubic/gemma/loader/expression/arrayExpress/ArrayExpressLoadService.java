@@ -33,6 +33,8 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.mage.MageMLConverter;
 import ubic.gemma.loader.expression.mage.MageMLConverterHelper;
 import ubic.gemma.loader.expression.mage.MageMLParser;
@@ -47,9 +49,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.Persister;
 
 /**

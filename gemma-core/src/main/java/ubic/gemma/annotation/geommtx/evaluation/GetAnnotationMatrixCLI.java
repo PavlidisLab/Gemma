@@ -26,10 +26,10 @@ import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.basecode.dataStructure.StringToStringSetMap;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**

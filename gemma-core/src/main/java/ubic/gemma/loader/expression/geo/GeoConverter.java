@@ -17,6 +17,7 @@ package ubic.gemma.loader.expression.geo;
 import java.util.Collection;
 import java.util.List;
 
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.util.converter.Converter;
@@ -25,7 +26,6 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
  * @author paul

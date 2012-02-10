@@ -23,8 +23,8 @@ import java.beans.PropertyEditorSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
  * Used to convert Taxon from and into strings for display in forms. Either by primary key (id), common or scientific

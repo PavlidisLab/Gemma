@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -34,11 +34,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetMember.Factory;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -66,10 +68,10 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Autowired
     Gene2GOAssociationService gene2GoService;
-
+    
     @Autowired
     SessionFactory sessionFactory;
-    
+
     @Before
     public void setUp() throws Exception {
 
@@ -205,7 +207,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         
         gmember = gset.getMembers().iterator().next();
         assertNotNull( gmember.getId() );
-        
+
         session.close();
         
         // add one.
@@ -220,17 +222,16 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g3 );
         gmember.setScore( 0.66 );
-                
+        
         gset.getMembers().add( gmember );
+
         assertEquals( 2, gset.getMembers().size() );
 
-        
         // persist.
         geneSetService.update( gset );
 
         // check
         gset = geneSetService.load( gset.getId() );
-
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         session.update( gset );
@@ -250,7 +251,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         session.update( gset );
         gset.getMembers().size();
         session.close();
-                
+        
         assertEquals( 1, gset.getMembers().size() );
 
         // clean

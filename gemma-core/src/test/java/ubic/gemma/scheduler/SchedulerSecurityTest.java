@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.ExpectedException;
 
 import ubic.gemma.analysis.report.WhatsNewService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.testing.BaseSpringContextTest;

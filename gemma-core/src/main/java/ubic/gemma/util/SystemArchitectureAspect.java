@@ -48,7 +48,7 @@ public class SystemArchitectureAspect {
     @Pointcut("within(ubic.gemma.model..*)")
     public void inModelLayer() {
     }
-
+    
     /**
      * A entity service method: a public method in a \@Service.
      */
@@ -62,6 +62,14 @@ public class SystemArchitectureAspect {
          * interfaces -- seems for InitializingBeans in particular. @within doesn't work, at least for the ACLs.
          */
     }
+
+    /**
+     * A entity service method.
+     */
+    @Pointcut("execution(public * ubic.gemma.model..*.*SampleCoexpressionAnalysisDaoImpl.*(..)))")
+    public void blockUpdateHack() {
+    }
+
 
     /**
      * Methods that create new objects in the persistent store

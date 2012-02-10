@@ -8,10 +8,10 @@ import java.util.Collection;
 import java.util.Set;
 
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;

@@ -22,8 +22,8 @@ import java.io.InputStreamReader;
 
 import org.junit.Test;
 
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * TODO Document Me

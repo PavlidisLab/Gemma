@@ -47,6 +47,7 @@ import ubic.GEOMMTx.filters.CUIIRIFilter;
 import ubic.GEOMMTx.filters.CUISUIFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
 import ubic.gemma.annotation.geommtx.evaluation.CheckHighLevelSpreadSheetReader;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -58,7 +59,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 

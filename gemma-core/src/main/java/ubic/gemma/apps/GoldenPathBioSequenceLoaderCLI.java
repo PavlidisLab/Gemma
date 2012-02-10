@@ -25,10 +25,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
