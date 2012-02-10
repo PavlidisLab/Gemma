@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
@@ -66,6 +67,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Autowired
     Gene2GOAssociationService gene2GoService;
 
+    @Autowired
+    SessionFactory sessionFactory;
+    
     @Before
     public void setUp() throws Exception {
 
@@ -195,31 +199,44 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         gset = geneSetService.create( gset );
         assertNotNull( gset.getId() );
+        
+        Session session = sessionFactory.openSession();
+        session.update( gset );
+        
         gmember = gset.getMembers().iterator().next();
         assertNotNull( gmember.getId() );
-
-        //Adding transaction bounding to gene set member load so that a thaw is not needed.
-        Session session = hibernateSupport.getSessionFactory().openSession();
-        //Session session = hibernateSupport.getSessionFactory().getCurrentSession();
-        Transaction tx = session.beginTransaction();
+        
+        session.close();
         
         // add one.
         gset = geneSetService.load( gset.getId() );
+        
+        // make sure members collection is initialized
+        session = sessionFactory.openSession();
+        session.update( gset );
+        gset.getMembers().size();
+        session.close();
+        
         gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g3 );
         gmember.setScore( 0.66 );
+                
         gset.getMembers().add( gmember );
-        
-        tx.commit();
-        session.close();
-
         assertEquals( 2, gset.getMembers().size() );
 
+        
         // persist.
         geneSetService.update( gset );
 
         // check
         gset = geneSetService.load( gset.getId() );
+
+        // make sure members collection is initialized
+        session = sessionFactory.openSession();
+        session.update( gset );
+        gset.getMembers().size();
+        session.close();
+        
         assertEquals( 2, gset.getMembers().size() );
 
         // remove one
@@ -228,6 +245,12 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         // check
         gset = geneSetService.load( gset.getId() );
+        // make sure members collection is initialized
+        session = sessionFactory.openSession();
+        session.update( gset );
+        gset.getMembers().size();
+        session.close();
+                
         assertEquals( 1, gset.getMembers().size() );
 
         // clean
