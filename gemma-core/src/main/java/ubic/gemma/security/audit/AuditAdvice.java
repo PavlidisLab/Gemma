@@ -24,26 +24,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.annotation.PostConstruct;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -70,8 +64,8 @@ import ubic.gemma.util.ReflectionUtil;
  * @author pavlidis
  * @version $Id$
  */
-@Repository
-public class AuditAdvice extends HibernateDaoSupport {
+@Component
+public class AuditAdvice {
 
     /*
      * Note that we have a special logger configured for this class, so delete events get stored.
@@ -98,11 +92,9 @@ public class AuditAdvice extends HibernateDaoSupport {
     private boolean AUDIT_DELETE = true;
 
     private boolean AUDIT_UPDATE = true;
-
-    private final TransactionTemplate transactionTemplate;
-
-    @Autowired
-    public AuditAdvice( SessionFactory sessionFactory, PlatformTransactionManager transactionManager ) {
+    
+    @PostConstruct
+    protected void init() {
 
         try {
             AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
@@ -110,10 +102,7 @@ public class AuditAdvice extends HibernateDaoSupport {
             AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" ) || AUDIT_UPDATE;
         } catch ( NoSuchElementException e ) {
             log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
-        }
-
-        transactionTemplate = new TransactionTemplate( transactionManager );
-        super.setSessionFactory( sessionFactory );
+        }        
     }
 
     /**
@@ -147,28 +136,25 @@ public class AuditAdvice extends HibernateDaoSupport {
     /**
      * @param a
      */
-    private AuditTrail addAuditTrailIfNeeded( Auditable a ) {
-        if ( a.getAuditTrail() == null ) {
+    private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
+        if ( auditable.getAuditTrail() == null ) {
 
             try {
 
-                a.setAuditTrail( auditTrailDao.create( AuditTrail.Factory.newInstance() ) );
-                /*
-                 * Critical to get trail associated in the store.
-                 */
-                this.getSession().update( a );
+                AuditTrail auditTrail =  AuditTrail.Factory.newInstance(); 
+                auditable.setAuditTrail( auditTrailDao.create( auditTrail ) );
 
             } catch ( Exception e ) {
 
                 /*
                  * This can happen if we hit an auditable during a read-only event: programming error.
                  */
-                throw new IllegalStateException( "Invalid attempt to create an audit trail on: " + a, e );
+                throw new IllegalStateException( "Invalid attempt to create an audit trail on: " + auditable, e );
             }
 
         }
 
-        return a.getAuditTrail();
+        return auditable.getAuditTrail();
     }
 
     /**
@@ -218,7 +204,6 @@ public class AuditAdvice extends HibernateDaoSupport {
             statusDao.initializeStatus( d );
             assert d.getStatus() != null && d.getStatus().getId() != null;
         }
-
     }
 
     /**
@@ -244,7 +229,7 @@ public class AuditAdvice extends HibernateDaoSupport {
         assert auditable != null;
 
         AuditTrail at = addAuditTrailIfNeeded( auditable );
-        if ( at.getEvents().size() == 0 ) {
+        if ( at.getEvents().isEmpty() ) {
             /*
              * Note: This can happen for ExperimentalFactors when loading from GEO etc. because of the bidirectional
              * association and the way we persist them. See ExpressionPersister. (actually this seems to be fixed...)
@@ -314,7 +299,6 @@ public class AuditAdvice extends HibernateDaoSupport {
         // String fullStackTrace = ExceptionUtils.getFullStackTrace( new Exception() );
 
         return "Updated " + d.getClass().getSimpleName() + " " + d.getId();
-
     }
 
     /**
@@ -375,41 +359,33 @@ public class AuditAdvice extends HibernateDaoSupport {
         if ( log.isTraceEnabled() )
             log.trace( "***********  Start Audit of " + methodName + " on " + a + " *************" );
 
-        transactionTemplate.execute( new TransactionCallbackWithoutResult() {
-            @SuppressWarnings("synthetic-access")
-            @Override
-            protected void doInTransactionWithoutResult( TransactionStatus status ) {
+        assert a != null : "Null entity passed to auditing [" + methodName + " on " + a + "]";
+        assert a.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + a + "]";
 
-                assert a != null : "Null entity passed to auditing [" + methodName + " on " + a + "]";
-                assert a.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + a + "]";
+//        if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
+//            Session session = getSession( false );
+//            session.buildLockRequest( LockOptions.NONE ).lock( a );
+//        }
 
-                if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
-                    Session session = getSession( false );
-                    session.buildLockRequest( LockOptions.NONE ).lock( a );
-                }
+        Hibernate.initialize( a );
+        Hibernate.initialize( a.getAuditTrail() );
 
-                Hibernate.initialize( a );
-                Hibernate.initialize( a.getAuditTrail() );
+        if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
+            addCreateAuditEvent( a, "" );
+            processAssociations( methodName, a );
+        } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
+            addUpdateAuditEvent( a );
 
-                if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
-                    addCreateAuditEvent( a, "" );
-                    processAssociations( methodName, a );
-                } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
-                    addUpdateAuditEvent( a );
+            /*
+             * Do not process associations during an update except to add creates to new objects. Otherwise this
+             * would result in update events getting added to all child objects, which is silly; and in any case
+             * they might be proxies.
+             */
+            processAssociations( methodName, a );
+        } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
+            addDeleteAuditEvent( a );
+        }
 
-                    /*
-                     * Do not process associations during an update except to add creates to new objects. Otherwise this
-                     * would result in update events getting added to all child objects, which is silly; and in any case
-                     * they might be proxies.
-                     */
-                    processAssociations( methodName, a );
-                } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
-                    addDeleteAuditEvent( a );
-                }
-
-            }
-
-        } );
 
         if ( log.isTraceEnabled() ) log.trace( "============  End Audit ==============" );
     }
@@ -458,8 +434,8 @@ public class AuditAdvice extends HibernateDaoSupport {
 
                     Auditable auditable = ( Auditable ) associatedObject;
                     try {
-                        this.getSession().buildLockRequest( LockOptions.NONE ).lock( auditable );
-                        Hibernate.initialize( auditable );
+                       // this.sessionFactory.getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( auditable );
+                       Hibernate.initialize( auditable );
 
                         AuditTrail at = this.addAuditTrailIfNeeded( auditable );
 

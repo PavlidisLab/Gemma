@@ -27,15 +27,11 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
@@ -53,11 +49,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -91,8 +83,8 @@ import ubic.gemma.util.ReflectionUtil;
  * @version $Id$
  * @see ubic.gemma.security.authorization.acl.AclPointcut
  */
-@Repository
-public class AclAdvice extends HibernateDaoSupport {
+@Component
+public class AclAdvice {
 
     private static Log log = LogFactory.getLog( AclAdvice.class );
 
@@ -103,14 +95,6 @@ public class AclAdvice extends HibernateDaoSupport {
     private CrudUtils crudUtils;
 
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
-
-    private final TransactionTemplate transactionTemplate;
-
-    @Autowired
-    public AclAdvice( SessionFactory sessionFactory, PlatformTransactionManager transactionManager ) {
-        transactionTemplate = new TransactionTemplate( transactionManager );
-        super.setSessionFactory( sessionFactory );
-    }
 
     /**
      * @param jp
@@ -160,134 +144,6 @@ public class AclAdvice extends HibernateDaoSupport {
         this.crudUtils = crudUtils;
     }
 
-    // TODO: Work in progress. This is a refactoring of addOrUpdateAcl logic. I'm keeping old one for now but it's
-    // getting too messy.
-    // private boolean isObjectPublicWhenCreatedByAdmin( Object object ) {
-    // return !( User.class.isAssignableFrom( object.getClass() ) || UserGroup.class.isAssignableFrom( object
-    // .getClass() ) );
-    // }
-    //
-    /*   
-       * 
-       * 
-       * 
-       */
-    // private AuditableAcl addAcl (Securable object, ObjectIdentity oi, Acl parentAcl) {
-    // // Assumption: doesn't exist
-    // AuditableAcl acl = null;
-    // Sid sid = null;
-    //
-    // // FIXME: better definition
-    // // Object is TOP_PARENT (ROOT of permissions inheritance tree)
-    // boolean isTopParent = ;
-    //
-    // /*
-    // * The logic here is: if we're supposed to inherit from the parent, but none is provided (can easily happen), we
-    // * have to put in ACEs. Same goes if we're not supposed to inherit. Objects which are not supposed to have their
-    // * own ACLs (SecurableChild)
-    // */
-    // if ( isTopParent ) {
-    //
-    // /*
-    // * All top level objects must have administration GROUP_ADMIN permissions.
-    // */
-    // if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );
-    // grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new GrantedAuthorityImpl(
-    // AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) );
-    //
-    // /*
-    // * GROUP_AGENT can read anything.
-    // */
-    // if ( log.isDebugEnabled() ) log.debug( "Making readable by GROUP_AGENT: " + oi );
-    // grant( acl, BasePermission.READ, new GrantedAuthoritySid( new GrantedAuthorityImpl(
-    // AuthorityConstants.AGENT_GROUP_AUTHORITY ) ) );
-    //
-    // /*
-    // * If object is created by admin and the object is not a user or group, make it readable by anonymous (public).
-    // */
-    // if ( SecurityService.isUserAdmin() & isObjectPublicWhenCreatedByAdmin ( object ) ) {
-    // if ( log.isDebugEnabled() ) log.debug( "Making readable by IS_AUTHENTICATED_ANONYMOUSLY: " + oi );
-    // grant( acl, BasePermission.READ, new GrantedAuthoritySid( new GrantedAuthorityImpl(
-    // AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ) );
-    // }
-    //
-    // /*
-    // * The user who created the object can read/write it, if admin then skip since admin has all permission already
-    // anyway.
-    // */
-    // if ( SecurityService.isUserLoggedIn() && !SecurityService.isUserAdmin() ) {
-    // if ( log.isDebugEnabled() ) log.debug( "Giving read/write permissions on " + oi + " to " + sid );
-    // grant( acl, BasePermission.READ, sid );
-    // grant( acl, BasePermission.WRITE, sid );
-    // }
-    // }
-    //
-    // //
-    // // SPECIAL CASES
-    // //
-    //
-    // /*
-    // * NEW USER CREATION AT REGISTRATION
-    // * Normal case: We expect anonymous user running with GROUP_RUN_AS_ADMIN privileges.
-    // */
-    // if ( SecurityService.isRunningAsAdmin() && User.class.isAssignableFrom( object.getClass() ) ) {
-    // User u = ( User ) object;
-    // sid = new PrincipalSid( u.getUserName() );
-    //
-    // grant( acl, BasePermission.READ, sid );
-    // grant( acl, BasePermission.WRITE, sid );
-    //
-    // if ( log.isDebugEnabled() ) log.debug( "New User: given read/write permissions on " + oi + " to " + sid );
-    // }
-    //
-    // // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
-    // // If aclParent is passed to this method we overwrite it.
-    // if ( DifferentialExpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-    //
-    // DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) object;
-    // ExpressionExperimentSet eeSet = dea.getExpressionExperimentSetAnalyzed();
-    // Collection<BioAssaySet> experiments = eeSet.getExperiments();
-    //
-    // if ( experiments.size() != 1 )
-    // throw new RuntimeException( "We do not support Diff. Expr. Analyses based on multiple datasets." );
-    //
-    // BioAssaySet e = experiments.iterator().next();
-    // ObjectIdentity oi_temp = makeObjectIdentity( e );
-    //
-    // parentAcl = aclService.readAclById( oi_temp );
-    // acl.setEntriesInheriting( true );
-    // }
-    //
-    // acl.setEntriesInheriting( inheritParent );
-    // acl.setOwner( sid );
-    //
-    // assert !acl.equals( parentAcl );
-    //
-    // if ( parentAcl != null ) {
-    // if ( log.isTraceEnabled() ) log.trace( "Setting parent to: " + parentAcl + " <--- " + acl );
-    // acl.setParent( parentAcl );
-    // }
-    //
-    // return ( AuditableAcl ) aclService.updateAcl( acl );
-    //
-    // }
-    //
-    // private AuditableAcl updateAcl( AuditableAcl acl, Securable object, Acl parentAcl ) {
-    // // Assumption: already exists
-    //
-    // /*
-    // * Could be findOrCreate, or could be a second pass that will let us fill in parent ACLs for associated objects
-    // * missed earlier in a persist cycle. E.g. BioMaterial
-    // */
-    // try {
-    // maybeSetParentACL( object, acl, parentAcl );
-    // return acl;
-    // } catch ( NotFoundException nfe ) {
-    // log.error( nfe, nfe );
-    // }
-    //
-    // return null;
-    // }
 
     /**
      * Creates the acl_permission object and the acl_object_identity object.
@@ -300,18 +156,6 @@ public class AclAdvice extends HibernateDaoSupport {
         if ( object.getId() == null ) {
             log.warn( "ACLs cannot be added or updated on non-persistent object" );
         }
-
-        // Flow
-        // exists vs doesn't exist
-        // updateAcl addAcl
-
-        // inherits from parent vs doesn't inherit
-        //
-        // Special handling under some privileges
-        // Special handling for some classes
-        // (default permissions rules)
-        // Root (top_parent) of acl inheritance tree
-        // Enforce SecuredChild, SecuredNotChild rules
 
         ObjectIdentity oi = makeObjectIdentity( object );
 
@@ -753,39 +597,32 @@ public class AclAdvice extends HibernateDaoSupport {
      * @param isDelete
      */
     private void process( final Object o, final String methodName, final boolean isUpdate, final boolean isDelete ) {
-        transactionTemplate.execute( new TransactionCallbackWithoutResult() {
+        if ( log.isTraceEnabled() ) log.trace( "***********  Start ACL *************" );
 
-            @SuppressWarnings("synthetic-access")
-            @Override
-            protected void doInTransactionWithoutResult( TransactionStatus status ) {
-                if ( log.isTraceEnabled() ) log.trace( "***********  Start ACL *************" );
+        Securable s = ( Securable ) o;
 
-                Securable s = ( Securable ) o;
+        assert s != null;
 
-                assert s != null;
+        //Session session = getSessionFactory().getCurrentSession();
 
-                Session session = getSessionFactory().getCurrentSession();
+        /*
+         * See AuditAdvice.process for a discussion of how difficult this is.
+         */
+//        if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
+//            session.buildLockRequest( LockOptions.NONE ).lock( s );
+//        }
 
-                /*
-                 * See AuditAdvice.process for a discussion of how difficult this is.
-                 */
-                if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
-                    session.buildLockRequest( LockOptions.NONE ).lock( s );
-                }
+        Hibernate.initialize( s );
 
-                Hibernate.initialize( s );
+        if ( isUpdate ) {
+            startUpdate( methodName, s );
+        } else if ( isDelete ) {
+            deleteAcl( s );
+        } else {
+            startCreate( methodName, s );
+        }
 
-                if ( isUpdate ) {
-                    startUpdate( methodName, s );
-                } else if ( isDelete ) {
-                    deleteAcl( s );
-                } else {
-                    startCreate( methodName, s );
-                }
-
-                if ( log.isTraceEnabled() ) log.trace( "*========* End ACL *=========*" );
-            }
-        } );
+        if ( log.isTraceEnabled() ) log.trace( "*========* End ACL *=========*" );
     }
 
     /**
