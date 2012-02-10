@@ -137,7 +137,7 @@
 
 	<s:global-method-security run-as-manager-ref="runAsManager"
 		secured-annotations="enabled" pre-post-annotations="enabled"
-		access-decision-manager-ref="accessDecisionManager">
+		access-decision-manager-ref="accessDecisionManager" order="1">
 		<s:expression-handler ref="securityExpressionHandler" />
 
 		<!-- these filters are declared below -->
@@ -336,7 +336,7 @@
 	<!-- Aspect that adds ACLs for new entities, and deletes them for deleted 
 		entities. -->
 	<aop:config>
-		<aop:aspect id="aclAspect" ref="aclAdvice" order="2" >
+		<aop:aspect id="aclAspect" ref="aclAdvice" order="3" >
 			<aop:after-returning method="doAclAdvice"
 				pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
 				returning="retValue" />
@@ -346,7 +346,7 @@
 
 	<!-- Aspect to add audit info for objects after CRUD operations. -->
 	<aop:config>
-		<aop:aspect id="auditAspect" ref="auditAdvice" order="3">
+		<aop:aspect id="auditAspect" ref="auditAdvice" order="4">
 			<aop:after-returning method="doAuditAdvice"
 				pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
 				returning="retValue" />
