@@ -257,17 +257,25 @@ public class SignupController extends BaseController {
 
         JSONUtil jsonUtil = new JSONUtil( request, response );
 
-        String jsonText = null;
+        String jsonText = "{success:false}";
         String userName = null;
+        
+        try {
 
-        if ( userManager.loggedIn() ) {
-            userName = userManager.getCurrentUser().getUserName();
-            jsonText = "{success:true,user:\'" + userName + "\',isAdmin:"+SecurityServiceImpl.isUserAdmin()+"}";
-        } else {
-            jsonText = "{success:false}";
-        }
-        jsonUtil.writeToResponse( jsonText );
-        return;
-
+            if ( userManager.loggedIn() ) {
+                userName = userManager.getCurrentUser().getUserName();
+                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:"+SecurityServiceImpl.isUserAdmin()+"}";
+            } else {
+                jsonText = "{success:false}";
+            }
+        } catch ( Exception e ) {
+           
+            log.error( e, e );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+            log.info( jsonText );
+        } finally {
+            jsonUtil.writeToResponse( jsonText );
+        }       
+        
     }
 }
