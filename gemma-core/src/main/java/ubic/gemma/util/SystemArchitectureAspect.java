@@ -64,14 +64,6 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * A entity service method.
-     */
-    @Pointcut("execution(public * ubic.gemma.model..*.*SampleCoexpressionAnalysisDaoImpl.*(..)))")
-    public void blockUpdateHack() {
-    }
-
-
-    /**
      * Methods that create new objects in the persistent store
      */
     @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
