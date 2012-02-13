@@ -814,9 +814,9 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Sequence";
 		} else if (clazz === "GeneValueObject") {
 			return "Gene";
-		} else if (clazz === "GeneSetValueObject") {
+		} else if (clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
 			return "Gene set";
-		} else if (clazz === "ExpressionExperimentSetValueObject") {
+		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject" ) {
 			return "Experiment set";
 		} else {
 			return clazz;
@@ -833,8 +833,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return record.shortName;
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return record.name;
-		} else if (clazz === "GeneValueObject" || clazz === 'GeneSetValueObject'
-				|| clazz === 'ExpressionExperimentSetValueObject') {
+		} else if (clazz === "GeneValueObject" || clazz === 'GeneSetValueObject' || clazz === "DatabaseBackedGeneSetValueObject" 
+				|| clazz === 'ExpressionExperimentSetValueObject' || clazz === "DatabaseBackedExpressionExperimentSetValueObject") {
 			return record.name;
 		} else {
 			return clazz;
@@ -845,36 +845,49 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
 		if (clazz === "ExpressionExperimentValueObject") {
-			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-					+ (data.sourceExperiment ? data.sourceExperiment : data.id) + "\">" + data.shortName + "</a> - "
-					+ data.name;
+			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
+			(data.sourceExperiment ? data.sourceExperiment : data.id) +
+			"\">" +
+			data.shortName +
+			"</a> - " +
+			data.name;
 		} else if (clazz === "CompositeSequence") {
-			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - "
-					+ (data.description ? data.description : "") + "; Array: " + data.arrayDesign.shortName;
+			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - " +
+			(data.description ? data.description : "") +
+			"; Array: " +
+			data.arrayDesign.shortName;
 		} else if (clazz === "ArrayDesignValueObject") {
-			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  "
-					+ data.name;
+			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " +
+			data.name;
 		} else if (/^BioSequence.*/.exec(clazz)) {
-			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name
-					+ "</a> - " + data.taxon.commonName + " " + (data.description ? data.description : "");
+			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name +
+			"</a> - " +
+			data.taxon.commonName +
+			" " +
+			(data.description ? data.description : "");
 		} else if (clazz === "GeneValueObject" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
-					+ "</a>  - Species: " + data.taxonCommonName + " Desc: " + data.officialName;
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol +
+			"</a>  - Species: " +
+			data.taxonCommonName +
+			" Desc: " +
+			data.officialName;
 		} else if (clazz === "Bibliographicreference") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId
-					+ "]";
-		} else if (clazz === "ExpressionExperimentSetValueObject") {
-
-			/*
-			 * TODO add links.
-			 */
-			return data.name;
-		} else if (clazz === "GeneSetValueObject") {
-
-			/*
-			 * TODO add links
-			 */
-			return data.name;
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
+			"]";
+		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject") {
+			return "<a href=\"/Gemma/geneSet/showGeneSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
+			data.taxonName +
+			"</span> (" +
+			data.size +
+			")";
+		} else if (clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject") {
+			return "<a href=\"/Gemma/geneSet/showGeneSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
+			data.taxonName +
+			"</span> (" +
+			data.size +
+			")";
+		} else {
+			return data[0];
 		}
 	}
 
