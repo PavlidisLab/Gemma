@@ -78,8 +78,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String queryString = "select count(distinct gene_fk) from acl_entry join acl_object_identity ON acl_entry.acl_object_identity = acl_object_identity.id join CHARACTERISTIC on CHARACTERISTIC.phenotype_association_fk =acl_object_identity.object_id_identity join PHENOTYPE_ASSOCIATION on PHENOTYPE_ASSOCIATION.id =acl_object_identity.object_id_identity join acl_class on acl_class.id=acl_object_identity.object_id_class where sid=4 and mask=1 and acl_class.class in "
                 + endQuery;
-        
-        System.out.println(queryString);
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 

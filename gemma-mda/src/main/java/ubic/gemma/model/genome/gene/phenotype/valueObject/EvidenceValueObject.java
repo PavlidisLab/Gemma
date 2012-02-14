@@ -95,7 +95,7 @@ public abstract class EvidenceValueObject {
     private String description = "";
     private CharacteristicValueObject associationType = null;
     private String evidenceCode = null;
-    private Boolean isNegativeEvidence = new Boolean( false );
+    private boolean isNegativeEvidence = false;
 
     private String className = "";
     private Set<CharacteristicValueObject> phenotypes = null;
@@ -106,7 +106,7 @@ public abstract class EvidenceValueObject {
     private String externalUrl = "";
 
     // last modified date of the evidence
-    private String lastUpdatedDate = null;
+    private String lastUpdated = null;
     // security for the evidence
     private SecurityInfoValueObject securityInfoValueObject = null;
     // linked to what gene
@@ -144,13 +144,13 @@ public abstract class EvidenceValueObject {
             this.phenotypes.add( characteristicVO );
         }
 
-        this.lastUpdatedDate = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
+        this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
 
     }
 
     protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
+            boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
             EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
         super();
         this.description = description;
@@ -229,7 +229,7 @@ public abstract class EvidenceValueObject {
         this.evidenceCode = evidenceCode;
     }
 
-    public void setIsNegativeEvidence( Boolean isNegativeEvidence ) {
+    public void setIsNegativeEvidence( boolean isNegativeEvidence ) {
         this.isNegativeEvidence = isNegativeEvidence;
     }
 
@@ -246,11 +246,11 @@ public abstract class EvidenceValueObject {
     }
 
     public String getLastUpdatedDate() {
-        return this.lastUpdatedDate;
+        return this.lastUpdated;
     }
 
-    public void setLastUpdatedDate( String lastUpdatedDate ) {
-        this.lastUpdatedDate = lastUpdatedDate;
+    public void setLastUpdatedDate( String lastUpdated ) {
+        this.lastUpdated = lastUpdated;
     }
 
     public SecurityInfoValueObject getSecurityInfoValueObject() {

@@ -2,18 +2,18 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 public class SecurityInfoValueObject {
 
-    private Boolean currentUserHasWritePermission = false;
+    private boolean currentUserHasWritePermission = false;
 
-    private Boolean currentUserIsOwner = false;
+    private boolean currentUserIsOwner = false;
 
-    private Boolean isPublic = true;
+    private boolean isPublic = true;
 
-    private Boolean isShared = false;
+    private boolean isShared = false;
 
     private String owner = null;
 
-    public SecurityInfoValueObject( Boolean currentUserHasWritePermission, Boolean currentUserIsOwner,
-            Boolean isPublic, Boolean isShared, String owner ) {
+    public SecurityInfoValueObject( boolean currentUserHasWritePermission, boolean currentUserIsOwner,
+            boolean isPublic, boolean isShared, String owner ) {
         super();
         this.currentUserHasWritePermission = currentUserHasWritePermission;
         this.currentUserIsOwner = currentUserIsOwner;
@@ -22,35 +22,35 @@ public class SecurityInfoValueObject {
         this.owner = owner;
     }
 
-    public Boolean getCurrentUserHasWritePermission() {
+    public boolean isCurrentUserHasWritePermission() {
         return this.currentUserHasWritePermission;
     }
 
-    public void setCurrentUserHasWritePermission( Boolean currentUserHasWritePermission ) {
+    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
         this.currentUserHasWritePermission = currentUserHasWritePermission;
     }
 
-    public Boolean getCurrentUserIsOwner() {
+    public boolean isCurrentUserIsOwner() {
         return this.currentUserIsOwner;
     }
 
-    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
+    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
         this.currentUserIsOwner = currentUserIsOwner;
     }
 
-    public Boolean getIsPublic() {
+    public boolean isPublic() {
         return this.isPublic;
     }
 
-    public void setIsPublic( Boolean isPublic ) {
+    public void setPublic( boolean isPublic ) {
         this.isPublic = isPublic;
     }
 
-    public Boolean getIsShared() {
+    public boolean isShared() {
         return this.isShared;
     }
 
-    public void setIsShared( Boolean isShared ) {
+    public void setShared( boolean isShared ) {
         this.isShared = isShared;
     }
 
