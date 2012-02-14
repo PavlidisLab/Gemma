@@ -135,6 +135,6 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
-    public ValidateEvidenceValueObject validateEvidence( String geneNCBI, EvidenceValueObject evidence );
+    public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
 
 }

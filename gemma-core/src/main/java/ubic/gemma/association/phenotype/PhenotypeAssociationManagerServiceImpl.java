@@ -653,7 +653,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     @Override
-    public ValidateEvidenceValueObject validateEvidence( String geneNCBI, EvidenceValueObject evidence ) {
+    public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
@@ -681,7 +681,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     }
 
                     // look if the gene have already been annotated
-                    if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
+                    if ( evidence.getGeneNCBI().equals( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
 
                         validateEvidenceValueObject = new ValidateEvidenceValueObject();
 
