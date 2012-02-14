@@ -10,7 +10,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 
 public class BibliographicPhenotypesValueObject {
 
-    private String geneNCBI = "";
+    private Integer geneNCBI = 0;
     private String geneName = "";
     private Long evidenceId = null;
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
@@ -19,7 +19,7 @@ public class BibliographicPhenotypesValueObject {
         super();
     }
 
-    public BibliographicPhenotypesValueObject( String geneName, String geneNCBI,
+    public BibliographicPhenotypesValueObject( String geneName, Integer geneNCBI,
             Set<CharacteristicValueObject> phenotypesValues ) {
         super();
         this.geneName = geneName;
@@ -29,7 +29,7 @@ public class BibliographicPhenotypesValueObject {
 
     public BibliographicPhenotypesValueObject( PhenotypeAssociation phenotypeAssociation ) {
         super();
-        this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId().toString();
+        this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
         this.geneName = phenotypeAssociation.getGene().getName();
         this.evidenceId = phenotypeAssociation.getId();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
@@ -67,11 +67,11 @@ public class BibliographicPhenotypesValueObject {
         this.phenotypesValues = phenotypesValues;
     }
 
-    public String getGeneNCBI() {
+    public Integer getGeneNCBI() {
         return this.geneNCBI;
     }
 
-    public void setGeneNCBI( String geneNCBI ) {
+    public void setGeneNCBI( Integer geneNCBI ) {
         this.geneNCBI = geneNCBI;
     }
 
