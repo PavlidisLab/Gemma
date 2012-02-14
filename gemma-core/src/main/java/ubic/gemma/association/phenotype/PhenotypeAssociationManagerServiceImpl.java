@@ -63,7 +63,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceStatusValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceErrorValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -144,7 +144,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
-    public EvidenceStatusValueObject create( EvidenceValueObject evidence ) {
+    public EvidenceErrorValueObject create( EvidenceValueObject evidence ) {
 
         if ( evidence.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot create an Evidence with no Phenotype" );
@@ -153,7 +153,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "Cannot create an Evidence not linked to a Gene" );
         }
 
-        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
+        EvidenceErrorValueObject evidenceErrorValueObject = null;
 
         Gene gene = this.geneService.findByNCBIId( evidence.getGeneNCBI() );
 
@@ -166,8 +166,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // the evidence already exists, no need to create it again
                 log.warn( "Trying to create an Evidence already present in the database" );
 
-                evidenceStatusValueObject.setEvidenceAlreadyInDatabase( true );
-                return evidenceStatusValueObject;
+                evidenceErrorValueObject = new EvidenceErrorValueObject();
+                evidenceErrorValueObject.setEvidenceAlreadyInDatabase( true );
+                return evidenceErrorValueObject;
             }
         }
 
@@ -184,12 +185,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( evidence.getSecurityInfoValueObject() != null ) {
             // evidence is not public
-            if ( evidence.getSecurityInfoValueObject().getIsPublic() == false ) {
+            if ( !evidence.getSecurityInfoValueObject().isPublic() ) {
                 this.securityService.makePrivate( phenotypeAssociation );
             }
         }
 
-        return evidenceStatusValueObject;
+        return evidenceErrorValueObject;
     }
 
     /**
@@ -344,9 +345,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     // TODO to test and to be modified
-    public EvidenceStatusValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
+    public EvidenceErrorValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
-        EvidenceStatusValueObject evidenceStatusValueObject = new EvidenceStatusValueObject();
+        EvidenceErrorValueObject evidenceErrorValueObject = null;
 
         if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
@@ -365,8 +366,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // check for the race condition
         if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
                 .equals( modifedEvidenceValueObject.getLastUpdatedDate() ) ) {
-            evidenceStatusValueObject.setLastUpdateDateDifferent( true );
-            return evidenceStatusValueObject;
+            evidenceErrorValueObject = new EvidenceErrorValueObject();
+            evidenceErrorValueObject.setLastUpdateDifferent( true );
+            return evidenceErrorValueObject;
         }
 
         // evidence type changed
@@ -390,12 +392,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // was private becomes public
             if ( this.securityService.isPrivate( phenotypeAssociation )
-                    && modifedEvidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                    && modifedEvidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
                 this.securityService.makePublic( phenotypeAssociation );
             }
             // was public becomes private
             else if ( this.securityService.isPublic( phenotypeAssociation )
-                    && !modifedEvidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                    && !modifedEvidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
                 this.securityService.makePrivate( phenotypeAssociation );
             }
         }
@@ -405,7 +407,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             buildTree( detectChangedPhenotypes );
         }
 
-        return evidenceStatusValueObject;
+        return evidenceErrorValueObject;
     }
 
     /**
@@ -653,7 +655,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public ValidateEvidenceValueObject validateEvidence( String geneNCBI, EvidenceValueObject evidence ) {
 
-        ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         if ( evidence instanceof LiteratureEvidenceValueObject ) {
 
@@ -663,6 +665,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmedId );
 
             if ( bibliographicReferenceValueObject == null ) {
+                validateEvidenceValueObject = new ValidateEvidenceValueObject();
                 validateEvidenceValueObject.setInvalidPubmedId( true );
             } else {
 
@@ -679,6 +682,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     // look if the gene have already been annotated
                     if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
+
+                        validateEvidenceValueObject = new ValidateEvidenceValueObject();
 
                         validateEvidenceValueObject.setSameGeneAnnotated( true );
 
@@ -1012,7 +1017,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
                     // find the security information for the object
-                    if ( evidenceValueObject.getSecurityInfoValueObject().getIsPublic() ) {
+                    if ( evidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
                         evidenceFromPhenotype.add( evidenceValueObject );
                     }
                 }
