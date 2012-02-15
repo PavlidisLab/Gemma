@@ -47,7 +47,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -273,7 +272,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteGroup(java.lang.String)
      */
-    @Transactional
     public void deleteGroup( String groupName ) {
         UserGroup group = loadGroup( groupName );
         group.getGroupMembers().clear();
@@ -285,7 +283,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteUser(java.lang.String)
      */
-    @Transactional
     public void deleteUser( String username ) {
 
         User user = loadUser( username );
@@ -299,7 +296,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findAllGroups()
      */
-    @Transactional(readOnly = true)
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
 
@@ -311,7 +307,6 @@ public class UserManagerImpl implements UserManager {
 
     }
 
-    @Transactional(readOnly = true)
     public Collection<String> findAllUsers() {
         Collection<User> users = userService.loadAll();
 
@@ -356,7 +351,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupAuthorities(java.lang.String)
      */
-    @Transactional(readOnly = true)
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
 
         String groupToSearch = groupName;
@@ -388,7 +382,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupsForUser(java.lang.String)
      */
-    @Transactional(readOnly = true)
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
 
@@ -413,7 +406,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findUsersInGroup(java.lang.String)
      */
-    @Transactional(readOnly = true)
     public List<String> findUsersInGroup( String groupName ) {
 
         UserGroup group = loadGroup( groupName );
@@ -504,7 +496,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#loadUserByUsername(java.lang.String)
      */
-    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
         List<UserDetails> users = loadUsersByUsername( username );
 
@@ -570,7 +561,6 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#removeGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
-    @Transactional
     public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
 
         UserGroup group = loadGroup( groupName );
@@ -584,7 +574,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#removeUserFromGroup(java.lang.String, java.lang.String)
      */
-    @Transactional
     public void removeUserFromGroup( String username, String groupName ) {
 
         User user = userService.findByUserName( username );
@@ -603,7 +592,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#renameGroup(java.lang.String, java.lang.String)
      */
-    @Transactional
     public void renameGroup( String oldName, String newName ) {
 
         UserGroup group = userService.findGroupByName( oldName );
@@ -669,7 +657,6 @@ public class UserManagerImpl implements UserManager {
      * ubic.gemma.security.authentication.UserManager#updateUser(org.springframework.security.core.userdetails.UserDetails
      * )
      */
-    @Transactional
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
@@ -712,7 +699,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#validateSignupToken(java.lang.String, java.lang.String)
      */
-    @Transactional
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean validateSignupToken( String username, String key ) {
 
@@ -810,7 +796,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUsersByUsername(java.lang.String)
      */
-    @Transactional
     protected List<UserDetails> loadUsersByUsername( String username ) {
         List<UserDetails> result = new ArrayList<UserDetails>();
         User u = loadUser( username );
