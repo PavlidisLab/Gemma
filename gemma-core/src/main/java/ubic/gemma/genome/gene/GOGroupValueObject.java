@@ -39,8 +39,6 @@ package ubic.gemma.genome.gene;
 
 import java.util.Collection;
 
-import ubic.gemma.model.genome.gene.GeneSet;
-
 /**
  * TODO Document Me
  * 
@@ -75,25 +73,6 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setTaxonId( taxonId );
         this.setTaxonName( taxonName );
         this.setGeneIds( memberIds );
-        this.setId( new Long( -1 ) );
-        this.setModified( false );
-        this.setGoId( goId );
-        this.setSearchTerm( searchTerm );
-    }
-
-    /**
-     * Method to create a display object from scratch
-     */
-    public GOGroupValueObject( GeneSet gs, String goId, String searchTerm ) {
-
-        GeneSetValueObject gsvo = new SessionBoundGeneSetValueObject( gs );
-
-        this.setName( gsvo.getName() );
-        this.setDescription( gsvo.getDescription() );
-        this.setSize( gsvo.getSize() );
-        this.setTaxonId( gsvo.getTaxonId() );
-        this.setTaxonName( gsvo.getTaxonName() );
-        this.setGeneIds( gsvo.getGeneIds() );
         this.setId( new Long( -1 ) );
         this.setModified( false );
         this.setGoId( goId );

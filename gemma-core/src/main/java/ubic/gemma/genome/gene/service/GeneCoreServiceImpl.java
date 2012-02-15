@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
@@ -35,7 +36,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
     private GeneService geneService = null;
     
     @Autowired
-    private GeneSetService geneSetService = null;
+    private GeneSetValueObjectHelper geneSetValueObjectHelper = null;
 
     @Autowired
     private GeneSetSearch geneSetSearch;
@@ -85,7 +86,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
+        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );

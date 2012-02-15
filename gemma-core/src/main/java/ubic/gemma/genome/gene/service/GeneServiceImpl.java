@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -83,6 +84,9 @@ public class GeneServiceImpl extends GeneServiceBase {
 
     @Autowired
     AnnotationAssociationService annotationAssociationService;
+    
+    @Autowired
+    GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
@@ -518,7 +522,7 @@ public class GeneServiceImpl extends GeneServiceBase {
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetService.convertToValueObjects( genesets, false ) );
+        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );

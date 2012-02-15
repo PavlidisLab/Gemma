@@ -42,6 +42,7 @@ import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.FreeTextGeneResultsValueObject;
 import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -86,6 +87,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     @Autowired
     private GeneOntologyService geneOntologyService;
+    
+    @Autowired
+    private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     // TODO REFACTOR method is much too long -Thea
     @Override
@@ -165,7 +169,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
             for ( SearchResult sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
-                GeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+                GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gs );
 
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
@@ -177,7 +181,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // convert result object to a value object
             for(SearchResult sr : taxonCheckedSets ){
                 GeneSet g = ( GeneSet ) sr.getResultObject();
-                DatabaseBackedGeneSetValueObject gsvo = geneSetService.convertToValueObject( g );
+                DatabaseBackedGeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( g );
                 sr.setResultObject( gsvo );
             }
             
@@ -207,7 +211,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
                 taxon = geneSetService.getTaxonForGeneSet( ( GeneSet ) sr.getResultObject() );
-                GeneSetValueObject gsvo = geneSetService.convertToValueObject( gs );
+                GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gs );
                 srdo = new SearchResultDisplayObject( gsvo );
                 srdo.setTaxonId( taxon.getId() );
                 srdo.setTaxonName( taxon.getCommonName() );
@@ -259,7 +263,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 if ( query.toUpperCase().startsWith( "GO" ) ) {
                     GeneSet goSet = geneSetSearch.findByGoId( query, taxonForGo );
                     if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
-                        GOGroupValueObject ggvo = new GOGroupValueObject( goSet, query, query );
+                        GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( goSet, query, query );
                         ggvo.setTaxonId( taxonForGo.getId() );
                         ggvo.setTaxonName( taxonForGo.getCommonName() );
                         SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
@@ -274,7 +278,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                         // don't bother adding empty GO groups
                         // (should probably do this check elsewhere in case it speeds things up)
                         if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                            GOGroupValueObject ggvo = new GOGroupValueObject( geneSet, null, query );
+                            GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( geneSet, null, query );
                             ggvo.setTaxonId( taxonForGo.getId() );
                             ggvo.setTaxonName( taxonForGo.getCommonName() );
                             SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
@@ -416,7 +420,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResultDisplayObject> displayResultsPublic = new LinkedList<SearchResultDisplayObject>();
         SearchResultDisplayObject newSRDO = null;
         for ( GeneSet set : sets ) {
-            GeneSetValueObject gsvo = geneSetService.convertToValueObject( set );
+            GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( set );
             newSRDO = new SearchResultDisplayObject( gsvo );
             newSRDO.setTaxonId( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonId() );
             newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );

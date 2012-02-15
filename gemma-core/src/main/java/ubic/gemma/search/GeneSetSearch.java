@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.genome.gene.GOGroupValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -60,6 +61,9 @@ public class GeneSetSearch {
 
     @Autowired
     private TaxonService taxonService;
+    
+    @Autowired
+    private GeneSetValueObjectHelper geneSetValueObjectHelper;
     
     /**
      * @param gene
@@ -93,7 +97,7 @@ public class GeneSetSearch {
                     log.warn( "No matching gene set found for: " + goId );
                     return null;
                 }
-                GOGroupValueObject ggvo = new GOGroupValueObject( result, goId, goId );
+                GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( result, goId, goId );
                 
                 ggvo.setTaxonId( taxon.getId() );
                 ggvo.setTaxonName( taxon.getCommonName() );

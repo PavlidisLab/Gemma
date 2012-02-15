@@ -20,13 +20,8 @@
 
 package ubic.gemma.genome.gene;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
-import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 /**
  * TODO Document Me
@@ -38,47 +33,12 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
 
     private static final long serialVersionUID = 5073203626044664184L;
     private boolean modified;
-    
-    /**
-     * @param genesets
-     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
-     * @return
-     */
-    public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets,
-            boolean includeOnesWithoutGenes ) {
-        List<GeneSetValueObject> results = new ArrayList<GeneSetValueObject>();
 
-        for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
-                continue;
-            }
-
-            results.add( new SessionBoundGeneSetValueObject( gs ) );
-        }
-
-        Collections.sort( results, new Comparator<GeneSetValueObject>() {
-            @Override
-            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
-                return -o1.getSize().compareTo( o2.getSize() );
-            }
-        } );
-        return results;
-    }
     /**
      * default constructor to satisfy java bean contract
      */
     public SessionBoundGeneSetValueObject() {
         super();
-        this.setModified( false );
-    }
-
-    /**
-     * Constructor to build value object from GeneSet
-     * 
-     * @param gs
-     */
-    public SessionBoundGeneSetValueObject( GeneSet gs ) {
-        super(gs);
         this.setModified( false );
     }
 

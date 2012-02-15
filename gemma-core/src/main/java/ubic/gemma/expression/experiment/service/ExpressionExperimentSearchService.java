@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -76,8 +77,10 @@ public class ExpressionExperimentSearchService {
     private TaxonService taxonService;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentService expressionExperimentService;
     
+    @Autowired
+    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
 
     /**
      * 
@@ -206,7 +209,7 @@ public class ExpressionExperimentSearchService {
         // get all expressionExperimentSet results and convert result object into a value object
         for(SearchResult sr : eesSR){
             ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) sr.getResultObject();
-            DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService.convertToValueObject( eeSet );
+            DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
             sr.setResultObject( eevo );
         }
         

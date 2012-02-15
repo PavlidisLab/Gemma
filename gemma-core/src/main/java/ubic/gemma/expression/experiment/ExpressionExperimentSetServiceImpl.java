@@ -60,6 +60,8 @@ public class ExpressionExperimentSetServiceImpl extends
     @Autowired 
     private ExpressionExperimentReportService expressionExperimentReportService;
     
+    @Autowired
+    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
 
     /*
      * (non-Javadoc)
@@ -91,7 +93,7 @@ public class ExpressionExperimentSetServiceImpl extends
 
     @Override
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadMySetValueObjects() {
-        return this.convertToValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
+        return expressionExperimentValueObjectHelper.convertToValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
     }
 
     @Override
@@ -221,51 +223,6 @@ public class ExpressionExperimentSetServiceImpl extends
         }
         return valid;
     }
-    
-    public DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
-        if(set == null){
-            return null;
-        }
-        int size = this.getExpressionExperimentSetDao().getExperimentCount( set.getId() );
-        assert size > 1; // should be due to the query.
-
-        DatabaseBackedExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
-        vo.setName( set.getName() );
-        vo.setId( set.getId() );
-        Taxon taxon = set.getTaxon();
-        if ( taxon == null ) {
-            // happens in test databases that aren't properly populated.
-            // log.debug( "No taxon provided" );
-        } else {
-            vo.setTaxonId( taxon.getId() );
-            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
-            // downstream object. This is
-            // basically a thaw.
-        }
-
-        vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
-
-        vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
-        vo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( set ) );
-        vo.setPublik( securityService.isPublic( set ) );
-        vo.setShared( securityService.isShared( set ) );
-
-        // if the set is used in an analysis, it should not be modifiable
-        if ( this.getAnalyses( set ).size() > 0 ) {
-            vo.setModifiable( false );
-        } else {
-            vo.setModifiable( true );
-        }
-
-        /*
-         * getExperimentsInSet to get the security-filtered ees.
-         */
-        vo.setExpressionExperimentIds( this.getExpressionExperimentSetDao().getExperimentIds( set.getId() ) );
-        //vo.getExpressionExperimentIds().addAll( EntityUtils.getIds( this.getExperimentsInSet( set.getId() ) ) );
-
-        vo.setNumExperiments( size );
-        return vo;
-    }
 
     @Override
     public DatabaseBackedExpressionExperimentSetValueObject createDatabaseEntity( ExpressionExperimentSetValueObject eesvo ){
@@ -315,18 +272,8 @@ public class ExpressionExperimentSetServiceImpl extends
             securityService.makePrivate( newEESet );
         }
         
-        return convertToValueObject( newEESet );
+        return expressionExperimentValueObjectHelper.convertToValueObject( newEESet );
         
-    }
-    
-    @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects( Collection<ExpressionExperimentSet> sets ) {
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> vos = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
-        java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
-        while(iter.hasNext()){
-            vos.add( this.convertToValueObject( iter.next() ) );
-        }
-        return vos;
     }
 
     @Override
@@ -337,7 +284,7 @@ public class ExpressionExperimentSetServiceImpl extends
 
         // should be a small number of items.
         for ( ExpressionExperimentSet set : sets ) {
-            ExpressionExperimentSetValueObject vo = this.convertToValueObject( set );
+            ExpressionExperimentSetValueObject vo = expressionExperimentValueObjectHelper.convertToValueObject( set );
             results.add( vo );
         }
 
@@ -371,13 +318,19 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id ) {
         ExpressionExperimentSet eeSet = this.load( id );
-        return convertToValueObject( eeSet );
+        return expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
     }
 
     @Override
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
         Collection<ExpressionExperimentSet> eeSets = this.load( ids );
-        return this.convertToValueObjects( eeSets );
+        return expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
+    }
+
+    @Override
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds( Collection<Long> ids ) {
+        Collection<ExpressionExperimentSet> eeSets = this.load( ids );
+        return expressionExperimentValueObjectHelper.convertToLightValueObjects( eeSets );
     }
     
     /**
@@ -457,7 +410,7 @@ public class ExpressionExperimentSetServiceImpl extends
         if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
         this.update( eeSet );
 
-        return convertToValueObject( eeSet );
+        return expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
 
     }
     

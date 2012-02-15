@@ -180,12 +180,6 @@ public interface ExpressionExperimentSetService {
      */
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids );
 
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects(
-            Collection<ExpressionExperimentSet> sets );
-
-    public DatabaseBackedExpressionExperimentSetValueObject convertToValueObject(
-            ExpressionExperimentSet set );
-
     /**
      * Get the member experiment value objects for the set id
      * 
@@ -249,4 +243,6 @@ public interface ExpressionExperimentSetService {
      * @return
      */
     public Collection<Long> findIds( BioAssaySet bioAssaySet );
+
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds( Collection<Long> ids );
 }

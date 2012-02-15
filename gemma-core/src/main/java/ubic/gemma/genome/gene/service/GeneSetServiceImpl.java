@@ -33,6 +33,7 @@ import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -70,6 +71,9 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private TaxonService taxonService;
+    
+    @Autowired
+    private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     /*
      * (non-Javadoc)
@@ -238,92 +242,11 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /**
-     * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have
-     * access to it
-     * 
-     * @param set an expressionExperimentSet entity to create a value object for
-     * @return
-     */
-    @Override
-    public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
-        if ( gs == null ) {
-            return null;
-        }
-        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( );
-
-        gsvo.setName( gs.getName() );
-
-        gsvo.setId( gs.getId() );
-
-        gsvo.setDescription( gs.getDescription() );
-
-        gsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
-        gsvo.setGeneIds( this.geneSetDao.getGeneIds( gs.getId()) );
-        Long taxId = this.geneSetDao.getTaxonId( gs.getId() );
-        Taxon tax = taxonService.load( taxId );
-        while(tax.getParentTaxon() != null){
-            tax = tax.getParentTaxon();
-        }          
-        gsvo.setTaxonId( tax.getId() );
-        gsvo.setTaxonName( tax.getCommonName() );
-        
-        gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
-        gsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );
-        gsvo.setPublik( securityService.isPublic( gs ) );
-        gsvo.setShared( securityService.isShared( gs ) );
-
-        return gsvo;
-    }
-
-    /**
-     * results will be sorted by size
-     * gene sets that lack genes will be included
-     * @see ubic.gemma.genome.gene.service.GeneSetServiceImpl.convertToValueObjects(Collection<GeneSet>, boolean) if you don't want empty sets returned
-     * @param sets
-     * @return
-     */
-    @Override
-    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
-
-        return convertToValueObjects(sets, true);
-    }
-
-    /**
-     * 
-     * 
-     * @param genesets
-     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
-     * @return
-     */
-    @Override
-    public Collection<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> genesets,
-            boolean includeOnesWithoutGenes ) {
-        List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
-
-        for ( GeneSet gs : genesets ) {
-            DatabaseBackedGeneSetValueObject gsvo = convertToValueObject( gs );
-            
-            if ( !includeOnesWithoutGenes && gsvo.getNumGenes() <= 0) {
-                continue;
-            }
-
-            results.add( gsvo );
-        }
-
-        Collections.sort( results, new Comparator<GeneSetValueObject>() {
-            @Override
-            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
-                return -o1.getSize().compareTo( o2.getSize() );
-            }
-        } );
-        return results;
-    }
     
     @Override
     public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
         GeneSet geneSet = load( id );
-        return convertToValueObject( geneSet );
+        return geneSetValueObjectHelper.convertToValueObject( geneSet );
     }
 
     @Override
@@ -373,7 +296,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         }
 
         
-        return convertToValueObject( load( gset.getId() ) );
+        return geneSetValueObjectHelper.convertToValueObject( load( gset.getId() ) );
     }
 
     /**
@@ -390,7 +313,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
 
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( convertToValueObjects( genesets, false ) );
+        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
         return gsvos;
     }
 
@@ -522,7 +445,7 @@ public class GeneSetServiceImpl implements GeneSetService {
              */
             updated.add( load( gset.getId() ) );
         }
-        return convertToValueObjects( updated );
+        return geneSetValueObjectHelper.convertToValueObjects( updated );
 
     }
 
@@ -546,7 +469,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         if ( geneSetVO.getName() != null && geneSetVO.getName().length() > 0 ) gset.setName( geneSetVO.getName() );
         update( gset );
 
-        return new DatabaseBackedGeneSetValueObject( gset );
+        return geneSetValueObjectHelper.convertToValueObject( gset );
 
     }
 
@@ -594,7 +517,7 @@ public class GeneSetServiceImpl implements GeneSetService {
             geneSets = loadAll( tax );
         }
 
-        Collection<DatabaseBackedGeneSetValueObject> result = convertToValueObjects( geneSets );
+        Collection<DatabaseBackedGeneSetValueObject> result = geneSetValueObjectHelper.convertToValueObjects( geneSets );
         return result;
     }
 
@@ -665,7 +588,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
 //        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
-        gsvos.addAll( convertToValueObjects( foundGeneSets ) );
+        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
         return gsvos;
     }
 

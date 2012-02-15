@@ -44,6 +44,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
@@ -105,6 +106,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Autowired
     private ExpressionExperimentSetService experimentSetService;
+    
+    @Autowired
+    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
 
     /*
      * (non-Javadoc)
@@ -345,7 +349,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
                     .load( EntityUtils.getIds( results ) ) );
-            vos = experimentSetService.convertToValueObjects( eeSets );
+            vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }

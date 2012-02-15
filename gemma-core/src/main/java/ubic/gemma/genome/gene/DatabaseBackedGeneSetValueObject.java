@@ -59,13 +59,4 @@ public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
         super();
     }
 
-    /**
-     * Constructor to build value object from GeneSet
-     * 
-     * @param gs
-     */
-    public DatabaseBackedGeneSetValueObject( GeneSet gs ) {
-        super(gs);
-    }
-
 }
