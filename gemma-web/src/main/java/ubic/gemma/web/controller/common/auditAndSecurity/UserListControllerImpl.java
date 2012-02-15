@@ -112,6 +112,7 @@ public class UserListControllerImpl extends BaseFormController implements UserLi
                     false, null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
         } else {
             u.setEmail( user.getEmail() );
+            u.setEnabled( user.isEnabled() );
             userDetails = new UserDetailsImpl( u );
         }
 
