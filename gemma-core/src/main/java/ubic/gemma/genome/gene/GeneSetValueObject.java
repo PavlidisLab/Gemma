@@ -23,9 +23,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetMember;
-
 
 /**
  * Represents a Gene group gene set.
