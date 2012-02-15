@@ -235,19 +235,19 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 					id: 'j_password',
 					allowBlank: false,
 					inputType: 'password'
-				}, {
-					fieldLabel: '<a href="/Gemma/passwordHint.html">'+Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.passwordHintLink+'</a>',
-					name: 'passwordHint',
-					id: 'passwordHint',
-					labelSeparator: '',
-					hidden: true
-				}, {
+				},{
 					fieldLabel: 'Remember Me',
 					boxLabel: 'rememberMe',
 					// defined in AbstractRememberMeServices.
 					id: '_spring_security_remember_me',
 					name: '_spring_security_remember_me',
 					inputType: 'checkbox'
+				}, {
+					html: '<a href="/Gemma/passwordHint.html">'+Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.passwordHintLink+'</a>',
+					name: 'passwordHint',
+					id: 'passwordHint',
+					xtype: 'label',
+					hidden: false
 				}, {
 					id: 'ajaxLoginTrue',
 					name: 'ajaxLoginTrue',
