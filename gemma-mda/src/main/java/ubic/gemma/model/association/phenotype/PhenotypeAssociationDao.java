@@ -36,6 +36,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** count the number of Genes with a public phenotype */
     public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri );
 
+    /** count the number of Genes with a public or private phenotype */
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri );
+
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
 

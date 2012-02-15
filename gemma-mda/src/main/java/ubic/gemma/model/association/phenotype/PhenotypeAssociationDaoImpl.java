@@ -89,6 +89,34 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return new Long( value );
     }
 
+    /** count the number of Genes with a public or private phenotype */
+    @Override
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri ) {
+
+        String endQuery = "";
+
+        for ( String phenotypeUri : phenotypesUri ) {
+
+            endQuery = endQuery + "'" + phenotypeUri + "', ";
+        }
+
+        endQuery = endQuery.substring( 0, endQuery.length() - 2 ) + ")";
+
+        long value = 0;
+
+        String queryString = "select count(distinct gene_fk) from CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.phenotype_association_fk=PHENOTYPE_ASSOCIATION.id where value_uri in ("
+                + endQuery;
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        if ( results.next() ) {
+            value = ( ( BigInteger ) results.get( 0 ) ).longValue();
+        }
+
+        return new Long( value );
+    }
+
     /**
      * find all phenotypes
      */

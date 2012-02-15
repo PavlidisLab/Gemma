@@ -112,6 +112,9 @@ public interface PhenotypeAssociationService {
      */
     public Long countGenesWithPublicPhenotype( Collection<String> phenotypesURI );
 
+    /** count the number of Genes with a public or private phenotype */
+    public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
+
     /** load all valueURI of Phenotype in the database */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Set<String> loadAllPhenotypesUri();

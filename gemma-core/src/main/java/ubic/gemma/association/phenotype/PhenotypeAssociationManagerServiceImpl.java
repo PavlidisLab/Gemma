@@ -639,7 +639,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // look if the gene have already been annotated
                     if ( evidence.getGeneNCBI().equals( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
 
-                        validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                        if ( validateEvidenceValueObject == null ) {
+                            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                        }
 
                         validateEvidenceValueObject.setSameGeneAnnotated( true );
 
@@ -950,7 +952,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
                     // admin can see all
-                    if (SecurityServiceImpl.isUserAdmin()){
+                    if ( SecurityServiceImpl.isUserAdmin() ) {
                         evidenceFromPhenotype.add( evidenceValueObject );
                     }
                     // public

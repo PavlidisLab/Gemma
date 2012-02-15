@@ -24,7 +24,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
-    private Long id = null;
+    private long id = 0L;
     /** id used by url on the client side */
     private String urlId = "";
 
@@ -35,7 +35,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String valueUri = "";
 
     /** number of occurence in all genes */
-    private Long occurence = null;
+    private long publicGeneCount = 0L;
+    private long privateGeneCount = 0L;
 
     /** what Ontology uses this term */
     private String ontologyUsed = null;
@@ -79,6 +80,22 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.value = vocabCharacteristic.getValue();
     }
 
+    public long getPublicGeneCount() {
+        return this.publicGeneCount;
+    }
+
+    public void setPublicGeneCount( long publicGeneCount ) {
+        this.publicGeneCount = publicGeneCount;
+    }
+
+    public long getPrivateGeneCount() {
+        return this.privateGeneCount;
+    }
+
+    public void setPrivateGeneCount( long privateGeneCount ) {
+        this.privateGeneCount = privateGeneCount;
+    }
+
     public String getCategoryUri() {
         return this.categoryUri;
     }
@@ -109,14 +126,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     public void setValue( String value ) {
         this.value = value.toLowerCase();
-    }
-
-    public Long getOccurence() {
-        return this.occurence;
-    }
-
-    public void setOccurence( Long occurence ) {
-        this.occurence = occurence;
     }
 
     public boolean isChild() {
@@ -155,7 +164,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return this.id;
     }
 
-    public void setId( Long id ) {
+    public void setId( long id ) {
         this.id = id;
     }
 

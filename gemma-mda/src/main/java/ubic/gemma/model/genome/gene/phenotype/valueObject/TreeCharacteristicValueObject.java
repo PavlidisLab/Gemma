@@ -75,7 +75,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             output = output + " ******* ";
         }
 
-        output = output + getValue() + "   " + getOccurence() + "\n";
+        output = output + getValue() + "   " + getPublicGeneCount() + "\n";
 
         int currentLevel = level + 1;
         for ( TreeCharacteristicValueObject treeVO : this.children ) {
@@ -118,10 +118,13 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     /** counts gene on a TreeCharacteristicValueObject */
-    public void countGeneOccurence( PhenotypeAssociationService associationService ) {
+    public void countGeneOccurence( PhenotypeAssociationService associationService, boolean isAdmin ) {
 
-        setOccurence( associationService.countGenesWithPublicPhenotype( getAllChildrenUri() ) );
-
+        setPublicGeneCount( associationService.countGenesWithPublicPhenotype( getAllChildrenUri() ) );
+        if ( isAdmin ) {
+            setPrivateGeneCount( associationService.countGenesWithPhenotype( getAllChildrenUri() )
+                    - getPublicGeneCount() );
+        }
         // count for each node of the tree
         for ( TreeCharacteristicValueObject tree : getChildren() ) {
             countGeneOccurence( associationService, tree );
@@ -143,7 +146,8 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** counts gene on a TreeCharacteristicValueObject */
     private void countGeneOccurence( PhenotypeAssociationService associationService, TreeCharacteristicValueObject tc ) {
 
-        tc.setOccurence( associationService.countGenesWithPublicPhenotype( tc.getAllChildrenUri() ) );
+        // set the public gene count
+        tc.setPublicGeneCount( associationService.countGenesWithPublicPhenotype( tc.getAllChildrenUri() ) );
 
         // count for each node of the tree
         for ( TreeCharacteristicValueObject tree : tc.getChildren() ) {
