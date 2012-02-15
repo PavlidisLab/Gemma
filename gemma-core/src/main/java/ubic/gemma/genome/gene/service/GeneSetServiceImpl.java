@@ -250,9 +250,23 @@ public class GeneSetServiceImpl implements GeneSetService {
         if ( gs == null ) {
             return null;
         }
-        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( );
 
-        this.geneSetDao.getGeneCount( gs.getId() );
+        gsvo.setName( gs.getName() );
+
+        gsvo.setId( gs.getId() );
+
+        gsvo.setDescription( gs.getDescription() );
+
+        gsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+        gsvo.setGeneIds( this.geneSetDao.getGeneIds( gs.getId()) );
+        Long taxId = this.geneSetDao.getTaxonId( gs.getId() );
+        Taxon tax = taxonService.load( taxId );
+        while(tax.getParentTaxon() != null){
+            tax = tax.getParentTaxon();
+        }          
+        gsvo.setTaxonId( tax.getId() );
+        gsvo.setTaxonName( tax.getCommonName() );
         
         gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
         gsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );

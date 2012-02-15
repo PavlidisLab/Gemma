@@ -152,6 +152,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
             }
 
+
+            // convert result object to a value object
+            for(SearchResult sr : taxonCheckedGenes ){
+                Gene g = ( Gene ) sr.getResultObject();
+                GeneValueObject gvo = new GeneValueObject( g );
+                sr.setResultObject( gvo );
+            }
+            
             genes = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( taxonCheckedGenes );
 
             List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
@@ -166,6 +174,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
             }
 
+            // convert result object to a value object
+            for(SearchResult sr : taxonCheckedSets ){
+                GeneSet g = ( GeneSet ) sr.getResultObject();
+                DatabaseBackedGeneSetValueObject gsvo = geneSetService.convertToValueObject( g );
+                sr.setResultObject( gsvo );
+            }
+            
             geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
             for ( SearchResultDisplayObject srdo : geneSets ) {
                 // geneSets were filtered by taxon above:
@@ -175,6 +190,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
         } else { // set the taxon values
 
+
+            // convert result object to a value object
+            for(SearchResult sr : geneSearchResults ){
+                Gene g = ( Gene ) sr.getResultObject();
+                GeneValueObject gvo = new GeneValueObject( g );
+                sr.setResultObject( gvo );
+            }
             genes = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( geneSearchResults );
 
             geneSets = new ArrayList<SearchResultDisplayObject>();
@@ -185,7 +207,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
                 taxon = geneSetService.getTaxonForGeneSet( ( GeneSet ) sr.getResultObject() );
-                srdo = new SearchResultDisplayObject( ( GeneSet ) sr.getResultObject() );
+                GeneSetValueObject gsvo = geneSetService.convertToValueObject( gs );
+                srdo = new SearchResultDisplayObject( gsvo );
                 srdo.setTaxonId( taxon.getId() );
                 srdo.setTaxonName( taxon.getCommonName() );
                 geneSets.add( srdo );
@@ -393,7 +416,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResultDisplayObject> displayResultsPublic = new LinkedList<SearchResultDisplayObject>();
         SearchResultDisplayObject newSRDO = null;
         for ( GeneSet set : sets ) {
-            newSRDO = new SearchResultDisplayObject( set );
+            GeneSetValueObject gsvo = geneSetService.convertToValueObject( set );
+            newSRDO = new SearchResultDisplayObject( gsvo );
             newSRDO.setTaxonId( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonId() );
             newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );
             boolean isPrivate = securityService.isPrivate( set );

@@ -43,8 +43,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -58,13 +62,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.gene.service.GeneSetService;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
@@ -90,9 +87,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
 
     @Autowired
     private GeneService geneService;
@@ -351,7 +345,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
                     .load( EntityUtils.getIds( results ) ) );
-            vos = DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( eeSets );
+            vos = experimentSetService.convertToValueObjects( eeSets );
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }

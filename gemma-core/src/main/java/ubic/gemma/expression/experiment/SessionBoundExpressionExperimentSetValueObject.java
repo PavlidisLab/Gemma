@@ -56,28 +56,13 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     private static final long serialVersionUID = 2068650886972222818L;
     private boolean modified;
 
-    public static Collection<ExpressionExperimentSetValueObject> makeValueObjects(
-            Collection<ExpressionExperimentSet> entities ) {
-        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
-
-        for ( ExpressionExperimentSet eeset : entities ) {
-            results.add( new SessionBoundExpressionExperimentSetValueObject( eeset ) );
-        }
-
-        return results;
-    }
-
     /**
      * default constructor to satisfy java bean contract
      */
     public SessionBoundExpressionExperimentSetValueObject() {
         super();
     }
-
-    public SessionBoundExpressionExperimentSetValueObject( ExpressionExperimentSet eeset ) {
-        super( eeset );
-    }
-
+ 
     /*
      * can't implement this because sessionListManager in is 'web' package
      * 

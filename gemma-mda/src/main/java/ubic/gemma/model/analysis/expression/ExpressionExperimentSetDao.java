@@ -82,4 +82,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
 
     int getExperimentCount( Long id );
 
+    Collection<Long> getExperimentIds( Long id );
+
 }

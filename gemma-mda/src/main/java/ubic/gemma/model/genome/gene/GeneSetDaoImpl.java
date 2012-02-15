@@ -18,13 +18,13 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -273,6 +273,42 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         }
         
         return 0;
+
+    }
+    
+    @Override
+    public Collection<Long> getGeneIds( Long id ) {
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select gs.id, g.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :ids",
+                "ids", id );
+        Collection<Long> results = new ArrayList<Long>();
+        
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            results.add( (Long)oa[1] ); 
+        }
+
+        return results;
+
+    }
+    
+    @Override
+    public Long getTaxonId( Long id ) {
+        
+        // using Query because I want to be able to limit the number of row returned to one
+        
+        Query q = this.getSession().createQuery( "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+        q.setParameter( "id", id );
+        q.setMaxResults( 1 );
+        
+        List<?> list = q.list();
+        for(Object obj : list){
+            Object[] oa = ( Object[] ) obj;
+            return ( ( Long ) oa[1] );
+        }
+
+        return new Long(-1);
 
     }
 }

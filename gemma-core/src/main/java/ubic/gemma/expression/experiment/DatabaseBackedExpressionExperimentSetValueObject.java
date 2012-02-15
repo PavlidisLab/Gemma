@@ -19,14 +19,6 @@
 
 package ubic.gemma.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
@@ -39,17 +31,6 @@ public class DatabaseBackedExpressionExperimentSetValueObject extends Expression
 
     private static final long serialVersionUID = -1075910242491981481L;
 
-    public static Collection<DatabaseBackedExpressionExperimentSetValueObject> makeValueObjects(
-            Collection<ExpressionExperimentSet> entities ) {
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> results = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
-
-        for ( ExpressionExperimentSet eeset : entities ) {
-            results.add( new DatabaseBackedExpressionExperimentSetValueObject( eeset ) );
-        }
-
-        return results;
-    }
-
     /**
      * default constructor to satisfy java bean contract
      */
@@ -57,34 +38,8 @@ public class DatabaseBackedExpressionExperimentSetValueObject extends Expression
         super();
     }
 
-    public DatabaseBackedExpressionExperimentSetValueObject( ExpressionExperimentSet eeset ) {
-        super( eeset );
-    }
-
     public static DatabaseBackedExpressionExperimentSetValueObject factoryMethod() {
         return new DatabaseBackedExpressionExperimentSetValueObject();
-    }
-
-    public static Collection<? extends ExpressionExperimentSetValueObject> convert2ValueObjects(
-            Collection<ExpressionExperimentSet> eesets, boolean includeOnesWithoutExperiments ) {
-        List<DatabaseBackedExpressionExperimentSetValueObject> results = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
-
-        for ( ExpressionExperimentSet es : eesets ) {
-            if ( !includeOnesWithoutExperiments && es.getExperiments().isEmpty() ) {
-                continue;
-            }
-
-            results.add( new DatabaseBackedExpressionExperimentSetValueObject( es ) );
-        }
-
-        Collections.sort( results, new Comparator<DatabaseBackedExpressionExperimentSetValueObject>() {
-            @Override
-            public int compare( DatabaseBackedExpressionExperimentSetValueObject o1,
-                    DatabaseBackedExpressionExperimentSetValueObject o2 ) {
-                return -o1.getNumExperiments().compareTo( o2.getNumExperiments() );
-            }
-        } );
-        return results;
     }
 
 }

@@ -80,6 +80,7 @@ import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
@@ -1051,9 +1052,9 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
         for ( SearchResult searchResult : searchResults ) {
             if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                SearchResult convertedSearchResult = new SearchResult(
-                        BioSequenceValueObject.fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult
-                                .getResultObject() ) ), searchResult.getScore(), searchResult.getHighlightedText() );
+                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
+                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
+                        searchResult.getScore(), searchResult.getHighlightedText() );
                 convertedSearchResults.add( convertedSearchResult );
             } // else if ...
             else {

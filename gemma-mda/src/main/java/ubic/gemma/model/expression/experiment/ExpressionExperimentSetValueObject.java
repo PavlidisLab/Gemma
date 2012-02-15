@@ -22,9 +22,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.util.EntityUtils;
-
 /**
  * @author tvrossum
  * @version $Id$
@@ -85,15 +82,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
      */
     public void setShared( boolean shared ) {
         this.shared = shared;
-    }
-
-    public ExpressionExperimentSetValueObject( ExpressionExperimentSet set ) {
-        this.id = set.getId();
-        this.name = set.getName();
-        this.description = set.getDescription();
-        this.taxonId = set.getTaxon().getId();
-        this.numExperiments = set.getExperiments().size();
-        this.expressionExperimentIds = EntityUtils.getIds( set.getExperiments() );
     }
 
     public ExpressionExperimentSetValueObject() {

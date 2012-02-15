@@ -39,7 +39,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @version $Id$
@@ -92,7 +91,7 @@ public class ExpressionExperimentSetServiceImpl extends
 
     @Override
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadMySetValueObjects() {
-        return this.getValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
+        return this.convertToValueObjects( this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon() );
     }
 
     @Override
@@ -223,11 +222,11 @@ public class ExpressionExperimentSetServiceImpl extends
         return valid;
     }
     
-    private DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
+    public DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
         if(set == null){
             return null;
         }
-        int size = set.getExperiments().size();
+        int size = this.getExpressionExperimentSetDao().getExperimentCount( set.getId() );
         assert size > 1; // should be due to the query.
 
         DatabaseBackedExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
@@ -261,7 +260,8 @@ public class ExpressionExperimentSetServiceImpl extends
         /*
          * getExperimentsInSet to get the security-filtered ees.
          */
-        vo.getExpressionExperimentIds().addAll( EntityUtils.getIds( this.getExperimentsInSet( set.getId() ) ) );
+        vo.setExpressionExperimentIds( this.getExpressionExperimentSetDao().getExperimentIds( set.getId() ) );
+        //vo.getExpressionExperimentIds().addAll( EntityUtils.getIds( this.getExperimentsInSet( set.getId() ) ) );
 
         vo.setNumExperiments( size );
         return vo;
@@ -320,7 +320,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
     
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjects( Collection<ExpressionExperimentSet> sets ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects( Collection<ExpressionExperimentSet> sets ) {
         Collection<DatabaseBackedExpressionExperimentSetValueObject> vos = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
         java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
         while(iter.hasNext()){
@@ -377,7 +377,7 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
         Collection<ExpressionExperimentSet> eeSets = this.load( ids );
-        return this.getValueObjects( eeSets );
+        return this.convertToValueObjects( eeSets );
     }
     
     /**
@@ -457,7 +457,7 @@ public class ExpressionExperimentSetServiceImpl extends
         if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
         this.update( eeSet );
 
-        return new DatabaseBackedExpressionExperimentSetValueObject( eeSet );
+        return convertToValueObject( eeSet );
 
     }
     

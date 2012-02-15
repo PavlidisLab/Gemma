@@ -136,6 +136,25 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet entity );
 
+    /**
+     * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all the members.
+     * @param id gene set id
+     * @return integer count of genes in set
+     */
     public int getGeneCount( Long id );
+
+    /**
+     * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all the members.
+     * @param id gene set id
+     * @return collection of ids for the genes in this set
+     */
+    public Collection<Long> getGeneIds( Long id );
+
+    /**
+     * Returns the taxon id of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
+     * @param id
+     * @return taxon id of a random member of the set
+     */
+    public Long getTaxonId( Long id );
 
 }

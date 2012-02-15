@@ -171,16 +171,7 @@ public interface ExpressionExperimentSetService {
      * @return null if id doesn't match an experiment set
      */
     public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id );
-
-    /**
-     * Get a value object for the id param
-     * 
-     * @param id
-     * @return null if id doesn't match an experiment set
-     */
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjects(
-            Collection<ExpressionExperimentSet> sets );
-
+    
     /**
      * Get a value objects for the ids
      * 
@@ -188,6 +179,12 @@ public interface ExpressionExperimentSetService {
      * @return value objects or an empty set
      */
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids );
+
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects(
+            Collection<ExpressionExperimentSet> sets );
+
+    public DatabaseBackedExpressionExperimentSetValueObject convertToValueObject(
+            ExpressionExperimentSet set );
 
     /**
      * Get the member experiment value objects for the set id

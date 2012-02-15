@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -129,11 +127,12 @@ public class ExpressionExperimentSearchService {
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );
             if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-                newSRDO = new SearchResultDisplayObject( set );
+                DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService.getValueObject( set.getId() );
+                newSRDO = new SearchResultDisplayObject( eevo );
                 newSRDO.setUserOwned( securityService.isPrivate( set ) );
                 ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() ).setPublik( securityService
                         .isPublic( set ) );
-                setResults.add( new SearchResultDisplayObject( set ) );
+                setResults.add( newSRDO );
             }
         }
 
@@ -184,13 +183,12 @@ public class ExpressionExperimentSearchService {
         List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
         Map<Long, Boolean> isSetOwnedByUser = new HashMap<Long, Boolean>();
 
-        // prepare taxon property for being read
         // store userOwned info
+        // check if sets are valid for front end
         Collection<SearchResult> toRmvSR = new ArrayList<SearchResult>();
         for ( SearchResult sr : eesSR ) {
             if ( expressionExperimentSetService.isValidForFrontEnd( ( ExpressionExperimentSet ) sr.getResultObject() ) ) {
                 ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
-                expressionExperimentSetService.thaw( ees );
                 isSetOwnedByUser.put( ees.getId(), securityService.isOwnedByCurrentUser( ees ) );
             } else {
                 toRmvSR.add( sr );
@@ -198,9 +196,23 @@ public class ExpressionExperimentSearchService {
         }
         eesSR.removeAll( toRmvSR );
 
-        Collection<SearchResultDisplayObject> experiments = SearchResultDisplayObject
-                .convertSearchResults2SearchResultDisplayObjects( results.get( ExpressionExperiment.class ) );
-        Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
+        // get all expressionExperiment results and convert result object into a value object
+        List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
+        for(SearchResult sr : srEEs){
+            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
+            ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject( ee );
+            sr.setResultObject( eevo );
+        }
+        // get all expressionExperimentSet results and convert result object into a value object
+        for(SearchResult sr : eesSR){
+            ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) sr.getResultObject();
+            DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService.convertToValueObject( eeSet );
+            sr.setResultObject( eevo );
+        }
+        
+        List<SearchResultDisplayObject> experiments = SearchResultDisplayObject
+                .convertSearchResults2SearchResultDisplayObjects( srEEs );
+        List<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
                 .convertSearchResults2SearchResultDisplayObjects( eesSR );
 
         /*
@@ -279,23 +291,19 @@ public class ExpressionExperimentSearchService {
             }
 
             // if there's a group, get the number of members
+            // assuming the taxon of the members is the same as that of the group
             if ( experimentSets.size() > 0 ) {
                 // for each group
                 for ( SearchResult eesSRO : eesSR ) {
+                    ExpressionExperimentSetValueObject set = ( ExpressionExperimentSetValueObject ) eesSRO.getResultObject();
+                    Collection<Long> ids = expressionExperimentSetService.getExperimentIdsInSet( set.getId() );
                     // get the ids of the experiment members
-                    Iterator<BioAssaySet> iter = ( ( ExpressionExperimentSet ) eesSRO.getResultObject() )
-                            .getExperiments().iterator();
-                    Long id = null;
-                    while ( iter.hasNext() ) {
-                        id = iter.next().getId();
-                        eeIds.add( id );
-                        // add experiment set members to the hashmap
-                        taxon = expressionExperimentService.getTaxon( id );
-                        if ( !eeIdsByTaxonId.containsKey( taxon.getId() ) ) {
-                            eeIdsByTaxonId.put( taxon.getId(), new HashSet<Long>() );
-                        }
-                        eeIdsByTaxonId.get( taxon.getId() ).add( id );
+                    eeIds.addAll(ids);
+                    
+                    if ( !eeIdsByTaxonId.containsKey( set.getTaxonId() ) ) {
+                       eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
                     }
+                    eeIdsByTaxonId.get( set.getTaxonId() ).addAll( ids );
                 }
             }
 

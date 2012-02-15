@@ -19,11 +19,9 @@
 package ubic.gemma.model.analysis.expression;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -36,7 +34,6 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -57,6 +54,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
      * BioAssaySet)
      */
+    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
@@ -68,6 +66,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentsInSet(java.lang.Long)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getHibernateTemplate().findByNamedParam(
@@ -79,6 +78,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
      */
+    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where size(ees.experiments) > 1" );
@@ -89,6 +89,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
      */
+    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
@@ -122,6 +123,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
@@ -135,6 +137,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
      * .expression.ExpressionExperimentSet)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
             throws Exception {
@@ -156,8 +159,24 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
             Object[] oa = ( Object[] ) object;
             return ( ( Long ) oa[1] ).intValue();
         }
-        
+
         return 0;
+
+    }
+
+    @Override
+    public Collection<Long> getExperimentIds( Long id ) {
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select e.id, i.id from ExpressionExperimentSetImpl e join e.experiments i where e.id = :id", "id", id );
+        Collection<Long> results = new ArrayList<Long>();
+
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            results.add( ( Long ) oa[1] );
+        }
+
+        return results;
 
     }
 
