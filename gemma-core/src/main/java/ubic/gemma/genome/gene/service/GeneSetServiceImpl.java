@@ -626,7 +626,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     public Taxon getTaxonForGeneSet( GeneSet geneSet ) {
         if(geneSet == null) return null;
         Taxon tmpTax = null;
-        tmpTax = geneSet.getMembers().iterator().next().getGene().getTaxon();
+        tmpTax = geneSetDao.getTaxon( geneSet.getId() );
         // check top-level parent
         while ( tmpTax != null && tmpTax.getParentTaxon() != null ) {
             tmpTax = tmpTax.getParentTaxon();

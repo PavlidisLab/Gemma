@@ -311,4 +311,23 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         return new Long(-1);
 
     }
+    
+    @Override
+    public Taxon getTaxon( Long id ) {
+        
+        // using Query because I want to be able to limit the number of row returned to one
+        
+        Query q = this.getSession().createQuery( "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+        q.setParameter( "id", id );
+        q.setMaxResults( 1 );
+        
+        List<?> list = q.list();
+        for(Object obj : list){
+            Object[] oa = ( Object[] ) obj;
+            return ( ( Taxon ) oa[1] );
+        }
+
+        return null;
+
+    }
 }

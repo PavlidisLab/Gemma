@@ -153,8 +153,15 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     /**
      * Returns the taxon id of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
      * @param id
-     * @return taxon id of a random member of the set
+     * @return taxon id of a random member of the set or -1
      */
     public Long getTaxonId( Long id );
+
+    /**
+     * Returns the taxon of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
+     * @param id
+     * @return taxon of a random member of the set or null
+     */    
+    public Taxon getTaxon( Long id );
 
 }
