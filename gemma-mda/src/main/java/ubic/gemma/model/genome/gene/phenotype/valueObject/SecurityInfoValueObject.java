@@ -12,6 +12,9 @@ public class SecurityInfoValueObject {
 
     private String owner = null;
 
+    public SecurityInfoValueObject() {
+    }
+
     public SecurityInfoValueObject( boolean currentUserHasWritePermission, boolean currentUserIsOwner,
             boolean isPublic, boolean isShared, String owner ) {
         super();
