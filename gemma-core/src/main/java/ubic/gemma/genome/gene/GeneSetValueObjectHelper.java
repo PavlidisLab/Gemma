@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,7 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.security.SecurityService;
 
 
@@ -115,8 +117,7 @@ public class GeneSetValueObjectHelper {
         dbgsvo.setDescription( gs.getDescription() );
         dbgsvo.setSize( geneSetDao.getGeneCount( gs.getId() ) );
         
-        Long taxId = this.geneSetDao.getTaxonId( gs.getId() );
-        Taxon tax = taxonService.load( taxId );
+        Taxon tax = geneSetDao.getTaxon( gs.getId() );
         if( tax != null){
             while(tax.getParentTaxon() != null){
                 tax = tax.getParentTaxon();
@@ -177,7 +178,7 @@ public class GeneSetValueObjectHelper {
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
+            if ( !includeOnesWithoutGenes && geneSetDao.getGeneCount( gs.getId() ) <= 0 ) {
                 continue;
             }
 
@@ -211,11 +212,15 @@ public class GeneSetValueObjectHelper {
         ggvo.setName( gs.getName() );
         ggvo.setDescription( gs.getDescription() );
         ggvo.setSize( geneSetDao.getGeneCount( gs.getId() ) );
-        ggvo.setGeneIds( geneSetDao.getGeneIds( gs.getId() ) );
+        
+        Collection<Long> gids = new HashSet<Long>();
+        for ( GeneSetMember gm : gs.getMembers() ) {
+            gids.add( gm.getGene().getId() );
+        }
+        ggvo.setGeneIds( gids );
         
         
-        Long taxId = this.geneSetDao.getTaxonId( gs.getId() );
-        Taxon tax = taxonService.load( taxId );
+        Taxon tax = geneSetDao.getTaxon( gs.getId() );
         if( tax != null){
             while(tax.getParentTaxon() != null){
                 tax = tax.getParentTaxon();
