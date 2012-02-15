@@ -57,7 +57,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceErrorValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -129,7 +128,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
-    public EvidenceErrorValueObject create( EvidenceValueObject evidence ) {
+    public ValidateEvidenceValueObject create( EvidenceValueObject evidence ) {
 
         if ( evidence.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot create an Evidence with no Phenotype" );
@@ -138,7 +137,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "Cannot create an Evidence not linked to a Gene" );
         }
 
-        EvidenceErrorValueObject evidenceErrorValueObject = null;
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         Gene gene = this.geneService.findByNCBIId( evidence.getGeneNCBI() );
 
@@ -151,9 +150,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // the evidence already exists, no need to create it again
                 log.warn( "Trying to create an Evidence already present in the database" );
 
-                evidenceErrorValueObject = new EvidenceErrorValueObject();
-                evidenceErrorValueObject.setEvidenceAlreadyInDatabase( true );
-                return evidenceErrorValueObject;
+                validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
+                return validateEvidenceValueObject;
             }
         }
 
@@ -161,7 +160,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .valueObject2Entity( evidence );
         phenotypeAssociation.setGene( gene );
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
-        gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         if ( evidence.getSecurityInfoValueObject() != null ) {
             // evidence is not public
@@ -170,7 +168,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        return evidenceErrorValueObject;
+        return validateEvidenceValueObject;
     }
 
     /**
@@ -319,9 +317,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     // TODO to test and to be modified
-    public EvidenceErrorValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
+    public ValidateEvidenceValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
-        EvidenceErrorValueObject evidenceErrorValueObject = null;
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
@@ -341,9 +339,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // check for the race condition
         if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
                 .equals( modifedEvidenceValueObject.getLastUpdatedDate() ) ) {
-            evidenceErrorValueObject = new EvidenceErrorValueObject();
-            evidenceErrorValueObject.setLastUpdateDifferent( true );
-            return evidenceErrorValueObject;
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setLastUpdateDifferent( true );
+            return validateEvidenceValueObject;
         }
 
         // evidence type changed
@@ -376,7 +374,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        return evidenceErrorValueObject;
+        return validateEvidenceValueObject;
     }
 
     /**

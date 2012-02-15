@@ -19,7 +19,6 @@ import java.util.Set;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceErrorValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
@@ -40,7 +39,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return Status of the operation
      */
-    public EvidenceErrorValueObject create( EvidenceValueObject evidence );
+    public ValidateEvidenceValueObject create( EvidenceValueObject evidence );
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -93,7 +92,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceValueObject the evidence with modified fields
      * @return Status of the operation
      */
-    public EvidenceErrorValueObject update( EvidenceValueObject evidenceValueObject );
+    public ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user

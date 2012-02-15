@@ -2,13 +2,12 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 public class ValidateEvidenceValueObject {
 
-    boolean sameGeneAnnotated = false;
-    
-    
-    boolean sameGeneAndOnePhenotypeAnnotated = false;
-    boolean sameGeneAndPhenotypesAnnotated = false;
-    boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
-    boolean invalidPubmedId = false;
+    private boolean sameGeneAnnotated = false;
+    private boolean lastUpdateDifferent = false;
+    private boolean sameGeneAndOnePhenotypeAnnotated = false;
+    private boolean sameGeneAndPhenotypesAnnotated = false;
+    private boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
+    private boolean invalidPubmedId = false;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -49,6 +48,13 @@ public class ValidateEvidenceValueObject {
     public void setSameGeneAndOnePhenotypeAnnotated( boolean sameGeneAndOnePhenotypeAnnotated ) {
         this.sameGeneAndOnePhenotypeAnnotated = sameGeneAndOnePhenotypeAnnotated;
     }
-    
-    
+
+    public boolean isLastUpdateDifferent() {
+        return this.lastUpdateDifferent;
+    }
+
+    public void setLastUpdateDifferent( boolean lastUpdateDifferent ) {
+        this.lastUpdateDifferent = lastUpdateDifferent;
+    }
+
 }
