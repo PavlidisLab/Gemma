@@ -47,6 +47,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.model.common.auditAndSecurity.StatusDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -83,7 +84,10 @@ public class AuditAdvice {
 
     @Autowired
     UserManager userManager;
-
+    
+    @Autowired
+    UserService userService;
+    
     @Autowired
     StatusDao statusDao;
 
@@ -260,12 +264,16 @@ public class AuditAdvice {
      * @return
      */
     private User getCurrentUser() {
-        try {
-            return userManager.getCurrentUser();
-        } catch ( UsernameNotFoundException e ) {
-            /* probably anonymous */
-            return null;
-        }
+        String username = userManager.getCurrentUsername();
+        User u = userService.findByUserName( username );
+        return u;
+        
+//        try {        
+//            return userManager.getCurrentUser();
+//        } catch ( UsernameNotFoundException e ) {
+//            /* probably anonymous */
+//            return null;
+//        }
     }
 
     /**
