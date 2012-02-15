@@ -26,12 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.annotation.PostConstruct;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,6 +70,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Service
@@ -103,9 +98,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private CharacteristicService characteristicService;
 
     @Autowired
-    private CacheManager cacheManager;
-
-    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
     @Autowired
@@ -127,13 +119,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
         this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
-    }
-
-    // set the cache that keeps count of how many genes in gemma for each phenotype found, cache reset each 2 days
-    @PostConstruct
-    protected void init() {
-        this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
-                false, 48 * 3600, 48 * 3600 ) );
     }
 
     /**
@@ -177,11 +162,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation.setGene( gene );
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
-
-        // if the trees are present in the cache, change the tree with the corresponding phenotypes
-        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            buildTree( evidence.getPhenotypesValueUri() );
-        }
 
         if ( evidence.getSecurityInfoValueObject() != null ) {
             // evidence is not public
@@ -313,12 +293,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
 
             this.associationService.remove( evidence );
-
-            // if the trees are present in the cache, change the tree with the corresponding phenotypes
-            if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-                EvidenceValueObject evidenceVO = EvidenceValueObject.convert2ValueObjects( evidence );
-                buildTree( evidenceVO.getPhenotypesValueUri() );
-            }
         }
     }
 
@@ -362,6 +336,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
+        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
 
         // check for the race condition
         if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
@@ -372,14 +347,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // evidence type changed
-        if ( !phenotypeAssociation.getClass().getSimpleName().equals( modifedEvidenceValueObject.getClass() ) ) {
+        if ( !evidenceValueObject.getClassName().equals( modifedEvidenceValueObject.getClassName() ) ) {
             remove( modifedEvidenceValueObject.getId() );
             return create( modifedEvidenceValueObject );
         }
 
-        // verify and modify the phenotypes part of an evidence
-        Set<String> detectChangedPhenotypes = populateModifiedPhenotypes( modifedEvidenceValueObject,
-                phenotypeAssociation );
+        // modify phenotypes
+        populateModifiedPhenotypes( modifedEvidenceValueObject, phenotypeAssociation );
 
         // modify all other values needed
         this.phenotypeAssoManagerServiceHelper
@@ -400,11 +374,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     && !modifedEvidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
                 this.securityService.makePrivate( phenotypeAssociation );
             }
-        }
-
-        // remake part of the tree (added or removed phenotypes)
-        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            buildTree( detectChangedPhenotypes );
         }
 
         return evidenceErrorValueObject;
@@ -514,36 +483,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Using all the phenotypes in the database, builds a tree structure using the Ontology, uses cache for fast access
+     * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
     @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
-        // the phenotypes in the database correspond to many trees not linked to each other, each of those tree are keep
-        // in the cache separately, when a change is detected we only need to reconstruct the specific tree the
-        // phenotype belong to ( the occurence count for a phenotype depends his children occurence)
-
         Collection<TreeCharacteristicValueObject> treesPhenotypes = buildTree( null );
-
-        Cache phenoCountCache = this.cacheManager.getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
 
         Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
 
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
 
-            // the branch is not in the cache ( it was removed or expired)
-            if ( phenoCountCache.get( tc.getValueUri() ) == null ) {
-                // count occurrence recursively for each phenotype in the branch
-                tc.countGeneOccurence( this.associationService );
-                phenoCountCache.put( new Element( tc.getValueUri(), tc ) );
-                finalTree.add( tc );
-            } else {
-                // found in the cache use this tree
-                tc = ( TreeCharacteristicValueObject ) phenoCountCache.get( tc.getValueUri() ).getObjectValue();
-                finalTree.add( tc );
-            }
+            // count occurrence recursively for each phenotype in the branch
+            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin() );
+            finalTree.add( tc );
+
         }
 
         return finalTree;
@@ -787,7 +743,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getCategory(),
                 t.getValueUri(), t.getCategoryUri() );
 
-        cha.setOccurence( t.getOccurence() );
+        cha.setPublicGeneCount( t.getPublicGeneCount() );
+        cha.setPrivateGeneCount( t.getPrivateGeneCount() );
 
         characteristcsVO.add( cha );
 
@@ -796,7 +753,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** built the tree, the phenotypesValueUri represents change made to the trees of cached phenotypes */
     private Collection<TreeCharacteristicValueObject> buildTree( Collection<String> phenotypesValueUri ) {
 
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
@@ -842,29 +798,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // remove all nodes in the trees found in the Ontology but not in the database
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.removeUnusedPhenotypes( tc.getValueUri() );
-        }
-
-        // used to update the tree in cache when there is a new phenotype or deleted phenotype
-        if ( phenotypesValueUri != null && !phenotypesValueUri.isEmpty() ) {
-            if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-
-                Cache phenoCountCache = this.cacheManager
-                        .getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
-
-                for ( String phenotypeUpdate : phenotypesValueUri ) {
-
-                    // find the new added or deleted term
-                    TreeCharacteristicValueObject treeCharacteristicValueObject = phenotypeFoundInTree
-                            .get( phenotypeUpdate );
-                    if ( treeCharacteristicValueObject != null ) {
-                        // determine the root of the tree this phenotype is in
-                        String rootParent = treeCharacteristicValueObject.getRootOfTree();
-
-                        // remove the root from the cache has the gene counts changed for this tree
-                        phenoCountCache.remove( rootParent );
-                    }
-                }
-            }
         }
 
         return treesPhenotypes;
@@ -1016,10 +949,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
-                    // find the security information for the object
-                    if ( evidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
+                    // admin can see all
+                    if (SecurityServiceImpl.isUserAdmin()){
                         evidenceFromPhenotype.add( evidenceValueObject );
                     }
+                    // public
+                    else if ( evidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
+                        evidenceFromPhenotype.add( evidenceValueObject );
+                    }
+                    // TODO private but user can see it
                 }
 
                 if ( !evidenceFromPhenotype.isEmpty() ) {
@@ -1053,16 +991,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     }
 
-    private Set<String> populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,
+    private void populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,
             PhenotypeAssociation phenotypeAssociation ) {
 
         // new phenotypes found on the evidence that will be compared to current phenotypes in the database
         Set<String> updatedPhenotypesValuesUri = evidenceValueObject.getPhenotypesValueUri();
 
-        // keeps track of deleted or added phenotypes to remake the HashMap present in the cache
-        Set<String> detectChangedPhenotypesValuesUri = new HashSet<String>();
-
-        // 3 - populate the new phenotypes
         // the final phenotypes to update the evidence with
         Collection<Characteristic> updatedPhenotypes = new HashSet<Characteristic>();
 
@@ -1076,7 +1010,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
                     // delete phenotype from the database
                     this.characteristicService.delete( cha.getId() );
-                    detectChangedPhenotypesValuesUri.add( ( ( VocabCharacteristicImpl ) cha ).getValueUri() );
                 }
                 // this phenotype is already on the evidence
                 else {
@@ -1090,14 +1023,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( String valueUri : updatedPhenotypesValuesUri ) {
             Characteristic cha = valueUri2Characteristic( valueUri );
             updatedPhenotypes.add( cha );
-            detectChangedPhenotypesValuesUri.add( valueUri );
         }
 
         // set the correct new phenotypes
         phenotypeAssociation.getPhenotypes().clear();
         phenotypeAssociation.getPhenotypes().addAll( updatedPhenotypes );
-
-        return detectChangedPhenotypesValuesUri;
     }
 
 }

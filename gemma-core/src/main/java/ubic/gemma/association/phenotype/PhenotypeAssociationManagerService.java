@@ -105,7 +105,7 @@ public interface PhenotypeAssociationManagerService {
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
 
     /**
-     * Using all the phenotypes in the database, builds a tree structure using the Ontology, uses cache for fast access
+     * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
