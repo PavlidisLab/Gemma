@@ -60,70 +60,7 @@ public class TaxonServiceImpl implements TaxonService {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
         }
     };
-    
-    /**
-     * @see TaxonService#createDatabaseEntity(Taxon)
-     */
-    protected Taxon handleCreate( Taxon taxon ) throws java.lang.Exception {
-        return this.getTaxonDao().create( taxon );
-    }
-
-    /**
-     * @see TaxonService#find(Taxon)
-     */
-    protected Taxon handleFind( Taxon taxon ) throws java.lang.Exception {
-        return this.getTaxonDao().find( taxon );
-    }
-
-    protected Taxon handleFindByAbbreviation( String abbreviation ) throws Exception {
-        return this.getTaxonDao().findByAbbreviation( abbreviation );
-    }
-
-    protected Taxon handleFindByCommonName( String commonName ) throws Exception {
-        return this.getTaxonDao().findByCommonName( commonName );
-    }
-
-    protected Taxon handleFindByScientificName( String scientificName ) throws Exception {
-        return this.getTaxonDao().findByScientificName( scientificName );
-    }
-
-    /**
-     * @see TaxonService#findChildTaxaByParent(Taxon)
-     */
-    protected Collection<Taxon> handleFindChildTaxaByParent( Taxon taxon ) throws java.lang.Exception {
-        return this.getTaxonDao().findChildTaxaByParent( taxon );
-    }
-
-    protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
-        return this.getTaxonDao().findOrCreate( taxon );
-    }
-
-    protected Taxon handleLoad( Long id ) throws Exception {
-        return this.getTaxonDao().load( id );
-    }
-
-    protected Collection<Taxon> handleLoadAll() throws Exception {
-        return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
-    }
-
-    /**
-     * @see TaxonService#remove(Taxon)
-     */
-    protected void handleRemove( Taxon taxon ) throws java.lang.Exception {
-        this.getTaxonDao().remove( taxon );
-    }
-
-    /**
-     * @see TaxonService#update(Taxon)
-     */
-    protected void handleUpdate( Taxon taxon ) throws java.lang.Exception {
-        this.getTaxonDao().update( taxon );
-    }
-   
-    protected void handleThaw( Taxon taxon ) throws Exception {
-        this.getTaxonDao().thaw( taxon );        
-    }
-    
+     
     public TaxonValueObject loadValueObject( Long id ){
         return TaxonValueObject.fromEntity( load( id ) );
     }
@@ -136,6 +73,7 @@ public class TaxonServiceImpl implements TaxonService {
         
         return result;
     }
+    
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
@@ -200,7 +138,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon find( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            return this.handleFind( taxon );
+            return this.getTaxonDao().find( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.find(ubic.gemma.model.genome.Taxon taxon)' --> "
@@ -213,7 +151,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
         try {
-            return this.handleFindByAbbreviation( abbreviation );
+            return this.getTaxonDao().findByAbbreviation( abbreviation );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
@@ -226,7 +164,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String commonName ) {
         try {
-            return this.handleFindByCommonName( commonName );
+            return this.getTaxonDao().findByCommonName( commonName );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByCommonName(java.lang.String commonName)' --> "
@@ -239,7 +177,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon findByScientificName( final java.lang.String scientificName ) {
         try {
-            return this.handleFindByScientificName( scientificName );
+            return this.getTaxonDao().findByScientificName( scientificName );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
@@ -252,7 +190,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public java.util.Collection<ubic.gemma.model.genome.Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
         try {
-            return this.handleFindChildTaxaByParent( parentTaxa );
+            return this.getTaxonDao().findChildTaxaByParent( parentTaxa );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
@@ -265,7 +203,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            return this.handleFindOrCreate( taxon );
+            return this.getTaxonDao().findOrCreate( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findOrCreate(ubic.gemma.model.genome.Taxon taxon)' --> "
@@ -278,7 +216,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public ubic.gemma.model.genome.Taxon load( final java.lang.Long id ) {
         try {
-            return this.handleLoad( id );
+            return this.getTaxonDao().load( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.load(java.lang.Long id)' --> " + th, th );
@@ -290,7 +228,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public java.util.Collection<Taxon> loadAll() {
         try {
-            return this.handleLoadAll();
+            return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.loadAll()' --> " + th, th );
@@ -302,7 +240,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            this.handleRemove( taxon );
+            this.getTaxonDao().remove( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.remove(ubic.gemma.model.genome.Taxon taxon)' --> "
@@ -322,7 +260,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public void update( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            this.handleUpdate( taxon );
+            this.getTaxonDao().update( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
@@ -335,7 +273,7 @@ public class TaxonServiceImpl implements TaxonService {
      */
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            this.handleThaw( taxon );
+            this.getTaxonDao().thaw( taxon );        
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
@@ -343,7 +281,6 @@ public class TaxonServiceImpl implements TaxonService {
         }
     }    
     
-
     /**
      * Gets the reference to <code>taxon</code>'s DAO.
      */
