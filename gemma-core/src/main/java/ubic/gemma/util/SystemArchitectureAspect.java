@@ -48,6 +48,14 @@ public class SystemArchitectureAspect {
     @Pointcut("within(ubic.gemma.model..*)")
     public void inModelLayer() {
     }
+
+    /**
+     * This pointcut is used to apply audit and acl advice at DAO boundary.
+     * 
+     */
+   @Pointcut("@target(org.springframework.stereotype.Repository) && execution(public * ubic.gemma..*.*(..))")
+   public void daoMethod() {//      
+   }
     
     /**
      * A entity service method: a public method in a \@Service.
@@ -66,41 +74,40 @@ public class SystemArchitectureAspect {
     /**
      * Methods that create new objects in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
-    public void creator() {
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
+    public void creator() {//
     }
 
     /**
      * Methods that update items in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && execution(* update(..))")
-    public void updater() {
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && execution(* update(..))")
+    public void updater() {//
     }
 
     /**
      * Methods that delete items in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
-    public void deleter() {
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
+    public void deleter() {//
     }
 
     /**
      * Methods that load (read) from the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && (execution(* load(..)) || execution(* loadAll(..)) || execution(* read(..)))")
-    public void loader() {
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* load(..)) || execution(* loadAll(..)) || execution(* read(..)))")
+    public void loader() {//
     }
 
     /**
      * Create, delete or update methods
      */
     @Pointcut("ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter()")
-    public void modifier() {
+    public void modifier() {//
     }
 
     @Pointcut("ubic.gemma.util.SystemArchitectureAspect.deleter() ||ubic.gemma.util.SystemArchitectureAspect.loader() || ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter()")
-    public void crud() {
-
+    public void crud() {//
     }
 
 }
