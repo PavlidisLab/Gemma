@@ -141,6 +141,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Gene gene = this.geneService.findByNCBIId( evidence.getGeneNCBI() );
 
+        if ( gene == null ) {
+            throw new IllegalArgumentException( "Cannot find the geneNCBI id in Gemma: " + evidence.getGeneNCBI() );
+        }
+
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
                 .getPhenotypeAssociations() );
 
@@ -161,10 +165,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation.setGene( gene );
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
 
-        if ( evidence.getSecurityInfoValueObject() != null ) {
-            // evidence is not public
-            if ( !evidence.getSecurityInfoValueObject().isPublic() ) {
+        if ( this.securityService.isPublic( phenotypeAssociation ) ) {
+
+            if ( evidence.getSecurityInfoValueObject() != null && !evidence.getSecurityInfoValueObject().isPublic() ) {
                 this.securityService.makePrivate( phenotypeAssociation );
+            }
+        } else {
+            if ( evidence.getSecurityInfoValueObject() == null && evidence.getSecurityInfoValueObject().isPublic() ) {
+                this.securityService.makePublic( phenotypeAssociation );
             }
         }
 
@@ -230,6 +238,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String firstPhenotypesValuesUri = phenotypesValuesUri.iterator().next();
 
         // find all Genes containing the first phenotypeValueUri
+        // TODO FIND THE EVIDENCES DIRECTLY
         Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( phenotypesWithChildren
                 .get( firstPhenotypesValuesUri ) );
         phenotypesWithChildren.remove( firstPhenotypesValuesUri );
@@ -345,7 +354,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // evidence type changed
-        if ( !evidenceValueObject.getClassName().equals( modifedEvidenceValueObject.getClassName() ) ) {
+        if ( !evidenceValueObject.getClass().equals( modifedEvidenceValueObject.getClass() ) ) {
             remove( modifedEvidenceValueObject.getId() );
             return create( modifedEvidenceValueObject );
         }
