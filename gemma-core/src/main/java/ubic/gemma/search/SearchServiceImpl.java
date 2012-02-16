@@ -35,8 +35,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -80,6 +78,7 @@ import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -134,7 +133,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @version $Id$
  */
 @Component
-public class SearchServiceImpl implements SearchService {
+public class SearchServiceImpl implements SearchService, InitializingBean {
 
     /**
      * Defines the properties we look at for 'highlighting'.
@@ -277,8 +276,7 @@ public class SearchServiceImpl implements SearchService {
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    @PostConstruct
-    private void initializeSearchService() throws Exception {
+    public void afterPropertiesSet() throws Exception {
         try {
 
             if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
