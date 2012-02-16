@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.experiment;
+package ubic.gemma.expression.experiment.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -42,11 +43,11 @@ import ubic.gemma.security.SecurityService;
 
 /**
  * @version $Id$
- * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService
+ * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService
  */
 @Service
 public class ExpressionExperimentSetServiceImpl extends
-        ubic.gemma.expression.experiment.ExpressionExperimentSetServiceBase {
+        ubic.gemma.expression.experiment.service.ExpressionExperimentSetServiceBase {
 
     @Autowired
     private SecurityService securityService;
@@ -102,7 +103,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
@@ -112,7 +113,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     protected void handleDelete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
@@ -132,7 +133,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#load(java.lang.Long)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
      */
     @Override
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
@@ -141,7 +142,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#loadAll()
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadAll()
      */
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception {
@@ -150,7 +151,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
@@ -162,7 +163,7 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.experiment;
+package ubic.gemma.expression.experiment.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
  * provides access to all services and entities referenced by this service.
  * </p>
  * 
- * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService
+ * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService
  */
 public abstract class ExpressionExperimentSetServiceBase implements
         ExpressionExperimentSetService {
@@ -42,7 +42,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     public ExpressionExperimentSet create(
             final ExpressionExperimentSet expressionExperimentSet ) {
@@ -56,7 +56,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     public void delete( final ExpressionExperimentSet expressionExperimentSet ) {
         try {
@@ -81,7 +81,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#findByName(java.lang.String)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#findByName(java.lang.String)
      */
     public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
@@ -94,7 +94,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
@@ -108,7 +108,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#load(java.lang.Long)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
      */
     public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
         try {
@@ -121,7 +121,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#loadAll()
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadAll()
      */
     public java.util.Collection<ExpressionExperimentSet> loadAll() {
         try {
@@ -134,7 +134,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
     public java.util.Collection<ExpressionExperimentSet> loadUserSets(
             final ubic.gemma.model.common.auditAndSecurity.User user ) {
@@ -157,7 +157,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     public void update( final ExpressionExperimentSet expressionExperimentSet ) {
         try {

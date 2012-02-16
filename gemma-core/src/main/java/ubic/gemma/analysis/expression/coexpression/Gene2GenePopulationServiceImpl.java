@@ -46,7 +46,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;

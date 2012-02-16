@@ -43,9 +43,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;

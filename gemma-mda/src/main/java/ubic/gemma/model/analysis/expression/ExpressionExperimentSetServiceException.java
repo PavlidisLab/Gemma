@@ -22,7 +22,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 /**
  * The default exception thrown for unexpected errors occurring within
- * {@link ubic.gemma.expression.experiment.ExpressionExperimentSetService}.
+ * {@link ubic.gemma.expression.experiment.service.ExpressionExperimentSetService}.
  */
 public class ExpressionExperimentSetServiceException extends java.lang.RuntimeException {
     /**

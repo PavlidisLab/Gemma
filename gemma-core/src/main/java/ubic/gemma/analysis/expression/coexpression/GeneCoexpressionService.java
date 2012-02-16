@@ -36,8 +36,8 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.protein.ProteinLinkOutFormatter;
 import ubic.gemma.model.analysis.Analysis;
