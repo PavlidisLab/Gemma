@@ -281,6 +281,9 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         } catch ( IOException e ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
+        } catch (IllegalArgumentException e){
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
         }
 
         if ( parse != null ) {
