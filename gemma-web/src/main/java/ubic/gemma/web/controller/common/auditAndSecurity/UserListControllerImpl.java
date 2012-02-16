@@ -25,6 +25,8 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -35,7 +37,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.web.controller.BaseFormController;
 
 /**
  * For display and editing of users.
@@ -46,8 +47,10 @@ import ubic.gemma.web.controller.BaseFormController;
  * @see SignupController
  */
 @Controller
-public class UserListControllerImpl extends BaseFormController implements UserListController {
+public class UserListControllerImpl implements UserListController {
 
+    private static Log log = LogFactory.getLog( UserListControllerImpl.class.getName() );
+    
     @Autowired
     private UserManager userManager;
 
