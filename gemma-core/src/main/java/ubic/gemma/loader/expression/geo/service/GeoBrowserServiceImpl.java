@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -71,7 +72,7 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 @Component
-public class GeoBrowserServiceImpl implements InitializingBean, GeoBrowserService {
+public class GeoBrowserServiceImpl implements GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
 
@@ -111,6 +112,7 @@ public class GeoBrowserServiceImpl implements InitializingBean, GeoBrowserServic
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         initializeLocalInfo();
 

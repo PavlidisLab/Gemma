@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.PostConstruct;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -121,7 +123,7 @@ import ubic.gemma.util.ReflectionUtil;
  * This service is used for performing searches using free text or exact matches to items in the database. <h2>
  * Implementation notes</h2>
  * <p>
- * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
+ * Internally, there are generally two kinds of searches performed, precise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
  * <p>
  * To add more dependencies to this Service edit the applicationContext-search.xml
@@ -275,6 +277,7 @@ public class SearchServiceImpl implements SearchService {
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         try {
 

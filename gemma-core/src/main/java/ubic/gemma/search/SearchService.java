@@ -24,7 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
  * @author paul
  * @version $Id$
  */
-public interface SearchService extends InitializingBean {
+public interface SearchService {
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
