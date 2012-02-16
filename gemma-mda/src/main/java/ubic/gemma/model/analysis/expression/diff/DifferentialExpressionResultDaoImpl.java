@@ -517,7 +517,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
         Map<Long,DiffExprGeneSearchResult> results = new HashMap<Long,DiffExprGeneSearchResult>();
 
-        Map<Long, Integer> best_p_value = new HashMap<Long, Integer>();
+        Map<Long, Integer> goodPvalue = new HashMap<Long, Integer>();
 
         Session session = super.getSession();
         try {
@@ -538,36 +538,36 @@ public class DifferentialExpressionResultDaoImpl extends
             for ( Object o : queryResult ) {
                 Object[] row = ( Object[] ) o;
                 BigInteger geneId = ( BigInteger ) row[0];
-                Integer p_value_bin = ( Integer ) row[1];
-                BigInteger probe_analysis_id = ( BigInteger ) row[2];
+                Integer pValueBin = ( Integer ) row[1];
+                BigInteger probeAnalysisId = ( BigInteger ) row[2];
 
                 // Count diff expressed probes per gene.
                 if (results.get( geneId.longValue() ) != null) {
                     DiffExprGeneSearchResult r = results.get( geneId.longValue() );
                     r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-                    if (p_value_bin != null && p_value_bin > 0) {
+                    if (pValueBin != null && pValueBin > 0) {
                         r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
                     }                    
                 }
                 
-                if ( best_p_value.get( geneId.longValue() ) == null ) { // first encounter
-                    best_p_value.put( geneId.longValue(), p_value_bin );
+                if ( goodPvalue.get( geneId.longValue() ) == null ) { // first encounter
+                    goodPvalue.put( geneId.longValue(), pValueBin );
                     
                     DiffExprGeneSearchResult r =  new DiffExprGeneSearchResult();
-                    r.setProbeAnalysisResultId( probe_analysis_id.longValue() );
+                    r.setProbeAnalysisResultId( probeAnalysisId.longValue() );
                     r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-                    if (p_value_bin != null && p_value_bin > 0) {
+                    if (pValueBin != null && pValueBin > 0) {
                         r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
                     }                    
                     
                     results.put( geneId.longValue(), r );                    
                 } else {
-                    if ( p_value_bin != null && best_p_value.get( geneId.longValue() ) < p_value_bin) {
+                    if ( pValueBin != null && goodPvalue.get( geneId.longValue() ) < pValueBin) {
                         // replace   
-                        best_p_value.put( geneId.longValue(), p_value_bin );
+                        goodPvalue.put( geneId.longValue(), pValueBin );
                         
                         DiffExprGeneSearchResult r = results.get( geneId.longValue() );
-                        r.setProbeAnalysisResultId( probe_analysis_id.longValue() );
+                        r.setProbeAnalysisResultId( probeAnalysisId.longValue() );
                         //results.put( geneId.longValue(),r );                    
                     }                    
                 }                
