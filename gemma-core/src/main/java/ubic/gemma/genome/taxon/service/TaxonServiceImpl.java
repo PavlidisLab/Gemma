@@ -35,6 +35,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonDao;
 
 /**
  * @author keshav
@@ -52,7 +53,7 @@ public class TaxonServiceImpl implements TaxonService {
     private ArrayDesignService arrayDesignService;
     
     @Autowired
-    private ubic.gemma.model.genome.TaxonDao taxonDao;
+    private TaxonDao taxonDao;
 
     private static Comparator<TaxonValueObject> TAXON_COMPARATOR = new Comparator<TaxonValueObject>() {
         public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
@@ -151,7 +152,6 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
-    @Override
     public Collection<TaxonValueObject> getTaxaWithGenes() {
         SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -165,7 +165,6 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return collection of taxa that have expression experiments available.
      */
-    @Override
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
         Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
 
@@ -183,7 +182,6 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return List of taxa with array designs in gemma
      */
-    @Override
     public Collection<TaxonValueObject> getTaxaWithArrays() {
         Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
 
@@ -312,12 +310,12 @@ public class TaxonServiceImpl implements TaxonService {
         }
     }
 
-    /**
-     * Sets the reference to <code>taxon</code>'s DAO.
-     */
-    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
+//    /**
+//     * Sets the reference to <code>taxon</code>'s DAO.
+//     */
+//    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
+//        this.taxonDao = taxonDao;
+//    }
 
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
@@ -349,7 +347,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * Gets the reference to <code>taxon</code>'s DAO.
      */
-    protected ubic.gemma.model.genome.TaxonDao getTaxonDao() {
+    protected TaxonDao getTaxonDao() {
         return this.taxonDao;
     }
 
