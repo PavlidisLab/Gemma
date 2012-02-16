@@ -41,8 +41,10 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -61,7 +63,7 @@ import ubic.gemma.util.NativeQueryUtils;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
-public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
+public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesignDao {
 
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
@@ -83,7 +85,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         for ( Object ad : results ) {
             log.error( ad );
         }
-
     }
 
     /**
@@ -205,7 +206,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
 
         BusinessKey.checkValidKey( arrayDesign );
@@ -217,7 +217,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( results != null ) {
             if ( results.size() > 1 ) {
                 debug( results );
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
+                throw new InvalidDataAccessResourceUsageException( results.size() + " "
                         + ArrayDesign.class.getName() + "s were found when executing query" );
 
             } else if ( results.size() == 1 ) {
@@ -249,7 +249,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(ubic.gemma.model.expression.arrayDesign.
      * ArrayDesign)
      */
-    @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
         ArrayDesign existingArrayDesign = this.find( arrayDesign );
         if ( existingArrayDesign != null ) {
@@ -353,7 +352,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
      */
-    @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign )
             throws Exception {
         final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -368,7 +366,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
      */
-    @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign )
             throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
@@ -393,7 +390,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model
      * .expression.arrayDesign.ArrayDesign)
      */
-    @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign )
             throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
@@ -414,7 +410,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCountAll()
      */
-    @Override
     protected Integer handleCountAll() throws Exception {
         final String queryString = "select count(*) from ArrayDesignImpl";
         return ( ( Long ) getHibernateTemplate().find( queryString ).iterator().next() ).intValue();
@@ -427,7 +422,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleDeleteAlignmentData(ubic.gemma.model.expression
      * .arrayDesign.ArrayDesign)
      */
-    @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
         // First have to delete all blatAssociations, because they are referred to by the alignments
         deleteGeneProductAssociations( arrayDesign );
@@ -443,7 +437,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     }
 
-    @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
@@ -466,7 +459,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
     }
 
-    @Override
     protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
@@ -477,7 +469,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
-    @Override
     protected Collection<BioAssay> handleGetAllAssociatedBioAssays( Long id ) throws Exception {
         final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
@@ -488,7 +479,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
      */
-    @Override
     protected Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids ) throws Exception {
         final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
                 + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
@@ -525,7 +515,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
-    @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign )
             throws Exception {
         final String queryString = "select distinct ee from ArrayDesignImpl ad, "
@@ -539,7 +528,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
-    @Override
     protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
 
         final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
@@ -554,7 +542,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
-    @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
         Collection<Taxon> taxon = handleGetTaxa( id );
         if ( taxon.size() == 0 ) {
@@ -568,7 +555,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return taxon.iterator().next();
     }
 
-    @Override
     protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) throws Exception {
 
         Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
@@ -595,7 +581,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @Override
     protected Map<Long, Boolean> handleIsMergee( final Collection<Long> ids ) throws Exception {
 
         Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
@@ -622,7 +607,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @Override
     protected Map<Long, Boolean> handleIsSubsumed( final Collection<Long> ids ) throws Exception {
         Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
         if ( ids.size() == 0 ) {
@@ -647,7 +631,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @Override
     protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) throws Exception {
 
         Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
@@ -673,7 +656,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
@@ -695,7 +677,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
-    @Override
     protected Collection<CompositeSequence> handleLoadCompositeSequences( Long id ) throws Exception {
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
@@ -706,7 +687,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadMultiple(java.util.Collection)
      */
-    @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
         final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
@@ -719,7 +699,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadValueObjects(java.util.Collection)
      */
-    @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) throws Exception {
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
@@ -744,7 +723,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences()
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithBioSequences() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where " + "cs.biologicalCharacteristic.sequence is not null";
@@ -758,7 +736,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java
      * .util.Collection)
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
@@ -770,7 +747,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults()
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithBlatResults() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
@@ -784,7 +760,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.
      * util.Collection)
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -799,7 +774,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes()
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithGenes() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
@@ -813,7 +787,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.
      * Collection)
      */
-    @Override
     protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -830,7 +803,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes()
      */
-    @Override
     protected long handleNumAllGenes() throws Exception {
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
@@ -838,12 +810,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes(java.util.Collection)
-     */
-    @Override
     protected long handleNumAllGenes( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -855,24 +821,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBioSequencesById(long)
-     */
-    @Override
     protected long handleNumBioSequences( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBlatResultsById(long)
-     */
-    @Override
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl as bs2gp "
@@ -880,52 +834,24 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequences(java.lang.Long)
-     */
-    @Override
     protected Integer handleNumCompositeSequences( Long id ) throws Exception {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return ( ( Long ) getHibernateTemplate().findByNamedParam( queryString, "id", id ).iterator().next() )
                 .intValue();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBioSequence(ubic.gemma
-     * .model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs) from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBlatResults()
-     */
-    @Override
     protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithGenes(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
-    @Override
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
@@ -933,7 +859,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    @Override
     protected long handleNumCompositeSequenceWithPredictedGene( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, PredictedGeneImpl gene inner join gene.products gp "
@@ -941,7 +866,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    @Override
     protected long handleNumCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, ProbeAlignedRegionImpl gene inner join gene.products gp "
@@ -949,12 +873,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumGeneProductsById(long)
-     */
-    @Override
     protected long handleNumGenes( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
@@ -962,7 +880,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    @Override
     protected void handleRemoveBiologicalCharacteristics( final ArrayDesign arrayDesign ) throws Exception {
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "Array design cannot be null" );
@@ -986,12 +903,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         } );
     }
 
-    @Override
     protected ArrayDesign handleThaw( final ArrayDesign arrayDesign ) throws Exception {
         return this.doThaw( arrayDesign );
     }
 
-    @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee )
             throws Exception {
 
@@ -1111,7 +1026,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return result;
     }
 
-    @Override
     public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
@@ -1140,14 +1054,806 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return bb;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from ArrayDesignImpl a where a.primaryTaxon = :t", "t", taxon );
     }
+    
+   
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#arrayDesignValueObjectToEntity(ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void arrayDesignValueObjectToEntity( ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject source,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign target, boolean copyIfNull ) {
+        if ( copyIfNull || source.getShortName() != null ) {
+            target.setShortName( source.getShortName() );
+        }
+        if ( copyIfNull || source.getTechnologyType() != null ) {
+            target.setTechnologyType( TechnologyType.fromString( source.getTechnologyType() ) );
+        }
+        if ( copyIfNull || source.getName() != null ) {
+            target.setName( source.getName() );
+        }
+        if ( copyIfNull || source.getDescription() != null ) {
+            target.setDescription( source.getDescription() );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleCompositeSequenceWithoutBioSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleCompositeSequenceWithoutBlatResults( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleCompositeSequenceWithoutGenes( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#countAll()
+     */
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.countAll()' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection<? extends ArrayDesign> create(
+            final java.util.Collection<? extends ArrayDesign> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<ArrayDesign>() {
+                    public ArrayDesign doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<? extends ArrayDesign> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(int transform,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public ArrayDesign create( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.create - 'arrayDesign' can not be null" );
+        }
+        this.getHibernateTemplate().save( arrayDesign );
+        return arrayDesign;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void deleteAlignmentData( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleDeleteAlignmentData( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void deleteGeneProductAssociations( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleDeleteGeneProductAssociations( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    public ArrayDesign find( final java.lang.String queryString,
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( arrayDesign );
+        argNames.add( "arrayDesign" );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        return ( ArrayDesign ) result;
+    }
+
+//    /**
+//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int,
+//     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+//     */
+//    public ArrayDesign find( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+//        return this
+//                .find( "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
+//                        arrayDesign );
+//    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByAlternateName(java.lang.String)
+     */
+    public java.util.Collection<ArrayDesign> findByAlternateName( final java.lang.String queryString ) {
+        try {
+            return this.handleFindByAlternateName( queryString );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.findByAlternateName(java.lang.String queryString)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String)
+     */
+    public ArrayDesign findByName( final java.lang.String name ) {
+        return this.findByName( "from ArrayDesignImpl a where a.name=:name", name );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String, java.lang.String)
+     */
+
+    public ArrayDesign findByName( final java.lang.String queryString, final java.lang.String name ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( name );
+        argNames.add( "name" );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        ArrayDesign result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String)
+     */
+    public ArrayDesign findByShortName( final java.lang.String shortName ) {
+        return this.findByShortName( "from ArrayDesignImpl a where a.shortName=:shortName", shortName );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String,
+     *      java.lang.String)
+     */
+
+    public ArrayDesign findByShortName( final java.lang.String queryString, final java.lang.String shortName ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( shortName );
+        argNames.add( "shortName" );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        ArrayDesign result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int, java.lang.String,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+
+    public ArrayDesign findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( arrayDesign );
+        argNames.add( "arrayDesign" );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        ArrayDesign result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        return result;
+    }
+
+//    /**
+//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int,
+//     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+//     */
+//    public ArrayDesign findOrCreate( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+//        return this.findOrCreate(
+//                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
+//                        arrayDesign );
+//    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAllAssociatedBioAssays(java.lang.Long)
+     */
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( final java.lang.Long id ) {
+        try {
+            return this.handleGetAllAssociatedBioAssays( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getAllAssociatedBioAssays(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAuditEvents(java.util.Collection)
+     */
+    public java.util.Map<Long, Collection<AuditEvent>> getAuditEvents( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleGetAuditEvents( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getAuditEvents(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleGetExpressionExperiments( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getTaxa(java.lang.Long)
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxa( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getTaxa(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getTaxon(java.lang.Long)
+     */
+    public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxon( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getTaxon(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isMerged(java.util.Collection)
+     */
+    public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleIsMerged( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.isMerged(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isMergee(java.util.Collection)
+     */
+    public java.util.Map<Long, Boolean> isMergee( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleIsMergee( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.isMergee(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isSubsumed(java.util.Collection)
+     */
+    public java.util.Map<Long, Boolean> isSubsumed( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleIsSubsumed( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.isSubsumed(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isSubsumer(java.util.Collection)
+     */
+    public java.util.Map<Long, Boolean> isSubsumer( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleIsSubsumer( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.isSubsumer(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(int, java.lang.Long)
+     */
+    public ArrayDesign load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.load - 'id' can not be null" );
+        }
+        final ArrayDesign entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class, id );
+        return entity;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(java.util.Collection)
+     */
+    public java.util.Collection<ArrayDesign> load( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleLoadMultiple( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.loadMultiple(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll(int)
+     */
+    public java.util.Collection<? extends ArrayDesign> loadAll() {
+        return this.getHibernateTemplate().loadAll( ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAllValueObjects()
+     */
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects() {
+        try {
+            return this.handleLoadAllValueObjects();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.loadAllValueObjects()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadCompositeSequences(java.lang.Long)
+     */
+    public java.util.Collection<CompositeSequence> loadCompositeSequences( final java.lang.Long id ) {
+        try {
+            return this.handleLoadCompositeSequences( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.loadCompositeSequences(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadValueObjects(java.util.Collection)
+     */
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleLoadValueObjects( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.loadValueObjects(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBioSequences()
+     */
+    public long numAllCompositeSequenceWithBioSequences() {
+        try {
+            return this.handleNumAllCompositeSequenceWithBioSequences();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithBioSequences()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBioSequences(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithBioSequences( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithBioSequences(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBlatResults()
+     */
+    public long numAllCompositeSequenceWithBlatResults() {
+        try {
+            return this.handleNumAllCompositeSequenceWithBlatResults();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithBlatResults()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBlatResults(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithBlatResults( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithBlatResults(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithGenes()
+     */
+    public long numAllCompositeSequenceWithGenes() {
+        try {
+            return this.handleNumAllCompositeSequenceWithGenes();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithGenes()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithGenes(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithGenes( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithGenes( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllCompositeSequenceWithGenes(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllGenes()
+     */
+    public long numAllGenes() {
+        try {
+            return this.handleNumAllGenes();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllGenes()' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllGenes(java.util.Collection)
+     */
+    public long numAllGenes( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleNumAllGenes( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numAllGenes(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numBioSequences( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumBioSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numBlatResults( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumBlatResults( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequences(java.lang.Long)
+     */
+    public java.lang.Integer numCompositeSequences( final java.lang.Long id ) {
+        try {
+            return this.handleNumCompositeSequences( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequences(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithBioSequences(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithBioSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithBlatResults(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithBlatResults( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithGenes( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequenceWithPredictedGene(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithPredictedGene(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithPredictedGene( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequenceWithPredictedGene(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithProbeAlignedRegion(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithProbeAlignedRegion( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumGenes( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(java.lang.Long)
+     */
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+    public void remove( java.util.Collection<? extends ArrayDesign> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+//    /**
+//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+//     */
+//    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+//        if ( arrayDesign == null ) {
+//            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
+//        }
+//        this.getHibernateTemplate().delete( arrayDesign );
+//    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void removeBiologicalCharacteristics( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleRemoveBiologicalCharacteristics( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public ArrayDesign thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleThaw( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection<? extends ArrayDesign> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<ArrayDesign>() {
+                    public ArrayDesign doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<? extends ArrayDesign> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.update - 'arrayDesign' can not be null" );
+        }
+        this.getHibernateTemplate().update( arrayDesign );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.lang.Boolean updateSubsumingStatus(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee ) {
+        try {
+            return this.handleUpdateSubsumingStatus( candidateSubsumer, candidateSubsumee );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer, ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee)' --> "
+                            + th, th );
+        }
+    }
+    
 }

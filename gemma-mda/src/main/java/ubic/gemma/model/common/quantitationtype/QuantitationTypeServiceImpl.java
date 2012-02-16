@@ -20,6 +20,7 @@ package ubic.gemma.model.common.quantitationtype;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,57 +30,125 @@ import org.springframework.stereotype.Service;
  * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService
  */
 @Service
-public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceBase {
+public class QuantitationTypeServiceImpl implements QuantitationTypeService {
 
+    @Autowired
+    private QuantitationTypeDao quantitationTypeDao;
+
+    /**
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    public void remove( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            this.getQuantitationTypeDao().remove( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
+    }
+
+    
+    /**
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    protected void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception {
+        this.getQuantitationTypeDao().update( quantitationType );
+    }
+    
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @Override
-    protected ubic.gemma.model.common.quantitationtype.QuantitationType handleCreate(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
-        return this.getQuantitationTypeDao().create( quantitationType );
+    public QuantitationType create( final QuantitationType quantitationType ) {
+        try {
+            return this.getQuantitationTypeDao().create( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.create(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @Override
-    protected ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
-        return this.getQuantitationTypeDao().find( quantitationType );
-    }
-
-    @Override
-    protected QuantitationType handleFindOrCreate( QuantitationType quantitationType ) throws Exception {
-        return this.getQuantitationTypeDao().findOrCreate( quantitationType );
-    }
-
-    @Override
-    protected QuantitationType handleLoad( Long id ) throws Exception {
-        return this.getQuantitationTypeDao().load( id );
-    }
-
-    @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getQuantitationTypeDao().loadAll();
+    public QuantitationType find( final QuantitationType quantitationType ) {
+        try {
+            return this.getQuantitationTypeDao().find( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.find(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @Override
-    protected void handleRemove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
-            throws java.lang.Exception {
-        this.getQuantitationTypeDao().remove( quantitationType );
+    public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
+            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            return this.getQuantitationTypeDao().findOrCreate( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#load(java.lang.Long)
+     */
+    public ubic.gemma.model.common.quantitationtype.QuantitationType load( final java.lang.Long id ) {
+        try {
+            return this.getQuantitationTypeDao().load( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#loadAll()
+     */
+    public java.util.Collection loadAll() {
+        try {
+            return this.getQuantitationTypeDao().loadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>quantitationType</code>'s DAO.
+     */
+    public void setQuantitationTypeDao( ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
     }
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
-            throws java.lang.Exception {
-        this.getQuantitationTypeDao().update( quantitationType );
+    public void update( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            this.handleUpdate( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
+
+    /**
+     * Gets the reference to <code>quantitationType</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.quantitationtype.QuantitationTypeDao getQuantitationTypeDao() {
+        return this.quantitationTypeDao;
+    }
+
 
 }

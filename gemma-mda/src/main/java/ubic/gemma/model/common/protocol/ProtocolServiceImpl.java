@@ -20,6 +20,7 @@ package ubic.gemma.model.common.protocol;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,40 +30,73 @@ import org.springframework.stereotype.Service;
  * @see ubic.gemma.model.common.protocol.ProtocolService
  */
 @Service
-public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.ProtocolServiceBase {
+public class ProtocolServiceImpl implements ProtocolService{
+
+    @Autowired
+    private ProtocolDao protocolDao;
+
+    public Collection<Protocol> loadAll() {
+        return ( Collection<Protocol> ) this.protocolDao.loadAll();
+    }
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#find(ubic.gemma.model.common.protocol.Protocol)
      */
-    @Override
-    protected ubic.gemma.model.common.protocol.Protocol handleFind( ubic.gemma.model.common.protocol.Protocol protocol )
-            throws java.lang.Exception {
-        return this.getProtocolDao().find( protocol );
+    public Protocol find( final Protocol protocol ) {
+        try {
+            return this.protocolDao.find( protocol );
+        } catch ( Throwable th ) {
+            throw new ProtocolServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.find(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected Protocol handleFindOrCreate( Protocol protocol ) throws Exception {
-        return this.getProtocolDao().findOrCreate( protocol );
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolService#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
+     */
+    public Protocol findOrCreate(
+            final Protocol protocol ) {
+        try {
+            return this.protocolDao.findOrCreate( protocol );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.findOrCreate(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
+                            + th, th );
+        }
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#remove(ubic.gemma.model.common.protocol.Protocol)
      */
-    @Override
-    protected void handleRemove( ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
-        this.getProtocolDao().remove( protocol );
+    public void remove( final ubic.gemma.model.common.protocol.Protocol protocol ) {
+        try {
+            this.protocolDao.remove( protocol );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.remove(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>protocol</code>'s DAO.
+     */
+    public void setProtocolDao( ubic.gemma.model.common.protocol.ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
      */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
-        this.getProtocolDao().update( protocol );
-    }
-
-    public Collection<Protocol> loadAll() {
-        return ( Collection<Protocol> ) this.getProtocolDao().loadAll();
+    public void update( final ubic.gemma.model.common.protocol.Protocol protocol ) {
+        try {
+            this.protocolDao.update( protocol );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.update(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
+                            + th, th );
+        }
     }
 
 }

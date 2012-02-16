@@ -38,19 +38,19 @@ public interface ArrayDesignService {
      * @return all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have gene associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     /**
      * @return global count of compositeSequences in the system.
@@ -85,7 +85,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ArrayDesign> findByAlternateName( String queryString );
+    public Collection<ArrayDesign> findByAlternateName( String queryString );
 
     /**
      * 
@@ -130,7 +130,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
+    public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -235,7 +235,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ArrayDesign> loadAll();
+    public Collection<ArrayDesign> loadAll();
 
     /**
      * <p>
@@ -248,7 +248,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -256,14 +256,14 @@ public interface ArrayDesignService {
      * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
+    public Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
      * </p>
      */
-    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
+    public Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**
      * <p>
