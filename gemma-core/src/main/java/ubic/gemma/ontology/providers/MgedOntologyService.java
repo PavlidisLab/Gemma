@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
@@ -62,7 +63,7 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     private static Map<String, URL> keyToTermListUrl;
 
-    private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new HashMap<String, Collection<OntologyTerm>>();
+    private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new ConcurrentHashMap<String, Collection<OntologyTerm>>();
 
     static {
         keyToTermListUrl = new HashMap<String, URL>();

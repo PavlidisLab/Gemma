@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
@@ -70,7 +71,7 @@ public class HomologeneService {
 
     // a collection of gene
     // IDs
-    private Map<Long, Long> gene2Group = new HashMap<Long, Long>();
+    private Map<Long, Long> gene2Group = new ConcurrentHashMap<Long, Long>();
 
     @Autowired
     private GeneService geneService;
@@ -78,7 +79,7 @@ public class HomologeneService {
     @Autowired
     private TaxonService taxonService;
 
-    private Map<Long, Collection<Long>> group2Gene = new HashMap<Long, Collection<Long>>(); // Homology group ID to
+    private Map<Long, Collection<Long>> group2Gene = new ConcurrentHashMap<Long, Collection<Long>>(); // Homology group ID to
 
     /*
      * Name of file in NCBI
