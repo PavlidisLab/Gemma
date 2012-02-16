@@ -278,7 +278,7 @@ public class SearchServiceImpl implements SearchService {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @PostConstruct
-    public void afterPropertiesSet() throws Exception {
+    private void initializeSearchService() throws Exception {
         try {
 
             if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
