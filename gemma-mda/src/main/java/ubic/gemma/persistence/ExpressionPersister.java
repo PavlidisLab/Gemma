@@ -586,8 +586,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                     + this.getClass() );
         }
 
-        expressionExperimentDao.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest
-
         return expExp;
     }
 
