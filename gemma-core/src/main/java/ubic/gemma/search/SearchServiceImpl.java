@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.PostConstruct;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -78,7 +80,6 @@ import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -88,7 +89,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -108,6 +108,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
@@ -133,7 +134,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @version $Id$
  */
 @Component
-public class SearchServiceImpl implements SearchService, InitializingBean {
+public class SearchServiceImpl implements SearchService {
 
     /**
      * Defines the properties we look at for 'highlighting'.
@@ -265,7 +266,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private OntologyService ontologyService;
 
     @Autowired
-    private TaxonService taxonService;
+    private TaxonDao taxonDao;
 
     private static final int MAX_LUCENE_HITS = 750;
 
@@ -276,7 +277,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    public void afterPropertiesSet() throws Exception {
+    @PostConstruct
+    private void initializeSearchService() throws Exception {
         try {
 
             if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
@@ -329,7 +331,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private void initializeNameToTaxonMap() {
 
-        Collection<Taxon> taxonCollection = taxonService.loadAll();
+        Collection<Taxon> taxonCollection = ( Collection<Taxon> ) taxonDao.loadAll();
 
         for ( Taxon taxon : taxonCollection ) {
             if ( taxon.getScientificName() != null )
@@ -515,7 +517,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     @Override
     public Collection<Long> searchExpressionExperiments( String query, Long taxonId ) {
-        Taxon taxon = taxonService.load( taxonId );
+        Taxon taxon = taxonDao.load( taxonId );
         Collection<Long> eeIds = new HashSet<Long>();
         if ( StringUtils.isNotBlank( query ) ) {
 
