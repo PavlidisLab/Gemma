@@ -34,11 +34,17 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
+import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
+import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisDao;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
@@ -58,6 +64,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -76,8 +83,7 @@ import ubic.gemma.util.monitor.Monitored;
  * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService
  */
 @Service
-public class ExpressionExperimentServiceImpl extends
-        ubic.gemma.expression.experiment.service.ExpressionExperimentServiceBase {
+public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -86,30 +92,846 @@ public class ExpressionExperimentServiceImpl extends
 
     @Autowired
     private OntologyService ontologyService;
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
-     * java.lang.Integer)
+    
+    @Autowired
+    private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
+
+    @Autowired
+    private AuditEventDao auditEventDao;
+
+    @Autowired
+    private ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao;
+
+    @Autowired
+    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private ExpressionExperimentSetDao expressionExperimentSetDao;
+
+    @Autowired
+    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+
+    @Autowired
+    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
+
+    @Autowired
+    private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
+
+    @Autowired
+    private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
+   
+    /**
+     * @see ExpressionExperimentService#countAll()
      */
+    public java.lang.Integer countAll() {
+        try {
+            return this.expressionExperimentDao.countAll();
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.countAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#create(ExpressionExperiment)
+     */
+    public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.create( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.create(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#delete(ExpressionExperiment)
+     */
+    public void delete( final ExpressionExperiment expressionExperiment ) {
+        try {
+            this.handleDelete( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#delete(ExpressionExperiment)
+     */
+    public void delete( final Long id ) {
+        try {
+            final ExpressionExperiment ee = this.load( id );
+            this.handleDelete( ee );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#find(ExpressionExperiment)
+     */
+    public ExpressionExperiment find( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.find( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.find(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
+     */
+    public Collection<ExpressionExperiment> findByAccession(
+            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+        try {
+            return this.expressionExperimentDao.findByAccession( accession );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByAccession(ubic.gemma.model.common.description.DatabaseEntry accession)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
+        try {
+            return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference bibRef)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
+        try {
+            return this.expressionExperimentDao.findByBioMaterial( bm );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial bm)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByBioMaterials(Collection)
+     */
+    public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
+        try {
+            return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByBioMaterials(Collection bioMaterials)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByExpressedGene(ubic.gemma.model.genome.Gene, double)
+     */
+    public Collection<ExpressionExperiment> findByExpressedGene( final ubic.gemma.model.genome.Gene gene,
+            final double rank ) {
+        try {
+            return this.expressionExperimentDao.findByExpressedGene( gene, rank );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByExpressedGene(ubic.gemma.model.genome.Gene gene, double rank)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
+     */
+    public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
+        try {
+            return this.expressionExperimentDao.findByFactorValue( factorValue );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByFactorValue(FactorValue factorValue)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByFactorValues(Collection)
+     */
+    public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
+        try {
+            return this.expressionExperimentDao.findByFactorValues( factorValues );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByFactorValues(Collection factorValues)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByGene(ubic.gemma.model.genome.Gene)
+     */
+    public Collection<ExpressionExperiment> findByGene( final ubic.gemma.model.genome.Gene gene ) {
+        try {
+            return this.expressionExperimentDao.findByGene( gene );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
+     */
+    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
+        try {
+            return this.expressionExperimentDao.findByInvestigator( investigator );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact investigator)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByName(java.lang.String)
+     */
+    public ExpressionExperiment findByName( final java.lang.String name ) {
+        try {
+            return this.expressionExperimentDao.findByName( name );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByName(java.lang.String name)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByParentTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.expressionExperimentDao.findByParentTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByShortName(java.lang.String)
+     */
+    public ExpressionExperiment findByShortName( final java.lang.String shortName ) {
+        try {
+            return this.expressionExperimentDao.findByShortName( shortName );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByShortName(java.lang.String shortName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.expressionExperimentDao.findByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#findOrCreate(ExpressionExperiment)
+     */
+    public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.findOrCreate( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.findOrCreate(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getAnnotationCounts(Collection)
+     */
+    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
+        try {
+            return this.expressionExperimentDao.getAnnotationCounts( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getAnnotationCounts(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getArrayDesignsUsed(ExpressionExperiment)
+     */
+    public Collection<ArrayDesign> getArrayDesignsUsed( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getArrayDesignsUsed(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @return the auditEventDao
+     */
+    public AuditEventDao getAuditEventDao() {
+        return auditEventDao;
+    }
+
+    /**
+     * @see ExpressionExperimentService#getBioMaterialCount(ExpressionExperiment)
+     */
+    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getBioMaterialCount(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getDesignElementDataVectorCountById(long)
+     */
+    public Integer getDesignElementDataVectorCountById( final long id ) {
+        try {
+            return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getDesignElementDataVectorCountById(long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection,
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            final Collection<CompositeSequence> designElements,
+            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            return this.expressionExperimentDao.getDesignElementDataVectors( designElements, quantitationType );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getDesignElementDataVectors(Collection designElements, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection)
+     */
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            final Collection<QuantitationType> quantitationTypes ) {
+        try {
+            return this.expressionExperimentDao.getDesignElementDataVectors( quantitationTypes );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getDesignElementDataVectors(Collection quantitationTypes)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @return the differentialExpressionAnalysisDao
+     */
+    public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+        return differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @return the expressionExperimentSetDao
+     */
+    public ExpressionExperimentSetDao getExpressionExperimentSetDao() {
+        return expressionExperimentSetDao;
+    }
+
+    public GeneCoexpressionAnalysisDao getGeneCoexpressionAnalysisDao() {
+        return geneCoexpressionAnalysisDao;
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
+     */
+    public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
+        try {
+            return this.expressionExperimentDao.getLastArrayDesignUpdate( expressionExperiments );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastArrayDesignUpdate(Collection expressionExperiments, java.lang.Class type)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)
+     */
+    public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
+        try {
+            return this.expressionExperimentDao.getLastArrayDesignUpdate( ee );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastArrayDesignUpdate(ExpressionExperiment expressionExperiment, java.lang.Class eventType)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastLinkAnalysis(Collection)
+     */
+    public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
+        try {
+            return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastLinkAnalysis(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastMissingValueAnalysis(Collection)
+     */
+    public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
+        try {
+            return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastMissingValueAnalysis(Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastProcessedDataUpdate(Collection)
+     */
+    public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
+        try {
+            return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastRankComputation(Collection ids)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
+     */
+    public Map<Long, AuditEvent> getLastTroubleEvent( final Collection<Long> ids ) {
+        try {
+            Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+
+            // this checks the array designs, too.
+            Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
+
+            Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
+            for ( Auditable a : directEvents.keySet() ) {
+                troubleMap.put( a.getId(), directEvents.get( a ) );
+            }
+
+            return troubleMap;
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastTroubleEvent(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastValidationEvent(Collection)
+     */
+    public Map<Long, AuditEvent> getLastValidationEvent( final Collection<Long> ids ) {
+        try {
+            return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getLastValidationEvent(Collection ids)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPerTaxonCount()
+     */
+    public Map<Taxon, Long> getPerTaxonCount() {
+        try {
+            return this.expressionExperimentDao.getPerTaxonCount();
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPerTaxonCount()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
+     */
+    public Map getPopulatedFactorCounts( final Collection<Long> ids ) {
+        try {
+            return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCounts(Collection ids)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPopulatedFactorCountsExcludeBatch(Collection)
+     */
+    public Map getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+        try {
+            return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPreferredQuantitationType(ExpressionExperiment)
+     */
+    public Collection getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        try {
+            Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
+
+            Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
+
+            for ( QuantitationType qt : quantitationTypes ) {
+                if ( qt.getIsPreferred() ) {
+                    preferredQuantitationTypes.add( qt );
+                }
+            }
+            return preferredQuantitationTypes;
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPreferredQuantitationType(ExpressionExperiment EE)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
+     */
+    public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPreferredDesignElementDataVectorCount(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
+        return sampleCoexpressionAnalysisDao;
+    }
+
+    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
+        return principalComponentAnalysisDao;
+    }
+
+    /**
+     * @see ExpressionExperimentService#getQuantitationTypeCountById(java.lang.Long)
+     */
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final java.lang.Long Id ) {
+        try {
+            return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getQuantitationTypeCountById(java.lang.Long Id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment)
+     */
+    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getQuantitationTypes(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getQuantitationTypes(ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getSampleRemovalEvents(Collection)
+     */
+    public Map getSampleRemovalEvents( final Collection expressionExperiments ) {
+        try {
+            return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getSampleRemovalEvents(Collection expressionExperiments)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
+     *      java.lang.Integer)
+     */
+    public Collection getSamplingOfVectors(
+            final QuantitationType quantitationType,
+            final Integer limit ) {
+        try {
+            return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getSubSets(ExpressionExperiment)
+     */
+    public Collection getSubSets( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.getSubSets( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getSubSets(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getTaxon(java.lang.Long)
+     */
+    public Taxon getTaxon( final Long ExpressionExperimentID ) {
+        try {
+            return this.expressionExperimentDao.getTaxon( ExpressionExperimentID );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getTaxon(java.lang.Long ExpressionExperimentID)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#load(java.lang.Long)
+     */
+    public ExpressionExperiment load( final java.lang.Long id ) {
+        try {
+            return this.expressionExperimentDao.load( id );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.load(java.lang.Long id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#loadAll()
+     */
+    public Collection<ExpressionExperiment> loadAll() {
+        try {
+            return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.loadAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#loadAllValueObjects()
+     */
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
+        try {
+            return this.handleLoadAllValueObjects();
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.loadAllValueObjects()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#loadMultiple(Collection)
+     */
+    public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {
+        try {
+            return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.loadMultiple(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#loadValueObjects(Collection)
+     */
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids ) {
+        try {
+            /*
+             * NOTE: Don't try and call this.loadMultiple(ids) to have security filter out experiments. The security
+             * filtering just doesn't work. You need to call loadMultiple before calling loadValueObjects.
+             */
+            return this.expressionExperimentDao.loadValueObjects( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.loadValueObjects(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>arrayDesign</code>'s DAO.
+     */
+    public void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @param auditEventDao the auditEventDao to set
+     */
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
+
+    /**
+     * Sets the reference to <code>bioAssayDimension</code>'s DAO.
+     */
+    public void setBioAssayDimensionDao(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao ) {
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
+     */
+    public void setDifferentialExpressionAnalysisDao(
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * Sets the reference to <code>expressionExperiment</code>'s DAO.
+     */
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    /**
+     * @param expressionExperimentSetDao the expressionExperimentSetDao to set
+     */
+    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
+    }
+
+    public void setGeneCoexpressionAnalysisDao( GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao ) {
+        this.geneCoexpressionAnalysisDao = geneCoexpressionAnalysisDao;
+    }
+
+    /**
+     * Sets the reference to <code>probe2ProbeCoexpression</code>'s DAO.
+     */
+    public void setProbe2ProbeCoexpressionDao(
+            ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao ) {
+        this.probe2ProbeCoexpressionDao = probe2ProbeCoexpressionDao;
+    }
+
+    /**
+     * @see ExpressionExperimentService#thaw(ExpressionExperiment)
+     */
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.thaw( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.thaw(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
+     */
+    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.thawLite(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#update(ExpressionExperiment)
+     */
+    public void update( final ExpressionExperiment expressionExperiment ) {
+        try {
+            this.expressionExperimentDao.update( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.update(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    
+    
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
-        return this.getExpressionExperimentDao().browse( start, limit );
+        return this.expressionExperimentDao.browse( start, limit );
     }
 
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        return this.getExpressionExperimentDao().browse( start, limit, orderField, descending );
+        return this.expressionExperimentDao.browse( start, limit, orderField, descending );
     }
 
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, ids );
+        return this.expressionExperimentDao.browseSpecificIds( start, limit, ids );
     }
 
     @Override
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
             boolean descending, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, orderField, descending, ids );
+        return this.expressionExperimentDao.browseSpecificIds( start, limit, orderField, descending, ids );
     }
 
     /*
@@ -126,21 +948,21 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     public Integer count() {
-        return this.getExpressionExperimentDao().count();
+        return this.expressionExperimentDao.count();
     }
 
     @Override
     public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.getExpressionExperimentDao().findByAccession( accession );
+        return this.expressionExperimentDao.findByAccession( accession );
     }
 
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.getExpressionExperimentDao().findByQuantitationType( type );
+        return this.expressionExperimentDao.findByQuantitationType( type );
     }
 
     @Override
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
-        return this.getExpressionExperimentDao().findByTaxon( taxon, limit );
+        return this.expressionExperimentDao.findByTaxon( taxon, limit );
     }
 
     /*
@@ -150,12 +972,12 @@ public class ExpressionExperimentServiceImpl extends
      * java.lang.Integer)
      */
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
-        return this.getExpressionExperimentDao().findByUpdatedLimit( ids, limit );
+        return this.expressionExperimentDao.findByUpdatedLimit( ids, limit );
     }
 
     @Override
     public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
-        return this.getExpressionExperimentDao().findByUpdatedLimit( limit );
+        return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
     /*
@@ -166,7 +988,7 @@ public class ExpressionExperimentServiceImpl extends
      * .experiment.ExpressionExperiment)
      */
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
-        return this.getExpressionExperimentDao().getBioAssayDimensions( expressionExperiment );
+        return this.expressionExperimentDao.getBioAssayDimensions( expressionExperiment );
     }
 
     /*
@@ -176,17 +998,17 @@ public class ExpressionExperimentServiceImpl extends
      * expression.experiment.ExpressionExperiment)
      */
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
+        return this.expressionExperimentDao.getProcessedDataVectors( ee );
     }
 
     @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        Collection<Long> firstPass = this.getExpressionExperimentDao().getUntroubled( ids );
+        Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
 
         /*
          * Now check the array designs.
          */
-        Map<ArrayDesign, Collection<Long>> ads = this.getExpressionExperimentDao().getArrayDesignsUsed( firstPass );
+        Map<ArrayDesign, Collection<Long>> ads = this.expressionExperimentDao.getArrayDesignsUsed( firstPass );
         Collection<Long> troubled = new HashSet<Long>();
         for ( ArrayDesign a : ads.keySet() ) {
             if ( a.getStatus().getTroubled() ) {
@@ -201,32 +1023,32 @@ public class ExpressionExperimentServiceImpl extends
 
     @Override
     public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
-        return this.getExpressionExperimentDao().loadAllOrdered( orderField, descending );
+        return this.expressionExperimentDao.loadAllOrdered( orderField, descending );
     }
 
     @Override
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        return this.getExpressionExperimentDao().loadAllTaxonOrdered( orderField, descending, taxon );
+        return this.expressionExperimentDao.loadAllTaxonOrdered( orderField, descending, taxon );
     }
 
     @Override
     public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
-        return this.getExpressionExperimentDao().loadAllTaxon( taxon );
+        return this.expressionExperimentDao.loadAllTaxon( taxon );
     }
 
     @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
-        return this.getExpressionExperimentDao().loadLackingFactors();
+        return this.expressionExperimentDao.loadLackingFactors();
     }
 
     @Override
     public Collection<ExpressionExperiment> loadLackingTags() {
-        return this.getExpressionExperimentDao().loadLackingTags();
+        return this.expressionExperimentDao.loadLackingTags();
     }
 
     @Override
     public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().loadMultipleOrdered( orderField, descending, ids );
+        return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
     }
 
     /*
@@ -254,23 +1076,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.loadMultiple( lastTroubleEvents.keySet() );
     }
 
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        return this.getExpressionExperimentDao().countAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleCreate(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    @Override
-    protected ExpressionExperiment handleCreate( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().create( expressionExperiment );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -278,7 +1083,6 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
-    @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
 
         if ( ee == null ) {
@@ -318,7 +1122,7 @@ public class ExpressionExperimentServiceImpl extends
         }
 
         // Remove probe2probe links
-        this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
+        this.probe2ProbeCoexpressionDao.deleteLinks( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
@@ -337,442 +1141,15 @@ public class ExpressionExperimentServiceImpl extends
             }
         }
 
-        this.getExpressionExperimentDao().remove( ee );
+        this.expressionExperimentDao.remove( ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFind(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    @Override
-    protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().find( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByAccession(ubic.gemma.model
-     * .common.description.DatabaseEntry)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByAccession( DatabaseEntry accession ) throws Exception {
-        return this.getExpressionExperimentDao().findByAccession( accession );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
-     * .gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByBibliographicReference( BibliographicReference bibRef )
-            throws Exception {
-        return this.getExpressionExperimentDao().findByBibliographicReference( bibRef.getId() );
-    }
-
-    @Override
-    protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) throws Exception {
-        return this.getExpressionExperimentDao().findByBioMaterial( bm );
-    }
-
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials )
-            throws Exception {
-        return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model
-     * .genome.Gene, double)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
-        return this.getExpressionExperimentDao().findByExpressedGene( gene, rank );
-    }
-
-    @Override
-    protected ExpressionExperiment handleFindByFactorValue( FactorValue factorValue ) throws Exception {
-        return this.getExpressionExperimentDao().findByFactorValue( factorValue );
-    }
-
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection factorValues ) throws Exception {
-        return this.getExpressionExperimentDao().findByFactorValues( factorValues );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome
-     * .Gene)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByGene( Gene gene ) throws Exception {
-        return this.getExpressionExperimentDao().findByGene( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model
-     * .common.auditAndSecurity.Contact)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByInvestigator( Contact investigator ) throws Exception {
-        return this.getExpressionExperimentDao().findByInvestigator( investigator );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByName(java.lang.String)
-     */
-    @Override
-    protected ExpressionExperiment handleFindByName( String name ) throws Exception {
-        return this.getExpressionExperimentDao().findByName( name );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByParentTaxon(ubic.gemma.model
-     * .genome .Taxon)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
-        return this.getExpressionExperimentDao().findByParentTaxon( taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByShortName(java.lang.String)
-     */
-    @Override
-    protected ExpressionExperiment handleFindByShortName( String shortName ) throws Exception {
-        return this.getExpressionExperimentDao().findByShortName( shortName );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByTaxon(ubic.gemma.model.genome
-     * .Taxon)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByTaxon( Taxon taxon ) throws Exception {
-        return this.getExpressionExperimentDao().findByTaxon( taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    @Override
-    protected ExpressionExperiment handleFindOrCreate( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().findOrCreate( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetAnnotationCounts(java.util.Collection
-     * )
-     */
-    @Override
-    protected Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws Exception {
-        return this.getExpressionExperimentDao().getAnnotationCounts( ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetArrayDesignsUsed(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
-        return this.getExpressionExperimentDao().getArrayDesignsUsed( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetBioMaterialCount(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().getBioMaterialCount( expressionExperiment );
-    }
-
-    @Override
-    protected Integer handleGetDesignElementDataVectorCountById( long id ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
-    }
-
-    @Override
-    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
-     */
-    @Override
-    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<QuantitationType> quantitationTypes ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( quantitationTypes );
-    }
-
-    @Override
-    protected Map<Long, Date> handleGetLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments )
-            throws Exception {
-        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments );
-    }
-
-    @Override
-    protected Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
-        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection
-     * )
-     */
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastLinkAnalysis( Collection<Long> ids ) throws Exception {
-
-        return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java
-     * .util.Collection)
-     */
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastMissingValueAnalysis( Collection<Long> ids ) throws Exception {
-        return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util
-     * .Collection)
-     */
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastProcessedDataUpdate( Collection<Long> ids ) throws Exception {
-        return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
-    }
-
-    /*
-     * Note this is a little tricky since we have to reach through to check the ArrayDesigns. (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection
-     * )
-     */
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection<Long> ids ) throws Exception {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
-
-        // this checks the array designs, too.
-        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
-
-        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
-        for ( Auditable a : directEvents.keySet() ) {
-            troubleMap.put( a.getId(), directEvents.get( a ) );
-        }
-
-        return troubleMap;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastValidationEvent(java.util
-     * .Collection)
-     */
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection<Long> ids ) throws Exception {
-        return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPerTaxonCount()
-     */
-    @Override
-    protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
-        return this.getExpressionExperimentDao().getPerTaxonCount();
-    }
-
-    @Override
-    protected Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
-        return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
-    }
-
-    @Override
-    protected Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception {
-        return this.getExpressionExperimentDao().getPopulatedFactorCountsExcludeBatch( ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
-     * .gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected Collection<QuantitationType> handleGetPreferredQuantitationType( ExpressionExperiment ee )
-            throws Exception {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
-
-        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
-
-        ee = handleThawLite( ee ); // why?
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsPreferred() ) {
-                preferredQuantitationTypes.add( qt );
-            }
-        }
-        return preferredQuantitationTypes;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount
-     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
-            throws Exception {
-        return this.getExpressionExperimentDao().getProcessedExpressionVectorCount( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetQuantitationTypeCountById(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id ) throws Exception {
-        return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
-    }
-
-    @Override
-    protected Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment )
-            throws Exception {
-        return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment );
-    }
-
-    @Override
-    protected Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ArrayDesign arrayDesign ) throws Exception {
-        return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment, arrayDesign );
-    }
-
-    @Override
-    protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
-            Collection expressionExperiments ) throws Exception {
-        return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
-    }
-
-    @Override
-    protected Collection<DesignElementDataVector> handleGetSamplingOfVectors( QuantitationType quantitationType,
-            Integer limit ) throws Exception {
-        return this.getExpressionExperimentDao().getSamplingOfVectors( quantitationType, limit );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
-            throws Exception {
-        return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
-    }
-
-    @Override
-    protected Taxon handleGetTaxon( Long id ) {
-        return this.getExpressionExperimentDao().getTaxon( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.lang.Long)
-     */
-    @Override
-    protected ExpressionExperiment handleLoad( Long id ) throws Exception {
-        return this.getExpressionExperimentDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAll()
-     */
-    @Override
-    @Monitored
-    protected Collection<ExpressionExperiment> handleLoadAll() throws Exception {
-        return ( Collection<ExpressionExperiment> ) this.getExpressionExperimentDao().loadAll();
-    }
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
      */
-    @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
 
         /* security will filter for us */
@@ -789,57 +1166,6 @@ public class ExpressionExperimentServiceImpl extends
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleLoadMultiple( Collection<Long> ids ) throws Exception {
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) this.getExpressionExperimentDao()
-                .load( ids );
-        return ees;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection
-     * )
-     */
-    @Override
-    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids )
-            throws Exception {
-        /*
-         * NOTE: Don't try and call this.loadMultiple(ids) to have security filter out experiments. The security
-         * filtering just doesn't work. You need to call loadMultiple before calling loadValueObjects.
-         */
-        return this.getExpressionExperimentDao().loadValueObjects( ids );
-    }
-
-    @Override
-    protected ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().thaw( expressionExperiment );
-    }
-
-    @Override
-    protected ExpressionExperiment handleThawLite( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleUpdate(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    @Override
-    protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
-        this.getExpressionExperimentDao().update( expressionExperiment );
-    }
 
     /**
      * @param ids
