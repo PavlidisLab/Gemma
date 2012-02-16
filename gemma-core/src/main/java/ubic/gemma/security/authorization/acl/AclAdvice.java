@@ -180,7 +180,7 @@ public class AclAdvice {
             } catch ( NotFoundException nfe ) {
                 log.error( nfe, nfe );
             }
-        }
+       }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -573,15 +573,16 @@ public class AclAdvice {
                                 + currentParentAcl + " != Proposed parent:" + parentAcl );
             }
 
-            boolean changed = false;
+            boolean changedParentAcl = false;
             if ( currentParentAcl == null ) {
                 childAcl.setParent( parentAcl );
                 childAcl.setEntriesInheriting( true );
-                changed = true;
+                changedParentAcl = true;
             }
 
-            changed = changed || maybeClearACEsOnChild( object, childAcl, parentAcl );
-            if ( changed ) {
+            boolean clearedACEs = maybeClearACEsOnChild( object, childAcl, parentAcl );
+                         
+            if ( changedParentAcl || clearedACEs ) {
                 aclService.updateAcl( childAcl );
             }
         }
