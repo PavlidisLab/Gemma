@@ -242,7 +242,13 @@ public class DatasetCombiner {
                     .compile( "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
 
             DocumentBuilder builder = factory.newDocumentBuilder();
-            StringInputStream sis = new StringInputStream( details );
+
+            /*
+             * Bug 2690. There must be a better way.
+             */
+            details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+
+            StringInputStream sis = new StringInputStream( StringUtils.trim( details ) );
             Document document = builder.parse( sis );
 
             NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
@@ -250,7 +256,6 @@ public class DatasetCombiner {
                 String nodeValue = result.item( i ).getNodeValue();
                 // if ( nodeValue.contains( ";" ) ) continue; //
                 associatedDatasetAccessions.add( "GDS" + nodeValue );
-                log.info( nodeValue );
             }
 
             return associatedDatasetAccessions;
