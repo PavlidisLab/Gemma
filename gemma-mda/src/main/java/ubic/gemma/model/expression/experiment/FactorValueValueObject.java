@@ -261,5 +261,27 @@ public class FactorValueValueObject implements Serializable {
 
         }
     }
+    
+    /**
+     * 
+     * @param fv
+     * @return
+     */
+    public static String getFactorValueString ( FactorValue fv ) {
+        if ( fv == null ) return "null";
 
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+            String fvString = "";
+            for ( Characteristic c : fv.getCharacteristics() ) {
+                fvString += c.getValue() + " ";
+            }
+            return fvString;
+        } else if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+            return fv.getValue();
+        } else
+            return "absent ";
+    }
+    
 }
