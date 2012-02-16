@@ -256,7 +256,7 @@ public class SecurityServiceImpl implements SecurityService {
         if ( objectIdentities.isEmpty() ) return result;
 
         /*
-         * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
+         * Take advantage of fast bulk loading of ACLs. Other methods should adopt this if they turn out to be heavily
          * used/slow.
          */
         Map<ObjectIdentity, Acl> acls = aclService
@@ -334,7 +334,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#createGroup(java.lang.String)
      */
     @Override
-    @Transactional
     public void createGroup( String groupName ) {
 
         /*
@@ -364,7 +363,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#deleteGroup(java.lang.String)
      */
     @Override
-    @Transactional
     public void deleteGroup( String groupName ) {
 
         if ( !userManager.groupExists( groupName ) ) {
@@ -884,7 +882,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("GROUP_ADMIN")
-    @Transactional
     public void makeOwnedByUser( Securable s, String userName ) {
         MutableAcl acl = getAcl( s );
 
@@ -932,7 +929,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public void makePrivate( Securable object ) {
         if ( object == null ) {
             return;
@@ -962,7 +958,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#makePublic(java.util.Collection)
      */
     @Override
-    @Transactional
     public void makePublic( Collection<? extends Securable> objs ) {
         for ( Securable s : objs ) {
             makePublic( s );
@@ -976,7 +971,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public void makePublic( Securable object ) {
 
         if ( object == null ) {
@@ -1017,7 +1011,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1047,7 +1040,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1067,7 +1059,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1085,7 +1076,6 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @PreAuthorize("hasPermission(#s, write)")
-    @Transactional
     public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1376,7 +1366,7 @@ public class SecurityServiceImpl implements SecurityService {
     private boolean isPrivate( Acl acl ) {
 
         /*
-         * If the given Acl has anonymous permissions on it, then we can't be private.
+         * If the given Acl has anonymous permissions on it, then it can't be private.
          */
         for ( AccessControlEntry ace : acl.getEntries() ) {
 
