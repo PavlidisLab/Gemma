@@ -39,7 +39,7 @@ public interface TaxonService {
 
     public Taxon findByScientificName( String scientificName );
 
-    public java.util.Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
+    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
     @Secured( { "GROUP_USER" })
     public Taxon findOrCreate( Taxon taxon );
@@ -48,7 +48,7 @@ public interface TaxonService {
 
     public TaxonValueObject loadValueObject( Long id );
 
-    public java.util.Collection<Taxon> loadAll();
+    public Collection<Taxon> loadAll();
 
 
     @Secured( { "GROUP_USER" })
@@ -59,7 +59,7 @@ public interface TaxonService {
 
     public void thaw( Taxon taxon );
     
-    public java.util.Collection<TaxonValueObject> loadAllValueObjects();
+    public Collection<TaxonValueObject> loadAllValueObjects();
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
