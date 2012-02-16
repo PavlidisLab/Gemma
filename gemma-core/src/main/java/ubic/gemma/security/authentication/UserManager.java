@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.security.provisioning.GroupManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -30,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
  * @author paul
  * @version $Id$
  */
+@Service
 public interface UserManager extends UserDetailsManager, GroupManager {
 
     /**
