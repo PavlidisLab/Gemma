@@ -41,7 +41,7 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class TaxonServiceImpl extends TaxonServiceBase {
+public class TaxonServiceImpl implements TaxonService {
 
     private static Log log = LogFactory.getLog( TaxonServiceImpl.class );
     
@@ -51,6 +51,9 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     @Autowired
     private ArrayDesignService arrayDesignService;
     
+    @Autowired
+    private ubic.gemma.model.genome.TaxonDao taxonDao;
+
     private static Comparator<TaxonValueObject> TAXON_COMPARATOR = new Comparator<TaxonValueObject>() {
         public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
@@ -67,22 +70,18 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     /**
      * @see TaxonService#find(Taxon)
      */
-    @Override
     protected Taxon handleFind( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().find( taxon );
     }
 
-    @Override
     protected Taxon handleFindByAbbreviation( String abbreviation ) throws Exception {
         return this.getTaxonDao().findByAbbreviation( abbreviation );
     }
 
-    @Override
     protected Taxon handleFindByCommonName( String commonName ) throws Exception {
         return this.getTaxonDao().findByCommonName( commonName );
     }
 
-    @Override
     protected Taxon handleFindByScientificName( String scientificName ) throws Exception {
         return this.getTaxonDao().findByScientificName( scientificName );
     }
@@ -90,22 +89,18 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     /**
      * @see TaxonService#findChildTaxaByParent(Taxon)
      */
-    @Override
     protected Collection<Taxon> handleFindChildTaxaByParent( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().findChildTaxaByParent( taxon );
     }
 
-    @Override
     protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
         return this.getTaxonDao().findOrCreate( taxon );
     }
 
-    @Override
     protected Taxon handleLoad( Long id ) throws Exception {
         return this.getTaxonDao().load( id );
     }
 
-    @Override
     protected Collection<Taxon> handleLoadAll() throws Exception {
         return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
     }
@@ -113,7 +108,6 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     /**
      * @see TaxonService#remove(Taxon)
      */
-    @Override
     protected void handleRemove( Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().remove( taxon );
     }
@@ -121,23 +115,18 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     /**
      * @see TaxonService#update(Taxon)
      */
-    @Override
     protected void handleUpdate( Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().update( taxon );
     }
-
    
-    @Override
     protected void handleThaw( Taxon taxon ) throws Exception {
         this.getTaxonDao().thaw( taxon );        
     }
     
-    @Override
     public TaxonValueObject loadValueObject( Long id ){
         return TaxonValueObject.fromEntity( load( id ) );
     }
     
-    @Override
     public Collection<TaxonValueObject> loadAllValueObjects( ){
         Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
         for(Taxon tax : loadAll()){
@@ -149,7 +138,6 @@ public class TaxonServiceImpl extends TaxonServiceBase {
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
-    @Override
     public Collection<TaxonValueObject> getTaxaSpecies() {
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -206,6 +194,163 @@ public class TaxonServiceImpl extends TaxonServiceBase {
 
         log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
         return taxaWithArrays;
+    }
+    
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#find(ubic.gemma.model.genome.Taxon)
+     */
+    public ubic.gemma.model.genome.Taxon find( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFind( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.find(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#findByAbbreviation(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
+        try {
+            return this.handleFindByAbbreviation( abbreviation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#findByCommonName(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String commonName ) {
+        try {
+            return this.handleFindByCommonName( commonName );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByCommonName(java.lang.String commonName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#findByScientificName(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByScientificName( final java.lang.String scientificName ) {
+        try {
+            return this.handleFindByScientificName( scientificName );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
+        try {
+            return this.handleFindChildTaxaByParent( parentTaxa );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
+     */
+    public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindOrCreate( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findOrCreate(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#load(java.lang.Long)
+     */
+    public ubic.gemma.model.genome.Taxon load( final java.lang.Long id ) {
+        try {
+            return this.handleLoad( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.load(java.lang.Long id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#loadAll()
+     */
+    public java.util.Collection<Taxon> loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.loadAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#remove(ubic.gemma.model.genome.Taxon)
+     */
+    public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleRemove( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.remove(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>taxon</code>'s DAO.
+     */
+    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
+     */
+    public void update( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleUpdate( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+    
+    /**
+     * thaws taxon
+     */
+    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleThaw( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
+                            + th, th );
+        }
+    }    
+    
+
+    /**
+     * Gets the reference to <code>taxon</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.TaxonDao getTaxonDao() {
+        return this.taxonDao;
     }
 
 }

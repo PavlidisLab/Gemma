@@ -31,6 +31,7 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperimentSet> {
 
+
     /**
      * Locate expressionExperimentSets that contain the given bioAssaySet.
      */
@@ -41,15 +42,14 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+    public Collection<ExpressionExperimentSet> findByName( String name );
 
     /**
      * Get analyses that use this set. Note that if this collection is not empty, modification of the
      * expressionexperimentset should be disallowed.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionAnalysis> getAnalyses(
-            ExpressionExperimentSet expressionExperimentSet );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Get the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set

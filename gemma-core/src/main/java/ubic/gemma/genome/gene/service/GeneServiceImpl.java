@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
@@ -63,7 +64,7 @@ import ubic.gemma.search.GeneSetSearch;
  * @see gene.GeneService
  */
 @Service
-public class GeneServiceImpl extends GeneServiceBase {
+public class GeneServiceImpl implements GeneService {
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
@@ -88,6 +89,9 @@ public class GeneServiceImpl extends GeneServiceBase {
     @Autowired
     GeneSetValueObjectHelper geneSetValueObjectHelper;
 
+    @Autowired
+    private GeneDao geneDao;
+    
     @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
         return this.getGeneDao().find( physicalLocation );
@@ -212,23 +216,15 @@ public class GeneServiceImpl extends GeneServiceBase {
 
     }
 
-    @Override
-    public Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly ) {
-        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
-    }
 
-    @Override
     public Collection<Gene> handleThawLite( Collection<Gene> genes ) {
         return this.getGeneDao().thawLite( genes );
     }
 
-    @Override
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
         return this.getGeneDao().loadThawed( ids );
     }
 
-    @Override
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
         return GeneValueObject.convert2ValueObjects( g );
@@ -248,51 +244,6 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().thawLite( gene );
     }
 
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        return this.getGeneDao().countAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleCreate(java.util.Collection)
-     */
-    @Override
-    protected Collection<Gene> handleCreate( Collection<Gene> genes ) throws Exception {
-        return ( Collection<Gene> ) this.getGeneDao().create( genes );
-
-    }
-
-    @Override
-    protected Gene handleCreate( Gene gene ) throws Exception {
-        return this.getGeneDao().create( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleFind(Gene)
-     */
-    @Override
-    protected Gene handleFind( Gene gene ) throws Exception {
-        return this.getGeneDao().find( gene );
-    }
-
-    @Override
-    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
-        return this.getGeneDao().findByAccession( accession, source );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
-     */
-    @Override
-    protected Collection<Gene> handleFindByAlias( String search ) throws Exception {
-        return this.getGeneDao().findByAlias( search );
-    }
 
     /**
      * @see gene.GeneService#handleFindByID(java.lang.long)
@@ -301,123 +252,6 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().load( id );
     }
 
-    @Override
-    protected Gene handleFindByNCBIId( Integer accession ) throws Exception {
-        return this.getGeneDao().findByNcbiId( accession );
-    }
-
-    /**
-     * @see gene.GeneService#findByOfficialName(java.lang.String)
-     */
-    @Override
-    protected java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName )
-            throws java.lang.Exception {
-        return this.getGeneDao().findByOfficialName( officialName );
-    }
-
-    /**
-     * @see gene.GeneService#findByOfficialSymbol(java.lang.String)
-     */
-    @Override
-    protected java.util.Collection<Gene> handleFindByOfficialSymbol( java.lang.String officialSymbol )
-            throws java.lang.Exception {
-        return this.getGeneDao().findByOfficalSymbol( officialSymbol );
-    }
-
-    @Override
-    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) throws Exception {
-        return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
-    }
-
-    /**
-     * @see gene.GeneService#handleFindByOfficialSymbolInexact(java.lang.String)
-     */
-    @Override
-    protected java.util.Collection<Gene> handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
-            throws java.lang.Exception {
-        return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
-    }
-
-    @Override
-    protected Gene handleFindOrCreate( Gene gene ) throws Exception {
-        return this.getGeneDao().findOrCreate( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleGetCoexpressedGenes(Gene)
-     */
-    @Override
-    protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
-    }
-
-    @Override
-    protected long handleGetCompositeSequenceCountById( Long id ) throws Exception {
-        return this.getGeneDao().getCompositeSequenceCountById( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleGetCompositeSequencesById(Gene,
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign )
-            throws Exception {
-        return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
-    }
-
-    @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequencesById( Long id ) throws Exception {
-        return this.getGeneDao().getCompositeSequencesById( id );
-    }
-
-    @Override
-    protected Collection<Gene> handleGetGenesByTaxon( Taxon taxon ) throws Exception {
-        return this.getGeneDao().getGenesByTaxon( taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleGetMicroRnaByTaxon(Taxon)
-     */
-    @Override
-    protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
-        return this.getGeneDao().getMicroRnaByTaxon( taxon );
-    }
-
-    @Override
-    protected Gene handleLoad( long id ) throws Exception {
-        return this.getGeneDao().load( id );
-    }
-
-    /**
-     * @see gene.GeneServiceBase#handleGetAllGenes()
-     */
-    @Override
-    protected Collection<Gene> handleLoadAll() throws Exception {
-        return ( Collection<Gene> ) this.getGeneDao().loadAll();
-    }
-
-    @Override
-    protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) throws Exception {
-        return this.getGeneDao().loadKnownGenes( taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleLoadMultiple(java.util.Collection)
-     */
-    @Override
-    protected Collection<Gene> handleLoadMultiple( Collection<Long> ids ) throws Exception {
-        return ( Collection<Gene> ) this.getGeneDao().load( ids );
-    }
 
     // @Override
     // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
@@ -429,22 +263,6 @@ public class GeneServiceImpl extends GeneServiceBase {
     // return this.getGeneDao().loadProbeAlignedRegions( taxon );
     // }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gene.GeneServiceBase#handleRemove(java.util.Collection)
-     */
-    @Override
-    protected void handleRemove( Collection<Gene> genes ) throws Exception {
-        this.getGeneDao().remove( genes );
-
-    }
-
-    @Override
-    protected void handleRemove( Gene gene ) throws Exception {
-        this.getGeneDao().remove( gene );
-    }
-
     /**
      * This was created because calling saveGene from Spring causes caching errors. I left saveGene in place on the
      * assumption that Kiran's loaders use it with success.
@@ -453,21 +271,6 @@ public class GeneServiceImpl extends GeneServiceBase {
      */
     protected Gene handleSaveGene( Gene gene ) throws java.lang.Exception {
         return this.getGeneDao().create( gene );
-    }
-
-    @Override
-    protected Gene handleThaw( Gene gene ) throws Exception {
-        return this.getGeneDao().thaw( gene );
-    }
-
-    /**
-     * This was created because calling saveGene with an existing gene actually causes a caching error in Spring.
-     * 
-     * @see gene.GeneService#updateGene(Gene)
-     */
-    @Override
-    protected void handleUpdate( Gene gene ) throws java.lang.Exception {
-        this.getGeneDao().update( gene );
     }
 
     @Override
@@ -568,5 +371,388 @@ public class GeneServiceImpl extends GeneServiceBase {
         Gene gene = findByNCBIId( accession );
         return new GeneValueObject( gene );
     }
+    
+    
+
+    /**
+     * @see GeneService#countAll()
+     */
+    @Override
+    public Integer countAll() {
+        try {
+            return this.getGeneDao().countAll();
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.countAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#create(Collection)
+     */
+    public Collection<Gene> create( final Collection<Gene> genes ) {
+        try {
+            return ( Collection<Gene> ) this.getGeneDao().create( genes );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.create(Collection genes)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#create(Gene)
+     */
+    public Gene create( final Gene gene ) {
+        try {
+            return this.getGeneDao().create( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.create(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#find(Gene)
+     */
+    public Gene find( final Gene gene ) {
+        try {
+            return this.getGeneDao().find( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.find(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByAccession(String, ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    public Gene findByAccession( final String accession, final ExternalDatabase source ) {
+        try {
+            return this.getGeneDao().findByAccession( accession, source );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.findByAccession(String accession, ubic.gemma.model.common.description.ExternalDatabase source)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByAlias(String)
+     */
+    public Collection<Gene> findByAlias( final String search ) {
+        try {
+            return this.getGeneDao().findByAlias( search );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.findByAlias(String search)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByNCBIId(String)
+     */
+    public Gene findByNCBIId( Integer accession ) {
+        try {
+            return this.getGeneDao().findByNcbiId( accession );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.findByNCBIId(String accession)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByOfficialName(String)
+     */
+    public Collection<Gene> findByOfficialName( final String officialName ) {
+        try {
+            return this.getGeneDao().findByOfficialName( officialName );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.findByOfficialName(String officialName)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByOfficialSymbol(String)
+     */
+    public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
+        try {
+            return this.getGeneDao().findByOfficalSymbol( officialSymbol );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.findByOfficialSymbol(String officialSymbol)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByOfficialSymbol(String, Taxon)
+     */
+    public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
+        try {
+            return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.findByOfficialSymbol(String symbol, Taxon taxon)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findByOfficialSymbolInexact(String)
+     */
+    public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
+        try {
+            return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.findByOfficialSymbolInexact(String officialSymbol)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#findOrCreate(Gene)
+     */
+    public Gene findOrCreate( final Gene gene ) {
+        try {
+            return this.getGeneDao().findOrCreate( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.findOrCreate(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+     */
+    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
+            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
+        try {
+            return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.getCoexpressedGenes(Collection<Gene> genes, Collection ees, Integer stringency, boolean knownGenesOnly)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+     */
+    public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
+            final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
+        try {
+            return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.getCoexpressedGenes(Gene gene, Collection ees, Integer stringency, boolean knownGenesOnly)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getCompositeSequenceCountById(Long)
+     */
+    public long getCompositeSequenceCountById( final Long id ) {
+        try {
+            return this.getGeneDao().getCompositeSequenceCountById( id );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.getCompositeSequenceCountById(Long id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getCompositeSequences(Gene, ArrayDesign)
+     */
+    public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
+        try {
+            return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException(
+                    "Error performing 'GeneService.getCompositeSequences(Gene gene, ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getCompositeSequencesById(Long)
+     */
+    public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
+        try {
+            return this.getGeneDao().getCompositeSequencesById( id );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.getCompositeSequencesById(Long id)' --> "
+                    + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#getGenesByTaxon(Taxon)
+     */
+    public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
+        try {
+            return this.getGeneDao().getGenesByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.getGenesByTaxon(Taxon taxon)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#loadMicroRNAs(Taxon)
+     */
+    public Collection<Gene> loadMicroRNAs( final Taxon taxon ) {
+        try {
+            return this.getGeneDao().getMicroRnaByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.getMicroRnaByTaxon(Taxon taxon)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see GeneService#load(long)
+     */
+    public Gene load( final long id ) {
+        try {
+            return this.getGeneDao().load( id );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.load(long id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#loadAll()
+     */
+    public Collection<Gene> loadAll() {
+        try {
+            return ( Collection<Gene> ) this.getGeneDao().loadAll();
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.loadAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#loadKnownGenes(Taxon)
+     */
+    public Collection<Gene> loadKnownGenes( final Taxon taxon ) {
+        try {
+            return this.getGeneDao().loadKnownGenes( taxon );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.loadKnownGenes(Taxon taxon)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#loadMultiple(Collection)
+     */
+    public Collection<Gene> loadMultiple( final Collection<Long> ids ) {
+        try {
+            return ( Collection<Gene> ) this.getGeneDao().load( ids );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.loadMultiple(Collection ids)' --> " + th, th );
+        }
+    }
+
+    // /**
+    // * @see GeneService#loadPredictedGenes(Taxon)
+    // */
+    // @Override
+    // public Collection<PredictedGene> loadPredictedGenes( final Taxon taxon ) {
+    // try {
+    // return this.handleLoadPredictedGenes( taxon );
+    // } catch ( Throwable th ) {
+    // throw new GeneServiceException( "Error performing 'GeneService.loadPredictedGenes(Taxon taxon)' --> " + th,
+    // th );
+    // }
+    // }
+    //
+    // /**
+    // * @see GeneService#loadProbeAlignedRegions(Taxon)
+    // */
+    // @Override
+    // public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final Taxon taxon ) {
+    // try {
+    // return this.handleLoadProbeAlignedRegions( taxon );
+    // } catch ( Throwable th ) {
+    // throw new GeneServiceException( "Error performing 'GeneService.loadProbeAlignedRegions(Taxon taxon)' --> "
+    // + th, th );
+    // }
+    // }
+
+    /**
+     * @see GeneService#remove(String)
+     */
+    public void remove( Gene gene ) {
+        try {
+            this.getGeneDao().remove( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.remove(String officialName)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#remove(Collection)
+     */
+    public void remove( final Collection<Gene> genes ) {
+        try {
+            this.getGeneDao().remove( genes );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.remove(Collection genes)' --> " + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>gene</code>'s DAO.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    /**
+     * @see GeneService#thaw(Gene)
+     */
+    public Gene thaw( final Gene gene ) {
+        try {
+            return this.getGeneDao().thaw( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.thaw(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#thawLite(Collection)
+     */
+    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
+        try {
+            return this.handleThawLite( genes );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.thawLite(Collection genes)' --> " + th, th );
+        }
+    }
+
+    /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    public Gene thawAliases( Gene gene ) {
+        try {
+            return this.getGeneDao().thawAliases( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.thawAliases(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see GeneService#update(Gene)
+     */
+    public void update( final Gene gene ) {
+        try {
+            this.getGeneDao().update( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.update(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>gene</code>'s DAO.
+     */
+    protected GeneDao getGeneDao() {
+        return this.geneDao;
+    }
+
 
 }
