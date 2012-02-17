@@ -44,7 +44,6 @@ import javax.xml.xpath.XPathFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hsqldb.lib.StringInputStream;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -326,6 +325,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      */
     protected String formatDetails( String details ) {
         try {
+
+            /*
+             * Bug 2690. There must be a better way.
+             */
+            details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+
             DocumentBuilder builder = factory.newDocumentBuilder();
             StringInputStream is = new StringInputStream( details );
             Document document = builder.parse( is );
