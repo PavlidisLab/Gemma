@@ -331,9 +331,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param id
      * @return taskId
      */
-    public String deleteById( Long id ) {
-        if ( id == null ) return null;
-        expressionExperimentService.delete( id );
+    public String deleteById( Long id ) {        
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) return null;       
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
         startTask( job );
         return job.getTaskId();
