@@ -100,8 +100,6 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
 		name="/admin/taskTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/metaheatmap.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
 		name="/contactUs.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
 		name="/analysesResultsSearch.html" />
@@ -314,6 +312,7 @@
 	<dwr:controller id="dwrController" debug="true" >
 		<dwr:config-param name="generateDtoClasses" value="dtoall" />
 		<dwr:config-param name="allowScriptTagRemoting" value="true" />	
+		<dwr:config-param name="crossDomainSessionSecurity" value="false" />		
 	</dwr:controller>
 	
 
