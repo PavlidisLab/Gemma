@@ -54,7 +54,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -65,16 +64,13 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.util.monitor.Monitored;
 
 /**
  * @author pavlidis
@@ -151,8 +147,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#delete(ExpressionExperiment)
      */
-    public void delete( final ExpressionExperiment expressionExperiment ) {
+    public void delete( ExpressionExperiment expressionExperiment ) {
         try {
+            expressionExperiment = this.load( expressionExperiment.getId() ); // TODO: this is a hack to get it into session, needs to be refactored (high level services should take value objects)
             this.handleDelete( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
@@ -1088,7 +1085,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment cannot be null" );
         }
-
+       
         /*
          * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
          * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
