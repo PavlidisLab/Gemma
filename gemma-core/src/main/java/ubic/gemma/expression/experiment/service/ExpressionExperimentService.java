@@ -85,7 +85,7 @@ public interface ExpressionExperimentService {
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
      * will not be deleted automatically, though this behavior could be changed)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_ADMIN"})
     public void delete( Long id );
 
     /**
