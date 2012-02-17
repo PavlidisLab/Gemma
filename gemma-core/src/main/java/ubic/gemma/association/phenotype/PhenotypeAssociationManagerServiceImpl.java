@@ -70,6 +70,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
+import ubic.gemma.security.authentication.UserManager;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Service
@@ -104,6 +105,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private UserManager userManager;
 
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
@@ -238,12 +242,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String firstPhenotypesValuesUri = phenotypesValuesUri.iterator().next();
 
         // find all Genes containing the first phenotypeValueUri
-        // TODO FIND THE EVIDENCES DIRECTLY
         Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( phenotypesWithChildren
                 .get( firstPhenotypesValuesUri ) );
+
+        // set security permissions, since findGeneWithPhenotypes method didn't since it return genes
+        for ( Gene gene : genes ) {
+            this.associationService.filterAclPhenotypeAssociations( gene.getPhenotypeAssociations() );
+        }
+
         phenotypesWithChildren.remove( firstPhenotypesValuesUri );
 
-        Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = convert2GeneEvidenceValueObjects( genes );
+        Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = convert2GeneEvidenceValueObjects( genes,
+                phenotypesValuesUri );
 
         Collection<GeneEvidenceValueObject> genesVO = null;
 
@@ -325,7 +335,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
-    // TODO to test and to be modified
     public ValidateEvidenceValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -501,12 +510,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
 
+        String username = null;
+
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+            // find user
+            username = this.userManager.getCurrentUsername();
+            // TODO find also groups
+        }
+
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
 
             // count occurrence recursively for each phenotype in the branch
-            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin() );
+            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin(), username );
             finalTree.add( tc );
-
         }
 
         return finalTree;
@@ -545,7 +561,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             genes.add( ( Gene ) sr.getResultObject() );
         }
 
-        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = convert2GeneEvidenceValueObjects( genes );
+        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = convert2GeneEvidenceValueObjects( genes, null );
 
         Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidenceValueObject>();
 
@@ -942,12 +958,20 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return allPhenotypesFoundInOntology;
     }
 
-    private Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes ) {
+    private Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes,
+            Set<String> phenotypesValuesUri ) {
         Collection<GeneEvidenceValueObject> converted = new HashSet<GeneEvidenceValueObject>();
         if ( genes == null ) return converted;
 
+        boolean keep = true;
+
         for ( Gene g : genes ) {
-            if ( g != null ) {
+
+            if ( phenotypesValuesUri != null ) {
+                keep = false;
+            }
+
+            if ( g != null && !g.getPhenotypeAssociations().isEmpty() ) {
 
                 Collection<EvidenceValueObject> evidenceFromPhenotype = new HashSet<EvidenceValueObject>();
 
@@ -958,18 +982,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
 
-                    // admin can see all
-                    if ( SecurityServiceImpl.isUserAdmin() ) {
-                        evidenceFromPhenotype.add( evidenceValueObject );
+                    evidenceFromPhenotype.add( evidenceValueObject );
+
+                    for ( CharacteristicValueObject chaVO : evidenceValueObject.getPhenotypes() ) {
+                        if ( phenotypesValuesUri != null && phenotypesValuesUri.contains( chaVO.getValueUri() ) ) {
+                            keep = true;
+                        }
                     }
-                    // public
-                    else if ( evidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
-                        evidenceFromPhenotype.add( evidenceValueObject );
-                    }
-                    // TODO private but user can see it
                 }
 
-                if ( !evidenceFromPhenotype.isEmpty() ) {
+                if ( !evidenceFromPhenotype.isEmpty() && keep ) {
                     converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), null, g.getNcbiGeneId(), g
                             .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(),
                             g.getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidenceFromPhenotype ) );
@@ -997,7 +1019,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,
                 currentUserIsOwner, isPublic, isShared, owner ) );
-
     }
 
     private void populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,

@@ -52,6 +52,15 @@ public interface PhenotypeAssociationService {
     public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
 
     /**
+     * filter the PhenotypeAssociation using the advice
+     * 
+     * @param phenotypesValueUri The Ontology valueURI of the phenotype
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<PhenotypeAssociation> filterAclPhenotypeAssociations(
+            Collection<PhenotypeAssociation> phenotypeAssociations );
+
+    /**
      * create a GenericExperiment
      * 
      * @param genericExperiment
@@ -110,10 +119,13 @@ public interface PhenotypeAssociationService {
     /**
      * count the number of Genes with public phenotype
      */
-    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesURI );
+    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri );
 
     /** count the number of Genes with a public or private phenotype */
-    public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri );
+
+    /** count the number of Genes with a private phenotype */
+    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName );
 
     /** load all valueURI of Phenotype in the database */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })

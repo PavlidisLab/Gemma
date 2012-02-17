@@ -117,6 +117,39 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return new Long( value );
     }
 
+    /** count the number of Genes with private phenotype */
+    @Override
+    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName ) {
+
+        // type of evidence
+        String queryEvidenceTypes = "('" + LiteratureEvidenceImpl.class.getName() + "','"
+                + GenericEvidenceImpl.class.getName() + "','" + ExperimentalEvidenceImpl.class.getName() + "','"
+                + DifferentialExpressionEvidenceImpl.class.getName() + "','" + UrlEvidenceImpl.class.getName() + "')";
+
+        String endQuery = queryEvidenceTypes + " and value_uri in(";
+
+        for ( String phenotypeUri : phenotypesUri ) {
+
+            endQuery = endQuery + "'" + phenotypeUri + "', ";
+        }
+
+        endQuery = endQuery.substring( 0, endQuery.length() - 2 ) + ")";
+
+        long value = 0;
+
+        String queryString = "select count(distinct gene_fk) from acl_entry join acl_object_identity ON acl_entry.acl_object_identity = acl_object_identity.id join CHARACTERISTIC on CHARACTERISTIC.phenotype_association_fk =acl_object_identity.object_id_identity join PHENOTYPE_ASSOCIATION on PHENOTYPE_ASSOCIATION.id =acl_object_identity.object_id_identity join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where mask=1 and acl_sid.sid='"
+                + userName + "'and acl_class.class in " + endQuery;
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        if ( results.next() ) {
+            value = ( ( BigInteger ) results.get( 0 ) ).longValue();
+        }
+
+        return new Long( value );
+    }
+
     /**
      * find all phenotypes
      */

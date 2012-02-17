@@ -74,6 +74,17 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri );
     }
 
+    /**
+     * filter the PhenotypeAssociation using the advice
+     * 
+     * @param phenotypesValueUri The Ontology valueURI of the phenotype
+     */
+    @Override
+    public Collection<PhenotypeAssociation> filterAclPhenotypeAssociations(
+            Collection<PhenotypeAssociation> phenotypeAssociations ) {
+        return phenotypeAssociations;
+    }
+
     /** find all phenotypes */
     @SuppressWarnings("unchecked")
     @Override
@@ -158,14 +169,20 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
      * count the number of Genes with public phenotype
      */
     @Override
-    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesURI ) {
-        return this.phenotypeAssociationDao.countGenesWithPublicPhenotype( phenotypesURI );
+    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri ) {
+        return this.phenotypeAssociationDao.countGenesWithPublicPhenotype( phenotypesUri );
     }
 
     /** count the number of Genes with a public or private phenotype */
     @Override
-    public Long countGenesWithPhenotype( Collection<String> phenotypesURI ) {
-        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypesURI );
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri ) {
+        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypesUri );
+    }
+
+    /** count the number of Genes with a private phenotype */
+    @Override
+    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName ) {
+        return this.phenotypeAssociationDao.countGenesWithPrivatePhenotype( phenotypesUri, userName );
     }
 
 }

@@ -114,16 +114,22 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         for ( TreeCharacteristicValueObject tc : this.children ) {
             tc.removeUnusedPhenotypes( rootValueUri );
         }
-
     }
 
     /** counts gene on a TreeCharacteristicValueObject */
-    public void countGeneOccurence( PhenotypeAssociationService associationService, boolean isAdmin ) {
+    public void countGeneOccurence( PhenotypeAssociationService associationService, boolean isAdmin, String username ) {
 
+        // everyone can see public
         setPublicGeneCount( associationService.countGenesWithPublicPhenotype( getAllChildrenUri() ) );
+
+        // admin see all private evidence
         if ( isAdmin ) {
             setPrivateGeneCount( associationService.countGenesWithPhenotype( getAllChildrenUri() )
                     - getPublicGeneCount() );
+        }
+        // user is logged in
+        else if ( username != null ) {
+            setPrivateGeneCount( associationService.countGenesWithPrivatePhenotype( getAllChildrenUri(), username ) );
         }
         // count for each node of the tree
         for ( TreeCharacteristicValueObject tree : getChildren() ) {
