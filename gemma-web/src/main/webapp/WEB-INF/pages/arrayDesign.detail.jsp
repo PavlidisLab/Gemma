@@ -269,3 +269,36 @@
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
 </security:authorize>
 
+<div style="padding-top: 20px;">
+	<table>
+		<tr>
+			<td colspan="2">
+				<hr />
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<div align="left">
+					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
+				</div>
+			</td>
+			<security:authorize access="hasRole('GROUP_ADMIN')">
+				<td colspan="2">
+					<div align="left">
+						<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">
+					</div>
+				</td>
+			</security:authorize>
+		</tr>
+	</table>
+</div>
+
+<div style="padding-top: 20px;">
+	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
+		<h4>
+			Enter search criteria for finding another array design here
+		</h4>
+		<input type="text" name="filter" size="66" />
+		<input type="submit" value="Find" />
+	</form>
+</div>
