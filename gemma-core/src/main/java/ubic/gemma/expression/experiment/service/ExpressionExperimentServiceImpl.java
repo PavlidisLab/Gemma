@@ -147,9 +147,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#delete(ExpressionExperiment)
      */
-    public void delete( ExpressionExperiment expressionExperiment ) {
-        try {
-            expressionExperiment = this.load( expressionExperiment.getId() ); // TODO: this is a hack to get it into session, needs to be refactored (high level services should take value objects)
+    public void delete(final ExpressionExperiment expressionExperiment ) {
+        try {           
+            this.thawLite( expressionExperiment ); // TODO: this is a hack to get it into session, needs to be refactored (high level services should take value objects)
             this.handleDelete( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
