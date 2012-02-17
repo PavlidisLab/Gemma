@@ -621,13 +621,15 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         }
 
         for ( double thresh : qValueThresholdsForHitLists ) {
-            Integer up = upCounts.get( thresh );
-            Integer down = downCounts.get( thresh );
-            Integer either = eitherCounts.get( thresh );
 
-            Integer upGenes = upCountGenes.get( thresh );
-            Integer downGenes = downCountGenes.get( thresh );
-            Integer eitherGenes = eitherCountGenes.get( thresh );
+            // Ensure we don't set values to null.
+            Integer up = upCounts.get( thresh ) == null ? 0 : upCounts.get( thresh );
+            Integer down = downCounts.get( thresh ) == null ? 0 : downCounts.get( thresh );
+            Integer either = eitherCounts.get( thresh ) == null ? 0 : eitherCounts.get( thresh );
+
+            Integer upGenes = upCountGenes.get( thresh ) == null ? 0 : upCountGenes.get( thresh );
+            Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
+            Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
 
             HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
             HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
@@ -725,13 +727,26 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
         for ( String factorName : label2Factors.keySet() ) {
+            if ( properDesignMatrix.getDroppedFactors().contains( factorName ) ) {
+                continue;
+            }
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
-        for ( String[] fs : interactionFactorLists ) {
+        addinteraction: for ( String[] fs : interactionFactorLists ) {
+            for ( String f : fs ) {
+                if ( properDesignMatrix.getDroppedFactors().contains( f ) ) {
+                    continue addinteraction;
+                }
+            }
             String intF = StringUtils.join( fs, ":" );
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( intF, new ArrayList<Double>() );
+        }
+
+        if ( pvaluesForQvalue.isEmpty() ) {
+            log.warn( "No results were obtained for the current stage of analysis, possibly due to dropped factors." );
+            return null;
         }
 
         /*
@@ -754,6 +769,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
 
             for ( String factorName : label2Factors.keySet() ) {
+
+                if ( !pvaluesForQvalue.containsKey( factorName ) ) {
+                    // was dropped.
+                    continue;
+                }
 
                 Double overallPValue = null;
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
@@ -919,6 +939,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         for ( String fName : pvaluesForQvalue.keySet() ) {
             List<Double> pvals = pvaluesForQvalue.get( fName );
+
+            if ( pvals.isEmpty() ) {
+                log.warn( "No pvalues for " + fName + ", ignoring." );
+                continue;
+            }
 
             Double[] pvalArray = pvals.toArray( new Double[] {} );
             for ( int i = 0; i < pvalArray.length; i++ ) {
@@ -1147,8 +1172,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          * Determine the factors and interactions to include.
          */
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
+
         /*
-         * FIXME careful, tricky case of one-sided test not handled yet? Actually seems okay ...
+         * FIXME Case of one-sided test not handled yet? Actually seems okay ...
          */
         if ( !( interactionFactorLists == null ) && !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {
@@ -1338,6 +1364,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         Future<?> f;
         if ( USE_R ) {
+            // Note: this will probably no longer work if we provide constant factors (e.g., in invalid subset
+            // situations)
             f = runAnalysisFuture( namedMatrix, factorNameMap, modelFormula, rawResults );
         } else {
             f = runAnalysisFutureJ( designMatrix, sNamedMatrix, rawResults );
