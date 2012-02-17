@@ -65,7 +65,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					},{
 						header : 'Details',
 						dataIndex : 'id',
-						width: 0.09,
+						width: 0.06,
 						editable : false,
 						sortable : false,
 						renderer: function(value, metadata, record, rowIndex, colIndex, store){
@@ -85,7 +85,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					},  {
 						header : 'Taxon',
 						dataIndex : 'taxonName',
-						width: 0.45,
+						width: 0.15,
 						editable : false,
 						sortable : true
 					}, {
@@ -93,18 +93,19 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						sortable : true,
 						dataIndex : 'size',
 						editable : false,
-						width : 0.05,
+						width : 0.07,
 						tooltip : 'number of genes in group'
 					}, {
 						header : 'Flags',
 						sortable : true,
-						width: 0.05,
+						width: 0.1,
 						renderer : function(value, metadata, record, rowIndex, colIndex, store) {
 							var result = Gemma.SecurityManager.getSecurityLink(
 									"ubic.gemma.model.genome.gene.GeneSetImpl", record.get('id'), record.get('publik'),
-									record.get('shared'), record.get('currentUserIsOwner'));
+									record.get('shared'), record.get('currentUserHasWritePermission'));
 							return result;
 						},
+
 						tooltip : 'Click to edit permissions'
 					}
 

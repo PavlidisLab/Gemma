@@ -57,6 +57,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 										description : args.description,
 										taxonId : args.taxon.id,
 										taxonName : args.taxon.commonName,
+										publik : args.publik,
 										// id : -1, // maybe not important.
 										currentUserHasWritePermission : true,
 										geneIds : [],
