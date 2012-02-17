@@ -330,6 +330,9 @@ public class ExpressionExperimentSetServiceImpl extends
 
     @Override
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds( Collection<Long> ids ) {
+        if (ids.isEmpty()){
+            return new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
+        }
         Collection<ExpressionExperimentSet> eeSets = this.load( ids );
         return expressionExperimentValueObjectHelper.convertToLightValueObjects( eeSets );
     }
