@@ -171,11 +171,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().findExperimentsWithAnalyses( gene );
     }
 
-    @Override
-    protected Collection handleGetResultSets( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getDifferentialExpressionAnalysisDao().getResultSets( expressionExperiment );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */

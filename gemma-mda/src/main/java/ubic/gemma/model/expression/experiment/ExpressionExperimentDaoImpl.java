@@ -251,8 +251,18 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * .experiment.ExpressionExperiment)
      */
     @Override
-    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
-        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( expressionExperiment, getSession() );
+    public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
+
+        ExpressionExperiment ee = null;
+        if ( bas instanceof ExpressionExperimentSubSet ) {
+            ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
+        } else {
+            ee = ( ExpressionExperiment ) bas;
+        }
+
+        assert ee != null;
+
+        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( ee, getSession() );
         return ADs;
     }
 

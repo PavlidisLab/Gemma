@@ -75,13 +75,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
 
-//        int up = this.countUpregulated( ears, threshold );
-//        int down = this.countDownregulated( ears, threshold );
-//        int result = up + down;
-//
-//        if ( result > 0 ) {
-//            return result;
-//        }
+        // int up = this.countUpregulated( ears, threshold );
+        // int down = this.countDownregulated( ears, threshold );
+        // int result = up + down;
+        //
+        // if ( result > 0 ) {
+        // return result;
+        // }
 
         /*
          * Otherwise, perhaps we have not filled in the contrast information. Try alternative instead. This is basically
@@ -243,12 +243,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * java.util.Collection)
      */
     @Override
-    protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection<Long> investigationIds )
-            throws Exception {
-        /*
-         * FIXME deal with subsets.
-         */
-        Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
+    protected Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
+            Collection<Long> investigationIds ) throws Exception {
+
+        Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Long, Collection<DifferentialExpressionAnalysis>>();
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
                 + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
         List<?> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
@@ -256,7 +254,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
             DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            results.put( bas.getId(), dea );
+            if ( results.containsKey( bas.getId() ) ) {
+                results.put( bas.getId(), new HashSet<DifferentialExpressionAnalysis>() );
+            }
+            results.get( bas.getId() ).add( dea );
         }
         return results;
     }
@@ -388,24 +389,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             result.addAll( this.getHibernateTemplate().findByNamedParam(
                     "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleGetResultSets(ubic.gemma
-     * .model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Collection<ExpressionAnalysisResultSet> handleGetResultSets( ExpressionExperiment expressionExperiment )
-            throws Exception {
-        /*
-         * FIXME this has to be changed to handle the case of EESubSets.
-         */
-        final String query = "select distinct r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
-                + " join a.experimentAnalyzed ee where ee=:expressionExperiment ";
-        return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }
 
     /*

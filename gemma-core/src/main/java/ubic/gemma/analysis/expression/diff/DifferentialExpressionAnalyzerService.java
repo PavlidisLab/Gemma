@@ -258,15 +258,6 @@ public class DifferentialExpressionAnalyzerService {
     /**
      * @param expressionExperiment
      * @return
-     * @throws Exception
-     */
-    public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment ) {
-        return differentialExpressionAnalysisService.getResultSets( expressionExperiment );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @return
      */
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
@@ -490,8 +481,8 @@ public class DifferentialExpressionAnalyzerService {
             // these will be headings on the
             for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
                 // Make a unique column heading.
-                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName() + FACTOR_NAME_MANGLING_DELIMITER
-                        + factor.getId();
+                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName()
+                        + FACTOR_NAME_MANGLING_DELIMITER + factor.getId();
             }
             factorNames.add( factorName );
 

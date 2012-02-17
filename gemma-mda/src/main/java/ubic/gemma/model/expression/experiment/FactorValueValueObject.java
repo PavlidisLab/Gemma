@@ -27,11 +27,10 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class FactorValueValueObject implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 3378801249808036785L;
+
     private String factor;
+
     private Long id;
 
     private Long factorId;
@@ -39,9 +38,13 @@ public class FactorValueValueObject implements Serializable {
     private String description;
 
     private String category;
+
     private String categoryUri;
+
     private String value;
+
     private String valueUri;
+
     private boolean measurement = false;
 
     /**
@@ -261,13 +264,12 @@ public class FactorValueValueObject implements Serializable {
 
         }
     }
-    
+
     /**
-     * 
      * @param fv
      * @return
      */
-    public static String getFactorValueString ( FactorValue fv ) {
+    public static String getFactorValueString( FactorValue fv ) {
         if ( fv == null ) return "null";
 
         if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
@@ -283,5 +285,5 @@ public class FactorValueValueObject implements Serializable {
         } else
             return "absent ";
     }
-    
+
 }

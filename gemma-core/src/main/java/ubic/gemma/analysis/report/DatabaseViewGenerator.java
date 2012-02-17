@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collection; 
+import java.util.Collection;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -275,80 +276,85 @@ public class DatabaseViewGenerator {
         /*
          * For each gene that is differentially expressed, print out a line per contrast
          */
-        writer
-                .write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
+        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
         int i = 0;
         for ( ExpressionExperiment ee : experiments ) {
             ee = expressionExperimentService.thawLite( ee );
 
-            Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+            Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService.getAnalyses( ee );
             if ( results == null || results.isEmpty() ) {
                 log.warn( "No differential expression results found for " + ee );
                 continue;
             }
 
+            if ( results.size() > 1 ) {
+                /*
+                 * FIXME. Should probably skip for this purpose.
+                 */
+            }
+
             log.info( "Processing: " + ee.getShortName() );
 
-            for ( ExpressionAnalysisResultSet ears : results ) {
-                if ( ears == null ) {
-                    log.warn( "No  expression analysis results found for " + ee );
-                    continue;
-                }
-                differentialExpressionResultService.thaw( ears );
+            for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                FactorValue baselineGroup = ears.getBaselineGroup();
+                for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 
-                if ( baselineGroup == null ) {
-                    // log.warn( "No baseline defined for " + ee ); // interaction
-                    continue;
-                }
+                    differentialExpressionResultService.thaw( ears );
 
-                if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
-                    continue;
-                }
+                    FactorValue baselineGroup = ears.getBaselineGroup();
 
-                String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
-
-                // Get the factor category name
-                String factorName = "";
-                String factorURI = "";
-
-                for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-                    factorName += ef.getName() + ",";
-                    if ( ef.getCategory() instanceof VocabCharacteristic ) {
-                        factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
-                    }
-                }
-                factorName = StringUtils.chomp( factorName, "," );
-                factorURI = StringUtils.chomp( factorURI, "," );
-
-                if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
-                    log.warn( "No  differential expression analysis results found for " + ee );
-                    continue;
-                }
-
-                // Generate probe details
-                for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
-
-                    if ( dear == null ) {
-                        log.warn( "Missing results for " + ee + " skipping to next. " );
-                        continue;
-                    }
-                    if ( !( dear instanceof ProbeAnalysisResult ) ) {
-                        log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
-                                + dear.getClass() + " with id: " + dear.getId() );
+                    if ( baselineGroup == null ) {
+                        // log.warn( "No baseline defined for " + ee ); // interaction
                         continue;
                     }
 
-                    if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
+                    if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
+                        continue;
+                    }
 
-                    String formatted = formatDiffExResult( ee, ( ProbeAnalysisResult ) dear, factorName, factorURI,
-                            baselineDescription );
+                    String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
 
-                    if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+                    // Get the factor category name
+                    String factorName = "";
+                    String factorURI = "";
 
-                } // dear loop
-            } // ears loop
+                    for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
+                        factorName += ef.getName() + ",";
+                        if ( ef.getCategory() instanceof VocabCharacteristic ) {
+                            factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
+                        }
+                    }
+                    factorName = StringUtils.chomp( factorName, "," );
+                    factorURI = StringUtils.chomp( factorURI, "," );
+
+                    if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
+                        log.warn( "No  differential expression analysis results found for " + ee );
+                        continue;
+                    }
+
+                    // Generate probe details
+                    for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+
+                        if ( dear == null ) {
+                            log.warn( "Missing results for " + ee + " skipping to next. " );
+                            continue;
+                        }
+                        if ( !( dear instanceof ProbeAnalysisResult ) ) {
+                            log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
+                                    + dear.getClass() + " with id: " + dear.getId() );
+                            continue;
+                        }
+
+                        if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
+
+                        String formatted = formatDiffExResult( ee, ( ProbeAnalysisResult ) dear, factorName, factorURI,
+                                baselineDescription );
+
+                        if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+
+                    } // dear loop
+                } // ears loop
+            } // analysis loop
 
             if ( limit > 0 && ++i > limit ) break;
 
@@ -373,7 +379,7 @@ public class DatabaseViewGenerator {
 
         Gene g = genes.iterator().next();
 
-        if (   g.getNcbiGeneId() == null ) return null;
+        if ( g.getNcbiGeneId() == null ) return null;
 
         Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
 
@@ -386,8 +392,8 @@ public class DatabaseViewGenerator {
             String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
 
             buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(), g
-                    .getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription, factorValueDescription,
-                    direction ) );
+                    .getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,
+                    factorValueDescription, direction ) );
         }
 
         return buf.toString();

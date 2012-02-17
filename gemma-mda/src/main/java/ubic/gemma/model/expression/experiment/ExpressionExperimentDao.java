@@ -133,7 +133,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
 
-    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
+    public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
     /**
      * Gets the AuditEvents of the specified expression experiment ids. This returns a map of id -> AuditEvent. If the

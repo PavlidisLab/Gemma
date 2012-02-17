@@ -179,7 +179,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             AuditEventType type = CommentedEvent.Factory.newInstance();
 
             expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, force_write );
+            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
             super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );

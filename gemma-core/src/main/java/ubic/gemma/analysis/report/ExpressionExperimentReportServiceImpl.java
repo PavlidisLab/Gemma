@@ -70,6 +70,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -540,8 +541,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
 
-            if ( analysis.getSubsetFactorValue() != null )
+            if ( analysis.getSubsetFactorValue() != null ) {
                 avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
+                avo.setSubsetFactor( new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
+                        .getExperimentalFactor() ) );
+            }
 
             for ( ExpressionAnalysisResultSet par : results ) {
 

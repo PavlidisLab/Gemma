@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 
@@ -32,9 +31,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
  * @version $Id$
  */
 public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
-
-    @Autowired
-    protected TaxonService taxonService;
 
     @Autowired
     private GenericAncovaAnalyzer analyzer = null;

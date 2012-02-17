@@ -131,7 +131,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         /*
          * Exercise the matrix output services.
          */
-        File outputLocation = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, true );
+        Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+
+        assertEquals( 1, outputLocations.size() );
+
+        File outputLocation = outputLocations.iterator().next();
+
         log.info( outputLocation );
         DoubleMatrixReader r = new DoubleMatrixReader();
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );

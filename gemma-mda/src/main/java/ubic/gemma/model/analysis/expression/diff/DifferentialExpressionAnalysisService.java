@@ -109,12 +109,6 @@ public interface DifferentialExpressionAnalysisService extends
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment );
-
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 

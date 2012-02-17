@@ -81,12 +81,6 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     /**
      * 
      */
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
-    /**
-     * 
-     */
     public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**

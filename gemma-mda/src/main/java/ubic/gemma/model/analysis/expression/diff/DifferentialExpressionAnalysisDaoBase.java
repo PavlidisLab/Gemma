@@ -158,20 +158,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
         }
     }
 
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetResultSets( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
-    }
-
     public Collection<? extends DifferentialExpressionAnalysis> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "from DifferentialExpressionAnalysisImpl where id in (:ids)", "ids", ids );
@@ -308,21 +294,14 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByInvestigationIds( java.util.Collection<Long> investigationIds )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
+            java.util.Collection<Long> investigationIds ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
      */
     protected abstract java.util.Collection<BioAssaySet> handleFindExperimentsWithAnalyses(
             ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     */
-    protected abstract java.util.Collection<ExpressionAnalysisResultSet> handleGetResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
-            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}

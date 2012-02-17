@@ -61,6 +61,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
 
+/**
+ * TODO Document Me
+ * 
+ * @author anton
+ * @version $Id$
+ */
 @Component
 public class DifferentialExpressionGeneConditionSearchService {
     protected static Log log = LogFactory.getLog( DifferentialExpressionGeneConditionSearchService.class.getName() );
@@ -76,19 +82,19 @@ public class DifferentialExpressionGeneConditionSearchService {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-    
+
     @Autowired
     private CacheManager cacheManager;
-           
+
     private Cache diffExpSearchTasksCache;
 
     public static class TaskProgress {
         private double progressPercent;
         private String currentStage;
-                            
-        public TaskProgress(String stage, double percent) {
+
+        public TaskProgress( String stage, double percent ) {
             this.currentStage = stage;
-            this.progressPercent = percent;            
+            this.progressPercent = percent;
         }
 
         public double getProgressPercent() {
@@ -97,18 +103,19 @@ public class DifferentialExpressionGeneConditionSearchService {
 
         public String getCurrentStage() {
             return this.currentStage;
-        }         
+        }
     }
-        
+
     @PostConstruct
     protected void init() {
         this.diffExpSearchTasksCache = new Cache( "DifferentialExpressionVisSearchTasks", 300, false, false, 3600, 3600 );
         this.cacheManager.addCache( this.diffExpSearchTasksCache );
     }
-        
-    private class DifferentialExpressionSearchTask implements Callable<DifferentialExpressionGenesConditionsValueObject> {
-        //private Log log = LogFactory.getLog( DifferentialExpressionSearchTask.class.getName() );
-            
+
+    private class DifferentialExpressionSearchTask implements
+            Callable<DifferentialExpressionGenesConditionsValueObject> {
+        // private Log log = LogFactory.getLog( DifferentialExpressionSearchTask.class.getName() );
+
         private List<List<Gene>> genes;
         private List<Collection<ExpressionExperiment>> experiments;
         private List<String> geneGroupNames;
@@ -116,28 +123,31 @@ public class DifferentialExpressionGeneConditionSearchService {
 
         private String taskProgressStage = "Search query submitted...";
         private double taskProgressPercent = 0.0;
-        
-        public DifferentialExpressionSearchTask (List<List<Gene>> genes,
+
+        public DifferentialExpressionSearchTask( List<List<Gene>> genes,
                 List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
-                List<String> experimentGroupNames) {
-            
+                List<String> experimentGroupNames ) {
+
             this.genes = genes;
             this.experiments = experiments;
             this.geneGroupNames = geneGroupNames;
             this.experimentGroupNames = experimentGroupNames;
-            
+
         }
-                    
-        public synchronized TaskProgress getTaskProgress() {        
-            return new TaskProgress (this.taskProgressStage, this.taskProgressPercent);   // I think this is safe only because String is immutable and double is copied by value. FIXME
+
+        public synchronized TaskProgress getTaskProgress() {
+            return new TaskProgress( this.taskProgressStage, this.taskProgressPercent ); // I think this is safe only
+                                                                                         // because String is immutable
+                                                                                         // and double is copied by
+                                                                                         // value. FIXME
         }
-        
-        private synchronized void setTaskProgress (String stage, double percent) {
+
+        private synchronized void setTaskProgress( String stage, double percent ) {
             this.taskProgressStage = stage;
-            this.taskProgressPercent = percent;                
+            this.taskProgressPercent = percent;
         }
-                
-        public DifferentialExpressionGenesConditionsValueObject call () {
+
+        public DifferentialExpressionGenesConditionsValueObject call() {
             StopWatch watch = new StopWatch( "createGenesConditionsValueObject" );
             watch.start();
 
@@ -157,23 +167,23 @@ public class DifferentialExpressionGeneConditionSearchService {
         }
 
         private void addGenesToSearchResultValueObject( List<List<Gene>> genes, List<String> geneGroupNames,
-                DifferentialExpressionGenesConditionsValueObject searchResult ) {        
+                DifferentialExpressionGenesConditionsValueObject searchResult ) {
             int geneGroupIndex = 0;
             for ( List<Gene> geneGroup : genes ) {
                 String geneGroupName = geneGroupNames.get( geneGroupIndex );
 
-                String stage = "Loading "+geneGroupName+ " genes...";
+                String stage = "Loading " + geneGroupName + " genes...";
                 double progress = 0.0;
                 double progressStep = 100 / geneGroup.size();
-                this.setTaskProgress( stage, progress );                
+                this.setTaskProgress( stage, progress );
                 for ( Gene gene : geneGroup ) {
-                    DifferentialExpressionGenesConditionsValueObject.Gene g = searchResult.new Gene( gene.getId(), gene
-                            .getOfficialSymbol(), gene.getOfficialName() );
+                    DifferentialExpressionGenesConditionsValueObject.Gene g = searchResult.new Gene( gene.getId(),
+                            gene.getOfficialSymbol(), gene.getOfficialName() );
                     g.setGroupIndex( geneGroupIndex );
                     g.setGroupName( geneGroupName );
                     searchResult.addGene( g );
                     progress += progressStep;
-                    this.setTaskProgress( stage, progress );                
+                    this.setTaskProgress( stage, progress );
                 }
                 geneGroupIndex++;
             }
@@ -187,13 +197,13 @@ public class DifferentialExpressionGeneConditionSearchService {
 
             List<ExpressionAnalysisResultSet> usedResultSets = new LinkedList<ExpressionAnalysisResultSet>();
 
-            int experimentGroupIndex = 0;        
+            int experimentGroupIndex = 0;
             for ( Collection<ExpressionExperiment> experimentGroup : experimentGroups ) {
-                
-                String stage = "Loading "+experimentGroupNames.get(experimentGroupIndex)+ " experiments...";
+
+                String stage = "Loading " + experimentGroupNames.get( experimentGroupIndex ) + " experiments...";
                 double progress = 0.0;
                 double progressStep = 100.0 / experimentGroup.size();
-                this.setTaskProgress( stage, progress );                
+                this.setTaskProgress( stage, progress );
 
                 for ( ExpressionExperiment experiment : experimentGroup ) {
 
@@ -211,8 +221,8 @@ public class DifferentialExpressionGeneConditionSearchService {
 
                         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
                             ExperimentalFactor factor = filterFactors( resultSet.getExperimentalFactors() );
-                            Collection<FactorValue> factorValues = filterFactorValues( factor.getFactorValues(), resultSet
-                                    .getBaselineGroup().getId() );
+                            Collection<FactorValue> factorValues = filterFactorValues( factor.getFactorValues(),
+                                    resultSet.getBaselineGroup().getId() );
 
                             for ( FactorValue factorValue : factorValues ) {
 
@@ -228,7 +238,8 @@ public class DifferentialExpressionGeneConditionSearchService {
                                 condition.resultSetId = resultSet.getId();
 
                                 int up = -1, down = -1, total = -1;
-                                log.info( "Got "+resultSet.getHitListSizes().size() + " hit list sizes for result set with id "+resultSet.getId() );
+                                log.info( "Got " + resultSet.getHitListSizes().size()
+                                        + " hit list sizes for result set with id " + resultSet.getId() );
                                 for ( HitListSize h : resultSet.getHitListSizes() ) {
                                     if ( h.getThresholdQvalue() == 0.01 ) {
                                         if ( h.getDirection().equals( Direction.DOWN ) ) {
@@ -247,11 +258,11 @@ public class DifferentialExpressionGeneConditionSearchService {
                                 // if (down == -1) {
                                 // up = differentialExpressionAnalysisService.countDownregulated( resultSet, 0.05 );
                                 // }
-                                if ( total == -1 ) {                                
-                                    total = differentialExpressionAnalysisService.countProbesMeetingThreshold( resultSet,
-                                            0.5 );
-                                }                                
-                                
+                                if ( total == -1 ) {
+                                    total = differentialExpressionAnalysisService.countProbesMeetingThreshold(
+                                            resultSet, 0.5 );
+                                }
+
                                 watch.start( "getProcessedExpressionVectorCount" );
                                 condition.numberOfProbesOnArray = expressionExperimentDao
                                         .getProcessedExpressionVectorCount( experiment );
@@ -265,8 +276,8 @@ public class DifferentialExpressionGeneConditionSearchService {
                                 condition.contrastFactorValue = getFactorValueString( factorValue );
                                 condition.factorDescription = factor.getDescription();
                                 condition.factorId = factor.getId();
-                                condition.factorCategory = ( factor.getCategory() == null ) ? "null" : factor.getCategory()
-                                        .getCategory();
+                                condition.factorCategory = ( factor.getCategory() == null ) ? "null" : factor
+                                        .getCategory().getCategory();
 
                                 if ( condition.numberOfProbesOnArray < condition.numberDiffExpressedProbes ) {
                                     log.error( "The data is messed up. More diff expressed probes than probes on array" );
@@ -277,7 +288,7 @@ public class DifferentialExpressionGeneConditionSearchService {
                         }
                     }
                     progress += progressStep;
-                    this.setTaskProgress( stage, progress );                
+                    this.setTaskProgress( stage, progress );
 
                 }
                 experimentGroupIndex++;
@@ -357,9 +368,9 @@ public class DifferentialExpressionGeneConditionSearchService {
         private void fillHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
             double progressStepSize = 100.0 / resultSets.size();
-            double progress = 0.0;        
+            double progress = 0.0;
             this.setTaskProgress( "Processing request...", progress );
-            
+
             int resultSetBatchIndex = 0;
             List<ExpressionAnalysisResultSet> resultSetBatch = getResultSetBatch( resultSets, resultSetBatchIndex );
             while ( resultSetBatch != null ) {
@@ -373,10 +384,10 @@ public class DifferentialExpressionGeneConditionSearchService {
                     geneBatchIndex++;
                 }
                 resultSetBatchIndex++;
-                
+
                 progress += progressStepSize * resultSetBatch.size();
                 this.setTaskProgress( "Processing request...", progress );
-                
+
                 resultSetBatch = getResultSetBatch( resultSets, resultSetBatchIndex );
             }
         }
@@ -396,51 +407,53 @@ public class DifferentialExpressionGeneConditionSearchService {
             watch.stop();
 
             watch.start( "Batched call" );
-            Map<Long, DiffExprGeneSearchResult> geneToProbeResult = differentialExpressionResultService.findProbeAnalysisResultIdsInResultSet(
-                                                                                                                resultSet.getId(),
-                                                                                                                geneIdBatch,
-                                                                                                                getADIds( arrayDesignsUsed ) );
+            Map<Long, DiffExprGeneSearchResult> geneToProbeResult = differentialExpressionResultService
+                    .findProbeAnalysisResultIdsInResultSet( resultSet.getId(), geneIdBatch, getADIds( arrayDesignsUsed ) );
             watch.stop();
-            
+
             List<Long> probeAnalysisResultIds = new LinkedList<Long>();
-            for (DiffExprGeneSearchResult r : geneToProbeResult.values()) {
+            for ( DiffExprGeneSearchResult r : geneToProbeResult.values() ) {
                 probeAnalysisResultIds.add( r.getProbeAnalysisResultId() );
             }
-            
+
             watch.start( "Loading contrasts" );
             Map<Long, DifferentialExpressionAnalysisResult> probeAnalysisResults = differentialExpressionAnalysisResultDao
-                    .loadMultiple(probeAnalysisResultIds);
+                    .loadMultiple( probeAnalysisResultIds );
             watch.stop();
 
             for ( Long geneId : geneIdBatch ) {
                 Long probeResultId = null;
-                if (geneToProbeResult.get( geneId )!= null) {
+                if ( geneToProbeResult.get( geneId ) != null ) {
                     probeResultId = geneToProbeResult.get( geneId ).getProbeAnalysisResultId();
                 }
                 DifferentialExpressionAnalysisResult deaResult = probeAnalysisResults.get( probeResultId );
                 if ( deaResult == null ) continue;
-                
+
                 Double pValue = deaResult.getCorrectedPvalue();
-                if (pValue == null) {
+                if ( pValue == null ) {
                     pValue = 1.0;
                 }
-                if (pValue.doubleValue() == 0.0) {
+                if ( pValue.doubleValue() == 0.0 ) {
                     pValue = 0.000000001;
                 }
-                markCellsBlack( resultSet, geneId, searchResult, pValue, geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed() );
+                markCellsBlack( resultSet, geneId, searchResult, pValue, geneToProbeResult.get( geneId )
+                        .getNumberOfProbes(), geneToProbeResult.get( geneId ).getNumberOfProbesDiffExpressed() );
 
                 for ( ContrastResult cr : deaResult.getContrasts() ) {
                     // double visualizationValue = calculateVisualizationValueBasedOnPvalue ( cr.getPvalue() );
-                    
+
                     String conditionId = constructConditionId( resultSet.getId(), cr.getFactorValue().getId() );
-                    searchResult.addCell( geneId, conditionId, pValue, cr.getLogFoldChange(), geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed());
+                    searchResult.addCell( geneId, conditionId, pValue, cr.getLogFoldChange(),
+                            geneToProbeResult.get( geneId ).getNumberOfProbes(), geneToProbeResult.get( geneId )
+                                    .getNumberOfProbesDiffExpressed() );
                 }
             }
             log.info( watch.prettyPrint() );
         }
 
         private void markCellsBlack( ExpressionAnalysisResultSet resultSet, Long geneId,
-                DifferentialExpressionGenesConditionsValueObject searchResult, double pValue, int numProbes, int numProbesDiffExpressed ) {
+                DifferentialExpressionGenesConditionsValueObject searchResult, double pValue, int numProbes,
+                int numProbesDiffExpressed ) {
             for ( FactorValue factorValue : resultSet.getExperimentalFactors().iterator().next().getFactorValues() ) {
                 String conditionId = constructConditionId( resultSet.getId(), factorValue.getId() );
                 searchResult.addBlackCell( geneId, conditionId, pValue, numProbes, numProbesDiffExpressed );
@@ -477,7 +490,8 @@ public class DifferentialExpressionGeneConditionSearchService {
         }
 
         /*
-         * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
+         * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first
+         * place.
          */
         private String getFactorValueString( FactorValue fv ) {
             if ( fv == null ) return "null";
@@ -505,26 +519,31 @@ public class DifferentialExpressionGeneConditionSearchService {
             return false;
         }
     }
-            
-    public String scheduleDiffExpSearchTask ( List<List<Gene>> genes, List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames, List<String> experimentGroupNames) {
-        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask (genes, experiments, geneGroupNames, experimentGroupNames);
-        
-        String taskId = UUID.randomUUID().toString();                
+
+    public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
+            List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
+            List<String> experimentGroupNames ) {
+        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes, experiments,
+                geneGroupNames, experimentGroupNames );
+
+        String taskId = UUID.randomUUID().toString();
         this.diffExpSearchTasksCache.put( new Element( taskId, diffExpSearchTask ) );
-        
+
         return taskId;
     }
-    
-    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult (String taskId) {
+
+    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
         DifferentialExpressionGenesConditionsValueObject result = null;
-        
+
         try {
-            DifferentialExpressionSearchTask diffExpSearchTask = (DifferentialExpressionSearchTask) this.diffExpSearchTasksCache.get( taskId ).getObjectValue();
-            
+            DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
+                    .get( taskId ).getObjectValue();
+
             ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-            Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor.submit (diffExpSearchTask);
+            Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor
+                    .submit( diffExpSearchTask );
             singleThreadExecutor.shutdown();
-            
+
             result = backgroundTask.get(); // blocks
         } catch ( InterruptedException e ) {
             // TODO Auto-generated catch block
@@ -533,14 +552,15 @@ public class DifferentialExpressionGeneConditionSearchService {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
-            this.diffExpSearchTasksCache.remove (taskId);
+            this.diffExpSearchTasksCache.remove( taskId );
         }
         return result;
     }
-    
-    public TaskProgress getDiffExpSearchTaskProgress (String taskId) {
-        DifferentialExpressionSearchTask diffExpSearchTask = (DifferentialExpressionSearchTask) this.diffExpSearchTasksCache.get( taskId ).getObjectValue();
-        return diffExpSearchTask.getTaskProgress();        
+
+    public TaskProgress getDiffExpSearchTaskProgress( String taskId ) {
+        DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
+                .get( taskId ).getObjectValue();
+        return diffExpSearchTask.getTaskProgress();
     }
-        
+
 }

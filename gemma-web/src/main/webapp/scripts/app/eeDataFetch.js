@@ -91,10 +91,10 @@ function fetchCoExpressionData( eeId ) {
 }
 
 
-function fetchDiffExpressionData(eeId) {
+function fetchDiffExpressionData(analysisId) {
 
 	var callParams = [];
-	callParams.push(eeId);
+	callParams.push(analysisId);
 
 	// callback is just for initiating the process.
 	var cb = handleStartSuccess;

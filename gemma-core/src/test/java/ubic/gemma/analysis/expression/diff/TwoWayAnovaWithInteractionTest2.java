@@ -197,8 +197,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                 interaction = true;
             }
 
-            this.differentialExpressionAnalysisService.getResultSets( ee );
-
             assertEquals( 8, results.size() );
 
             /*

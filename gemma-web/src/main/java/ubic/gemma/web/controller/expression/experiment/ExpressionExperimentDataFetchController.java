@@ -19,6 +19,8 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -220,14 +222,17 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
             StopWatch watch = new StopWatch();
             watch.start();
-            File f;
+            Collection<File> files = new HashSet<File>();
+
             assert this.command != null;
 
             if ( this.command.getAnalysisId() != null ) {
 
                 DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.load( command
                         .getAnalysisId() );
-                f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( analysis, command.isForceRewrite() );
+                File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( analysis,
+                        command.isForceRewrite() );
+                files.add( f );
 
             } else if ( this.command.getExpressionExperimentId() != null ) {
 
@@ -239,21 +244,27 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                             "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
                 }
 
-                f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, command.isForceRewrite() );
+                files = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, command.isForceRewrite() );
 
             } else {
                 throw new IllegalArgumentException( "Must provide either experiment or specific analysis to provide" );
             }
 
             watch.stop();
-            log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime()
+            log.debug( "Finished writing and downloading differential expression file(s); done in " + watch.getTime()
                     + " milliseconds" );
 
-            String url = "/Gemma/getData.html?file=" + f.getName();
-
-            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
-
-            return new TaskResult( command, mav );
+            if ( files.isEmpty() ) {
+                throw new IllegalArgumentException(
+                        "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
+            } else if ( files.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Sorry, you can't get multiple analyses at once using this method." );
+            } else {
+                String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
+                ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+                return new TaskResult( command, mav );
+            }
 
         }
 
@@ -318,12 +329,12 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential
      * expression data file
      * 
-     * @param eeId
+     * @param analysisId
      * @return
      */
-    public String getDiffExpressionDataFile( Long eeId ) {
+    public String getDiffExpressionDataFile( Long analysisId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
-        tc.setExpressionExperimentId( eeId );
+        tc.setAnalysisId( analysisId );
         DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( tc );
         return startTask( runner );
     }

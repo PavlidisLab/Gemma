@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-
 /**
  * <p>
  * Spring Service base class for
@@ -103,20 +102,6 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    public java.util.Collection getResultSets(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetResultSets( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * Sets the reference to <code>differentialExpressionAnalysis</code>'s DAO.
      */
     public void setDifferentialExpressionAnalysisDao(
@@ -193,13 +178,6 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
      */
     protected abstract java.util.Collection handleFindExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     */
-    protected abstract java.util.Collection handleGetResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
     /**

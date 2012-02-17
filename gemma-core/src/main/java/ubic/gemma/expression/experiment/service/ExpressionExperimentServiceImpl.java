@@ -62,6 +62,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -383,7 +384,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getArrayDesignsUsed(ExpressionExperiment)
      */
-    public Collection<ArrayDesign> getArrayDesignsUsed( final ExpressionExperiment expressionExperiment ) {
+    public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
         } catch ( Throwable th ) {

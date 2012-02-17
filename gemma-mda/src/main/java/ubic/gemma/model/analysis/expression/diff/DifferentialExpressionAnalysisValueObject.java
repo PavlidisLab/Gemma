@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 /**
@@ -38,6 +39,16 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     private FactorValueValueObject subsetFactorValue = null;
 
+    private ExperimentalFactorValueObject subsetFactor = null;
+
+    public ExperimentalFactorValueObject getSubsetFactor() {
+        return subsetFactor;
+    }
+
+    public void setSubsetFactor( ExperimentalFactorValueObject subsetFactor ) {
+        this.subsetFactor = subsetFactor;
+    }
+
     /**
      * Does not populate the resultSets.
      * 
@@ -48,6 +59,8 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         this.bioAssaySetId = analysis.getExperimentAnalyzed().getId();
         if ( analysis.getSubsetFactorValue() != null ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
+            this.subsetFactor = new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
+                    .getExperimentalFactor() );
         }
     }
 
