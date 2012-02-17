@@ -958,6 +958,11 @@
     <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProduct" />			
     <dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterial" />			
 
+	<dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
+    	<dwr:include method="x" /> 
+    	<dwr:include method="y" /> 
+    </dwr:convert>
+
     <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.VocabCharacteristic" />	
     <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic" />	
     <dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode" />	
