@@ -49,7 +49,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -71,10 +70,7 @@ public class ExperimentalDesignVisualizationService {
     protected Log log = LogFactory.getLog( getClass().getName() );
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    BioAssayService bioAssayService;
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * Cache. TODO: use ehcache so we can manage this.
@@ -282,6 +278,8 @@ public class ExperimentalDesignVisualizationService {
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
 
+        if ( dedvs == null ) return returnedLayouts;
+
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -472,6 +470,8 @@ public class ExperimentalDesignVisualizationService {
      * @param dedvs
      */
     private void prepare( Collection<DoubleVectorValueObject> dedvs ) {
+
+        if ( dedvs == null ) return;
 
         for ( DoubleVectorValueObject vec : dedvs ) {
             if ( vec == null ) {

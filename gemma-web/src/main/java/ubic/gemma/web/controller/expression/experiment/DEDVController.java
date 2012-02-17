@@ -390,8 +390,8 @@ public class DEDVController {
         }
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
-        validatedProbes.put( ee.getId(), geneDifferentialExpressionService.getDifferentialExpression( gene, ees,
-                threshold, null ) );
+        validatedProbes.put( ee.getId(),
+                geneDifferentialExpressionService.getDifferentialExpression( gene, ees, threshold, null ) );
 
         watch.stop();
         time = watch.getTime();
@@ -411,8 +411,7 @@ public class DEDVController {
     private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> removeBatchLayouts(
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> paramLayouts ) {
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = 
-            new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(
                 paramLayouts );
         // don't include batch because it isn't biologically relevant
 
@@ -857,7 +856,10 @@ public class DEDVController {
         Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> ee2probeResults = differentialExpressionResultService
                 .findInResultSets( ars, threshold, MAX_RESULTS_TO_RETURN );
 
-        if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return null;
+        /*
+         * FIXME. We might want to return _something_ like the top 'N', even if they aren't 'significant'.
+         */
+        if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return new ArrayList<DoubleVectorValueObject>();
 
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
         Map<CompositeSequence, Double> pvalues = new HashMap<CompositeSequence, Double>();
@@ -1057,16 +1059,20 @@ public class DEDVController {
      */
     private void getFactorValues( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
-        
+
         // colours for conditions/factor values bar chart
         Map<ExperimentalFactor, Queue<String>> factorColoursMap = new HashMap<ExperimentalFactor, Queue<String>>();
-        String[] blues = {"#85c6ff","#6b90ff","#105bfe","#005589","#0090e9","#0400fe","#008998","#3e3c90","#020090","#105bfe"}; //10
-        String[] purples = {"#d19bff","#a30064","#7d00ea","#893984","#f05eb8","#9c00d0","#b66ccf","#e7008f","#670089","#bf00b2","#890080","#8865a6","#3f0076"}; //13
-        String[] redYellows = {"#ffd78d","#d85d00","#b40101","#944343","#ff6d48","#d36b62","#ff8001","#c74f34","#d89561","#f8bc2e"}; //10
-        String[] greens= {"#98da95","#82b998","#257e21","#36b52f","#38b990","#a9da5f","#4cfe42","#73c000","#0fa345","#99fe01","#508500"}; //10
-        String[][] colourArrs = {blues,greens,purples,redYellows};
+        String[] blues = { "#85c6ff", "#6b90ff", "#105bfe", "#005589", "#0090e9", "#0400fe", "#008998", "#3e3c90",
+                "#020090", "#105bfe" }; // 10
+        String[] purples = { "#d19bff", "#a30064", "#7d00ea", "#893984", "#f05eb8", "#9c00d0", "#b66ccf", "#e7008f",
+                "#670089", "#bf00b2", "#890080", "#8865a6", "#3f0076" }; // 13
+        String[] redYellows = { "#ffd78d", "#d85d00", "#b40101", "#944343", "#ff6d48", "#d36b62", "#ff8001", "#c74f34",
+                "#d89561", "#f8bc2e" }; // 10
+        String[] greens = { "#98da95", "#82b998", "#257e21", "#36b52f", "#38b990", "#a9da5f", "#4cfe42", "#73c000",
+                "#0fa345", "#99fe01", "#508500" }; // 10
+        String[][] colourArrs = { blues, greens, purples, redYellows };
         int j = 0;
-        
+
         /* assign colours to factors */
         for ( DoubleVectorValueObject vec : vectors ) {
             ExpressionExperiment ee = vec.getExpressionExperiment();
@@ -1078,7 +1084,7 @@ public class DEDVController {
                         if ( !factorColoursMap.containsKey( pair.getKey() ) ) {
                             factorColoursMap.put( pair.getKey(), new LinkedList<String>() );
                         }
-                        if(j < colourArrs.length){
+                        if ( j < colourArrs.length ) {
                             for ( int i = 0; i < colourArrs[j].length; i++ ) {
                                 factorColoursMap.get( pair.getKey() ).add( colourArrs[j][i] ); // array to queue
                             }
@@ -1088,100 +1094,98 @@ public class DEDVController {
                 }
             }
         }
-        
+
         Random random = new Random();
 
         // >1 vector can have same ee, but no need to do the same thing >1
-        //Collection<ExpressionExperiment> usedEEs = new ArrayList<ExpressionExperiment>();
+        // Collection<ExpressionExperiment> usedEEs = new ArrayList<ExpressionExperiment>();
         LinkedHashMap<String, LinkedHashMap<String, String>> factorNames = new LinkedHashMap<String, LinkedHashMap<String, String>>();
         /* list of maps with entries: key = factorName, value=array of factor values */
         ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>();
         DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example. TODO
-        //for ( DoubleVectorValueObject vec : vectors ) {
-            ExpressionExperiment ee = vec.getExpressionExperiment();
-            //if ( usedEEs.contains( ee ) ) {
-            //    continue;
-            //}
-            List<List<String>> factorValues = new ArrayList<List<String>>();
+        // for ( DoubleVectorValueObject vec : vectors ) {
+        ExpressionExperiment ee = vec.getExpressionExperiment();
+        // if ( usedEEs.contains( ee ) ) {
+        // continue;
+        // }
+        List<List<String>> factorValues = new ArrayList<List<String>>();
 
-            if ( layouts != null && layouts.get( ee ) != null ) {
-                for ( BioAssay ba : layouts.get( ee ).keySet() ) {
-                    // double should be the factorValue id, defined in
-                    // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
-                    // BioAssayDimension)
-                    LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
-                    LinkedHashMap<String, String[]> factorValuesToNames = new LinkedHashMap<String, String[]>();
+        if ( layouts != null && layouts.get( ee ) != null ) {
+            for ( BioAssay ba : layouts.get( ee ).keySet() ) {
+                // double should be the factorValue id, defined in
+                // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
+                // BioAssayDimension)
+                LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
+                LinkedHashMap<String, String[]> factorValuesToNames = new LinkedHashMap<String, String[]>();
 
-                    // for each experimental factor, store the name and value
-                    for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
-                        if ( pair.getValue() == null ) {
-                            String[] facValAndColour = new String[] { "", "#FFFFFF" };
-                            factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
-                            continue;
-                        }
-                        /*
-                         * the double is only a double because it is meant to hold measurements when the factor is
-                         * continuous if the factor is categorical, the double value is set to the value's id see
-                         * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
-                         * ExpressionExperiment, BioAssayDimension)
-                         */
-                        FactorValue facVal = factorValueService.load( new Long( Math.round( pair.getValue() ) ) );
-                        StringBuffer facValsStrBuff = new StringBuffer();
-                        if ( facVal == null ) {
-                            log.warn( "Failed to load factorValue with id = " + pair.getValue()
-                                    + ". Load returned null. " );
-
-                            String[] facValAndColour = new String[] { "No value", "#FFFFFF" };
-                            factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
-                        } else {
-                            
-                            if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
-                                facValsStrBuff.append( facVal.getValue() + ", " );
-                            }
-                            for ( Characteristic characteristic : facVal.getCharacteristics() ) {
-                                facValsStrBuff.append( characteristic.getValue() + ", " );
-                            }
-                            if ( facValsStrBuff.length() > 0 ) {
-                                facValsStrBuff.delete( facValsStrBuff.length() - 2, facValsStrBuff.length() );
-                            }
-                            if ( facValsStrBuff.length() == 0 ) {
-                                facValsStrBuff.append( "FactorValue id:" + Math.round( pair.getValue() )
-                                        + " was not null but no value was found." );
-                            }
-                            
-                            String facValsStr = facValsStrBuff.toString();
-                            String colourString = "";
-                            if ( !factorNames.containsKey( facVal.getExperimentalFactor().getName() ) ) {
-                                factorNames.put( facVal.getExperimentalFactor().getName(),
-                                        new LinkedHashMap<String, String>() );
-                            }
-                            if ( !( factorNames.get( facVal.getExperimentalFactor().getName() ) )
-                                    .containsKey( facValsStr ) ) {
-                                if(factorColoursMap.containsKey( facVal.getExperimentalFactor() ) ){
-                                    colourString = factorColoursMap.get( facVal.getExperimentalFactor() ).poll();
-                                }
-                                if(colourString == null || colourString == ""){ // ran out of predefined colours
-                                    colourString = "#" + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
-                                                + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
-                                                + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0" ;
-                                }
-                                ( factorNames.get( facVal.getExperimentalFactor().getName() ) ).put( facValsStr
-                                        , colourString );
-                            } else {
-                                colourString = ( factorNames.get( facVal.getExperimentalFactor().getName() ) )
-                                        .get( facValsStr );
-                            }
-                            String[] facValAndColour = new String[] { facValsStr, colourString };
-                            factorValuesToNames.put( facVal.getExperimentalFactor().getName(), facValAndColour );
-                        }
+                // for each experimental factor, store the name and value
+                for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
+                    if ( pair.getValue() == null ) {
+                        String[] facValAndColour = new String[] { "", "#FFFFFF" };
+                        factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
+                        continue;
                     }
-                    factorValueMaps.add( factorValuesToNames );
+                    /*
+                     * the double is only a double because it is meant to hold measurements when the factor is
+                     * continuous if the factor is categorical, the double value is set to the value's id see
+                     * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
+                     * ExpressionExperiment, BioAssayDimension)
+                     */
+                    FactorValue facVal = factorValueService.load( new Long( Math.round( pair.getValue() ) ) );
+                    StringBuffer facValsStrBuff = new StringBuffer();
+                    if ( facVal == null ) {
+                        log.warn( "Failed to load factorValue with id = " + pair.getValue() + ". Load returned null. " );
+
+                        String[] facValAndColour = new String[] { "No value", "#FFFFFF" };
+                        factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
+                    } else {
+
+                        if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
+                            facValsStrBuff.append( facVal.getValue() + ", " );
+                        }
+                        for ( Characteristic characteristic : facVal.getCharacteristics() ) {
+                            facValsStrBuff.append( characteristic.getValue() + ", " );
+                        }
+                        if ( facValsStrBuff.length() > 0 ) {
+                            facValsStrBuff.delete( facValsStrBuff.length() - 2, facValsStrBuff.length() );
+                        }
+                        if ( facValsStrBuff.length() == 0 ) {
+                            facValsStrBuff.append( "FactorValue id:" + Math.round( pair.getValue() )
+                                    + " was not null but no value was found." );
+                        }
+
+                        String facValsStr = facValsStrBuff.toString();
+                        String colourString = "";
+                        if ( !factorNames.containsKey( facVal.getExperimentalFactor().getName() ) ) {
+                            factorNames.put( facVal.getExperimentalFactor().getName(),
+                                    new LinkedHashMap<String, String>() );
+                        }
+                        if ( !( factorNames.get( facVal.getExperimentalFactor().getName() ) ).containsKey( facValsStr ) ) {
+                            if ( factorColoursMap.containsKey( facVal.getExperimentalFactor() ) ) {
+                                colourString = factorColoursMap.get( facVal.getExperimentalFactor() ).poll();
+                            }
+                            if ( colourString == null || colourString == "" ) { // ran out of predefined colours
+                                colourString = "#" + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
+                                        + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
+                                        + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0";
+                            }
+                            ( factorNames.get( facVal.getExperimentalFactor().getName() ) ).put( facValsStr,
+                                    colourString );
+                        } else {
+                            colourString = ( factorNames.get( facVal.getExperimentalFactor().getName() ) )
+                                    .get( facValsStr );
+                        }
+                        String[] facValAndColour = new String[] { facValsStr, colourString };
+                        factorValuesToNames.put( facVal.getExperimentalFactor().getName(), facValAndColour );
+                    }
                 }
+                factorValueMaps.add( factorValuesToNames );
             }
-            vvo.setFactorNames( factorNames );
-            vvo.setFactorValues( factorValues );
-            vvo.setFactorValuesToNames( factorValueMaps );
-        //} end of vec in vectors loop
+        }
+        vvo.setFactorNames( factorNames );
+        vvo.setFactorValues( factorValues );
+        vvo.setFactorValuesToNames( factorValueMaps );
+        // } end of vec in vectors loop
     }
 
     /**
@@ -1292,8 +1296,8 @@ public class DEDVController {
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
 
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes, ee2P
-                    .getPValue(), validatedProbes.get( ee2P.getEEId() ) );
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
+                    ee2P.getPValue(), validatedProbes.get( ee2P.getEEId() ) );
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
             getFactorValues( vvoMap.get( ee2P.getEEId() ), vvo, layouts );

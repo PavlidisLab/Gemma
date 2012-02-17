@@ -39,7 +39,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.expression.experiment.FactorValueDeletion;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
