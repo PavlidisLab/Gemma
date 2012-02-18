@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,9 +80,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        if ( ee != null ) {
-            ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
+        if ( ee != null ) {            
+            eeService.delete( ee );            
         }
     }
 
