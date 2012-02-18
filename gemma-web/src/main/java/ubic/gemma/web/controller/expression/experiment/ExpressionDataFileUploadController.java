@@ -96,7 +96,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
                 return new TaskResult( command, result.getId() );
             } catch ( IOException e ) {
-                throw new RuntimeException( e );
+                throw new RuntimeException( e );    
             }
         }
 
@@ -284,6 +284,9 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         } catch (IllegalArgumentException e){
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
+        } catch (Exception e){
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "Error Validating: " + e.getMessage() );
         }
 
         if ( parse != null ) {
