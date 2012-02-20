@@ -59,7 +59,6 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     @After
     public void after() {
         if ( ee != null ) {
-            ee = eeService.load( ee.getId() );
             eeService.delete( ee );
         }
     }
