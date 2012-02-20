@@ -141,9 +141,9 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
                 evidenceSource = new EvidenceSourceValueObject( phenoAss.getDatabaseID(), externalDatabase );
             }
 
-            EvidenceValueObject evidence = new LiteratureEvidenceValueObject( description, associationType,
-                    new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    evidenceSource, new Integer( phenoAss.getGeneID() ) );
+            EvidenceValueObject evidence = new LiteratureEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
+                    phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
+                    associationType, primaryPublicationPubmed );
 
             try {
 

@@ -35,12 +35,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
-    public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
+    public ExperimentalEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
+            String description, String evidenceCode, boolean isNegativeEvidence,
+            EvidenceSourceValueObject evidenceSource, CharacteristicValueObject associationType,
             String primaryPublication, Set<String> relevantPublication,
-            Set<CharacteristicValueObject> experimentCharacteristics, EvidenceSourceValueObject evidenceSource,
-            Integer geneNCBI ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
+            Set<CharacteristicValueObject> experimentCharacteristics ) {
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource, associationType );
         this.primaryPublicationCitationValueObject = new CitationValueObject();
         this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
 

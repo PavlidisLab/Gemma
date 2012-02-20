@@ -363,9 +363,9 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
                 evidenceSource = new EvidenceSourceValueObject( phenoAss.getDatabaseID(), externalDatabase );
             }
 
-            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
-                    new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    relevantPublicationsPubmed, characteristics, evidenceSource, new Integer( phenoAss.getGeneID() ) );
+            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
+                    phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
+                    associationType, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
 
             try {
 

@@ -106,7 +106,7 @@ public abstract class EvidenceValueObject {
     private String externalUrl = "";
 
     // last modified date of the evidence
-    private String lastUpdated = null;
+    private Long lastUpdated = null;
     // security for the evidence
     private SecurityInfoValueObject securityInfoValueObject = null;
     // linked to what gene
@@ -144,14 +144,14 @@ public abstract class EvidenceValueObject {
             this.phenotypes.add( characteristicVO );
         }
 
-        this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().toString();
+        this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().getTime();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
 
     }
 
-    protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
-            boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
-            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
+    protected EvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
+            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource,
+            CharacteristicValueObject associationType ) {
         super();
         this.description = description;
         this.associationType = associationType;
@@ -245,11 +245,11 @@ public abstract class EvidenceValueObject {
         return this.evidenceSource;
     }
 
-    public String getLastUpdatedDate() {
+    public Long getLastUpdated() {
         return this.lastUpdated;
     }
 
-    public void setLastUpdatedDate( String lastUpdated ) {
+    public void setLastUpdated( Long lastUpdated ) {
         this.lastUpdated = lastUpdated;
     }
 

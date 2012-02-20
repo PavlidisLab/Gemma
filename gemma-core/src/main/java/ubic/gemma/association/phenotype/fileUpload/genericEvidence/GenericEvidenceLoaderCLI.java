@@ -138,10 +138,9 @@ public class GenericEvidenceLoaderCLI extends EvidenceLoaderCLI {
             EvidenceSourceValueObject evidenceSource = new EvidenceSourceValueObject( phenoAss.getDatabaseID(),
                     externalDatabase );
 
-            EvidenceValueObject evidence = new GenericEvidenceValueObject( description, associationType, new Boolean(
-                    phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, evidenceSource, new Integer(
-                    phenoAss.getGeneID() ) );
-
+            EvidenceValueObject evidence = new GenericEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
+                    phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
+                    associationType );
             try {
 
                 this.phenotypeAssociationService.create( evidence );

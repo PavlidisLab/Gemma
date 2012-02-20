@@ -29,11 +29,11 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
     // TODO need to populate this as an valueObject...
     private DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult = null;
 
-    public DiffExpressionEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult,
-            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
+    public DiffExpressionEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
+            String description, String evidenceCode, boolean isNegativeEvidence,
+            EvidenceSourceValueObject evidenceSource, CharacteristicValueObject associationType,
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource, associationType );
         this.differentialExpressionAnalysisResult = differentialExpressionAnalysisResult;
     }
 

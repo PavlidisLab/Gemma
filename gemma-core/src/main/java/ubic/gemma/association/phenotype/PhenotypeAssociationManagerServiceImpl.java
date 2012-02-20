@@ -352,11 +352,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
+
+        if ( phenotypeAssociation == null ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setEvidenceNotFound( true );
+            return validateEvidenceValueObject;
+        }
+
         EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
 
         // check for the race condition
-        if ( !phenotypeAssociation.getStatus().getLastUpdateDate().toString()
-                .equals( modifedEvidenceValueObject.getLastUpdatedDate() ) ) {
+        if ( phenotypeAssociation.getStatus().getLastUpdateDate().getTime() != modifedEvidenceValueObject
+                .getLastUpdated() ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setLastUpdateDifferent( true );
             return validateEvidenceValueObject;
@@ -645,7 +652,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             if ( bibliographicReferenceValueObject == null ) {
                 validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                validateEvidenceValueObject.setInvalidPubmedId( true );
+                validateEvidenceValueObject.setPubmedIdInvalid( true );
             } else {
 
                 for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject

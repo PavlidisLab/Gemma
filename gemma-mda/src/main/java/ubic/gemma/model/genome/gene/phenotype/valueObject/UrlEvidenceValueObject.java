@@ -36,10 +36,10 @@ public class UrlEvidenceValueObject extends EvidenceValueObject {
         this.url = url;
     }
 
-    public UrlEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes, String url,
-            EvidenceSourceValueObject evidenceSource, Integer geneNCBI ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource, geneNCBI );
+    public UrlEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
+            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource,
+            CharacteristicValueObject associationType, String url ) {
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource, associationType );
         this.url = url;
     }
 

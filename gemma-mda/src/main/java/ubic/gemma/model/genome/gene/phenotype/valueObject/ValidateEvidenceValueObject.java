@@ -7,7 +7,8 @@ public class ValidateEvidenceValueObject {
     private boolean sameGeneAndOnePhenotypeAnnotated = false;
     private boolean sameGeneAndPhenotypesAnnotated = false;
     private boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
-    private boolean invalidPubmedId = false;
+    private boolean pubmedIdInvalid = false;
+    private boolean evidenceNotFound = false;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -33,12 +34,12 @@ public class ValidateEvidenceValueObject {
         this.sameGeneAndPhenotypeChildOrParentAnnotated = sameGeneAndPhenotypeChildOrParentAnnotated;
     }
 
-    public boolean isInvalidPubmedId() {
-        return this.invalidPubmedId;
+    public boolean isPubmedIdInvalid() {
+        return this.pubmedIdInvalid;
     }
 
-    public void setInvalidPubmedId( boolean invalidPubmedId ) {
-        this.invalidPubmedId = invalidPubmedId;
+    public void setPubmedIdInvalid( boolean pubmedIdInvalid ) {
+        this.pubmedIdInvalid = pubmedIdInvalid;
     }
 
     public boolean isSameGeneAndOnePhenotypeAnnotated() {
@@ -57,4 +58,11 @@ public class ValidateEvidenceValueObject {
         this.lastUpdateDifferent = lastUpdateDifferent;
     }
 
+    public boolean isEvidenceNotFound() {
+        return this.evidenceNotFound;
+    }
+
+    public void setEvidenceNotFound( boolean evidenceNotFound ) {
+        this.evidenceNotFound = evidenceNotFound;
+    }
 }
