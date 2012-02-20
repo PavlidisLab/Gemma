@@ -753,7 +753,13 @@
       		<dwr:include method="getAuthenticatedUserCount" />   
       		<dwr:include method="getAuthenticatedUserNames" />   
 		</dwr:remote>
- 	</bean>  
+ 	</bean>
+ 	
+ 	<bean id="signupController" class="ubic.gemma.web.controller.common.auditAndSecurity.SignupController">
+    	<dwr:remote javascript="SignupController">
+      		<dwr:include method="loginCheck" />      		
+		</dwr:remote>
+ 	</bean> 
 
    <dwr:configuration>
 	
@@ -840,7 +846,8 @@
     <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject" />				
     <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject" />				
     <dwr:convert type="bean" class="ubic.gemma.model.common.description.AnnotationValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />				
+    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />
+    <dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />			
 
     <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject" />				
     <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductValueObject" />				

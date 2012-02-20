@@ -792,27 +792,19 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
 	saveBtnHandler : function() {
-				
-		Ext.Ajax.request({
-         	url : '/Gemma/ajaxLoginCheck.html',
-            method: 'GET',                  
-            success: function ( response, options ) {		
-                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
-                    
-                    if (dataMsg.success){
-						this.loggedInSaveHandler();
-					}
-                    else{
-						this.promptLoginForSave('save');  
-                    }
-                      
-            },
-            failure: function ( response, options ) {  
-				this.promptLoginForSave('save');  
-            },
-            scope: this,
-            disableCaching: true
-       });
+		
+		SignupController.loginCheck(
+	             {
+	                callback: function(result){
+	                	if (result.loggedIn){
+	                		this.loggedInSaveHandler();	                		
+	                	}
+	                	else{
+	                		this.promptLoginForSave('save'); 
+	                	}
+	                }.createDelegate(this)
+	            });
+		
 	   
 	},
 			
@@ -820,29 +812,20 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	 * When user clicks 'save as', check if they are logged in or not, then in the callback, call saveAsHandler
 	 */
 	saveAsBtnHandler : function() {
-				
-		Ext.Ajax.request({
-         	url : '/Gemma/ajaxLoginCheck.html',
-            method: 'GET',                  
-            success: function ( response, options ) {			
-					
-                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
-                    
-                    if (dataMsg.success){
-						// get name and description set up
-						this.createDetails();
-						this.saveAsHandler();
-					}
-                    else{
-						this.promptLoginForSave('saveAs');                      	
-                    }
-            },
-            failure: function ( response, options ) {   
-				this.promptLoginForSave('saveAs');  
-            },
-            scope: this,
-            disableCaching: true
-       });
+		
+		SignupController.loginCheck(
+	             {
+	                callback: function(result){
+	                	if (result.loggedIn){
+	                		this.createDetails();
+							this.saveAsHandler();                		
+	                	}
+	                	else{
+	                		this.promptLoginForSave('saveAs'); 
+	                	}
+	                }.createDelegate(this)
+	            });
+	
 	},
 	promptLoginForSave : function (saveAction) {
 		/*//Check to see if another login widget is open (rare case but possible)

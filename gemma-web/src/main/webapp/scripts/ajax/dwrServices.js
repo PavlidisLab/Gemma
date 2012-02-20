@@ -597,12 +597,16 @@ ExtCoexpressionSearchController.findExpressionExperiments = function(p0, p1, cal
 			'findExpressionExperiments', p0, p1, callback);
 }
 ExtCoexpressionSearchController.doSearchQuick2Complete = function(p0, p1, callback) {
+	
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick2', p0, p1,
 			callback);
+	
 }
 ExtCoexpressionSearchController.doSearchQuick2 = function(p0, callback) {
+	
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick2', p0,
 			callback);
+	
 }
 ExtCoexpressionSearchController.doSearchQuick = function(p0, callback) {
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick', p0,
@@ -1014,3 +1018,12 @@ JavascriptLogger.writeToErrorLog = function(p0, p1, p2, p3, p4, callback) {
 JavascriptLogger.writeToFatalLog = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(JavascriptLogger._path, 'JavascriptLogger', 'writeToFatalLog', p0, p1, p2, p3, p4, callback);
 }
+//====================================================================================
+if (SignupController == null)
+	var SignupController = {};
+SignupController._path = '/Gemma/dwr';
+SignupController.loginCheck = function(callback) {
+	dwr.engine._execute(SignupController._path, 'SignupController', 'loginCheck', callback);
+}
+
+// ====================================================================================
