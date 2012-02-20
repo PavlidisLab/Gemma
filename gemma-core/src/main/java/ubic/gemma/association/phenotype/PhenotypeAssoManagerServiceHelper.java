@@ -138,17 +138,6 @@ public class PhenotypeAssoManagerServiceHelper {
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
-        if ( evidenceValueObject.getAssociationType() != null ) {
-            VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
-
-            associationType.setValue( evidenceValueObject.getAssociationType().getValue() );
-            associationType.setCategory( evidenceValueObject.getAssociationType().getCategory() );
-            associationType.setValueUri( evidenceValueObject.getAssociationType().getValueUri() );
-            associationType.setCategoryUri( evidenceValueObject.getAssociationType().getCategoryUri() );
-
-            phe.setAssociationType( associationType );
-        }
-
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
         }
@@ -180,17 +169,6 @@ public class PhenotypeAssoManagerServiceHelper {
         phenotypeAssociation.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phenotypeAssociation.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phenotypeAssociation.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
-
-        if ( evidenceValueObject.getAssociationType() != null ) {
-            VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
-
-            associationType.setValue( evidenceValueObject.getAssociationType().getValue() );
-            associationType.setCategory( evidenceValueObject.getAssociationType().getCategory() );
-            associationType.setValueUri( evidenceValueObject.getAssociationType().getValueUri() );
-            associationType.setCategoryUri( evidenceValueObject.getAssociationType().getCategoryUri() );
-
-            phenotypeAssociation.setAssociationType( associationType );
-        }
 
         // 2- modify specific values depending on evidence type
         if ( phenotypeAssociation instanceof LiteratureEvidence ) {

@@ -328,11 +328,7 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
         for ( ExpEvidenceLineInfo phenoAss : linesFromFile ) {
 
             String description = phenoAss.getComment();
-            CharacteristicValueObject associationType = null;
 
-            if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
-                // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
-            }
             String evidenceCode = phenoAss.getEvidenceCode();
             String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
             String relevantPublicationPubmed = phenoAss.getReviewReferencePubmed();
@@ -365,7 +361,7 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
                     phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
-                    associationType, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
+                    primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
 
             try {
 

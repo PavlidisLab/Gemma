@@ -93,7 +93,6 @@ public abstract class EvidenceValueObject {
 
     private Long id = null;
     private String description = "";
-    private CharacteristicValueObject associationType = null;
     private String evidenceCode = null;
     private boolean isNegativeEvidence = false;
 
@@ -129,12 +128,6 @@ public abstract class EvidenceValueObject {
             this.evidenceSource = new EvidenceSourceValueObject( phenotypeAssociation.getEvidenceSource() );
         }
 
-        if ( phenotypeAssociation.getAssociationType() != null ) {
-            this.associationType = new CharacteristicValueObject();
-            this.associationType.setValue( phenotypeAssociation.getAssociationType().getValue() );
-            this.associationType.setCategory( phenotypeAssociation.getAssociationType().getCategory() );
-        }
-
         this.phenotypes = new TreeSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
@@ -150,11 +143,9 @@ public abstract class EvidenceValueObject {
     }
 
     protected EvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
-            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource,
-            CharacteristicValueObject associationType ) {
+            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource ) {
         super();
         this.description = description;
-        this.associationType = associationType;
         this.evidenceCode = evidenceCode;
         this.isNegativeEvidence = isNegativeEvidence;
         this.phenotypes = phenotypes;
@@ -176,10 +167,6 @@ public abstract class EvidenceValueObject {
 
     public String getDescription() {
         return this.description;
-    }
-
-    public CharacteristicValueObject getAssociationType() {
-        return this.associationType;
     }
 
     public String getEvidenceCode() {
@@ -219,10 +206,6 @@ public abstract class EvidenceValueObject {
 
     public void setDescription( String description ) {
         this.description = description;
-    }
-
-    public void setAssociationType( CharacteristicValueObject associationType ) {
-        this.associationType = associationType;
     }
 
     public void setEvidenceCode( String evidenceCode ) {

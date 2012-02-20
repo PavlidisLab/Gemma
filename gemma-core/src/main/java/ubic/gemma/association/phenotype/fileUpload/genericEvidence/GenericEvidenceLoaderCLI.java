@@ -121,7 +121,6 @@ public class GenericEvidenceLoaderCLI extends EvidenceLoaderCLI {
         for ( GenericEvidenceLineInfo phenoAss : linesFromFile ) {
 
             String description = phenoAss.getComment();
-            CharacteristicValueObject associationType = null;
 
             String evidenceCode = phenoAss.getEvidenceCode();
 
@@ -139,8 +138,7 @@ public class GenericEvidenceLoaderCLI extends EvidenceLoaderCLI {
                     externalDatabase );
 
             EvidenceValueObject evidence = new GenericEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
-                    phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
-                    associationType );
+                    phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource);
             try {
 
                 this.phenotypeAssociationService.create( evidence );

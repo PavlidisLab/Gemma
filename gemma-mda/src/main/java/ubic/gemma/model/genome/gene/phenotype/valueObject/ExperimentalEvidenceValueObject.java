@@ -37,10 +37,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
     public ExperimentalEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource, CharacteristicValueObject associationType,
-            String primaryPublication, Set<String> relevantPublication,
+            EvidenceSourceValueObject evidenceSource, String primaryPublication, Set<String> relevantPublication,
             Set<CharacteristicValueObject> experimentCharacteristics ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource, associationType );
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
         this.primaryPublicationCitationValueObject = new CitationValueObject();
         this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
 

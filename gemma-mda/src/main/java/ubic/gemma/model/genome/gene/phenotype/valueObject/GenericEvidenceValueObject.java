@@ -25,9 +25,8 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 public class GenericEvidenceValueObject extends EvidenceValueObject {
 
     public GenericEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
-            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource,
-            CharacteristicValueObject associationType ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource, associationType );
+            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource) {
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
     }
 
     /** Entity to Value Object */

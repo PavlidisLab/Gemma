@@ -115,7 +115,6 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
         for ( LitEvidenceLineInfo phenoAss : linesFromFile ) {
 
             String description = phenoAss.getComment();
-            CharacteristicValueObject associationType = null;
 
             if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
                 // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
@@ -143,7 +142,7 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             EvidenceValueObject evidence = new LiteratureEvidenceValueObject( new Integer( phenoAss.getGeneID() ),
                     phenotypes, description, evidenceCode, phenoAss.isEdivenceNegative(), evidenceSource,
-                    associationType, primaryPublicationPubmed );
+                    primaryPublicationPubmed );
 
             try {
 
