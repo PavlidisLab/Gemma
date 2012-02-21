@@ -145,12 +145,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         @Override
         public TaskResult processJob() {
-            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
-            expressionExperimentService.delete( ee );
+            expressionExperimentService.delete( command.getEntityId() );
 
             return new TaskResult( command, new ModelAndView( new RedirectView(
                     "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) ).addObject( "message",
-                    "Dataset " + ee.getShortName() + " removed from Database" ) );
+                    "Dataset id: " + command.getEntityId() + " removed from Database" ) );
 
         }
     }
@@ -332,8 +331,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return taskId
      */
     public String deleteById( Long id ) {        
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) return null;       
+        if ( id == null ) return null;       
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
         startTask( job );
         return job.getTaskId();
