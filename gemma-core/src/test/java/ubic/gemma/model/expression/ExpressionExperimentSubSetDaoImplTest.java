@@ -17,6 +17,7 @@ package ubic.gemma.model.expression;
 import static org.junit.Assert.*;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class ExpressionExperimentSubSetDaoImplTest extends BaseSpringContextTest
     @Autowired
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
+    @Autowired
+    SessionFactory sessionFactory;
+    
     @Test
     public final void testFind() throws Exception {
 
@@ -46,16 +50,24 @@ public class ExpressionExperimentSubSetDaoImplTest extends BaseSpringContextTest
         subset.getBioAssays().addAll( ee.getBioAssays() );
         subset.setName( "foo" );
         
-        Session session = this.hibernateSupport.getHibernateTemplate().getSessionFactory().openSession();
-        Transaction tx = session.beginTransaction();
+       // Transaction tx = session.beginTransaction();
         ExpressionExperimentSubSet persisted = expressionExperimentSubSetDao.create( subset );
-        tx.commit();
+       // tx.commit();
 
         assertNotNull( persisted );
                 
-        tx = session.beginTransaction();
-        ExpressionExperimentSubSet hit = expressionExperimentSubSetDao.find( subset );
-        tx.commit();
+        
+        Session session = sessionFactory.openSession();
+        session.update( persisted );
+        
+        ExpressionExperimentSubSet hit = expressionExperimentSubSetDao.find( persisted );
+        
+        session.close();
+        
+        
+        //Session session = this.hibernateSupport.getHibernateTemplate().getSessionFactory().openSession();
+        //Transaction tx = session.beginTransaction();
+        //tx.commit();
 
         assertEquals( persisted, hit );
 
