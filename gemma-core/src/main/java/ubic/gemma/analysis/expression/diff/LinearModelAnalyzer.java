@@ -260,24 +260,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /**
      * @param expressionExperiment
-     * @param subsetFactor
-     * @param factors
-     * @return
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors ) {
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
-        config.setFactorsToInclude( factors );
-
-        config.setSubsetFactor( subsetFactor );
-
-        return this.run( expressionExperiment, config );
-    }
-
-    /**
-     * @param expressionExperiment
      * @param dmatrix
      * @param config
      * @return
@@ -301,12 +283,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
              * By far the most complex is #2 -- it depends on which factors and what kind they are.
              */
 
-            /*
-             * Initialize our matrix and factor lists...
-             */
             if ( USE_R ) {
                 connectToR();
             }
+
+            /*
+             * Initialize our matrix and factor lists...
+             */
             List<ExperimentalFactor> factors = config.getFactorsToInclude();
 
             List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
@@ -351,12 +334,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     }
                     eesubSet.getBioAssays().addAll( bioAssays );
 
-                    /*
-                     * Check that the data is valid for analysis.
-                     */
-                    boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( eesubSet, factors );
+                    Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset(
+                            subsets.get( subsetFactorValue ), eesubSet, factors );
 
-                    if ( !ok ) {
+                    DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config );
+
+                    if ( subsetFactors.isEmpty() ) {
                         log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
                         continue;
                     }
@@ -364,7 +347,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     /*
                      * Run analysis on the subset.
                      */
-                    DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, config,
+                    DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, subsetConfig,
                             subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
 
                     if ( analysis == null ) {
@@ -394,6 +377,89 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         } finally {
             disconnectR();
         }
+    }
+
+    /**
+     * Remove factors which are no longer usable, based on the subset.
+     * 
+     * @param expressionDataDoubleMatrix
+     * @param eesubSet
+     * @param factors
+     * @return
+     */
+    private Collection<ExperimentalFactor> fixFactorsForSubset( ExpressionDataDoubleMatrix dmatrix,
+            ExpressionExperimentSubSet eesubSet, List<ExperimentalFactor> factors ) {
+
+        List<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
+
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        ExperimentalFactor interceptFactor = determineInterceptFactor( factors, quantitationType );
+
+        /*
+         * Remove any constant factors, unless they are that intercept.
+         */
+        for ( ExperimentalFactor f : factors ) {
+
+            if ( f.getType().equals( FactorType.CONTINUOUS ) ) {
+                result.add( f );
+            } else if ( interceptFactor != null && interceptFactor.equals( f ) ) {
+                result.add( f );
+            } else {
+
+                Collection<FactorValue> levels = new HashSet<FactorValue>();
+                for ( BioAssay ba : eesubSet.getBioAssays() ) {
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        for ( FactorValue fv : bm.getFactorValues() ) {
+                            if ( fv.getExperimentalFactor().equals( f ) ) {
+                                levels.add( fv );
+                            }
+                        }
+                    }
+                }
+
+                if ( levels.size() > 1 ) {
+                    result.add( f );
+                }
+
+            }
+
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Remove all configurations that have to do with factors that aren't in the selected factors
+     * 
+     * @param factors the factors that will be incluced
+     * @param config
+     * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
+     *         involve the given factors.
+     */
+    private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
+
+        newConfig.setBaseLineFactorValues( null );
+
+        if ( !config.getInteractionsToInclude().isEmpty() ) {
+            Collection<Collection<ExperimentalFactor>> newInteractionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
+            for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
+                if ( factors.containsAll( interactors ) ) {
+                    newInteractionsToInclude.add( interactors );
+                }
+            }
+
+            newConfig.setInteractionsToInclude( newInteractionsToInclude );
+        }
+
+        newConfig.setSubsetFactor( null );
+        newConfig.setFactorsToInclude( factors );
+
+        return newConfig;
+
     }
 
     /**
@@ -1173,9 +1239,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
-        /*
-         * FIXME Case of one-sided test not handled yet? Actually seems okay ...
-         */
         if ( !( interactionFactorLists == null ) && !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {
                 // we actually only support (tested etc.) one interaction at a time, but this should actually work for

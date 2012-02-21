@@ -119,8 +119,8 @@ public class DifferentialExpressionAnalysisUtil {
     }
 
     /**
-     * Check that at least one of the given factors is valid: the factorvalues are measurements, or that there are at
-     * least two assays for at least one factor value.
+     * Check that <em>at least one</em> of the given factors is valid: the factorvalues are measurements, or that there
+     * are at least two assays for at least one factor value.
      * 
      * @param expressionExperiment
      * @param experimentalFactors

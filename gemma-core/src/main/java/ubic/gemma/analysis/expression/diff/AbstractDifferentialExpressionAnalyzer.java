@@ -102,17 +102,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 
     /**
-     * Perform an analysis using the specified factor(s), on subsets of the data as defined by the subsetFactor.
-     * 
-     * @param expressionExperiment
-     * @param subsetFactor
-     * @param factors
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors );
-
-    /**
      * @param pvalues
      * @return normalized ranks of the pvalues, or null if they were invalid/unusable.
      */
