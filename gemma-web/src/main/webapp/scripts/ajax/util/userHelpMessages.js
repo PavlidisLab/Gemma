@@ -8,7 +8,26 @@ Gemma.EvidenceCodes = {
 	icText: 'Inferred by Curator',
 	icTT: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.',
 	tasText: 'Traceable Author Statement',
-	tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.'
+	tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.',
+	IDA: 'Direct Assay',
+	IPI: 'Physical Interaction',
+	IMP: 'Mutant Phenotype',
+	IGI: 'Genetic Interaction',
+	IEP: 'Expression Pattern',
+	ISS: 'Sequence or Structural Similarity',
+	ISO: 'Sequence Orthology',
+	ISA: 'Sequence Alignment',
+	ISM: 'Sequence Model',
+	IGC: 'Genomic Context',
+	IBA: 'Biological aspect of Ancestor',
+	IBD: 'Biological aspect of Descendant',
+	IKR: 'Key Residues',
+	IRD: 'Rapid Divergence',
+	RCA: 'Reviewed Computational Analysis',
+	NAS: 'Non-traceable Author Statement',
+	ND: 'No biological Data available',
+	IEA: 'Electronic Annotation',
+	NR: 'Not Recorded'
 };
 
 Gemma.StatusText = {
