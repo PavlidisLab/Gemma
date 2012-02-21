@@ -111,15 +111,13 @@ public class ExpressionExperimentValueObjectHelper {
         vo.setName( set.getName() );
         vo.setId( set.getId() );
         vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
-        Taxon taxon = set.getTaxon();
+        Taxon taxon = expressionExperimentSetDao.getTaxon( set.getId() );
         if ( taxon == null ) {
             // happens in test databases that aren't properly populated.
             // log.debug( "No taxon provided" );
         } else {
             vo.setTaxonId( taxon.getId() );
-            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
-            // downstream object. This is
-            // basically a thaw.
+            vo.setTaxonName( taxon.getCommonName() );
         }
         
         vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );

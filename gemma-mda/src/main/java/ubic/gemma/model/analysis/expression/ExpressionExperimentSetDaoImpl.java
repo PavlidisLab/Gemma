@@ -21,14 +21,13 @@ package ubic.gemma.model.analysis.expression;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +37,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -99,6 +99,25 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                 "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
     }
 
+    @Override
+    public Taxon getTaxon( Long id) {
+        
+        // using Query because I want to be able to limit the number of row returned to one
+        
+        Query q = this.getSession().createQuery( 
+                "select ees.id, ees.taxon from ExpressionExperimentSetImpl ees where ees.id = :id" );
+        q.setParameter( "id", id );
+        q.setMaxResults( 1 );
+        
+        List<?> list = q.list();
+        for(Object obj : list){
+            Object[] oa = ( Object[] ) obj;
+            return ( ( Taxon ) oa[1] );
+        }
+
+        return null;
+    }
+    
     /*
      * (non-Javadoc)
      * 

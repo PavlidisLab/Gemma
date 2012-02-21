@@ -24,6 +24,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -83,5 +84,7 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
     int getExperimentCount( Long id );
 
     Collection<Long> getExperimentIds( Long id );
+
+    Taxon getTaxon( Long id );
 
 }
