@@ -39,12 +39,13 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 					var sftCategoryNode = categoryNodes[i];
 
 					var ftCategoryNode = new Ext.tree.TreeNode({
-						expanded : false,
-						singleClickExpand : false,
-						text : sftCategoryNode.groupName,
-						checked : true,
-						iconCls : '',
-						cls : ''
+						expanded: false,
+						singleClickExpand: false,
+						text: (sftCategoryNode.groupName && sftCategoryNode.groupName !== null 
+							&& sftCategoryNode.groupName !== "null") ? sftCategoryNode.groupName : "No category",
+						checked: true,
+						iconCls: '',
+						cls: ''
 					});				
 
 					var factorNodes = sftCategoryNode.children;
@@ -60,7 +61,8 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 						var ftFactorNode = new Ext.tree.TreeNode({
 							expanded : false,
 							singleClickExpand : false,
-							text : sftFactorNode.groupName + "<span style=\"color:grey\"> vs "+baselines.join(',')+'</span>',
+							text : (sftFactorNode.groupName && sftFactorNode.groupName !== null && sftFactorNode.groupName !== "null")?
+								sftFactorNode.groupName + "<span style=\"color:grey\"> vs "+baselines.join(',')+'</span>' : "No value",
 							checked : true,
 							cls : '',
 							iconCls : ''
