@@ -866,19 +866,19 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			" " +
 			(data.description ? data.description : "");
 		} else if (clazz === "GeneValueObject" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol +
-			"</a>  - Species: " +
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + 
+			"</a><span style='color:grey'> " +
 			data.taxonCommonName +
-			" Desc: " +
+			"</span> " +
 			data.officialName;
 		} else if (clazz === "Bibliographicreference") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
 			"]";
 		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject") {
-			return "<a href=\"/Gemma/geneSet/showGeneSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
+			return "<a href=\"/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
 			data.taxonName +
 			"</span> (" +
-			data.size +
+			data.numExperiments +
 			")";
 		} else if (clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject") {
 			return "<a href=\"/Gemma/geneSet/showGeneSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
