@@ -69,16 +69,19 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 				}
 			},
 
-			onDoneLoading : function(eeId) {
+			onDoneLoading : function(payload) {
 				Ext.getCmp('uploadform').enable();
 				Ext.getCmp('main-form').enable();
+				
+				if (payload.error==false){
+				
 				var w = new Ext.Window({
 							modal : true,
 							width : 400,
 							closable : false,
 							title : "Data loading finished",
 							html : "Congratulations! You data was successfully loaded and assigned internal Gemma id "
-									+ eeId
+									+ payload.taskId
 									+ ". Click 'ok' to view the details of your new data set, or 'Load another'.",
 							buttons : [{
 								text : "OK",
@@ -86,7 +89,7 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 									w.hide();
 									w.destroy();
 									window.location = "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-											+ eeId;
+											+ payload.taskId;
 
 								}
 							}, {
@@ -102,6 +105,30 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 						});
 
 				w.show();
+				
+				}
+				else{
+					
+					var w = new Ext.Window({
+						modal : true,
+						width : 400,
+						closable : false,
+						title : "Error Submitting Dataset",
+						html : "There was an error submitting your dataset, please check your data file, re-upload and try again. Error: "+payload.errorMessage,
+						buttons : [{
+							text : "OK",
+							handler : function() {
+								w.hide();
+								w.destroy();
+								
+							}
+						}]
+					});
+
+					w.show();
+					
+					
+				}
 			},
 
 			onStartSubmission : function(taskId) {

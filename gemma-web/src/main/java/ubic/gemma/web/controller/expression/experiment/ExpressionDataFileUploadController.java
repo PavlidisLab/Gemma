@@ -75,7 +75,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                 populateCommandObject( command );
 
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-
+                
                 if ( stream == null ) {
                     throw new IllegalStateException( "Could not read from file " + file );
                 }
@@ -92,11 +92,25 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
                 // In theory we could do the link analysis right away. However, when a data set has new array designs,
                 // we
-                // won't be ready yet.
-
-                return new TaskResult( command, result.getId() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );    
+                // won't be ready yet.                
+                
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
+                eeUploadResponse.setTaskId( result.getId() );
+                eeUploadResponse.setError( false );
+                
+                return new TaskResult( command, eeUploadResponse );
+            } catch ( IOException e ) {                
+                //log.info( "There was an error opening an uploaded file:" + e.getMessage() );                
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();                
+                eeUploadResponse.setError( true );
+                eeUploadResponse.setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
+                return new TaskResult( command, eeUploadResponse );
+            } catch (Exception e){
+                //log.warn( "There was an error submitting your dataset, exception:" + e.toString() );                
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();                
+                eeUploadResponse.setError( true );
+                eeUploadResponse.setErrorMessage(  e.getMessage() );
+                return new TaskResult( command, eeUploadResponse );
             }
         }
 

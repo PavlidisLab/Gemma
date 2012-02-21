@@ -880,7 +880,8 @@
 
     <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.PrimitiveType" />			
     <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />			
+    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />
+    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentUploadResponse" />		
 
     <dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.PolymerType" >
     	<dwr:include method="value" /> 
