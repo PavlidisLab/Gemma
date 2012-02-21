@@ -103,8 +103,9 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
                     /*
                      * If the key is not a securable, it's okay; if it is we need explicit permission
                      */
-                    hasPermission = Securable.class.isAssignableFrom( domainObject.getClass() )
-                            || hasPermission( authentication, domainObject );
+                    boolean isSecurable = Securable.class.isAssignableFrom( domainObject.getClass() );
+                    
+                    hasPermission = !isSecurable || hasPermission( authentication, domainObject );
 
                     /*
                      * Check the VALUE as well.
