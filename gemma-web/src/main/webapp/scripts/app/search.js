@@ -462,7 +462,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 												}, {
 													id : 'search-genesets-chkbx',
 													name : "searchGeneSets",
-													boxLabel : "Gene sets",
+													boxLabel : "Gene groups",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -815,9 +815,9 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		} else if (clazz === "GeneValueObject") {
 			return "Gene";
 		} else if (clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
-			return "Gene set";
+			return "Gene group";
 		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject" ) {
-			return "Experiment set";
+			return "Experiment group";
 		} else {
 			return clazz;
 		}

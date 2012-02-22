@@ -69,7 +69,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						editable : false,
 						sortable : false,
 						renderer: function(value, metadata, record, rowIndex, colIndex, store){
-							return '<a target="_blank" title="Go to gene set page" '+
+							return '<a target="_blank" title="Go to gene group page" '+
 								'href="/Gemma/geneSet/showGeneSet.html?id='+record.data.id+
 								'"><img src="/Gemma/images/magnifier.png"></a>'
 						}

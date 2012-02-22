@@ -194,7 +194,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 	},
 	/**
 	 * set the gene chooser to have chosen a go group and show its preview
-	 * @param geneSetId must be a valid id for a database-backed gene set
+	 * @param geneSetId must be a valid id for a database-backed gene group
 	 */
 	getGOGeneSet: function(goName, taxonId, backupGeneIds){
 

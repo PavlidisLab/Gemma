@@ -767,7 +767,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 	/**
 	 * set the gene chooser to have chosen a go group and show its preview
-	 * @param geneSetId must be a valid id for a database-backed gene set
+	 * @param geneSetId must be a valid id for a database-backed gene group
 	 */
 	setFirstGeneSet: function(record){
 	
@@ -787,7 +787,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		// reset all the choosers
 		this.reset();
 		
-		// taxon needs to be set before gene set is chosen because otherwise there will be >1 choice provided
+		// taxon needs to be set before gene group is chosen because otherwise there will be >1 choice provided
 		this.setTaxonId(taxonId);
 		
 		this.setFirstExperimentSet(experimentSetRecord);

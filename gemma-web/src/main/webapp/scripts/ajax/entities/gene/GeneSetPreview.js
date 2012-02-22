@@ -80,7 +80,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 	 */
 	updateTitle: function(name, size){
 	
-		// if an gene set page exists for this set, make title a link 
+		// if an gene group page exists for this set, make title a link 
 		if (!name && this.selectedSetValueObject instanceof GeneSetValueObject) {
 			size = this.selectedSetValueObject.geneIds.size();
 			
@@ -139,7 +139,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 			var editedGroup;
 			editedGroup = new SessionBoundGeneSetValueObject();
 			editedGroup.id = null;
-			editedGroup.name = time+" Custom Gene Set";
+			editedGroup.name = time+" Custom Gene Group";
 			editedGroup.description = "Temporary gene group created " + currentTime.toString();
 			editedGroup.geneIds = allIds;
 			editedGroup.taxonId = record.get('taxonId');

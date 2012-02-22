@@ -2,10 +2,10 @@ Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 /**
  *
- * Panel containing the most interesting info about a gene set.
+ * Panel containing the most interesting info about a gene group.
  * Used as one tab of the EE page
  *
- * pass in the gene set id obj as geneSetId
+ * pass in the gene group id obj as geneSetId
  *
  * @class Gemma.GeneSetSummary
  * @extends Ext.Panel
@@ -202,9 +202,9 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
         });
 
         var deleteEEButton = new Ext.Button({
-            text: 'Delete Gene Set',
+            text: 'Delete Gene Group',
             icon: '/Gemma/images/icons/cross.png',
-            toolTip: 'Delete the gene set from the system',
+            toolTip: 'Delete the gene group from the system',
             disabled: !this.editable,
             handler: this.deleteGeneSet,
             scope: this
@@ -273,7 +273,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 		        
 		/*MEMBERS GRID*/
 		var geneMembersGrid = new Gemma.GeneMembersSaveGrid({
-			title:'Gene Set Members',
+			title:'Gene Group Members',
 			name: 'geneMembersGrid',
 			frame: true,
 			taxonId : g.taxonId,
@@ -333,7 +333,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 		var redirectHome = true;
 		Ext.Msg.show({
 					title : 'Delete '+this.geneSet.name+'?',
-					msg : 'Are you sure you want to delete gene set "'+this.geneSet.name+'"? This cannot be undone.',
+					msg : 'Are you sure you want to delete gene group "'+this.geneSet.name+'"? This cannot be undone.',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {

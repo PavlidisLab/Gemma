@@ -31,7 +31,7 @@ Gemma.GeneSetPage = Ext.extend(Ext.TabPanel, {
     },
 	invalidIdHandler: function(msg){
 		this.items.add(new Ext.Panel({
-			html: "Error in loading gene set due to invalid id. "+msg
+			html: "Error in loading gene group due to invalid id. "+msg
 		}));
 	},
     initComponent: function(){

@@ -700,7 +700,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			var time = '(' + hours + ':' + minutes + ') ';
 			
 			// Use simple, non descriptive naming for now
-			this.newGroupName  = time + "Custom Gene Set";
+			this.newGroupName  = time + "Custom Gene Group";
 			
 			// if group name was already made in this way, just change root
 			//var prefix = "Edited \''";
@@ -1125,7 +1125,7 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 			}, this);
 		}
 		
-		// If no genes in gene set, enable taxon
+		// If no genes in gene group, enable taxon
 		// selection
 		this.currentGroupId = groupRecord.get('id');
 		

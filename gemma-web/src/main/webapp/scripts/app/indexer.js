@@ -134,14 +134,14 @@ var indexForm = function() {
 
 	eeSetCheckBox = new Ext.form.Checkbox({
 				labelSeparator : '',
-				boxLabel : 'Index Experiment sets',
+				boxLabel : 'Index Experiment Groups',
 				name : 'eeSet'
 			});
 	simple.add(eeSetCheckBox);
 
 	geneSetCheckBox = new Ext.form.Checkbox({
 				labelSeparator : '',
-				boxLabel : 'Index Gene sets',
+				boxLabel : 'Index Gene Groups',
 				name : 'geneSet'
 			});
 	simple.add(geneSetCheckBox);
