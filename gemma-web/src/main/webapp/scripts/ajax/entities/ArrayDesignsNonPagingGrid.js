@@ -163,7 +163,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 	showMergees : true,
 	showTroubled : true,
     
-	loadArrayDesigns: function( adIds ){
+	loadArrayDesigns: function( adIds, extraCallback, extraCallbackParams ){
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
 						msg : Gemma.StatusText.Loading.arrayDesigns
@@ -176,6 +176,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.setTitle(arrayDesigns.length + ((arrayDesigns.length === 1) ? " Array Design" : " Array Designs"));
 				this.totalCount = arrayDesigns.length;
 				this.getStore().applyMultiFilters();
+				if(extraCallback) extraCallback(extraCallbackParams);
 			}.createDelegate(this));
 	},
     initComponent: function(){
@@ -251,7 +252,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 				else 
 					if (action === 'icon-refresh') {
-						updateArrayDesignReport(record.id); // function in arrayDesign.js
+						updateArrayDesignReport(record.id, grid); // function in arrayDesign.js
 					}
 			},
 			// You can cancel the action by returning false from this
@@ -261,8 +262,22 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 		
-		rowExpander = new Ext.grid.RowExpander({
+		this.rowExpander = new Ext.grid.RowExpander({
+			enableCaching : false,
 			tpl: Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
+		});
+		
+		this.on('reportUpdated', function(id){
+			var extraCallback = function( arr ){
+				var grid = arr[0];
+				var id = arr[1];
+				grid.rowExpander.collapseAll();
+				record = grid.getStore().getById(id);
+				grid.rowExpander.expandRow(grid.getStore().indexOf(record));
+			};
+			
+			this.loadArrayDesigns( this.idSubset, extraCallback, [this, id] );
+			
 		});
 		
 		var cellTips = new Ext.ux.plugins.grid.CellToolTips([
@@ -275,7 +290,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		]);
 		Ext.apply(this, {
-			plugins: [this.action, rowExpander, cellTips],
+			plugins: [this.action, this.rowExpander, cellTips],
 			colModel: new Ext.grid.ColumnModel({
 				defaults: {
 					sortable: true
@@ -287,7 +302,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			 sortable:true,
 			 width: 0.1 //viewConfig.forceFit resizes based on relative widths
 			 },*/
-				rowExpander, {
+				this.rowExpander, {
 					id: 'name',
 					header: "Array Name",
 					dataIndex: 'name',

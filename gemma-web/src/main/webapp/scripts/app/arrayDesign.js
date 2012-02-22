@@ -61,12 +61,15 @@ function reportFeedback(type, text, e){
 	}
 }
 
-function handleReportLoadSuccess(data) {
+function handleReportLoadSuccess(data, callerScope) {
 	try {
 		reportFeedback("success");
 		var arrayDesignSummaryDiv = "arraySummary_" + data.id;
 		if (Ext.get(arrayDesignSummaryDiv) !== null) {
 			Ext.DomHelper.overwrite(arrayDesignSummaryDiv, data.html);
+		}
+		if (callerScope) {
+			callerScope.fireEvent('reportUpdated', data.id);
 		}
 	} catch (e) {
 		handleFailure(data, e);
@@ -74,14 +77,14 @@ function handleReportLoadSuccess(data) {
 	}
 }
 
-function handleDoneUpdateReport(id) {
+function handleDoneUpdateReport(id, callerScope) {
 
 	var callParams = [];
 	var commandObj = {
 		id : id
 	};
 	callParams.push(commandObj);
-	var callback = handleReportLoadSuccess.createDelegate(this, [], true);
+	var callback = handleReportLoadSuccess.createDelegate(this, [callerScope], true);
 	var errorHandler = handleFailure.createDelegate(this, [], true);
 	callParams.push(callback);
 	callParams.push(errorHandler);
@@ -115,7 +118,7 @@ function handleReportUpdateSuccess(taskId) {
 
 }
 
-function updateArrayDesignReport(id) {
+function updateArrayDesignReport(id, callerScope) {
 
 	var callParams = [];
 	callParams.push({
@@ -127,7 +130,7 @@ function updateArrayDesignReport(id) {
 					k.handleWait(data, false);
 					k.on('done', function(payload) {
 								// this.fireEvent('reportUpdated', payload)
-								handleDoneUpdateReport(id);
+								handleDoneUpdateReport(id, callerScope);
 							});
 				}.createDelegate(this)
 			});

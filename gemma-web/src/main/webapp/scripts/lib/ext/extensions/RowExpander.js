@@ -65,9 +65,13 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
         }, this);
     },
 
+    generateBodyContent : function(record, rowIndex){
+    	return this.tpl.apply(record.data);
+    },
+	
     getBodyContent : function(record, index){
         if(!this.enableCaching){
-            return generateBodyContent(record, index);
+            return this.generateBodyContent(record, index);
         }
         var content = this.bodyContent[record.id];
         if(!content){
@@ -77,9 +81,6 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
         return content;
     },
     
-    generateBodyContent : function(record, rowIndex){
-    	return this.tpl.apply(record.data);
-    },
 
     onMouseDown : function(e, t){
         if(t.className == 'x-grid3-row-expander'){
