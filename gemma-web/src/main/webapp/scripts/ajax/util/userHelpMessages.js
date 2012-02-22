@@ -67,7 +67,7 @@ Gemma.HelpText.CommonWarnings = {
 	},
 	DuplicateName: {
 		title: "Duplicate Name",
-		text: "Please provide a previously unused name for the set"
+		text: "Please provide a previously unused name for the group"
 	},
 	BrowserWarnings: {
 		ie8: 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  ' +
@@ -100,9 +100,9 @@ Gemma.HelpText.CommonErrors = {
 		text: "Form is not valid, check entries before clicking 'submit'"
 	},
 	EmptySet: {
-		title: "Cannot save an empty set",
-		text: "You cannot save an empty set. No changes have been saved.<br>"+
-				" Add experiments to set {0} or delete it."
+		title: "Cannot save an empty group",
+		text: "You cannot save an empty group. No changes have been saved.<br>"+
+				" Add experiments to group {0} or delete it."
 	}
 };
 
@@ -226,7 +226,7 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	DatasetGroupEditor:{
 		widgetTT: "Use this tool to create and edit groups of datasets. "+
-				"You can modify a built-in set by making a copy (clone) and editing the copy",
+				"You can modify a built-in group by making a copy (clone) and editing the copy",
 		helpURL: Gemma.HOST + "faculty/pavlidis/wiki/display/gemma/Dataset+chooser"
 	},
 	DatasetGroupGridPanel:{
@@ -346,7 +346,7 @@ Gemma.HelpText.WidgetDefaults = {
 							"limited to a smaller number of genes.)"
 	},
 	GeneMembersSaveGrid:{
-		saveAsTT: 'Save your selection as a new set.',
+		saveAsTT: 'Save your selection as a new group.',
 		saveTT: 'Save your selection permanently.',
 		doneTT: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 		exportTT: 'Get a plain text version of this list'

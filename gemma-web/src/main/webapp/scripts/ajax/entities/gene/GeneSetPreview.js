@@ -113,7 +113,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 			style:'margin:10px',
 			hideTrigger: true,
 			taxonId: this.taxonId,
-			emptyText: 'Add genes to your set'
+			emptyText: 'Add genes to your group'
 		});
 		withinSetGeneCombo.setTaxonId(this.taxonId);
 		withinSetGeneCombo.on('select', function(combo, record, index){

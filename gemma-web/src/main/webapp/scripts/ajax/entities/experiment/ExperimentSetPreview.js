@@ -109,7 +109,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			width: 300,
 			style:'margin:10px',
 			hideTrigger: true,
-			emptyText: 'Add experiments to your set'
+			emptyText: 'Add experiments to your group'
 		});
 		withinSetExperimentCombo.setTaxonId(this.taxonId);
 		withinSetExperimentCombo.on('select', function(combo, record, index){
