@@ -20,7 +20,7 @@
 						geneSetId: Ext.get("geneSetId").getValue()
 				})],
 			 	layout:'fit', 
-			 	title: 'Gene Set: \"'+Ext.get("geneSetName").getValue()+'\"'
+			 	title: 'Gene Group: \"'+Ext.get("geneSetName").getValue()+'\"'
 			 })
 		});
 	});
