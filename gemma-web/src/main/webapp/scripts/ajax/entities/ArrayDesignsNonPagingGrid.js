@@ -482,6 +482,15 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						
 					},
 					scope: this
+				},'-',{
+					ref: 'refreshButton',
+					text:'Refresh',
+					icon: '/Gemma/images/icons/arrow_refresh_small.png',
+					tooltip: 'Refresh the contents of this table',
+					handler: function(){
+						this.loadArrayDesigns( this.idSubset );
+					}, 
+					scope: this
 				},'->','-',{
 						ref: 'orphansToggle',
 						boxLabel:'Hide Orphans',
