@@ -1427,7 +1427,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
             throws Exception {
-        String queryString = "select from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee where ee = :ee";
+        String queryString = "select eess from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee where ee = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
