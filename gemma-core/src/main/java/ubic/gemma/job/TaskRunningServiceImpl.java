@@ -38,7 +38,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.job.grid.util.SpaceMonitor;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.job.grid.util.SpacesUtilImpl;
@@ -55,7 +56,7 @@ import ubic.gemma.util.MailEngine;
  * @author pavlidis
  * @version $Id$
  */
-@Component
+@Service
 public class TaskRunningServiceImpl implements TaskRunningService {
 
     private static class SubmittedTask {
