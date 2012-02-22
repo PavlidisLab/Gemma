@@ -442,7 +442,14 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		}
 		
+		
 		Ext.apply(this, {
+			clearFilter: function(){
+				this.getTopToolbar().searchInGrid.reset();
+				this.getStore().removeMultiFilter('textQueryFilter');
+				this.getStore().applyMultiFilters();
+				this.getTopToolbar().fieldClearBtn.disable();
+			},
 			tbar: new Ext.Toolbar({
 				items: [{
 					xtype: 'textfield',
@@ -474,13 +481,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					disabled: true,
 					tooltip: 'Clear your search',
 					icon: '/Gemma/images/icons/cross.png',
-					handler: function(){
-						this.getTopToolbar().searchInGrid.reset();
-						this.getStore().removeMultiFilter('textQueryFilter');
-						this.getStore().applyMultiFilters();
-						this.getTopToolbar().fieldClearBtn.disable();
-						
-					},
+					handler: this.clearFilter,
 					scope: this
 				},'-',{
 					ref: 'refreshButton',
@@ -488,6 +489,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					icon: '/Gemma/images/icons/arrow_refresh_small.png',
 					tooltip: 'Refresh the contents of this table',
 					handler: function(){
+						this.clearFilter();
 						this.loadArrayDesigns( this.idSubset );
 					}, 
 					scope: this
