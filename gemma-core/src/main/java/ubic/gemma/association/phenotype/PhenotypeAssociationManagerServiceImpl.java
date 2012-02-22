@@ -300,7 +300,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param id The Evidence database id
      */
     @Override
-    public void remove( Long id ) {
+    public ValidateEvidenceValueObject remove( Long id ) {
+
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
+
         PhenotypeAssociation evidence = this.associationService.load( id );
 
         if ( evidence != null ) {
@@ -310,7 +313,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
 
             this.associationService.remove( evidence );
+
+        } else {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setEvidenceNotFound( true );
         }
+        return validateEvidenceValueObject;
     }
 
     /**

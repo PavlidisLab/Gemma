@@ -77,7 +77,7 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param id The Evidence database id
      */
-    public void remove( Long id );
+    public ValidateEvidenceValueObject remove( Long id );
 
     /**
      * Load an evidence
