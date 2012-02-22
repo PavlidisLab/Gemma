@@ -1669,16 +1669,22 @@ public class SearchServiceImpl implements SearchService {
                 Taxon currentTaxon = null;
 
                 if ( o instanceof ExpressionExperiment ) {
-
                     ExpressionExperiment ee = ( ExpressionExperiment ) o;
                     currentTaxon = expressionExperimentService.getTaxon( ee.getId() );
-
+                    
                 } else if ( o instanceof ExpressionExperimentSet ) {
                     ExpressionExperimentSet ees = ( ExpressionExperimentSet ) o;
-                    expressionExperimentSetService.thaw( ees );
                     currentTaxon = ees.getTaxon();
+                    
+                } else if ( o instanceof Gene ) {
+                    Gene gene = ( Gene ) o;
+                    currentTaxon = gene.getTaxon();
+                    
+                } else if ( o instanceof GeneSet ) {
+                    GeneSet geneSet = ( GeneSet ) o;
+                    currentTaxon = geneSetService.getTaxonForGeneSet( geneSet );
+                    
                 } else {
-
                     Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
                     currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
                 }
