@@ -4,8 +4,8 @@ Ext.namespace('Gemma');
 /**
  * Grid to display ExpressionExperiment group members and allow the user to remove and add members.
  * 
- * Define selectedExpressionExperimentValueObject in config or with setSelectedExpressionExperimentValueObject(eesvo) to display an experiment set.
- * Use loadExperimentSet(eesvo) to display an experiment set after initialisation. 
+ * Define selectedExpressionExperimentValueObject in config or with setSelectedExpressionExperimentValueObject(eesvo) to display an experiment group.
+ * Use loadExperimentSet(eesvo) to display an experiment group after initialisation. 
  */
 Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
@@ -479,7 +479,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			var time = '(' + hours + ':' + minutes + ') ';
 			
 			// Use simple, non descriptive naming for now
-			this.newGroupName  = time + "Custom Experiment Set";
+			this.newGroupName  = time + "Custom Experiment Group";
 			
 			//var matches = groupName.match(/^\(\d+:\d+\)\s*/);
 			//if ( matches !== null) {

@@ -683,7 +683,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 			filterBySearch : function(box, record, index) {
 				this.ids = record.get('memberIds');
-				// if user selected an experiment instead of an experiment set, member ids will be null
+				// if user selected an experiment instead of an experiment group, member ids will be null
 				if(this.ids === null){
 					this.ids = [record.get('id')];
 				}

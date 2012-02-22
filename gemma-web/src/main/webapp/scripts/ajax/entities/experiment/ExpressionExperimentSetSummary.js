@@ -203,7 +203,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
         });
 
         var deleteEEButton = new Ext.Button({
-            text: 'Delete Experiment Set',
+            text: 'Delete Experiment Group',
             icon: '/Gemma/images/icons/cross.png',
             toolTip: 'Delete the experiment from the system',
             disabled: !this.editable,
@@ -274,7 +274,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
         
 		/*MEMBERS GRID*/
 		var experimentMembersGrid = new Gemma.ExpressionExperimentMembersGrid({
-			title:'Experiment Set Members',
+			title:'Experiment Group Members',
 			name: 'experimentMembersGrid',
 			hideHeaders: true,
 			frame: true,

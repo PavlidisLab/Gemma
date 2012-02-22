@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 /**
  * 
- * Creates a new session-bound experiment set
+ * Creates a new session-bound experiment group
  * 
  * This store should only be used for creation, use UserSessionDatasetGroupStore for the rest of CRUD
  * 

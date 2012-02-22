@@ -31,7 +31,7 @@ Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
     },
 	invalidIdHandler: function(msg){
 		this.items.add(new Ext.Panel({
-			html: "Error in loading experiment set due to invalid id. "+msg
+			html: "Error in loading experiment group due to invalid id. "+msg
 		}));
 	},
     initComponent: function(){

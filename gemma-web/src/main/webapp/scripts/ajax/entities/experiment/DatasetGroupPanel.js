@@ -1,6 +1,6 @@
 Ext.namespace('Gemma');
 /**
- * Grid of expression experiment sets (data set groups) with a toolbar for doing
+ * Grid of expression experiment groups (data set groups) with a toolbar for doing
  * basic operations.
  * 
  * @version $Id$

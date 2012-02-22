@@ -477,7 +477,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 												}, {
 													id : 'search-eesets-chkbx',
 													name : "searchEESets",
-													boxLabel : "Experiment sets",
+													boxLabel : "Experiment groups",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {

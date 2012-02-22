@@ -1,6 +1,6 @@
 Ext.namespace('Gemma');
 /**
- * Holds the list of available ExpressionExperiment sets. This is a separate class so it can be more easily shared
+ * Holds the list of available ExpressionExperiment groups. This is a separate class so it can be more easily shared
  * between components. It also knows which record is selected, unlike the default store.
  * 
  * @class Gemma.DatasetGroupStore

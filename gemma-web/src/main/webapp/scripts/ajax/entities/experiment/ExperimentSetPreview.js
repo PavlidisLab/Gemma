@@ -79,7 +79,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 	 */
 	updateTitle: function(name, size){
 	
-		// if an experiment set page exists for this set, make title a link 
+		// if an experiment group page exists for this set, make title a link 
 		if (!name && this.selectedSetValueObject instanceof ExpressionExperimentSetValueObject) {
 			size = this.selectedSetValueObject.expressionExperimentIds.size();
 			
@@ -134,7 +134,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			var editedGroup;
 			editedGroup = new SessionBoundExpressionExperimentSetValueObject();
 			editedGroup.id = null;
-			editedGroup.name = time+" Custom Experiment Set";
+			editedGroup.name = time+" Custom Experiment Group";
 			editedGroup.description = "Temporary experiment group created " + currentTime.toString();
 			editedGroup.expressionExperimentIds = allIds;
 			editedGroup.taxonId = record.get('taxonId');

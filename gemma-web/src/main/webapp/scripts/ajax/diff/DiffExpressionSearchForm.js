@@ -235,7 +235,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 */
 	chooseFactors : function() {
 		if (!this.currentSet) {
-			Ext.Msg.alert("Warning", "You must select an expression experiment set before choosing factors. Scope must be specified.");
+			Ext.Msg.alert("Warning", "You must select an expression experiment group before choosing factors. Scope must be specified.");
 		} else if (this.currentSet.get("expressionExperimentIds").length == 0) {
 			Ext.Msg.alert("Warning", "You should select at least one experiment to analyze");
 		} else {

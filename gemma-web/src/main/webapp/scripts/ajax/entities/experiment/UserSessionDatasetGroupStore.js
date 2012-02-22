@@ -1,6 +1,6 @@
 Ext.namespace('Gemma');
 /**
- * Holds the list of available db backed and session backed ExpressionExperiment sets from. This is a separate class so it can be more easily shared
+ * Holds the list of available db backed and session backed ExpressionExperiment groups from. This is a separate class so it can be more easily shared
  * between components. It also knows which record is selected, unlike the default store.
  * 
  * @class Gemma.UserSessionDatasetGroupStore
