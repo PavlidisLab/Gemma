@@ -348,7 +348,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			width: 282,
 			hideTrigger: true,
 			taxonId: this.taxonId,
-			emptyText: 'Add genes to your set'
+			emptyText: 'Find genes by keyword'
 		});
 		
 		this.geneCombo.on('select', function(combo, record, index) {
