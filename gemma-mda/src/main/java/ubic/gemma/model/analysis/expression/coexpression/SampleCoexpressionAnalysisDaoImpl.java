@@ -112,8 +112,10 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * expression.experiment.ExpressionExperiment)
      */
     public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return !this.getHibernateTemplate().findByNamedParam(
-                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee ).isEmpty();
+        return !this
+                .getHibernateTemplate()
+                .findByNamedParam( " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee",
+                        ee ).isEmpty();
     }
 
     /*
@@ -145,7 +147,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         try {
             rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
         } catch ( IllegalArgumentException e ) {
-            log.error( "EE id = "+ee.getId()+": "+ e.getMessage() );
+            log.error( "EE id = " + ee.getId() + ": " + e.getMessage() );
             return null;
         }
 
@@ -153,12 +155,12 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         try {
             result.setRowNames( bioAssays );
         } catch ( IllegalArgumentException e ) {
-            log.error( "EE id = "+ee.getId()+": "+ e.getLocalizedMessage() );
+            log.error( "EE id = " + ee.getId() + ": " + e.getLocalizedMessage() );
         }
         try {
             result.setColumnNames( bioAssays );
         } catch ( IllegalArgumentException e ) {
-            log.error( "EE id = "+ee.getId()+": "+ e.getLocalizedMessage() );
+            log.error( "EE id = " + ee.getId() + ": " + e.getLocalizedMessage() );
         }
 
         return result;
@@ -173,7 +175,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void remove( ExpressionExperiment ee ) {
+    public void removeForExperiment( ExpressionExperiment ee ) {
 
         List<?> r = this.getHibernateTemplate().findByNamedParam(
                 "select sa " + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );

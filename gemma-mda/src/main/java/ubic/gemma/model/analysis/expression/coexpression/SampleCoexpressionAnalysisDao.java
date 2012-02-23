@@ -50,6 +50,6 @@ public interface SampleCoexpressionAnalysisDao extends BaseDao<SampleCoexpressio
      * 
      * @param ee
      */
-    public void remove( ExpressionExperiment ee );
+    public void removeForExperiment( ExpressionExperiment ee );
 
 }

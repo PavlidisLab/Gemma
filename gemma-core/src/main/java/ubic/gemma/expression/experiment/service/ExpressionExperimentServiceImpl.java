@@ -65,7 +65,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -91,15 +90,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private OntologyService ontologyService;
-    
-    @Autowired
-    private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
 
     @Autowired
     private AuditEventDao auditEventDao;
-
-    @Autowired
-    private ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao;
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
@@ -121,13 +114,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
-    
-    @Autowired
-    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-    
+
     /**
      * @see ExpressionExperimentService#countAll()
      */
@@ -156,9 +146,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#delete(ExpressionExperiment)
      */
-    public void delete(final ExpressionExperiment expressionExperiment ) {
-        try {           
-            this.thawLite( expressionExperiment ); // TODO: this is a hack to get it into session, needs to be refactored (high level services should take value objects)
+    public void delete( final ExpressionExperiment expressionExperiment ) {
+        try {
+            this.thawLite( expressionExperiment ); // TODO: this is a hack to get it into session, needs to be
+                                                   // refactored (high level services should take value objects)
             this.handleDelete( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
@@ -721,9 +712,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
-    public Collection getSamplingOfVectors(
-            final QuantitationType quantitationType,
-            final Integer limit ) {
+    public Collection getSamplingOfVectors( final QuantitationType quantitationType, final Integer limit ) {
         try {
             return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
         } catch ( Throwable th ) {
@@ -824,25 +813,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * Sets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    public void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
      * @param auditEventDao the auditEventDao to set
      */
     public void setAuditEventDao( AuditEventDao auditEventDao ) {
         this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * Sets the reference to <code>bioAssayDimension</code>'s DAO.
-     */
-    public void setBioAssayDimensionDao(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao ) {
-        this.bioAssayDimensionDao = bioAssayDimensionDao;
     }
 
     /**
@@ -918,8 +892,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
-    
-    
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         return this.expressionExperimentDao.browse( start, limit );
@@ -1094,7 +1066,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment cannot be null" );
         }
-               
+
         /*
          * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
          * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
@@ -1112,20 +1084,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
-        for(ExpressionExperimentSubSet subset : subsets){
+        for ( ExpressionExperimentSubSet subset : subsets ) {
             expressionExperimentSubSetService.delete( subset );
         }
-        
+
         // Remove differential expression analyses
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
-        .findByInvestigation( ee );
+                .findByInvestigation( ee );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
             Long toDelete = de.getId();
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );
         }
 
         // remove any sample coexpression matrices
-        this.getSampleCoexpressionAnalysisDao().remove( ee );
+        this.getSampleCoexpressionAnalysisDao().removeForExperiment( ee );
 
         // Remove PCA
         PrincipalComponentAnalysis pca = this.getPrincipalComponentAnalysisDao().findByExperiment( ee );
@@ -1156,7 +1128,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         this.expressionExperimentDao.remove( ee );
     }
 
-
     /*
      * (non-Javadoc)
      * 
@@ -1177,7 +1148,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.loadValueObjects( filteredIds );
 
     }
-
 
     /**
      * @param ids
@@ -1214,35 +1184,36 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
         return troubleMap;
     }
-    
+
     /**
      * returns ids of search results
+     * 
      * @param searchString
      * @return collection of ids or an empty collection
      */
     @Override
     public Collection<Long> filter( String searchString ) {
-        
+
         Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
                 .expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
-        
+
         Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
-        Collection<Long> ids = new ArrayList<Long>(searchResults.size());
-        
-        for(SearchResult s : searchResults){
+        Collection<Long> ids = new ArrayList<Long>( searchResults.size() );
+
+        for ( SearchResult s : searchResults ) {
             ids.add( s.getId() );
         }
-        
+
         return ids;
     }
 
     /**
      * Get the terms associated this expression experiment.
      */
-    public Collection<AnnotationValueObject> getAnnotations( Long eeId ){
+    public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = load( eeId );
         Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
@@ -1278,6 +1249,5 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
         return null;
     }
-
 
 }
