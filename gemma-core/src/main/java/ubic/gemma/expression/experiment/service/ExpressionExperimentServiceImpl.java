@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +64,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
@@ -119,7 +121,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
-   
+    
+    @Autowired
+    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    
     /**
      * @see ExpressionExperimentService#countAll()
      */
@@ -728,7 +736,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getSubSets(ExpressionExperiment)
      */
-    public Collection getSubSets( final ExpressionExperiment expressionExperiment ) {
+    public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getSubSets( expressionExperiment );
         } catch ( Throwable th ) {
@@ -1086,7 +1094,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment cannot be null" );
         }
-       
+               
         /*
          * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
          * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
@@ -1102,9 +1110,15 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     + g2gAnalyses.iterator().next().getName() );
         }
 
+        // Remove subsets
+        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
+        for(ExpressionExperimentSubSet subset : subsets){
+            expressionExperimentSubSetService.delete( subset );
+        }
+        
         // Remove differential expression analyses
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
-                .findByInvestigation( ee );
+        .findByInvestigation( ee );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
             Long toDelete = de.getId();
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );

@@ -276,10 +276,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected void handleDeleteLinks( final ExpressionExperiment ee ) throws Exception {
+    protected void handleDeleteLinks( final BioAssaySet ba ) throws Exception {
 
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Experiment cannot be null" );
+        if ( ba == null ) {
+            throw new IllegalArgumentException( "BioaAssaySet (experiment or experiment sub set) cannot be null" );
         }
 
         /*
@@ -294,17 +294,19 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         for ( String p2pClassName : p2pClassNames ) {
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
-                    + " p.experimentAnalyzed e where e = :ee";
-            List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
+                    + " p.experimentAnalyzed e where e = :ba";
+            List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ba", ba );
             if ( o.size() > 0 ) {
                 analysis = ( ProbeCoexpressionAnalysis ) o.iterator().next();
             }
 
+            // As expected, the EXPRESSION_EXPERIMENT_FK references INVESTIGATION.ID, so both ExpressionExperiments
+            // and ExpressionExperimentSubSets should work with this query
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid limit " + DELETE_CHUNK_SIZE;
 
             SQLQuery q = super.getSession().createSQLQuery( nativeDeleteQuery );
-            q.setParameter( "eeid", ee.getId() );
+            q.setParameter( "eeid", ba.getId() );
 
             StopWatch timer = new StopWatch();
             timer.start();
@@ -316,13 +318,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
             if ( totalDone > 0 ) {
-                log.info( totalDone + " coexpression results removed for " + ee + ": " + timer.getTime() + "ms" );
+                log.info( totalDone + " coexpression results removed for " + ba + ": " + timer.getTime() + "ms" );
                 break;
             }
         }
 
         if ( totalDone == 0 ) {
-            log.info( "No coexpression results to remove for " + ee );
+            log.info( "No coexpression results to remove for " + ba );
         }
         if ( analysis != null ) {
             removeAnalysisObject( analysis );

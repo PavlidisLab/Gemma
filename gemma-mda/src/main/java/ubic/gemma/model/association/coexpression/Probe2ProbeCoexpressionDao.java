@@ -47,7 +47,7 @@ public interface Probe2ProbeCoexpressionDao {
      * Removes the all the probe2probeCoexpression links for a given expression experiment
      * </p>
      */
-    public void deleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee );
+    public void deleteLinks( BioAssaySet bioAssaySet );
 
     /**
      * <p>

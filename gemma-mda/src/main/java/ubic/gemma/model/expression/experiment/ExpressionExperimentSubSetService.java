@@ -50,4 +50,15 @@ public interface ExpressionExperimentSubSetService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
 
+
+    /**
+     * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is similar to 
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment) but it
+     * doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting of experiment set members.
+     * @param entity the subset to delete
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void delete( ExpressionExperimentSubSet entity );
+
 }

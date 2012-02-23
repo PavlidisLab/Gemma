@@ -68,9 +68,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public void deleteLinks( final ubic.gemma.model.expression.experiment.ExpressionExperiment ee ) {
+    public void deleteLinks( final BioAssaySet bioAssaySet ) {
         try {
-            this.handleDeleteLinks( ee );
+            this.handleDeleteLinks( bioAssaySet );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment ee)' --> "
@@ -263,7 +263,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * Performs the core logic for {@link #deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract void handleDeleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee )
+    protected abstract void handleDeleteLinks( BioAssaySet bioAssaySet )
             throws Exception;
 
     /**
