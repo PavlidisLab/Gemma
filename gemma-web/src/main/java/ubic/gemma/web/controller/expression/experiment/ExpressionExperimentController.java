@@ -777,6 +777,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         // limit = 10;
+        // default limit to 50, should always be set on front end but it case it wasn't this 
+        // will keep from loading a ridiculous number of experiments
+        if(limit == null || limit <= 0) limit = 50;
 
         eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter );
 
@@ -1673,13 +1676,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
             boolean filterDataByUser, Integer limit, Integer filter ) {
         List<ExpressionExperimentValueObject> eeValObjectCol;
 
-        Integer limitToUse = 0;
+        Integer limitToUse = -1;
         if ( filter == null || filter == 0 ) {
             limitToUse = limit;
         }
 
         // taxon specific?
-        if ( taxonId != null ) {
+        if ( taxonId != null && taxonId > 0) {
             Taxon taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );

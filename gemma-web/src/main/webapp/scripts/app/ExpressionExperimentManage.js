@@ -35,7 +35,7 @@ Ext.onReady(function() {
 						}, manager.record),
 				remoteSort : false,
 				sortInfo : {
-					field : 'dateCreated',
+					field : 'dateLastUpdated',
 					direction : 'DESC'
 				},
 				sort : function(fieldName, dir) {
@@ -675,9 +675,9 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			filterByLimit : function(box, record, index) {
 				this.limit = record.get('count');
 				// can't do "50 recently updated" and search results
-				this.searchCombo.clearValue();
+				//this.searchCombo.clearValue();
 				this.store.load({
-							params : [this.taxonid, null, this.limit, this.filterType]
+							params : [this.taxonid,  this.ids, this.limit, this.filterType]
 						});
 			},
 			
@@ -688,7 +688,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 					this.ids = [record.get('id')];
 				}
 				// can't do "50 recently updated" and search results
-				this.limitCombo.clearValue();
+				//this.limitCombo.clearValue();
 				this.store.load({
 							params : [this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType]
 						});
@@ -737,6 +737,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							triggerAction : 'all',
 							lazyRender : true,
 							mode : 'local',
+							defaultValue: '0',
 							emptyText : "Filter by property",
 							store : new Ext.data.ArrayStore({
 										id : 0,
@@ -749,8 +750,10 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 												[5, 'Troubled'], 
 												[6, 'No factors'], 
 												[7, 'No tags'],
-												[8, 'Needs batch info'], [9, 'Has batch info'], 
-												[10, 'Needs PCA'],[11, 'Has PCA']]
+												[8, 'Needs batch info'], 
+												[9, 'Has batch info'], 
+												[10, 'Needs PCA'],
+												[11, 'Has PCA']]
 									}),
 							valueField : 'filterType',
 							displayField : 'displayText',
@@ -807,6 +810,28 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 								'select' : this.filterBySearch,
 							}
 						});
+
+				// set combos to initial values
+				this.on('afterrender', function(){
+					this.taxonCombo.getStore().on('doneLoading', function(){
+						if (this.taxonid) {
+							this.taxonCombo.setValue(this.taxonid);
+						} else {
+							this.taxonid = (this.taxonCombo.getStore().getAt(0)) ? this.taxonCombo.getStore().getAt(0).get('id') : "-1";
+							this.taxonCombo.setValue(this.taxonid);
+						}
+					}, this);
+										
+					if (this.limit) {
+						this.limitCombo.setValue(this.limit);
+					}
+					if (this.filterType) {
+						this.filterCombo.setValue(this.filterType);
+					} else {
+						this.filterCombo.setValue(this.filterCombo.defaultValue);
+					}
+				}, this);
+					
 
 				Ext.apply(this, {
 

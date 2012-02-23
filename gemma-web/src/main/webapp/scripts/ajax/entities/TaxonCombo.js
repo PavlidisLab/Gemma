@@ -115,12 +115,18 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 										'parentTaxon': '-1'
 									});
 									this.insert(0, [allTaxaRecord]);
+									// using getStore().on('load', ...) will execute code before this call back has been run 
+									this.fireEvent('doneLoading');
 							}
 						});
 		}else{
 			this.store.load({
 							params : [],
-							add : false
+							add : false,
+							callback: function (){
+								// for symmetry with the case when an 'all taxa' option is added
+								this.fireEvent('doneLoading');
+							}
 						});	
 		}
 		
