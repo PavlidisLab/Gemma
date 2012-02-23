@@ -253,7 +253,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypesWithChildren.remove( firstPhenotypesValuesUri );
 
         Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = convert2GeneEvidenceValueObjects( genes,
-                phenotypesValuesUri );
+                possibleChildrenPhenotypes );
 
         Collection<GeneEvidenceValueObject> genesVO = null;
 
