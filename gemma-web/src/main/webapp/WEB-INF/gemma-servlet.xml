@@ -456,6 +456,8 @@
       		<dwr:include method="loadAllPhenotypes" />   
       		<dwr:include method="searchOntologyForPhenotypes" />   
       		<dwr:include method="findBibliographicReference" />   
+      		<dwr:include method="validatePhenotypeAssociation" />   
+      		<dwr:include method="removePhenotypeAssociation" />   
 		</dwr:remote>
  	</bean>  
 

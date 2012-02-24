@@ -28,7 +28,10 @@ Gemma.BibliographicReference.Record = new Ext.data.Record.create([{
         name: "meshTerms"
     }, {
         name: "chemicalsTerms"
-}]);
+	}, {
+		name: "bibliographicPhenotypes"
+	}
+]);
 
 Gemma.BibliographicReference.PagingStore = Ext.extend(Ext.data.Store, {
 	initComponent: function(){

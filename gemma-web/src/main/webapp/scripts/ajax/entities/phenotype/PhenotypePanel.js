@@ -7,10 +7,16 @@
 Ext.namespace('Gemma');
 
 Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
+	height: 600,
+	width: 760,
+	layout: 'border',        
     initComponent: function() {
     	if ((this.phenotypeStoreProxy && this.geneStoreProxy && this.geneColumnRenderer) ||
     	    (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.geneColumnRenderer)) {
     	    	
+			var currentPhenotypes = null;
+			var currentGene = null;
+
 			var phenotypeGrid = new Gemma.PhenotypeGridPanel({
 				region: "west",
 				phenotypeStoreProxy: this.phenotypeStoreProxy ?
@@ -19,9 +25,11 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				listeners: {
 					phenotypeSelectionChange: function(selectedPhenotypes) {
 			            geneGrid.setCurrentPhenotypes(selectedPhenotypes);
+						currentPhenotypes = selectedPhenotypes;
         			}
 				}
 			});
+			this.relayEvents(phenotypeGrid, ['phenotypeAssociationChanged']);			
 
 	    	var geneGrid = new Gemma.PhenotypeGeneGridPanel({
 				region: "center",
@@ -40,6 +48,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene, selectedGeneEvidence) {
 						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene, selectedGeneEvidence);
+						currentGene = selectedGene;
         			}
 				}
 			});
@@ -51,15 +60,56 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 							record.data.id, record.data.officialSymbol);
 					}
 			);
+			this.relayEvents(geneGrid, ['phenotypeAssociationChanged']);
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
 	    		region: 'center'
 	    	});
-	
+			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
+
+			var selectRecordsOnLoad = function(gridPanel, recordIds) {
+				gridPanel.getStore().on('load', 
+					function(store, records, options) {
+						if (recordIds.length > 0) {				
+							var selModel = gridPanel.getSelectionModel();				
+			            	selModel.clearSelections();
+		
+							var firstRowIndex = store.indexOfId(recordIds[0]);
+			            	selModel.selectRow(firstRowIndex, false); // false to not keep existing selections
+					        for (var i = 1; i < recordIds.length; i++) {
+					            selModel.selectRow(store.indexOfId(recordIds[i]), true); // true to keep existing selections
+			        		}
+			        		gridPanel.getView().focusRow(firstRowIndex); // Make sure the first selected record is viewable.
+						}				
+					},
+					this, // scope
+					{
+						single: true,
+						delay: 100  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
+					})};		
+			
+			var reloadWholePanel = function() {
+				if (currentPhenotypes != null && currentPhenotypes.length > 0) {
+					var currentPhenotypeUrlIds = [];
+					for (var i = 0; i < currentPhenotypes.length; i++) {
+						currentPhenotypeUrlIds.push(currentPhenotypes[i].urlId);				
+					}
+					selectRecordsOnLoad(phenotypeGrid, currentPhenotypeUrlIds);
+		
+					if (currentGene != null) {
+						// geneGrid's store will be loaded after phenotypeGrid's original rows are selected later on.
+						selectRecordsOnLoad(geneGrid, [ currentGene.id ]);
+					}
+				}
+		
+				var phenotypeGridStore = phenotypeGrid.getStore();
+				phenotypeGridStore.reload(phenotypeGridStore.lastOptions);
+			};
+
+			Gemma.Application.currentUser.on("logIn", reloadWholePanel,	this);
+			Gemma.Application.currentUser.on("logOut", reloadWholePanel, this);
+			
 			Ext.apply(this, {
-		        height: 600,
-	    	    width: 760,
-				layout: 'border',        
 	        	items: [
 		        	{
 						xtype: 'panel',
@@ -76,42 +126,25 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 						split: true
 		        	},
 		            evidenceGrid
-		        ]
+		        ],
+				listeners: {
+					'phenotypeAssociationChanged': reloadWholePanel,
+					scope: this
+				}
 			});
+			
+			if (Ext.get("phenotypeUrlId") != null && Ext.get("phenotypeUrlId").getValue() != "") {
+				selectRecordsOnLoad(phenotypeGrid, [ Ext.get("phenotypeUrlId").getValue() ]);
+				
+				if (Ext.get("geneId") != null && Ext.get("geneId").getValue() != "") {
+					selectRecordsOnLoad(geneGrid, [ parseInt(Ext.get("geneId").getValue()) ]);
+				}
+			}
     	} else {
     		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	}
 
 		this.superclass().initComponent.call(this);
-		
-		phenotypeGrid.getStore().on('load', 
-			function() {
-				if (Ext.get("phenotypeUrlId") != null && Ext.get("phenotypeUrlId").getValue() != "") {
-					var currentRecord = phenotypeGrid.getStore().getById(Ext.get("phenotypeUrlId").getValue());
-	
-					phenotypeGrid.getSelectionModel().selectRecords( [ currentRecord ], false); // false to not keep existing selections
-					phenotypeGrid.getView().focusRow(phenotypeGrid.getStore().indexOf(currentRecord));
-				}
-			},
-			this, // scope
-			{
-				single: true,
-				delay: 100  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
-			});		
-		geneGrid.getStore().on('load', 
-			function() {
-				if (Ext.get("geneId") != null && Ext.get("geneId").getValue() != "") {
-					var currentRecord = geneGrid.getStore().getById(Ext.get("geneId").getValue());
-					
-					geneGrid.getSelectionModel().selectRecords( [ currentRecord ], false); // false to not keep existing selections
-					geneGrid.getView().focusRow(geneGrid.getStore().indexOf(currentRecord));
-				}
-			},
-			this, // scope
-			{
-				single: true,
-				delay: 100 // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
-			});		
     }
 });
 
@@ -129,7 +162,7 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
             this.onTrigger2Click();
 		}
 	},
-    onTrigger1Click : function() {
+    onTrigger1Click: function() {
         if (this.hasSearch) {
             this.el.dom.value = '';
             this.triggers[0].hide();
@@ -159,6 +192,9 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
 		this.fireEvent('filterApplied', recordFilter);
 
         this.superclass().onTrigger2Click.call(this);
+    },
+    applyCurrentFilter: function() {
+    	this.onTrigger2Click();
     },
     initComponent: function() {
     	this.addEvents('filterApplied', 'filterRemoved');

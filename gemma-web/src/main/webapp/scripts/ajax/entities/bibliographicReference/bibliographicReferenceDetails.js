@@ -2,178 +2,180 @@ Ext.namespace('Gemma.BibliographicReference');
 
 // Originally, this panel extended from Ext.FormPanel. It should not do so because we may put it inside  
 // another FormPanel, but FormPanel cannot be put inside another FormPanel. To be able to layout components
-// in the same way as in FormPanel, we make it to have form layout by adding the config:
+// in the same way as in FormPanel, we make it to have form layout by using the config:
 // 		layout: 'form'
 Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
+	genePhenotypeSeparator: '&hArr;',
 	layout: 'form',
 	title: 'Bibliographic Reference Details',
 	autoScroll:true,
-	padding: 20,
-	updateFields: function(bibRefRecord){
-			
-					
-		this.items.each(function(field){
-			field.show();
-		});
-		//this.setTitle(bibRefRecord.get('title'));
-		
-		this.bibtitle.setValue(bibRefRecord.get('title'));
-		this.abstractBibli.setValue(bibRefRecord.get('abstractText'));
-		this.authors.setValue(bibRefRecord.get('authorList'));
-		this.publication.setValue(bibRefRecord.get('publication'));
-		if (bibRefRecord.get('publicationDate').format) {
-			this.date.setValue(bibRefRecord.get('publicationDate').format('F j, Y'));
-		} else {
-			this.date.setValue(bibRefRecord.get('publicationDate'));
-		}
-		if (bibRefRecord.get('citation')) {
-			this.citation.setValue(bibRefRecord.get('citation').citation);
-		}
-		
-		var allExperiments = '';
-		var i;
-		for (i = 0; i <
-		bibRefRecord.get('experiments').length; i++) {
-			allExperiments += bibRefRecord.get('experiments')[i].shortName +
-			" : ";
-			allExperiments += bibRefRecord.get('experiments')[i].name +
-			"\n";
-		}
-		this.experiments.setValue(allExperiments);
-		
-		var allMeshTerms = "";
-		
-		for (i = 0; i <
-		bibRefRecord.get('meshTerms').length; i++) {
-		
-			allMeshTerms += bibRefRecord.get('meshTerms')[i] +
-			"\n";
-		}
-		this.pages.setValue(bibRefRecord.get('pages'));
-		this.pubmed.setValue(bibRefRecord.get('pubAccession'));
-		this.mesh.setValue(allMeshTerms);
-		
-		var allChemicalsTerms = "";
-		
-		for (i = 0; i <
-		bibRefRecord.get('chemicalsTerms').length; i++) {
-			allChemicalsTerms += bibRefRecord.get('chemicalsTerms')[i] +
-			"\n";
-		}
-		this.chemicals.setValue(allChemicalsTerms);
-		
-		
-		this.items.each(function(field){
-			// trick textareas into resizing themselves
-			field.fireEvent('change', field, field.getValue, field.getValue);
-			field.disable();
-		});
-	},
-	defaults:{
-		style: "width:100%;color:black",
+	collapseByDefault: false,	
+	defaults: {
 		hidden: true,
-		grow: true,
-		growMin:1,
-		growMax: 60,
-		growAppend:'',
-		readOnly: true,
-		value: 'placeholder'
+		labelWidth: 110
 	},
 	initComponent: function(){
+		var getPudmedAnchor = function(pudmedUrl) {
+		    return '<a target="_blank" href="' +
+		        pudmedUrl +
+		        '"><img ext:qtip="Go to PubMed (in new window)"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+		}; 
+		
+		Ext.apply(this, {
+			updateFields: function(bibRefRecord) {
+				this.citation.show();		
+				this.detailsFieldset.show();		
+				this.bibtitle.setValue(bibRefRecord.get('title'));
+				this.abstractBibli.setValue(bibRefRecord.get('abstractText'));
+				this.authors.setValue(bibRefRecord.get('authorList'));
+				if (bibRefRecord.get('citation')) {
+					this.citation.setValue(bibRefRecord.get('citation').citation + ' ' +
+						getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
+				}
+				
+				var allExperiments = '';
+				var i;
+				for (i = 0; i <	bibRefRecord.get('experiments').length; i++) {
+					allExperiments += bibRefRecord.get('experiments')[i].shortName +
+					" : ";
+					allExperiments += bibRefRecord.get('experiments')[i].name +
+					"<br />";
+				}
+				this.experiments.setValue(allExperiments);
+				
+				var allMeshTerms = "";
+				
+				for (i = 0; i <	bibRefRecord.get('meshTerms').length; i++) {
+					allMeshTerms += bibRefRecord.get('meshTerms')[i];
+					
+					if (i < bibRefRecord.get('meshTerms').length - 1) {
+						allMeshTerms += "; ";
+					}
+				}
+				this.pubmed.setValue(bibRefRecord.get('pubAccession'));
+				this.mesh.setValue(allMeshTerms);
+				
+				var allChemicalsTerms = "";
+				for (i = 0; i <	bibRefRecord.get('chemicalsTerms').length; i++) {
+					allChemicalsTerms += bibRefRecord.get('chemicalsTerms')[i];
+		
+					if (i < bibRefRecord.get('chemicalsTerms').length - 1) {
+						allChemicalsTerms += "; ";
+					}
+				}
+				this.chemicals.setValue(allChemicalsTerms);
+				
+				var allgenePhenotypeAssociations = "";
+				if (bibRefRecord.get('bibliographicPhenotypes') != null) {
+					for (i = 0; i <	bibRefRecord.get('bibliographicPhenotypes').length; i++) {
+						allgenePhenotypeAssociations += bibRefRecord.get('bibliographicPhenotypes')[i].geneName + ' ' + this.genePhenotypeSeparator + ' ';
+						for (j = 0; j <	bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues.length; j++) {
+							allgenePhenotypeAssociations += bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues[j].value;
+							
+							if (j < bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues.length - 1) {
+								allgenePhenotypeAssociations += '; ';
+							}
+						}
+						allgenePhenotypeAssociations += '<br />';
+					}
+				}
+				this.genePhenotypeAssociation.setValue(allgenePhenotypeAssociations);
+						
+				this.detailsFieldset.items.each(function(field) {
+					if (field.getValue() == "") {
+						field.hide();
+					} else {
+						field.show();
+					}
+				});
+				if (this.experiments.getValue() == "" && this.genePhenotypeAssociation.getValue() == "") {
+					this.annotationsFieldset.hide();
+				} else {
+					this.annotationsFieldset.show();
+				}
+				this.annotationsFieldset.items.each(function(field) {
+					if (field.getValue() == "") {
+						field.hide();
+					} else {
+						field.show();
+					}
+				});
+			}
+		});
 		
 		Gemma.BibliographicReference.DetailsPanel.superclass.initComponent.call(this);
 		
-		this.bibtitle = new Ext.form.TextArea({
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
+		this.citation = new Ext.form.DisplayField({
+			hideLabel: true
+		});
+		
+		this.bibtitle = new Ext.form.DisplayField({
 			fieldLabel: 'Title'
 		});
 		
 		this.abstractBibli = new Ext.form.TextArea({
+			anchor: '100%',
+			grow: true,
+			growMin:1,
+			growMax: 62,
+			fieldLabel: 'Abstract',
 			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Abstract'
+			disabled: true
 		});
 		
-		this.authors = new Ext.form.TextArea({
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Authors',
-			readOnly: true
+		this.authors = new Ext.form.DisplayField({
+			fieldLabel: 'Authors'
 		});
 		
-		this.publication = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Publication',
-			readOnly: true
+		this.pubmed = new Ext.form.DisplayField({
+			fieldLabel: 'PubMed Id'
 		});
 		
-		this.date = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Date',
-			readOnly: true
+		this.mesh = new Ext.form.DisplayField({
+			fieldLabel: 'MeSH'
 		});
 		
-		this.pages = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Pages',
-			readOnly: true
+		this.chemicals = new Ext.form.DisplayField({
+			fieldLabel: 'Chemicals'
+		});
+
+		this.detailsFieldset =	new Ext.form.FieldSet({
+			defaults: {
+				labelStyle: 'padding-top: 1px;'
+			},
+	        collapsed: this.collapseByDefault,
+			cls : 'no-collapsed-border',
+			anchor: '100%',
+			title: 'Publication Details',
+			collapsible: true,
+			style: "margin-bottom: 3px;",
+			items: [
+				this.bibtitle, this.abstractBibli, this.authors, this.pubmed, this.mesh, this.chemicals	
+			]
+		});
+
+		this.experiments = new Ext.form.DisplayField({
+			fieldLabel: 'Experiments'
 		});
 		
-		this.experiments = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Experiments',
-			readOnly: true
+		this.genePhenotypeAssociation = new Ext.form.DisplayField({
+			fieldLabel: 'Gene ' + this.genePhenotypeSeparator + ' Phenotype'
 		});
 		
-		this.citation = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Citation',
-			readOnly: true
+		this.annotationsFieldset =	new Ext.form.FieldSet({
+			defaults: {
+				labelStyle: 'padding-top: 1px;'
+			},
+			cls: 'no-collapsed-border',
+			anchor: '100%',
+			title: 'Current Annotations',
+			collapsible: true,
+			style: "margin-bottom: 3px;",
+			items: [
+				this.experiments, this.genePhenotypeAssociation
+			]
 		});
 		
-		this.pubmed = new Ext.form.TextArea({
-			enableKeyEvents: true,
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Pubmed',
-			readOnly: true
-		});
-		
-		this.mesh = new Ext.form.TextArea({
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Mesh',
-			readOnly: true,
-			grow: true
-		});
-		
-		this.chemicals = new Ext.form.TextArea({
-			disabledClass: 'disabled-plain',
-			fieldClass: 'x-bare-field',
-			fieldLabel: 'Chemicals',
-			readOnly: true,
-			grow: true
-		});
-		
-		this.add([this.bibtitle, this.abstractBibli, this.authors, this.publication, this.date, this.pages, this.citation, this.experiments, this.pubmed, this.mesh, this.chemicals]);
-		
-		// can't do this in the definition b/c it gets overidden by defaults when it's added to parent
-		Ext.apply(this.abstractBibli, {
-			style: "width:100%;color:black;background-color: #fcfcfc; border: 1px solid #cccccc;",
-		});
-		
-	}// eo initComponent
+		this.add(this.citation, this.detailsFieldset, this.annotationsFieldset);
+	} // initComponent
 });
- 
-    

@@ -22,6 +22,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				
 		var titleText = this.title; // Contains the title's text without any HTML code whereas title may contain HTML code.
     	
+		var phenotypeAssociationFormWindow = null;
+
     	var downloadButton = new Ext.Button({
 			text: '<b>Download</b>',
 			disabled: true,
@@ -86,8 +88,16 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: true,
 			handler: function() {
-				var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-				phenotypeAssociationFormWindow.showWindow(this.currentPhenotypes);
+				if (phenotypeAssociationFormWindow == null) {
+					phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+				}
+
+				phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+					{
+						gene: null,
+						phenotypes: this.currentPhenotypes
+					});
 			},
 			scope: this,
 			icon: "/Gemma/images/icons/add.png",
@@ -161,8 +171,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			}),
 			tbar: [
 				geneSearchField,
-// TODO: It has been commented out because the new feature "create phenotype association" is still being implemented.
-//				createPhenotypeAssociationButton,				
+				createPhenotypeAssociationButton,				
 				downloadButton
 			],
 			setCurrentPhenotypes: function(currentPhenotypes) {

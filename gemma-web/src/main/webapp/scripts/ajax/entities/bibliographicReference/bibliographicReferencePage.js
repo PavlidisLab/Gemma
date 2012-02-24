@@ -15,7 +15,7 @@ Gemma.BibliographicReference.Page =  Ext.extend(Ext.Panel, {
 		var details = new Gemma.BibliographicReference.DetailsPanel({
 			region:'south',
 			split: true,
-			title:'Details',
+			title: '',  // We don't need title.
 			collapsible: true,
 			collapsed: true
 		});

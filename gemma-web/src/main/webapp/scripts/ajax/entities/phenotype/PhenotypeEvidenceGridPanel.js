@@ -25,6 +25,31 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
 
+		var createPhenotypeAssociationFormWindow = null;
+		var editPhenotypeAssociationFormWindow = null;
+		
+   		// Show Admin column after user logs in. 
+		Gemma.Application.currentUser.on("logIn", 
+			function(userName, isAdmin) {	
+				var columnModel = this.getColumnModel();
+				columnModel.setHidden(columnModel.getIndexById('admin'), !isAdmin);
+			},
+			this);
+		   		
+   		// Hide Admin column after user logs out. 
+		Gemma.Application.currentUser.on("logOut", 
+			function() {	
+				var columnModel = this.getColumnModel();
+				columnModel.setHidden(columnModel.getIndexById('admin'), true);
+			},
+			this);
+
+		var generateLink = function(methodWithArguments, imageSrc) {
+			return '<span class="link" onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments
+						+ '"><img src="' + imageSrc + '" alt="" ext:qtip=""/></span>';
+			
+		}.createDelegate(this);
+   		
 		var convertToPudmedAnchor = function(pudmedUrl) {
 		    return '<a target="_blank" href="' +
 		        pudmedUrl +
@@ -49,8 +74,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: (this.currentGene == null),
 			handler: function() {
-				var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-				phenotypeAssociationFormWindow.showWindow(this.currentPhenotypes, this.currentGene);
+				if (createPhenotypeAssociationFormWindow == null) {
+					createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+				}
+
+				createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+					{
+						gene: this.currentGene,
+						phenotypes: this.currentPhenotypes
+					});
 			},
 			scope: this,
 			icon: "/Gemma/images/icons/add.png",
@@ -58,9 +91,11 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     	});
 		    	
 		var rowExpander = new Ext.grid.RowExpander({
+			enableCaching: false, // It needs to be false. Otherwise, its content will not be updated after grid's data is changed.
+			lazyRender: false, // It needs to be false. Otherwise, after grid's data is changed, all rows will be collapsed even though the expand button ("+" button) shows the correct state.
 			// Use class="x-grid3-cell-inner" so that we have padding around the description.
 		    tpl: new Ext.Template(
-		        '<div class="x-grid3-cell-inner" style="white-space: normal;">{description}</div>'
+		        '<div class="x-grid3-cell-inner" style="white-space: normal;">{rowExpanderText}</div>'
 		    )
 		});
 
@@ -68,7 +103,11 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			this.evidencePhenotypeColumnRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 				var phenotypesHtml = '';
 				for (var i = 0; i < value.length; i++) {
-					phenotypesHtml += value[i].value + '<br />';
+					if (value[i].valueHTML) {
+						phenotypesHtml += value[i].valueHTML + '<br />';
+					} else {
+						phenotypesHtml += value[i].value + '<br />';
+					}
 				}					
 				return phenotypesHtml;
 		    }
@@ -90,11 +129,13 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			    	this.storeProxy) :
 			    null,
 		    reader: new Ext.data.JsonReader({
+				idProperty: 'id',		    	
 		        fields: [
+					'id', 'description', 'lastUpdated',	'securityInfoValueObject',        
 		        	'relevance', 'phenotypes', 'className', 'evidenceCode', 'evidenceSource', 'experimentCharacteristics',
-		 			 'isNegativeEvidence', 'primaryPublicationCitationValueObject', 'citationValueObject',
+		 			'isNegativeEvidence', 'primaryPublicationCitationValueObject', 'citationValueObject',
 		            {
-						name: 'description',
+						name: 'rowExpanderText',
 						convert: function(value, record) {
 							var descriptionHtml = '';
 							
@@ -323,12 +364,30 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						return '<span style="white-space: normal;">' + linkOutHtml +'</span>'					
 					},	
 					sortable: false
+				},
+				{
+					header: 'Admin',
+					id: 'admin',
+					width: 0.12,
+		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+		            	var adminLinks = '';
+		            	
+		            	if (record.data.className === 'LiteratureEvidenceValueObject' &&
+		            		record.data.securityInfoValueObject.currentUserHasWritePermission) {
+		            		adminLinks = generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
+											generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png');
+		            	}
+		            	
+						return adminLinks;
+		            },
+		            hidden: !(Ext.get("hasAdmin") != null && Ext.get("hasAdmin").getValue()),
+					sortable: true,
+					scope: this
 				}
 			],
-// TODO: The following codes have been commented out because the new feature "create phenotype association" is still being implemented.
-//			tbar: [
-//				createPhenotypeAssociationButton
-//			],
+			tbar: [
+				createPhenotypeAssociationButton
+			],
 		    setCurrentData: function(currentPhenotypes, currentGene, currentEvidence) {
 		    	this.currentPhenotypes = currentPhenotypes;
 
@@ -348,7 +407,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					for (var i = 0; i < currentEvidence.length; i++) {
 						for (var j = 0; j < currentEvidence[i].phenotypes.length; j++) {
 							if (currentEvidence[i].phenotypes[j].child || currentEvidence[i].phenotypes[j].root) {
-						  		currentEvidence[i].phenotypes[j].value = '<span style="font-weight: bold; color: red;">' + currentEvidence[i].phenotypes[j].value + '</span>'; 
+								currentEvidence[i].phenotypes[j].valueHTML =
+									'<span style="font-weight: bold; color: red;">' +
+										currentEvidence[i].phenotypes[j].value +
+									'</span>';								
 							}
 						}
 					}
@@ -366,7 +428,69 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    			'geneId': geneId
 		    		}
 		    	});
-			}
+			},
+			showEditWindow: function(id) {
+				// record to be edited
+				var record = this.getStore().getById(id);
+				var evidenceClassName = record.data.className; 
+			
+// TODO: Do ONLY LiteratureEvidenceValueObject for now.
+				if (evidenceClassName === 'LiteratureEvidenceValueObject') {
+					var evidencePhenotypes = [];
+					for (var i = 0; i < record.data.phenotypes.length; i++) {
+						evidencePhenotypes.push({
+							value: record.data.phenotypes[i].value,
+							valueUri: record.data.phenotypes[i].valueUri
+						});
+					}
+					
+					
+					if (editPhenotypeAssociationFormWindow == null) {
+						editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+						this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+					}
+					editPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT,
+						{
+							evidenceId: record.data.id,
+							gene: this.currentGene,
+							phenotypes: evidencePhenotypes,
+							evidenceClassName: evidenceClassName,
+							pubMedId: record.data.citationValueObject.pubmedAccession,
+							description: record.data.description,
+							evidenceCode: record.data.evidenceCode,
+							lastUpdated: record.data.lastUpdated,
+							isPublic: record.data.securityInfoValueObject.public
+						});
+				}
+			},
+			removeEvidence: function(id) {
+				Ext.MessageBox.confirm('Confirm',
+					'Are you sure you want to remove this evidence?',
+					function(button) {
+						if (button === 'yes') {
+							PhenotypeController.removePhenotypeAssociation(id, function(validateEvidenceValueObject) {
+								if (validateEvidenceValueObject == null) {
+									this.fireEvent('phenotypeAssociationChanged');
+								} else {
+									if (validateEvidenceValueObject.evidenceNotFound) {
+										// We still need to fire event to let listeners know that it has been removed.
+										this.fireEvent('phenotypeAssociationChanged');
+										Ext.Msg.alert('Evidence already removed', 'This evidence has already been removed by someone else.');
+									} else {
+										Ext.Msg.alert('Cannot remove evidence', Gemma.convertToEvidenceError(validateEvidenceValueObject).errorMessage,
+											function() {
+												if (validateEvidenceValueObject.userNotLoggedIn) {
+													Gemma.AjaxLogin.showLoginWindowFn();
+												}
+											}
+										);
+									}
+								}
+							}.createDelegate(this));
+						}
+					},
+					this);
+			}			
 		});
 		this.superclass().initComponent.call(this);
 		
@@ -382,6 +506,5 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				}
 			});
 		}
-		
     }
 });

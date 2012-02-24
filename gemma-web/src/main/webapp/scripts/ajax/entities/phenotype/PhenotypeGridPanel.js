@@ -20,6 +20,8 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
 		this.addEvents('phenotypeSelectionChange');
 
+		var phenotypeAssociationFormWindow = null;
+
 		var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
 			dataIndex: 'isChecked',
 			singleSelect: false,
@@ -40,6 +42,7 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						var selections = selectionModel.getSelections();
 					    for (var i = 0; i < selections.length; i++) {
 					        selectedPhenotypes.push({
+								urlId: selections[i].get('urlId'),
 					        	value: selections[i].get('value'),
 					        	valueUri: selections[i].get('valueUri')
 					        });
@@ -75,6 +78,17 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 
+		var rightPad = function (val, size, ch) {
+	        var result = String(val);
+	        if(!ch) {
+	            ch = " ";
+	        }
+	        while (result.length < size) {
+	            result += ch;
+	        }
+	        return result;
+	    }
+		
 		Ext.apply(this, {
 			store: new Ext.data.Store({
 				proxy: this.phenotypeStoreProxy,
@@ -88,7 +102,15 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						'urlId',
 						'value',
 						'valueUri',
-						{ name: 'occurence', type: "long" },
+//						{
+//							name: 'count',
+//							type: "long",
+//							convert: function(value, record) {
+//								return record.publicGeneCount + record.privateGeneCount; 
+//							}
+//						},
+						'publicGeneCount',
+						'privateGeneCount',
 						{ name: 'isChecked', sortDir: 'DESC' }
 					]
 				}),
@@ -105,10 +127,21 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					sortable: true
 				},{
 					header: "Gene Count",
-					dataIndex: 'occurence',
+//					dataIndex: 'count',
+dataIndex: 'publicGeneCount',
 					align: "right",
 					width: 135,
-					renderer: Ext.util.Format.numberRenderer('0,0'),
+//					renderer: Ext.util.Format.numberRenderer('0,0'),
+		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+var countTextWidth = 5; // Assume private count has a maximum of 2 digits.		            	
+var countText;		            	
+						if (record.data.privateGeneCount > 0) {
+							countText = record.data.publicGeneCount + rightPad(' (' + record.data.privateGeneCount + ')', countTextWidth, ' ');
+						} else {
+							countText = record.data.publicGeneCount + rightPad('', countTextWidth, ' ');
+						}
+return '<pre style="font-size: 0.952em">' + countText + '</pre>';						
+		            },
 					sortable: true
 			    }
 			],
@@ -121,29 +154,35 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    	}
 		    },
 			tbar: [
-				phenotypeSearchField			
-// TODO: The following codes have been commented out because the new feature "create phenotype association" is still being implemented.
-//				{
-//					handler: function() {
-//						var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-//// TODO: I think I should not reload, but add the new phenotype association AND keep the original selection instead of selecting the newly created phenotype association. 						
-//						phenotypeAssociationFormWindow.on('phenotypeAssociationFormWindowHidden',
-//							function(isPhenotypeAssociationCreated) {
-//								if (isPhenotypeAssociationCreated) {
-//									var gridStore = this.getStore();
-//									gridStore.reload(gridStore.lastOptions);
-//								}
-//							},
-//							this);
-//						phenotypeAssociationFormWindow.showWindow(this.currentPhenotypes, this.currentGene);
-//					},
-//					scope: this,
-//					icon: "/Gemma/images/icons/add.png",
-//					tooltip: "Add new phenotype association"
-//				}
+				phenotypeSearchField,		
+				{
+					handler: function() {
+						if (phenotypeAssociationFormWindow == null) {
+							phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+							this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+						}
+						phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+							{
+								gene: this.currentGene,
+								phenotypes: this.currentPhenotypes
+							});
+					},
+					scope: this,
+					icon: "/Gemma/images/icons/add.png",
+					tooltip: "Add new phenotype association"
+				}
 			]
 		});
 
 		this.superclass().initComponent.call(this);
+		
+		this.getStore().on('load', 
+			function(store, records, options) {
+				if (phenotypeSearchField.getValue() !== '') {
+					phenotypeSearchField.applyCurrentFilter();
+				}
+			},
+			this // scope
+		);
     }
 });

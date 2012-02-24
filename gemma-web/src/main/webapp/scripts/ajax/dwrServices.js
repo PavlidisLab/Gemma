@@ -996,6 +996,12 @@ PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
 PhenotypeController.findBibliographicReference = function(p0, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findBibliographicReference', p0, callback);
 }
+PhenotypeController.validatePhenotypeAssociation = function(p0, p1, p2, p3, p4, p5, p6, p7, p8, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'validatePhenotypeAssociation', p0, p1, p2, p3, p4, p5, p6, p7, p8, callback);
+}
+PhenotypeController.removePhenotypeAssociation = function(p0, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removePhenotypeAssociation', p0, callback);
+}
 //=====================================================================================
 if (JavascriptLogger == null)
 	var JavascriptLogger = {};
