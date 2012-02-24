@@ -394,6 +394,20 @@ Gemma.HelpText.WidgetDefaults = {
     			'in config. Otherwise, all of them should be set.',
 		
 	},
+	PhenotypeAssociationForm: {
+		ErrorMessage: {
+		    lastUpdateDifferent: 'This evidence has been modified by someone else.<br />Please reload the page to view the updated version.',
+		    evidenceNotFound: 'This evidence cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest phenotype association.',
+		    pubmedIdInvalid: 'PubMed Id is not valid.',
+		    sameGeneAndPhenotypesAnnotated: 'An identical annotation (same gene and same phenotype(s)) already exists for this PubMed Id.',
+		    sameGeneAnnotated: 'An annotation for this gene already exists for this PubMed Id.',
+		    sameGeneAndOnePhenotypeAnnotated: 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
+		    sameGeneAndPhenotypeChildOrParentAnnotated: 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
+		    errorUnknown: 'System error has occurred. Please contact the system administrator for assistance.',
+		    accessDenied: 'Your access is denied.',
+		    userNotLoggedIn: 'You have not logged in. Please log in to try again.'
+		}
+	},
 	ProbeLevelDiffExGrid: {
 		// skipped, only had column TTs
 	},
