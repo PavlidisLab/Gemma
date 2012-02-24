@@ -1,0 +1,4 @@
+.x-panel-collapsed.no-collapsed-border {
+	/*	Don't use "border-style: none;" because when fieldset is expanded, the right border will be hidden sometimes. */
+	border-color: transparent;
+}
