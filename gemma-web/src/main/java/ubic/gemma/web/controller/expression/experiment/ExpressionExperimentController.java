@@ -1896,7 +1896,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 if ( eeIds == null ) {
                     securedEEs = expressionExperimentService.findByTaxon( taxon, limit + OVERSHOOT );
 
-                    if ( securedEEs.size() > limit ) {
+                    if ( securedEEs.size() > limit && limit >= 0) {
                         securedEEs = securedEEs.subList( 0, limit );
                     }
 
