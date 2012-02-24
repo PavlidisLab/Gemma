@@ -9,6 +9,8 @@ public class ValidateEvidenceValueObject {
     private boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
     private boolean pubmedIdInvalid = false;
     private boolean evidenceNotFound = false;
+    private boolean accessDenied = false;
+    private boolean userNotLoggedIn = false;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -65,4 +67,20 @@ public class ValidateEvidenceValueObject {
     public void setEvidenceNotFound( boolean evidenceNotFound ) {
         this.evidenceNotFound = evidenceNotFound;
     }
+
+	public boolean isAccessDenied() {
+		return accessDenied;
+	}
+
+	public void setAccessDenied(boolean accessDenied) {
+		this.accessDenied = accessDenied;
+	}
+
+	public boolean isUserNotLoggedIn() {
+		return userNotLoggedIn;
+	}
+
+	public void setUserNotLoggedIn(boolean userNotLoggedIn) {
+		this.userNotLoggedIn = userNotLoggedIn;
+	}
 }
