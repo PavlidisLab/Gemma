@@ -720,6 +720,16 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                             + th, th );
         }
     }
+    
+    public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.handleThawLiter( expressionExperiment, false );
+        } catch ( Throwable th ) {
+            throw new RuntimeException(
+                    "Error performing 'ExpressionExperimentDao.thawBioAssays(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ExpressionExperimentDao#toExpressionExperimentValueObject(ExpressionExperiment)
@@ -976,5 +986,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
             throws Exception;
+    
+    protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment, boolean thawVectors )
+        throws Exception;
 
 }

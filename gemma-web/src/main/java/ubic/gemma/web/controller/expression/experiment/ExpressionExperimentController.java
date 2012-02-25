@@ -585,11 +585,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
-
+        ee = expressionExperimentService.thawLiter( ee );
+        
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );        
+              
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
-
+        
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
 
         if ( initialResults.size() == 0 ) {
@@ -602,7 +604,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
          * Check for multiple "preferred" qts.
          */
         int countPreferred = 0;
-        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+        for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsPreferred() ) {
                 countPreferred++;
             }
@@ -665,7 +667,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         finalResult.setQChtml( getQCTagHTML( ee ) );
 
+        
         boolean hasBatchInformation = false;
+        
+        
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
                 hasBatchInformation = true;

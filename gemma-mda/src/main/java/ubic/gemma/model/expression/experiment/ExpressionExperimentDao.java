@@ -287,6 +287,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * </p>
      */
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    
+    public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
 
     /**
      * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated

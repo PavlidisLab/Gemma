@@ -878,6 +878,19 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                             + th, th );
         }
     }
+    
+    /**
+     * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
+     */
+    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.thawLite(ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ExpressionExperimentService#update(ExpressionExperiment)

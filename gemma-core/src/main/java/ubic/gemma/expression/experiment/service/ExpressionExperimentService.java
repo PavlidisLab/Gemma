@@ -506,6 +506,9 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
+    
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiment

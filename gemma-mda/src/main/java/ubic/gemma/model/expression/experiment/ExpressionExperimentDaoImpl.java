@@ -1688,6 +1688,85 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         return result;
     }
+    
+    
+    //this is for front end display by the web app, 
+    @Override
+    protected ExpressionExperiment handleThawLiter( ExpressionExperiment ee, boolean vectorsAlso ) {
+        if ( ee == null ) {
+            return null;
+        }
+
+        if ( ee.getId() == null ) throw new IllegalArgumentException( "Id cannot be null, cannot be thawed: " + ee );
+
+        /*
+         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
+         * as opposed to thawing the one passed in, solves problems.
+         */
+        String thawQuery = "select distinct e from ExpressionExperimentImpl e "
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeid";
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam( thawQuery, "eeid", ee.getId() );
+
+        if ( res.size() == 0 ) {
+            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
+        }
+        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
+        //Hibernate.initialize( result.getQuantitationTypes() );
+        //Hibernate.initialize( result.getCharacteristics() );
+        //Hibernate.initialize( result.getRawDataFile() );
+        Hibernate.initialize( result.getPrimaryPublication() );
+        //Hibernate.initialize( result.getBioAssays() );
+        //Hibernate.initialize( result.getAuditTrail() );
+        //Hibernate.initialize( result.getAuditTrail().getEvents() );
+/*
+        for ( BioAssay ba : result.getBioAssays() ) {
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+            Hibernate.initialize( ba.getDerivedDataFiles() );
+            Hibernate.initialize( ba.getSamplesUsed() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                Hibernate.initialize( bm.getFactorValues() );
+                Hibernate.initialize( bm.getTreatments() );
+            }
+        }
+*/
+        
+        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
+        if ( experimentalDesign != null ) {
+            Hibernate.initialize( experimentalDesign );
+            
+            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
+            /*
+            experimentalDesign.getTypes().size();
+            for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
+                Hibernate.initialize( factor.getAnnotations() );
+                for ( FactorValue f : factor.getFactorValues() ) {
+                    Hibernate.initialize( f.getCharacteristics() );
+                    if ( f.getMeasurement() != null ) {
+                        Hibernate.initialize( f.getMeasurement() );
+                        if ( f.getMeasurement().getUnit() != null ) {
+                            Hibernate.initialize( f.getMeasurement().getUnit() );
+                        }
+                    }
+                }
+            }
+           */
+        }
+
+        thawReferences( result );
+
+        if ( vectorsAlso ) {
+            /*
+             * Optional because this could be slow.
+             */
+            Hibernate.initialize( result.getRawExpressionDataVectors() );
+            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
+
+        }
+
+        return result;
+    }
 
     /**
      * @param qtMap
