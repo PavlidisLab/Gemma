@@ -588,10 +588,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ee = expressionExperimentService.thawLiter( ee );
         
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );        
-              
+
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
-        
+
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
 
         if ( initialResults.size() == 0 ) {
@@ -667,10 +667,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         finalResult.setQChtml( getQCTagHTML( ee ) );
 
-        
         boolean hasBatchInformation = false;
-        
-        
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
                 hasBatchInformation = true;
@@ -1681,9 +1678,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
             boolean filterDataByUser, Integer limit, Integer filter ) {
         List<ExpressionExperimentValueObject> eeValObjectCol;
 
-        Integer limitToUse = -1;
-        if ( filter == null || filter == 0 ) {
-            limitToUse = limit;
+        Integer limitToUse = limit;
+        if ( filter != null && filter > 0 ) {
+            // HACK TO FIX!! THIS IS JUST SO IT DOESN'T LOAD ALLLLL EEs 
+            // NEED A BETTER WAY TO FIX THIS
+            // (can't just load the limit because we will be filtering later for experiments with differential expression, PCA, factors etc.)
+            limitToUse = limit + 100;
         }
 
         // taxon specific?
