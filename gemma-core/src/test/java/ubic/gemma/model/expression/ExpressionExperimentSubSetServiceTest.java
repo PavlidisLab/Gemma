@@ -21,17 +21,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSubSetDaoImplTest extends BaseSpringContextTest {
+public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Test
     public final void testFind() throws Exception {
@@ -44,10 +44,10 @@ public class ExpressionExperimentSubSetDaoImplTest extends BaseSpringContextTest
         subset.getBioAssays().addAll( ee.getBioAssays() );
         subset.setName( "foo" );
 
-        ExpressionExperimentSubSet persisted = expressionExperimentSubSetDao.create( subset );
+        ExpressionExperimentSubSet persisted = expressionExperimentSubSetService.create( subset );
 
         assertNotNull( persisted );
-        ExpressionExperimentSubSet hit = expressionExperimentSubSetDao.find( persisted );
+        ExpressionExperimentSubSet hit = expressionExperimentSubSetService.find( persisted );
 
         assertEquals( persisted, hit );
 
