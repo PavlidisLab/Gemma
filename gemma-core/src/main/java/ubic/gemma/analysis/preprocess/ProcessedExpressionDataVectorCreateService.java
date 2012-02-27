@@ -59,6 +59,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -87,6 +88,9 @@ public class ProcessedExpressionDataVectorCreateService {
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+    
+    @Autowired
+    private ExpressionExperimentDao eeDao;
 
     /**
      * @param ee
@@ -139,8 +143,10 @@ public class ProcessedExpressionDataVectorCreateService {
      * 
      * @param ee
      */
-    public void reorderByDesign( ExpressionExperiment ee ) {
+    public void reorderByDesign( Long eeId ) {
 
+        ExpressionExperiment ee = eeDao.load( eeId ); 
+        
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
             log.info( ee.getShortName() + " does not have a populated experimental design, skipping" );
             return;
