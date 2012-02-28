@@ -113,7 +113,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         Long id = gset.getId();
         assertNotNull( id );
         
-        GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
+        GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToLightValueObject( gset );
         
         assertNull( gsvo.getGeneIds() );
                 
