@@ -95,6 +95,7 @@ public class GeneSetValueObjectHelper {
 
         dbgsvo.setId( gs.getId() );
 
+        dbgsvo.setGeneIds( null );
         
         dbgsvo.setDescription( gs.getDescription() );
         dbgsvo.setSize( geneSetDao.getGeneCount( gs.getId() ) );
