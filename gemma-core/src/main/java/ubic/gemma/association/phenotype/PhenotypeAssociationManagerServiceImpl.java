@@ -197,7 +197,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( gene == null ) {
             return new HashSet<EvidenceValueObject>();
         }
-        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+
+        this.associationService.filterAclPhenotypeAssociations( gene.getPhenotypeAssociations() );
+
+        return this.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
     /**
@@ -214,7 +217,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( gene == null ) {
             return new HashSet<EvidenceValueObject>();
         }
-        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+
+        this.associationService.filterAclPhenotypeAssociations( gene.getPhenotypeAssociations() );
+
+        return this.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
     /**
@@ -1015,6 +1021,31 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return converted;
+    }
+
+    /**
+     * Convert an collection of evidence entities to their corresponding value objects
+     * 
+     * @param phenotypeAssociations The List of entities we need to convert to value object
+     * @return Collection<EvidenceValueObject> the converted results
+     */
+    private Collection<EvidenceValueObject> convert2ValueObjects( Collection<PhenotypeAssociation> phenotypeAssociations ) {
+
+        Collection<EvidenceValueObject> returnEvidenceVO = new HashSet<EvidenceValueObject>();
+
+        if ( phenotypeAssociations != null ) {
+
+            for ( PhenotypeAssociation phe : phenotypeAssociations ) {
+
+                EvidenceValueObject evidence = EvidenceValueObject.convert2ValueObjects( phe );
+                findEvidencePermissions( phe, evidence );
+
+                if ( evidence != null ) {
+                    returnEvidenceVO.add( evidence );
+                }
+            }
+        }
+        return returnEvidenceVO;
     }
 
     /** determine permissions for an PhenotypeAssociation */
