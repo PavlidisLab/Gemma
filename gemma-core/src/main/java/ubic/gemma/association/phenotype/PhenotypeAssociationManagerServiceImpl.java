@@ -167,7 +167,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .valueObject2Entity( evidence );
         phenotypeAssociation.setGene( gene );
+        gene.getPhenotypeAssociations().add( phenotypeAssociation );
+
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
+        this.geneService.update( gene );
 
         if ( this.securityService.isPublic( phenotypeAssociation ) ) {
 
