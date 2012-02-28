@@ -65,7 +65,10 @@ public class GeneSetValueObjectHelper {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
-            dbgsvo.setGeneIds( geneSetDao.getGeneIds( gs.getId() ) );
+            Collection<Long> ids = geneSetDao.getGeneIds( gs.getId() );
+            dbgsvo.setGeneIds( ids );
+            dbgsvo.setSize( ids.size() );
+            dbgsvo.setNumGenes( ids.size() );
         }
         
         return dbgsvo;
