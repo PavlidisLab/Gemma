@@ -707,8 +707,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
                         }
 
-                        if ( evidence.getPhenotypes().containsAll(
-                                bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
+                        if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject
+                                .getPhenotypesValues().size()
+                                && evidence.getPhenotypes().containsAll(
+                                        bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                             validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
                         }
 
