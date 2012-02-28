@@ -107,6 +107,9 @@ public class GeneSetValueObjectHelper {
             }  
             dbgsvo.setTaxonId( tax.getId() );
             dbgsvo.setTaxonName( tax.getCommonName() );
+        }else{
+            dbgsvo.setTaxonId( null );
+            dbgsvo.setTaxonName( null );
         }
  
         dbgsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
