@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,8 @@ public class GeneSetValueObjectHelper {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
-            Collection<Long> ids = geneSetDao.getGeneIds( gs.getId() );
+            // no duplicates
+            Set<Long> ids = new HashSet<Long>(geneSetDao.getGeneIds( gs.getId() ));
             dbgsvo.setGeneIds( ids );
             dbgsvo.setSize( ids.size() );
         }
@@ -74,7 +76,7 @@ public class GeneSetValueObjectHelper {
     }
     
     /**
-     * Constructor to build value object from GeneSet. This is a light version and *does not include member ids*!
+     * Constructor to build value object from GeneSet. This is a light version and *does not include member ids*! (But the size is set.)
      * 
      * No security filtering is done here, assuming that if the user could load the experimentSet entity, they have
      * access to it.

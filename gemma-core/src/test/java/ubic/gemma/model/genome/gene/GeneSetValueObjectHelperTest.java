@@ -115,10 +115,10 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
         
-        assertNull( gsvo.getSize() );
         assertNull( gsvo.getGeneIds() );
                 
         assertEquals( gset.getId(), gsvo.getId());
+        assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
         assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
         
