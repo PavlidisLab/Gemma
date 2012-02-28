@@ -51,9 +51,6 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     @Autowired
     GeneSetService geneSetService;
     
-    //@Autowired
-    //SecurityService securityService;
-    
     @Autowired
     UserManager userManager;
 
@@ -81,8 +78,6 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         gset.getMembers().add( gmember );
 
         gset = geneSetService.create( gset );
-        //securityService.setOwner( gset, userManager.getCurrentUsername() );
-        //securityService.makePublic( gset );
         
 
         Long id = gset.getId();
@@ -91,7 +86,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
                 
         assertEquals( gset.getId(), gsvo.getId());
-        assertEquals( gset.getMembers().size(), gsvo.getNumGenes() );
+        assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
         assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
         
@@ -120,7 +115,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
         
-        assertNull( gsvo.getNumGenes() );
+        assertNull( gsvo.getSize() );
         assertNull( gsvo.getGeneIds() );
                 
         assertEquals( gset.getId(), gsvo.getId());

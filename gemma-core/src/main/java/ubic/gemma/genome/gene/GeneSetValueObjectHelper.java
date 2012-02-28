@@ -68,7 +68,6 @@ public class GeneSetValueObjectHelper {
             Collection<Long> ids = geneSetDao.getGeneIds( gs.getId() );
             dbgsvo.setGeneIds( ids );
             dbgsvo.setSize( ids.size() );
-            dbgsvo.setNumGenes( ids.size() );
         }
         
         return dbgsvo;
