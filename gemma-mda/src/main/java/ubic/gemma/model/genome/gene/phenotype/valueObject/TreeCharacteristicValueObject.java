@@ -131,9 +131,14 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         else if ( username != null ) {
             setPrivateGeneCount( associationService.countGenesWithPrivatePhenotype( getAllChildrenUri(), username ) );
         }
-        // count for each node of the tree
-        for ( TreeCharacteristicValueObject tree : getChildren() ) {
-            countGeneOccurence( associationService, tree );
+
+        if ( getPublicGeneCount() + getPrivateGeneCount() == 0 ) {
+            this.getChildren().clear();
+        } else {
+            // count for each node of the tree
+            for ( TreeCharacteristicValueObject tree : getChildren() ) {
+                countGeneOccurence( associationService, tree );
+            }
         }
     }
 

@@ -530,7 +530,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
-        Collection<TreeCharacteristicValueObject> treesPhenotypes = buildTree( null );
+        Collection<TreeCharacteristicValueObject> treesPhenotypes = buildTree();
 
         Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
 
@@ -546,7 +546,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // count occurrence recursively for each phenotype in the branch
             tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin(), username );
-            finalTree.add( tc );
+            if ( tc.getPublicGeneCount() + tc.getPrivateGeneCount() != 0 ) {
+                finalTree.add( tc );
+            }
         }
 
         return finalTree;
@@ -802,7 +804,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    private Collection<TreeCharacteristicValueObject> buildTree( Collection<String> phenotypesValueUri ) {
+    private Collection<TreeCharacteristicValueObject> buildTree() {
 
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
