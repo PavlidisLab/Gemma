@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
@@ -159,7 +160,9 @@ public class SecurityController {
     }
 
     /**
+     * AJAX
      * @param groupName
+     * @throws DataIntegrityViolationException cannot delete a group if it is being used to set any permission, delete permission settings first (is thrown if the acl_entry table has rows with this sid)
      */
     public void deleteGroup( String groupName ) {
 
@@ -169,8 +172,11 @@ public class SecurityController {
         /*
          * Additional checks for ability to delete group handled by ss.
          */
-
-        securityService.deleteGroup( groupName );
+        try{
+            securityService.deleteGroup( groupName );
+        }catch( DataIntegrityViolationException div ){
+            throw div;
+        }
     }
 
     /**

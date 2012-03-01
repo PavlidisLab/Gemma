@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -357,13 +358,13 @@ public class SecurityServiceImpl implements SecurityService {
 
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * This will throw an error if the group has any permissions set (if there are any entries for this sid in the acl_entry table)
      * 
      * @see ubic.gemma.security.SecurityService#deleteGroup(java.lang.String)
      */
     @Override
-    public void deleteGroup( String groupName ) {
+    public void deleteGroup( String groupName ) throws DataIntegrityViolationException{
 
         if ( !userManager.groupExists( groupName ) ) {
             throw new IllegalArgumentException( "No group with that name: " + groupName );
@@ -380,7 +381,7 @@ public class SecurityServiceImpl implements SecurityService {
         if ( !isOwnedByCurrentUser( userManager.findGroupByName( groupName ) ) ) {
             throw new IllegalArgumentException( "Only the owner of a group can delete it" );
         }
-
+        
         String authority = getGroupAuthorityNameFromGroupName( groupName );
 
         userManager.deleteGroup( groupName );
@@ -388,8 +389,11 @@ public class SecurityServiceImpl implements SecurityService {
         /*
          * clean up acls that use this group...do that last!
          */
-
-        aclService.deleteSid( new GrantedAuthoritySid( authority ) );
+        try{
+            aclService.deleteSid( new GrantedAuthoritySid( authority ) );
+        }catch(DataIntegrityViolationException div){
+            throw div;
+        }
 
     }
 

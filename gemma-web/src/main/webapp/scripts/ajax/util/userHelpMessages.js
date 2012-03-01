@@ -361,6 +361,10 @@ Gemma.HelpText.WidgetDefaults = {
 							'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>{0}{1}'+
 							'\');" style="color: red; text-decoration: underline;">details</a>)</div>'
 	},
+	ManageGroups:{
+		groupInUseErrorText: 'Cannot delete group while permissions are set. Uncheck all checkboxes in the panel to the right, save your changes and try again.',
+		groupInUseErrorTitle: 'Group in use'
+	},
 	MetaheatmapApplication:{
 		noGenesSelectedTitle: "No Genes Selected",
 		noGenesSelectedText: "Selection cannot be saved because no genes have been selected. "+

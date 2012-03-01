@@ -41,6 +41,17 @@ Ext.onReady(function() {
 				groupable : false,
 				width : 55
 			});
+			
+	var selectAllChecks = function(selectAll){
+		
+			var recs = Ext.getCmp("group-data-grid").getStore().getRange();
+			Ext.each(recs, function(rec){
+				rec.set('publiclyReadable', selectAll);
+				rec.set('currentGroupCanRead', selectAll);
+				rec.set('currentGroupCanWrite', selectAll);
+			}, this);
+			
+		};
 
 	var refresh = function(groupName) {
 		currentGroup = groupName;
@@ -147,46 +158,65 @@ Ext.onReady(function() {
 					tooltip : "Delete a group",
 					// disabled : true,
 					// hidden : true,
-					handler : function() {
-
-						var sel = Ext.getCmp('manager-groups-listview').getSelectionModel().getSelected();
-						var groupName = sel.get("groupName");
-
-						var processResult = function(btn) {
-							/*
-							 * TODO -- no full server side support yet! Deleting group is not so easy if there is data
-							 * attached.
-							 */
-
-							if (btn == 'yes') {
-
-								SecurityController.deleteGroup(groupName, {
-											callback : function() {
-												Ext.getCmp('manager-groups-listview').getStore().load({
-															params : []
-														});
-												/*reset the group-members grid*/
-												Ext.getCmp('group-members-grid').getStore().loadData({});
-												/*reset the data grid*/
-												Ext.getCmp('group-data-grid').getStore().loadData({});
-											},
-											errorHandler : function(e) {
-												Ext.Msg.alert('Sorry', e);
-											}
-										});
+					handler: function(){
+					
+						var recs = Ext.getCmp("group-data-grid").getStore().getRange();
+						var msg = null;
+						Ext.each(recs, function(rec){
+							if (rec.get('publiclyReadable') ||
+							rec.get('currentGroupCanRead') ||
+							rec.get('currentGroupCanWrite')) {
+								msg = Gemma.HelpText.WidgetDefaults.ManageGroups.groupInUseErrorText;
+								return false;//to break "each" loop
 							}
-						};
-
-						Ext.Msg.show({
-									title : 'Are you sure?',
-									msg : 'The group "' + groupName
-											+ '" will be permanently deleted. This cannot be undone.',
-									buttons : Ext.Msg.YESNO,
-									fn : processResult,
-									animEl : 'elId',
-									icon : Ext.MessageBox.QUESTION
-								});
-
+							return true; // just for symmetry
+						}, this);
+						
+						if (msg !== null) {
+							Ext.Msg.show({
+								title: Gemma.HelpText.WidgetDefaults.ManageGroups.groupInUseErrorTitle,
+								msg: msg,
+								buttons: Ext.Msg.OK,
+								icon: Ext.MessageBox.ERROR
+							});
+							
+						} else {
+							
+							var sel = Ext.getCmp('manager-groups-listview').getSelectionModel().getSelected();
+							var groupName = sel.get("groupName");
+							
+							var processResult = function(btn){
+							
+								if (btn == 'yes') {
+								
+									SecurityController.deleteGroup(groupName, {
+										callback: function(){
+											Ext.getCmp('manager-groups-listview').getStore().load({
+												params: []
+											});
+											/*reset the group-members grid*/
+											Ext.getCmp('group-members-grid').getStore().loadData({});
+											/*reset the data grid*/
+											Ext.getCmp('group-data-grid').getStore().loadData({});
+										},
+										errorHandler: function(e){
+											Ext.Msg.alert('Sorry', e);
+										}
+									});
+								}
+							};
+							
+							Ext.Msg.show({
+								title: 'Are you sure?',
+								msg: 'The group "' + groupName +
+								'" will be permanently deleted. This cannot be undone.',
+								buttons: Ext.Msg.YESNO,
+								fn: processResult,
+								animEl: 'elId',
+								icon: Ext.MessageBox.QUESTION
+							});
+						}
+						
 					}
 				}]
 			},
@@ -464,6 +494,19 @@ Ext.onReady(function() {
 							icon : "/Gemma/images/icons/world_add.png",
 							handler : function() {
 								refreshData(currentGroup);
+							}
+						},'-',{
+							tooltip : "Select All/None",
+							id : "manager-data-panel-select-all",
+							text: "Select all",
+							selectAll: true,
+							handler : function() {
+								
+								selectAllChecks(this.selectAll);
+								
+								//(this.selectAll)? this.setText("Select None") : this.setText("Select All");
+								this.selectAll = !this.selectAll;
+
 							}
 						}]
 			},
