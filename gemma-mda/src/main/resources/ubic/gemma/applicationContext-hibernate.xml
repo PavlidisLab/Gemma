@@ -45,6 +45,7 @@
 			<tx:method name="load*" read-only="true" />
 			<tx:method name="thaw*" read-only="true" />
 			<tx:method name="is*" read-only="true" />
+			<tx:method name="are*" read-only="true" />
 			<tx:method name="count*" read-only="true" />
 			<tx:method name="has*" read-only="true" />
 			<tx:method name="lack*" read-only="true" />
