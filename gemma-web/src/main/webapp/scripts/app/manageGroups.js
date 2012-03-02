@@ -498,7 +498,7 @@ Ext.onReady(function() {
 						},'-',{
 							tooltip : "Select All/None",
 							id : "manager-data-panel-select-all",
-							text: "Select all",
+							text: "Select All / None",
 							selectAll: true,
 							handler : function() {
 								
