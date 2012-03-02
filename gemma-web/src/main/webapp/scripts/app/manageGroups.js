@@ -53,12 +53,21 @@ Ext.onReady(function() {
 			
 		};
 
-	var refresh = function(groupName) {
+	var refresh = function(groupName, showPrivateOnly) {
 		currentGroup = groupName;
 
+		activateButtons();
 		refreshGroupMembers(groupName);
-		refreshData(groupName);
+		refreshData(groupName, showPrivateOnly);
 
+	};
+	
+	/**
+	 * when a user has selected a group, activate the group member and data panel buttons 
+	 */
+	var activateButtons = function(){
+		Ext.getCmp("manager-group-data-panel").getTopToolbar().enable();
+		Ext.getCmp('manager-group-members-panel').getTopToolbar().enable();
 	};
 
 	/*
@@ -73,9 +82,11 @@ Ext.onReady(function() {
 	/*
 	 * Load the data available to the _current_ user w.r.t the selected group, put in the data column.
 	 */
-	var refreshData = function(groupName) {
-
-		var showPrivateOnly = !Ext.getCmp("manager-data-panel-show-public").pressed;
+	var refreshData = function(groupName, showPrivateOnly) {
+		
+		if (showPrivateOnly == undefined) {
+			showPrivateOnly = !Ext.getCmp("manager-data-panel-show-public").showPublicData;
+		}
 
 		Ext.getCmp('group-data-grid').getStore().load({
 					params : [groupName, showPrivateOnly]
@@ -307,6 +318,7 @@ Ext.onReady(function() {
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
+				disabled: true,
 				items : [{
 					icon : "/Gemma/images/icons/user_add.png",
 					tooltip : "Invite new member",
@@ -432,6 +444,7 @@ Ext.onReady(function() {
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
+				disabled:true,
 				items : [{
 							tooltip : "Save changes",
 							icon : "/Gemma/images/icons/database_save.png",
@@ -487,13 +500,21 @@ Ext.onReady(function() {
 							handler : function() {
 								refreshData(currentGroup);
 							}
-						}, {
-							tooltip : "Show/hide public data",
+						}, '-',{
+							tooltip : "Show/hide public data. Public experiments will never be shown.",
+							text: "Show public data",
+							showPublicData : false,
 							id : "manager-data-panel-show-public",
-							enableToggle : true,
-							icon : "/Gemma/images/icons/world_add.png",
+							//enableToggle : true,
+							//icon : "/Gemma/images/icons/world_add.png",
 							handler : function() {
-								refreshData(currentGroup);
+								if(this.showPublicData){
+									this.setText("Show public data");
+								}else{
+									this.setText("Hide public data");
+								}
+								refreshData(currentGroup, this.showPublicData);
+								this.showPublicData = !this.showPublicData;
 							}
 						},'-',{
 							tooltip : "Select All/None",
