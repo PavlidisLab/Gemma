@@ -381,7 +381,7 @@ public class ExperimentalDesignVisualizationService {
                 continue;
             }
 
-            ee = expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLiter( ee );
 
             // don't sort by "batch" factor // FIXME we might want to make this an option.
             Collection<ExperimentalFactor> filteredFactors = new HashSet<ExperimentalFactor>();
@@ -515,7 +515,7 @@ public class ExperimentalDesignVisualizationService {
             /*
              * The following is the really slow part if we don't use a cache.
              */
-            ee = expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLiter( ee );
             // plotExperimentalDesign( ee ); // debugging/testing
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
                     ee, bioAssayDimension );
