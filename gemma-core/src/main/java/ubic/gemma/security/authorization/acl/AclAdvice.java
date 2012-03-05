@@ -319,8 +319,9 @@ public class AclAdvice {
                 parentAcl = aclService.createAcl( oi_temp );
             }
 
-            // Owner of the experiment owns analyses even if administrator ran them.
             acl.setEntriesInheriting( true );
+            acl.setParent( parentAcl );
+            // Owner of the experiment owns analyses even if administrator ran them.
             sid = parentAcl.getOwner();
         }
 
