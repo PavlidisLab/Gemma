@@ -1,5 +1,11 @@
 
-Ext.namespace('Gemma.HelpText','Gemma.StatusText','Gemma.Widget');
+Ext.namespace('Gemma.HelpText','Gemma.StatusText','Gemma.Widget','Gemma.LinkRoots');
+
+Gemma.LinkRoots = {
+	expressionExperimentPage : "/Gemma/expressionExperiment/showExpressionExperiment.html?id=",
+	expressionExperimentSetPage : "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=",
+	geneSetPage : "/Gemma/geneSet/showGeneSet.html?id="
+};
 
 // TT = tooltip
 Gemma.EvidenceCodes = {

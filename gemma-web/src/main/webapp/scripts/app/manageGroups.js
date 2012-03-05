@@ -585,14 +585,31 @@ Ext.onReady(function() {
 							editable : false,
 							sortable : true,
 							renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-								return value.replace(/.*\./, '').replace("Impl", '').replace(/([A-Z])/g, ' $1');
+								return value.replace(/.*\./, '').replace("Impl", '').replace("Set", 'Group').replace(/([A-Z])/g, ' $1');
 							}
 						}, {
 							header : 'Identifier',
 							dataIndex : 'entityShortName',
 							editable : false,
 							groupable : false,
-							sortable : true
+							sortable : true,
+							renderer : function(value, metaData, record, rowIndex, colIndex, store) {
+																
+								if (record.get('entityClazz') === "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl") {
+									return '<a target="_blank" href="'+Gemma.LinkRoots.expressionExperimentPage+record.get("entityId")+'">'
+											+value+'</a>';
+								}
+								if (record.get('entityClazz') === "ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl") {
+									return '<a target="_blank" href="'+Gemma.LinkRoots.expressionExperimentSetPage+record.get("entityId")+'">'
+											+value+'</a>';
+								
+								}
+								if (record.get('entityClazz') === "ubic.gemma.model.genome.gene.GeneSetImpl") {
+									return '<a target="_blank" href="'+Gemma.LinkRoots.geneSetPage+record.get("entityId")+'">'
+											+value+'</a>';
+								}
+								return value;
+							}
 						}, {
 							header : 'Name/Desc',
 							dataIndex : 'entityName',
