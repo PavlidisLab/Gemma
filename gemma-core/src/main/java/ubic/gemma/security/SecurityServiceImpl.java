@@ -1079,7 +1079,7 @@ public class SecurityServiceImpl implements SecurityService {
      * java.lang.String)
      */
     @Override
-    @PreAuthorize("hasPermission(#s, write)")
+    @Secured("ACL_SECURABLE_EDIT")
     public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
