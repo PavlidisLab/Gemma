@@ -225,7 +225,6 @@ public interface SecurityService {
      * @param userName
      */
     @Secured("GROUP_ADMIN")
-    @Transactional
     public abstract void makeOwnedByUser( Securable s, String userName );
 
     /**
@@ -239,7 +238,6 @@ public interface SecurityService {
      * @param object
      */
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public abstract void makePrivate( Securable object );
 
     /**
@@ -254,7 +252,6 @@ public interface SecurityService {
      * @param object
      */
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public abstract void makePublic( Securable object );
 
     /**
@@ -265,7 +262,6 @@ public interface SecurityService {
      * @throws AccessDeniedException
      */
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public abstract void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException;
 
     /**
@@ -276,7 +272,6 @@ public interface SecurityService {
      * @throws AccessDeniedException
      */
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public abstract void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException;
 
     /**
@@ -287,7 +282,6 @@ public interface SecurityService {
      * @throws AccessDeniedException
      */
     @Secured("ACL_SECURABLE_EDIT")
-    @Transactional
     public abstract void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException;
 
     /**
@@ -297,8 +291,7 @@ public interface SecurityService {
      * @param groupName
      * @throws AccessDeniedException
      */
-    @PreAuthorize("hasPermission(#s, write)")
-    @Transactional
+    @Secured("ACL_SECURABLE_EDIT")
     public abstract void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException;
 
     /**
