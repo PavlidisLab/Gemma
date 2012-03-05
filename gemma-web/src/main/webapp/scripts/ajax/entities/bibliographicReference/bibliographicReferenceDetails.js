@@ -12,7 +12,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 	collapseByDefault: false,	
 	defaults: {
 		hidden: true,
-		labelWidth: 110
+		labelWidth: 120
 	},
 	initComponent: function(){
 		var getPudmedAnchor = function(pudmedUrl) {
