@@ -74,17 +74,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri );
     }
 
-    /**
-     * filter the PhenotypeAssociation using the advice
-     * 
-     * @param phenotypesValueUri The Ontology valueURI of the phenotype
-     */
-    @Override
-    public Collection<PhenotypeAssociation> filterAclPhenotypeAssociations(
-            Collection<PhenotypeAssociation> phenotypeAssociations ) {
-        return phenotypeAssociations;
-    }
-
     /** find all phenotypes */
     @SuppressWarnings("unchecked")
     @Override
@@ -184,5 +173,20 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName ) {
         return this.phenotypeAssociationDao.countGenesWithPrivatePhenotype( phenotypesUri, userName );
     }
+    
+    /** find all PhenotypeAssociation for a specific gene id */
+    @Override
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ){
+        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneId( geneId );
+    }
+    
+    /** find all PhenotypeAssociation for a specific NCBI id */
+    @Override
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI(Integer geneNCBI){
+        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI );
+    }
 
+    
+    
+    
 }

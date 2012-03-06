@@ -185,15 +185,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI ) {
 
-        Gene gene = this.geneService.findByNCBIId( geneNCBI );
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findPhenotypeAssociationForGeneNCBI( geneNCBI);
 
-        if ( gene == null ) {
-            return new HashSet<EvidenceValueObject>();
-        }
-
-        this.associationService.filterAclPhenotypeAssociations( gene.getPhenotypeAssociations() );
-
-        return this.convert2ValueObjects( gene.getPhenotypeAssociations() );
+        return this.convert2ValueObjects( phenotypeAssociations );
     }
 
     /**
@@ -205,15 +200,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId ) {
 
-        Gene gene = this.geneService.load( ( geneId.longValue() ) );
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findPhenotypeAssociationForGeneId( geneId );
 
-        if ( gene == null ) {
-            return new HashSet<EvidenceValueObject>();
-        }
-
-        this.associationService.filterAclPhenotypeAssociations( gene.getPhenotypeAssociations() );
-
-        return this.convert2ValueObjects( gene.getPhenotypeAssociations() );
+        return this.convert2ValueObjects( phenotypeAssociations );
     }
 
     /**

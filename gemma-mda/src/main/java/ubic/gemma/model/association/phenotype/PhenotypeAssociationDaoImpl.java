@@ -231,4 +231,30 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return phenotypeAssociationsFound;
 
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    /** find all PhenotypeAssociation for a specific gene id */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
+
+        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "gene" )
+                .add( Restrictions.like( "id", geneId ) );
+
+        return geneQueryCriteria.list();
+
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    /** find all PhenotypeAssociation for a specific NCBI id */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
+
+        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "gene" )
+                .add( Restrictions.like( "ncbiGeneId", geneNCBI ) );
+
+        return geneQueryCriteria.list();
+
+    }
 }
