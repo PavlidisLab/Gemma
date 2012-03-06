@@ -8,7 +8,6 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 	genePhenotypeSeparator: '&hArr;',
 	layout: 'form',
 	title: 'Bibliographic Reference Details',
-	autoScroll:true,
 	collapseByDefault: false,	
 	defaults: {
 		hidden: true,
