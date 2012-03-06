@@ -78,16 +78,9 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 
-		var rightPad = function (val, size, ch) {
-	        var result = String(val);
-	        if(!ch) {
-	            ch = " ";
-	        }
-	        while (result.length < size) {
-	            result += ch;
-	        }
-	        return result;
-	    }
+		var generateGeneCountHTML = function(width, geneCountText) {
+			return '<span style="float: left; text-align: right; width: ' + width + 'px;">' + geneCountText + '</span>'; 
+		}
 		
 		Ext.apply(this, {
 			store: new Ext.data.Store({
@@ -127,20 +120,12 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					sortable: true
 				},{
 					header: "Gene Count",
-//					dataIndex: 'count',
-dataIndex: 'publicGeneCount',
+					dataIndex: 'publicGeneCount',
 					align: "right",
 					width: 135,
-//					renderer: Ext.util.Format.numberRenderer('0,0'),
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-var countTextWidth = 5; // Assume private count has a maximum of 2 digits.		            	
-var countText;		            	
-						if (record.data.privateGeneCount > 0) {
-							countText = record.data.publicGeneCount + rightPad(' (' + record.data.privateGeneCount + ')', countTextWidth, ' ');
-						} else {
-							countText = record.data.publicGeneCount + rightPad('', countTextWidth, ' ');
-						}
-return '<pre style="font-size: 0.952em">' + countText + '</pre>';						
+						return generateGeneCountHTML(50, record.data.publicGeneCount) + ' ' +
+							   generateGeneCountHTML(26, (record.data.privateGeneCount > 0 ? '(' + record.data.privateGeneCount + ')' : '&nbsp;'));
 		            },
 					sortable: true
 			    }
@@ -156,17 +141,20 @@ return '<pre style="font-size: 0.952em">' + countText + '</pre>';
 			tbar: [
 				phenotypeSearchField,		
 				{
-					handler: function() {
-						if (phenotypeAssociationFormWindow == null) {
-							phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-							this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+					handler: this.createPhenotypeAssociationHandler ?
+						this.createPhenotypeAssociationHandler :
+						function() {
+							if (phenotypeAssociationFormWindow == null) {
+								phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+								this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+							}
+							phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+								{
+									gene: this.currentGene,
+									phenotypes: this.currentPhenotypes
+								});
 						}
-						phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
-							{
-								gene: this.currentGene,
-								phenotypes: this.currentPhenotypes
-							});
-					},
+					,
 					scope: this,
 					icon: "/Gemma/images/icons/add.png",
 					tooltip: "Add new phenotype association"

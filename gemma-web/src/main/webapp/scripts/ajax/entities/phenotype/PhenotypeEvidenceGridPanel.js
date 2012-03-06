@@ -28,22 +28,26 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var createPhenotypeAssociationFormWindow = null;
 		var editPhenotypeAssociationFormWindow = null;
 		
-   		// Show Admin column after user logs in. 
-		Gemma.Application.currentUser.on("logIn", 
-			function(userName, isAdmin) {	
-				var columnModel = this.getColumnModel();
-				columnModel.setHidden(columnModel.getIndexById('admin'), !isAdmin);
-			},
-			this);
-		   		
-   		// Hide Admin column after user logs out. 
-		Gemma.Application.currentUser.on("logOut", 
-			function() {	
-				var columnModel = this.getColumnModel();
-				columnModel.setHidden(columnModel.getIndexById('admin'), true);
-			},
-			this);
-
+		if (!this.createPhenotypeAssociationHandler) {		
+	   		// Show Admin column after user logs in. 
+			Gemma.Application.currentUser.on("logIn", 
+				function(userName, isAdmin) {	
+					var columnModel = this.getColumnModel();
+					// Show Admin column for all logged-in users.
+					columnModel.setHidden(columnModel.getIndexById('admin'), false);
+				},
+				this);
+			   		
+	   		// Hide Admin column after user logs out. 
+			Gemma.Application.currentUser.on("logOut", 
+				function() {	
+					var columnModel = this.getColumnModel();
+					// Hide Admin column when users log out.
+					columnModel.setHidden(columnModel.getIndexById('admin'), true);
+				},
+				this);
+		}
+		
 		var generateLink = function(methodWithArguments, imageSrc) {
 			return '<span class="link" onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments
 						+ '"><img src="' + imageSrc + '" alt="" ext:qtip=""/></span>';
@@ -73,18 +77,20 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: (this.currentGene == null),
-			handler: function() {
-				if (createPhenotypeAssociationFormWindow == null) {
-					createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-				}
-
-				createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
-					{
-						gene: this.currentGene,
-						phenotypes: this.currentPhenotypes
-					});
-			},
+			handler: this.createPhenotypeAssociationHandler ?
+				this.createPhenotypeAssociationHandler :
+				function() {
+					if (createPhenotypeAssociationFormWindow == null) {
+						createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+						this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+					}
+	
+					createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+						{
+							gene: this.currentGene,
+							phenotypes: this.currentPhenotypes
+						});
+				},
 			scope: this,
 			icon: "/Gemma/images/icons/add.png",
 			tooltip: "Add new phenotype association"
@@ -368,19 +374,30 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				{
 					header: 'Admin',
 					id: 'admin',
-					width: 0.12,
+					width: 0.13,
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-		            	if (record.data.className === 'LiteratureEvidenceValueObject' &&
-		            		record.data.securityInfoValueObject.currentUserHasWritePermission) {
-		            		adminLinks = generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
-											generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png');
+		            	if (record.data.className === 'LiteratureEvidenceValueObject') {
+		            		if (record.data.securityInfoValueObject.currentUserHasWritePermission) {
+			            		adminLinks += generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
+											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
+		            		}
+		            		
+							adminLinks += Gemma.SecurityManager.getSecurityLink(
+								'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
+								record.data.id,
+								record.data.securityInfoValueObject.public,
+								record.data.securityInfoValueObject.shared,
+								record.data.securityInfoValueObject.currentUserIsOwner,
+								null,
+								null,
+								'Phenotype Association'); // Evidence name for the title in Security dialog.  											
 		            	}
 		            	
 						return adminLinks;
 		            },
-		            hidden: !(Ext.get("hasAdmin") != null && Ext.get("hasAdmin").getValue()),
+		            hidden: !(Ext.get("hasUser") != null && Ext.get("hasUser").getValue()),
 					sortable: true,
 					scope: this
 				}
@@ -458,8 +475,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							pubMedId: record.data.citationValueObject.pubmedAccession,
 							description: record.data.description,
 							evidenceCode: record.data.evidenceCode,
-							lastUpdated: record.data.lastUpdated,
-							isPublic: record.data.securityInfoValueObject.public
+							lastUpdated: record.data.lastUpdated
 						});
 				}
 			},

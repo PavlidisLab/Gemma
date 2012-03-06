@@ -15,6 +15,12 @@ Gemma.EvidenceCodes = {
 	icTT: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.',
 	tasText: 'Traceable Author Statement',
 	tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.',
+    iepText: 'Inferred from Expression Pattern',
+    iepTT: 'The association between the gene and phenotype is inferred from the timing or location of expression of a gene.',
+    impText: 'Inferred from Mutant Phenotype',
+    impTT: 'The association between the gene and phenotype is inferred based on differences in the function, process, or cellular localization between two different alleles of the corresponding gene.',
+    igiText: 'Inferred from Genetic Interaction',
+    igiTT: 'The association between the gene and phenotype is inferred based on a mutation in another gene.',
 	EXP: 'Inferred from Experiment',
 	IC: 'Inferred by Curator',
 	TAS: 'Traceable Author Statement',
@@ -398,11 +404,12 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	PhenotypePanel:{
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
-		setupErrorText:'If you are using PhenotypePanel inside of Gemma,<br />' +
-    			'<b>phenotypeStoreProxy</b>, <b>geneStoreProxy</b> and<br />' +
-    			'<b>geneColumnRenderer</b> should not be set <br />' +
-    			'in config. Otherwise, all of them should be set.',
-		
+		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>, <br />' +
+    			'<b>geneStoreProxy</b>, <b>geneColumnRenderer</b> and <b>createPhenotypeAssociationHandler</b><br />' +
+    			' should not be set in config. Otherwise, all of them should be set.<br />' +
+    			'',
+    	modifyPhenotypeAssociationOutsideOfGemmaTitle: "Add new phenotype association", 
+		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>."
 	},
 	PhenotypeAssociationForm: {
 		ErrorMessage: {

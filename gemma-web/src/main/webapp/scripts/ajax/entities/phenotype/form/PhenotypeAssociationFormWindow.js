@@ -13,7 +13,7 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 	layout: 'fit',
 	modal: true,
 	constrain: true,
-	width: 740,
+	width: 700,
 	height: 500,
 	shadow: true,
 	closeAction: 'hide',
@@ -81,6 +81,8 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 
 Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
     initComponent: function() {
+    	var ANCHOR_VALUE = '96%';
+    	
 		var hasError = true;
 
 		// They are null when this form is used for creating evidence.
@@ -101,6 +103,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
     	});
 
 		var phenotypesSearchPanel = new Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel({
+			anchor: ANCHOR_VALUE,
 			listeners: {
 				blur: function() {
 					this.validateForm(false);
@@ -163,9 +166,14 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			mode: 'local',
 			store: new Ext.data.ArrayStore({
 				fields:  ['evidenceCode', 'evidenceCodeDisplayText'],
-				data: [['EXP', Gemma.EvidenceCodes.expText],
+				data: [
+						['EXP', Gemma.EvidenceCodes.expText],
 						['IC', Gemma.EvidenceCodes.icText],
-						['TAS', Gemma.EvidenceCodes.tasText]]
+						['TAS', Gemma.EvidenceCodes.tasText],
+						['IEP', Gemma.EvidenceCodes.iepText],
+						['IMP', Gemma.EvidenceCodes.impText],
+						['IGI', Gemma.EvidenceCodes.igiText]
+					  ]
 			}),
 			value: 'IC',
 			forceSelection: true,				
@@ -215,18 +223,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		var descriptionTextArea = new Ext.form.TextArea({
 			name: 'description',
 			fieldLabel: 'Note',
-	//		width: 590
-			anchor: '96%'
-		});
-
-		var isPublicCheckbox = new Ext.form.Checkbox({
-			name: "isPublic",
-			fieldLabel: "Public",
-			value: false
+			anchor: ANCHOR_VALUE
 		});
 
     	Ext.apply(this, {
-			url: '/Gemma/processPhenotypeAssociationCreateForm.html',
 			layout: 'border',    	
 			monitorValid : true,
 
@@ -238,11 +238,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					layout: 'form',
 				    border: false,
 					autoScroll: true,
-					width: 600,
 						defaults: {
 							blankText: 'This field is required'
 						},
-						bodyStyle: 'padding: 5px;',
+						padding: '15px 0px 8px 15px',						
 						items: [
 							{
 								xtype: 'compositefield',
@@ -267,16 +266,18 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							    	evidenceCodeComboBox,
 									{
 										xtype: 'displayfield',
-										value: '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
-												'\''+
-												'<b>Inferred from Experiment</b><br />An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.<br /><br /><b>Inferred by Curator</b><br />The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.<br /><br /><b>Traceable Author Statement</b><br />The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.' +
-												'\'); return false">' +
-												'<img src="/Gemma/images/help.png" /> </a>',
+										value: '<img src="/Gemma/images/help.png" ext:qtip="' +
+												'<b>' + Gemma.EvidenceCodes.expText + '</b><br />' + Gemma.EvidenceCodes.expTT + '<br /><br />' + 
+												'<b>' + Gemma.EvidenceCodes.icText + '</b><br />' + Gemma.EvidenceCodes.icTT + '<br /><br />' + 
+												'<b>' + Gemma.EvidenceCodes.tasText + '</b><br />' + Gemma.EvidenceCodes.tasTT + '<br /><br />' + 
+												'<b>' + Gemma.EvidenceCodes.iepText + '</b><br />' + Gemma.EvidenceCodes.iepTT + '<br /><br />' + 
+												'<b>' + Gemma.EvidenceCodes.impText + '</b><br />' + Gemma.EvidenceCodes.impTT + '<br /><br />' + 
+												'<b>' + Gemma.EvidenceCodes.igiText + '</b><br />' + Gemma.EvidenceCodes.igiTT + '<br /><br />' + 
+												'" />',
 										margins: '4 0 0 0'			
 									}
 							    ]
-							},
-							isPublicCheckbox
+							}
 						]
 			}],
 			setData: function(action, data) {
@@ -300,7 +301,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					
 					descriptionTextArea.setValue(data.description);
 					evidenceCodeComboBox.setValue(data.evidenceCode);
-					isPublicCheckbox.setValue(data.isPublic);
 				}
 				
 				if (this.hidden) {
@@ -357,62 +357,66 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				errorPanel.hide();
 			},
 			validateForm: function(shouldSubmitAfterValidating) {
-				// Validate the form only when there are no previous errors
-				if (evidenceTypeComboBox.getValue() === 'LiteratureEvidenceValueObject') {
-					if (geneSearchComboBox.getValue() !== '' && evidenceCodeComboBox.getValue() !== '' && literaturePanel.getPubMedId() !== '') {
-						var phenotypeValueUris = phenotypesSearchPanel.validatePhenotypes();
-		
-						if (phenotypeValueUris != null && phenotypeValueUris.length > 0) {
-							var prevGeneValue = geneSearchComboBox.getValue();
-		
-							PhenotypeController.validatePhenotypeAssociation(
-								geneSearchComboBox.getValue(), phenotypeValueUris, evidenceTypeComboBox.getValue(),  
-								literaturePanel.getPubMedId(), descriptionTextArea.getValue(), evidenceCodeComboBox.getValue(), 
-								isPublicCheckbox.getValue(), evidenceId, lastUpdated, function(validateEvidenceValueObject) {
-			
-		
-								// Because using the controller to validate takes time, fields such as gene value could be changed (e.g. by clicking the Reset button). 
-								// Thus, we should show error ONLY when a sample test field has not been changed after the controller call. I picked Gene as a sample.  
-								if (prevGeneValue === geneSearchComboBox.getValue()) {
-									var hasWarning = false;
-		
-									if (validateEvidenceValueObject == null) {
-										hasError = false;
-										errorPanel.hide();
+				var evidenceType = evidenceTypeComboBox.getValue();
+				if (evidenceType === '') {
+					hasError = true;
+					errorPanel.hide();
+				} else if (evidenceType === 'LiteratureEvidenceValueObject') {
+					var phenotypeValueUris = phenotypesSearchPanel.validatePhenotypes();
+					
+					if (geneSearchComboBox.getValue() === '' ||
+						phenotypeValueUris == null || phenotypeValueUris.length <= 0 ||
+						literaturePanel.getPubMedId() === '' || evidenceCodeComboBox.getValue() === '') {
+						hasError = true;
+						errorPanel.hide();
+					} else {
+						var prevGeneValue = geneSearchComboBox.getValue();
+
+						// Ask the controller to validate only after all fields are filled.
+						PhenotypeController.validatePhenotypeAssociation(
+							geneSearchComboBox.getValue(), phenotypeValueUris, evidenceType,  
+							literaturePanel.getPubMedId(), descriptionTextArea.getValue(), evidenceCodeComboBox.getValue(), 
+							evidenceId, lastUpdated, function(validateEvidenceValueObject) {
+
+							// Because using the controller to validate takes time, fields such as gene value could be changed (e.g. by clicking the Reset button). 
+							// Thus, we should show error ONLY when a sample test field has not been changed after the controller call. I picked Gene as a sample.  
+							if (prevGeneValue === geneSearchComboBox.getValue()) {
+								var hasWarning = false;
+	
+								if (validateEvidenceValueObject == null) {
+									hasError = false;
+									errorPanel.hide();
+								} else {
+									var errorCode = Gemma.convertToEvidenceError(validateEvidenceValueObject); 
+									hasWarning = errorCode.isWarning;
+									hasError = !hasWarning; 
+									if (hasWarning) {
+										errorPanel.showWarning(errorCode.errorMessage);
 									} else {
-										var errorCode = Gemma.convertToEvidenceError(validateEvidenceValueObject); 
-										hasWarning = errorCode.isWarning;
-										hasError = !hasWarning; 
+										errorPanel.showError(errorCode.errorMessage);
+									}
+	
+								}						
+	
+								if (shouldSubmitAfterValidating) {
+									if (!hasError) {
 										if (hasWarning) {
-											errorPanel.showWarning(errorCode.errorMessage);
+											Ext.MessageBox.confirm('Confirm',
+												'<b>' + errorPanel.getErrorMessage() + '</b><br />' +
+													'Are you sure you want to ' + (evidenceId == null ? 'add' : 'edit') + ' phenotype association?',
+												function(button) {
+													if (button === 'yes') {
+														this.submitForm();
+													}
+												},
+												this);
 										} else {
-											errorPanel.showError(errorCode.errorMessage);
-										}
-		
-									}						
-		
-									if (shouldSubmitAfterValidating) {
-										if (!hasError) {
-											if (hasWarning) {
-												Ext.MessageBox.confirm('Confirm',
-													'<b>' + errorPanel.getErrorMessage() + '</b><br />' +
-														'Are you sure you want to ' + (evidenceId == null ? 'add' : 'edit') + ' phenotype association?',
-													function(button) {
-														if (button === 'yes') {
-															this.submitForm();
-														}
-													},
-													this);
-											} else {
-												this.submitForm();
-											}
+											this.submitForm();
 										}
 									}
-								}							
-							}.createDelegate(this));
-							
-						}
-		
+								}
+							}							
+						}.createDelegate(this));
 					}
 				}
 			},
@@ -426,7 +430,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			    literaturePanel.reset();
 				descriptionTextArea.reset();
 				evidenceCodeComboBox.reset();
-				isPublicCheckbox.reset();
 				
 				this.validateForm(false);
 			},	

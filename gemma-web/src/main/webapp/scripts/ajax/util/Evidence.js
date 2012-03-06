@@ -14,6 +14,18 @@ Gemma.decodeEvidenceCode = function(evidenceCode) {
 		'TAS': {
 			displayText: Gemma.EvidenceCodes.tasText,
 			tooltipText: Gemma.EvidenceCodes.tasTT
+		},
+		'IEP': {
+			displayText: Gemma.EvidenceCodes.iepText,
+			tooltipText: Gemma.EvidenceCodes.iepTT
+		},
+		'IMP': {
+			displayText: Gemma.EvidenceCodes.impText,
+			tooltipText: Gemma.EvidenceCodes.impTT
+		},
+		'IGI': {
+			displayText: Gemma.EvidenceCodes.igiText,
+			tooltipText: Gemma.EvidenceCodes.igiTT
 		}
 	};
 	

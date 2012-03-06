@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.JSONUtil;
@@ -58,7 +57,7 @@ public class PhenotypeController extends BaseController {
     private UserManager userManager;
 
     private static EvidenceValueObject createEvidenceValueObject(Integer geneNCBI, String[] phenotypeValueUris, String evidenceClassName, 
-    		String pubmedId, String description, String evidenceCode, boolean isPublic, Long evidenceId, Long lastUpdated) {
+    		String pubmedId, String description, String evidenceCode, Long evidenceId, Long lastUpdated) {
     	
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
         for (int i = 0; i < phenotypeValueUris.length; ++i) {
@@ -67,13 +66,9 @@ public class PhenotypeController extends BaseController {
     	
         EvidenceValueObject evidenceValueObject = null; 
         if (evidenceClassName.equals(LiteratureEvidenceValueObject.class.getSimpleName())) {
-        	SecurityInfoValueObject securityInfoValueObject = new SecurityInfoValueObject();
-        	securityInfoValueObject.setPublic(isPublic);
-        	
         	boolean isNegativeEvidence = false;
         	evidenceValueObject = new LiteratureEvidenceValueObject(geneNCBI,
         			phenotypes, pubmedId, description, evidenceCode, isNegativeEvidence);
-        	evidenceValueObject.setSecurityInfoValueObject(securityInfoValueObject);
         	
         	if (evidenceId != null) {
         		evidenceValueObject.setId(evidenceId);
@@ -176,7 +171,6 @@ public class PhenotypeController extends BaseController {
         String pubmedId = request.getParameter( "pubmedId" );
         String description = request.getParameter( "description" );
         String evidenceCode = request.getParameter( "evidenceCode" );
-        boolean isPublic = (request.getParameter( "isPublic" ) != null);
         
         String evidenceId = request.getParameter("evidenceId");  // hidden field
         
@@ -189,7 +183,7 @@ public class PhenotypeController extends BaseController {
     		try {
     			validateEvidenceValueObject = phenotypeAssociationManagerService.create(
     					createEvidenceValueObject(geneNCBI, phenotypeValueUris, evidenceClassName,
-    							pubmedId, description, evidenceCode, isPublic, newEvidenceId, lastUpdated));
+    							pubmedId, description, evidenceCode, newEvidenceId, lastUpdated));
     		} catch (Throwable throwable) {
     			validateEvidenceValueObject = generateValidateEvidenceValueObject(throwable);
     		}
@@ -199,7 +193,7 @@ public class PhenotypeController extends BaseController {
     		try {
     			validateEvidenceValueObject = phenotypeAssociationManagerService.update(
     					createEvidenceValueObject(geneNCBI, phenotypeValueUris, evidenceClassName,  
-    				    		pubmedId, description, evidenceCode, isPublic, new Long(evidenceId), lastUpdated));
+    				    		pubmedId, description, evidenceCode, new Long(evidenceId), lastUpdated));
     		} catch (Throwable throwable) {
     			validateEvidenceValueObject = generateValidateEvidenceValueObject(throwable);
     		}
@@ -228,11 +222,11 @@ public class PhenotypeController extends BaseController {
     }
     
     public ValidateEvidenceValueObject validatePhenotypeAssociation(Integer geneNCBI, String[] phenotypeValueUris, String evidenceClassName, 
-    		String pubmedId, String description, String evidenceCode, boolean isPublic, Long evidenceId, Long lastUpdated) {
+    		String pubmedId, String description, String evidenceCode, Long evidenceId, Long lastUpdated) {
     	ValidateEvidenceValueObject validateEvidenceValueObject;
 		try {
 			validateEvidenceValueObject = phenotypeAssociationManagerService.validateEvidence(createEvidenceValueObject(geneNCBI, phenotypeValueUris,  
-	        		evidenceClassName, pubmedId, description, evidenceCode, isPublic, evidenceId, lastUpdated));
+	        		evidenceClassName, pubmedId, description, evidenceCode, evidenceId, lastUpdated));
 		} catch (Throwable throwable) {
 			validateEvidenceValueObject = generateValidateEvidenceValueObject(throwable);
 		}

@@ -87,18 +87,20 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: true,
-			handler: function() {
-				if (phenotypeAssociationFormWindow == null) {
-					phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-					this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-				}
-
-				phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
-					{
-						gene: null,
-						phenotypes: this.currentPhenotypes
-					});
-			},
+			handler: this.createPhenotypeAssociationHandler ?
+				this.createPhenotypeAssociationHandler :
+					function() {
+						if (phenotypeAssociationFormWindow == null) {
+							phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+							this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+						}
+		
+						phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+							{
+								gene: null,
+								phenotypes: this.currentPhenotypes
+							});
+					},
 			scope: this,
 			icon: "/Gemma/images/icons/add.png",
 			tooltip: "Add new phenotype association"

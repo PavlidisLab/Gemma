@@ -23,7 +23,7 @@ Gemma.SecurityManager.usersGroupName = "Users";
  * @param {}
  *            elid HTML element that will be used to show the results.
  */
-Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
+Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityFormTitle) {
 	/*
 	 * Show a panel to 1) make the data set private or public 2) share the data with groups the user is in an which 3)
 	 * shows the current permissions. There can be any number of groups. On returning, update the div.
@@ -177,7 +177,10 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 		 * show panel...
 		 */
 		var sp = new Ext.Window({
-					title : "Security for: " + Ext.util.Format.ellipsis(securityInfo.entityName, 70, true),
+					title : "Security for: " +
+								(securityFormTitle == null ?
+									Ext.util.Format.ellipsis(securityInfo.entityName, 70, true) :
+									securityFormTitle),
 					minimizable : false,
 					maximizable : false,
 					width:widgetWidth + 30, // needed for chrome
@@ -303,7 +306,7 @@ Gemma.SecurityManager.updateSecurityLink = function(elid, clazz, id, isPublic, i
  *            canEdit if the current user should be able to edit permissions.
  * @return {} html for the link
  */
-Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, canEdit, elid, forUpdate) {
+Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, canEdit, elid, forUpdate, securityFormTitle) {
 
 	var icon = '';
 
@@ -325,7 +328,7 @@ Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, 
 	}
 
 	var dialog = canEdit ? 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid +
-			'\', \'' + clazz + '\',\'' + id + '\');"' : '';
+			'\', \'' + clazz + '\',\'' + id + '\'' + (securityFormTitle == null ? '' : ', \'' + securityFormTitle + '\'') + ');"' : '';
 	if (forUpdate) {
 		return icon + '&nbsp;' + sharedIcon;
 	} else {

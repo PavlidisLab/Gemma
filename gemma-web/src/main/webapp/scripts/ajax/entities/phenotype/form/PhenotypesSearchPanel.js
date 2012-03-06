@@ -10,7 +10,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 	fieldLabel: 'Phenotype',
 	border: false,
 	layout: 'form',
-	width: 500,
     initComponent: function() {
 		var originalPhenotypeSelections = null;
 		var originalGeneSelection = null;
@@ -29,7 +28,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 			var comboButtonPanel = new Ext.Panel({
 				border: false,
 				layout: 'hbox',
-			    autoWidth: true,
 			    	items: [ 
 						phenotypeSearchComboBox,
 						{
@@ -60,7 +58,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 		var rowsPanel = new Ext.Panel({
 			border: false,
 			layout: 'form',
-		    autoWidth: true,
 	    	items: [
 	    		createComboButtonPanel()
 	    	] 
@@ -152,7 +149,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 					border: false,
 					layout: 'form',
 					hideLabel: true,
-				    autoWidth: true,
 				    items: [
 						addPhenotypeRowButton,
 						{

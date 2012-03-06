@@ -31,7 +31,9 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '9'},
 			enableKeyEvents: true,
 		    initComponent: function() {
-				var keyPressed = false;
+				// This is set to true initially because we will see it having invalid red border 
+				// very briefly and then the border disappears after its initial value is set.		    	
+				var keyPressed = true;
 		    	
 				Ext.apply(this, {
 					validator: function() {
@@ -55,6 +57,12 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		});
 		this.relayEvents(pubMedIdField, ['blur', 'keypress']);
 		
+		var statusDisplayField = new Ext.form.DisplayField({
+			value: 'Searching for publication ...',
+			style: 'color: grey; font-style: italic;',
+			margins: '4 0 0 0'			
+		});
+		
 		var bibliographicReferenceDetailsPanel = new Gemma.BibliographicReference.DetailsPanel({
 			hidden: true,			
 			border: false,
@@ -62,7 +70,19 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			padding: '0 0 10px 10px',			
 			collapseByDefault: true       		
 		});
-        
+
+		// loadMask needs to be set up on render because this.getEl() has not been defined yet before render.     	
+		bibliographicReferenceDetailsPanel.on('render', function() {
+			if (!bibliographicReferenceDetailsPanel.loadMask) {
+				bibliographicReferenceDetailsPanel.loadMask = new Ext.LoadMask(bibliographicReferenceDetailsPanel.getEl(), {
+					msg: "Loading ..."
+				});
+				
+				// This status field cannot be set hidden in the config. Otherwise, it would be on top of the PubMed Id field.
+				statusDisplayField.hide();
+			}
+		});    	
+    	
 		var pubMedStore = new Ext.data.Store({
 			proxy: new Ext.data.DWRProxy({
 				        apiActionToHandlerMap: {
@@ -81,6 +101,9 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		pubMedStore.on({
 		    'load': {
 		        fn: function(store, records, options){
+					statusDisplayField.hide();
+					bibliographicReferenceDetailsPanel.loadMask.hide();
+
 		        	// Because it takes time to reload the store, update PudMed details
 		        	// only when PudMed Id has not been changed (e.g. by resetting).
 		        	if (pubMedIdField.getValue() !== '') {		        	
@@ -107,6 +130,11 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			if (pubMedId === "") {
 				bibliographicReferenceDetailsPanel.hide();
 			} else if (pubMedId > 0) {
+				if (bibliographicReferenceDetailsPanel.loadMask) {
+					statusDisplayField.show();
+					bibliographicReferenceDetailsPanel.loadMask.show();
+				}
+
 				pubMedStore.reload({
 					params: {
 						'pubMedId': pubMedId
@@ -137,7 +165,16 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				this.setPubMedId(pubMedIdField.originalValue);
 			},
 	        items :[
-				pubMedIdField,	        
+				{
+					xtype: 'compositefield',
+					border: false,
+					layout: 'form',
+					fieldLabel: 'PubMed Id',
+				    items: [
+						pubMedIdField,
+						statusDisplayField
+				    ]
+				},
        			bibliographicReferenceDetailsPanel
 	        ]
 		});

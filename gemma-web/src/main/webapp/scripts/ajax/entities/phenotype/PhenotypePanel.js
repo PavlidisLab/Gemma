@@ -7,13 +7,20 @@
 Ext.namespace('Gemma');
 
 Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
+	// Configs that should be set if used outside of Gemma (BEGIN)
+	phenotypeStoreProxy: null,
+	geneStoreProxy: null,
+	geneColumnRenderer: null, 
+	createPhenotypeAssociationHandler: null,
+	// Configs that should be set if used outside of Gemma (END)
 	height: 600,
 	width: 760,
 	layout: 'border',        
     initComponent: function() {
-    	if ((this.phenotypeStoreProxy && this.geneStoreProxy && this.geneColumnRenderer) ||
-    	    (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.geneColumnRenderer)) {
-    	    	
+    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.geneColumnRenderer && this.createPhenotypeAssociationHandler) ||
+    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.geneColumnRenderer && !this.createPhenotypeAssociationHandler))) {
+    		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
+    	} else {
 			var currentPhenotypes = null;
 			var currentGene = null;
 
@@ -22,6 +29,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				phenotypeStoreProxy: this.phenotypeStoreProxy ?
 					this.phenotypeStoreProxy :
 					new Ext.data.DWRProxy(PhenotypeController.loadAllPhenotypes),
+				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,					
 				listeners: {
 					phenotypeSelectionChange: function(selectedPhenotypes) {
 			            geneGrid.setCurrentPhenotypes(selectedPhenotypes);
@@ -45,6 +53,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 							    	        }
 								        }
 							    	}),
+				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene, selectedGeneEvidence) {
 						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene, selectedGeneEvidence);
@@ -63,7 +72,8 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			this.relayEvents(geneGrid, ['phenotypeAssociationChanged']);
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
-	    		region: 'center'
+	    		region: 'center',
+				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
 
@@ -106,9 +116,11 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				phenotypeGridStore.reload(phenotypeGridStore.lastOptions);
 			};
 
-			Gemma.Application.currentUser.on("logIn", reloadWholePanel,	this);
-			Gemma.Application.currentUser.on("logOut", reloadWholePanel, this);
-			
+			if (!this.createPhenotypeAssociationHandler) {
+				Gemma.Application.currentUser.on("logIn", reloadWholePanel,	this);
+				Gemma.Application.currentUser.on("logOut", reloadWholePanel, this);
+			}
+
 			Ext.apply(this, {
 	        	items: [
 		        	{
@@ -140,8 +152,6 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					selectRecordsOnLoad(geneGrid, [ parseInt(Ext.get("geneId").getValue()) ]);
 				}
 			}
-    	} else {
-    		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	}
 
 		this.superclass().initComponent.call(this);
