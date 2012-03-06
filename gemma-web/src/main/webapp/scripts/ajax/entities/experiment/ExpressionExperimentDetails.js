@@ -377,7 +377,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 		var pubMedIdField = new Ext.form.NumberField({
 			xtype: 'numberfield',
 			allowDecimals: false,
-			minLength: 7,
+			minLength: 1,
 			maxLength: 9,
 			allowNegative: false,
 			emptyText: (this.isAdmin || this.editable) ? 'Enter pubmed id' : 'Not Available',
