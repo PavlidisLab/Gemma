@@ -144,12 +144,16 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					this.hideErrorPanel();
 				},
 				load: function(store, records, options) {
-			    	if (store.getTotalCount() > 0) {
-						this.hideErrorPanel();
-						this.validateForm(false);
-			    	} else {
-						this.showPubMedIdError();
-			    	}
+		        	// Because it takes time to reload the store, show errors
+		        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+					if (options.params.pubMedId === literaturePanel.getPubMedId()) {
+				    	if (store.getTotalCount() > 0) {
+							this.hideErrorPanel();
+							this.validateForm(false);
+				    	} else {
+							this.showPubMedIdError();
+				    	}
+					}			    	
 				},
 				scope: this
 			}
@@ -378,6 +382,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							literaturePanel.getPubMedId(), descriptionTextArea.getValue(), evidenceCodeComboBox.getValue(), 
 							evidenceId, lastUpdated, function(validateEvidenceValueObject) {
 
+// TODO: I don't think this test is neccessary.								
 							// Because using the controller to validate takes time, fields such as gene value could be changed (e.g. by clicking the Reset button). 
 							// Thus, we should show error ONLY when a sample test field has not been changed after the controller call. I picked Gene as a sample.  
 							if (prevGeneValue === geneSearchComboBox.getValue()) {

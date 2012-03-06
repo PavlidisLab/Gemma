@@ -105,8 +105,8 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 					bibliographicReferenceDetailsPanel.loadMask.hide();
 
 		        	// Because it takes time to reload the store, update PudMed details
-		        	// only when PudMed Id has not been changed (e.g. by resetting).
-		        	if (pubMedIdField.getValue() !== '') {		        	
+		        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+					if (options.params.pubMedId === pubMedIdField.getValue()) {					
 			        	if (pubMedStore.getTotalCount() > 0) {
 							pubMedIdField.clearInvalid();
 							
