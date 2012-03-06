@@ -58,7 +58,7 @@ import ubic.gemma.security.SecurityService;
  * @version $Id$
  */
 @Component
-public class ExpressionExperimentValueObjectHelper {
+public class ExpressionExperimentSetValueObjectHelper {
 
     @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao = null;
