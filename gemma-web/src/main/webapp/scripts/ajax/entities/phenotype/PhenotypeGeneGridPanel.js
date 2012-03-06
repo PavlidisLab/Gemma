@@ -151,7 +151,6 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				listeners: {
 					selectionchange: function(selModel) {
 						var selectedGene = null;
-						var selectedGeneEvidence = null;
 						
 						if (selModel.hasSelection()) {
 							var geneGridSelection = this.getSelectionModel().getSelected();
@@ -163,10 +162,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								officialName: geneGridSelection.get('officialName'),
 								taxonCommonName: geneGridSelection.get('taxonCommonName')
 							};
-
-							selectedGeneEvidence = geneGridSelection.json.evidence;
 						}						
-						this.fireEvent('geneSelectionChange', this.currentPhenotypes, selectedGene,	selectedGeneEvidence);
+						this.fireEvent('geneSelectionChange', this.currentPhenotypes, selectedGene);
 					},
 					scope: this
 				}

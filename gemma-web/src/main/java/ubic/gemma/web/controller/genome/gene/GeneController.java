@@ -20,8 +20,10 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -115,8 +117,9 @@ public class GeneController extends BaseController {
     }
 
     /** used to show gene info in the phenotype tab */
-    public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId );
+    public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId, String[] phenotypeValueUris ) {
+        return phenotypeAssociationManagerService.findEvidenceByGeneId(
+        		geneId, new HashSet<String>(Arrays.asList(phenotypeValueUris)) );
     }
 
     public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {

@@ -109,11 +109,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			this.evidencePhenotypeColumnRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 				var phenotypesHtml = '';
 				for (var i = 0; i < value.length; i++) {
-					if (value[i].valueHTML) {
-						phenotypesHtml += value[i].valueHTML + '<br />';
+					if (value[i].child || value[i].root) {					
+						phenotypesHtml += '<span style="font-weight: bold; color: red;">' +
+												value[i].value +
+										  '</span>';
 					} else {
-						phenotypesHtml += value[i].value + '<br />';
+						phenotypesHtml += value[i].value;
 					}
+					phenotypesHtml += '<br />';
 				}					
 				return phenotypesHtml;
 		    }
@@ -127,7 +130,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			    	        read: {
 			        	        dwrFunction: GeneController.loadGeneEvidence,
 			            	    getDwrArgsFunction: function(request){
-			            	    	return [request.params["geneId"]];
+			            	    	return [request.params["geneId"], request.params["phenotypeValueUris"]];
 				                }
 			    	        }
 				        }
@@ -405,12 +408,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			tbar: [
 				createPhenotypeAssociationButton
 			],
-		    setCurrentData: function(currentPhenotypes, currentGene, currentEvidence) {
+		    setCurrentData: function(currentPhenotypes, currentGene) {
 		    	this.currentPhenotypes = currentPhenotypes;
 
 				createPhenotypeAssociationButton.setDisabled(currentGene == null);
 		    	
-				if (currentGene != null && currentEvidence != null) {
+				if (currentGene != null) {
 					this.setTitle("Evidence for " + currentGene.officialSymbol);
 					
 			    	this.currentGene = {
@@ -421,17 +424,17 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			    		taxonCommonName: currentGene.taxonCommonName
 			    	};
 			    	
-					for (var i = 0; i < currentEvidence.length; i++) {
-						for (var j = 0; j < currentEvidence[i].phenotypes.length; j++) {
-							if (currentEvidence[i].phenotypes[j].child || currentEvidence[i].phenotypes[j].root) {
-								currentEvidence[i].phenotypes[j].valueHTML =
-									'<span style="font-weight: bold; color: red;">' +
-										currentEvidence[i].phenotypes[j].value +
-									'</span>';								
-							}
-						}
+					var phenotypeValueUris = [];
+					for (var i = 0; i < currentPhenotypes.length; i++) {
+						phenotypeValueUris.push(currentPhenotypes[i].valueUri);
 					}
-					evidenceStore.loadData(currentEvidence);
+								    	
+					evidenceStore.reload({
+						params: {
+							'geneId': currentGene.id,
+							'phenotypeValueUris': phenotypeValueUris		    			
+						}
+					});
 				} else {
 					this.currentGene = null;
 
@@ -442,7 +445,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			loadGene: function(geneId) {
 		    	evidenceStore.reload({
 		    		params: {
-		    			'geneId': geneId
+		    			'geneId': geneId,
+						'phenotypeValueUris': []
 		    		}
 		    	});
 			},

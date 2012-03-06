@@ -55,8 +55,8 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 							    	}),
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,
 				listeners: {
-					geneSelectionChange: function(selectedPhenotypes, selectedGene, selectedGeneEvidence) {
-						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene, selectedGeneEvidence);
+					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
+						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene);
 						currentGene = selectedGene;
         			}
 				}
@@ -73,6 +73,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
 	    		region: 'center',
+				hasStoreProxy: true,	    		
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
