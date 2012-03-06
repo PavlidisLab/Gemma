@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -62,7 +62,7 @@ public class ExpressionExperimentSetServiceImpl extends
     private ExpressionExperimentReportService expressionExperimentReportService;
     
     @Autowired
-    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
     /*
      * (non-Javadoc)

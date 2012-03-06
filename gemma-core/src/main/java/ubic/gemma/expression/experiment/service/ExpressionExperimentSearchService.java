@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -79,7 +79,7 @@ public class ExpressionExperimentSearchService {
     private ExpressionExperimentService expressionExperimentService;
     
     @Autowired
-    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
     /**
      * 

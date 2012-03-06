@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentValueObjectHelper;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -108,7 +108,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private ExpressionExperimentSetService experimentSetService;
     
     @Autowired
-    private ExpressionExperimentValueObjectHelper expressionExperimentValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
     /*
      * (non-Javadoc)
