@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -58,12 +59,21 @@ public interface PhenotypeAssociationManagerService {
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
 
     /**
+     * Return all evidence for a specific gene id with evidence flagged, indicating more information
+     * 
+     * @param geneId The Evidence id
+     * @param phenotypesValuesUri the chosen phenotypes
+     * @return The Gene we are interested in
+     */
+    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri );
+
+    /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
      */
-    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
+    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
