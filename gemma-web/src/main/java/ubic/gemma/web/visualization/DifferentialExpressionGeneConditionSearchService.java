@@ -54,6 +54,7 @@ import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
@@ -401,7 +402,7 @@ public class DifferentialExpressionGeneConditionSearchService {
             watch.start( "Get array designs used." );
 
             for ( ExpressionAnalysisResultSet rs : resultSetBatch ) {
-                arrayDesignsUsed.addAll( expressionExperimentDao.getArrayDesignsUsed( ( ExpressionExperiment ) rs
+                arrayDesignsUsed.addAll( expressionExperimentDao.getArrayDesignsUsed( ( BioAssaySet ) rs
                         .getAnalysis().getExperimentAnalyzed() ) );
             }
             watch.stop();
