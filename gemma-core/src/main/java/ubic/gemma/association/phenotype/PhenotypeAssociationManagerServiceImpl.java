@@ -244,13 +244,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
 
-        String firstPhenotypesValuesUri = phenotypesValuesUri.iterator().next();
-
         // find all Genes containing the first phenotypeValueUri
-        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( phenotypesWithChildren
-                .get( firstPhenotypesValuesUri ) );
-
-        phenotypesWithChildren.remove( firstPhenotypesValuesUri );
+        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( possibleChildrenPhenotypes );
 
         // dont keep genes with evidence that the user doesnt have the permissions to see
         Collection<Gene> genesAfterAcl = filterGeneAfterAcl( genes );
