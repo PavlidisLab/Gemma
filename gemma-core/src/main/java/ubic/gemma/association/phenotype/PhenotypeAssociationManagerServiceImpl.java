@@ -171,7 +171,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
-        this.geneService.update( gene );
 
         return validateEvidenceValueObject;
     }
@@ -186,7 +185,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                .findPhenotypeAssociationForGeneNCBI( geneNCBI);
+                .findPhenotypeAssociationForGeneNCBI( geneNCBI );
 
         return this.convert2ValueObjects( phenotypeAssociations );
     }
@@ -388,21 +387,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .populateModifiedValues( modifedEvidenceValueObject, phenotypeAssociation );
 
         this.associationService.update( phenotypeAssociation );
-
-        // change the security to public or private if needed
-        if ( modifedEvidenceValueObject.getSecurityInfoValueObject() != null ) {
-
-            // was private becomes public
-            if ( this.securityService.isPrivate( phenotypeAssociation )
-                    && modifedEvidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
-                this.securityService.makePublic( phenotypeAssociation );
-            }
-            // was public becomes private
-            else if ( this.securityService.isPublic( phenotypeAssociation )
-                    && !modifedEvidenceValueObject.getSecurityInfoValueObject().isPublic() ) {
-                this.securityService.makePrivate( phenotypeAssociation );
-            }
-        }
 
         return validateEvidenceValueObject;
     }
