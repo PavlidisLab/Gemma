@@ -1,70 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527578125_463523_83" name="process" metamodelReference="_11_5_e240333_1154527578125_463523_83_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_M-emwku4EeGhtIxlutwgyA" source="attributes">
-    <details xmi:id="_M-emw0u4EeGhtIxlutwgyA" key="version" value="0"/>
+  <eAnnotations xmi:id="_SnYJsmlSEeGSA9Z_BHiyvQ" source="attributes">
+    <details xmi:id="_SnYJs2lSEeGSA9Z_BHiyvQ" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_M-emxEu4EeGhtIxlutwgyA" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_M-emxUu4EeGhtIxlutwgyA" name="process_0" nsURI="http:///process_0_M-FiYEu4EeGhtIxlutwgyA.profile.uml2" nsPrefix="process_0">
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-emxku4EeGhtIxlutwgyA" name="process___andromdaprocessjbpmtaskblocking">
-        <eAnnotations xmi:id="_M-emx0u4EeGhtIxlutwgyA" source="stereotype" references="_11_5_e240333_1154527555484_345527_11"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-emyEu4EeGhtIxlutwgyA" name="_andromdaprocessjbpmtaskblocking" ordered="false" lowerBound="1" defaultValueLiteral="false">
-          <eAnnotations xmi:id="_M-emyUu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_M-emyku4EeGhtIxlutwgyA" key="documentation" value="Denotes this task to block signalling it's state unless it has ended."/>
+  <eAnnotations xmi:id="_SnYJtGlSEeGSA9Z_BHiyvQ" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_SnYJtWlSEeGSA9Z_BHiyvQ" name="process_0" nsURI="http:///process_0_Sk6rkWlSEeGSA9Z_BHiyvQ.profile.uml2" nsPrefix="process_0">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJtmlSEeGSA9Z_BHiyvQ" name="process___andromdaprocessjbpmtaskblocking">
+        <eAnnotations xmi:id="_SnYJt2lSEeGSA9Z_BHiyvQ" source="stereotype" references="_11_5_e240333_1154527555484_345527_11"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_SnYJuGlSEeGSA9Z_BHiyvQ" name="_andromdaprocessjbpmtaskblocking" ordered="false" lowerBound="1" defaultValueLiteral="false">
+          <eAnnotations xmi:id="_SnYJuWlSEeGSA9Z_BHiyvQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_SnYJumlSEeGSA9Z_BHiyvQ" key="documentation" value="Denotes this task to block signalling it's state unless it has ended."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-emy0u4EeGhtIxlutwgyA" name="process__BusinessProcess">
-        <eAnnotations xmi:id="_M-emzEu4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129568518_911545_8"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJu2lSEeGSA9Z_BHiyvQ" name="process__BusinessProcess">
+        <eAnnotations xmi:id="_SnYJvGlSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129568518_911545_8"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-emzUu4EeGhtIxlutwgyA" name="process__NodeLeave">
-        <eAnnotations xmi:id="_M-emzku4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129568393_539365_7"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJvWlSEeGSA9Z_BHiyvQ" name="process__NodeLeave">
+        <eAnnotations xmi:id="_SnYJvmlSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129568393_539365_7"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-emz0u4EeGhtIxlutwgyA" name="process__Timer">
-        <eAnnotations xmi:id="_M-em0Eu4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1120030836093_315389_0"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJv2lSEeGSA9Z_BHiyvQ" name="process__Timer">
+        <eAnnotations xmi:id="_SnYJwGlSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1120030836093_315389_0"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em0Uu4EeGhtIxlutwgyA" name="process___andromdaprocessjbpmtimertransition">
-        <eAnnotations xmi:id="_M-em0ku4EeGhtIxlutwgyA" source="stereotype" references="_11_5_e240333_1154527555484_517863_14"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-em00u4EeGhtIxlutwgyA" name="_andromdaprocessjbpmtimertransition" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_M-em1Eu4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_M-em1Uu4EeGhtIxlutwgyA" key="documentation" value="The outgoing transition to take after the timer has executed."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJwWlSEeGSA9Z_BHiyvQ" name="process___andromdaprocessjbpmtimertransition">
+        <eAnnotations xmi:id="_SnYJwmlSEeGSA9Z_BHiyvQ" source="stereotype" references="_11_5_e240333_1154527555484_517863_14"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_SnYJw2lSEeGSA9Z_BHiyvQ" name="_andromdaprocessjbpmtimertransition" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_SnYJxGlSEeGSA9Z_BHiyvQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_SnYJxWlSEeGSA9Z_BHiyvQ" key="documentation" value="The outgoing transition to take after the timer has executed."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em1ku4EeGhtIxlutwgyA" name="process__BeforeSignal">
-        <eAnnotations xmi:id="_M-em10u4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129567612_128908_4"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJxmlSEeGSA9Z_BHiyvQ" name="process__BeforeSignal">
+        <eAnnotations xmi:id="_SnYJx2lSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129567612_128908_4"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em2Eu4EeGhtIxlutwgyA" name="process___andromdaprocessjbpmtimerduedate">
-        <eAnnotations xmi:id="_M-em2Uu4EeGhtIxlutwgyA" source="stereotype" references="_11_5_e240333_1154527555484_812393_17"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-em2ku4EeGhtIxlutwgyA" name="_andromdaprocessjbpmtimerduedate" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_M-em20u4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_M-em3Eu4EeGhtIxlutwgyA" key="documentation" value="When this timer is due, the value of this field requires to be in the specific jBpm format."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJyGlSEeGSA9Z_BHiyvQ" name="process___andromdaprocessjbpmtimerduedate">
+        <eAnnotations xmi:id="_SnYJyWlSEeGSA9Z_BHiyvQ" source="stereotype" references="_11_5_e240333_1154527555484_812393_17"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_SnYJymlSEeGSA9Z_BHiyvQ" name="_andromdaprocessjbpmtimerduedate" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_SnYJy2lSEeGSA9Z_BHiyvQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_SnYJzGlSEeGSA9Z_BHiyvQ" key="documentation" value="When this timer is due, the value of this field requires to be in the specific jBpm format."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em3Uu4EeGhtIxlutwgyA" name="process__Task">
-        <eAnnotations xmi:id="_M-em3ku4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129548521_871830_1"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJzWlSEeGSA9Z_BHiyvQ" name="process__Task">
+        <eAnnotations xmi:id="_SnYJzmlSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129548521_871830_1"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em30u4EeGhtIxlutwgyA" name="process___andromdaprocessjbpmtimerrepeat">
-        <eAnnotations xmi:id="_M-em4Eu4EeGhtIxlutwgyA" source="stereotype" references="_11_5_e240333_1154527555484_300330_20"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-em4Uu4EeGhtIxlutwgyA" name="_andromdaprocessjbpmtimerrepeat" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_M-em4ku4EeGhtIxlutwgyA" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_M-em40u4EeGhtIxlutwgyA" key="documentation" value="The number of times to repeat this timer."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJz2lSEeGSA9Z_BHiyvQ" name="process___andromdaprocessjbpmtimerrepeat">
+        <eAnnotations xmi:id="_SnYJ0GlSEeGSA9Z_BHiyvQ" source="stereotype" references="_11_5_e240333_1154527555484_300330_20"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_SnYJ0WlSEeGSA9Z_BHiyvQ" name="_andromdaprocessjbpmtimerrepeat" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_SnYJ0mlSEeGSA9Z_BHiyvQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_SnYJ02lSEeGSA9Z_BHiyvQ" key="documentation" value="The number of times to repeat this timer."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em5Eu4EeGhtIxlutwgyA" name="process__NodeEnter">
-        <eAnnotations xmi:id="_M-em5Uu4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129568378_575653_6"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJ1GlSEeGSA9Z_BHiyvQ" name="process__NodeEnter">
+        <eAnnotations xmi:id="_SnYJ1WlSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129568378_575653_6"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em5ku4EeGhtIxlutwgyA" name="process__AfterSignal">
-        <eAnnotations xmi:id="_M-em50u4EeGhtIxlutwgyA" source="stereotype" references="_9_0_1fe00f9_1119129567784_936874_5"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJ1mlSEeGSA9Z_BHiyvQ" name="process__AfterSignal">
+        <eAnnotations xmi:id="_SnYJ12lSEeGSA9Z_BHiyvQ" source="stereotype" references="_9_0_1fe00f9_1119129567784_936874_5"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_M-em6Eu4EeGhtIxlutwgyA" name="process___andromdaprocessjbpmassignmentexpression">
-        <eAnnotations xmi:id="_M-em6Uu4EeGhtIxlutwgyA" source="stereotype" references="_11_5_e240333_1154527555484_297219_4"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_M-em6ku4EeGhtIxlutwgyA" name="_andromdaprocessjbpmassignmentexpression" ordered="false" upperBound="-1" defaultValueLiteral="">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_SnYJ2GlSEeGSA9Z_BHiyvQ" name="process___andromdaprocessjbpmassignmentexpression">
+        <eAnnotations xmi:id="_SnYJ2WlSEeGSA9Z_BHiyvQ" source="stereotype" references="_11_5_e240333_1154527555484_297219_4"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_SnYJ2mlSEeGSA9Z_BHiyvQ" name="_andromdaprocessjbpmassignmentexpression" ordered="false" upperBound="-1" defaultValueLiteral="">
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
@@ -167,10 +167,10 @@
       <type xmi:type="uml:Class" href="pathmap://UML2_METAMODELS/UML2.metamodel.uml2#_m9bQZ686EdiEh75YJ_3n8g"/>
     </ownedAttribute>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_165376_32" memberEnd="_11_5_e240333_1154527555609_130548_33 _11_5_e240333_1154527555609_264326_34">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_264326_34" name="extension_Task" visibility="private" type="_9_0_1fe00f9_1119129548521_871830_1" association="_11_5_e240333_1154527555609_165376_32" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_903864_36" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_976730_35"/>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_955233_52" memberEnd="_11_5_e240333_1154527555609_470890_54 _11_5_e240333_1154527555609_288630_53">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_470890_54" name="extension_Node Leave" visibility="private" type="_9_0_1fe00f9_1119129568393_539365_7" association="_11_5_e240333_1154527555609_955233_52" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_798020_56" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_636468_55"/>
     </ownedEnd>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_621075_42" memberEnd="_11_5_e240333_1154527555609_522910_44 _11_5_e240333_1154527555609_878977_43">
@@ -179,10 +179,16 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_672788_45"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_661413_37" memberEnd="_11_5_e240333_1154527555609_531518_39 _11_5_e240333_1154527555609_975969_38">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_531518_39" name="extension_After Signal" visibility="private" type="_9_0_1fe00f9_1119129567784_936874_5" association="_11_5_e240333_1154527555609_661413_37" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_23281_41" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_204708_40"/>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_239757_62" memberEnd="_11_5_e240333_1154527555609_536074_64 _11_5_e240333_1154527555609_167673_63">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_536074_64" name="extension_Business Process" visibility="private" type="_9_0_1fe00f9_1119129568518_911545_8" association="_11_5_e240333_1154527555609_239757_62" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_974211_66" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_525986_65"/>
+    </ownedEnd>
+  </ownedMember>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_586608_57" memberEnd="_11_5_e240333_1154527555609_93555_58 _11_5_e240333_1154527555609_687929_59">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_687929_59" name="extension_@andromda.process.jbpm.timer.duedate" visibility="private" type="_11_5_e240333_1154527555484_812393_17" association="_11_5_e240333_1154527555609_586608_57" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_927203_61" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_918021_60"/>
     </ownedEnd>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_501371_67" memberEnd="_11_5_e240333_1154527555609_331049_69 _11_5_e240333_1154527555609_150128_68">
@@ -191,22 +197,16 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_108417_70"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_955233_52" memberEnd="_11_5_e240333_1154527555609_470890_54 _11_5_e240333_1154527555609_288630_53">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_470890_54" name="extension_Node Leave" visibility="private" type="_9_0_1fe00f9_1119129568393_539365_7" association="_11_5_e240333_1154527555609_955233_52" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_798020_56" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_636468_55"/>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_847264_72" memberEnd="_11_5_e240333_1154527555609_229457_74 _11_5_e240333_1154527555609_230071_73">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_229457_74" name="extension_Node Enter" visibility="private" type="_9_0_1fe00f9_1119129568378_575653_6" association="_11_5_e240333_1154527555609_847264_72" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_940443_76" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_374497_75"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555593_361596_22" memberEnd="_11_5_e240333_1154527555593_754626_23 _11_5_e240333_1154527555593_757805_24">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555593_757805_24" name="extension_@andromda.process.jbpm.task.blocking" visibility="private" type="_11_5_e240333_1154527555484_345527_11" association="_11_5_e240333_1154527555593_361596_22" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555593_582139_26" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555593_810105_25"/>
-    </ownedEnd>
-  </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_239757_62" memberEnd="_11_5_e240333_1154527555609_536074_64 _11_5_e240333_1154527555609_167673_63">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_536074_64" name="extension_Business Process" visibility="private" type="_9_0_1fe00f9_1119129568518_911545_8" association="_11_5_e240333_1154527555609_239757_62" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_974211_66" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_525986_65"/>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_661413_37" memberEnd="_11_5_e240333_1154527555609_531518_39 _11_5_e240333_1154527555609_975969_38">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_531518_39" name="extension_After Signal" visibility="private" type="_9_0_1fe00f9_1119129567784_936874_5" association="_11_5_e240333_1154527555609_661413_37" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_23281_41" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_204708_40"/>
     </ownedEnd>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_685498_77" memberEnd="_11_5_e240333_1154527555609_612842_79 _11_5_e240333_1154527555609_639719_78">
@@ -215,28 +215,28 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_790138_80"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_782515_27" memberEnd="_11_5_e240333_1154527555609_107027_29 _11_5_e240333_1154527555609_682846_28">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_107027_29" name="extension_Timer" visibility="private" type="_9_0_1fe00f9_1120030836093_315389_0" association="_11_5_e240333_1154527555609_782515_27" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_261517_31" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_937380_30"/>
-    </ownedEnd>
-  </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_847264_72" memberEnd="_11_5_e240333_1154527555609_229457_74 _11_5_e240333_1154527555609_230071_73">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_229457_74" name="extension_Node Enter" visibility="private" type="_9_0_1fe00f9_1119129568378_575653_6" association="_11_5_e240333_1154527555609_847264_72" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_940443_76" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_374497_75"/>
-    </ownedEnd>
-  </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_480373_47" memberEnd="_11_5_e240333_1154527555609_896373_48 _11_5_e240333_1154527555609_278062_49">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_480373_47" memberEnd="_11_5_e240333_1154527555609_278062_49 _11_5_e240333_1154527555609_896373_48">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_278062_49" name="extension_Before Signal" visibility="private" type="_9_0_1fe00f9_1119129567612_128908_4" association="_11_5_e240333_1154527555609_480373_47" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_436789_51" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_572420_50"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_586608_57" memberEnd="_11_5_e240333_1154527555609_93555_58 _11_5_e240333_1154527555609_687929_59">
-    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_687929_59" name="extension_@andromda.process.jbpm.timer.duedate" visibility="private" type="_11_5_e240333_1154527555484_812393_17" association="_11_5_e240333_1154527555609_586608_57" aggregation="composite">
-      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_927203_61" value="1"/>
-      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_918021_60"/>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_165376_32" memberEnd="_11_5_e240333_1154527555609_264326_34 _11_5_e240333_1154527555609_130548_33">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_264326_34" name="extension_Task" visibility="private" type="_9_0_1fe00f9_1119129548521_871830_1" association="_11_5_e240333_1154527555609_165376_32" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_903864_36" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_976730_35"/>
+    </ownedEnd>
+  </ownedMember>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555593_361596_22" memberEnd="_11_5_e240333_1154527555593_757805_24 _11_5_e240333_1154527555593_754626_23">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555593_757805_24" name="extension_@andromda.process.jbpm.task.blocking" visibility="private" type="_11_5_e240333_1154527555484_345527_11" association="_11_5_e240333_1154527555593_361596_22" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555593_582139_26" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555593_810105_25"/>
+    </ownedEnd>
+  </ownedMember>
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527555609_782515_27" memberEnd="_11_5_e240333_1154527555609_107027_29 _11_5_e240333_1154527555609_682846_28">
+    <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527555609_107027_29" name="extension_Timer" visibility="private" type="_9_0_1fe00f9_1120030836093_315389_0" association="_11_5_e240333_1154527555609_782515_27" aggregation="composite">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527555609_261517_31" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527555609_937380_30"/>
     </ownedEnd>
   </ownedMember>
 </uml:Profile>
