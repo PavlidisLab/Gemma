@@ -45,7 +45,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
 
     private Gene g1 = null;
-    private Taxon tax1;
+    private Taxon tax1 = null;
+    private GeneSet gset = null;
     
     @Autowired
     GeneSetService geneSetService;
@@ -63,21 +64,19 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         tax1 = this.getTaxon( "human" );
         g1.setTaxon( tax1 );
 
-    }
-    
-    @Test
-    public void testConvertToValueObject() {
-
         GeneSetMember gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( g1 );
         gmember.setScore( 0.22 );
 
-        GeneSet gset = GeneSet.Factory.newInstance();
+        gset = GeneSet.Factory.newInstance();
         gset.setName( "CreateTest" );
         gset.getMembers().add( gmember );
 
         gset = geneSetService.create( gset );
-        
+    }
+    
+    @Test
+    public void testConvertToValueObject() {
 
         Long id = gset.getId();
         assertNotNull( id );
@@ -99,16 +98,6 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     
     @Test
     public void testConvertToLightValueObject() {
-
-        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-        gmember.setGene( g1 );
-        gmember.setScore( 0.22 );
-
-        GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( "CreateTest" );
-        gset.getMembers().add( gmember );
-
-        gset = geneSetService.create( gset );
 
         Long id = gset.getId();
         assertNotNull( id );
