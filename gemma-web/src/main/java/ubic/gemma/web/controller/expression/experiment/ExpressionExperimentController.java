@@ -1547,22 +1547,22 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperimentValueObject> filtered = new ArrayList<ExpressionExperimentValueObject>();
         Collection<ExpressionExperiment> eesToKeep = null;
 
-        eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
-
-        assert eesToKeep.size() <= eeValObjectCol.size();
-
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
             case 2: // need coexp
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 3:
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 break;
             case 4:
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
@@ -1575,16 +1575,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
             case 8: // needs batch info
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 auditEventService.retainLackingEvent( eesToKeep, FailedBatchInformationMissingEvent.class );
                 break;
             case 9:
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 break;
             case 10:
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 11:
+                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             default:
@@ -1592,17 +1596,21 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         }
 
+        assert eesToKeep == null || eesToKeep.size() <= eeValObjectCol.size();
+
         /*
          * TODO support more filters, and use an enumeration.
          */
 
+        // get corresponding value objects from collection param
         if ( eesToKeep != null ) {
             if ( eesToKeep.isEmpty() ) {
                 return filtered;
             }
-            Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
+//            Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
+            Collection<Long> ids= EntityUtils.getIds( eesToKeep );
             for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
-                if ( idMap.containsKey( eevo.getId() ) ) {
+                if ( ids.contains( eevo.getId() ) ) {
                     filtered.add( eevo );
                 }
             }
@@ -1610,7 +1618,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         }
 
-        // temporary - no filtering.
         return eeValObjectCol;
     }
 
@@ -1683,7 +1690,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // HACK TO FIX!! THIS IS JUST SO IT DOESN'T LOAD ALLLLL EEs 
             // NEED A BETTER WAY TO FIX THIS
             // (can't just load the limit because we will be filtering later for experiments with differential expression, PCA, factors etc.)
-            limitToUse = limit + 100;
+            //limitToUse = limit * 3;
+            
+            // if using a filter, need to load all to guarantee we'll have enough post filtering
+            limitToUse = -1;
         }
 
         // taxon specific?
@@ -1841,8 +1851,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        int OVERSHOOT = 10; // how many extra to get in case our limit is not reached due to a filter.
-
         /*
          * FIXME remove troubled? Needs to be optional. For dataset managment page, don't.
          */
@@ -1899,7 +1907,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } else {
             if ( taxon != null ) {
                 if ( eeIds == null ) {
-                    securedEEs = expressionExperimentService.findByTaxon( taxon, limit + OVERSHOOT );
+                    securedEEs = expressionExperimentService.findByTaxon( taxon, limit );
 
                     if ( securedEEs.size() > limit && limit >= 0) {
                         securedEEs = securedEEs.subList( 0, limit );
