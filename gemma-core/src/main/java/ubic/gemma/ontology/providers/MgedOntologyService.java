@@ -47,7 +47,6 @@ import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
  * @author klc
  * @version $Id$
  */
-@Component
 public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     public static final String MGED_ONTOLOGY_URL = "url.mgedOntology";

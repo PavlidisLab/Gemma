@@ -197,41 +197,30 @@ public class OntologyServiceImpl implements  OntologyService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
-    private BirnLexOntologyService birnLexOntologyService;
-
-    private CellTypeOntologyService cellTypeOntologyService;
-
-    private NIFSTDOntologyService nifstdOntologyService;
-
     @Autowired
     private CharacteristicService characteristicService;
-
-    private ChebiOntologyService chebiOntologyService;
-
-    private DiseaseOntologyService diseaseOntologyService;
 
     @Autowired
     private ExpressionExperimentService eeService;
 
-    private FMAOntologyService fmaOntologyService;
-
-    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
-
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-
-    @Autowired
-    private MgedOntologyService mgedOntologyService;
-
-    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
-
-    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
-
     @Autowired
     private SearchService searchService;
 
-    private ObiService obiService;
-
+    private BirnLexOntologyService birnLexOntologyService;
+    private CellTypeOntologyService cellTypeOntologyService;
+    private NIFSTDOntologyService nifstdOntologyService;
+    private ChebiOntologyService chebiOntologyService;
+    private DiseaseOntologyService diseaseOntologyService;
+    private FMAOntologyService fmaOntologyService;
+    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
+    private MgedOntologyService mgedOntologyService;
+    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+
+    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
+
+    private ObiService obiService;
 
     public void afterPropertiesSet() throws Exception {
 
@@ -244,6 +233,7 @@ public class OntologyServiceImpl implements  OntologyService {
         this.cellTypeOntologyService = new CellTypeOntologyService();
         this.mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
         this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
+        this.mgedOntologyService = new MgedOntologyService();
         this.humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
         this.obiService = new ObiService();
 
