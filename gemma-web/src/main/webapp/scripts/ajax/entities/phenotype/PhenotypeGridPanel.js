@@ -84,7 +84,9 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		
 		Ext.apply(this, {
 			store: new Ext.data.Store({
-				proxy: this.phenotypeStoreProxy,
+				proxy: this.phenotypeStoreProxy == null ?
+					new Ext.data.DWRProxy(PhenotypeController.loadAllPhenotypes) :
+					this.phenotypeStoreProxy,
 				reader: new Ext.data.JsonReader({
 					root: 'records', // required.
 					successProperty: 'success', // same as default.

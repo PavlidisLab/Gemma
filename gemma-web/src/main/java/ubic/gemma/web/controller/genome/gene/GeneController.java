@@ -118,8 +118,10 @@ public class GeneController extends BaseController {
 
     /** used to show gene info in the phenotype tab */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId(
-        		geneId, new HashSet<String>(Arrays.asList(phenotypeValueUris)) );
+        return phenotypeAssociationManagerService.findEvidenceByGeneId(geneId,
+        		phenotypeValueUris == null ?
+    				new HashSet<String>() :
+    				new HashSet<String>(Arrays.asList(phenotypeValueUris)));
     }
 
     public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {

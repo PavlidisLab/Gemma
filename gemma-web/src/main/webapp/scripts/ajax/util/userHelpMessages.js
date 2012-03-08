@@ -404,8 +404,8 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	PhenotypePanel:{
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
-		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>, <br />' +
-    			'<b>geneStoreProxy</b>, <b>geneColumnRenderer</b> and <b>createPhenotypeAssociationHandler</b><br />' +
+		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>, <b>geneStoreProxy</b>, <br />' +
+    			'<b>evidenceStoreProxy</b>, <b>geneColumnRenderer</b> and <b>createPhenotypeAssociationHandler</b><br />' +
     			' should not be set in config. Otherwise, all of them should be set.<br />' +
     			'',
     	modifyPhenotypeAssociationOutsideOfGemmaTitle: "Add new phenotype association", 

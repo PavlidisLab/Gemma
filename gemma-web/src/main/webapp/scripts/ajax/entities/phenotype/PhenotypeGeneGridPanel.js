@@ -109,10 +109,21 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
     	var onStoreRecordChange = function() {
 			downloadButton.setDisabled(this.getStore().getCount() <= 0);
 		};
-			
+
 		Ext.apply(this, {
 			store: new Ext.data.Store({
-				proxy: this.geneStoreProxy,
+				proxy: this.geneStoreProxy == null ?
+							new Ext.data.DWRProxy({
+						        apiActionToHandlerMap: {
+					    	        read: {
+					        	        dwrFunction: PhenotypeController.findCandidateGenes,
+					            	    getDwrArgsFunction: function(request){
+					            	    	return [request.params["phenotypeValueUris"]];
+						                }
+					    	        }
+						        }
+					    	}) :
+					   		this.geneStoreProxy,
 				reader: new Ext.data.JsonReader({
 					root: 'records', // required.
 					successProperty: 'success', // same as default.
@@ -207,7 +218,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 					this.getStore().reload({
 			    		params: {
-			    			'phenotypeValueUri': currentPhenotypeValueUris
+			    			'phenotypeValueUris': currentPhenotypeValueUris
 			    		}
 			    	});
 					this.getSelectionModel().clearSelections(false);				    

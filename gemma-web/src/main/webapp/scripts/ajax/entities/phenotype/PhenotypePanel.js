@@ -10,6 +10,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 	// Configs that should be set if used outside of Gemma (BEGIN)
 	phenotypeStoreProxy: null,
 	geneStoreProxy: null,
+	evidenceStoreProxy: null,
 	geneColumnRenderer: null, 
 	createPhenotypeAssociationHandler: null,
 	// Configs that should be set if used outside of Gemma (END)
@@ -17,8 +18,8 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 	width: 760,
 	layout: 'border',        
     initComponent: function() {
-    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.geneColumnRenderer && this.createPhenotypeAssociationHandler) ||
-    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.geneColumnRenderer && !this.createPhenotypeAssociationHandler))) {
+    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.evidenceStoreProxy && this.geneColumnRenderer && this.createPhenotypeAssociationHandler) ||
+    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.evidenceStoreProxy && !this.geneColumnRenderer && !this.createPhenotypeAssociationHandler))) {
     		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	} else {
 			var currentPhenotypes = null;
@@ -26,9 +27,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 
 			var phenotypeGrid = new Gemma.PhenotypeGridPanel({
 				region: "west",
-				phenotypeStoreProxy: this.phenotypeStoreProxy ?
-					this.phenotypeStoreProxy :
-					new Ext.data.DWRProxy(PhenotypeController.loadAllPhenotypes),
+				phenotypeStoreProxy: this.phenotypeStoreProxy,
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,					
 				listeners: {
 					phenotypeSelectionChange: function(selectedPhenotypes) {
@@ -41,18 +40,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 
 	    	var geneGrid = new Gemma.PhenotypeGeneGridPanel({
 				region: "center",
-				geneStoreProxy: this.geneStoreProxy ?
-							   		this.geneStoreProxy :
-							   		new Ext.data.DWRProxy({
-								        apiActionToHandlerMap: {
-							    	        read: {
-							        	        dwrFunction: PhenotypeController.findCandidateGenes,
-							            	    getDwrArgsFunction: function(request){
-							            	    	return [request.params["phenotypeValueUri"]];
-								                }
-							    	        }
-								        }
-							    	}),
+				geneStoreProxy: this.geneStoreProxy,
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
@@ -73,7 +61,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
 	    		region: 'center',
-				hasStoreProxy: true,	    		
+				evidenceStoreProxy: this.evidenceStoreProxy,	    		
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);

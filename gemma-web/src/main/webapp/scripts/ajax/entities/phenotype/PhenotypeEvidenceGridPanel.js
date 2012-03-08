@@ -6,8 +6,9 @@
  */
 Ext.namespace('Gemma');
 
-// Note: If you set hasStoreProxy to true and keep storeProxy as null, a default storeProxy will be created.
+// evidenceStoreProxy should be overridden if used outside of Gemma. 
 Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
+	evidenceStoreProxy: null,
 	title: 'Evidence',
     autoScroll: true,
     stripeRows: true,
@@ -16,8 +17,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     viewConfig: {
         forceFit: true
     },
-	hasStoreProxy: false, 
-	storeProxy: null,
 	hasRelevanceColumn: true,
     currentPhenotypes: null,
     currentGene: null,
@@ -123,20 +122,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		}
 			
 		var evidenceStore = new Ext.data.Store({
-			proxy: this.hasStoreProxy ?
-				(this.storeProxy == null ?
-					new Ext.data.DWRProxy({
-				        apiActionToHandlerMap: {
-			    	        read: {
-			        	        dwrFunction: GeneController.loadGeneEvidence,
-			            	    getDwrArgsFunction: function(request){
-			            	    	return [request.params["geneId"], request.params["phenotypeValueUris"]];
-				                }
-			    	        }
-				        }
-			    	}) :
-			    	this.storeProxy) :
-			    null,
+			proxy: this.evidenceStoreProxy == null ?
+						new Ext.data.DWRProxy({
+					        apiActionToHandlerMap: {
+				    	        read: {
+				        	        dwrFunction: GeneController.loadGeneEvidence,
+				            	    getDwrArgsFunction: function(request){
+				            	    	return [request.params["geneId"], request.params["phenotypeValueUris"]];
+					                }
+				    	        }
+					        }
+				    	}) :
+				    	this.evidenceStoreProxy,
 		    reader: new Ext.data.JsonReader({
 				idProperty: 'id',		    	
 		        fields: [
@@ -381,7 +378,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-		            	if (record.data.className === 'LiteratureEvidenceValueObject') {
+						if (!this.hidden && record.data.className === 'LiteratureEvidenceValueObject') {
 		            		if (record.data.securityInfoValueObject.currentUserHasWritePermission) {
 			            		adminLinks += generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
 											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
@@ -400,9 +397,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            	
 						return adminLinks;
 		            },
-		            hidden: !(Ext.get("hasUser") != null && Ext.get("hasUser").getValue()),
-					sortable: true,
-					scope: this
+					hidden: Ext.get("hasUser") == null || (!Ext.get("hasUser").getValue()),
+					sortable: true
 				}
 			],
 			tbar: [
@@ -445,8 +441,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			loadGene: function(geneId) {
 		    	evidenceStore.reload({
 		    		params: {
-		    			'geneId': geneId,
-						'phenotypeValueUris': []
+		    			'geneId': geneId
 		    		}
 		    	});
 			},

@@ -111,9 +111,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			deferLoadToRender: true
 		});
 		
-		this.add(new Gemma.PhenotypeEvidenceGridPanel({
+		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
-			hasStoreProxy: true,
 			hasRelevanceColumn: false,
 			deferLoadToRender: true,
 			currentGene: {
@@ -131,7 +130,18 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				}					
 				return phenotypesHtml;
 			}
-		}));
+		});
+		// In PhenotypePanel, when a user logs in, PhenotypeGridPanel will be reloaded first, followed by  
+		// PhenotypeGeneGridPanel and then PhenotypeEvidenceGridPanel. So, the following code should not 
+		// be done in PhenotypeEvidenceGridPanel. Otherwise, PhenotypeEvidenceGridPanel would be reloaded twice.
+		Gemma.Application.currentUser.on("logIn", 
+			function(userName, isAdmin) {
+				var phenotypeEvidenceGridStore = phenotypeEvidenceGridPanel.getStore();
+				phenotypeEvidenceGridStore.reload(phenotypeEvidenceGridStore.lastOptions);
+			},
+			this);
+		
+		this.add(phenotypeEvidenceGridPanel);
 		
 		this.on('render', function(){
 			this.setActiveTab(0);
