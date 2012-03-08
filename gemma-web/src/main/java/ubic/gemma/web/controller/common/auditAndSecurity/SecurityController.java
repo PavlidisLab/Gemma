@@ -811,6 +811,9 @@ public class SecurityController {
             vo.setShared( sharedness.get( s ) );
             vo.setOwner( new SidValueObject( owners.get( s ) ) );
 
+            vo.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
+            vo.setCurrentUserCanwrite( securityService.isEditable( s ) );
+            
             vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
             vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<String>() : groupsThatCanWrite );
 

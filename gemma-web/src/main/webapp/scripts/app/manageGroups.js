@@ -46,9 +46,11 @@ Ext.onReady(function() {
 		
 			var recs = Ext.getCmp("group-data-grid").getStore().getRange();
 			Ext.each(recs, function(rec){
-				rec.set('publiclyReadable', selectAll);
-				rec.set('currentGroupCanRead', selectAll);
-				rec.set('currentGroupCanWrite', selectAll);
+				if (rec.get('allowModification')) {
+					rec.set('publiclyReadable', selectAll);
+					rec.set('currentGroupCanRead', selectAll);
+					rec.set('currentGroupCanWrite', selectAll);
+				}
 			}, this);
 			
 		};
@@ -571,6 +573,13 @@ Ext.onReady(function() {
 											}, {
 												name : "currentGroupCanWrite",
 												type : "boolean"
+											}, {
+												name : "allowModification",
+												type : "boolean",
+												convert: function(v, record){
+													// note: just using "( record.currentUserOwns || record.currentUserCanWrite )" below can return undefined for some reason
+													return ( record.currentUserOwns || record.currentUserCanWrite )? true:false;
+												}
 											}])),
 							listeners : {
 								"exception" : function(proxy, type, action, options, response, arg) {

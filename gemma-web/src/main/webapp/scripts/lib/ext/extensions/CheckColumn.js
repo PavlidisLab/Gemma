@@ -70,7 +70,8 @@ Ext.ux.grid.CheckColumn.prototype = {
 		 * PP added this to allow disabling.
 		 */
 		if (record.get("allowModification") !== undefined && !record.get("allowModification")) {
-			return v ? "Y" : "N";
+			p.css += ' x-grid3-check-col-td';
+			return '<div class="x-item-disabled x-grid3-check-col' + (v ? '-on' : '')+ '">&#160;</div>';
 		}
 		p.css += ' x-grid3-check-col-td';
 		return '<div class="x-grid3-check-col' + (v ? '-on' : '') + ' x-grid3-cc-' + this.id + '">&#160;</div>';
