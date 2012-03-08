@@ -56,6 +56,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
@@ -105,14 +106,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private ExperimentalDesignService experimentalDesignService;
 
     @Autowired
-    private MgedOntologyService mgedOntologyService;
-
+    private OntologyService ontologyService;
+    
     @Autowired
     FactorValueService factorValueServiceService = null;
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
 
+    private MgedOntologyService mgedOntologyService;
     /*
      * (non-Javadoc)
      * 
@@ -153,6 +155,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      *      #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
+        this.mgedOntologyService = this.ontologyService.getMgedOntologyService();
+        
         log.debug( "Parsing input file" );
         boolean readHeader = false;
 
