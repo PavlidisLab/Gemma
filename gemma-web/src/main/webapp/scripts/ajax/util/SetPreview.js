@@ -161,7 +161,9 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 	 */
 	launchSelectionEditor: function(){
 	
-		Ext.getBody().mask();
+		// let owner component control masking, body masking can interact badly with flash components in Firefox
+		//Ext.getBody().mask();
+		this.fireEvent('maskParentContainer');
 	
 		if (!(this.selectedEntityOrGroup && this.selectedEntityOrGroup.resultValueObject) &&
 		!(this.entityIds || this.entityIds !== null || this.entityIds.length > 0) &&
@@ -201,7 +203,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 		this.selectionEditor.on('doneModification', function(){
 			this.selectionEditorWindow.hide();
 			this.fireEvent('doneModification');
-			Ext.getBody().unmask();
+			this.fireEvent('unmaskParentContainer');
 		}, this);
 		
 		this.moreIndicator = new Ext.Button({

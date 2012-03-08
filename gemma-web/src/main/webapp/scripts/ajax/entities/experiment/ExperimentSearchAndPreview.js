@@ -170,7 +170,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			}
 		}, this);
 
-		this.preview.on('doneModification', function() {
+		this.preview.on('maskParentContainer', function() {
+			this.searchForm.getEl().mask();
+		}, this);
+
+		this.preview.on('unmaskParentContainer', function() {
 			this.searchForm.getEl().unmask();
 		}, this);
 		
