@@ -27,5 +27,7 @@ public interface StatusService {
     public Status create();
 
     public void update( Status status );
+    
+    public Status getStatus( Auditable auditable );
 
 }

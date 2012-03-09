@@ -45,5 +45,10 @@ public class StatusServiceImpl implements StatusService {
     public void update( Status s ) {
         this.statusDao.update( s );      
     }
+    
+    @Override
+    public Status getStatus( Auditable auditable ) {
+        return statusDao.load( auditable.getStatus().getId() );
+    }
 
 }

@@ -56,4 +56,9 @@ public interface StatusDao extends BaseDao<Status> {
      */
     public void initializeStatus( Auditable d );
 
+    /**
+     * @param d
+     */
+    public Status load( Long id );
+
 }

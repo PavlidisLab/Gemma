@@ -60,6 +60,8 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Status;
+import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -118,6 +120,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Autowired
     private SecurityService securityService;
+    
+    @Autowired
+    private StatusService statusService;
 
     /**
      * Batch of classes we can get events for all at once.
@@ -405,7 +410,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Collection<Long> getValidated( Collection<ExpressionExperiment> ees ) {
         Collection<Long> result = new HashSet<Long>();
         for ( ExpressionExperiment ee : ees ) {
-            if ( ee.getStatus().getValidated() ) {
+            
+            Status s = statusService.getStatus( ee );
+            
+            if ( s.getValidated() ) {
                 result.add( ee.getId() );
             }
         }
@@ -847,6 +855,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private void updateStats( ExpressionExperimentValueObject eeVo ) {
         assert eeVo.getId() != null;
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
+        Status s = statusService.getStatus( tempEe );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
         eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
@@ -859,8 +868,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-        eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
-        eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
+        eeVo.setDateCreated( s.getCreateDate() );
+        eeVo.setDateLastUpdated( s.getLastUpdateDate() );
 
         saveValueObject( eeVo );
 

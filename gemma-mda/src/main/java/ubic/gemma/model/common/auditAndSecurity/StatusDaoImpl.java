@@ -86,5 +86,14 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         this.getHibernateTemplate().update( d );
 
     }
+    
+    @Override
+    public Status load( Long id ) {
+        if (id == null ) {
+            throw new IllegalArgumentException( "StatusDaoImpl.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
+        return ( Status ) entity;
+    }
 
 }

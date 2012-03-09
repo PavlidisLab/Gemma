@@ -54,6 +54,8 @@ import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.common.auditAndSecurity.Status;
+import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -108,6 +110,9 @@ public class GeneCoexpressionService {
 
     @Autowired
     private TfGeneAssociationService tfGeneAssociationService;
+    
+    @Autowired
+    private StatusService statusService;
 
     /**
      * @param inputEeIds
@@ -1369,7 +1374,10 @@ public class GeneCoexpressionService {
 
         Collection<Long> filteredIds = new HashSet<Long>();
         for ( ExpressionExperiment ee : filteredExperiments ) {
-            if ( ee.getStatus().getTroubled() ) continue;
+            
+            Status eestatus =statusService.getStatus( ee );
+            
+            if ( eestatus.getTroubled() ) continue;
             filteredIds.add( ee.getId() );
         }
 
