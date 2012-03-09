@@ -11,6 +11,7 @@ Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox = Ext.extend(Ext.form.ComboB
 	valueField: 'evidenceClassName',
 	fieldLabel: 'Type of Evidence',
 	allowBlank: false,
+	editable: false,  			
 	mode: 'local',
 	store: new Ext.data.ArrayStore({
 		fields:  ['evidenceClassName', 'evidenceType'],

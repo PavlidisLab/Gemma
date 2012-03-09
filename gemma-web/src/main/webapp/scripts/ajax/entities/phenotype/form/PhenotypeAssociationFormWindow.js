@@ -167,6 +167,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			hiddenName: 'evidenceCode',
 			valueField: 'evidenceCode',
 			allowBlank: false,
+			// If editable is not set to false, then users are able to type an
+			// invalid value which makes the store has no records. When users press
+			// the Reset button, the combo box will display the default value 'IC'.
+			editable: false,  			
 			mode: 'local',
 			store: new Ext.data.ArrayStore({
 				fields:  ['evidenceCode', 'evidenceCodeDisplayText'],
@@ -193,13 +197,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				scope: this
 			},
 		    initComponent: function() {
-				var originalEvidenceCode = null;
-
 				Ext.apply(this, {
-					reset: function() {
-						this.superclass().reset.call(this);
-					    this.setValue('IC');
-					    this.clearInvalid();
+					selectEvidenceCode: function(evidenceCode) {
+						this.setValue(evidenceCode);
+						this.originalValue = evidenceCode;
 					}
 				});
 				this.superclass().initComponent.call(this);
@@ -227,7 +228,16 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		var descriptionTextArea = new Ext.form.TextArea({
 			name: 'description',
 			fieldLabel: 'Note',
-			anchor: ANCHOR_VALUE
+			anchor: ANCHOR_VALUE,
+		    initComponent: function() {
+				Ext.apply(this, {
+					setDescription: function(description) {
+						this.setValue(description);
+						this.originalValue = description;
+					}
+				});
+				this.superclass().initComponent.call(this);
+		    }
 		});
 
     	Ext.apply(this, {
@@ -303,8 +313,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 						break;
 					}
 					
-					descriptionTextArea.setValue(data.description);
-					evidenceCodeComboBox.setValue(data.evidenceCode);
+					descriptionTextArea.setDescription(data.description);
+					evidenceCodeComboBox.selectEvidenceCode(data.evidenceCode);
 				}
 				
 				if (this.hidden) {
@@ -426,7 +436,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				}
 			},
 			resetForm: function() {
-				this.getForm().reset();
+// TODO: I don't think I need it.				
+//				this.getForm().reset();
 			    this.hideErrorPanel();
 			    
 				geneSearchComboBox.reset();

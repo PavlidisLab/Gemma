@@ -150,7 +150,13 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				return pubMedIdField.getValue();
 			},
 			setPubMedId: function(pubMedId) {
-				pubMedIdField.setValue(pubMedId);
+				// Don't use !== because pubMedId is a string while pubMedIdField.getValue() is a number.
+				if (pubMedIdField.getValue() != pubMedId) {
+					pubMedIdField.setValue(pubMedId);
+					pubMedIdField.originalValue = pubMedId;
+					
+					updateBibliographicReferenceDetailsPanel();				
+				}
 				
 				if (pubMedId === '') {
 					pubMedIdField.clearInvalid();
@@ -158,8 +164,6 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				} else {
 					this.show();
 				}
-				
-				updateBibliographicReferenceDetailsPanel();
 			},
 			reset: function() {
 				this.setPubMedId(pubMedIdField.originalValue);
