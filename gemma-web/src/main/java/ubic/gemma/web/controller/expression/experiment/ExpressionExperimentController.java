@@ -75,6 +75,8 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.Status;
+import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -319,6 +321,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private SessionListManager sessionListManager;
+    
+    @Autowired
+    private StatusService statusService;
+
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
@@ -880,7 +886,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // Long id = null;
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment record : records ) {
-            if ( record.getStatus() != null && record.getStatus().getTroubled() ) {
+            
+            Status s = statusService.getStatus( record );
+            if ( s != null && s.getTroubled() ) {
                 toRemove.add( record );
             }
             // id = record.getId();
