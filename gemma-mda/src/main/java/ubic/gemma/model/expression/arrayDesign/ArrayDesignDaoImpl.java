@@ -173,12 +173,14 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "array design cannot be null" );
         }
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from ArrayDesignImpl a left join fetch a.subsumedArrayDesigns "
-                        + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
-                        + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
-                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adid",
-                "adid", arrayDesign.getId() );
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from ArrayDesignImpl a left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
+                                + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
+                                + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adid",
+                        "adid", arrayDesign.getId() );
 
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
@@ -190,13 +192,16 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() ) return arrayDesigns;
-        return this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from ArrayDesignImpl a " + "left join fetch a.subsumedArrayDesigns "
-                        + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
-                        + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
-                        + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                        + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
-                EntityUtils.getIds( arrayDesigns ) );
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from ArrayDesignImpl a "
+                                + "left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
+                                + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
+                                + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
+                                + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
+                        EntityUtils.getIds( arrayDesigns ) );
 
     }
 
@@ -217,8 +222,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( results != null ) {
             if ( results.size() > 1 ) {
                 debug( results );
-                throw new InvalidDataAccessResourceUsageException( results.size() + " "
-                        + ArrayDesign.class.getName() + "s were found when executing query" );
+                throw new InvalidDataAccessResourceUsageException( results.size() + " " + ArrayDesign.class.getName()
+                        + "s were found when executing query" );
 
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
@@ -1058,8 +1063,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from ArrayDesignImpl a where a.primaryTaxon = :t", "t", taxon );
     }
-    
-   
+
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#arrayDesignValueObjectToEntity(ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -1215,15 +1219,16 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return ( ArrayDesign ) result;
     }
 
-//    /**
-//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int,
-//     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-//     */
-//    public ArrayDesign find( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-//        return this
-//                .find( "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
-//                        arrayDesign );
-//    }
+    // /**
+    // * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int,
+    // * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    // */
+    // public ArrayDesign find( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    // return this
+    // .find(
+    // "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
+    // arrayDesign );
+    // }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByAlternateName(java.lang.String)
@@ -1327,15 +1332,15 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return result;
     }
 
-//    /**
-//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int,
-//     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-//     */
-//    public ArrayDesign findOrCreate( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-//        return this.findOrCreate(
-//                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
-//                        arrayDesign );
-//    }
+    // /**
+    // * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int,
+    // * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    // */
+    // public ArrayDesign findOrCreate( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    // return this.findOrCreate(
+    // "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
+    // arrayDesign );
+    // }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAllAssociatedBioAssays(java.lang.Long)
@@ -1774,15 +1779,16 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         this.getHibernateTemplate().deleteAll( entities );
     }
 
-//    /**
-//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-//     */
-//    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-//        if ( arrayDesign == null ) {
-//            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
-//        }
-//        this.getHibernateTemplate().delete( arrayDesign );
-//    }
+    // /**
+    // * @see
+    // ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    // */
+    // public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    // if ( arrayDesign == null ) {
+    // throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
+    // }
+    // this.getHibernateTemplate().delete( arrayDesign );
+    // }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -1855,5 +1861,5 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                             + th, th );
         }
     }
-    
+
 }
