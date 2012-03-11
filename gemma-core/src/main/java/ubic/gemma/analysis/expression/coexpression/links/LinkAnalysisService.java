@@ -413,11 +413,13 @@ public class LinkAnalysisService {
      * @param e
      */
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
+
         if ( e instanceof InsufficientSamplesException ) {
             audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else if ( e instanceof InsufficientProbesException ) {
             audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
+            log.error( "While processing " + expressionExperiment, e );
             audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ),
                     FailedLinkAnalysisEvent.Factory.newInstance() );
         }
