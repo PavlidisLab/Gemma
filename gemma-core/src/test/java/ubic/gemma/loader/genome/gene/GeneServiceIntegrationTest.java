@@ -32,7 +32,6 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -61,8 +60,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         if ( !setupDone ) {
             ArrayDesign ad;
             // first load small twoc-color
-            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            GeoService geoService = this.getBean( GeoService.class );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
                     true, false, false, true, true );
             ad = ads.iterator().next();
@@ -103,7 +101,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     public void testGetCompositeSequenceCountById() throws Exception {
 
         // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        GeneService geneService = this.getBean( GeneService.class );
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
@@ -116,7 +114,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     public void testGetCompositeSequencesById() throws Exception {
 
         // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        GeneService geneService = this.getBean( GeneService.class );
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         Gene g = geneCollection.iterator().next();
@@ -130,7 +128,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     @Test
     public void testGetGenesByTaxon() throws Exception {
         // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        GeneService geneService = this.getBean( GeneService.class );
 
         Taxon taxon = taxonService.findByCommonName( "human" );
         Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );

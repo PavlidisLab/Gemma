@@ -23,7 +23,7 @@ import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
 import org.directwebremoting.extend.MarshallException;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 
 /**
  * TODO Document Me

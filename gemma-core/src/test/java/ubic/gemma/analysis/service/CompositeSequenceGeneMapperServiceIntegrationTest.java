@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -50,7 +51,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * This integration test makes use of the {@link ArrayDesignProbeMapperService}. These tests add array data and gene
+ * This integration test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene
  * data to the database to be used for testing. GPL96.
  * 
  * @author keshav

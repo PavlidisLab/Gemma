@@ -161,7 +161,7 @@ public class ProbeMapperTest extends TestCase {
         ProbeMapperConfig config = new ProbeMapperConfig();
         config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.
 
-        ProbeMapper pm = new ProbeMapper();
+        ProbeMapper pm = new ProbeMapperImpl();
         Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres, config );
         // This test will fail if the database changes :)
         assertTrue( "No results", res.values().size() > 0 );

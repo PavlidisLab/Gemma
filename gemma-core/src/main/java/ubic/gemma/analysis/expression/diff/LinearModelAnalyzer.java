@@ -42,6 +42,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -95,7 +97,9 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-public abstract class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
+@Component
+@Scope(value = "prototype")
+public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( LinearModelAnalyzer.class );
 
@@ -119,6 +123,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param quantitationType
      * @return
      */
+    @Override
     public ExperimentalFactor determineInterceptFactor( Collection<ExperimentalFactor> factors,
             QuantitationType quantitationType ) {
         ExperimentalFactor interceptFactor = null;
@@ -145,6 +150,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param retainScale if true, the data retain the global mean (intercept)
      * @return residuals from the regression.
      */
+    @Override
     public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
             DifferentialExpressionAnalysisConfig config, boolean retainScale ) {
 
@@ -251,10 +257,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExperimentalFactor... experimentalFactors ) {
 
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( Arrays.asList( experimentalFactors ) );
-
-        return this.run( expressionExperiment, config );
+        return this.run( expressionExperiment, Arrays.asList( experimentalFactors ) );
 
     }
 

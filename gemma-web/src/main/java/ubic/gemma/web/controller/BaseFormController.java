@@ -43,7 +43,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.MailEngineImpl;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -61,7 +61,7 @@ public abstract class BaseFormController extends SimpleFormController {
     private MessageUtil messageUtil;
 
     @Autowired
-    protected MailEngine mailEngine = null;
+    protected MailEngineImpl mailEngine = null;
 
     /**
      * @return the messageUtil
@@ -136,7 +136,7 @@ public abstract class BaseFormController extends SimpleFormController {
     /**
      * @param mailEngine
      */
-    public void setMailEngine( MailEngine mailEngine ) {
+    public void setMailEngine( MailEngineImpl mailEngine ) {
         this.mailEngine = mailEngine;
     }
 

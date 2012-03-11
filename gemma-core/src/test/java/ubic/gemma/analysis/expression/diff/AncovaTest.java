@@ -53,7 +53,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private GenericAncovaAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     /**
      * Two fixed-level parameters

@@ -35,7 +35,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.analysis.service.ArrayDesignAnnotationService.OutputType;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -544,15 +545,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Processing AD: " + ad.getName() );
 
-        String shortFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+        String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
-        String biocFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+        File sf = ArrayDesignAnnotationServiceImpl.getFileName( shortFileBaseName );
+        String biocFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
-        String allparFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+        File bf = ArrayDesignAnnotationServiceImpl.getFileName( biocFileBaseName );
+        String allparFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
+        File af = ArrayDesignAnnotationServiceImpl.getFileName( allparFileBaseName );
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
             log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );

@@ -33,20 +33,8 @@
 		</url>
 	</issueManagement>
 	<ciManagement>
-		<system>continuum</system>
-		<url>http://chibi.ubc.ca/faculty/pavlidis/continuum</url>
-		<notifiers>
-			<notifier>
-				<type>mail</type>
-				<sendOnError>true</sendOnError>
-				<sendOnFailure>true</sendOnFailure>
-				<sendOnSuccess>true</sendOnSuccess>
-				<sendOnWarning>true</sendOnWarning>
-				<configuration>
-					<address>paul@chibi.ubc.ca</address>
-				</configuration>
-			</notifier>
-		</notifiers>
+		<system>bamboo</system>
+		<url>http://chibi.ubc.ca/faculty/pavlidis/bamboo</url>
 	</ciManagement>
 	<licenses>
 		<license>
@@ -354,97 +342,6 @@
 			<version>2.2.2</version>
 		</dependency>
 	</dependencies>
-	<reporting>
-		<outputDirectory>target/site</outputDirectory>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>
-					maven-project-info-reports-plugin
-				</artifactId>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>dependencies</report>
-							<report>dependency-convergence</report>
-							<report>index</report>
-							<report>project-team</report>
-							<report>cim</report>
-							<report>issue-tracking</report>
-							<report>license</report>
-							<report>scm</report>
-							<report>summary</report>
-							<report>mailing-list</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<quiet>true</quiet>
-					<aggregate>false</aggregate>
-					<links>
-						<link>
-							http://java.sun.com/j2se/1.6.0/docs/api
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/dbcp/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/fileupload/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/httpclient/apidocs/
-						</link>
-						<link>
-							http://commons.apache.org/logging/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/pool/apidocs/
-						</link>
-						<link>
-							http://logging.apache.org/log4j/docs/api/
-						</link>
-						<link>
-							http://jakarta.apache.org/regexp/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/velocity/api/
-						</link>
-						<link>
-							http://dsd.lbl.gov/~hoschek/colt/api/
-						</link>
-						<link>
-							http://static.springframework.org/spring/docs/2.0.7/api/
-						</link>
-						<link>
-							http://www.hibernate.org/hib_docs/v3/api/
-						</link>
-					</links>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-report-plugin</artifactId>
-				<configuration>
-					<argLine>-Xmx1.2g -XX:MaxPermSize=256m</argLine>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<configuration>
-					<outputDirectory>${cobertura.outputDirectory}</outputDirectory>
-					<aggregate>true</aggregate>
-				</configuration>
-			</plugin>
-		</plugins>
-	</reporting>
 	<build>
 		<plugins>
 			<plugin>
@@ -477,6 +374,139 @@
 						true
 					</allowTimestampedSnapshots>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.0-beta-2</version>
+				<configuration>
+					<reportPlugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-project-info-reports-plugin</artifactId>
+							<version>2.4</version>
+							<reportSets>
+								<reportSet>
+									<reports>
+										<report>index</report>
+										<report>dependencies</report>
+										<report>cim</report>
+										<report>issue-tracking</report>
+										<report>license</report>
+										<report>scm</report>
+										<report>summary</report>
+										<report>dependency-convergence</report>
+									</reports>
+								</reportSet>
+							</reportSets>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-javadoc-plugin</artifactId>
+							<version>2.8</version>
+							<configuration>
+								<configuration>
+									<quiet>true</quiet>
+									<aggregate>false</aggregate>
+									<links>
+										<link>
+											http://java.sun.com/j2se/1.6.0/docs/api
+										</link>
+										<link>
+											http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
+										</link>
+										<link>
+											http://jakarta.apache.org/commons/dbcp/apidocs/
+										</link>
+										<link>
+											http://jakarta.apache.org/commons/fileupload/apidocs/
+										</link>
+										<link>
+											http://jakarta.apache.org/commons/httpclient/apidocs/
+										</link>
+										<link>
+											http://commons.apache.org/logging/apidocs/
+										</link>
+										<link>
+											http://jakarta.apache.org/commons/pool/apidocs/
+										</link>
+										<link>
+											http://logging.apache.org/log4j/docs/api/
+										</link>
+										<link>
+											http://jakarta.apache.org/regexp/apidocs/
+										</link>
+										<link>
+											http://jakarta.apache.org/velocity/api/
+										</link>
+										<link>
+											http://dsd.lbl.gov/~hoschek/colt/api/
+										</link>
+										<link>
+											http://static.springsource.org/spring/docs/3.0.x/javadoc-api/
+										</link>
+										<link>
+											http://docs.jboss.org/hibernate/orm/3.5/api/
+										</link>
+									</links>
+								</configuration>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>changelog-maven-plugin</artifactId>
+						</plugin>
+
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>jxr-maven-plugin</artifactId>
+						</plugin>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>taglist-maven-plugin</artifactId>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-surefire-report-plugin</artifactId>
+							<configuration>
+								<argLine>-Xmx1.2g -XX:MaxPermSize=256m</argLine>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-pmd-plugin</artifactId>
+							<configuration>
+								<targetJdk>1.5</targetJdk>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>cobertura-maven-plugin</artifactId>
+							<version>2.5.1</version>
+							<configuration>
+								<aggregate>true</aggregate>
+								<!-- seems we need something here when running 'mvn site' -->
+								<check>
+									<haltOnFailure>false</haltOnFailure>
+								</check>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>jdepend-maven-plugin</artifactId>
+						</plugin>
+					</reportPlugins>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- used when running cobertura outside of the 'site' plugin call. -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<aggregate>false</aggregate>
+					<outputDirectory>${cobertura.outputDirectory}</outputDirectory>
 				</configuration>
 			</plugin>
 		</plugins>

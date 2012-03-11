@@ -70,7 +70,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
 /**
@@ -84,20 +83,11 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * @version $Id$
  */
 @Component
-public class ExpressionDataFileService {
+public class ExpressionDataFileServiceImpl implements ExpressionDataFileSerivce {
 
     private static final String DECIMAL_FORMAT = "%.4g";
 
-    public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
-
-    public static final String JSON_FILE_SUFFIX = ".data.json.gz";
-
-    public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
-            + "dataFiles" + File.separatorChar;
-
-    public static final String DISCLAIMER = "# If you use this file for your research, please cite the Gemma web site\n";
-
-    private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
+    private static Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
 
     @Autowired
     ArrayDesignService arrayDesignService;
@@ -120,11 +110,13 @@ public class ExpressionDataFileService {
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
 
-    /**
-     * @param ee
-     * @param filtered if the data matrix is filtered
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#getOutputFile(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, boolean)
      */
+    @Override
     public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
         String filteredAdd = "";
         if ( !filtered ) {
@@ -135,19 +127,25 @@ public class ExpressionDataFileService {
         return getOutputFile( filename );
     }
 
-    /**
-     * @param type
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#getOutputFile(ubic.gemma.model.common.quantitationtype.
+     * QuantitationType)
      */
+    @Override
     public File getOutputFile( QuantitationType type ) {
         String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
         return getOutputFile( filename );
     }
 
-    /**
-     * @param filename
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#getOutputFile(java.lang.String)
      */
+    @Override
     public File getOutputFile( String filename ) {
         String fullFilePath = DATA_DIR + filename;
         File f = new File( fullFilePath );
@@ -161,47 +159,14 @@ public class ExpressionDataFileService {
         return f;
     }
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
-        this.expressionDataMatrixService = expressionDataMatrixService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param differentialExpressionResultService the differentialExpressionResultService to set
-     */
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
-
-    /**
-     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
+    /*
+     * (non-Javadoc)
      * 
-     * @param ee
-     * @param forceWrite
-     * @return
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, boolean, boolean)
      */
+    @Override
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
 
         try {
@@ -222,14 +187,14 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * Locate or create a new data file for the given quantitation type. The output will include gene information if it
-     * can be located from its own file.
+    /*
+     * (non-Javadoc)
      * 
-     * @param type
-     * @param forceWrite To not return the existing file, but create it anew.
-     * @return location of the resulting file.
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.common.quantitationtype
+     * .QuantitationType, boolean)
      */
+    @Override
     public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
@@ -257,13 +222,14 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * Locate or create an experimental design file for a given experiment.
+    /*
+     * (non-Javadoc)
      * 
-     * @param ee
-     * @param forceWrite
-     * @return
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDesignFile(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, boolean)
      */
+    @Override
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -286,13 +252,13 @@ public class ExpressionDataFileService {
 
     }
 
-    /**
-     * @param ee
-     * @param forceWrite
-     * @param filtered if the data should be filtered.
-     * @see ExpressionDataMatrixService.getFilteredMatrix
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.expression.
+     * experiment.ExpressionExperiment, boolean, boolean)
      */
+    @Override
     public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
 
         try {
@@ -315,10 +281,13 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * @param type
-     * @param forceWrite
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.common.
+     * quantitationtype.QuantitationType, boolean)
      */
+    @Override
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
@@ -344,13 +313,13 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * Locate or create the differential expression data file(s) for a given experiment.
+    /*
+     * (non-Javadoc)
      * 
-     * @param ee
-     * @param forceWrite
-     * @return collection of files, one per analysis.
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFiles(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment, boolean)
      */
+    @Override
     public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -366,11 +335,14 @@ public class ExpressionDataFileService {
 
     }
 
-    /**
-     * @param analysis
-     * @param forceRewrite
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFile(ubic.gemma.model.analysis
+     * .expression.diff.DifferentialExpressionAnalysis, boolean)
      */
+    @Override
     public File writeOrLocateDiffExpressionDataFile( DifferentialExpressionAnalysis analysis, boolean forceRewrite ) {
         String filename = getDiffExFileName( analysis );
 
@@ -417,11 +389,14 @@ public class ExpressionDataFileService {
 
     }
 
-    /**
-     * Delete the differential expression file for the given experiment
+    /*
+     * (non-Javadoc)
      * 
-     * @param ee
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#deleteDiffExFile(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
      */
+    @Override
     public void deleteDiffExFile( ExpressionExperiment ee ) {
         File f = getOutputFile( getDiffExFileName( ee ) );
         if ( f.exists() ) {
@@ -433,13 +408,14 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * Write or located the coexpression data file for a given experiment
+    /*
+     * (non-Javadoc)
      * 
-     * @param ee
-     * @param forceWrite
-     * @return
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateCoexpressionDataFile(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, boolean)
      */
+    @Override
     public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -576,11 +552,13 @@ public class ExpressionDataFileService {
 
     }
 
-    /**
-     * @param results
-     * @param geneAnnotations
-     * @param buf
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#analysisResultSetsToString(java.util.Collection,
+     * java.util.Map, java.lang.StringBuilder)
      */
+    @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
@@ -619,14 +597,14 @@ public class ExpressionDataFileService {
         }
     }
 
-    /**
-     * @param ears
-     * @param geneAnnotations
-     * @param buf
-     * @param probe2String
-     * @param sortedFirstColumnOfResults
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#analysisResultSetToString(ubic.gemma.model.analysis.expression
+     * .diff.ExpressionAnalysisResultSet, java.util.Map, java.lang.StringBuilder, java.util.Map, java.util.List)
      */
+    @Override
     public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
             Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
             List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults ) {
@@ -827,7 +805,7 @@ public class ExpressionDataFileService {
         Map<Long, Collection<Gene>> annots = new HashMap<Long, Collection<Gene>>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
-            annots.putAll( ArrayDesignAnnotationService.readAnnotationFile( arrayDesign ) );
+            annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFile( arrayDesign ) );
         }
         return annots;
     }
@@ -841,7 +819,7 @@ public class ExpressionDataFileService {
         Map<Long, String[]> annots = new HashMap<Long, String[]>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
-            annots.putAll( ArrayDesignAnnotationService.readAnnotationFileAsString( arrayDesign ) );
+            annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
         return annots;
     }

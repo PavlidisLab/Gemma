@@ -44,60 +44,67 @@ import cern.colt.matrix.DoubleMatrix1D;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
- * {@link OneWayAnovaAnalyzer}.
+ * {@link OneWayAnovaAnalyzerImpl}.
  * 
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
+public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer implements DiffExAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    /**
-     * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
-     * determined, an exception will be thrown. (Default behaviour might be just to use all factors)
+    /*
+     * (non-Javadoc)
      * 
-     * @param expressionExperiment
-     * @return ExpressionAnalysis
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * )
      */
+    @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment );
 
-    /**
-     * Perform an analysis using the specified factor(s)
+    /*
+     * (non-Javadoc)
      * 
-     * @param expressionExperiment
-     * @param factors If you care about the order the factors are included in the model, use a List
-     * @return
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * , java.util.Collection)
      */
+    @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors );
 
-    /**
-     * @param expressionExperiment
-     * @param config
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * , ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
+    @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
-    /**
-     * Perform an analysis using the specified factor(s), introduced in the order given.
+    /*
+     * (non-Javadoc)
      * 
-     * @param expressionExperiment
-     * @param experimentalFactors
-     * @return
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * , ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExperimentalFactor... experimentalFactors );
 
-    /***
-     * Allows entry of modified data matrices into the workflow
+    /*
+     * (non-Javadoc)
      * 
-     * @param expressionExperiment
-     * @param dmatrix
-     * @param config
-     * @return
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * , ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
+    @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 

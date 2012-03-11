@@ -115,9 +115,9 @@ public class EutilFetch {
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
                 buf.append( line );
-                if ( !line.endsWith( " " ) ) {
-                    buf.append( " " );
-                }
+                // if ( !line.endsWith( " " ) ) {
+                // buf.append( " " );
+                // }
             }
             return buf.toString();
 

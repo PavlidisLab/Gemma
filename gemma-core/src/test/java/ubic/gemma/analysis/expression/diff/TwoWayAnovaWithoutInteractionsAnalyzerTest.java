@@ -45,7 +45,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    TwoWayAnovaWithoutInteractionsAnalyzer analyzer = null;
+    DiffExAnalyzer  analyzer = null;
 
     /**
      * Tests the TwoWayAnova method.
@@ -53,7 +53,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
     @Test
     public void testTwoWayAnova() throws Exception {
 
-        log.debug( "Testing getPValues method in " + TwoWayAnovaWithoutInteractionsAnalyzer.class.getName() );
+        log.debug( "Testing getPValues method in " + DiffExAnalyzer.class.getName() );
 
         if ( !connected ) {
             log.warn( "Could not establish R connection.  Skipping test ..." );

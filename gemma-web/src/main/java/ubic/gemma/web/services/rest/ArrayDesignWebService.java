@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -66,7 +67,7 @@ public class ArrayDesignWebService {
         String fileType = ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
         Collection<ArrayDesignValueObject> vos = arrayDesignService.loadAllValueObjects();
         for ( ArrayDesignValueObject arrayDesign : vos ) {
-            String fileBaseName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+            String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
             String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
             File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
@@ -94,7 +95,7 @@ public class ArrayDesignWebService {
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
         }
-        String fileBaseName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+        String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
         String fileName = fileBaseName + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 

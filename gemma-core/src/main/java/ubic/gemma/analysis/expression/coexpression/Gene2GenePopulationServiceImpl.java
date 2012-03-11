@@ -488,7 +488,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             int stringency, String analysisName, Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis ) {
         int totalLinks = 0;
         Collection<Gene> processedGenes = new HashSet<Gene>();
-        Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( expressionExperiments );
+        Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzerImpl.getOrderingMap( expressionExperiments );
 
         log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
                 + expressionExperiments.size() + " experiments with a stringency of " + stringency

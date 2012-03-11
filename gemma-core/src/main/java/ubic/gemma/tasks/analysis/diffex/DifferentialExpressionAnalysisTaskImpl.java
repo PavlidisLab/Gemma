@@ -25,11 +25,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
-import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService; 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -101,15 +101,14 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
                 .getAnalyses( ee );
 
         if ( !diffAnalyses.isEmpty() ) {
-            log
-                    .info( "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
+            log.info( "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
         }
 
         Collection<DifferentialExpressionAnalysis> results;
 
         Collection<ExperimentalFactor> factors = command.getFactors();
-        AbstractDifferentialExpressionAnalyzer analyzer = analysisSelectionAndExecutionService.determineAnalysis( ee,
-                factors, command.getSubsetFactor() );
+        AnalysisType analyzer = analysisSelectionAndExecutionService.determineAnalysis( ee, factors,
+                command.getSubsetFactor() );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
@@ -117,7 +116,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         assert factors != null;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
+        config.setAnalysisType( analyzer );
         config.setFactorsToInclude( factors );
         config.setSubsetFactor( command.getSubsetFactor() );
 
@@ -130,7 +129,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
             for ( ExperimentalFactor ef : factors ) {
-                if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                     log.warn( "Batch is included in the interaction!" );
                 }
             }

@@ -50,6 +50,7 @@ import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -280,7 +281,7 @@ public class ArrayDesignController extends AbstractTaskService {
             fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-        String fileBaseName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+        String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
         String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
@@ -844,7 +845,7 @@ public class ArrayDesignController extends AbstractTaskService {
      */
     private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
 
-        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+        String mungedShortName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
         File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );

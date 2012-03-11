@@ -114,7 +114,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     @Autowired
     private UserManager userService;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#addEmailAlert(java.lang.String)
      */
     @Override
@@ -166,7 +168,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#cancelTask(java.lang.String)
      */
     @Override
@@ -223,7 +227,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return cancelled;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#checkResult(java.lang.String)
      */
     @Override
@@ -250,7 +256,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#getCancelledTasks()
      */
     @Override
@@ -258,7 +266,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return cancelledTasks.values();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#getFailedTasks()
      */
     @Override
@@ -266,7 +276,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return failedTasks.values();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#getFinishedTasks()
      */
     @Override
@@ -274,7 +286,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return finishedTasks.values();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#getSubmittedTasks()
      */
     @Override
@@ -286,7 +300,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return commands;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.job.TaskRunningService#submitTask(ubic.gemma.job.BackgroundJob)
      */
     @Override
@@ -525,8 +541,8 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         } else if ( startTime.before( DateUtils.addMinutes( new Date(), -command.getMaxRuntime() ) ) ) {
             log.warn( "Running task is taking too long, cancelling: " + taskId + " " + command.getTaskInterface() );
             submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
-            ProgressManager.updateJob( taskId, "The job took too long to run, so it was cancelled after "
-                    + command.getMaxRuntime() + " minutes." );
+            ProgressManager.updateJob( taskId,
+                    "The job took too long to run, so it was cancelled after " + command.getMaxRuntime() + " minutes." );
             cancelTask( taskId );
         }
     }
@@ -652,8 +668,8 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      * for too long.
      */
     private void sweepUp() {
-    // can cause npe error, breaking hot deploy
-    	if(log != null) log.debug( "Running task result cleanup" );
+        // can cause npe error, breaking hot deploy
+        if ( log != null ) log.debug( "Running task result cleanup" );
 
         if ( finishedTasks.size() > 0 ) log.debug( finishedTasks.size() + " finished tasks in the hold" );
         if ( failedTasks.size() > 0 ) log.debug( failedTasks.size() + " failed tasks in the hold" );

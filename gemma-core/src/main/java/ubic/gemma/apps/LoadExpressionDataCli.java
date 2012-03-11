@@ -286,7 +286,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         processAEAccession( aeService, accession );
 
                     } else if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession, true, true, false, false, true, true );
+                        Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, false, true,
+                                true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             successObjects.add( ( ( Describable ) object ).getName()

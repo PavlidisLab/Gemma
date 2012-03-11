@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author xwan, paul
  * @version $Id$
- * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
+ * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 

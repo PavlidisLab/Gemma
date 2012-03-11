@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.diff;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 
 /**
@@ -34,13 +34,13 @@ public class DifferentialExpressionAnalyzerInfo {
 
     Collection<ExperimentalFactorValueObject> factors = new HashSet<ExperimentalFactorValueObject>();
 
-    DifferentialExpressionAnalyzerService.AnalysisType type;
+    DifferentialExpressionAnalyzerServiceImpl.AnalysisType type;
 
     public Collection<ExperimentalFactorValueObject> getFactors() {
         return factors;
     }
 
-    public DifferentialExpressionAnalyzerService.AnalysisType getType() {
+    public DifferentialExpressionAnalyzerServiceImpl.AnalysisType getType() {
         return type;
     }
 
@@ -48,7 +48,7 @@ public class DifferentialExpressionAnalyzerInfo {
         this.factors = factors;
     }
 
-    public void setType( DifferentialExpressionAnalyzerService.AnalysisType type ) {
+    public void setType( DifferentialExpressionAnalyzerServiceImpl.AnalysisType type ) {
         this.type = type;
     }
 

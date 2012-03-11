@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -54,6 +55,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
 
     @Autowired
+    OntologyService os;
+
     MgedOntologyService mos;
 
     ExpressionExperiment ee;
@@ -69,7 +72,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
     @Before
     public void setup() throws Exception {
-
+        this.mos = os.getMgedOntologyService();
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/expdesign.import.testfull.data.txt" );
 

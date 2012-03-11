@@ -43,14 +43,6 @@ public abstract class ExpressionExperimentVectorManipulatingService {
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    /**
-     * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
-     */
-    public void setProcessedExpressionDataVectorService(
-            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
-        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
-    }
-
     // ByteArrayConverter is stateless.
     protected ByteArrayConverter converter = new ByteArrayConverter();
 
@@ -113,10 +105,6 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
 }

@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -61,7 +62,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    GenericAncovaAnalyzer analyzer;
+    DiffExAnalyzer analyzer;
 
     @Autowired
     AnalysisSelectionAndExecutionService analysisService = null;
@@ -129,18 +130,21 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Test
     public void test() throws Exception {
 
-        AbstractAnalyzer aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign()
-                .getExperimentalFactors(), null );
-        assertTrue( aa instanceof TwoWayAnovaWithInteractionsAnalyzer );
+        AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
+                null );
+
+        assertEquals( AnalysisType.TWA, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 2, factors.size() );
+        config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
         config.getInteractionsToInclude().add( factors );
 
+        analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );
 
@@ -148,16 +152,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         checkResults( analysis );
 
-        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
-        Collection<DifferentialExpressionAnalysis> autoran = differentialExpressionAnalyzerService
-                .doDifferentialExpressionAnalysis( ee );
-        assertEquals( 1, autoran.size() );
-        checkResults( autoran.iterator().next() );
-
         Collection<DifferentialExpressionAnalysis> persistent = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee );
-        assertEquals( 1, persistent.size() );
-        checkResults( persistent.iterator().next() );
+                .runDifferentialExpressionAnalyses( ee, config );
 
         DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService.load( persistent.iterator()
                 .next().getId() );

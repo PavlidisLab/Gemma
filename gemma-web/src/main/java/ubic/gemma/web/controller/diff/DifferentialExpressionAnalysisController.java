@@ -24,14 +24,10 @@ import java.util.HashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
-import ubic.gemma.analysis.expression.diff.OneWayAnovaAnalyzer;
-import ubic.gemma.analysis.expression.diff.TTestAnalyzer;
-import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
-import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
@@ -121,8 +117,8 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
                 .getExperimentalDesign().getExperimentalFactors() );
 
-        AbstractDifferentialExpressionAnalyzer analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee,
-                factorsWithoutBatch, null );
+        AnalysisType analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee, factorsWithoutBatch,
+                null );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
@@ -137,22 +133,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             if ( factorsWithoutBatch.size() < 2 ) {
                 throw new IllegalStateException( "This data set does not seem suitable for analysis." );
             }
-
-        } else if ( analyzer instanceof TTestAnalyzer ) {
-            if ( factorsWithoutBatch.iterator().next().getFactorValues().size() == 1 ) {
-                result.setType( AnalysisType.OSTTEST );
-            } else {
-                result.setType( AnalysisType.TTEST );
-            }
-        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
-            result.setType( AnalysisType.OWA );
-        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWIA );
-        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWA );
-        } else {
-            result.setType( AnalysisType.GENERICLM );
         }
+
+        result.setType( analyzer );
         return result;
     }
 
@@ -239,7 +222,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         cmd.setSubsetFactor( subsetFactor );
 
         for ( ExperimentalFactor ef : factors ) {
-            if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 /*
                  * This is a policy and I am pretty sure it makes sense!
                  */

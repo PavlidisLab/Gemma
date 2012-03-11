@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import org.springframework.context.ApplicationContextAware;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -70,7 +70,7 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * @param subsetFactor - can be null
      * @return
      */
-    public abstract AbstractDifferentialExpressionAnalyzer determineAnalysis(
+    public abstract AnalysisType determineAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type,
             ExperimentalFactor subsetFactor );
 
@@ -83,7 +83,7 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * @return an appropriate analyzer
      * @throws an exception if the experiment doesn't have a valid experimental design.
      */
-    public abstract AbstractDifferentialExpressionAnalyzer determineAnalysis(
+    public abstract AnalysisType determineAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors,
             ExperimentalFactor subsetFactor );
 

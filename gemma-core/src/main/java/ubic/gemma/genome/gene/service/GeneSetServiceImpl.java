@@ -46,7 +46,7 @@ import ubic.gemma.security.SecurityService;
  * Service for managing gene sets
  * 
  * @author kelsey
- * @version $Id: GeneSetService.java,
+ * @version $Id$
  */
 @Service
 public class GeneSetServiceImpl implements GeneSetService {
@@ -55,7 +55,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private GeneSetDao geneSetDao = null;
-    
+
     @Autowired
     private GeneService geneService;
 
@@ -67,7 +67,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private TaxonService taxonService;
-    
+
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
@@ -76,7 +76,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
         return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
@@ -126,7 +125,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> load( Collection<Long> ids ) {
         return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
@@ -148,7 +146,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
@@ -169,7 +166,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMyGeneSets() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets();
@@ -180,13 +176,11 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets( tax );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> loadMySharedGeneSets() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
@@ -238,7 +232,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    
     @Override
     public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
         GeneSet geneSet = load( id );
@@ -248,7 +241,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
         Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
-        for(Long id: ids){
+        for ( Long id : ids ) {
             vos.add( getValueObject( id ) );
         }
         return vos;
@@ -263,7 +256,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         GeneSet newGeneSet = GeneSet.Factory.newInstance();
         newGeneSet.setName( geneSetVo.getName() );
         newGeneSet.setDescription( geneSetVo.getDescription() );
-
 
         Collection<Long> geneIds = geneSetVo.getGeneIds();
 
@@ -282,7 +274,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         }
 
         GeneSet gset = create( newGeneSet );
-        
+
         // make groups private by default
         // can't do this to newGeneSet variable because the entity's id needs to be non-null
         if ( geneSetVo.isPublik() ) {
@@ -291,7 +283,6 @@ public class GeneSetServiceImpl implements GeneSetService {
             securityService.makePrivate( gset );
         }
 
-        
         return geneSetValueObjectHelper.convertToValueObject( load( gset.getId() ) );
     }
 
@@ -583,21 +574,23 @@ public class GeneSetServiceImpl implements GeneSetService {
         }
 
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-//        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
+        // gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
         gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
         return gsvos;
     }
 
     /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
+     * all the genes
+     * 
      * @param geneSetVos
      * @return the taxon or null if the gene set param was null
      */
     @Override
     public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
 
-        if(geneSetVO == null) return null;
-        
+        if ( geneSetVO == null ) return null;
+
         TaxonValueObject taxonVO = null;
         // get taxon from members
         for ( Long l : geneSetVO.getGeneIds() ) {
@@ -614,13 +607,15 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of all the genes
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
+     * all the genes
+     * 
      * @param geneSet
      * @return the taxon or null if the gene set param was null
      */
     @Override
     public Taxon getTaxonForGeneSet( GeneSet geneSet ) {
-        if(geneSet == null) return null;
+        if ( geneSet == null ) return null;
         Taxon tmpTax = null;
         tmpTax = geneSetDao.getTaxon( geneSet.getId() );
         // check top-level parent

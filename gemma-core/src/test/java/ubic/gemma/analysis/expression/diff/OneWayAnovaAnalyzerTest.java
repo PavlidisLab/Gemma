@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private OneWayAnovaAnalyzer analyzer = null;
+    private DiffExAnalyzer analyzer = null;
 
     /**
      * Tests the OneWayAnova method.

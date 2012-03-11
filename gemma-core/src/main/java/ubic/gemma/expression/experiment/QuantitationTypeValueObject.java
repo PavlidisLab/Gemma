@@ -31,10 +31,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  * @author thea
  */
 public class QuantitationTypeValueObject {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9139694738279728432L;
+    
      
     private String name;
     

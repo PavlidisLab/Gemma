@@ -54,7 +54,7 @@ import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.MailEngineImpl;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -86,7 +86,7 @@ public class SecurityController {
     private PhenotypeAssociationService phenotypeAssociationService;
 
     @Autowired
-    private MailEngine mailEngine;
+    private MailEngineImpl mailEngine;
 
     @Autowired
     private SecurityService securityService = null;

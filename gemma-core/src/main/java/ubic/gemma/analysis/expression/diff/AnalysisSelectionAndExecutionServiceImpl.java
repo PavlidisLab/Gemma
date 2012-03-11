@@ -26,8 +26,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -66,12 +66,13 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, expressionExperiment
-                .getExperimentalDesign().getExperimentalFactors(), null );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors(), null );
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment );
+        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( expressionExperiment );
 
         return analyses;
 
@@ -87,14 +88,15 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment,
-                config.getFactorsToInclude(), config.getAnalysisType(), config.getSubsetFactor() );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, config.getFactorsToInclude(),
+                config.getAnalysisType(), config.getSubsetFactor() );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( expressionExperiment, config );
 
         return analyses;
     }
@@ -110,7 +112,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, null );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, null );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -118,7 +120,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
         log.info( "Analysis will be done using " + analyzer.getClass().getSimpleName() );
 
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, factors );
+        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( expressionExperiment, factors );
 
         return analyses;
 
@@ -136,13 +139,14 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type, null );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, type, null );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, factors );
+        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( expressionExperiment, factors );
 
         return analyses;
 
@@ -157,7 +161,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+    public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type, ExperimentalFactor subsetFactor ) {
 
         if ( factors.size() == 0 ) {
@@ -173,7 +177,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
              * Basically have to make the subsets, and then validate the choice of model on each of those. The following
              * just assumes that we're going to do something very simple.
              */
-            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
+            return AnalysisType.GENERICLM;
         }
 
         switch ( type ) {
@@ -181,17 +185,17 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 if ( factors.size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
                 }
-                return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
+                return AnalysisType.OWA;
             case TWA:
                 validateFactorsForTwoWayANOVA( factors );
-                return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
-            case TWIA:
+                return AnalysisType.TWA;
+            case TWANI:
                 validateFactorsForTwoWayANOVA( factors );
                 if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, factors ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }
-                return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
+                return AnalysisType.TWANI;
             case TTEST:
                 if ( factors.size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
@@ -202,7 +206,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                                 "Need at least two levels per factor to run two-sample t-test" );
                     }
                 }
-                return this.applicationContext.getBean( TTestAnalyzer.class );
+                return AnalysisType.TTEST;
             case OSTTEST:
                 // one sample t-test.
                 if ( factors.size() != 1 ) {
@@ -213,10 +217,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                         throw new IllegalArgumentException( "Need only one level for the factor for one-sample t-test" );
                     }
                 }
-                return this.applicationContext.getBean( TTestAnalyzer.class );
+                return AnalysisType.OSTTEST;
             case GENERICLM:
 
-                return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
+                return AnalysisType.GENERICLM;
             default:
                 throw new IllegalArgumentException( "Analyses of that type (" + type + ")are not yet supported" );
         }
@@ -242,7 +246,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+    public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor ) {
 
         Collection<ExperimentalFactor> efsToUse = getFactorsToUse( expressionExperiment, experimentalFactors );
@@ -251,7 +255,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             /*
              * Note that the interaction term might still get used (if selected), we just don't decide here.
              */
-            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
+            return AnalysisType.GENERICLM;
         }
 
         if ( efsToUse.size() == 1 ) {
@@ -273,7 +277,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
             if ( factorValues.size() == 1 ) {
                 // one sample t-test.
-                return this.applicationContext.getBean( TTestAnalyzer.class );
+                return AnalysisType.OSTTEST;
             }
 
             else if ( factorValues.size() == 2 ) {
@@ -281,7 +285,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
-                return this.applicationContext.getBean( TTestAnalyzer.class );
+                return AnalysisType.TTEST;
             }
 
             else {
@@ -290,7 +294,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                  * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
                  * with two groups is just a t-test
                  */
-                return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
+                return AnalysisType.OWA;
             }
 
         }
@@ -315,12 +319,12 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                     }
 
                     if ( useIntercept ) {
-                        return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
+                        return AnalysisType.GENERICLM;
                     }
 
                     return null;
                 }
-                if ( BatchInfoPopulationService.isBatchFactor( f ) ) {
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
                     log.info( "One of the two factors is 'batch', not using it for an interaction" );
                     okForInteraction = false;
                 }
@@ -328,15 +332,15 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             /* Check for block design and execute two way anova (with or without interactions). */
             if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, experimentalFactors )
                     || !okForInteraction ) {
-                return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
+                return AnalysisType.TWANI;
             }
-            return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
 
+            return AnalysisType.TWA;
         } else {
             /*
              * Upstream we bail if there are too many factors.
              */
-            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
+            return AnalysisType.GENERICLM;
         }
     }
 

@@ -65,7 +65,7 @@ public class MatrixWriter<T> {
      * @param matrix
      * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
      *        gene Name]
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
      *      annotations are set up.
      * @param writeHeader
      * @throws IOException
@@ -209,7 +209,7 @@ public class MatrixWriter<T> {
      * @param writeGeneInfo
      * @param columns
      * @param buf
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
      *      annotations are set up.
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<T> matrix,
@@ -244,7 +244,7 @@ public class MatrixWriter<T> {
      *        the text. If there are no genes for the probe, then blanks will be added. In each array, the first string
      *        is expected to respresent the gene symbols, the second the names. Any other array elements are ignored.
      *        The array of annotations is like this: [probe name,genes symbol, gene Name, gemma gene id, ncbi id]
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
      *      annotations are set up.
      */
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,

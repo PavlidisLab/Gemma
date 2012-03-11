@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.dataStructure.CountingMap;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -66,7 +66,7 @@ public class DesignMatrixRowValueObject implements Serializable {
 
             for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
                 ExperimentalFactor experimentalFactor = iterator.next();
-                if ( BatchInfoPopulationService.isBatchFactor( experimentalFactor ) ) {
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
                     iterator.remove();
                 }
             }

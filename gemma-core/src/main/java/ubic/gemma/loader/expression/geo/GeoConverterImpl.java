@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
@@ -129,7 +129,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private static final int LOGGING_VECTOR_COUNT_UPDATE = 2000;
 
-    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
+    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
 
     /**
      * Initial guess at how many designelementdatavectors to allocate space for.

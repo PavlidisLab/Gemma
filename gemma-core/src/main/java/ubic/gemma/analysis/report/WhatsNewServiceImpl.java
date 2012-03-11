@@ -160,120 +160,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     }
     
     /**
-     * 
-     * @param items a collection of objects that may include expression experiments
-     * @return the expression experiment subset of the collection passed in 
-     */
-    private Collection<ExpressionExperiment> getExpressionExperiments(Collection<Auditable> items){
-        
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        for ( Auditable auditable : items ) {
-            if ( auditable instanceof ExpressionExperiment ) {
-                ees.add( ( ExpressionExperiment ) auditable );
-            }
-        }
-        return ees;
-    }
-    /**
-     * 
-     * @param items a collection of objects that may include array designs
-     * @return the array design subset of the collection passed in 
-     */
-    private Collection<ArrayDesign> getArrayDesigns(Collection<Auditable> items){
-        
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        for ( Auditable auditable : items ) {
-            if ( auditable instanceof ArrayDesign ) {
-                ads.add( ( ArrayDesign ) auditable );
-            }
-        }
-        return ads;
-    }
-    
-    /**
-     * 
-     * @param ees a collection of expression experiments
-     * @return the number of assays in all the expression experiments passed in
-     */
-    private int getAssayCount(Collection<ExpressionExperiment> ees){
-        
-        int count = 0;
-        //for ( ExpressionExperiment ee : ees ) {
-            //count += ee.getBioAssays().size(); // TODO trying to access bio assays causes LazyInitializationException
-        //}
-        return count;
-    }
-    
-    private Map<Taxon, Long> getExpressionExperimentCountsByTaxon(Collection<ExpressionExperiment> ees){
-        /*
-         * Sort taxa by name.
-         */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                if(o1 == null){
-                    return 1;
-                }else if(o2 == null){
-                    return -1;
-                }else{
-                   return o1.getScientificName().compareTo( o2.getScientificName() );  
-                }                                   
-            }
-        } );
-                
-        ExpressionExperiment ee = null;
-        Taxon t = null;
-
-        // get counts of new experiments by taxon
-        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
-            ee = it.next();
-            t = expressionExperimentService.getTaxon(ee.getId());
-            if(t!=null){
-                eesPerTaxon.put(t, (eesPerTaxon.containsKey(t))? (eesPerTaxon.get(t)+1): 1);
-            }
-        }
-        return eesPerTaxon;
-    } 
-    
-    private Map<Taxon, Collection<Long>> getExpressionExperimentIdsByTaxon(Collection<ExpressionExperiment> ees){
-        /*
-         * Sort taxa by name.
-         */
-        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<Taxon, Collection<Long>>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                if(o1 == null){
-                    return 1;
-                }else if(o2 == null){
-                    return -1;
-                }else{
-                   return o1.getScientificName().compareTo( o2.getScientificName() );  
-                }                                   
-            }
-        } );
-                
-        ExpressionExperiment ee = null;
-        Taxon t = null;
-
-        Collection<Long> ids;
-        // get counts of new experiments by taxon
-        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
-            ee = it.next();
-            t = expressionExperimentService.getTaxon(ee.getId());
-            if(t!=null){
-                if(eesPerTaxon.containsKey(t)){
-                    ids = eesPerTaxon.get(t);
-                }else{
-                    ids = new ArrayList<Long>();
-                }
-                ids.add( ee.getId() );
-                eesPerTaxon.put(t, ids);
-            }
-        }
-        return eesPerTaxon;
-    }    
-
-    /**
      * Retrieve the latest WhatsNew report.
      * 
      * @return WhatsNew the latest WhatsNew report cache.
@@ -342,7 +228,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         }
         return wn;
     }
-
     /**
      * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
      * 
@@ -353,7 +238,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         initDirectories( true );
         saveFile( wn );
     }
-
+    
     /**
      * @param arrayDesignService the arrayDesignService to set
      */
@@ -363,7 +248,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     public void setAuditEventService( AuditEventService auditEventService ) {
         this.auditEventService = auditEventService;
-    }
+    }    
 
     /**
      * @param cacheManager the cacheManager to set
@@ -431,6 +316,90 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             }
         }
         return auditable;
+    }
+
+    /**
+     * 
+     * @param items a collection of objects that may include array designs
+     * @return the array design subset of the collection passed in 
+     */
+    private Collection<ArrayDesign> getArrayDesigns(Collection<Auditable> items){
+        
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( Auditable auditable : items ) {
+            if ( auditable instanceof ArrayDesign ) {
+                ads.add( ( ArrayDesign ) auditable );
+            }
+        }
+        return ads;
+    }
+
+    /**
+     * 
+     * @param ees a collection of expression experiments
+     * @return the number of assays in all the expression experiments passed in
+     */
+    private int getAssayCount(Collection<ExpressionExperiment> ees){
+        
+        int count = 0;
+        //for ( ExpressionExperiment ee : ees ) {
+            //count += ee.getBioAssays().size(); // TODO trying to access bio assays causes LazyInitializationException
+        //}
+        return count;
+    }
+
+    private Map<Taxon, Collection<Long>> getExpressionExperimentIdsByTaxon(Collection<ExpressionExperiment> ees){
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<Taxon, Collection<Long>>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                if(o1 == null){
+                    return 1;
+                }else if(o2 == null){
+                    return -1;
+                }else{
+                   return o1.getScientificName().compareTo( o2.getScientificName() );  
+                }                                   
+            }
+        } );
+                
+        ExpressionExperiment ee = null;
+        Taxon t = null;
+
+        Collection<Long> ids;
+        // get counts of new experiments by taxon
+        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
+            ee = it.next();
+            t = expressionExperimentService.getTaxon(ee.getId());
+            if(t!=null){
+                if(eesPerTaxon.containsKey(t)){
+                    ids = eesPerTaxon.get(t);
+                }else{
+                    ids = new ArrayList<Long>();
+                }
+                ids.add( ee.getId() );
+                eesPerTaxon.put(t, ids);
+            }
+        }
+        return eesPerTaxon;
+    }
+
+    /**
+     * 
+     * @param items a collection of objects that may include expression experiments
+     * @return the expression experiment subset of the collection passed in 
+     */
+    private Collection<ExpressionExperiment> getExpressionExperiments(Collection<Auditable> items){
+        
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        for ( Auditable auditable : items ) {
+            if ( auditable instanceof ExpressionExperiment ) {
+                ees.add( ( ExpressionExperiment ) auditable );
+            }
+        }
+        return ees;
     }
 
     /**

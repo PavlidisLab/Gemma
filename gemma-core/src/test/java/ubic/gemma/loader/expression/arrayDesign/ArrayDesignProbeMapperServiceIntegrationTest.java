@@ -43,7 +43,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
+     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
      * .
      */
     @Test

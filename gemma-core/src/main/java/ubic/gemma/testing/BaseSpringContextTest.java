@@ -258,6 +258,14 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * @param t
+     * @return
+     */
+    protected <T> T getBean( Class<T> t ) {
+        return this.applicationContext.getBean( t );
+    }
+
+    /**
      * @return
      */
     protected Gene getTestPeristentGene() {

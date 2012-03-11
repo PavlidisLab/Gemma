@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;

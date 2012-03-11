@@ -154,6 +154,7 @@ public class GeoBrowserServiceParseTest {
         serv.expressionExperimentService = ees;
         expect( ads.findByShortName( "GPL1708" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE4595" ) ).andReturn( null );
+        // expect( ads.thawLite( null ) ).andReturn( null );
         replay( ads );
         String details = serv.formatDetails( response );
 
@@ -215,7 +216,7 @@ public class GeoBrowserServiceParseTest {
         expect( ads.findByShortName( "GPL3829" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE21230" ) ).andReturn( null );
         replay( ads );
-        String details = serv.formatDetails( response );
+        serv.formatDetails( response );
 
     }
 }

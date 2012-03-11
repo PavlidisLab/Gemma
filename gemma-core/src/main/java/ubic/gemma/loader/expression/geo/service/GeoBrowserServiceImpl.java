@@ -61,7 +61,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
@@ -89,9 +88,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     @Autowired
     private AuditTrailService auditTrailService;
-
-    @Autowired
-    private BioAssayService bioAssayService;
 
     private Map<String, GeoRecord> localInfo;
 
@@ -242,7 +238,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             if ( seenGpl.contains( gpl ) ) continue;
             seenGpl.add( gpl );
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( gpl );
+
             if ( arrayDesign != null ) {
+                arrayDesign = arrayDesignService.thawLite( arrayDesign );
                 String trouble = "";
                 if ( arrayDesign.getStatus().getTroubled() ) {
                     AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );

@@ -109,9 +109,9 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
+    protected void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors )
+            throws Exception {
 
         if ( designElementDataVectors == null ) return;
 
@@ -125,7 +125,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
         Collection<CompositeSequence> cs = new HashSet<CompositeSequence>();
-        for ( DesignElementDataVector vector : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
+        for ( DesignElementDataVector vector : designElementDataVectors ) {
             session.buildLockRequest( LockOptions.NONE ).lock( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );

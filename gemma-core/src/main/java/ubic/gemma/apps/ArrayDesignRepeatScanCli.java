@@ -25,7 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -157,7 +157,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         ArrayDesign thawed = unlazifyArrayDesign( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
-        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( thawed );
+        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( thawed );
 
         RepeatScan scanner = new RepeatScan();
         Collection<BioSequence> altered;

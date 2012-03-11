@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,6 +31,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     @Autowired
     AnalysisSelectionAndExecutionService analysis = null;
+    DiffExAnalyzer analyzer;
 
     /**
      * * Tests determineAnalysis.
@@ -43,16 +42,15 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      * <p>
      * complete block design and biological replicates
      * <p>
-     * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
+     * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzerImpl}
      * 
      * @throws Exception
      */
     @Test
     public void testDetermineAnalysisA() throws Exception {
         configureMocks();
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors(), null );
-        assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
+        analyzer = this.getBean( DiffExAnalyzer.class );
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
     /**
@@ -64,7 +62,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      * <p>
      * no replicates
      * <p>
-     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzerImpl}
      * 
      * @throws Exception
      */
@@ -72,9 +70,8 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
         configureMocks();
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors(), null );
-        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
+        analyzer = this.getBean( DiffExAnalyzer.class );
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
     /*

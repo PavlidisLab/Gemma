@@ -36,7 +36,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -66,13 +66,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
-    ExpressionDataFileService expressionDataFileService;
+    ExpressionDataFileSerivce expressionDataFileService;
 
     @Autowired
     protected GeoService geoService;
 
     @Autowired
-    GenericAncovaAnalyzer analyzer;
+    DiffExAnalyzer analyzer;
 
     @Autowired
     ExperimentalDesignImporter experimentalDesignImporter;
@@ -99,8 +99,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
-            processedDataVectorService.createProcessedDataVectors( ee );
         }
+        processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
         ee = expressionExperimentService.thawLite( ee );
@@ -142,7 +142,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 100, readIn.rows() );
-        assertEquals( 6, readIn.columns() );
+        assertEquals( 4, readIn.columns() ); // no interactions.
 
         // / delete the analysis
         int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
@@ -206,9 +206,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
-            processedDataVectorService.createProcessedDataVectors( ee );
 
         }
+        processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

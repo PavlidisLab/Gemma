@@ -536,7 +536,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         Map<String, BioMaterial> biomaterialsInExpressionExperiment = mapBioMaterialsToNamePossibilities( bioMaterials );
 
         // format the biomaterial name gemma style
-        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderService.makeBioMaterialName( ee,
+        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderServiceImpl.makeBioMaterialName( ee,
                 biomaterialNameFromFile );
 
         BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );

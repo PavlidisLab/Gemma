@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.*;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +43,12 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    TwoWayAnovaWithInteractionsAnalyzer analyzer = null;
+    DiffExAnalyzer analyzer = null;
 
     @Test
     public void testTwoWayAnova() throws Exception {
 
-        log.debug( "Testing TwoWayAnova method in " + TwoWayAnovaWithInteractionsAnalyzer.class.getName() );
+        log.debug( "Testing TwoWayAnova method in " + DiffExAnalyzer.class.getName() );
 
         if ( !connected ) {
             log.warn( "Could not establish R connection.  Skipping test ..." );
@@ -56,8 +57,15 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         configureMocks();
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
-                experimentalFactorA_Area, experimentalFactorB );
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( experimentalFactorA_Area );
+        factors.add( experimentalFactorB );
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.addInteractionToInclude( factors );
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 

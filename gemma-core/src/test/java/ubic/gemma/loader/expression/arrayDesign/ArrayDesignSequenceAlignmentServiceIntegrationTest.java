@@ -39,7 +39,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
+     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
      * .
      */
     @Test

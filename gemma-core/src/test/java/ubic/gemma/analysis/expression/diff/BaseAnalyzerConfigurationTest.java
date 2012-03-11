@@ -36,6 +36,7 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixServiceImpl;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -422,13 +423,13 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
-     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
+     * Mocks the method getVectors in the {@link ExpressionDataMatrixServiceImpl}.
      * 
      * @param numMethodCalls The number of times the mocked method will be called.
      * @throws Exception
      */
     protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
-        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
+        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixServiceImpl.class );
 
         org.easymock.EasyMock
                 .expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )

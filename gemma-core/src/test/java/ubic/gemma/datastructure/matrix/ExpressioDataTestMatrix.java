@@ -26,6 +26,7 @@ import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -51,7 +52,7 @@ public class ExpressioDataTestMatrix extends ExpressionDataDoubleMatrix {
     public ExpressioDataTestMatrix() {
         super();
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderService();
+        SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 

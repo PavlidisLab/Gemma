@@ -28,8 +28,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -64,6 +63,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     String adName = RandomStringUtils.randomAlphabetic( 10 );
 
     @Autowired
+    OntologyService os;
+
     MgedOntologyService mos;
 
     @Autowired
@@ -80,13 +81,15 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        if ( ee != null ) {            
-            eeService.delete( ee );            
+        if ( ee != null ) {
+            eeService.delete( ee );
         }
     }
 
     @Before
     public void setup() throws Exception {
+
+        this.mos = os.getMgedOntologyService();
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );

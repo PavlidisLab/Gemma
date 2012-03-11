@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private TTestAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValuesImpl;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -78,7 +79,7 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
      * @param expressionExperiment
      * @param s2n
      * @param extraMissingValueIndictors
-     * @see TwoChannelMissingValues for parameterization details.
+     * @see TwoChannelMissingValuesImpl for parameterization details.
      */
     public TwoChannelMissingValueTaskCommand( ExpressionExperiment expressionExperiment, double s2n,
             Collection<Double> extraMissingValueIndictors ) {

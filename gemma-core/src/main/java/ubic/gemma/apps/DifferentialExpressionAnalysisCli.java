@@ -29,9 +29,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -84,7 +84,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     protected boolean ignoreBatch = false;
 
-    private ExpressionDataFileService expressionDataFileService;
+    private ExpressionDataFileSerivce expressionDataFileService;
 
     private boolean noDB = false;
 
@@ -168,7 +168,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalyzerService" );
 
-        this.expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
+        this.expressionDataFileService = ( ExpressionDataFileSerivce ) this.getBean( "expressionDataFileService" );
 
         SecurityService securityService = ( SecurityService ) this.getBean( "securityService" );
 
@@ -269,7 +269,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 // has already implemented way of figuring out human-friendly name of factor value.
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
-                if ( ignoreBatch && BatchInfoPopulationService.isBatchFactor( experimentalFactor ) ) {
+                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
                     log.info( "Ignoring batch factor:" + experimentalFactor );
                     continue;
                 }
@@ -298,7 +298,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
                 }
 
-                if ( ignoreBatch && BatchInfoPopulationService.isBatchFactor( factor ) ) {
+                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( factor ) ) {
                     log.warn( "Selected factor looks like a batch, and 'ignoreBatch' is true, skipping:" + factor );
                     continue;
                 }

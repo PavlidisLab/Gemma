@@ -28,7 +28,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -59,7 +59,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
 
         ad = arrayDesignService.thaw( ad );
 
-        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( ad );
+        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( ad );
         RepeatScan scanner = new RepeatScan();
         scanner.repeatScan( sequences );
 

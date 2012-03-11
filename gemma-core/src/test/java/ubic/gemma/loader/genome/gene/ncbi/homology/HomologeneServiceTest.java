@@ -31,7 +31,7 @@ import junit.framework.TestCase;
  */
 public class HomologeneServiceTest extends TestCase {
 
-    private HomologeneService hgs;
+    private HomologeneServiceImpl hgs;
 
     public final void testGetHomologues() throws Exception {
         long id = 34;
@@ -49,7 +49,7 @@ public class HomologeneServiceTest extends TestCase {
     // note: no spring context.
     @Override
     protected void setUp() throws Exception {
-        hgs = new HomologeneService();
+        hgs = new HomologeneServiceImpl();
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" );
         assert is != null;
         hgs.parseHomologGeneFile( is );

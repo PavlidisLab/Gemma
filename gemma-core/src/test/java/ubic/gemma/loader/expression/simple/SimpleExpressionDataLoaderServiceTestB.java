@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 
 public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTest {
@@ -35,6 +36,8 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     ArrayDesignService arrayDesignService;
 
     @Autowired
+    OntologyService ontologyService;
+
     MgedOntologyService mos;
 
     @Autowired
@@ -88,8 +91,8 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
                 "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        mos.startInitializationThread( true );
+        mos = ontologyService.getMgedOntologyService();
+        if ( !mos.isOntologyLoaded() ) mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );

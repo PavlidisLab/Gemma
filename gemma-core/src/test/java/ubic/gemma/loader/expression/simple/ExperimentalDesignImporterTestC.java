@@ -53,6 +53,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 
@@ -65,6 +66,8 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
     ExpressionExperiment ee;
 
     @Autowired
+    OntologyService os;
+
     MgedOntologyService mos;
 
     @Autowired
@@ -137,6 +140,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
+        mos = os.getMgedOntologyService();
         mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 1000 );
@@ -267,8 +271,8 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
                     assertNotNull( c.getValue() );
                     assertNotNull( c.getCategoryUri() );
                 } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
-                            .getMeasurement() );
+                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
+                            fv.getMeasurement() );
                 }
                 seenFactorValueIds.add( fv.getId() );
             }

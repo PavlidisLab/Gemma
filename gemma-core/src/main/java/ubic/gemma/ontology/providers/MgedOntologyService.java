@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.Configuration;
 import ubic.basecode.ontology.OntologyTreeNode;
 import ubic.basecode.ontology.model.OntologyTerm;

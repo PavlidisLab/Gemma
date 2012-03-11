@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.io.File;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
@@ -33,21 +32,6 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ExpressionExperimentQCUtils {
 
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasCorrDistFile( ExpressionExperiment ee ) {
-
-        if ( ee == null ) return false;
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
-        String suffix = ".correlDist.txt";
-        File f = new File( analysisStoragePath + File.separatorChar
-                + ExpressionDataSampleCorrelation.cleanStringForPath( shortName ) + suffix );
-        return f.exists() && f.canRead();
-    }
- 
     /**
      * @param ee
      * @return

@@ -134,6 +134,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
+        ee = eeService.thawLite( ee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
@@ -160,7 +161,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         factor.getFactorValues().add( fv2 );
 
         experimentalFactorService.update( factor );
-      
+
         List<BioAssay> basInOrder = new ArrayList<BioAssay>( ee.getBioAssays() );
 
         Collections.sort( basInOrder, new Comparator<BioAssay>() {
@@ -193,11 +194,11 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         assertEquals( 2, factor.getFactorValues().size() );
-        
+
         /*
          * All that was setup. Now do the interesting bit
          */
-     
+
         processedExpressionDataVectorCreateService.reorderByDesign( ee.getId() );
 
         /*
@@ -252,6 +253,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         assertTrue( "test vector not found", foundVector );
-        
+
     }
 }

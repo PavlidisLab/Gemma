@@ -38,8 +38,8 @@ import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.GeneSetSearch;
+import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**

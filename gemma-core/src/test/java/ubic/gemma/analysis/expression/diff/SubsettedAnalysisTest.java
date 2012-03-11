@@ -33,7 +33,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private GenericAncovaAnalyzer analyzer = null;
+    private DiffExAnalyzer  analyzer = null;
 
     @Test
     public final void testWithSubset() throws Exception {
@@ -84,8 +84,7 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Override
     protected void configureMocks() throws Exception {
-        configureMockAnalysisServiceHelper( 1 );
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
+        configureMockAnalysisServiceHelper( 1 ); 
     }
 
 }
