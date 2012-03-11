@@ -42,11 +42,11 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
 
     @Override
     public void update( Auditable a ) {
-
         Date now = new Date();
         if ( a.getStatus() == null ) {
             a.setStatus( create() );
         } else {
+
             a.getStatus().setLastUpdateDate( now );
             this.update( a.getStatus() );
         }
@@ -86,10 +86,10 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         this.getHibernateTemplate().update( d );
 
     }
-    
+
     @Override
     public Status load( Long id ) {
-        if (id == null ) {
+        if ( id == null ) {
             throw new IllegalArgumentException( "StatusDaoImpl.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
