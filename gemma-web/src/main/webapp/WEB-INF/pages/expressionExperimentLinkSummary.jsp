@@ -18,7 +18,7 @@
 		// need wrapper panel because tabPanels can't have title headers (it's used for tabs)
 		new Gemma.GemmaViewPort({
 		 	centerPanelConfig: new Ext.Panel({
-		 		items:[new Gemma.MyDatasetsGrid()],
+		 		items:[new Gemma.MyDatasetsPanel()],
 			 	layout:'fit'
 			 })
 		});
