@@ -50,9 +50,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.SecurityService;
 
 /**
- * This class will handle population of ExpressionExperimentSetValueObjects. Services need to be accessed in order
- * to fill size, experiment ids, and publik/private fields.
- * 
+ * This class will handle population of ExpressionExperimentSetValueObjects. Services need to be accessed in order to
+ * fill size, experiment ids, and publik/private fields.
  * 
  * @author tvrossum
  * @version $Id$
@@ -62,20 +61,23 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao = null;
-    
+
     @Autowired
     private SecurityService securityService;
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-    
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObject(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObject(ubic.gemma.model
+     * .analysis.expression.ExpressionExperimentSet)
      */
     @Override
     public DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set ) {
-        if(set == null){
+        if ( set == null ) {
             return null;
         }
 
@@ -88,32 +90,42 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
         return vo;
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObjects(java.util.Collection)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObjects(java.util.Collection
+     * )
      */
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects( Collection<ExpressionExperimentSet> sets ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects(
+            Collection<ExpressionExperimentSet> sets ) {
         Collection<DatabaseBackedExpressionExperimentSetValueObject> vos = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
         java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
-        while(iter.hasNext()){
+        while ( iter.hasNext() ) {
             vos.add( convertToValueObject( iter.next() ) );
         }
         return vos;
     }
-/* (non-Javadoc)
- * @see ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObject(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
- */
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObject(ubic.gemma
+     * .model.analysis.expression.ExpressionExperimentSet)
+     */
     @Override
     public DatabaseBackedExpressionExperimentSetValueObject convertToLightValueObject( ExpressionExperimentSet set ) {
-        if(set == null){
+        if ( set == null ) {
             return null;
         }
         int size = expressionExperimentSetDao.getExperimentCount( set.getId() );
-        assert size > 1; // should be due to the query.
+        // assert size > 1; // should be due to the query.
 
         DatabaseBackedExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
-        
+
         vo.setNumExperiments( size );
         vo.setName( set.getName() );
         vo.setId( set.getId() );
@@ -126,7 +138,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             vo.setTaxonId( taxon.getId() );
             vo.setTaxonName( taxon.getCommonName() );
         }
-        
+
         vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
         vo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( set ) );
         vo.setPublik( securityService.isPublic( set ) );
@@ -141,15 +153,20 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
         return vo;
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObjects(java.util.Collection)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObjects(java.util
+     * .Collection)
      */
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToLightValueObjects( Collection<ExpressionExperimentSet> sets ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToLightValueObjects(
+            Collection<ExpressionExperimentSet> sets ) {
         Collection<DatabaseBackedExpressionExperimentSetValueObject> vos = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
         java.util.Iterator<ExpressionExperimentSet> iter = sets.iterator();
-        while(iter.hasNext()){
+        while ( iter.hasNext() ) {
             vos.add( convertToLightValueObject( iter.next() ) );
         }
         return vos;
