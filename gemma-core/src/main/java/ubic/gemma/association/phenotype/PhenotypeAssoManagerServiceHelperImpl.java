@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +64,7 @@ import ubic.gemma.persistence.Persister;
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
 @Service
-public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper {
+public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper, InitializingBean {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -91,8 +92,19 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#valueObject2Entity(ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
+    private PhenotypeAssoOntologyHelper ontologyHelper = null;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#valueObject2Entity(ubic.gemma.model.genome
+     * .gene.phenotype.valueObject.EvidenceValueObject)
      */
     @Override
     public PhenotypeAssociation valueObject2Entity( EvidenceValueObject evidence ) {
@@ -113,8 +125,13 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePhenotypeAssociation(ubic.gemma.model.association.phenotype.PhenotypeAssociation, ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePhenotypeAssociation(ubic.gemma.model
+     * .association.phenotype.PhenotypeAssociation,
+     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
      */
     @Override
     public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
@@ -122,8 +139,13 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         populatePheAssoPhenotypes( phe, evidenceValueObject );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePheAssoWithoutPhenotypes(ubic.gemma.model.association.phenotype.PhenotypeAssociation, ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePheAssoWithoutPhenotypes(ubic.gemma
+     * .model.association.phenotype.PhenotypeAssociation,
+     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
      */
     @Override
     public void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
@@ -137,8 +159,12 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#ontology2CharacteristicValueObject(java.util.Collection, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#ontology2CharacteristicValueObject(java.util
+     * .Collection, java.lang.String)
      */
     @Override
     public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
@@ -158,8 +184,12 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     // load evidence from the database and populate it with the updated information
-    /* (non-Javadoc)
-     * @see ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populateModifiedValues(ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject, ubic.gemma.model.association.phenotype.PhenotypeAssociation)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populateModifiedValues(ubic.gemma.model.genome
+     * .gene.phenotype.valueObject.EvidenceValueObject, ubic.gemma.model.association.phenotype.PhenotypeAssociation)
      */
     @Override
     public void populateModifiedValues( EvidenceValueObject evidenceValueObject,
@@ -444,21 +474,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
 
-            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
-
-            OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotype.getValueUri() );
-
-            if ( ontologyTerm == null ) {
-                throw new EntityNotFoundException( "Could not locate ontology term with uri: "
-                        + phenotype.getValueUri() );
-            }
-
-            myPhenotype.setValueUri( ontologyTerm.getUri() );
-            myPhenotype.setValue( ontologyTerm.getLabel() );
-            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
-
-            myPhenotypes.add( myPhenotype );
+            myPhenotypes.add( this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() ) );
         }
 
         phe.getPhenotypes().addAll( myPhenotypes );

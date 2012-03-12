@@ -35,9 +35,6 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
-import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -110,18 +107,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private UserManager userManager;
 
-    private DiseaseOntologyService diseaseOntologyService = null;
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    private PhenotypeAssoOntologyHelper ontologyHelper = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
     private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class.getName() );
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
+        this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }
 
@@ -167,8 +160,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .valueObject2Entity( evidence );
-        phenotypeAssociation.setGene( gene );
-        gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
 
@@ -408,7 +399,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String newSearchQuery = prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the new search query
-        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = findPhenotypesInOntology( newSearchQuery );
+        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = this.ontologyHelper
+                .findPhenotypesInOntology( newSearchQuery );
 
         // All phenotypes present on the gene (if the gene was given)
         Set<CharacteristicValueObject> phenotypesOnCurrentGene = null;
@@ -719,7 +711,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** For a valueUri return the Characteristic (represents a phenotype) */
     private Characteristic valueUri2Characteristic( String valueUri ) {
 
-        OntologyTerm o = findPhenotypeInOntology( valueUri );
+        OntologyTerm o = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
         VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
@@ -729,20 +721,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
 
         return myPhenotype;
-    }
-
-    /** For a valueUri return the OntologyTerm found */
-    private OntologyTerm findPhenotypeInOntology( String valueUri ) {
-
-        OntologyTerm ontologyTerm = this.diseaseOntologyService.getTerm( valueUri );
-
-        if ( ontologyTerm == null ) {
-            ontologyTerm = this.mammalianPhenotypeOntologyService.getTerm( valueUri );
-        }
-        if ( ontologyTerm == null ) {
-            ontologyTerm = this.humanPhenotypeOntologyService.getTerm( valueUri );
-        }
-        return ontologyTerm;
     }
 
     /** Given a geneId finds all phenotypes for that gene */
@@ -796,7 +774,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             } else {
 
                 // find the ontology term using the valueURI
-                OntologyTerm ontologyTerm = findPhenotypeInOntology( c.getValueUri() );
+                OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( c.getValueUri() );
 
                 if ( ontologyTerm != null ) {
 
@@ -836,7 +814,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // determine all children terms for each other phenotypes
         for ( String phenoRoot : phenotypesValuesUri ) {
 
-            OntologyTerm ontologyTermFound = findPhenotypeInOntology( phenoRoot );
+            OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
             Set<String> parentChildren = new HashSet<String>();
@@ -938,27 +916,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private String prepareOntologyQuery( String searchQuery ) {
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
-    }
-
-    /** search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO */
-    private Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
-        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = new TreeSet<CharacteristicValueObject>();
-
-        // search disease ontology
-        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
-
-        // search mp ontology
-        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.mammalianPhenotypeOntologyService.findTerm( searchQuery ),
-                PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
-
-        // search hp ontology
-        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.humanPhenotypeOntologyService.findTerm( searchQuery ),
-                PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
-
-        return allPhenotypesFoundInOntology;
     }
 
     /**
