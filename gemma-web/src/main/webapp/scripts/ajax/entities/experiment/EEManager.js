@@ -61,12 +61,15 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "diffExpressedProbes"
 			}, {
-				name : "validatedFlag"
+				name : "validated"
 			}, {
 				name : 'validatedAnnotations'
 			}, {
-				name : "troubleFlag",
-				type : "object"
+				name : "troubled",
+				type : "boolean"
+			}, {
+				name : "troubleDetails",
+				type : "string"
 			}, {
 				name : "missingValueAnalysisEventType"
 			}, {

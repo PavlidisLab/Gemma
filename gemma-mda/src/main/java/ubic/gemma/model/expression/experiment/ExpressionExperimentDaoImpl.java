@@ -1517,7 +1517,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "AD.technologyType, ee.class, " // 12, 13
                 + " EDES.id,  " // 14
                 + " s.lastUpdateDate, " // 15
-                + " AD.status " // 16
+                + " AD.status, " // 16
+                + " s.troubled " // 17
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1571,6 +1572,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
+            v.setTroubled( ( ( Boolean ) res[17] ) );
+            if(( ( Boolean ) res[17] ) ){
+                v.setTroubleDetails( "Troubled reason not loaded" );
+            }else{
+                v.setTroubleDetails( "Not troubled" );
+            }
             Object technology = res[12];
             if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );
             if ( !qtMap.isEmpty() && v.getTechnologyType() != null ) {

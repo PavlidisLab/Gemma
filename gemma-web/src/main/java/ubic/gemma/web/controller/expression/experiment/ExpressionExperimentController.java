@@ -1552,6 +1552,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Integer filter ) {
         List<ExpressionExperimentValueObject> filtered = new ArrayList<ExpressionExperimentValueObject>();
         Collection<ExpressionExperiment> eesToKeep = null;
+        List<ExpressionExperimentValueObject> eeVOsToKeep = null;
 
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
@@ -1572,7 +1573,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
-                eesToKeep = expressionExperimentService.loadTroubled();
+                eeVOsToKeep = returnTroubled( eeValObjectCol );
                 break;
             case 6:
                 eesToKeep = expressionExperimentService.loadLackingFactors();
@@ -1623,10 +1624,31 @@ public class ExpressionExperimentController extends AbstractTaskService {
             return filtered;
 
         }
+        if(eeVOsToKeep != null){
+            return eeVOsToKeep;
+        }
 
         return eeValObjectCol;
     }
 
+    /**
+     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for
+     * which it is true
+     * @param ees
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees){
+        List<ExpressionExperimentValueObject> troubled = new ArrayList<ExpressionExperimentValueObject>();
+        
+        for(ExpressionExperimentValueObject eevo : ees){
+            if(eevo.getTroubled()){
+                troubled.add( eevo );
+            }
+        }
+        
+        return troubled;
+    }
+    
     /**
     
      */

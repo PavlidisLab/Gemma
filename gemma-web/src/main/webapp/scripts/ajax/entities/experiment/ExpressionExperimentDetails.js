@@ -151,11 +151,11 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     renderStatus: function(ee){
         var result = '';
-        if (ee.validatedFlag) {
+        if (ee.validated) {
             result = result + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
         }
         
-        if (ee.troubleFlag) {
+        if (ee.troubled) {
             result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
         }
         
