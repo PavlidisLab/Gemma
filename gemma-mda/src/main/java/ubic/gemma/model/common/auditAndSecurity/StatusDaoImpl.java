@@ -55,7 +55,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
 
     @Override
     public void setTroubled( Auditable a, boolean value ) {
-        a.getStatus().setTroubled( true );
+        a.getStatus().setTroubled( value );
         if ( value ) {
             a.getStatus().setValidated( false );
         }
@@ -64,7 +64,10 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
 
     @Override
     public void setValidated( Auditable a, boolean value ) {
-        a.getStatus().setValidated( true );
+        a.getStatus().setValidated( value );
+        if ( value ) {
+            a.getStatus().setTroubled( false );
+        }
         this.update( a.getStatus() );
     }
 
