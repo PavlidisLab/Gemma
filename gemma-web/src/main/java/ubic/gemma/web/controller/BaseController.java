@@ -32,6 +32,7 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.mail.SimpleMailMessage;
 
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.MailEngine;
 import ubic.gemma.util.MailEngineImpl;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -47,7 +48,7 @@ public abstract class BaseController {
     protected Log log = LogFactory.getLog( getClass().getName() );
 
     @Autowired
-    protected MailEngineImpl mailEngine = null;
+    protected MailEngine mailEngine = null;
 
     @Autowired
     protected MessageSource messageSource;
@@ -58,7 +59,7 @@ public abstract class BaseController {
     /**
      * @param mailEngine
      */
-    public void setMailEngine( MailEngineImpl mailEngine ) {
+    public void setMailEngine( MailEngine mailEngine ) {
         this.mailEngine = mailEngine;
     }
 

@@ -52,7 +52,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}
+     * {@link ubic.gemma.web.controller.common.description.bibref.PubMedQueryControllerImpl#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}
      * .
      */
     @Test

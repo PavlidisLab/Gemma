@@ -112,7 +112,7 @@ public class DifferentialExpressionSearchController {
         return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
     }
 
-    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService.TaskProgress getDiffExpSearchTaskProgress(String taskId) {
+    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(String taskId) {
         return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
     }
     

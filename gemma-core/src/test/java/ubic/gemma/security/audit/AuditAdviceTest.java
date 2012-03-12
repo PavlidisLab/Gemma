@@ -67,7 +67,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Autowired
-    UserManager userManager;
+    private UserManager userManager;
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -88,8 +88,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     private UserService userService;
 
     @Autowired
-    private SessionFactory sessionFactory;    
-    
+    private SessionFactory sessionFactory;
+
     @Test
     public void testAuditCreateAndDeleteExpressionExperiment() throws Exception {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true );
@@ -142,10 +142,10 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         // should have create and 1 updates, because we update to add the gene product.
         assertEquals( 2, g.getAuditTrail().getEvents().size() );
-        
+
         Session session = sessionFactory.openSession();
         session.update( g );
-        
+
         for ( GeneProduct prod : g.getProducts() ) {
             assertNotNull( prod.getAuditTrail() );
             Collection<AuditEvent> events = prod.getAuditTrail().getEvents();
@@ -155,9 +155,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                 assertNotNull( e.getAction() );
             }
         }
-        
+
         session.close();
-        
+
         this.geneService.update( g );
         this.geneService.update( g );
         this.geneService.update( g );

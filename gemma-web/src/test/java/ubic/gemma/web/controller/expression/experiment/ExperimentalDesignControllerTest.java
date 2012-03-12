@@ -43,7 +43,7 @@ import ubic.gemma.testing.BaseSpringWebTest;
 public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
-    ExperimentalDesignController experimentalDesignController;
+    private  ExperimentalDesignController experimentalDesignController;
 
     /**
      * Tests showing an experimentalDesign which is implemented in

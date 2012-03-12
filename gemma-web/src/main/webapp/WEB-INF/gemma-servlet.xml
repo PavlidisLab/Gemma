@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- @author Gemma @version $Id: gemma-servlet.xml,v 1.96 2012/01/13 00:10:26 
-	nicolas Exp $ -->
+<!-- @author Gemma @version $Id$ -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
- 	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
- 	
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+
 	xsi:schemaLocation="http://www.springframework.org/schema/beans 
         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
         http://www.springframework.org/schema/context 
@@ -15,34 +13,28 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 		http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
 
-	<context:component-scan base-package="ubic.gemma.web"
-		name-generator="ubic.gemma.util.BeanNameGenerator" />
+	<context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.util.BeanNameGenerator" />
 
 	<aop:aspectj-autoproxy />
 
 	<!-- Mapping URLS to controllers -->
 
-	<!-- This is provided by spring by default, but this declaration is needed 
-		because we define other mappers, and to allow configuration of the interceptor; 
-		otherwise this would be configured by default. -->
-	<bean
-		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+	<!-- This is provided by spring by default, but this declaration is needed because we define other mappers, and to allow 
+		configuration of the interceptor; otherwise this would be configured by default. -->
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
 		<property name="order" value="1" />
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
-	<bean
-		class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
+	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
 		<property name="order" value="2" />
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
-	<bean id="viewNameTranslator"
-		class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator" />
+	<bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator" />
 
 	<!-- explicit mappings of patterns to urls -->
-	<bean id="simpleUrlMapping"
-		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+	<bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 		<property name="order" value="3" />
 		<property name="alwaysUseFullPath" value="true" />
 		<property name="mappings"><!-- replace with annotations ... -->
@@ -72,47 +64,31 @@
 		</property>
 	</bean>
 	<!-- default mapping, as a fallback. Avoid using. -->
-	<bean id="beanNameUrlHandlerMapping"
-		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
+	<bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
 		<property name="order" value="4" />
 	</bean>
 
 	<!-- ==================================================== -->
-	<!-- Mapping urls to views. List views here that are just jsps and that 
-		don't need a controller. -->
+	<!-- Mapping urls to views. List views here that are just jsps and that don't need a controller. -->
 	<!-- ==================================================== -->
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/register.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/userProfile.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/manageGroups.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/geneGroupManager.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/passwordHint.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/admin/userManager.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/admin/indexer.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/admin/widgetTest.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/admin/taskTest.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/contactUs.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/analysesResultsSearch.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/expressionExperiments.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-		name="/expressionExperimentSetManager.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/manageGroups.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/geneGroupManager.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/contactUs.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/analysesResultsSearch.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentSetManager.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
 	<!-- ==================================================== -->
-	<bean id="exceptionResolver"
-		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+	<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
 		<property name="defaultErrorView" value="error" />
 		<property name="exceptionMappings">
 			<props>
@@ -124,17 +100,15 @@
 	</bean>
 
 	<!-- Used for file uploads. Simply defining this makes Spring use it. -->
-	<bean id="multipartResolver"
-		class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
+	<bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
 		<property name="maxUploadSize">
 			<value>104857600</value>
 		</property>
 	</bean>
 	<!-- # 100 megabytes # 104857600 # 20 megabytes gemma.max.fileupload.size.bytes= -->
-	<!-- View Resolver for JSPs. This means that a jsp named "myform.jsp" can 
-		be referred to as "myform" in your controller bean declarations. -->
-	<bean id="viewResolver"
-		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	<!-- View Resolver for JSPs. This means that a jsp named "myform.jsp" can be referred to as "myform" in your controller 
+		bean declarations. -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<property name="requestContextAttribute">
 			<value>rc</value>
 		</property>
@@ -153,8 +127,7 @@
 	<!-- ==================================================== -->
 	<!-- Make spring aware of our i18n support files -->
 	<!-- ==================================================== -->
-	<bean id="messageSource"
-		class="org.springframework.context.support.ResourceBundleMessageSource">
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
 		<property name="basenames">
 			<list>
 				<value>messages</value>
@@ -162,18 +135,15 @@
 		</property>
 	</bean>
 
-	<bean id="geneSetListContainer" class="ubic.gemma.web.persistence.GeneSetListContainer"
-		scope="session">
+	<bean id="geneSetListContainer" class="ubic.gemma.web.persistence.GeneSetListContainer" scope="session">
 		<aop:scoped-proxy />
 	</bean>
 
-	<bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer"
-		scope="session">
+	<bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer" scope="session">
 		<aop:scoped-proxy />
 	</bean>
 
-	<bean id="expressionExperimentFormController"
-		class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
+	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
 
 		<property name="commandName">
 			<value>expressionExperiment</value>
@@ -221,18 +191,13 @@
 		</property>
 	</bean>
 
-<!-- 
-	<bean id="differentialExpressionSearchController"
-		class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
-	</bean>
- -->
+	<!-- <bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController"> 
+		</bean> -->
 	<bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer" />
 
-	<bean id="arrayDesignSequenceAddValidator"
-		class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
+	<bean id="arrayDesignSequenceAddValidator" class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
 
-	<bean id="arrayDesignFormController"
-		class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController" >
+	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 
 		<property name="commandName">
 			<value>arrayDesign</value>
@@ -255,21 +220,17 @@
 	<!-- ==================================================== -->
 	<!-- Validation settings. The validator factory is defined in applicationContext-validation.xml -->
 	<!-- ==================================================== -->
-	<!-- Use this if the command class is a command object that has Xdoclet 
-		validation tags in the source. -->
-	<bean id="genericBeanValidator"
-		class="org.springmodules.validation.commons.DefaultBeanValidator">
+	<!-- Use this if the command class is a command object that has Xdoclet validation tags in the source. -->
+	<bean id="genericBeanValidator" class="org.springmodules.validation.commons.DefaultBeanValidator">
 		<property name="validatorFactory">
 			<ref bean="validatorFactory" />
 		</property>
 	</bean>
 
-	<!-- Use this type of validator if you use a data model object as the command 
-		object . Each of these corresonds to a form declared in validation-global.xml 
-		(which gets merged into validation.xml) -->
+	<!-- Use this type of validator if you use a data model object as the command object . Each of these corresonds to a form 
+		declared in validation-global.xml (which gets merged into validation.xml) -->
 	<!-- FIXME these aren't used much, we need to update our validation setup -->
-	<bean id="userValidator"
-		class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+	<bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 		<property name="validatorFactory">
 			<ref bean="validatorFactory" />
 		</property>
@@ -278,12 +239,10 @@
 		</property>
 	</bean>
 
-	<bean id="simpleExpressionExperimentLoadValidator"
-		class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
+	<bean id="simpleExpressionExperimentLoadValidator" class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
 
 
-	<bean id="databaseEntryValidator"
-		class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+	<bean id="databaseEntryValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 		<property name="validatorFactory">
 			<ref bean="validatorFactory" />
 		</property>
@@ -292,11 +251,9 @@
 		</property>
 	</bean>
 
-	<bean id="fileUploadValidator"
-		class="ubic.gemma.web.validation.auditAndSecurity.FileUploadValidator" />
+	<bean id="fileUploadValidator" class="ubic.gemma.web.validation.auditAndSecurity.FileUploadValidator" />
 
-	<bean id="expressionExperimentValidator"
-		class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+	<bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 		<property name="validatorFactory">
 			<ref bean="validatorFactory" />
 		</property>
@@ -309,20 +266,20 @@
 	<!-- DWR CONFIGURATION -->
 	<!-- ============================================ -->
 
-	<dwr:controller id="dwrController" debug="true" >
+	<dwr:controller id="dwrController" debug="true">
 		<dwr:config-param name="generateDtoClasses" value="dtoall" />
-		<dwr:config-param name="allowScriptTagRemoting" value="true" />	
-		<dwr:config-param name="crossDomainSessionSecurity" value="false" />		
+		<dwr:config-param name="allowScriptTagRemoting" value="true" />
+		<dwr:config-param name="crossDomainSessionSecurity" value="false" />
 	</dwr:controller>
-	
+
 
 	<bean id="javascriptLogger" class="ubic.gemma.web.util.JavascriptLogger">
-    	<dwr:remote javascript="JavascriptLogger" />
+		<dwr:remote javascript="JavascriptLogger" />
 	</bean>
 
 	<bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
-    	<dwr:remote javascript="DifferentialExpressionSearchController">
-      		<dwr:include method="scheduleDiffExpSearchTask" />   
+		<dwr:remote javascript="DifferentialExpressionSearchController">
+			<dwr:include method="scheduleDiffExpSearchTask" />
 			<dwr:include method="getDiffExpSearchTaskProgress" />
 			<dwr:include method="getDiffExpSearchResult" />
 			<dwr:include method="getDifferentialExpressionWithoutBatch" />
@@ -330,20 +287,20 @@
 			<dwr:include method="getDiffExpressionForGenes" />
 			<dwr:include method="getFactors" />
 		</dwr:remote>
-  	</bean>  
+	</bean>
 
 	<bean id="coexpressionSearchController" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchController">
-    	<dwr:remote javascript="ExtCoexpressionSearchController">
-      		<dwr:include method="doSearch" />   
+		<dwr:remote javascript="ExtCoexpressionSearchController">
+			<dwr:include method="doSearch" />
 			<dwr:include method="doSearchQuick2" />
 			<dwr:include method="doSearchQuick" />
 			<dwr:include method="findExpressionExperiments" />
 		</dwr:remote>
-  	</bean>  
+	</bean>
 
 	<bean id="genePickerController" class="ubic.gemma.web.controller.genome.gene.GenePickerController">
-    	<dwr:remote javascript="GenePickerController">
-      		<dwr:include method="getTaxa" />   
+		<dwr:remote javascript="GenePickerController">
+			<dwr:include method="getTaxa" />
 			<dwr:include method="getTaxaSpecies" />
 			<dwr:include method="getTaxaWithGenes" />
 			<dwr:include method="getTaxaWithDatasets" />
@@ -357,671 +314,663 @@
 			<dwr:include method="searchMultipleGenesGetMap" />
 			<dwr:include method="getGeneSetByGOId" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="expressionExperimentSetController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetController">
-    	<dwr:remote javascript="ExpressionExperimentSetController">
-      		<dwr:include method="getExperimentsInSet" />   
-      		<dwr:include method="getExperimentsInSetBySessionId" />   
-      		<dwr:include method="getExperimentIdsInSet" />   
-      		<dwr:include method="loadAll" />   
-      		<dwr:include method="load" />   
-      		<dwr:include method="update" />   
-      		<dwr:include method="updateNameDesc" />   
-      		<dwr:include method="create" />   
-      		<dwr:include method="remove" />   
-      		<dwr:include method="loadAllUserAndSessionGroups" />   
-      		<dwr:include method="updateUserAndSessionGroups" />   
-      		<dwr:include method="updateMembers" />   
-      		<dwr:include method="addUserAndSessionGroups" />   
-      		<dwr:include method="removeUserAndSessionGroups" />   
-      		<dwr:include method="loadAllSessionGroups" />   
-      		<dwr:include method="addSessionGroups" />   
-      		<dwr:include method="canCurrentUserEditGroup" />   
+		<dwr:remote javascript="ExpressionExperimentSetController">
+			<dwr:include method="getExperimentsInSet" />
+			<dwr:include method="getExperimentsInSetBySessionId" />
+			<dwr:include method="getExperimentIdsInSet" />
+			<dwr:include method="loadAll" />
+			<dwr:include method="load" />
+			<dwr:include method="update" />
+			<dwr:include method="updateNameDesc" />
+			<dwr:include method="create" />
+			<dwr:include method="remove" />
+			<dwr:include method="loadAllUserAndSessionGroups" />
+			<dwr:include method="updateUserAndSessionGroups" />
+			<dwr:include method="updateMembers" />
+			<dwr:include method="addUserAndSessionGroups" />
+			<dwr:include method="removeUserAndSessionGroups" />
+			<dwr:include method="loadAllSessionGroups" />
+			<dwr:include method="addSessionGroups" />
+			<dwr:include method="canCurrentUserEditGroup" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 
 	<bean id="expressionExperimentController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController">
-    	<dwr:remote javascript="ExpressionExperimentController">
-      		<dwr:include method="deleteById" />   
-      		<dwr:include method="find" />   
-      		<dwr:include method="searchExpressionExperiments" />   
-      		<dwr:include method="searchExperimentsAndExperimentGroups" />   
-      		<dwr:include method="updateReport" />   
-      		<dwr:include method="updateAllReports" />   
-      		<dwr:include method="updateBasics" />   
-      		<dwr:include method="updateQuantiationTypes" />   
-      		<dwr:include method="updateBioMaterialMapping" />   
-      		<dwr:include method="updatePubMed" />   
-      		<dwr:include method="removePrimaryPublication" />   
-      		<dwr:include method="getAnnotation" />   
-      		<dwr:include method="getExperimentalFactors" />   
-      		<dwr:include method="getFactorValues" />   
-      		<dwr:include method="getDesignMatrixRows" />   
-      		<dwr:include method="getDiffExAnalysisDetails" />   
-      		<dwr:include method="loadExpressionExperiments" />   
-      		<dwr:include method="loadExpressionExperimentDetails" />   
-      		<dwr:include method="loadQuantitationTypes" />   
-      		<dwr:include method="loadStatusSummaries" />   
-      		<dwr:include method="getDescription" />   
-      		<dwr:include method="unmatchAllBioAssays" />   
-      		<dwr:include method="canCurrentUserEditExperiment" />   
-      		<dwr:include method="browse" />   
-      		<dwr:include method="browseSpecificIds" />   
-      		<dwr:include method="browseByTaxon" />   
-      		<dwr:include method="loadCountsForDataSummaryTable" />   
+		<dwr:remote javascript="ExpressionExperimentController">
+			<dwr:include method="deleteById" />
+			<dwr:include method="find" />
+			<dwr:include method="searchExpressionExperiments" />
+			<dwr:include method="searchExperimentsAndExperimentGroups" />
+			<dwr:include method="updateReport" />
+			<dwr:include method="updateAllReports" />
+			<dwr:include method="updateBasics" />
+			<dwr:include method="updateQuantiationTypes" />
+			<dwr:include method="updateBioMaterialMapping" />
+			<dwr:include method="updatePubMed" />
+			<dwr:include method="removePrimaryPublication" />
+			<dwr:include method="getAnnotation" />
+			<dwr:include method="getExperimentalFactors" />
+			<dwr:include method="getFactorValues" />
+			<dwr:include method="getDesignMatrixRows" />
+			<dwr:include method="getDiffExAnalysisDetails" />
+			<dwr:include method="loadExpressionExperiments" />
+			<dwr:include method="loadExpressionExperimentDetails" />
+			<dwr:include method="loadQuantitationTypes" />
+			<dwr:include method="loadStatusSummaries" />
+			<dwr:include method="getDescription" />
+			<dwr:include method="unmatchAllBioAssays" />
+			<dwr:include method="canCurrentUserEditExperiment" />
+			<dwr:include method="browse" />
+			<dwr:include method="browseSpecificIds" />
+			<dwr:include method="browseByTaxon" />
+			<dwr:include method="loadCountsForDataSummaryTable" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="geneController" class="ubic.gemma.web.controller.genome.gene.GeneController">
-    	<dwr:remote javascript="GeneController">
-      		<dwr:include method="findGOTerms" />   
-      		<dwr:include method="getProducts" />   
-      		<dwr:include method="loadGeneDetails" />   
-      		<dwr:include method="loadGeneEvidence" />   
-      		<dwr:include method="loadAllenBrainImages" />         	
+		<dwr:remote javascript="GeneController">
+			<dwr:include method="findGOTerms" />
+			<dwr:include method="getProducts" />
+			<dwr:include method="loadGeneDetails" />
+			<dwr:include method="loadGeneEvidence" />
+			<dwr:include method="loadAllenBrainImages" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="geneSetController" class="ubic.gemma.web.controller.genome.gene.GeneSetController">
-    	<dwr:remote javascript="GeneSetController">
-      		<dwr:include method="create" />         	
-      		<dwr:include method="load" />         	
-      		<dwr:include method="addSessionGroups" />         	
-      		<dwr:include method="addUserAndSessionGroups" />         	
-      		<dwr:include method="remove" />         	
-      		<dwr:include method="removeSessionGroups" />         	
-      		<dwr:include method="removeUserAndSessionGroups" />         	
-      		<dwr:include method="getUsersGeneGroups" />         	
-      		<dwr:include method="getUserSessionGeneGroups" />         	
-      		<dwr:include method="getUserAndSessionGeneGroups" />         	
-      		<dwr:include method="getGenesInGroup" />         	
-      		<dwr:include method="getGeneSetByGOId" />         	
-      		<dwr:include method="update" />         	
-      		<dwr:include method="updateNameDesc" />         	
-      		<dwr:include method="updateMembers" />         	
-      		<dwr:include method="updateSessionGroups" />         	
-      		<dwr:include method="updateUserAndSessionGroups" />         	
-      		<dwr:include method="findGeneSetsByGene" />         	
-      		<dwr:include method="findGeneSetsByName" />         	
-      		<dwr:include method="canCurrentUserEditGroup" />         	
+		<dwr:remote javascript="GeneSetController">
+			<dwr:include method="create" />
+			<dwr:include method="load" />
+			<dwr:include method="addSessionGroups" />
+			<dwr:include method="addUserAndSessionGroups" />
+			<dwr:include method="remove" />
+			<dwr:include method="removeSessionGroups" />
+			<dwr:include method="removeUserAndSessionGroups" />
+			<dwr:include method="getUsersGeneGroups" />
+			<dwr:include method="getUserSessionGeneGroups" />
+			<dwr:include method="getUserAndSessionGeneGroups" />
+			<dwr:include method="getGenesInGroup" />
+			<dwr:include method="getGeneSetByGOId" />
+			<dwr:include method="update" />
+			<dwr:include method="updateNameDesc" />
+			<dwr:include method="updateMembers" />
+			<dwr:include method="updateSessionGroups" />
+			<dwr:include method="updateUserAndSessionGroups" />
+			<dwr:include method="findGeneSetsByGene" />
+			<dwr:include method="findGeneSetsByName" />
+			<dwr:include method="canCurrentUserEditGroup" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 
 	<bean id="phenotypeController" class="ubic.gemma.web.controller.PhenotypeController">
-    	<dwr:remote javascript="PhenotypeController">
-      		<dwr:include method="findCandidateGenes" />   
-      		<dwr:include method="loadAllPhenotypes" />   
-      		<dwr:include method="searchOntologyForPhenotypes" />   
-      		<dwr:include method="findBibliographicReference" />   
-      		<dwr:include method="validatePhenotypeAssociation" />   
-      		<dwr:include method="removePhenotypeAssociation" />   
+		<dwr:remote javascript="PhenotypeController">
+			<dwr:include method="findCandidateGenes" />
+			<dwr:include method="loadAllPhenotypes" />
+			<dwr:include method="searchOntologyForPhenotypes" />
+			<dwr:include method="findBibliographicReference" />
+			<dwr:include method="validatePhenotypeAssociation" />
+			<dwr:include method="removePhenotypeAssociation" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
-    	<dwr:remote javascript="SearchService">
-      		<dwr:include method="search" />   
+		<dwr:remote javascript="SearchService">
+			<dwr:include method="search" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
-	<bean id="mgedOntologyServiceDWR" class="ubic.gemma.ontology.providers.MgedOntologyService" 
-      factory-bean="ontologyService" factory-method="getMgedOntologyService">
-    	<dwr:remote javascript="MgedOntologyService">
-      		<dwr:include method="getUsefulMgedTerms" />   
-      		<dwr:include method="getMgedTermsByKey" />   
+	<bean id="mgedOntologyServiceDWR" class="ubic.gemma.ontology.providers.MgedOntologyService" factory-bean="ontologyService"
+		factory-method="getMgedOntologyService">
+		<dwr:remote javascript="MgedOntologyService">
+			<dwr:include method="getUsefulMgedTerms" />
+			<dwr:include method="getMgedTermsByKey" />
 		</dwr:remote>
- 	</bean> 
- 	
-	<bean id="bibliographicReferenceController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController">
-    	<dwr:remote javascript="BibliographicReferenceController">
-      		<dwr:include method="update" />   
-      		<dwr:include method="browse" />   
+	</bean>
+
+	<bean id="bibliographicReferenceController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceControllerImpl">
+		<dwr:remote javascript="BibliographicReferenceController">
+			<dwr:include method="update" />
+			<dwr:include method="browse" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="bioAssayController" class="ubic.gemma.web.controller.expression.bioAssay.BioAssayController">
-    	<dwr:remote javascript="BioAssayController">
-      		<dwr:include method="markOutlier" />   
+		<dwr:remote javascript="BioAssayController">
+			<dwr:include method="markOutlier" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="bioMaterialController" class="ubic.gemma.web.controller.expression.biomaterial.BioMaterialController">
-    	<dwr:remote javascript="BioMaterialController">
-      		<dwr:include method="getBioMaterials" />   
-      		<dwr:include method="getAnnotation" />   
-      		<dwr:include method="getFactorValues" />   
-      		<dwr:include method="addFactorValueTo" />   
+		<dwr:remote javascript="BioMaterialController">
+			<dwr:include method="getBioMaterials" />
+			<dwr:include method="getAnnotation" />
+			<dwr:include method="getFactorValues" />
+			<dwr:include method="addFactorValueTo" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="compositeSequenceController" class="ubic.gemma.web.controller.expression.designElement.CompositeSequenceController">
-    	<dwr:remote javascript="CompositeSequenceController">
-      		<dwr:include method="getGeneMappingSummary" />   
-      		<dwr:include method="getCsSummaries" />   
-      		<dwr:include method="search" />   
+		<dwr:remote javascript="CompositeSequenceController">
+			<dwr:include method="getGeneMappingSummary" />
+			<dwr:include method="getCsSummaries" />
+			<dwr:include method="search" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="fileUploadController" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUploadController">
-    	<dwr:remote javascript="FileUploadController">
-      		<dwr:include method="upload" />   
-      		<dwr:include method="getUploadStatus" />   
+		<dwr:remote javascript="FileUploadController">
+			<dwr:include method="upload" />
+			<dwr:include method="getUploadStatus" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
-	<bean id="arrayDesignController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController">
-    	<dwr:remote javascript="ArrayDesignController">
-      		<dwr:include method="getCsSummaries" />   
-      		<dwr:include method="updateReport" />   
-      		<dwr:include method="getReportHtml" />   
-      		<dwr:include method="addAlternateName" />   
-      		<dwr:include method="getArrayDesigns" />   
-      		<dwr:include method="loadArrayDesignsForShowAll" />   
-      		<dwr:include method="remove" />   
-      		<dwr:include method="getSummaryForArrayDesign" />   
-      		<dwr:include method="loadArrayDesignsSummary" />   
-      		<dwr:include method="updateReportById" />   
+	<bean id="arrayDesignController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerImpl">
+		<dwr:remote javascript="ArrayDesignController">
+			<dwr:include method="getCsSummaries" />
+			<dwr:include method="updateReport" />
+			<dwr:include method="getReportHtml" />
+			<dwr:include method="addAlternateName" />
+			<dwr:include method="getArrayDesigns" />
+			<dwr:include method="loadArrayDesignsForShowAll" />
+			<dwr:include method="remove" />
+			<dwr:include method="getSummaryForArrayDesign" />
+			<dwr:include method="loadArrayDesignsSummary" />
+			<dwr:include method="updateReportById" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 
-	<bean id="experimentalDesignController" class="ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController">
-    	<dwr:remote javascript="ExperimentalDesignController">
-      		<dwr:include method="createDesignFromFile" />   
-      		<dwr:include method="getExperimentalFactors" />   
-      		<dwr:include method="createExperimentalFactor" />   
-      		<dwr:include method="deleteExperimentalFactors" />   
-      		<dwr:include method="updateExperimentalFactors" />   
-      		<dwr:include method="getFactorValues" />   
-      		<dwr:include method="createFactorValue" />   
-      		<dwr:include method="deleteFactorValues" />   
-      		<dwr:include method="getFactorValuesWithCharacteristics" />   
-      		<dwr:include method="createFactorValueCharacteristic" />   
-      		<dwr:include method="deleteFactorValueCharacteristics" />   
-      		<dwr:include method="updateFactorValueCharacteristics" />   
-      		<dwr:include method="getBioMaterials" />   
-      		<dwr:include method="updateBioMaterials" />   
+	<bean id="experimentalDesignController" class="ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerImpl">
+		<dwr:remote javascript="ExperimentalDesignController">
+			<dwr:include method="createDesignFromFile" />
+			<dwr:include method="getExperimentalFactors" />
+			<dwr:include method="createExperimentalFactor" />
+			<dwr:include method="deleteExperimentalFactors" />
+			<dwr:include method="updateExperimentalFactors" />
+			<dwr:include method="getFactorValues" />
+			<dwr:include method="createFactorValue" />
+			<dwr:include method="deleteFactorValues" />
+			<dwr:include method="getFactorValuesWithCharacteristics" />
+			<dwr:include method="createFactorValueCharacteristic" />
+			<dwr:include method="deleteFactorValueCharacteristics" />
+			<dwr:include method="updateFactorValueCharacteristics" />
+			<dwr:include method="getBioMaterials" />
+			<dwr:include method="updateBioMaterials" />
 		</dwr:remote>
- 	</bean>  
-				
+	</bean>
+
 	<bean id="taskCompletionController" class="ubic.gemma.web.controller.TaskCompletionController">
-    	<dwr:remote javascript="TaskCompletionController">
-      		<dwr:include method="checkResult" />   
+		<dwr:remote javascript="TaskCompletionController">
+			<dwr:include method="checkResult" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="expressionExperimentDataFetchController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchController">
-    	<dwr:remote javascript="ExpressionExperimentDataFetchController">
-      		<dwr:include method="getDataFile" />   
-      		<dwr:include method="getCoExpressionDataFile" />   
-      		<dwr:include method="getDiffExpressionDataFile" />   
+		<dwr:remote javascript="ExpressionExperimentDataFetchController">
+			<dwr:include method="getDataFile" />
+			<dwr:include method="getCoExpressionDataFile" />
+			<dwr:include method="getDiffExpressionDataFile" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
-	<bean id="progressStatusService" class="ubic.gemma.job.progress.ProgressStatusService">
-    	<dwr:remote javascript="ProgressStatusService">
-      		<dwr:include method="getProgressStatus" />   
-      		<dwr:include method="cancelJob" />   
-      		<dwr:include method="addEmailAlert" />   
-      		<dwr:include method="getSubmittedTasks" />   
+	<bean id="progressStatusService" class="ubic.gemma.job.progress.ProgressStatusServiceImpl">
+		<dwr:remote javascript="ProgressStatusService">
+			<dwr:include method="getProgressStatus" />
+			<dwr:include method="cancelJob" />
+			<dwr:include method="addEmailAlert" />
+			<dwr:include method="getSubmittedTasks" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="annotationController" class="ubic.gemma.web.controller.expression.experiment.AnnotationController">
-    	<dwr:remote javascript="AnnotationController">
-      		<dwr:include method="autoTag" />   
-      		<dwr:include method="findTerm" />   
-      		<dwr:include method="createExperimentTag" />   
-      		<dwr:include method="removeExperimentTag" />   
-      		<dwr:include method="createBioMaterialTag" />   
-      		<dwr:include method="removeBioMaterialTag" />   
-      		<dwr:include method="reinitializeOntologyIndices" />   
-      		<dwr:include method="validateTags" />   
+		<dwr:remote javascript="AnnotationController">
+			<dwr:include method="autoTag" />
+			<dwr:include method="findTerm" />
+			<dwr:include method="createExperimentTag" />
+			<dwr:include method="removeExperimentTag" />
+			<dwr:include method="createBioMaterialTag" />
+			<dwr:include method="removeBioMaterialTag" />
+			<dwr:include method="reinitializeOntologyIndices" />
+			<dwr:include method="validateTags" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 
 	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
-    	<dwr:remote javascript="IndexService">
-      		<dwr:include method="index" />   
+		<dwr:remote javascript="IndexService">
+			<dwr:include method="index" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="expressionExperimentLoadController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadController">
-    	<dwr:remote javascript="ExpressionExperimentLoadController">
-      		<dwr:include method="load" />   
+		<dwr:remote javascript="ExpressionExperimentLoadController">
+			<dwr:include method="load" />
 		</dwr:remote>
- 	</bean>  
-						
+	</bean>
+
 	<bean id="expressionDataFileUploadController" class="ubic.gemma.web.controller.expression.experiment.ExpressionDataFileUploadController">
-    	<dwr:remote javascript="ExpressionDataFileUploadController">
-      		<dwr:include method="load" />   
-      		<dwr:include method="validate" />   
+		<dwr:remote javascript="ExpressionDataFileUploadController">
+			<dwr:include method="load" />
+			<dwr:include method="validate" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="expressionExperimentReportGenerationController" class="ubic.gemma.web.controller.ExpressionExperimentReportGenerationController">
-    	<dwr:remote javascript="ExpressionExperimentReportGenerationController">
-      		<dwr:include method="run" />   
-      		<dwr:include method="runAll" />   
+		<dwr:remote javascript="ExpressionExperimentReportGenerationController">
+			<dwr:include method="run" />
+			<dwr:include method="runAll" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="differentialExpressionAnalysisController" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController">
-    	<dwr:remote javascript="DifferentialExpressionAnalysisController">
-      		<dwr:include method="run" />   
-      		<dwr:include method="runCustom" />   
-      		<dwr:include method="determineAnalysisType" />   
+		<dwr:remote javascript="DifferentialExpressionAnalysisController">
+			<dwr:include method="run" />
+			<dwr:include method="runCustom" />
+			<dwr:include method="determineAnalysisType" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="processedExpressionDataVectorCreateController" class="ubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController">
-    	<dwr:remote javascript="ProcessedExpressionDataVectorCreateController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="ProcessedExpressionDataVectorCreateController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="twoChannelMissingValueController" class="ubic.gemma.web.controller.analysis.preprocess.TwoChannelMissingValueController">
-    	<dwr:remote javascript="TwoChannelMissingValueController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="TwoChannelMissingValueController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="svdController" class="ubic.gemma.web.controller.analysis.preprocess.SvdController">
-    	<dwr:remote javascript="SvdController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="SvdController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="batchInfoFetchController" class="ubic.gemma.web.controller.analysis.preprocess.BatchInfoFetchController">
-    	<dwr:remote javascript="BatchInfoFetchController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="BatchInfoFetchController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 
 	<bean id="linkAnalysisController" class="ubic.gemma.web.controller.analysis.expression.coexpression.links.LinkAnalysisController">
-    	<dwr:remote javascript="LinkAnalysisController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="LinkAnalysisController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="arrayDesignRepeatScanController" class="ubic.gemma.web.controller.analysis.sequence.ArrayDesignRepeatScanController">
-    	<dwr:remote javascript="ArrayDesignRepeatScanController">
-      		<dwr:include method="run" />   
+		<dwr:remote javascript="ArrayDesignRepeatScanController">
+			<dwr:include method="run" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="characteristicBrowserController" class="ubic.gemma.web.controller.common.CharacteristicBrowserController">
-    	<dwr:remote javascript="CharacteristicBrowserController">
-      		<dwr:include method="findCharacteristics" />   
-      		<dwr:include method="findCharacteristicsCustom" />   
-      		<dwr:include method="removeCharacteristics" />   
-      		<dwr:include method="updateCharacteristics" />   
-      		<dwr:include method="browse" />   
-      		<dwr:include method="count" />   
+		<dwr:remote javascript="CharacteristicBrowserController">
+			<dwr:include method="findCharacteristics" />
+			<dwr:include method="findCharacteristicsCustom" />
+			<dwr:include method="removeCharacteristics" />
+			<dwr:include method="updateCharacteristics" />
+			<dwr:include method="browse" />
+			<dwr:include method="count" />
 		</dwr:remote>
- 	</bean>  
-	
+	</bean>
+
 	<bean id="auditController" class="ubic.gemma.web.remote.AuditController">
-    	<dwr:remote javascript="AuditController">
-      		<dwr:include method="getEvents" />   
-      		<dwr:include method="getAuditable" />   
-      		<dwr:include method="addAuditEvent" />   
+		<dwr:remote javascript="AuditController">
+			<dwr:include method="getEvents" />
+			<dwr:include method="getAuditable" />
+			<dwr:include method="addAuditEvent" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="geoBrowserService" class="ubic.gemma.loader.expression.geo.service.GeoBrowserServiceImpl">
-    	<dwr:remote javascript="GeoBrowserService">
-      		<dwr:include method="getDetails" />   
-      		<dwr:include method="toggleUsability" />   
+		<dwr:remote javascript="GeoBrowserService">
+			<dwr:include method="getDetails" />
+			<dwr:include method="toggleUsability" />
 		</dwr:remote>
- 	</bean>  
-				 
+	</bean>
+
 	<bean id="dEDVController" class="ubic.gemma.web.controller.expression.experiment.DEDVController">
-    	<dwr:remote javascript="DEDVController">
-      		<dwr:include method="getDEDV" />   
-      		<dwr:include method="getDEDVForVisualization" />   
-      		<dwr:include method="getDEDVForCoexpressionVisualization" />   
-      		<dwr:include method="getDEDVForDiffExVisualization" />   
-      		<dwr:include method="getVectorData" />   
-      		<dwr:include method="getDEDVForPcaVisualization" />   
-      		<dwr:include method="getDEDVForVisualizationByProbe" />   
-      		<dwr:include method="getDEDVForDiffExVisualizationByThreshold" />   
-      		<dwr:include method="getDEDVForDiffExVisualizationByExperiment" />   
+		<dwr:remote javascript="DEDVController">
+			<dwr:include method="getDEDV" />
+			<dwr:include method="getDEDVForVisualization" />
+			<dwr:include method="getDEDVForCoexpressionVisualization" />
+			<dwr:include method="getDEDVForDiffExVisualization" />
+			<dwr:include method="getVectorData" />
+			<dwr:include method="getDEDVForPcaVisualization" />
+			<dwr:include method="getDEDVForVisualizationByProbe" />
+			<dwr:include method="getDEDVForDiffExVisualizationByThreshold" />
+			<dwr:include method="getDEDVForDiffExVisualizationByExperiment" />
 		</dwr:remote>
- 	</bean>  
-				  				
+	</bean>
+
 	<bean id="systemMonitorController" class="ubic.gemma.web.controller.monitoring.SystemMonitorController">
-    	<dwr:remote javascript="SystemMonitorController">
-      		<dwr:include method="getHibernateStatus" />   
-      		<dwr:include method="getCacheStatus" />   
-      		<dwr:include method="getSpaceStatus" />   
-      		<dwr:include method="flushCache" />   
-      		<dwr:include method="flushAllCaches" />   
-      		<dwr:include method="resetHibernateStatus" />   
+		<dwr:remote javascript="SystemMonitorController">
+			<dwr:include method="getHibernateStatus" />
+			<dwr:include method="getCacheStatus" />
+			<dwr:include method="getSpaceStatus" />
+			<dwr:include method="flushCache" />
+			<dwr:include method="flushAllCaches" />
+			<dwr:include method="resetHibernateStatus" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="feedReader" class="ubic.gemma.web.feed.FeedReader">
-    	<dwr:remote javascript="FeedReader">
-      		<dwr:include method="getLatestNews" />   
+		<dwr:remote javascript="FeedReader">
+			<dwr:include method="getLatestNews" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="userListController" class="ubic.gemma.web.controller.common.auditAndSecurity.UserListControllerImpl">
-    	<dwr:remote javascript="UserListController">
-      		<dwr:include method="getUsers" />   
-      		<dwr:include method="saveUser" />   
+		<dwr:remote javascript="UserListController">
+			<dwr:include method="getUsers" />
+			<dwr:include method="saveUser" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
 	<bean id="linkOutController" class="ubic.gemma.web.controller.LinkOutController">
-    	<dwr:remote javascript="LinkOutController">
-      		<dwr:include method="getAllenBrainAtlasLink" />   
+		<dwr:remote javascript="LinkOutController">
+			<dwr:include method="getAllenBrainAtlasLink" />
 		</dwr:remote>
- 	</bean>  
+	</bean>
 
-	<bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityController">
-    	<dwr:remote javascript="SecurityController">
-      		<dwr:include method="addUserToGroup" />   
-      		<dwr:include method="createGroup" />   
-      		<dwr:include method="deleteGroup" />   
-      		<dwr:include method="getGroupMembers" />   
-      		<dwr:include method="getUsersData" />   
-      		<dwr:include method="getAvailableSids" />   
-      		<dwr:include method="getAvailableGroups" />   
-      		<dwr:include method="getSecurityInfo" />   
-      		<dwr:include method="makePrivate" />   
-      		<dwr:include method="makePublic" />   
-      		<dwr:include method="makeGroupWriteable" />   
-      		<dwr:include method="makeGroupReadable" />   
-      		<dwr:include method="removeGroupWriteable" />   
-      		<dwr:include method="removeGroupReadable" />   
-      		<dwr:include method="removeUsersFromGroup" />   
-      		<dwr:include method="updatePermissions" />   
-      		<dwr:include method="updatePermission" />   
-      		<dwr:include method="getAvailablePrincipalSids" />   
-      		<dwr:include method="getAuthenticatedUserCount" />   
-      		<dwr:include method="getAuthenticatedUserNames" />   
+	<bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityControllerImpl">
+		<dwr:remote javascript="SecurityController">
+			<dwr:include method="addUserToGroup" />
+			<dwr:include method="createGroup" />
+			<dwr:include method="deleteGroup" />
+			<dwr:include method="getGroupMembers" />
+			<dwr:include method="getUsersData" />
+			<dwr:include method="getAvailableSids" />
+			<dwr:include method="getAvailableGroups" />
+			<dwr:include method="getSecurityInfo" />
+			<dwr:include method="makePrivate" />
+			<dwr:include method="makePublic" />
+			<dwr:include method="makeGroupWriteable" />
+			<dwr:include method="makeGroupReadable" />
+			<dwr:include method="removeGroupWriteable" />
+			<dwr:include method="removeGroupReadable" />
+			<dwr:include method="removeUsersFromGroup" />
+			<dwr:include method="updatePermissions" />
+			<dwr:include method="updatePermission" />
+			<dwr:include method="getAvailablePrincipalSids" />
+			<dwr:include method="getAuthenticatedUserCount" />
+			<dwr:include method="getAuthenticatedUserNames" />
 		</dwr:remote>
- 	</bean>
- 	
- 	<bean id="signupController" class="ubic.gemma.web.controller.common.auditAndSecurity.SignupController">
-    	<dwr:remote javascript="SignupController">
-      		<dwr:include method="loginCheck" />      		
+	</bean>
+
+	<bean id="signupController" class="ubic.gemma.web.controller.common.auditAndSecurity.SignupController">
+		<dwr:remote javascript="SignupController">
+			<dwr:include method="loginCheck" />
 		</dwr:remote>
- 	</bean> 
+	</bean>
 
-   <dwr:configuration>
-	
-	<dwr:init>
-		<dwr:converter id="classConverter" class="ubic.gemma.web.remote.ClassConverter" />				
-		<dwr:converter id="characteristicPropertyConverter" class="ubic.gemma.web.remote.CharacteristicPropertyConverter" />		
-		<dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter" />		
-		<dwr:converter id="standardQuantitationTypeConverter" class="ubic.gemma.web.remote.StandardQuantitationTypeConverter" />			
-		<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />		
-		<dwr:converter id="ontologyTermConverter" class="ubic.gemma.web.remote.OntologyTermConverter" />				
-		<dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter" />		
-		<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />		
-		<dwr:converter id="diffAnalysisTypeConverter" class="ubic.gemma.web.remote.DiffAnalysisTypeConverter" />								
-	</dwr:init>
-		
-	<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject" javascript="FreeTextExpressionExperimentResultsValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject" javascript="DatabaseBackedExpressionExperimentSetValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject" javascript="SessionBoundExpressionExperimentSetValueObject" />
+	<dwr:configuration>
+
+		<dwr:init>
+			<dwr:converter id="classConverter" class="ubic.gemma.web.remote.ClassConverter" />
+			<dwr:converter id="characteristicPropertyConverter" class="ubic.gemma.web.remote.CharacteristicPropertyConverter" />
+			<dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter" />
+			<dwr:converter id="standardQuantitationTypeConverter" class="ubic.gemma.web.remote.StandardQuantitationTypeConverter" />
+			<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />
+			<dwr:converter id="ontologyTermConverter" class="ubic.gemma.web.remote.OntologyTermConverter" />
+			<dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter" />
+			<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />
+			<dwr:converter id="diffAnalysisTypeConverter" class="ubic.gemma.web.remote.DiffAnalysisTypeConverter" />
+		</dwr:init>
+
+		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
+			javascript="FreeTextExpressionExperimentResultsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject"
+			javascript="DatabaseBackedExpressionExperimentSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"
+			javascript="SessionBoundExpressionExperimentSetValueObject" />
 
 
-    <dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
-   	<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneDetailsValueObject" javascript="GeneDetailsValueObject" />
-    
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" />	
-    
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject" />	
-	<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject" javascript="EvidenceValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject" javascript="ExperimentalEvidenceValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject" javascript="ExpressionExperimentSetValueObject" />
-	<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject" javascript="ExpressionExperimentValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneDetailsValueObject" javascript="GeneDetailsValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
-    <dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
-    <dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
-    <dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.search.SearchResult" />
-		
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject"
+			javascript="EvidenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
+			javascript="ExperimentalEvidenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
+			javascript="ExpressionExperimentSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
+			javascript="ExpressionExperimentValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.expression.experiment.QuantitationTypeValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt" />
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />	
+		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
+		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress" />
 
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />	
+		<dwr:convert type="bean" class="ubic.gemma.search.SearchResult" />
 
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject" />	
-    <dwr:convert type="bean" class="ubic.gemma.web.util.upload.UploadInfo" />	
-    <dwr:convert type="bean" class="ubic.gemma.web.image.aba.ImageValueObject" />				
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.feed.NewsItem" />				
-    <dwr:convert type="bean" class="ubic.gemma.search.SearchSettings" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.VisualizationValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.TaxonValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject" />				
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.QuantitationTypeValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.ontology.OntologyTreeNode" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditAction" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserGroupValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.AnnotationValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />
-    <dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />			
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject" />				
-    <dwr:convert type="bean" class="ubic.gemma.job.progress.ProgressData" />				
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.util.upload.UploadInfo" />
+		<dwr:convert type="bean" class="ubic.gemma.web.image.aba.ImageValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.ontology.OntologyData" />				
-    <dwr:convert type="bean" class="ubic.gemma.ontology.OntologyDataList" />			
-    	
-    <dwr:convert type="bean" class="ubic.gemma.analysis.sequence.GeneMappingSummary" >
-    	<dwr:exclude method="geneProductMap" /> 
-    	<dwr:exclude method="geneProducts" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile" />
+		<dwr:convert type="bean" class="ubic.gemma.web.feed.NewsItem" />
+		<dwr:convert type="bean" class="ubic.gemma.search.SearchSettings" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.VisualizationValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.TaxonValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject" javascript="ArrayDesignValueObject" >
-    	<dwr:exclude method="technologyType" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.ontology.OntologyTreeNode" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditAction" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserGroupValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.AnnotationValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />
 
-    <dwr:convert type="bean" class="ubic.gemma.job.TaskCommand" >
-    	<dwr:exclude method="securityContext" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.job.progress.ProgressData" />
 
-    <dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand" >
-    	<dwr:exclude method="securityContext" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.ontology.OntologyData" />
+		<dwr:convert type="bean" class="ubic.gemma.ontology.OntologyDataList" />
 
-    <dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand" >
-    	<dwr:exclude method="securityContext" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.analysis.sequence.GeneMappingSummary">
+			<dwr:exclude method="geneProductMap" />
+			<dwr:exclude method="geneProducts" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.PrimitiveType" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentUploadResponse" />		
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject"
+			javascript="ArrayDesignValueObject">
+			<dwr:exclude method="technologyType" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.PolymerType" >
-    	<dwr:include method="value" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommand">
+			<dwr:exclude method="securityContext" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.SequenceType" >
-    	<dwr:include method="value" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
+			<dwr:exclude method="securityContext" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis" >
-    	<dwr:include method="name" /> 
-    	<dwr:include method="description" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand">
+			<dwr:exclude method="securityContext" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject" >
-    	<dwr:include method="id" /> 
-    	<dwr:include method="data" />     	
-    	<dwr:include method="expressionExperiment" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.PrimitiveType" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentUploadResponse" />
 
-    <dwr:convert type="bean" class="ubic.basecode.ontology.model.DatatypePropertyImpl" >
-    	<dwr:include method="uri" /> 
-    	<dwr:include method="label" />     	
-    	<dwr:include method="type" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.PolymerType">
+			<dwr:include method="value" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.basecode.ontology.model.ObjectPropertyImpl" >
-    	<dwr:include method="uri" /> 
-    	<dwr:include method="label" />     	
-    	<dwr:include method="range" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.SequenceType">
+			<dwr:include method="value" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyIndividualImpl" >
-    	<dwr:include method="uri" /> 
-    	<dwr:include method="label" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis">
+			<dwr:include method="name" />
+			<dwr:include method="description" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.basecode.ontology.model.AnnotationPropertyImpl" >
-    	<dwr:include method="contents" /> 
-    	<dwr:include method="property" />     	
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject">
+			<dwr:include method="id" />
+			<dwr:include method="data" />
+			<dwr:include method="expressionExperiment" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.BioSequence" >
-    	<dwr:exclude method="sequence" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.DatatypePropertyImpl">
+			<dwr:include method="uri" />
+			<dwr:include method="label" />
+			<dwr:include method="type" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequence" >
-    	<dwr:include method="id" /> 
-    	<dwr:include method="name" /> 
-    	<dwr:include method="description" /> 
-    	<dwr:include method="arrayDesign" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.ObjectPropertyImpl">
+			<dwr:include method="uri" />
+			<dwr:include method="label" />
+			<dwr:include method="range" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabase" >
-    	<dwr:include method="name" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyIndividualImpl">
+			<dwr:include method="uri" />
+			<dwr:include method="label" />
+		</dwr:convert>
 
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />				
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand" />				
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand" />				
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetMemberImpl" />				   				
-    <dwr:convert type="bean" class="ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.DatabaseEntryValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.ExternalDatabaseValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.CompositeSequenceValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.image.LinkOutValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />			   
-    <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />			
-    <dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator" />			
-    <dwr:convert type="bean" class="ubic.gemma.web.remote.ListBatchCommand" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.Property" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.common.description.DataProperty" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.Taxon" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductType" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProduct" />			
-    <dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterial" />			
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.AnnotationPropertyImpl">
+			<dwr:include method="contents" />
+			<dwr:include method="property" />
+		</dwr:convert>
 
-	<dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
-    	<dwr:include method="x" /> 
-    	<dwr:include method="y" /> 
-    </dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.BioSequence">
+			<dwr:exclude method="sequence" />
+		</dwr:convert>
 
-    <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.VocabCharacteristic" />	
-    <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic" />	
-    <dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode" />	
-    <dwr:convert type="characteristicPropertyConverter" class="ubic.gemma.model.common.description.CharacteristicProperty" />					
-    <dwr:convert type="classConverter" class="java.lang.Class" />	
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyTermImpl">
-    	<dwr:include method="term" />
-		<dwr:include method="uri" />
-		<dwr:include method="label" />
-		<dwr:include method="comment" />
-    </dwr:convert>
-    	
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyRestrictionImpl" />    	
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyCardinalityRestrictionImpl" />	  
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyClassRestrictionImpl" />	  
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyDatatypeRestrictionImpl" />	  
-    <dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyPropertyImpl" />	
-  
-    <dwr:convert type="standardQuantitationTypeConverter" class="ubic.gemma.model.common.quantitationtype.StandardQuantitationType" />	
-    <dwr:convert type="scaleTypeConverter" class="ubic.gemma.model.common.quantitationtype.ScaleType" />	
-		
-    <dwr:convert type="exception" class="java.lang.Exception" />	
-    <dwr:convert type="bean" class="java.lang.StackTraceElement" />			
-				
-		
-  </dwr:configuration>
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequence">
+			<dwr:include method="id" />
+			<dwr:include method="name" />
+			<dwr:include method="description" />
+			<dwr:include method="arrayDesign" />
+		</dwr:convert>
+
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabase">
+			<dwr:include method="name" />
+		</dwr:convert>
+
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetMemberImpl" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.DatabaseEntryValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.ExternalDatabaseValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.CompositeSequenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.image.LinkOutValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />
+		<dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse" />
+		<dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator" />
+		<dwr:convert type="bean" class="ubic.gemma.web.remote.ListBatchCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.Property" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.DataProperty" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.Taxon" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductType" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProduct" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterial" />
+
+		<dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
+			<dwr:include method="x" />
+			<dwr:include method="y" />
+		</dwr:convert>
+
+		<dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.VocabCharacteristic" />
+		<dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic" />
+		<dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode" />
+		<dwr:convert type="characteristicPropertyConverter" class="ubic.gemma.model.common.description.CharacteristicProperty" />
+		<dwr:convert type="classConverter" class="java.lang.Class" />
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyTermImpl">
+			<dwr:include method="term" />
+			<dwr:include method="uri" />
+			<dwr:include method="label" />
+			<dwr:include method="comment" />
+		</dwr:convert>
+
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyRestrictionImpl" />
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyCardinalityRestrictionImpl" />
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyClassRestrictionImpl" />
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyDatatypeRestrictionImpl" />
+		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyPropertyImpl" />
+
+		<dwr:convert type="standardQuantitationTypeConverter" class="ubic.gemma.model.common.quantitationtype.StandardQuantitationType" />
+		<dwr:convert type="scaleTypeConverter" class="ubic.gemma.model.common.quantitationtype.ScaleType" />
+
+		<dwr:convert type="exception" class="java.lang.Exception" />
+		<dwr:convert type="bean" class="java.lang.StackTraceElement" />
+
+
+	</dwr:configuration>
 
 </beans>
 
-	<!-- Leaving this here until I figure out how to pass these setting using new config style (IF they are important)
-	
-	<bean id="dwrController" class="org.directwebremoting.spring.DwrController">
-		<property name="configParams">
-			<map>
-				<entry key="allowScriptTagRemoting" value="true"></entry>
-				<entry key="generateDtoClasses" value="dtoall"></entry>
-
-				Uncomment for development if you are getting DWR security errors 
-				<entry key="crossDomainSessionSecurity" value="false"></entry>
-
-				 <entry key="activeReverseAjaxEnabled" value="true"></entry> <entry 
-					key="org.directwebremoting.extend.ServerLoadMonitor" value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry> 
-					<entry key="disconnectedTime" value="1000"></entry> 
-			</map>
-		</property>
-		 turn debug true on to get access to dwr debugging tools (very helpful) 
-		<property name="debug" value="true" />
-	</bean>
-
-	TODO: These are candidate for removal (if everything works without them).
-
-				<entry key="ubic.basecode.dataStructure.DoublePoint">
-								<value>x</value>
-								<value>y</value>
-
-				<entry key="ubic.gemma.web.remote.StringPoint"> can this be removed? 
-
-				key="ubic.gemma.web.controller.visualization.ExpressionProfileDataObject">  can this be removed only used in DEDVController, looks redundent 
--->
+<!-- Leaving this here until I figure out how to pass these setting using new config style (IF they are important) <bean 
+	id="dwrController" class="org.directwebremoting.spring.DwrController"> <property name="configParams"> <map> <entry key="allowScriptTagRemoting" 
+	value="true"></entry> <entry key="generateDtoClasses" value="dtoall"></entry> Uncomment for development if you are getting 
+	DWR security errors <entry key="crossDomainSessionSecurity" value="false"></entry> <entry key="activeReverseAjaxEnabled" 
+	value="true"></entry> <entry key="org.directwebremoting.extend.ServerLoadMonitor" value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry> 
+	<entry key="disconnectedTime" value="1000"></entry> </map> </property> turn debug true on to get access to dwr debugging 
+	tools (very helpful) <property name="debug" value="true" /> </bean> TODO: These are candidate for removal (if everything 
+	works without them). <entry key="ubic.basecode.dataStructure.DoublePoint"> <value>x</value> <value>y</value> <entry key="ubic.gemma.web.remote.StringPoint"> 
+	can this be removed? key="ubic.gemma.web.controller.visualization.ExpressionProfileDataObject"> can this be removed only 
+	used in DEDVController, looks redundent -->

@@ -41,7 +41,7 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
     private MockHttpServletRequest request;
 
     @Autowired
-    ArrayDesignController arrayDesignController;
+    private ArrayDesignController arrayDesignController;
 
     /**
      * @throws Exception

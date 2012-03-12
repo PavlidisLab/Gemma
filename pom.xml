@@ -506,7 +506,7 @@
 				<version>2.5.1</version>
 				<configuration>
 					<aggregate>false</aggregate>
-					<outputDirectory>${cobertura.outputDirectory}</outputDirectory>
+					<outputDirectory>${cobertura.outputDirectory}/${project.artifactId}</outputDirectory>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -697,8 +697,7 @@
 			</build>
 		</profile>
 		<profile>
-			<!-- For deployment where host is local (and ssh isn't available for builder, 
-				e.g. CI) -->
+			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
 			<id>local-deploy</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
