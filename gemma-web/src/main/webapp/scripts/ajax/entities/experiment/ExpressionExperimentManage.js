@@ -114,49 +114,49 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
  */
 Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 
-			viewConfig : {
-				autoFill : true,
-				forceFit : true
-			},
-
-			searchForText : function(button, keyev) {
-				var text = this.searchInGridField.getValue();
-				if (text.length < 2) {
-					this.clearFilter();
-					return;
-				}
-				this.getStore().filterBy(this.getSearchFun(text), this, 0);
-			},
-
-			clearFilter : function() {
-				this.getStore().clearFilter();
-			},
-
-			getSearchFun : function(text) {
-				var value = new RegExp(Ext.escapeRe(text), 'i');
-				return function(r, id) {
-					var obj = r.data;
-					return value.match(obj.name) || value.match(obj.shortName);
-				}
-			},
-
-			refresh : function() {
-				this.getTopToolbar().refresh();
-			},
-
-	initComponent : function() {
-		
-		
+	viewConfig: {
+		autoFill: true,
+		forceFit: true
+	},
+	
+	searchForText: function(button, keyev){
+		var text = this.searchInGridField.getValue();
+		if (text.length < 2) {
+			this.clearFilter();
+			return;
+		}
+		this.getStore().filterBy(this.getSearchFun(text), this, 0);
+	},
+	
+	clearFilter: function(){
+		this.getStore().clearFilter();
+	},
+	
+	getSearchFun: function(text){
+		var value = new RegExp(Ext.escapeRe(text), 'i');
+		return function(r, id){
+			var obj = r.data;
+			return value.match(obj.name) || value.match(obj.shortName);
+		}
+	},
+	
+	refresh: function(){
+		this.getTopToolbar().refresh();
+	},
+	
+	initComponent: function(){
+	
+	
 		var manager = new Gemma.EEManager({
 			editable: true,
 			id: 'eemanager'
 		});
-	
+		
 		this.manager = manager;
-				
+		
 		/*
-	 * If the URL contains a list of IDs, limit ourselves to that.
-	 */
+		 * If the URL contains a list of IDs, limit ourselves to that.
+		 */
 		var limit = Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 		var queryStart = document.URL.indexOf("?");
 		var ids = null;
@@ -173,15 +173,18 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		var store = new Gemma.PagingDataStore({
 			autoLoad: true,
 			proxy: new Ext.data.DWRProxy({
-					apiActionToHandlerMap: {
-						read: {
-							dwrFunction: ExpressionExperimentController.loadStatusSummaries,
-							getDwrArgsFunction: function(){
-								return [ids, taxonid, limit, filterMode];
+				apiActionToHandlerMap: {
+					read: {
+						dwrFunction: ExpressionExperimentController.loadStatusSummaries,
+						getDwrArgsFunction: function(request, recordDataArray) {					
+							if (request.options.params && request.options.params instanceof Array ) {
+								return request.options.params;
 							}
+							return [ids, taxonid, limit, filterMode];
 						}
 					}
-				}),
+				}
+			}),
 			reader: new Ext.data.ListRangeReader({
 				id: "id"
 			}, manager.record),
@@ -193,9 +196,9 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 			sort: function(fieldName, dir){
 				store.fireEvent('beforesort');
 				/*
-			 * Sorting this table is slooow. We need to pause to allow
-			 * time for the loadmask to display.
-			 */
+				 * Sorting this table is slooow. We need to pause to allow
+				 * time for the loadmask to display.
+				 */
 				var t = new Ext.util.DelayedTask(function(){
 					Gemma.PagingDataStore.superclass.sort.call(store, fieldName, dir);
 					store.fireEvent('aftersort');
@@ -264,12 +267,12 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">', '<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
 			log: function(id){
-			// console.log(id);
+				// console.log(id);
 			}
 		});
-
 		
-       // Gemma.EEReportGrid.superclass.initComponent.call(this);
+		
+		// Gemma.EEReportGrid.superclass.initComponent.call(this);
 		store.on('beforesort', function(){
 			this.loadMask.show();
 		});
@@ -281,55 +284,55 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		// if the user is an admin, show the "refresh all" button
 		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
 		
-		this.refreshAllLink = (isAdmin)?'<span style="font-weight:normal"> &nbsp;&nbsp | &nbsp;&nbsp; To update all reports click ' +
-			'<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"> here </span></span>':'';
-
+		this.refreshAllLink = (isAdmin) ? '<span style="font-weight:normal"> &nbsp;&nbsp | &nbsp;&nbsp; To update all reports click ' +
+		'<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"> here </span></span>' : '';
+		
 		store.on("exception", function(scope, args, data, e){
 			Ext.Msg.alert('There was an error', e + ".  \nPlease try again.");
 		});
-				
-				
-				var topToolbar = new Gemma.EEReportGridToolbar();
-				
-				topToolbar.on('loadStore', function(paramArr){
-					this.store.load({
-							params : paramArr
-						});
-				}, this);
-				
-				this.searchInGridField = new Ext.form.TextField({
-							enableKeyEvents : true,
-							emptyText : 'Search',
-							tooltip : "Text typed here will act as a filter.",
-							listeners : {
-								"keyup" : {
-									fn : this.searchForText.createDelegate(this),
-									scope : this,
-									options : {
-										delay : 100
-									}
-								}
-							}
-						});
-
-				Ext.apply(this, {
-							tbar : topToolbar,
-							bbar : new Ext.Toolbar({
-										items : ['->', {
-													xtype : 'button',
-													handler : this.clearFilter.createDelegate(this),
-													tooltip : "Show all",
-													scope : this,
-													cls : 'x-btn-text',
-													text : 'Reset filter'
-												}, ' ', this.searchInGridField]
-									})
-
-						});
-				Gemma.EEReportGrid.superclass.initComponent.call(this);
-									
+		
+		
+		var topToolbar = new Gemma.EEReportGridToolbar();
+		
+		topToolbar.on('loadStore', function(paramArr){
+			this.store.load({
+				params: paramArr
+			});
+		}, this);
+		
+		this.searchInGridField = new Ext.form.TextField({
+			enableKeyEvents: true,
+			emptyText: 'Search',
+			tooltip: "Text typed here will act as a filter.",
+			listeners: {
+				"keyup": {
+					fn: this.searchForText.createDelegate(this),
+					scope: this,
+					options: {
+						delay: 100
+					}
+				}
 			}
 		});
+		
+		Ext.apply(this, {
+			tbar: topToolbar,
+			bbar: new Ext.Toolbar({
+				items: ['->', {
+					xtype: 'button',
+					handler: this.clearFilter.createDelegate(this),
+					tooltip: "Show all",
+					scope: this,
+					cls: 'x-btn-text',
+					text: 'Reset filter'
+				}, ' ', this.searchInGridField]
+			})
+		
+		});
+		Gemma.EEReportGrid.superclass.initComponent.call(this);
+		
+	}
+});
 
 
 Gemma.EEReportGridColumnRenderers = {
