@@ -58,7 +58,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     ArrayDesign result;
 
     @Autowired
-    ArrayDesignSequenceProcessingServiceImpl app;
+    ArrayDesignSequenceProcessingService app;
 
     @Autowired
     ArrayDesignService arrayDesignService;

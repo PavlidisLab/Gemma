@@ -75,12 +75,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     private static final int BATCH_SIZE = 100;
 
-    /**
-     * When checking a BLAST database for sequences, we stop after checking Genbank accessions versions up to this value
-     * (e.g, AA22930.1)
-     */
-    private static final int MAX_VERSION_NUMBER = 20;
-
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
 
     @Autowired
@@ -141,6 +135,26 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
+            throws IOException {
+
+        FastaParser fp = new FastaParser();
+        fp.parse( fastaFile );
+        Collection<BioSequence> sequences = fp.getResults();
+        log.debug( "Parsed " + sequences.size() + " sequences" );
+
+        assignSequencesToDesignElements( designElements, sequences );
+    }
+
+    /**
+     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
+     * of a design element. Provided for testing purposes.
+     * 
+     * @param designElements
+     * @param fastaFile
+     * @throws IOException
+     */
+    @Override
+    public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile )
             throws IOException {
 
         FastaParser fp = new FastaParser();
@@ -627,22 +641,32 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     /**
-     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
-     * of a design element. Provided for testing purposes.
+     * If taxon is null then it has not been provided on the command line, then deduce the taxon from the arrayDesign.
+     * If there are 0 or more than one taxon on the array design throw an error as this programme can only be run for 1
+     * taxon at a time if processing from a file.
      * 
-     * @param designElements
-     * @param fastaFile
-     * @throws IOException
+     * @param taxon Taxon as passed in on the command line
+     * @param arrayDesign Array design to process
+     * @return taxon Taxon to process
+     * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
      */
-    protected void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile )
-            throws IOException {
+    @Override
+    public Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException {
 
-        FastaParser fp = new FastaParser();
-        fp.parse( fastaFile );
-        Collection<BioSequence> sequences = fp.getResults();
-        log.debug( "Parsed " + sequences.size() + " sequences" );
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        }
 
-        assignSequencesToDesignElements( designElements, sequences );
+        if ( taxon == null ) {
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
+
+            if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+                return taxaOnArray.iterator().next();
+            }
+            throw new IllegalArgumentException( taxaOnArray.size() + " taxa found for " + arrayDesign
+                    + "please specify which taxon to run" );
+        }
+        return taxon;
     }
 
     /**
@@ -683,34 +707,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         this.processAffymetrixDesign( result, probeSequenceFile, taxon, false );
 
         return result;
-    }
-
-    /**
-     * If taxon is null then it has not been provided on the command line, then deduce the taxon from the arrayDesign.
-     * If there are 0 or more than one taxon on the array design throw an error as this programme can only be run for 1
-     * taxon at a time if processing from a file.
-     * 
-     * @param taxon Taxon as passed in on the command line
-     * @param arrayDesign Array design to process
-     * @return taxon Taxon to process
-     * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
-     */
-    protected Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException {
-
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "Array design cannot be null" );
-        }
-
-        if ( taxon == null ) {
-            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
-
-            if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
-                return taxaOnArray.iterator().next();
-            }
-            throw new IllegalArgumentException( taxaOnArray.size() + " taxa found for " + arrayDesign
-                    + "please specify which taxon to run" );
-        }
-        return taxon;
     }
 
     /**

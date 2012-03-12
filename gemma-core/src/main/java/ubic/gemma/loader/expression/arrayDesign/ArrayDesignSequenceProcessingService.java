@@ -32,6 +32,12 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 public interface ArrayDesignSequenceProcessingService {
 
     /**
+     * When checking a BLAST database for sequences, we stop after checking Genbank accessions versions up to this value
+     * (e.g, AA22930.1)
+     */
+    static final int MAX_VERSION_NUMBER = 20;
+
+    /**
      * Associate sequences with an array design.
      * 
      * @param designElements
@@ -51,6 +57,8 @@ public interface ArrayDesignSequenceProcessingService {
      */
     public abstract void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException;
+
+    public abstract void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile ) throws IOException;
 
     /**
      * Use this to add sequences to an existing Affymetrix design.
@@ -141,33 +149,11 @@ public interface ArrayDesignSequenceProcessingService {
      * @param taxon - if null, attempt to determine it from the array design.
      * @throws IOException
      * @see ubic.gemma.loader.genome.FastaParser
-     * @see ArrayDesignProbeRenamingServiceImpl.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR for the specification of how duplicate
-     *      probes are munged.
+     * @see ArrayDesignProbeRenamingServiceImpl.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR for the specification of how
+     *      duplicate probes are munged.
      */
     public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException;
-
-    public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            boolean force );
-
-    /**
-     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
-     * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
-     * they have, the values will be replaced if force=true)
-     * <p>
-     * Sequences that appear to be IMAGE clones are given another check and the Genbank accession used to retrieve the
-     * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
-     * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
-     * 
-     * @param arrayDesign
-     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome where to find the blast databases for sequence retrieval
-     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *        overwritten with a new one.
-     * @return
-     */
-    public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            String blastDbHome, boolean force );
 
     /**
      * Intended for use with array designs that use sequences that are in genbank, but the accessions need to be
@@ -193,6 +179,28 @@ public interface ArrayDesignSequenceProcessingService {
             InputStream sequenceIdentifierFile, String[] databaseNames, String blastDbHome, Taxon taxon, boolean force )
             throws IOException;
 
+    public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            boolean force );
+
+    /**
+     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
+     * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
+     * they have, the values will be replaced if force=true)
+     * <p>
+     * Sequences that appear to be IMAGE clones are given another check and the Genbank accession used to retrieve the
+     * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
+     * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
+     * 
+     * @param arrayDesign
+     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
+     * @param blastDbHome where to find the blast databases for sequence retrieval
+     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *        overwritten with a new one.
+     * @return
+     */
+    public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            String blastDbHome, boolean force );
+
     /**
      * Update a single sequence in the system.
      * 
@@ -205,5 +213,7 @@ public interface ArrayDesignSequenceProcessingService {
      */
     public abstract BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
             boolean force );
+
+    abstract Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException;
 
 }
