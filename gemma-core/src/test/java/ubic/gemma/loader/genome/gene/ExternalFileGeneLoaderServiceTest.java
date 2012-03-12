@@ -72,7 +72,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#load(java.lang.String, java.lang.String)}.
+     * {@link ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderServiceImpl#load(java.lang.String, java.lang.String)}.
      * Tests that 2 genes are loaded sucessfully into Gemma.
      */
     @Test
