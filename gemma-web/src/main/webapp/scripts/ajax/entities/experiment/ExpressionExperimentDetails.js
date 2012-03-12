@@ -156,7 +156,9 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         }
         
         if (ee.troubled) {
-            result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
+            result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: ' +
+			ee.troubleDetails +
+			'"/>';
         }
         
         if (ee.hasMultiplePreferredQuantitationTypes) {
