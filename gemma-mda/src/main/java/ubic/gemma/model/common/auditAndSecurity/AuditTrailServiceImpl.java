@@ -102,7 +102,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
-        this.getStatusDao().update( auditable );
+        this.getStatusDao().update( auditable, auditEventType );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );
     }
 
@@ -115,7 +115,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
         auditEvent.setDetail( detail );
-        this.getStatusDao().update( auditable );
+        this.getStatusDao().update( auditable, auditEventType );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );
     }
 
@@ -125,7 +125,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         auditEvent.setDate( new Date() );
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setNote( note );
-        this.getStatusDao().update( auditable );
+        this.getStatusDao().update( auditable, null );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );
     }
 
@@ -156,7 +156,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         } else {
             if ( auditEvent == null ) throw new IllegalArgumentException( "auditEvent cannot be null" );
             at.addEvent( auditEvent );
-            this.getStatusDao().update( entity );
+            this.getStatusDao().update( entity, auditEvent.getEventType());
             this.getAuditTrailDao().update( at );
             log.debug( "Added event " + auditEvent.getAction() + " to " + entity );
         }

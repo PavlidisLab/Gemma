@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -33,7 +34,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -79,6 +85,53 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getStatus().getLastUpdateDate() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
+                .getEventType().getClass() );
+    }
+
+    @Test
+    public final void testAddTroubleEvent() {
+        AuditEventType eventType = TroubleStatusFlagEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertNotNull( auditTrail );
+        assertNotNull( auditable.getStatus() );
+        assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertTrue( auditable.getStatus().getTroubled() );
+        assertFalse( auditable.getStatus().getValidated() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertEquals( TroubleStatusFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
+                .getEventType().getClass() );
+    }
+
+    @Test
+    public final void testAddOKEvent() {
+        AuditEventType eventType = OKStatusFlagEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertNotNull( auditTrail );
+        assertNotNull( auditable.getStatus() );
+        assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertFalse( auditable.getStatus().getTroubled() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertEquals( OKStatusFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
+                .getEventType().getClass() );
+    }
+
+    @Test
+    public final void testAddValidatedEvent() {
+        AuditEventType eventType = ValidatedFlagEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertNotNull( auditTrail );
+        assertNotNull( auditable.getStatus() );
+        assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertFalse( auditable.getStatus().getTroubled() );
+        assertTrue( auditable.getStatus().getValidated() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertEquals( ValidatedFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
                 .getEventType().getClass() );
     }
 

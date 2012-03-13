@@ -354,7 +354,7 @@ public class AuditAdvice {
      * @param d
      */
     private void updateStatus( Auditable d ) {
-        statusDao.update( d );
+        statusDao.update( d, null );
     }
 
     /**

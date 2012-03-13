@@ -25,6 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
 import ubic.gemma.persistence.AbstractDao;
 
 /**
@@ -41,14 +45,20 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
     }
 
     @Override
-    public void update( Auditable a ) {
+    public void update( Auditable a, AuditEventType auditEventType ) {
         Date now = new Date();
         if ( a.getStatus() == null ) {
             a.setStatus( create() );
         } else {
-
             a.getStatus().setLastUpdateDate( now );
             this.update( a.getStatus() );
+        }
+        if(auditEventType instanceof TroubleStatusFlagEventImpl){
+            a.getStatus().setTroubled( true );
+        }else if (auditEventType instanceof OKStatusFlagEventImpl){
+            a.getStatus().setTroubled( false );
+        }else if (auditEventType instanceof ValidatedFlagEventImpl){
+            a.getStatus().setValidated( true );
         }
 
     }
@@ -98,5 +108,6 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
         return ( Status ) entity;
     }
+
 
 }

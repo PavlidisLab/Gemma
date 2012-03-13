@@ -15,6 +15,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -23,12 +24,14 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface StatusDao extends BaseDao<Status> {
 
+    
     /**
-     * Update the 'last updated' date.
+     * Update the 'last updated' date and trouble/validated flags
      * 
-     * @param a
+     * @param a entity to update the status for
+     * @param auditEventType used to updated the appropriate status flags, can be null
      */
-    public void update( Auditable a );
+    void update( Auditable a, AuditEventType auditEventType );
 
     /**
      * Automatically turns off 'validated' if the value is 'true'.
@@ -60,5 +63,6 @@ public interface StatusDao extends BaseDao<Status> {
      * @param d
      */
     public Status load( Long id );
+
 
 }
