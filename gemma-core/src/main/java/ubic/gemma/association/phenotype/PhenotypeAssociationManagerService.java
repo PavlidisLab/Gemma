@@ -40,7 +40,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return Status of the operation
      */
-    public ValidateEvidenceValueObject create( EvidenceValueObject evidence );
+    public abstract ValidateEvidenceValueObject create( EvidenceValueObject evidence );
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -48,7 +48,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
 
     /**
      * Return all evidence for a specific gene id
@@ -56,7 +56,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
 
     /**
      * Return all evidence for a specific gene id with evidence flagged, indicating more information
@@ -65,7 +65,7 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypesValuesUri the chosen phenotypes
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri );
 
     /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
@@ -73,28 +73,28 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
      */
-    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
+    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
-    public Collection<CharacteristicValueObject> loadAllPhenotypes();
+    public abstract Collection<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
      * Removes an evidence
      * 
      * @param id The Evidence database id
      */
-    public ValidateEvidenceValueObject remove( Long id );
+    public abstract ValidateEvidenceValueObject remove( Long id );
 
     /**
      * Load an evidence
      * 
      * @param id The Evidence database id
      */
-    public EvidenceValueObject load( Long id );
+    public abstract EvidenceValueObject load( Long id );
 
     /**
      * Modify an existing evidence
@@ -102,7 +102,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceValueObject the evidence with modified fields
      * @return Status of the operation
      */
-    public ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
+    public abstract ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
@@ -111,14 +111,14 @@ public interface PhenotypeAssociationManagerService {
      * @param geneId the id of the chosen gene
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
+    public abstract Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
 
     /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
-    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
+    public abstract Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
 
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
@@ -127,7 +127,7 @@ public interface PhenotypeAssociationManagerService {
      * @param taxonId, can be null to not constrain by taxon
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
-    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
+    public abstract Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
 
     /**
      * Find all phenotypes associated to a pubmedID
@@ -135,7 +135,7 @@ public interface PhenotypeAssociationManagerService {
      * @param pubMedId
      * @return BibliographicReferenceValueObject
      */
-    public BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
+    public abstract BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
 
     /**
      * Validate an Evidence before we create it
@@ -144,6 +144,26 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
-    public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
+    public abstract ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
+
+    /**
+     * Find mged category term that were used in the database, used to annotated Experiments
+     * 
+     * @return Collection<CharacteristicValueObject> the terms found
+     */
+    public abstract Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
+
+    /**
+     * for a given search string look in the database and Ontology for matches
+     * 
+     * @param givenQueryString the search query
+     * @param categoryUri the mged category (can be null)
+     * @param taxonId the taxon id (can be null)
+     * @return Collection<CharacteristicValueObject> the terms found
+     */
+    public abstract Collection<CharacteristicValueObject> searchOntologyForExperimentEvidenceTag(
+            String givenQueryString, String categoryUri, Long taxonId );
+
+    public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
 
 }

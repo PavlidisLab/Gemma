@@ -548,5 +548,10 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         return bibRef;
     }
+    
+    @Override
+    public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
+        this.ontologyHelper = ontologyHelper;
+    }
 
 }

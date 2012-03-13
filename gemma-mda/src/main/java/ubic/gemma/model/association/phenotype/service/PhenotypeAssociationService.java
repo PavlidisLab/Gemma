@@ -125,14 +125,16 @@ public interface PhenotypeAssociationService {
     /** find PhenotypeAssociations associated with a BibliographicReference */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedId );
-    
+
     /** find all PhenotypeAssociation for a specific gene id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
-    
+
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI(Integer geneNCBI);
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
+    /** find mged category term that were used in the database, used to annotated Experiments */
+    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
 
 }

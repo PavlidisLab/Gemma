@@ -14,6 +14,10 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
 /**
@@ -49,6 +53,31 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     /** root of a query */
     private boolean root = false;
 
+    public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
+            Collection<Characteristic> characteristics ) {
+
+        Collection<CharacteristicValueObject> characteristicValueObjects = new HashSet<CharacteristicValueObject>();
+
+        for ( Characteristic characteristic : characteristics ) {
+
+            CharacteristicValueObject characteristicValueObject = null;
+
+            if ( characteristic instanceof VocabCharacteristic ) {
+                characteristicValueObject = new CharacteristicValueObject( ( VocabCharacteristic ) characteristic );
+            } else {
+                characteristicValueObject = new CharacteristicValueObject( characteristic );
+            }
+
+            characteristicValueObjects.add( characteristicValueObject );
+
+            if ( characteristic.getDescription() != null && characteristic.getDescription().indexOf( " -USED- " ) != -1 ) {
+
+                characteristicValueObject.setAlreadyPresentInDatabase( true );
+            }
+        }
+        return characteristicValueObjects;
+    }
+
     public CharacteristicValueObject() {
         super();
     }
@@ -78,6 +107,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.category = vocabCharacteristic.getCategory();
         this.categoryUri = vocabCharacteristic.getCategoryUri();
         this.value = vocabCharacteristic.getValue();
+    }
+
+    public CharacteristicValueObject( Characteristic characteristic ) {
+        this.category = characteristic.getCategory();
+        this.value = characteristic.getValue();
     }
 
     public long getPublicGeneCount() {

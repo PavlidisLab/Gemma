@@ -42,5 +42,7 @@ public interface PhenotypeAssoManagerServiceHelper {
     // load evidence from the database and populate it with the updated information
     public abstract void populateModifiedValues( EvidenceValueObject evidenceValueObject,
             PhenotypeAssociation phenotypeAssociation );
+    
+    public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
 
 }

@@ -173,20 +173,23 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName ) {
         return this.phenotypeAssociationDao.countGenesWithPrivatePhenotype( phenotypesUri, userName );
     }
-    
+
     /** find all PhenotypeAssociation for a specific gene id */
     @Override
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ){
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneId( geneId );
     }
-    
+
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Override
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI(Integer geneNCBI){
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI );
     }
 
-    
-    
-    
+    /** find mged category term that were used in the database, used to annotated Experiments */
+    @Override
+    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
+        return this.phenotypeAssociationDao.findEvidenceMgedCategoryTerms();
+    }
+
 }

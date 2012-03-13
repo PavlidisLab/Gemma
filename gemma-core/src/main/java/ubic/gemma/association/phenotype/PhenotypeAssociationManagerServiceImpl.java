@@ -313,8 +313,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
         EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
-        findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
-
+        if ( evidenceValueObject != null ) {
+            findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
+        }
         return evidenceValueObject;
     }
 
@@ -708,19 +709,43 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /** For a valueUri return the Characteristic (represents a phenotype) */
-    private Characteristic valueUri2Characteristic( String valueUri ) {
+    /**
+     * Find mged category term that were used in the database, used to annotated Experiments
+     * 
+     * @return Collection<CharacteristicValueObject> the terms found
+     */
+    @Override
+    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
+        return this.associationService.findEvidenceMgedCategoryTerms();
+    }
 
-        OntologyTerm o = this.ontologyHelper.findOntologyTermByUri( valueUri );
+    /**
+     * for a given search string look in the database and Ontology for matches
+     * 
+     * @param givenQueryString the search query
+     * @param categoryUri the mged category (can be null)
+     * @param taxonId the taxon id (can be null)
+     * @return Collection<CharacteristicValueObject> the terms found
+     */
+    @Override
+    public Collection<CharacteristicValueObject> searchOntologyForExperimentEvidenceTag( String givenQueryString,
+            String categoryUri, Long taxonId ) {
 
-        VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = this.taxonService.load( taxonId );
+        }
 
-        myPhenotype.setValueUri( o.getUri() );
-        myPhenotype.setValue( o.getLabel() );
-        myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-        myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
+        Collection<Characteristic> experimentCharacteristics = this.ontologyService.findExactTerm( givenQueryString,
+                categoryUri, taxon );
 
-        return myPhenotype;
+        return CharacteristicValueObject.characteristic2CharacteristicVO( experimentCharacteristics );
+    }
+
+    @Override
+    public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
+        this.ontologyHelper = ontologyHelper;
+        this.phenotypeAssoManagerServiceHelper.setOntologyHelper( this.ontologyHelper );
     }
 
     /** Given a geneId finds all phenotypes for that gene */
@@ -992,7 +1017,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
         for ( String valueUri : updatedPhenotypesValuesUri ) {
-            Characteristic cha = valueUri2Characteristic( valueUri );
+            Characteristic cha = this.ontologyHelper.valueUri2Characteristic( valueUri );
             updatedPhenotypes.add( cha );
         }
 
@@ -1036,5 +1061,4 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
         return allPhenotypesOnGene;
     }
-
 }

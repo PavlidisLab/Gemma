@@ -14,21 +14,31 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import static org.junit.Assert.*;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.easymock.classextension.EasyMock;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelper;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -41,90 +51,166 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private GeneService geneService;
 
     @Autowired
-    private PhenotypeAssociationManagerService phenoAssoService;
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    private String geneNCBI = RandomStringUtils.randomNumeric( 6 );
-    private EvidenceValueObject evidence = null;
-    private String phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
+
+    private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
+
     private Gene gene = null;
-    private GeneEvidenceValueObject geneValue = null;
-    private String primaryPubmed = "17699851";
 
-    // @Before
-    public void setup() {
+    private LiteratureEvidenceValueObject litEvidence = null;
 
-        // Evidence
-        CharacteristicValueObject phenotype = new CharacteristicValueObject( this.phenotypeValue, "phenotypeCategory",
-                "phenotypeValueUri", "phenotypeCategoryUri" );
-        CharacteristicValueObject caracteristic = new CharacteristicValueObject( "chaValue", "chaCategory",
-                "chaValueUri", "chaCategoryUri" );
-
-        Set<String> relevantPublication = new HashSet<String>();
-        relevantPublication.add( "17699851" );
-
-        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
-        phenotypes.add( phenotype );
-
-        Set<CharacteristicValueObject> characteristics = new HashSet<CharacteristicValueObject>();
-        characteristics.add( caracteristic );
-
-        this.evidence = new ExperimentalEvidenceValueObject( new Integer( this.geneNCBI ), phenotypes,
-                "test Description", "IC", false, null, this.primaryPubmed, relevantPublication, characteristics );
-
-        // Make sure a Gene exist in the database with the NCBI id
-        this.gene = makeGene( this.geneNCBI );
+    @Before
+    public void setup() throws SecurityException, NoSuchMethodException {
+        // make a test gene
+        makeGene( this.geneNCBI );
+        // mock the ontology
+        mockOntology();
+        // create an literature Evidence
+        createLiteratureEvidence();
     }
 
-    // @After
+    @After
     public void tearDown() {
-        if ( this.gene != null ) {
-            this.gene.getPhenotypeAssociations().clear();
-            Gene myGene = this.geneService.load( this.geneValue.getId() );
-            this.geneService.remove( myGene );
+
+        // make sure all evidence are deleted
+        for ( PhenotypeAssociation p : this.phenotypeAssociationService.loadAll() ) {
+            this.phenotypeAssociationService.remove( p );
         }
+
+        // delete the test gene
+        this.gene = this.geneService.load( this.gene.getId() );
+        this.gene.getPhenotypeAssociations().clear();
+        this.geneService.remove( this.gene );
     }
 
     @Test
-    public void testPhenotypeAssoService() {
-        // TODO the create method is now using the ontology to find phenotype, since the ontologgy is not loaded in
-        // test, wont work
+    public void testLoadUpdateDeleteEvidence() {
+        // 1- findEvidenceByGeneNCBI
+        Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
+                .findEvidenceByGeneNCBI( this.geneNCBI );
+        assertTrue( evidences != null && evidences.size() == 1 );
 
-        /*
-         * this.geneValue = this.phenoAssoService.create( this.geneNCBI, this.evidence );
-         * 
-         * assertNotNull( this.geneValue ); assertNotNull( this.geneValue.getEvidence() ); assertTrue(
-         * !this.geneValue.getEvidence().isEmpty() );
-         * 
-         * assertTrue( this.phenoAssoService.findGenesWithEvidence( this.geneValue.getName(), null ).size() > 0 );
-         * 
-         * for ( EvidenceValueObject evidenceValueObject : this.geneValue.getEvidence() ) {
-         * 
-         * EvidenceValueObject evidenceVO = this.phenoAssoService.load( evidenceValueObject.getDatabaseId() );
-         * assertNotNull( evidenceVO );
-         * 
-         * this.phenoAssoService.remove( evidenceValueObject.getDatabaseId() ); evidenceVO = this.phenoAssoService.load(
-         * evidenceValueObject.getDatabaseId() ); assertNull( evidenceVO ); }
-         */
+        @SuppressWarnings("null")
+        EvidenceValueObject evidence = evidences.iterator().next();
+        assertTrue( evidence.equals( this.litEvidence ) );
+
+        // 2- load
+        evidence = this.phenotypeAssociationManagerService.load( evidence.getId() );
+
+        assertNotNull( evidence );
+
+        evidence.setDescription( "new Description" );
+        // 3- update
+        this.phenotypeAssociationManagerService.update( evidence );
+        evidence = this.phenotypeAssociationManagerService.load( evidence.getId() );
+        assertTrue( evidence.getDescription().equals( "new Description" ) );
+
+        // 4- remove
+        this.phenotypeAssociationManagerService.remove( evidence.getId() );
+
+        assertNull( this.phenotypeAssociationManagerService.load( evidence.getId() ) );
     }
 
-    private Gene makeGene( String ncbiId ) {
+    @Test
+    public void testFindEvidenceByGeneId() {
+        Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
+                .findEvidenceByGeneId( this.gene.getId() );
+        assertTrue( evidences != null && evidences.size() == 1 );
+    }
 
-        Taxon rat = Taxon.Factory.newInstance();
-        rat.setIsGenesUsable( new Boolean( true ) );
-        rat.setNcbiId( new Integer( 10116 ) );
-        rat.setScientificName( "Rattus norvegicus" );
-        rat.setIsSpecies( new Boolean( true ) );
-        this.persisterHelper.persist( rat );
+    @Test
+    public void testFindCandidateGenes() {
 
-        Gene g = Gene.Factory.newInstance();
-        g.setName( "RAT1" );
-        g.setOfficialName( "RAT1" );
-        g.setOfficialSymbol( "RAT1" );
-        g.setNcbiGeneId( new Integer( ncbiId ) );
-        g.setTaxon( rat );
-        g.getProducts().add( super.getTestPersistentGeneProduct( g ) );
-        g = ( Gene ) this.persisterHelper.persist( g );
-        return g;
+        Set<String> phenotypesValuesUri = new HashSet<String>();
+        phenotypesValuesUri.add( "testUri" );
+
+        Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService
+                .findCandidateGenes( phenotypesValuesUri );
+
+        assertTrue( geneValueObjects != null && geneValueObjects.size() == 1 );
+    }
+
+    @Test
+    public void testLoadAllPhenotypes() {
+
+        Collection<CharacteristicValueObject> phenotypes = this.phenotypeAssociationManagerService.loadAllPhenotypes();
+
+        assertTrue( phenotypes != null && phenotypes.size() == 1 );
+
+        @SuppressWarnings("null")
+        CharacteristicValueObject phenotype = phenotypes.iterator().next();
+
+        assertTrue( phenotype.equals( this.litEvidence.getPhenotypes().iterator().next() ) );
+
+    }
+
+    @Test
+    public void testFindBibliographicReference() {
+
+        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1" ) );
+    }
+
+    private void makeGene( int ncbiId ) {
+        this.gene = Gene.Factory.newInstance();
+        this.gene.setName( "RAT1" );
+        this.gene.setOfficialName( "RAT1" );
+        this.gene.setOfficialSymbol( "RAT1" );
+        this.gene.setNcbiGeneId( new Integer( ncbiId ) );
+        // the taxon is already populated in the test database
+        this.gene.setTaxon( this.taxonService.findByCommonName( "human" ) );
+        this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
+        this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
+    }
+
+    private void createLiteratureEvidence() {
+        this.litEvidence = new LiteratureEvidenceValueObject();
+        this.litEvidence.setDescription( "Test Description" );
+        this.litEvidence.setEvidenceCode( "TAS" );
+        this.litEvidence.setGeneNCBI( this.geneNCBI );
+
+        CitationValueObject citationValueObject = new CitationValueObject();
+        citationValueObject.setPubmedAccession( "1" );
+
+        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( "testUri" );
+
+        phenotypes.add( characteristicValueObject );
+
+        this.litEvidence.setPhenotypes( phenotypes );
+        this.litEvidence.setCitationValueObject( citationValueObject );
+
+        this.phenotypeAssociationManagerService.create( this.litEvidence );
+    }
+
+    private void mockOntology() throws SecurityException, NoSuchMethodException {
+
+        OntologyTerm mockedOntoloyTerm = EasyMock.createMock( OntologyTerm.class );
+
+        org.easymock.EasyMock.expect( mockedOntoloyTerm.getUri() ).andReturn( "testUri" ).anyTimes();
+        org.easymock.EasyMock.expect( mockedOntoloyTerm.getLabel() ).andReturn( "testLabel" ).anyTimes();
+
+        Collection<OntologyTerm> emptyCollection = new HashSet<OntologyTerm>();
+
+        org.easymock.EasyMock.expect( mockedOntoloyTerm.getChildren( true ) ).andReturn( emptyCollection ).anyTimes();
+        org.easymock.EasyMock.expect( mockedOntoloyTerm.getChildren( false ) ).andReturn( emptyCollection ).anyTimes();
+
+        EasyMock.replay( mockedOntoloyTerm );
+
+        // we only mock 1 method of the class in this case, the other methods of the object behave normally
+        PhenotypeAssoOntologyHelper phenotypeAssoOntologyHelperMocked = EasyMock.createMock(
+                PhenotypeAssoOntologyHelper.class,
+                new Method[] { PhenotypeAssoOntologyHelper.class.getMethod( "findOntologyTermByUri", String.class ) } );
+
+        org.easymock.EasyMock.expect( phenotypeAssoOntologyHelperMocked.findOntologyTermByUri( "testUri" ) )
+                .andReturn( mockedOntoloyTerm ).anyTimes();
+
+        EasyMock.replay( phenotypeAssoOntologyHelperMocked );
+
+        this.phenotypeAssociationManagerService.setOntologyHelper( phenotypeAssoOntologyHelperMocked );
     }
 
 }

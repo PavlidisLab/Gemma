@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -156,7 +157,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
-        // TODO make hsql query
         String queryString = "select distinct value,value_uri,category,category_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
@@ -257,4 +257,27 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
 
     }
+
+    /** find MGED category terms currently used in the database by evidence */
+    @Override
+    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
+
+        Collection<CharacteristicValueObject> mgedCategory = new ArrayList<CharacteristicValueObject>();
+
+        String queryString = "SELECT distinct CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION join INVESTIGATION on PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID join CHARACTERISTIC on CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+
+            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject();
+            characteristicValueObject.setCategoryUri( ( String ) results.get( 0 ) );
+            characteristicValueObject.setCategory( ( String ) results.get( 1 ) );
+            mgedCategory.add( characteristicValueObject );
+        }
+        results.close();
+
+        return mgedCategory;
+    }
+
 }
