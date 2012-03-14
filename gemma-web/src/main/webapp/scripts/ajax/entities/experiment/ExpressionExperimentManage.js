@@ -39,7 +39,6 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 		};
 		
 		
-		var limit = Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 		
 		var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">', '<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
 			log: function(id){
@@ -48,8 +47,9 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 		});
 		
 		/*
-	 * If the URL contains a list of IDs, limit ourselves to that.
-	 */
+		 * If the URL contains a list of IDs, limit ourselves to that.
+		 */
+		var limit = Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 		var queryStart = document.URL.indexOf("?");
 		var ids = null;
 		var taxonid = null;
@@ -63,10 +63,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 		}
 		
 		var reportGrid = new Gemma.EEReportGrid({
-			title: 'Experiment manager',
 			region: 'center',
-			loadMask: true,
-			height: 500,
 			taxonid: taxonid,
 			limit: limit,
 			filterType: filterMode,
@@ -144,6 +141,11 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.getTopToolbar().refresh();
 	},
 	
+	updateTitle : function(count){
+		this.setTitle('Experiment Manager &nbsp;&nbsp; ( '+count+ 
+			((count == 1)?' row':' rows') +' )' );
+	},
+	
 	initComponent: function(){
 	
 	
@@ -153,23 +155,12 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 		
 		this.manager = manager;
-		
-		/*
-		 * If the URL contains a list of IDs, limit ourselves to that.
-		 */
-		var limit = Gemma.DEFAULT_NUMBER_EXPERIMENTS;
-		var queryStart = document.URL.indexOf("?");
-		var ids = null;
-		var taxonid = null;
-		var filterMode = null;
-		if (queryStart > -1) {
-			var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
-			ids = urlParams.ids ? urlParams.ids.split(',') : null;
-			taxonid = urlParams.taxon ? urlParams.taxon : null;
-			limit = urlParams.taxon ? urlParams.limit : Gemma.DEFAULT_NUMBER_EXPERIMENTS;
-			filterMode = urlParams.filter ? urlParams.filter : null;
-		}
-		
+
+		var limit = (this.limit)?this.limit: Gemma.DEFAULT_NUMBER_EXPERIMENTS;
+		var ids = (this.ids)?this.ids:null;
+		var taxonid = (this.taxonid)?this.taxonid:null;
+		var filterMode = (this.filterMode)?this.filterMode:null;
+				
 		var store = new Gemma.PagingDataStore({
 			autoLoad: true,
 			proxy: new Ext.data.DWRProxy({
@@ -208,16 +199,15 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 		
+		store.on('load', function(store, records, options){
+			this.updateTitle(records.size());
+		},this);
+				
 		Ext.apply(this, {
+			header:true,
 			store: store,
-			title: 'Experiment manager',
-			region: 'center',
 			loadMask: true,
 			height: 500,
-			taxonid: taxonid,
-			limit: limit,
-			filterType: filterMode,
-			ids: ids,
 			cm: Gemma.EEReportGridColumnModel
 		});
 		
@@ -228,11 +218,11 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		manager.on('done', function(){
 			store.reload();
-		});
+		}, this);
 		
 		manager.on('tagsUpdated', function(){
 			store.reload();
-		});
+		}, this);
 		
 		var detailsmask = null;
 		
@@ -275,11 +265,11 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		// Gemma.EEReportGrid.superclass.initComponent.call(this);
 		store.on('beforesort', function(){
 			this.loadMask.show();
-		});
+		}, this);
 		
 		store.on('aftersort', function(){
 			this.loadMask.hide()
-		});
+		}, this);
 		
 		// if the user is an admin, show the "refresh all" button
 		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
