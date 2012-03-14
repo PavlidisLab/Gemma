@@ -13,6 +13,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
+@RequestMapping("/experimentalDesign")
 public interface ExperimentalDesignController {
 
     /**
