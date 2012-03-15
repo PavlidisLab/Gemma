@@ -235,7 +235,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 	
 	runSearch :function(){
-		
+					
 		this.searchMethods = new Gemma.AnalysisResultsSearchMethods({
 			taxonId: this.getTaxonId(),
 			taxonName: this.getTaxonName(),
@@ -275,6 +275,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		this.searchMethods.on('clearerror', function(){
 			this.clearError();
+		}, this);
+		
+		this.searchMethods.on('searchAborted', function(){
+			this.loadMask.hide();
 		}, this);
 		
 		

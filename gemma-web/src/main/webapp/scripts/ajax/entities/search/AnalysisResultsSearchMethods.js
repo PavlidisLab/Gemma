@@ -132,11 +132,13 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 	validateSearch: function(geneSetValueObjects, experimentSetValueObjects){
 		if (geneSetValueObjects.length === 0) {
 			Ext.Msg.alert("Error", "Gene(s) must be selected before continuing.");
+			this.fireEvent('searchAborted');
 			return;
 		}
 
 		if (experimentSetValueObjects.length === 0) {
 			Ext.Msg.alert("Error", "Experiment(s) must be selected before continuing.");
+			this.fireEvent('searchAborted');
 			return;
 		}
 		//get the total number of genes 
