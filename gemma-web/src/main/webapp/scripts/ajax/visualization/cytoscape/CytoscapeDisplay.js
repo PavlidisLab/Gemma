@@ -444,8 +444,10 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         if (this.ready) {
             if (!isNodeDegreeEmphasis) {
                 this.visualization.visualStyle(this.visualStyleRegular);
+                this.nodeDegreeVisualStyleFlag=false;
             } else {
                 this.visualization.visualStyle(this.visualStyleNodeDegree);
+                this.nodeDegreeVisualStyleFlag=true;
             }
         }
     },
