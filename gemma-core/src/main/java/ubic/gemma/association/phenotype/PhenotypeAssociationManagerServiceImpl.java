@@ -55,11 +55,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.SecurityInfoValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
@@ -983,8 +983,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             owner = ( ( PrincipalSid ) this.securityService.getOwner( p ) ).getPrincipal();
         }
 
-        evidenceValueObject.setSecurityInfoValueObject( new SecurityInfoValueObject( currentUserHasWritePermission,
-                currentUserIsOwner, isPublic, isShared, owner ) );
+        evidenceValueObject.setEvidenceSecurityValueObject( new EvidenceSecurityValueObject(
+                currentUserHasWritePermission, currentUserIsOwner, isPublic, isShared, owner ) );
     }
 
     private void populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,

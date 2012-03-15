@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-public class SecurityInfoValueObject {
+public class EvidenceSecurityValueObject {
 
     private boolean currentUserHasWritePermission = false;
 
@@ -12,10 +12,10 @@ public class SecurityInfoValueObject {
 
     private String owner = null;
 
-    public SecurityInfoValueObject() {
+    public EvidenceSecurityValueObject() {
     }
 
-    public SecurityInfoValueObject( boolean currentUserHasWritePermission, boolean currentUserIsOwner,
+    public EvidenceSecurityValueObject( boolean currentUserHasWritePermission, boolean currentUserIsOwner,
             boolean isPublic, boolean isShared, String owner ) {
         super();
         this.currentUserHasWritePermission = currentUserHasWritePermission;

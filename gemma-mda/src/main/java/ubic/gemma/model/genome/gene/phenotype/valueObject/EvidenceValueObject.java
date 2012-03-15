@@ -107,7 +107,7 @@ public abstract class EvidenceValueObject {
     // last modified date of the evidence
     private Long lastUpdated = null;
     // security for the evidence
-    private SecurityInfoValueObject securityInfoValueObject = null;
+    private EvidenceSecurityValueObject evidenceSecurityValueObject = null;
     // linked to what gene
     private Integer geneNCBI = null;
 
@@ -236,12 +236,12 @@ public abstract class EvidenceValueObject {
         this.lastUpdated = lastUpdated;
     }
 
-    public SecurityInfoValueObject getSecurityInfoValueObject() {
-        return this.securityInfoValueObject;
+    public EvidenceSecurityValueObject getEvidenceSecurityValueObject() {
+        return this.evidenceSecurityValueObject;
     }
 
-    public void setSecurityInfoValueObject( SecurityInfoValueObject securityInfoValueObject ) {
-        this.securityInfoValueObject = securityInfoValueObject;
+    public void setEvidenceSecurityValueObject( EvidenceSecurityValueObject evidenceSecurityValueObject ) {
+        this.evidenceSecurityValueObject = evidenceSecurityValueObject;
     }
 
     public Integer getGeneNCBI() {
