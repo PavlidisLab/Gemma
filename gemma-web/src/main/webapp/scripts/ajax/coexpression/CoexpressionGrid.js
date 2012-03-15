@@ -712,7 +712,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		return function(r, id) {
 			var foundGene = (r.get("foundGene"));
+			var queryGene = (r.get("queryGene"));
 			if (value.test(foundGene.officialSymbol)) {
+				return true;
+			}else if(value.test(queryGene.officialSymbol)){
 				return true;
 			}
 
