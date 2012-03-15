@@ -78,6 +78,10 @@ Ext.onReady(function() {
 		
 		// before every search, clear the results in preparation for new (possibly blank) results		
 		
+		var flashPanel = resultsPanel.getItem('cytoscaperesults');
+		if (flashPanel){
+			flashPanel.stopRender=true;
+		}
 		this.resultsPanel.removeAll(); 
 		this.resultsPanel.hide();
 		
@@ -327,6 +331,11 @@ Ext.onReady(function() {
 			
 		}
 		else {
+			
+			var flashPanel = resultsPanel.getItem('cytoscaperesults');
+			if (flashPanel){
+				flashPanel.stopRender=true;
+			}
 
 			this.resultsPanel.removeAll(); 
 			this.resultsPanel.hide(); 

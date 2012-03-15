@@ -9,6 +9,7 @@ Ext.Panel, {
     initialDisplayStringency: 2,
 
     currentNodeGeneIds: [],
+    stopRender: false,
     
     //The query genes that will be coloured red, and show up in search form( different from the 'complete the graph-my genes only'(this.queryGenes) query genes).
     //currentQueryGeneIds is a subset of the 'complete the graph-my genes only' query gene ids.
@@ -253,6 +254,8 @@ Ext.Panel, {
     //and needs to set up values of the top and bottom toolbar
     cytoscapePanelAfterRenderHandler: function () {
 
+    	if (!this.stopRender){
+    	
         if (!this.loadMask) {
             this.loadMask = new Ext.LoadMask(
             this.getEl(), {
@@ -281,6 +284,8 @@ Ext.Panel, {
         }
 
         this.initialCoexSearchCallback(results);
+        
+    	}
     },
 
     initialCoexSearchCallback: function (result) {

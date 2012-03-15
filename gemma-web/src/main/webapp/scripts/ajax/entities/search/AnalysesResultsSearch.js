@@ -93,7 +93,12 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		// get ready to show results
 		searchForm.on("beforesearch", function(panel){
 					
-			// before every search, clear the results in preparation for new (possibly blank) results 
+			// before every search, clear the results in preparation for new (possibly blank) results
+			
+			var flashPanel = coexResultsTabPanel.getItem('cytoscaperesults');
+			if (flashPanel){
+				flashPanel.stopRender=true;
+			}			
 			coexResultsTabPanel.removeAll();
 			panel.clearError();
 			// clear errors
@@ -207,6 +212,10 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		var coexOptions = new Gemma.CoexpressionSearchOptions();
 		coexOptions.on('rerunSearch', function(stringency, forceProbe, queryGenesOnly){
 			coexOptions.hide();
+			var flashPanel = coexResultsTabPanel.getItem('cytoscaperesults');
+			if (flashPanel){
+				flashPanel.stopRender=true;
+			}
 			coexResultsTabPanel.removeAll();
 			searchForm.redoRecentCoexpressionSearch(stringency, forceProbe, queryGenesOnly);
 		}, this);
