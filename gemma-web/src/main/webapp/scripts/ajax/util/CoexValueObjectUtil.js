@@ -95,34 +95,6 @@ Gemma.CoexValueObjectUtil = {
 		        } // end for (<kglength)
 	    	
 		        return trimmedGeneResults;
-	    },
-	    
-	    //backend sometimes returns duplicate results
-	    removeDuplicates: function(knowngenes){
-	    	
-	    	var edgeSet = [];
-	    	
-	    	var duplicatesRemovedResults = [];
-		       
-	        var kglength = knowngenes.length;
-	        for (i = 0; i < kglength; i++) {
-
-	            
-	                
-	                if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol) == -1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol) == -1) {
-	                
-	                	duplicatesRemovedResults.push(knowngenes[i]);
-	                
-	                	edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
-	                	edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
-	                }
-
-	            
-	        } // end for (<kglength)
-	        
-	        return duplicatesRemovedResults;
-	    	
-	    }
-		
+	    }		
 		
 }

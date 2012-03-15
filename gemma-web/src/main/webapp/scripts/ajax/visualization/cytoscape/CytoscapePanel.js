@@ -9,6 +9,9 @@ Ext.Panel, {
     initialDisplayStringency: 2,
 
     currentNodeGeneIds: [],
+    
+    //The query genes that will be coloured red, and show up in search form( different from the 'complete the graph-my genes only'(this.queryGenes) query genes).
+    //currentQueryGeneIds is a subset of the 'complete the graph-my genes only' query gene ids.
     currentQueryGeneIds: [],    
 
     initComponent: function () {
@@ -356,7 +359,7 @@ Ext.Panel, {
 
     completeCoexSearchCallback: function (result) {
         this.queryGenes = result.queryGenes;
-        this.knownGeneResults = Gemma.CoexValueObjectUtil.removeDuplicates(result.knownGeneResults);
+        this.knownGeneResults = result.knownGeneResults;
         this.fireEvent('dataUpdateFromCoexpressionViz', this.knownGeneResults, this.currentQueryGeneIds, this.currentResultsStringency, this.initialDisplayStringency);       
         
         this.display.drawGraph(this.currentQueryGeneIds, this.queryGenes, this.knownGeneResults);

@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -60,13 +61,13 @@ import ubic.gemma.web.view.TextView;
 public class CoexpressionSearchController {
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-    
+
     private static final int DEFAULT_STRINGENCY = 2;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
     private static final int MAX_RESULTS = 200;
-    
+
     private static final int COEX_VIS_RESULTS = 20;
 
     @Autowired
@@ -125,7 +126,7 @@ public class CoexpressionSearchController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
-                genes, 2, COEX_VIS_RESULTS, false , false);
+                genes, 2, COEX_VIS_RESULTS, false, false );
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -136,14 +137,15 @@ public class CoexpressionSearchController {
         return result;
 
     }
-    
+
     /**
      * @param searchOptions
      * @return
      */
-    public CoexpressionMetaValueObject doSearchQuick2( CoexpressionSearchCommand searchOptions) {
-           return doSearchQuick2(searchOptions, null);
+    public CoexpressionMetaValueObject doSearchQuick2( CoexpressionSearchCommand searchOptions ) {
+        return doSearchQuick2( searchOptions, null );
     }
+
     /**
      * @param searchOptions
      * @return
@@ -168,16 +170,16 @@ public class CoexpressionSearchController {
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick(
                 searchOptions.getEeIds(), genes, searchOptions.getStringency(), COEX_VIS_RESULTS,
                 searchOptions.getQueryGenesOnly(), true );
-        
+
         int stringencyTrimLimit = searchOptions.getEeIds().size();
-        
-        //make sure the limit isn't too big
-        if (stringencyTrimLimit>1400){
-            stringencyTrimLimit=1400;
+
+        // make sure the limit isn't too big
+        if ( stringencyTrimLimit > 1400 ) {
+            stringencyTrimLimit = 1400;
         }
 
         int resultsLimit = 850;
-        
+
         boolean displayInfo = false;
         int displayTrimmedStringency = 0;
 
@@ -188,25 +190,27 @@ public class CoexpressionSearchController {
 
             log.info( "Coex Search for " + searchOptions.getGeneIds().size() + " genes: "
                     + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
-                    + " results.  Stripping non query gene low stringency results(possible up to a stringency of "+stringencyTrimLimit+")" );
+                    + " results.  Stripping non query gene low stringency results(possible up to a stringency of "
+                    + stringencyTrimLimit + ")" );
 
-            Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();            
+            Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();
 
             for ( int i = 2; i < stringencyTrimLimit; i++ ) {
 
                 HashSet<Long> nodeIds = new HashSet<Long>();
 
                 // add all coexpression links to the original queryGenes
-                for ( CoexpressionValueObjectExt cvoe : geneResults ) {                    
-                   
+                for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+
                     if ( ( queryGeneIds.contains( cvoe.getFoundGene().getId() ) || queryGeneIds.contains( cvoe
                             .getQueryGene().getId() ) ) ) {
                         // if one of the query or found genes is in the original search(before the my genes only) keep
                         // that coexpression value object to ensure that node sticks around
 
                         strippedGeneResults.add( cvoe );
-                        
-                        //need to populate nodeIds appropriately based on stringency for next loop which adds 'my genes only' edges
+
+                        // need to populate nodeIds appropriately based on stringency for next loop which adds 'my genes
+                        // only' edges
                         if ( queryGeneIds.contains( cvoe.getFoundGene().getId() )
                                 && queryGeneIds.contains( cvoe.getQueryGene().getId() ) ) {
                             nodeIds.add( cvoe.getFoundGene().getId() );
@@ -225,15 +229,13 @@ public class CoexpressionSearchController {
                             }
                         }
                     }
-                        
-                    
 
                 }
 
                 // need to loop through again to add missing coex links between non query genes(that are in the graph,
                 // i.e. in graphIds) that meet stringency threshold
                 // separate loop is needed because we need to know all the nodes in the graph before we can do this step
-        
+
                 for ( CoexpressionValueObjectExt cvoe : geneResults ) {
 
                     if ( !queryGeneIds.contains( cvoe.getFoundGene().getId() )
@@ -245,7 +247,6 @@ public class CoexpressionSearchController {
                     }
 
                 }
-                
 
                 geneResults = strippedGeneResults;
 
@@ -262,18 +263,25 @@ public class CoexpressionSearchController {
 
             log.info( "Original results size: " + oldSize + " trimmed results size: " + geneResults.size()
                     + "  Total results removed: " + ( oldSize - geneResults.size() ) );
-        
+
         }
-        
+
+        if ( queryGeneIds != null ) {
+            //fix for bug 2737, bug 2453
+            geneResults = eliminateDuplicatesAndSetQueryGenesFirstColumn( geneResults, queryGeneIds );
+
+        }
+
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
             log.info( "No search results for query: " + searchOptions );
         }
-        
-        if (displayInfo){
-            result.setDisplayInfo( "Results not involving query genes have been removed to a stringency of "+ displayTrimmedStringency+" due to size of graph." );
+
+        if ( displayInfo ) {
+            result.setDisplayInfo( "Results not involving query genes have been removed to a stringency of "
+                    + displayTrimmedStringency + " due to size of graph." );
         }
 
         return result;
@@ -286,9 +294,7 @@ public class CoexpressionSearchController {
      */
     public CoexpressionMetaValueObject doSearchQuick( CoexpressionSearchCommand searchOptions ) {
 
-       
-            return doQuickSearch( searchOptions );
-       
+        return doQuickSearch( searchOptions );
 
     }
 
@@ -312,9 +318,7 @@ public class CoexpressionSearchController {
         }
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            result
-                    .setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY
-                            + " genes" );
+            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY + " genes" );
             return result;
         }
 
@@ -331,8 +335,7 @@ public class CoexpressionSearchController {
         if ( searchOptions.getTaxonId() != null ) {
             for ( Gene gene : genes ) {
                 if ( !gene.getTaxon().getId().equals( searchOptions.getTaxonId() ) ) {
-                    result
-                            .setErrorState( "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
+                    result.setErrorState( "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
                     return result;
                 }
             }
@@ -397,8 +400,7 @@ public class CoexpressionSearchController {
         }
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
-            result
-                    .setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
+            result.setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
             log.info( "No search results for query: " + searchOptions );
         }
         return result;
@@ -421,77 +423,76 @@ public class CoexpressionSearchController {
         return new CoexpressionMetaValueObject();
     }
 
-
-// TODO: Dead code?
+    // TODO: Dead code?
     /*
      * Handle case of text export of the results.
      * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */   
-//    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-//            throws Exception {
-//
-//        if ( request.getParameter( "export" ) != null ) {
-//
-//            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-//            Collection<Gene> genes = geneService.loadMultiple( geneIds );
-//            genes = geneService.thawLite( genes );
-//
-//            boolean queryGenesOnly = request.getParameter( "q" ) != null;
-//            int stringency = DEFAULT_STRINGENCY;
-//            try {
-//                stringency = Integer.parseInt( request.getParameter( "s" ) );
-//            } catch ( Exception e ) {
-//                log.warn( "invalid stringency; using default " + stringency );
-//            }
-//            Collection<Long> eeIds = new HashSet<Long>();
-//            Long eeSetId = null;
-//
-//            String eeSetIdString = request.getParameter( "a" );
-//            if ( StringUtils.isNotBlank( eeSetIdString ) ) {
-//                try {
-//                    eeSetId = Long.parseLong( eeSetIdString );
-//                } catch ( NumberFormatException e ) {
-//                    log.warn( "Invalid eeSet id: " + eeSetIdString );
-//                    return new ModelAndView( this.getFormView() );
-//                }
-//
-//                ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-//                if ( eeSet == null ) {
-//                    throw new IllegalArgumentException( "Cannot load EE set with id=" + eeSetId );
-//                }
-//
-//                eeIds = EntityUtils.getIds( eeSet.getExperiments() );
-//            } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
-//                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request
-//                        .getParameter( "an" ) );
-//                if ( eeSets.size() == 1 ) {
-//                    eeSetId = eeSets.iterator().next().getId();
-//
-//                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-//                    for ( BioAssaySet b : eeSet.getExperiments() ) {
-//                        eeIds.add( b.getId() );
-//                    }
-//                } else {
-//                    log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
-//                    return new ModelAndView( this.getFormView() );
-//                }
-//            } else {
-//                eeIds = extractIds( request.getParameter( "ee" ) );
-//            }
-//
-//            CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency,
-//                    MAX_RESULTS, queryGenesOnly, false );
-//            ModelAndView mav = new ModelAndView( new TextView() );
-//            String output = result.toString();
-//            mav.addObject( "text", output.length() > 0 ? output : "no results" );
-//            return mav;
-//
-//        }
-//        return new ModelAndView( this.getFormView() );
-//
-//    }
+     */
+    // protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+    // throws Exception {
+    //
+    // if ( request.getParameter( "export" ) != null ) {
+    //
+    // Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+    // Collection<Gene> genes = geneService.loadMultiple( geneIds );
+    // genes = geneService.thawLite( genes );
+    //
+    // boolean queryGenesOnly = request.getParameter( "q" ) != null;
+    // int stringency = DEFAULT_STRINGENCY;
+    // try {
+    // stringency = Integer.parseInt( request.getParameter( "s" ) );
+    // } catch ( Exception e ) {
+    // log.warn( "invalid stringency; using default " + stringency );
+    // }
+    // Collection<Long> eeIds = new HashSet<Long>();
+    // Long eeSetId = null;
+    //
+    // String eeSetIdString = request.getParameter( "a" );
+    // if ( StringUtils.isNotBlank( eeSetIdString ) ) {
+    // try {
+    // eeSetId = Long.parseLong( eeSetIdString );
+    // } catch ( NumberFormatException e ) {
+    // log.warn( "Invalid eeSet id: " + eeSetIdString );
+    // return new ModelAndView( this.getFormView() );
+    // }
+    //
+    // ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+    // if ( eeSet == null ) {
+    // throw new IllegalArgumentException( "Cannot load EE set with id=" + eeSetId );
+    // }
+    //
+    // eeIds = EntityUtils.getIds( eeSet.getExperiments() );
+    // } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
+    // Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request
+    // .getParameter( "an" ) );
+    // if ( eeSets.size() == 1 ) {
+    // eeSetId = eeSets.iterator().next().getId();
+    //
+    // ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+    // for ( BioAssaySet b : eeSet.getExperiments() ) {
+    // eeIds.add( b.getId() );
+    // }
+    // } else {
+    // log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
+    // return new ModelAndView( this.getFormView() );
+    // }
+    // } else {
+    // eeIds = extractIds( request.getParameter( "ee" ) );
+    // }
+    //
+    // CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency,
+    // MAX_RESULTS, queryGenesOnly, false );
+    // ModelAndView mav = new ModelAndView( new TextView() );
+    // String output = result.toString();
+    // mav.addObject( "text", output.length() > 0 ? output : "no results" );
+    // return mav;
+    //
+    // }
+    // return new ModelAndView( this.getFormView() );
+    //
+    // }
 
     private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
 
@@ -575,6 +576,55 @@ public class CoexpressionSearchController {
             }
         }
         return eeSetId;
+    }
+
+    private Collection<CoexpressionValueObjectExt> eliminateDuplicatesAndSetQueryGenesFirstColumn(
+            Collection<CoexpressionValueObjectExt> geneResults, Collection<Long> queryGeneIds ) {
+
+        HashSet<String> coexLinkMap = new HashSet<String>();
+
+        List<CoexpressionValueObjectExt> resultsNoDuplicatesQueryGenesFirstColumn = new ArrayList<CoexpressionValueObjectExt>();
+
+        for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+
+            Long queryGeneId = cvoe.getQueryGene().getId();
+            Long foundGeneId = cvoe.getFoundGene().getId();
+
+            if ( !coexLinkMap.contains( queryGeneId.toString() + "to" + foundGeneId.toString() )
+                    && !coexLinkMap.contains( foundGeneId.toString() + "to" + queryGeneId.toString() ) ) {
+
+                coexLinkMap.add( queryGeneId.toString() + "to" + foundGeneId.toString() );
+                coexLinkMap.add( foundGeneId.toString() + "to" + queryGeneId.toString() );
+
+                if ( !queryGeneIds.contains( queryGeneId ) && queryGeneIds.contains( foundGeneId ) ) {
+                    
+                    // swap querygene and foundgene
+                    GeneValueObject queryGVO = cvoe.getQueryGene();
+
+                    GeneValueObject foundGVO = cvoe.getFoundGene();
+
+                    Double queryNodeDegree = cvoe.getQueryGeneNodeDegree();
+                    Double foundNodeDegree = cvoe.getFoundGeneNodeDegree();
+
+                    Boolean foundRegulatesQuery = cvoe.getFoundRegulatesQuery();
+                    Boolean queryRegulatesFound = cvoe.getQueryRegulatesFound();
+
+                    cvoe.setQueryGene( foundGVO );
+                    cvoe.setQueryGeneNodeDegree( foundNodeDegree );
+                    cvoe.setQueryRegulatesFound( foundRegulatesQuery );// ask about swapping this
+
+                    cvoe.setFoundGene( queryGVO );
+                    cvoe.setFoundGeneNodeDegree( queryNodeDegree );
+                    cvoe.setFoundRegulatesQuery( queryRegulatesFound );// ask about swapping this
+
+                }
+                resultsNoDuplicatesQueryGenesFirstColumn.add( cvoe );
+
+            } 
+
+        }
+
+        return resultsNoDuplicatesQueryGenesFirstColumn;
     }
 
 }
