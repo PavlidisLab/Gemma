@@ -919,6 +919,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator" />
