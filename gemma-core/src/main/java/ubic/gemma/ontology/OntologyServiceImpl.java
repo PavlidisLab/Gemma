@@ -62,6 +62,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -256,6 +257,12 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
+    @Override
+    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri, Taxon taxon ) {
+        Collection<Characteristic> terms = findExactTerm(givenQueryString, categoryUri, taxon);
+        return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
+        
+    };
     /* (non-Javadoc)
      * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String, ubic.gemma.model.genome.Taxon)
      */

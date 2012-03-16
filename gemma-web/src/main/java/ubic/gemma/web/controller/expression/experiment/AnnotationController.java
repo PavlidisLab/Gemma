@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.AutoTaggerTask;
@@ -150,20 +151,21 @@ public class AnnotationController extends AbstractTaskService {
     }
 
     /**
+     * AJAX
      * @param givenQueryString
      * @param categoryUri
      * @param taxonId
      * @return
      */
-    public Collection<Characteristic> findTerm( String givenQueryString, String categoryUri, Long taxonId ) {
+    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, String categoryUri, Long taxonId ) {
         if ( StringUtils.isBlank( givenQueryString ) ) {
-            return new HashSet<Characteristic>();
+            return new HashSet<CharacteristicValueObject>();
         }
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        return ontologyService.findExactTerm( givenQueryString, categoryUri, taxon );
+        return ontologyService.findExactTermValueObject( givenQueryString, categoryUri, taxon );
     }
 
     /**

@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchService;
 
@@ -214,5 +215,8 @@ public interface OntologyService extends InitializingBean {
      * @param searchService the searchService to set
      */
     public abstract void setSearchService( SearchService searchService );
+
+    Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
+            Taxon taxon );
 
 }
