@@ -519,6 +519,7 @@
 	</bean>
 
 	<bean id="progressStatusService" class="ubic.gemma.job.progress.ProgressStatusServiceImpl">
+		<aop:scoped-proxy/>
 		<dwr:remote javascript="ProgressStatusService">
 			<dwr:include method="getProgressStatus" />
 			<dwr:include method="cancelJob" />
@@ -653,13 +654,13 @@
 	</bean>
 
 	<bean id="systemMonitorController" class="ubic.gemma.web.controller.monitoring.SystemMonitorController">
-		<dwr:remote javascript="SystemMonitorController">
-			<dwr:include method="getHibernateStatus" />
-			<dwr:include method="getCacheStatus" />
-			<dwr:include method="getSpaceStatus" />
-			<dwr:include method="flushCache" />
-			<dwr:include method="flushAllCaches" />
-			<dwr:include method="resetHibernateStatus" />
+    	<dwr:remote javascript="SystemMonitorController">
+      		<dwr:include method="getHibernateStatus" />   
+      		<dwr:include method="getCacheStatus" />   
+      		<dwr:include method="getSpaceStatus" />   
+      		<dwr:include method="clearCache" />   
+      		<dwr:include method="clearAllCaches" />   
+      		<dwr:include method="resetHibernateStatus" />   
 		</dwr:remote>
 	</bean>
 
@@ -766,7 +767,7 @@
 			class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
 		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
 		<dwr:convert type="bean"
-			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress" />
+			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl$TaskProgress" />
 
 		<dwr:convert type="bean" class="ubic.gemma.search.SearchResult" />
 
