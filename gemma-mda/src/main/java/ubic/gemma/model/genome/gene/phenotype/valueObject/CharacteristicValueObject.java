@@ -250,6 +250,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     @Override
     public int compareTo( CharacteristicValueObject o ) {
+
+        if ( !this.category.equalsIgnoreCase( o.category ) ) {
+            return ( this.category.compareToIgnoreCase( o.category ) );
+        }
+
         return this.value.compareToIgnoreCase( o.value );
     }
 
