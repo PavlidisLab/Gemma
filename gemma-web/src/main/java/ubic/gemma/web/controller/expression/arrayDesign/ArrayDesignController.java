@@ -34,6 +34,7 @@ import ubic.gemma.web.remote.ListBatchCommand;
  * @author paul
  * @version $Id$
  */
+@RequestMapping("/arrays")
 public interface ArrayDesignController {
 
     public abstract String addAlternateName( Long arrayDesignId, String alternateName );

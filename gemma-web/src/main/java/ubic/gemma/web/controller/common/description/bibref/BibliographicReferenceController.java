@@ -10,6 +10,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
+@RequestMapping("/bibRef")
 public interface BibliographicReferenceController {
 
     /**
