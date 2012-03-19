@@ -37,6 +37,10 @@ import ubic.gemma.web.controller.BaseController;
 /**
  * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
  * 
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @author pavlidis
  * @version $Id$
  */

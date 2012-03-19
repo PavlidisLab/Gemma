@@ -39,6 +39,10 @@ import ubic.gemma.web.view.TextView;
  * This controller allows images to be created in a web environment. Specifically, the image is written to the
  * {@link OutputStream} as a Portable Network Graphic (PNG).
  * 
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @deprecatd in favour of client-side rendering, though this could see use if revamped
  * @author keshav
  * @version $Id$

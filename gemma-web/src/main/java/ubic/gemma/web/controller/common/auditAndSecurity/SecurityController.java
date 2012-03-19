@@ -23,6 +23,10 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -177,7 +181,7 @@ public interface SecurityController {
      * @param groupName
      * @return
      */
-    public abstract boolean removeUsersFromGroup( Collection<String> userNames, String groupName );
+    public abstract boolean removeUsersFromGroup( String[] userNames, String groupName );
 
     /**
      * @param expressionExperimentService
@@ -197,6 +201,6 @@ public interface SecurityController {
      * 
      * @param settings
      */
-    public abstract void updatePermissions( Collection<SecurityInfoValueObject> settings );
+    public abstract void updatePermissions( SecurityInfoValueObject[] settings );
 
 }

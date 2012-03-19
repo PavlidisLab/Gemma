@@ -51,6 +51,10 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * This controller is responsible for showing a list of all bibliographic references, as well sending the user to the
  * pubMed.Detail.view when they click on a specific link in that list.
  * 
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @author keshav
  */
 @Controller

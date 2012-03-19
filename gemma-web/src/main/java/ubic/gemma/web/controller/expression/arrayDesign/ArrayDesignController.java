@@ -31,6 +31,10 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
 /**
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -46,7 +50,7 @@ public interface ArrayDesignController {
      * @param batch
      * @return
      */
-    public abstract JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids,
+    public abstract JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids,
             boolean showMerged, boolean showOrphans );
 
     /**
@@ -95,7 +99,7 @@ public interface ArrayDesignController {
      * @param showOrphans
      * @return
      */
-    public abstract Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds,
+    public abstract Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds,
             boolean showMergees, boolean showOrphans );
 
     /**
@@ -136,7 +140,7 @@ public interface ArrayDesignController {
      * @param showOrphans
      * @return
      */
-    public abstract Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Collection<Long> arrayDesignIds );
+    public abstract Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Long[] arrayDesignIds );
 
     /**
      * AJAX

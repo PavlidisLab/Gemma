@@ -26,10 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -81,6 +83,10 @@ import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -193,7 +199,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#browse(ubic.gemma.web.remote.ListBatchCommand, java.util.Collection, boolean, boolean)
      */
     @Override
-    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids,
+    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids,
             boolean showMerged, boolean showOrphans ) {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
@@ -392,16 +398,18 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getArrayDesigns(java.util.Collection, boolean, boolean)
      */
     @Override
-    public Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds, boolean showMergees,
+    public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
         List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
+        if ( arrayDesignIds == null || arrayDesignIds.length == 0) {
             result.addAll( arrayDesignService.loadAllValueObjects() );
 
         } else {// if ids are specified, then display only those arrayDesigns
-            result.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
+
+            Collection<Long> adCol = new LinkedList<Long>(Arrays.asList( arrayDesignIds ));
+            result.addAll( arrayDesignService.loadValueObjects( adCol ) );
         }
 
         // Filter...
@@ -491,7 +499,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsForShowAll(java.util.Collection)
      */
     @Override
-    public Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Collection<Long> arrayDesignIds ) {
+    public Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Long[] arrayDesignIds ) {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( arrayDesignIds, true, true );
 

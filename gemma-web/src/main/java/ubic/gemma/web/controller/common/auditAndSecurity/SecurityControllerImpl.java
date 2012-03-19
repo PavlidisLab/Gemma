@@ -58,7 +58,10 @@ import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
- * Manages data-level security (ie. can make data private).
+ * Manages data-level security (ie. can make data private). 
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
  * 
  * @author keshav
  * @version $Id$
@@ -431,7 +434,7 @@ public class SecurityControllerImpl implements SecurityController {
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeUsersFromGroup(java.util.Collection, java.lang.String)
      */
     @Override
-    public boolean removeUsersFromGroup( Collection<String> userNames, String groupName ) {
+    public boolean removeUsersFromGroup( String[] userNames, String groupName ) {
         for ( String userName : userNames ) {
 
             if ( userName.equals( "administrator" ) && groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) ) {
@@ -566,7 +569,7 @@ public class SecurityControllerImpl implements SecurityController {
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermissions(java.util.Collection)
      */
     @Override
-    public void updatePermissions( Collection<SecurityInfoValueObject> settings ) {
+    public void updatePermissions( SecurityInfoValueObject[] settings ) {
         for ( SecurityInfoValueObject so : settings ) {
             this.updatePermission( so );
         }

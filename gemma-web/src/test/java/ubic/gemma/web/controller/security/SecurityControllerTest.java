@@ -83,8 +83,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testRemoveUsersFromGroupDisallowed() throws Exception {
-        Collection<String> userNames = new HashSet<String>();
-        userNames.add( "administrator" );
+        String[] userNames = {"administrator"};
         try {
             securityController.removeUsersFromGroup( userNames, "Administrators" );
 
@@ -107,8 +106,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         SecurityInfoValueObject securityInfo = securityController.getSecurityInfo( ed );
         securityInfo.getGroupsThatCanRead().add( groupName );
 
-        Collection<SecurityInfoValueObject> os = new HashSet<SecurityInfoValueObject>();
-        os.add( securityInfo );
+        SecurityInfoValueObject[] os = { securityInfo };
 
         securityController.updatePermissions( os );
 

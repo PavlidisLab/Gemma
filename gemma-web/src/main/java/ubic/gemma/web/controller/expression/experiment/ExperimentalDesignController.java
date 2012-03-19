@@ -13,6 +13,13 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
+/**
+ * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
+ * arrays instead.
+ * 
+ * @version $Id$
+ */
 @RequestMapping("/experimentalDesign")
 public interface ExperimentalDesignController {
 
@@ -56,14 +63,14 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExperimentalDesign
      * @param efIds a collection of ExperimentalFactor ids
      */
-    public abstract void deleteExperimentalFactors( EntityDelegator e, Collection<Long> efIds );
+    public abstract void deleteExperimentalFactors( EntityDelegator e, Long[] efIds );
 
     /**
      * Deletes the specified Characteristics from their parent FactorValues.
      * 
      * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
      */
-    public abstract void deleteFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos );
+    public abstract void deleteFactorValueCharacteristics( FactorValueValueObject[] fvvos );
 
     /**
      * Deletes the specified FactorValues and removes them from the ExperimentalFactor specified by the EntityDelegator.
@@ -71,7 +78,7 @@ public interface ExperimentalDesignController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @param efIds a collection of FactorValue ids
      */
-    public abstract void deleteFactorValues( EntityDelegator e, Collection<Long> fvIds );
+    public abstract void deleteFactorValues( EntityDelegator e, Long[] fvIds );
 
     /**
      * Returns BioMaterialValueObjects for each BioMaterial in the ExpressionExperiment specified by the
@@ -123,20 +130,20 @@ public interface ExperimentalDesignController {
      * 
      * @param bmvos a collection of BioMaterialValueObjects containing the updated values
      */
-    public abstract void updateBioMaterials( Collection<BioMaterialValueObject> bmvos );
+    public abstract void updateBioMaterials( BioMaterialValueObject[] bmvos );
 
     /**
      * Updates the specified ExperimentalFactors.
      * 
      * @param efvos a collection of ExperimentalFactorValueObjects containing the updated values
      */
-    public abstract void updateExperimentalFactors( Collection<ExperimentalFactorValueObject> efvos );
+    public abstract void updateExperimentalFactors( ExperimentalFactorValueObject[] efvos );
 
     /**
      * Updates the specified Characteristics.
      * 
      * @param efvos a collection of FactorValueValueObjects containing the updated values
      */
-    public abstract void updateFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos );
+    public abstract void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos );
 
 }
