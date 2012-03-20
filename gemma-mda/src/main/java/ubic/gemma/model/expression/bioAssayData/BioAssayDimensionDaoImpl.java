@@ -161,5 +161,21 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         } );
         return bioAssayDimension;
     }
+    
+    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null ) return null;
+        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
+
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+                
+                return null;
+            }
+        } );
+        return bioAssayDimension;
+    }
 
 }

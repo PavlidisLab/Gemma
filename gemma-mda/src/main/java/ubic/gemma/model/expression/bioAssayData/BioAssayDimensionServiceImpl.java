@@ -38,6 +38,10 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
     }
+    
+    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
+        return this.getBioAssayDimensionDao().thawLite( bioAssayDimension );
+    }
 
     /*
      * (non-Javadoc)

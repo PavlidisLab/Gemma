@@ -37,5 +37,7 @@ public interface BioAssayDimensionDao extends BaseDao<BioAssayDimension> {
     public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
 
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
+    
+    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
 }

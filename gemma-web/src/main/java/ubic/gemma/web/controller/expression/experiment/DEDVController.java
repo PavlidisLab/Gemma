@@ -1199,7 +1199,7 @@ public class DEDVController {
             return result;
         }
         if ( bioAssayDimension.getId() != null ) {
-            bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
+            bioAssayDimension = bioAssayDimensionService.thawLite( bioAssayDimension );
         }
         for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
             result.add( ba.getName() );

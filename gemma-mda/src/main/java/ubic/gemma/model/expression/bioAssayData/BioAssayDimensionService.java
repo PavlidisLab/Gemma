@@ -48,5 +48,7 @@ public interface BioAssayDimensionService {
      * @param bioAssayDimension
      */
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
+    
+    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
 }
