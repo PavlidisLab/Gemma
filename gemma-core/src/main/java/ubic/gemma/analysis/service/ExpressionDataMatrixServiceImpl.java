@@ -26,8 +26,6 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -41,6 +39,8 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
