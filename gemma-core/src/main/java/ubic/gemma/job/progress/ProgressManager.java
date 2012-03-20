@@ -301,7 +301,9 @@ public class ProgressManager {
             User u = userManager.getCurrentUser();
             jobI.setUser( u );
         } catch ( UsernameNotFoundException e ) {
-            log.warn( "No current user" );
+            log.warn( "No current user, using null for anon user." );
+            // JobInfo.user = null just means job was run by anonymous user
+            jobI.setUser( null );
         } catch ( AccessDeniedException e ) {
             log.warn( "Access denied" );
         }
