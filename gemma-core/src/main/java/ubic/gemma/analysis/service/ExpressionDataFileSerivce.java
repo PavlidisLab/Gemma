@@ -33,6 +33,8 @@ import ubic.gemma.util.ConfigUtils;
 public interface ExpressionDataFileSerivce {
 
     public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
+    public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
+    
     public static final String JSON_FILE_SUFFIX = ".data.json.gz";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
@@ -43,19 +45,19 @@ public interface ExpressionDataFileSerivce {
      * @param filtered if the data matrix is filtered
      * @return
      */
-    public abstract File getOutputFile( ExpressionExperiment ee, boolean filtered );
+    public File getOutputFile( ExpressionExperiment ee, boolean filtered );
 
     /**
      * @param type
      * @return
      */
-    public abstract File getOutputFile( QuantitationType type );
+    public File getOutputFile( QuantitationType type );
 
     /**
      * @param filename
      * @return
      */
-    public abstract File getOutputFile( String filename );
+    public File getOutputFile( String filename );
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -65,7 +67,7 @@ public interface ExpressionDataFileSerivce {
      * @param forceWrite
      * @return
      */
-    public abstract File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -75,7 +77,7 @@ public interface ExpressionDataFileSerivce {
      * @param forceWrite To not return the existing file, but create it anew.
      * @return location of the resulting file.
      */
-    public abstract File writeOrLocateDataFile( QuantitationType type, boolean forceWrite );
+    public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite );
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -84,8 +86,8 @@ public interface ExpressionDataFileSerivce {
      * @param forceWrite
      * @return
      */
-    public abstract File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
-
+    public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
+    
     /**
      * @param ee
      * @param forceWrite
@@ -93,13 +95,13 @@ public interface ExpressionDataFileSerivce {
      * @see ExpressionDataMatrixServiceImpl.getFilteredMatrix
      * @return
      */
-    public abstract File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     /**
      * @param type
      * @param forceWrite
      */
-    public abstract File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
+    public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
@@ -108,22 +110,26 @@ public interface ExpressionDataFileSerivce {
      * @param forceWrite
      * @return collection of files, one per analysis.
      */
-    public abstract Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
-
+    public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
+    
     /**
+     * Locate or create the differential expression data file(s) for a given experiment.
+     * We generate an archive that contains following files:
+     *  - differential expression analysis file (q-values per factor)
+     *  - file for each result set with contrasts info (such as fold change for each factor value)
+     *  
      * @param analysis
      * @param forceRewrite
      * @return
      */
-    public abstract File writeOrLocateDiffExpressionDataFile( DifferentialExpressionAnalysis analysis,
-            boolean forceRewrite );
+    public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
 
     /**
      * Delete the differential expression file for the given experiment
      * 
      * @param ee
      */
-    public abstract void deleteDiffExFile( ExpressionExperiment ee );
+    public void deleteDiffExFile( ExpressionExperiment ee );
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -132,14 +138,14 @@ public interface ExpressionDataFileSerivce {
      * @param forceWrite
      * @return
      */
-    public abstract File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
+    public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
 
     /**
      * @param results
      * @param geneAnnotations
      * @param buf
      */
-    public abstract void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
+    public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf );
 
     /**
@@ -150,7 +156,7 @@ public interface ExpressionDataFileSerivce {
      * @param sortedFirstColumnOfResults
      * @return
      */
-    public abstract List<DifferentialExpressionAnalysisResult> analysisResultSetToString(
+    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString(
             ExpressionAnalysisResultSet ears, Map<Long, String[]> geneAnnotations, StringBuilder buf,
             Map<Long, StringBuilder> probe2String, List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
 
