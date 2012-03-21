@@ -870,7 +870,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			"</a><span style='color:grey'> " +
 			data.taxonCommonName +
 			"</span> " +
-			data.officialName;
+			((data.officialName && data.officialName !== null)?data.officialName:'');
 		} else if (clazz === "Bibliographicreference") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
 			"]";
