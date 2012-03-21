@@ -39,13 +39,11 @@ import net.sf.ehcache.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -86,6 +84,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+    
+    @Autowired
+    private ExpressionExperimentService eeService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -381,7 +382,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
                 Collection<ArrayDesign> arrayDesignsUsed = new ArrayList<ArrayDesign>();
 
                 for ( ExpressionAnalysisResultSet rs : resultSetBatch ) {
-                    arrayDesignsUsed.addAll( expressionExperimentDao.getArrayDesignsUsed( ( BioAssaySet ) rs
+                    arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( ( BioAssaySet ) rs
                             .getAnalysis().getExperimentAnalyzed() ) );
                 }
                 
