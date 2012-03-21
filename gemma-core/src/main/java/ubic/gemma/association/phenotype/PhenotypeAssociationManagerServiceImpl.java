@@ -736,10 +736,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             taxon = this.taxonService.load( taxonId );
         }
 
-        Collection<Characteristic> experimentCharacteristics = this.ontologyService.findExactTerm( givenQueryString,
-                categoryUri, taxon );
-
-        return CharacteristicValueObject.characteristic2CharacteristicVO( experimentCharacteristics );
+        return this.ontologyService.findExactTermValueObject( givenQueryString, categoryUri, taxon );
     }
 
     @Override

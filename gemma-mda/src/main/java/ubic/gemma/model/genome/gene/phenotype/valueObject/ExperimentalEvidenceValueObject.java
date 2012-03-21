@@ -91,8 +91,13 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return this.experimentCharacteristics;
     }
 
-    public Collection<CitationValueObject> getRelevantPublicationsValueObjects() {
+    public Set<CitationValueObject> getRelevantPublicationsCitationValueObjects() {
         return this.relevantPublicationsCitationValueObjects;
+    }
+
+    public void setRelevantPublicationsCitationValueObjects(
+            Set<CitationValueObject> relevantPublicationsCitationValueObjects ) {
+        this.relevantPublicationsCitationValueObjects = relevantPublicationsCitationValueObjects;
     }
 
     public CitationValueObject getPrimaryPublicationCitationValueObject() {

@@ -287,7 +287,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             Set<String> otherRelevantPubMed = new HashSet<String>();
 
-            for ( CitationValueObject citation : experimentalVO.getRelevantPublicationsValueObjects() ) {
+            for ( CitationValueObject citation : experimentalVO.getRelevantPublicationsCitationValueObjects() ) {
                 otherRelevantPubMed.add( citation.getPubmedAccession() );
             }
 
@@ -379,7 +379,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             HashSet<String> relevantPublication = new HashSet<String>();
 
-            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsCitationValueObjects() ) {
 
                 relevantPublication.add( relevantPubli.getPubmedAccession() );
             }
@@ -430,7 +430,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             Collection<String> relevantPubmedId = new HashSet<String>();
 
-            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsCitationValueObjects() ) {
 
                 relevantPubmedId.add( citationValueObject.getPubmedAccession() );
             }
