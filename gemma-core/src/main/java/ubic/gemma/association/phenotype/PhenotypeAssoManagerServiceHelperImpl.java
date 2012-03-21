@@ -238,7 +238,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             for ( CharacteristicValueObject chaVO : experimentalVO.getExperimentCharacteristics() ) {
 
                 // new characteristic, since no database id received
-                if ( chaVO.getId() == null ) {
+                if ( chaVO.getId() == 0 ) {
 
                     VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
 

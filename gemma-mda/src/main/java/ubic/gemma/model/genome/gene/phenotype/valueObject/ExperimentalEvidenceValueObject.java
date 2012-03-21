@@ -74,8 +74,14 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
                 if ( c instanceof VocabCharacteristicImpl ) {
                     VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
 
+                    String valueUri = "";
+
+                    if ( voCha.getValueUri() != null ) {
+                        valueUri = voCha.getValueUri();
+                    }
+
                     CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getValue(),
-                            voCha.getCategory(), voCha.getValueUri(), voCha.getCategoryUri() );
+                            voCha.getCategory(), valueUri, voCha.getCategoryUri() );
 
                     chaValueObject.setId( voCha.getId() );
 

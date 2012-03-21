@@ -196,7 +196,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.alreadyPresentOnGene = alreadyPresentOnGene;
     }
 
-    public Long getId() {
+    public long getId() {
         return this.id;
     }
 
