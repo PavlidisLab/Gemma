@@ -84,7 +84,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					this, // scope
 					{
 						single: true,
-						delay: 100  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
+						delay: 500  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
 					})};		
 			
 			var reloadWholePanel = function() {
