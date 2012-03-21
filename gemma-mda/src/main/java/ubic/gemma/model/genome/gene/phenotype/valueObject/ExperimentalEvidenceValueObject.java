@@ -91,6 +91,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return this.experimentCharacteristics;
     }
 
+	public void setExperimentCharacteristics(
+			Set<CharacteristicValueObject> experimentCharacteristics) {
+		this.experimentCharacteristics = experimentCharacteristics;
+	}
+
     public Set<CitationValueObject> getRelevantPublicationsCitationValueObjects() {
         return this.relevantPublicationsCitationValueObjects;
     }
@@ -103,6 +108,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     public CitationValueObject getPrimaryPublicationCitationValueObject() {
         return this.primaryPublicationCitationValueObject;
     }
+
+	public void setPrimaryPublicationCitationValueObject(
+			CitationValueObject primaryPublicationCitationValueObject) {
+		this.primaryPublicationCitationValueObject = primaryPublicationCitationValueObject;
+	}
 
     @Override
     public int hashCode() {

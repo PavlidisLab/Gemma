@@ -39,7 +39,7 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
  * @version $Id$
  * @author nicolas
  */
-public abstract class EvidenceValueObject {
+public class EvidenceValueObject {
 
     /**
      * Convert an collection of evidence entities to their corresponding value objects
@@ -194,6 +194,10 @@ public abstract class EvidenceValueObject {
 
     public String getClassName() {
         return this.className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     public Double getRelevance() {
