@@ -843,8 +843,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         int origStart = batch.getStart();
         List<ExpressionExperiment> records = loadAllOrdered( batch );
 
-        int start = origStart;
-        int stop = Math.min( origStart + limit, records.size() );
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityServiceImpl.isUserAdmin() ) {
@@ -857,6 +855,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
          */
         int count = records.size();
 
+        int start = origStart;
+        int stop = Math.min( origStart + limit, records.size() );
+        
         List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
