@@ -576,9 +576,11 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
      */
     @Override
     public TaskProgress getDiffExpSearchTaskProgress( String taskId ) {
+        if (this.diffExpSearchTasksCache.isKeyInCache( taskId )) {
         DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
                 .get( taskId ).getObjectValue();
         return diffExpSearchTask.getTaskProgress();
+        } else return new TaskProgress("Completed", 100.0);
     }
 
 }
