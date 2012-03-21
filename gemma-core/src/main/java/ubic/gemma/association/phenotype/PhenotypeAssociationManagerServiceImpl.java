@@ -715,7 +715,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found
      */
     @Override
-    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
+    public Collection<CharacteristicValueObject> findExperimentMgedCategory() {
         return this.associationService.findEvidenceMgedCategoryTerms();
     }
 
@@ -728,7 +728,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found
      */
     @Override
-    public Collection<CharacteristicValueObject> searchOntologyForExperimentEvidenceTag( String givenQueryString,
+    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
 
         Taxon taxon = null;

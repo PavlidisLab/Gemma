@@ -151,7 +151,7 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @return Collection<CharacteristicValueObject> the terms found
      */
-    public abstract Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
+    public abstract Collection<CharacteristicValueObject> findExperimentMgedCategory();
 
     /**
      * for a given search string look in the database and Ontology for matches
@@ -161,7 +161,7 @@ public interface PhenotypeAssociationManagerService {
      * @param taxonId the taxon id (can be null)
      * @return Collection<CharacteristicValueObject> the terms found
      */
-    public abstract Collection<CharacteristicValueObject> searchOntologyForExperimentEvidenceTag(
+    public abstract Collection<CharacteristicValueObject> findExperimentOntologyValue(
             String givenQueryString, String categoryUri, Long taxonId );
 
     public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );

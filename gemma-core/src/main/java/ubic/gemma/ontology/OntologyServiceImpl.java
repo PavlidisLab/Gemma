@@ -262,7 +262,7 @@ public class OntologyServiceImpl implements  OntologyService {
         Collection<Characteristic> terms = findExactTerm(givenQueryString, categoryUri, taxon);
         return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
         
-    };
+    }
     /* (non-Javadoc)
      * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String, ubic.gemma.model.genome.Taxon)
      */
