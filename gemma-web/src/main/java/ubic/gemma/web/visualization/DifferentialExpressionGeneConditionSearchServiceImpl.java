@@ -39,7 +39,10 @@ import net.sf.ehcache.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -112,11 +115,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
         this.diffExpSearchTasksCache = new Cache( "DifferentialExpressionVisSearchTasks", 300, false, false, 3600, 3600 );
         this.cacheManager.addCache( this.diffExpSearchTasksCache );
     }
-
+    
     private class DifferentialExpressionSearchTask implements
             Callable<DifferentialExpressionGenesConditionsValueObject> {
         // private Log log = LogFactory.getLog( DifferentialExpressionSearchTask.class.getName() );
-
         private List<List<Gene>> genes;
         private List<Collection<ExpressionExperiment>> experiments;
         private List<String> geneGroupNames;
@@ -375,11 +377,19 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
             int resultSetBatchIndex = 0;
             List<ExpressionAnalysisResultSet> resultSetBatch = getResultSetBatch( resultSets, resultSetBatchIndex );
             while ( resultSetBatch != null ) {
+                
+                Collection<ArrayDesign> arrayDesignsUsed = new ArrayList<ArrayDesign>();
+
+                for ( ExpressionAnalysisResultSet rs : resultSetBatch ) {
+                    arrayDesignsUsed.addAll( expressionExperimentDao.getArrayDesignsUsed( ( BioAssaySet ) rs
+                            .getAnalysis().getExperimentAnalyzed() ) );
+                }
+                
                 int geneBatchIndex = 0;
                 List<Long> geneBatch = getGeneBatch( geneIds, geneBatchIndex );
                 while ( geneBatch != null ) {
 
-                    fillBatchOfHeatmapCells( resultSetBatch, geneBatch, searchResult );
+                    fillBatchOfHeatmapCells( resultSetBatch, geneBatch, arrayDesignsUsed, searchResult );
 
                     geneBatch = getGeneBatch( geneIds, geneBatchIndex );
                     geneBatchIndex++;
@@ -393,20 +403,14 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
             }
         }
 
-        private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSetBatch, List<Long> geneIdBatch,
-                DifferentialExpressionGenesConditionsValueObject searchResult ) {
+        private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSetBatch, 
+                                              List<Long> geneIdBatch,
+                                              Collection<ArrayDesign> arrayDesignsUsed,
+                                              DifferentialExpressionGenesConditionsValueObject searchResult ) {
+            
             ExpressionAnalysisResultSet resultSet = resultSetBatch.iterator().next();
 
             StopWatch watch = new StopWatch( "" );
-            Collection<ArrayDesign> arrayDesignsUsed = new ArrayList<ArrayDesign>();
-            watch.start( "Get array designs used." );
-
-            for ( ExpressionAnalysisResultSet rs : resultSetBatch ) {
-                arrayDesignsUsed.addAll( expressionExperimentDao.getArrayDesignsUsed( ( BioAssaySet ) rs
-                        .getAnalysis().getExperimentAnalyzed() ) );
-            }
-            watch.stop();
-
             watch.start( "Batched call" );
             Map<Long, DiffExprGeneSearchResult> geneToProbeResult = differentialExpressionResultService
                     .findProbeAnalysisResultIdsInResultSet( resultSet.getId(), geneIdBatch, getADIds( arrayDesignsUsed ) );
