@@ -75,7 +75,7 @@ Ext.Panel, {
         }, this);
 
 
-        this.addEvents('stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryUpdateFromCoexpressionViz');
+        this.addEvents('stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryUpdateFromCoexpressionViz','coexWarningAlreadyDisplayed');
         this.relayEvents(this.display, ['doneDrawingCytoscape']);
 
     },
@@ -106,6 +106,8 @@ Ext.Panel, {
     },
 
     newSearchForLowerStringencyHandler: function (stringencyValue) {
+    	
+    	if (!this.warningAlreadyDisplayed){
 
         Ext.Msg.show({
             title: 'New Search',
@@ -116,34 +118,47 @@ Ext.Panel, {
             },
             fn: function (btn) {
                 if (btn == 'ok') {
-                    this.currentbbarText = null;
-                    this.getBottomToolbar().hide();
-                    this.doLayout();
-
-                    var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(stringencyValue);
-
-                    Ext.apply(
-                    this.coexCommand, {
-                        stringency: resultsStringency,
-                        displayStringency: stringencyValue,
-                        geneIds: this.currentQueryGeneIds,
-                        queryGenesOnly: false
-                    });
+                	this.fireEvent('coexWarningAlreadyDisplayed');
+                	this.warningAlreadyDisplayed = true;
+                	this.newSearchForLowerStringencyHandlerNoWarning(stringencyValue);
                     
-                    this.display.updateStringency(stringencyValue);
-
-                    this.loadMask.show();
-                    ExtCoexpressionSearchController.doSearchQuick2(
-                    this.coexCommand, {
-                        callback: this.initialCoexSearchCallback.createDelegate(this)
-
-                    });
                 } else {
                     this.display.updateStringency();
                 }
             }.createDelegate(this)
         });
+        
+    	} else {
+    		this.newSearchForLowerStringencyHandlerNoWarning(stringencyValue);    		
+    	}
 
+    },
+    
+    newSearchForLowerStringencyHandlerNoWarning: function (stringencyValue){
+    	
+    	this.currentbbarText = null;
+        this.getBottomToolbar().hide();
+        this.doLayout();
+
+        var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(stringencyValue);
+
+        Ext.apply(
+        this.coexCommand, {
+            stringency: resultsStringency,
+            displayStringency: stringencyValue,
+            geneIds: this.currentQueryGeneIds,
+            queryGenesOnly: false
+        });
+        
+        this.display.updateStringency(stringencyValue);
+
+        this.loadMask.show();
+        ExtCoexpressionSearchController.doSearchQuick2(
+        this.coexCommand, {
+            callback: this.initialCoexSearchCallback.createDelegate(this)
+
+        });
+    	
     },
 
     reRunSearchWithSelectedNodes: function (selectedNodes) {

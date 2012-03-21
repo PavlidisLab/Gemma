@@ -366,7 +366,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			
 			this.coexStringencyUpdate(trimmedData, displayStringency);
 					
-		}, this);	
+		}, this);
+		
+		this.on('coexWarningAlreadyDisplayed', function () {
+			
+			this.warningAlreadyDisplayed = true;
+					
+		}, this);
 		
 		this.on('dataUpdateFromCoexpressionViz', function (knownGeneResults, currentQueryGeneIds, currentResultsStringency, displayStringency) {
 			
@@ -379,137 +385,111 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (!this.lite) {
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
-
-                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-
-                if (spinner.getValue() >= this.currentResultsStringency) {
-
-                    var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
-                    
-                    var filteredData;
-            		//filter away non-query genes
-            		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmed.trimmedKnownGeneResults);
-                    
-                    
-                    this.loadData(false, 2,filteredData, null);
-                    
-                    //update cytoscape                 
-                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.display.ready){
-                    	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed);
-                    	
-                    }
-                    this.lastSpinnerValue = spinner.getValue();                    
-
-                } else {
-                	
-                	
-                	Ext.Msg.show({title:'New Search',
-                    	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
-                    	buttons: {ok: 'Proceed', cancel: 'Cancel'},
-                    	fn: function (
-                            btn) {
-
-                                if (btn == 'ok') {
-                                	
-                                	//different behaviour based on whether visualization has loaded or not
-                                	if (this.cytoscapeRef && this.cytoscapeRef.display.ready){
-                                		this.getBottomToolbar().hide();
-                                		this.doLayout();
-                                		this.cytoscapeRef.getBottomToolbar().hide();
-                                		//if cytoscape tab has been loaded
-                                		this.cytoscapeLoadedSearch();
-                                	}
-                                	else{
-                                		this.getBottomToolbar().hide();
-                                		this.doLayout();
-                                		//visualization tab has not been activated yet do a regular search
-                                		this.regularSearch();
-                                		                		
-                                	}                                	
-                                	
-
-                                } else {
-                                    spinner.setValue(spinner.getValue()+1);
-                                }
-                            }.createDelegate(this), scope: this});
-                	
-                }
+            	
+            	this.stringencyChange();
 
             }, this);
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
             	
             	if (e.getKey() == e.ENTER) {
-
-                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-             
-                if (spinner.getValue() >= this.currentResultsStringency) {
-
-                    var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
-                    
-                    var filteredData;
-            		//filter away non-query genes
-            		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmed.trimmedKnownGeneResults);
-                    
-                    this.loadData(false, 2, filteredData, null);
-                    
-                    //update cytoscape                 
-                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.display.ready){
-                    	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed);
-                    	
-                    }
-                    
-                    this.lastSpinnerValue = spinner.getValue();
-                    
-
-                }else {
-                	
-                	
-                	Ext.Msg.show({title:'New Search',
-                    	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
-                    	buttons: {ok: 'Proceed', cancel: 'Cancel'},
-                    	fn: function (
-                            btn) {
-
-                                if (btn == 'ok') {
-                                	
-                                	//different behaviour based on whether visualization has loaded or not
-                                	if (this.cytoscapeRef && this.cytoscapeRef.display.ready){
-                                		this.getBottomToolbar().hide();
-                                		this.doLayout();
-                                		this.cytoscapeRef.getBottomToolbar().hide();
-                                		//if cytoscape tab has been loaded
-                                		this.cytoscapeLoadedSearch();
-                                	}
-                                	else{
-                                		//visualization tab has not been activated yet do a regular search
-                                		this.getBottomToolbar().hide();
-                                		this.doLayout();
-                                		this.regularSearch();
-                                		                		
-                                	}                                	
-                                	
-
-                                } else {
-                                    spinner.setValue(this.lastSpinnerValue);
-                                }
-                            }.createDelegate(this), scope:this});
-                	
-                }
-                
+            		this.stringencyChange();
             	}
 
             }, this);
             
 		}
-
-            
-        
-		
 		
 	},
+	
+	stringencyChange: function(){
+		
+		var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+
+        if (spinner.getValue() >= this.currentResultsStringency) {
+        	
+        	this.stringencyChangeHandler(spinner.getValue());
+
+        } else {
+        	
+        	this.newSearchForLowerStringencyHandler(spinner.getValue());
+        	
+        }
+		
+	},
+	
+	stringencyChangeHandler: function(stringencyValue){
+		
+		var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
+        
+        var filteredData;
+		//filter away non-query genes
+		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmed.trimmedKnownGeneResults);
+        
+        
+        this.loadData(false, 2,filteredData, null);
+        
+        //update cytoscape                 
+        if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.display.ready){
+        	
+        	this.cytoscapeRef.stringencyUpdate(stringencyValue, trimmed);
+        	
+        }
+        this.lastSpinnerValue = stringencyValue;
+		
+	},
+	
+	newSearchForLowerStringencyHandler: function (stringencyValue){
+		
+		if (!this.warningAlreadyDisplayed){
+		
+		Ext.Msg.show({title:'New Search',
+        	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
+        	buttons: {ok: 'Proceed', cancel: 'Cancel'},
+        	fn: function (
+                btn) {
+
+                    if (btn == 'ok') {
+                    	this.warningAlreadyDisplayed = true;
+                    	if (this.cytoscapeRef){
+                    		this.cytoscapeRef.warningAlreadyDisplayed=true;
+                    	}
+                    	this.newSearchForLowerStringencyHandlerNoWarning();                   	
+
+                    } else {
+                    	
+                    	var spinner = this.getTopToolbar().getComponent('stringencySpinner');                    	
+                        spinner.setValue(this.lastSpinnerValue);
+                    }
+                }.createDelegate(this), scope: this});
+		
+		} else {
+			
+			this.newSearchForLowerStringencyHandlerNoWarning();
+			
+		}
+		
+	},
+	
+	newSearchForLowerStringencyHandlerNoWarning: function (){
+		
+		//different behaviour based on whether visualization has loaded or not
+    	if (this.cytoscapeRef && this.cytoscapeRef.display.ready){
+    		this.getBottomToolbar().hide();
+    		this.doLayout();
+    		this.cytoscapeRef.getBottomToolbar().hide();
+    		//if cytoscape tab has been loaded
+    		this.cytoscapeLoadedSearch();
+    	}
+    	else{
+    		this.getBottomToolbar().hide();
+    		this.doLayout();
+    		//visualization tab has not been activated yet do a regular search
+    		this.regularSearch();
+    		                		
+    	}            
+		
+	},	
 
 	getSupportingDatasetRecords : function(record, grid) {
 		var ids = record.data.supportingExperiments;

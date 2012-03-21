@@ -213,7 +213,7 @@ Ext.onReady(function() {
 		resultsPanel.add(knownGeneGrid);
 		resultsPanel.add(cytoscapePanel);	
 	        
-	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz']);	    
+	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'coexWarningAlreadyDisplayed']);	    
 	    searchPanel.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz']);
 	    
 		// won't fire the render event if it's already rendered
