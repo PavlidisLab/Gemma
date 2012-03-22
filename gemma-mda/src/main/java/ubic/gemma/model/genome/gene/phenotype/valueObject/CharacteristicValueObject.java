@@ -107,7 +107,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.category = vocabCharacteristic.getCategory();
         this.categoryUri = vocabCharacteristic.getCategoryUri();
         this.value = vocabCharacteristic.getValue();
-        this.id = vocabCharacteristic.getId();
+        if (vocabCharacteristic.getId() != null) {
+            this.id = vocabCharacteristic.getId(); 
+        }
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
