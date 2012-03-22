@@ -74,7 +74,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
                 characteristicValueObject.setAlreadyPresentInDatabase( true );
             }
-            characteristicValueObject.setId( characteristic.getId() );
         }
         return characteristicValueObjects;
     }
@@ -108,11 +107,13 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.category = vocabCharacteristic.getCategory();
         this.categoryUri = vocabCharacteristic.getCategoryUri();
         this.value = vocabCharacteristic.getValue();
+        this.id = vocabCharacteristic.getId();
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
         this.category = characteristic.getCategory();
         this.value = characteristic.getValue();
+        this.id = characteristic.getId();
     }
 
     public long getPublicGeneCount() {
