@@ -28,7 +28,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
-    private long id = 0L;
+    private Long id = 0L; // needs to be able to be null
     /** id used by url on the client side */
     private String urlId = "";
 
