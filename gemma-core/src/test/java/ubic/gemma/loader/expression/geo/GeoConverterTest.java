@@ -39,10 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -85,11 +83,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Transactional
     public void testArrayTaxonDifferentToSampleTaxon() throws Exception {
 
-        TaxonService tService = this.getBean( TaxonService.class );
-        
-        Taxon rainbowTrout = tService.findByAbbreviation( "omyk" );
+        Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
         assertNotNull( rainbowTrout );
-        Taxon atlanticSalm = tService.findByAbbreviation( "ssal" );
+        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
         assertNotNull( atlanticSalm );
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE2388_family.soft.gz" ) );
@@ -748,12 +744,10 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
         // }
 
-        TaxonService tService = this.getBean( TaxonService.class );
-        
-        Taxon rainbowTroat = tService.findByAbbreviation( "omyk" );
-        Taxon whiteFish = tService.findByAbbreviation( "cclu" );
-        Taxon rainbowSmelt = tService.findByAbbreviation( "omor" );
-        Taxon atlanticSalm = tService.findByAbbreviation( "ssal" );
+        Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
+        Taxon whiteFish = taxonService.findByAbbreviation( "cclu" );
+        Taxon rainbowSmelt = taxonService.findByAbbreviation( "omor" );
+        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
 
         assertNotNull( atlanticSalm );
 
@@ -908,15 +902,12 @@ public class GeoConverterTest extends BaseSpringContextTest {
     public final void testGetPrimaryArrayTaxon() throws Exception {
         Collection<Taxon> platformTaxa = new HashSet<Taxon>();
         Collection<String> probeTaxa = new ArrayList<String>();
-        
-        TaxonService tService = this.getBean( TaxonService.class );
-        
-        Taxon salmonid = tService.findByCommonName( "salmonid" );
-        Taxon rainbowTroat = tService.findByAbbreviation( "omyk" );
-        Taxon atlanticSalm = tService.findByAbbreviation( "ssal" );
+        Taxon salmonid = taxonService.findByCommonName( "salmonid" );
+        Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
+        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
         atlanticSalm.setParentTaxon( salmonid );
         rainbowTroat.setParentTaxon( salmonid );
-        Taxon human = tService.findByCommonName( "human" );
+        Taxon human = taxonService.findByCommonName( "human" );
 
         platformTaxa.add( atlanticSalm );
         probeTaxa.add( "ssal" );
