@@ -164,16 +164,15 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getHover : function(value, record) {
-		return (record.valueUri)? record.valueUri: 
-				(record.category)? record.category:
+		return (record.valueUri && record.valueUri != null && record.valueUri != "")? record.valueUri: 
+				(record.category && record.category != null && record.category != "")? record.category:
 				  '';
 	},
-	getStyle : function(value, record) {
-		if (record.alreadyPresentInDatabase) {
-			return record.valueUri ? "usedWithUri" : "usedNoUri";
-		} else {
-			return record.valueUri ? "unusedWithUri" : "unusedNoUri";
-		}
+	getStyle: function(value, record){
+		var isUsed = record.alreadyPresentInDatabase ? 'used': 'unused';
+		var hasURI = (record.valueUri && record.valueUri != null && record.valueUri != "") ? 
+			"WithUri" : "NoUri";
+		return isUsed+hasURI;
 	}
 
 });
