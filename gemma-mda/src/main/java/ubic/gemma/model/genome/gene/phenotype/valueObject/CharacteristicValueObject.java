@@ -74,6 +74,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
                 characteristicValueObject.setAlreadyPresentInDatabase( true );
             }
+            characteristicValueObject.setId( characteristic.getId() );
         }
         return characteristicValueObjects;
     }
