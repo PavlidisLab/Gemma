@@ -163,21 +163,13 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 		this.characteristic.categoryUri = categoryUri;
 	},
 
-	/*
-	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added
-	 * server-side)F if present.
-	 */
 	getHover : function(value, record) {
-		if (record.valueUri) {
-			return record.valueUri;
-		} else {
-			return (record.description.substring(0, 8) == " -USED- ")
-					? record.description.substring(8)
-					: record.description;
-		}
+		return (record.valueUri)? record.valueUri: 
+				(record.category)? record.category:
+				  '';
 	},
 	getStyle : function(value, record) {
-		if (record.description && record.description.substring(0, 8) == " -USED- ") {
+		if (record.alreadyPresentInDatabase) {
 			return record.valueUri ? "usedWithUri" : "usedNoUri";
 		} else {
 			return record.valueUri ? "unusedWithUri" : "unusedNoUri";
