@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -45,7 +46,7 @@ import ubic.gemma.model.genome.Gene;
  * @author pavlidis
  * @version $Id$
  */
-@Controller
+@Service
 public class AuditController {
 
     private static Log log = LogFactory.getLog( AuditController.class.getName() );
