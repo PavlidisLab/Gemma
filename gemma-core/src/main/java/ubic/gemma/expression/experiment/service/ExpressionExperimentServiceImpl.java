@@ -73,6 +73,7 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.security.SecurityService;
 
 /**
  * @author pavlidis
@@ -84,6 +85,9 @@ import ubic.gemma.search.SearchSettings;
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
     private Log log = LogFactory.getLog( this.getClass() );
+    
+    @Autowired
+    private SecurityService securityService;
 
     @Autowired
     private SearchService searchService;
@@ -164,7 +168,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public void delete( final Long id ) {
         try {
             final ExpressionExperiment ee = this.load( id );
-            this.handleDelete( ee );
+            if(securityService.isEditable( ee )){
+                this.handleDelete( ee );
+            }else{
+                throw new SecurityException("Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "+
+                        " You do not have permission to edit this experiment.");
+            }
+            
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
