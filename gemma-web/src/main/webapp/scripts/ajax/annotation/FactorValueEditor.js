@@ -7,11 +7,9 @@ Ext.namespace('Gemma');
  * @version $Id$
  */
 Gemma.FactorValueRecord = Ext.data.Record.create([{
-						name : "charId",
-						type : "int"
+						name : "charId"
 					}, {
-						name : "id",
-						type : "int"
+						name : "id"
 					}, {
 						name : "category",
 						type : "string"
