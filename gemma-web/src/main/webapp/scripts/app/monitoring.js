@@ -33,24 +33,26 @@ Ext.onReady(function() {
 			function handleSpaceStatus(data) {
 				Ext.DomHelper.overwrite("spaceStats", data);
 			}
+
 });
-			function flushAllCaches() {
+
+			function clearAllCaches() {
 				Ext.Msg.show({
 							title : 'Are you sure?',
-							msg : 'Flush all caches?',
+							msg : 'Clear all caches?',
 							buttons : Ext.Msg.YESNO,
-							fn : processFlushAllCachesResult,
+							fn : processClearAllCachesResult,
 							animEl : 'cacheStats',
 							icon : Ext.MessageBox.QUESTION
 						});
 			}
 
-			function flushCache(name) {
+			function clearCache(name) {
 				Ext.Msg.show({
 							title : 'Are you sure?',
-							msg : 'Flush ' + name + ' cache?',
+							msg : 'Clear ' + name + ' cache?',
 							buttons : Ext.Msg.YESNO,
-							fn : processFlushCacheResult,
+							fn : processClearCacheResult,
 							animEl : 'cacheStats',
 							icon : Ext.MessageBox.QUESTION,
 							cacheName : name
@@ -69,15 +71,15 @@ Ext.onReady(function() {
 						});
 			}
 
-			function processFlushCacheResult(btn, text, opt) {
+			function processClearCacheResult(btn, text, opt) {
 				if (btn == 'yes') {
-					SystemMonitorController.flushCache(opt.cacheName);
+					SystemMonitorController.clearCache(opt.cacheName);
 				}
 			}
 
-			function processFlushAllCachesResult(btn, text, opt) {
+			function processClearAllCachesResult(btn, text, opt) {
 				if (btn == 'yes') {
-					SystemMonitorController.flushAllCaches();
+					SystemMonitorController.clearAllCaches();
 				}
 			}
 
@@ -87,4 +89,3 @@ Ext.onReady(function() {
 					SystemMonitorController.getHibernateStatus(handleSuccess);
 				}
 			}
-
