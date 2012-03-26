@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
@@ -26,6 +27,7 @@ import ubic.gemma.job.TaskResult;
  * @author paul
  * @version $Id$
  */
+@Component
 public interface ProgressStatusService {
 
     /**
