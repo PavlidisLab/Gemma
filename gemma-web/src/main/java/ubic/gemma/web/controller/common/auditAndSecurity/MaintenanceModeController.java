@@ -44,20 +44,21 @@ import ubic.gemma.web.controller.WebConstants;
  */
 @Controller
 @RequestMapping("/admin/maintenanceMode.html")
-public class MaintenanceModeController extends WebApplicationObjectSupport {
+public class MaintenanceModeController {
 
     @RequestMapping(method = RequestMethod.GET)
     public String getForm() {
         return "admin/maintenanceMode";
     }
 
+    @SuppressWarnings("unchecked")
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
-        Map<String, Object> config = ( Map<String, Object> ) super.getServletContext().getAttribute( Constants.CONFIG );
+        
+        Map<String, Object> config = ( Map<String, Object> ) request.getSession().getServletContext().getAttribute( Constants.CONFIG );
 
-        /*
-         * check that the user is admin!
-         */
+        //check that the user is admin!
+        
         boolean isAdmin = SecurityServiceImpl.isUserAdmin();
 
         if ( !isAdmin ) {
