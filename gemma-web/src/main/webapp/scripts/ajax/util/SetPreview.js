@@ -185,10 +185,13 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 			this.selectionEditor.loadSetValueObject(this.selectedSetValueObject, function(){
 				this.selectionEditor.loadMask.hide();
 			}.createDelegate(this, [], false));
-		} else {
+		} else if (this.entityIds && this.entityIds.length >0){
+			
 			this.selectionEditor.loadEntities(this.entityIds, function(){
 				this.selectionEditor.loadMask.hide();
 			}.createDelegate(this, [], false));
+		} else{
+			this.selectionEditor.loadMask.hide();			
 		}
 		
 	},

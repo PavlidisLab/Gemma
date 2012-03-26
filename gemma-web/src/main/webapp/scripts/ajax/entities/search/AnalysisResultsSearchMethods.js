@@ -134,6 +134,10 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			Ext.Msg.alert("Error", "Gene(s) must be selected before continuing.");
 			this.fireEvent('searchAborted');
 			return;
+		}else if (geneSetValueObjects[0].geneIds && geneSetValueObjects[0].geneIds.length==0){
+			Ext.Msg.alert("Error", "Gene(s) must be selected before continuing.");
+			this.fireEvent('searchAborted');
+			return;
 		}
 
 		if (experimentSetValueObjects.length === 0) {

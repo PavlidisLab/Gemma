@@ -556,9 +556,15 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 					return;
 				}
 				this.hide();
-				this.fireEvent("commit", {
-							geneNames : this._geneText.getValue()
+				
+				var geneList = this._geneText.getValue();
+				
+				if (geneList.length>0){
+					this.fireEvent("commit", {
+							geneNames : geneList
 						});
+				
+				}
 			},
 
 			initComponent : function() {
