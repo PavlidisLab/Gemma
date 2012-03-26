@@ -15,6 +15,7 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -38,8 +39,9 @@ public interface GeoBrowserService {
      * @param count
      * @return
      * @throws IOException
+     * @throws ParseException 
      */
-    public abstract List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException;
+    public abstract List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
 
     /**
      * @param accession

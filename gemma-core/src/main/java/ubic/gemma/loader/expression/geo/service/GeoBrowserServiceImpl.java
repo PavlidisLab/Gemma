@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,7 +154,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * @see ubic.gemma.loader.expression.geo.service.GeoBrowserService#getRecentGeoRecords(int, int)
      */
     @Override
-    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
+    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException {
         GeoBrowser browser = new GeoBrowser();
         List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );

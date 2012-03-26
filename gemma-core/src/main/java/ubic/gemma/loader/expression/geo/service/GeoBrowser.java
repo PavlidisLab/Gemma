@@ -27,10 +27,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -48,129 +49,76 @@ import ubic.gemma.loader.expression.geo.model.GeoRecord;
 public class GeoBrowser {
 
     private static Log log = LogFactory.getLog( GeoBrowser.class.getName() );
-    private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&private=0&sorton=pub_date&sortdir=1&start=";
-    private String GEO_BROWSE_SUFFIX = "&pgsize=";
+    // mode=tsv  : tells GEO to give us tab delimited file
+    private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=tsv&page=";    
+    private String GEO_BROWSE_SUFFIX = "&display=";
 
-    private String GEO_TABLE_CELL_REGEXP = ".+?(DEEBDC|EEEEEE)\".*?>(.*?)</td>"; // allows for empty cells.
-
-    private String[] DATE_FORMATS = new String[] { "MMMM dd, yyyy" };
-
+    private String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+    
     /**
-     * For an example of the HTML used, see {@link http
-     * ://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&sorton=pub_date&sortdir=1&start=1&pgsize=10}
-     * 
-     * @param startPoint how many records in to start from. For example, 100 means start from record 100.
-     * @param numberToFetch how many, from the most recent, to fetch.
-     * @return List of GeoRecords with data on the experiments, most recent first.
+     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.   
+     *  
+     * @param startPage
+     * @param pageSize
+     * @return list of GeoRecords
      * @throws IOException
+     * @throws ParseException
      */
-    public List<GeoRecord> getRecentGeoRecords( int startPoint, int numberToFetch ) throws IOException {
-        Pattern pat = Pattern.compile( GEO_TABLE_CELL_REGEXP );
-        Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)</.+?>" );
-        URL url = null;
-
+    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException, ParseException {
+        
         List<GeoRecord> records = new ArrayList<GeoRecord>();
+        URL url = null;
         try {
-            url = new URL( GEO_BROWSE_URL + startPoint + GEO_BROWSE_SUFFIX + numberToFetch );
+            url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
 
             URLConnection conn = url.openConnection();
             conn.connect();
             InputStream is = conn.getInputStream();
+
+            // We are getting a tab delimited file.                                  
             BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String line = null;
-            int fieldnum = 0;
-            GeoRecord geoRecord = null;
+            
+            // Read columns headers.            
+            String headerLine = br.readLine();
+            String[] headers = headerLine.split( "\t" );
 
-            while ( ( line = br.readLine() ) != null ) {
-
-                if ( line.contains( "GEO Error" ) ) {
-                    throw new IOException( "GEO returned an error while trying to get records." );
-                }
-
-                Matcher mat = pat.matcher( line );
-                if ( mat.find() ) {
-                    String captured = mat.group( 2 );
-                    log.debug( "Field " + fieldnum + " Got: " + captured );
-                    switch ( fieldnum ) {
-                        case 0:
-                            if ( geoRecord != null ) {
-                                records.add( geoRecord );
-                                log.debug( "Record: " + geoRecord );
-                            }
-                            geoRecord = new GeoRecord();
-                            Pattern accath = Pattern.compile( ".+?acc=(GSE\\d+).+" );
-                            Matcher accmat = accath.matcher( captured );
-                            if ( accmat.find() ) {
-                                geoRecord.setGeoAccession( accmat.group( 1 ) );
-                            }
-                            break;
-                        case 1:
-                            if ( geoRecord != null ) geoRecord.setTitle( captured );
-                            break;
-                        case 2:
-                            try {
-                                int numSamples = Integer.parseInt( captured );
-                                if ( geoRecord != null ) geoRecord.setNumSamples( numSamples );
-                            } catch ( NumberFormatException e ) {
-                                //
-                            }
-                            break;
-                        case 3:
-                            String[] fields = captured.split( "; " );
-
-                            for ( String string : fields ) {
-                                Matcher specCap = simpleUrlPat.matcher( string );
-                                if ( specCap.find() ) {
-                                    String organism = specCap.group( 1 );
-                                    log.debug( "Organism: " + organism );
-                                    if ( geoRecord != null ) geoRecord.getOrganisms().add( organism );
-                                }
-
-                            }
-                            break;
-                        case 4:
-                            // supplementary file, skip it.
-                            break;
-                        case 5:
-                            // contact
-                            log.debug( captured );
-                            Matcher specCap = simpleUrlPat.matcher( captured );
-                            if ( !specCap.find() ) break;
-                            String contact = specCap.group( 1 );
-                            if ( geoRecord != null ) geoRecord.setContactName( contact );
-                            specCap.find();
-                            break;
-                        case 6:
-                            try {
-                                Date d = DateUtils.parseDate( captured, DATE_FORMATS );
-                                log.debug( d );
-                                if ( geoRecord != null ) geoRecord.setReleaseDate( d );
-                            } catch ( ParseException e ) {
-                                log.warn( "Could not parse date: " + captured );
-                            }
-                            fieldnum = -1; // back to start.
-                            break;
-                        default:
-                            break;
-                    }
-
-                    fieldnum++;
-                }
-
+            // Map column names to their indices (handy later). 
+            Map<String,Integer> columnNameToIndex = new HashMap<String,Integer>();
+            for (int i = 0; i < headers.length; i++) {
+                columnNameToIndex.put( headers[i], i );                
             }
-            // last one dangles
-            if ( geoRecord != null ) {
+
+            // Read the rest of the file.
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
+                String[] fields = line.split("\t");
+                
+                GeoRecord geoRecord = new GeoRecord();                
+                geoRecord.setGeoAccession ( 
+                        fields[ columnNameToIndex.get( "Accession" ) ] );
+                geoRecord.setTitle ( 
+                        fields[ columnNameToIndex.get( "Title" ) ].replaceAll("^\"|\"$", "") );
+                geoRecord.setNumSamples ( 
+                        Integer.parseInt( 
+                                fields[ columnNameToIndex.get( "Sample Count" ) ] ) );                
+                geoRecord.setContactName (
+                        fields[ columnNameToIndex.get( "Contact" ) ].replaceAll("^\"|\"$", "") );
+                                
+                String[] taxons = fields[ columnNameToIndex.get( "Taxonomy" ) ].replaceAll("^\"|\"$", "").split( ";" );
+                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+                
+                Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )].replaceAll("^\"|\"$", ""), DATE_FORMATS );
+                geoRecord.setReleaseDate( date );
+                              
                 records.add( geoRecord );
             }
+                            
             is.close();
             return records;
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Invalid URL " + url, e );
-
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Could not parse sample count" );
         }
-
     }
-
 }

@@ -40,7 +40,7 @@ import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
 public class GeoRecordBrowserController {
 
     private static final int DEFAULT_BATCH_SIZE = 50;
-    private static final int DEFAULT_START = 0;
+    private static final int DEFAULT_START_PAGE = 1;
 
     @Autowired
     private GeoBrowserService geoBrowserService;
@@ -52,7 +52,8 @@ public class GeoRecordBrowserController {
         boolean next = request.getParameter( "next" ) != null;
         boolean prev = request.getParameter( "prev" ) != null;
 
-        int start = DEFAULT_START;
+        
+        int start = 1;
         String startSt = request.getParameter( "start" );
         if ( StringUtils.isNotBlank( startSt ) ) {
             try {
@@ -63,6 +64,7 @@ public class GeoRecordBrowserController {
         }
 
         int count = DEFAULT_BATCH_SIZE;
+        int startPage = DEFAULT_START_PAGE;
 
         String batchSize = request.getParameter( "count" );
         if ( StringUtils.isNotBlank( batchSize ) ) {
@@ -102,7 +104,8 @@ public class GeoRecordBrowserController {
         }
         start = start + skip;
 
-        Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( start, count );
+        startPage = (start/count) + 1;
+        Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
 
         ModelAndView mav = new ModelAndView( "/admin/geoRecordBrowser" );
 
