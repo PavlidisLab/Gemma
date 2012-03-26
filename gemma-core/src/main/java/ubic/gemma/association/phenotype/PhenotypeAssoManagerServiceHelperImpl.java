@@ -366,58 +366,62 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         // populate common field to evidence
         populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
 
-        // we only need to create the experiment if its not already in the database
-        Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
-                .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession() );
-
         GenericExperiment genericExperiment = null;
 
-        // for the list received we need to check each one to see if they are the same
-        for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
+        if ( evidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
 
-            boolean sameFound = true;
+            // we only need to create the experiment if its not already in the database
+            Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
+                    .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject()
+                            .getPubmedAccession() );
 
-            HashSet<String> relevantPublication = new HashSet<String>();
+            // for the list received we need to check each one to see if they are the same
+            for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
 
-            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsCitationValueObjects() ) {
+                boolean sameFound = true;
 
-                relevantPublication.add( relevantPubli.getPubmedAccession() );
-            }
+                HashSet<String> relevantPublication = new HashSet<String>();
 
-            for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
+                for ( CitationValueObject relevantPubli : evidenceValueObject
+                        .getRelevantPublicationsCitationValueObjects() ) {
 
-                // same relevant pubmed
-                if ( !relevantPublication.contains( bilbi.getPubAccession().getAccession() ) ) {
-                    sameFound = false;
+                    relevantPublication.add( relevantPubli.getPubmedAccession() );
                 }
-            }
 
-            // list of all values for a characteristic
-            Collection<String> values = new HashSet<String>();
+                for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
 
-            for ( CharacteristicValueObject characteristic : evidenceValueObject.getExperimentCharacteristics() ) {
-                values.add( characteristic.getValue() );
-            }
-
-            if ( values.size() != genericExp.getCharacteristics().size() ) {
-                sameFound = false;
-            } else {
-
-                for ( Characteristic cha : genericExp.getCharacteristics() ) {
-                    if ( !values.contains( cha.getValue() ) ) {
+                    // same relevant pubmed
+                    if ( !relevantPublication.contains( bilbi.getPubAccession().getAccession() ) ) {
                         sameFound = false;
                     }
                 }
-            }
 
-            // the Investigation is already present in the database so we can reuse it
-            if ( sameFound ) {
-                System.out
-                        .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
-                genericExperiment = genericExp;
+                // list of all values for a characteristic
+                Collection<String> values = new HashSet<String>();
+
+                for ( CharacteristicValueObject characteristic : evidenceValueObject.getExperimentCharacteristics() ) {
+                    values.add( characteristic.getValue() );
+                }
+
+                if ( values.size() != genericExp.getCharacteristics().size() ) {
+                    sameFound = false;
+                } else {
+
+                    for ( Characteristic cha : genericExp.getCharacteristics() ) {
+                        if ( !values.contains( cha.getValue() ) ) {
+                            sameFound = false;
+                        }
+                    }
+                }
+
+                // the Investigation is already present in the database so we can reuse it
+                if ( sameFound ) {
+                    System.out
+                            .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
+                    genericExperiment = genericExp;
+                }
             }
         }
-
         // we didn't find the experiment in the database
         if ( genericExperiment == null ) {
 
@@ -425,18 +429,22 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             genericExperiment = GenericExperiment.Factory.newInstance();
 
             // find all pubmed id from the value object
-            String primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject()
-                    .getPubmedAccession();
+            String primaryPubmedId = null;
+
+            if ( evidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
+
+                primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession();
+                genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
+            }
 
             Collection<String> relevantPubmedId = new HashSet<String>();
 
-            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsCitationValueObjects() ) {
+            for ( CitationValueObject citationValueObject : evidenceValueObject
+                    .getRelevantPublicationsCitationValueObjects() ) {
 
                 relevantPubmedId.add( citationValueObject.getPubmedAccession() );
             }
 
-            // creates or find those Bibliographic Reference and add them to the GenericExperiment
-            genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
             genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
 
             // characteristics for an experiment
@@ -548,7 +556,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         return bibRef;
     }
-    
+
     @Override
     public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
         this.ontologyHelper = ontologyHelper;

@@ -40,8 +40,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             EvidenceSourceValueObject evidenceSource, String primaryPublication, Set<String> relevantPublication,
             Set<CharacteristicValueObject> experimentCharacteristics ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
-        this.primaryPublicationCitationValueObject = new CitationValueObject();
-        this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
+
+        if ( primaryPublication != null ) {
+            this.primaryPublicationCitationValueObject = new CitationValueObject();
+            this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
+        }
 
         for ( String relevantPubMedID : relevantPublication ) {
             CitationValueObject relevantPublicationValueObject = new CitationValueObject();
@@ -97,10 +100,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return this.experimentCharacteristics;
     }
 
-	public void setExperimentCharacteristics(
-			Set<CharacteristicValueObject> experimentCharacteristics) {
-		this.experimentCharacteristics = experimentCharacteristics;
-	}
+    public void setExperimentCharacteristics( Set<CharacteristicValueObject> experimentCharacteristics ) {
+        this.experimentCharacteristics = experimentCharacteristics;
+    }
 
     public Set<CitationValueObject> getRelevantPublicationsCitationValueObjects() {
         return this.relevantPublicationsCitationValueObjects;
@@ -115,10 +117,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return this.primaryPublicationCitationValueObject;
     }
 
-	public void setPrimaryPublicationCitationValueObject(
-			CitationValueObject primaryPublicationCitationValueObject) {
-		this.primaryPublicationCitationValueObject = primaryPublicationCitationValueObject;
-	}
+    public void setPrimaryPublicationCitationValueObject( CitationValueObject primaryPublicationCitationValueObject ) {
+        this.primaryPublicationCitationValueObject = primaryPublicationCitationValueObject;
+    }
 
     @Override
     public int hashCode() {

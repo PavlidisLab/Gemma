@@ -162,6 +162,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .valueObject2Entity( evidence );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
+        gene.getPhenotypeAssociations().add( phenotypeAssociation );
+        this.geneService.update( gene );
 
         return validateEvidenceValueObject;
     }
