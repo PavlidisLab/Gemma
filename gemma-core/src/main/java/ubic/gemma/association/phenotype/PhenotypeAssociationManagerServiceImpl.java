@@ -27,15 +27,12 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -79,9 +76,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private PhenotypeAssociationService associationService;
 
     @Autowired
-    private GeneService geneService;
-
-    @Autowired
     private PhenotypeAssoManagerServiceHelper phenotypeAssoManagerServiceHelper;
 
     @Autowired
@@ -111,8 +105,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
-    private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class.getName() );
-
     @Override
     public void afterPropertiesSet() throws Exception {
         this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
@@ -138,33 +130,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        Gene gene = this.geneService.findByNCBIId( evidence.getGeneNCBI() );
-
-        if ( gene == null ) {
-            throw new IllegalArgumentException( "Cannot find the geneNCBI id in Gemma: " + evidence.getGeneNCBI() );
-        }
-
-        Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
-                .getPhenotypeAssociations() );
-
-        // verify that the evidence is not a duplicate
-        for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
-            if ( evidenceFound.equals( evidence ) ) {
-                // the evidence already exists, no need to create it again
-                log.warn( "Trying to create an Evidence already present in the database" );
-
-                validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                return validateEvidenceValueObject;
-            }
+        if ( isEvidenceAlreadyInDatabase( evidence ) ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setSameEvidenceFound( true );
+            return validateEvidenceValueObject;
         }
 
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .valueObject2Entity( evidence );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
-        gene.getPhenotypeAssociations().add( phenotypeAssociation );
-        this.geneService.update( gene );
 
         return validateEvidenceValueObject;
     }
@@ -353,8 +328,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return validateEvidenceValueObject;
         }
 
-        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
-
         // check for the race condition
         if ( phenotypeAssociation.getStatus().getLastUpdateDate().getTime() != modifedEvidenceValueObject
                 .getLastUpdated() ) {
@@ -362,6 +335,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             validateEvidenceValueObject.setLastUpdateDifferent( true );
             return validateEvidenceValueObject;
         }
+
+        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
 
         // evidence type changed
         if ( !evidenceValueObject.getClass().equals( modifedEvidenceValueObject.getClass() ) ) {
@@ -625,6 +600,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
+
+        if ( isEvidenceAlreadyInDatabase( evidence ) ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setSameEvidenceFound( true );
+            return validateEvidenceValueObject;
+        }
 
         if ( evidence instanceof LiteratureEvidenceValueObject ) {
 
@@ -1029,10 +1010,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = validateEvidenceParameterValueObject;
 
+        // rule to determine if its an Update
+        if ( evidence.getId() != null ) {
+
+            PhenotypeAssociation phenotypeAssociation = this.associationService.load( evidence.getId() );
+
+            if ( phenotypeAssociation == null ) {
+                validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                validateEvidenceValueObject.setEvidenceNotFound( true );
+                return;
+            }
+
+            // check for the race condition
+            if ( phenotypeAssociation.getStatus().getLastUpdateDate().getTime() != evidence.getLastUpdated() ) {
+                validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                validateEvidenceValueObject.setLastUpdateDifferent( true );
+                return;
+            }
+        }
+
         for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
                 .getBibliographicPhenotypes() ) {
 
-            // we are using validate in update
             if ( evidence.getId() != null ) {
                 // dont compare evidence to itself since it already exists
                 if ( evidence.getId().equals( bibliographicPhenotypesValueObject.getEvidenceId() ) ) {
@@ -1094,5 +1093,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
             }
         }
+    }
+
+    /** checks to see if the evidence is already in the database */
+    private boolean isEvidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI() );
+
+        Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject
+                .convert2ValueObjects( phenotypeAssociations );
+
+        // verify that the evidence is not a duplicate
+        for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
+            if ( evidenceFound.equals( evidence ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 }

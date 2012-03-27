@@ -11,6 +11,7 @@ public class ValidateEvidenceValueObject {
     private boolean evidenceNotFound = false;
     private boolean accessDenied = false;
     private boolean userNotLoggedIn = false;
+    private boolean sameEvidenceFound = false;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -69,7 +70,7 @@ public class ValidateEvidenceValueObject {
     }
 
 	public boolean isAccessDenied() {
-		return accessDenied;
+		return this.accessDenied;
 	}
 
 	public void setAccessDenied(boolean accessDenied) {
@@ -77,10 +78,19 @@ public class ValidateEvidenceValueObject {
 	}
 
 	public boolean isUserNotLoggedIn() {
-		return userNotLoggedIn;
+		return this.userNotLoggedIn;
 	}
 
 	public void setUserNotLoggedIn(boolean userNotLoggedIn) {
 		this.userNotLoggedIn = userNotLoggedIn;
 	}
+
+    public boolean isSameEvidenceFound() {
+        return this.sameEvidenceFound;
+    }
+
+    public void setSameEvidenceFound( boolean sameEvidenceFound ) {
+        this.sameEvidenceFound = sameEvidenceFound;
+    }
+	
 }
