@@ -43,6 +43,8 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		var isPublic = securityInfo.publiclyReadable;
 		var isShared = securityInfo.shared;
 		var canEdit = securityInfo.currentUserOwns;
+		
+		var ownerName = securityInfo.owner.authority;
 
 		var readers = securityInfo.groupsThatCanRead;
 		var writers = securityInfo.groupsThatCanWrite;
@@ -128,7 +130,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		privateReadingFieldSet.on('expand', function(){
 			publicReadingFieldSet.collapse();
 		},this);
-		
+				
 		var readerFieldSet = {
 			width: widgetWidth,
             xtype:'fieldset',
@@ -194,7 +196,12 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 					},
 					// this set up method will not work if >1 of these windows per page
 					// for now that can't happen so this is ok
-					items : [readerFieldSet,writerFieldSet],
+					items : [{
+						xtype: 'panel',
+						html: "<b>Owner</b>: " + ownerName,
+						border:false,
+						padding: '10'
+					}, readerFieldSet,writerFieldSet],
 					buttons : [{
 						text : "Save changes",
 						disabled : !canEdit,
