@@ -42,7 +42,6 @@ import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
@@ -318,6 +317,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( modifedEvidenceValueObject.getId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
+        }
+
+        if ( isEvidenceAlreadyInDatabase( modifedEvidenceValueObject ) ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setSameEvidenceFound( true );
+            return validateEvidenceValueObject;
         }
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
@@ -612,42 +617,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             String pubmedId = ( ( LiteratureEvidenceValueObject ) evidence ).getCitationValueObject()
                     .getPubmedAccession();
 
-            BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmedId );
+            validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, pubmedId );
 
-            if ( bibliographicReferenceValueObject == null ) {
-                validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                validateEvidenceValueObject.setPubmedIdInvalid( true );
-            } else {
-                determineSameGeneAndPhenotypeAnnotated( bibliographicReferenceValueObject, evidence,
-                        validateEvidenceValueObject );
-            }
         } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
 
             ExperimentalEvidenceValueObject experimentalEvidenceValueObject = ( ExperimentalEvidenceValueObject ) evidence;
 
-            Set<String> pubmeds = new HashSet<String>();
-
             if ( experimentalEvidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
-                pubmeds.add( experimentalEvidenceValueObject.getPrimaryPublicationCitationValueObject()
-                        .getPubmedAccession() );
-            }
-            for ( CitationValueObject citationValueObject : experimentalEvidenceValueObject
-                    .getRelevantPublicationsCitationValueObjects() ) {
-                pubmeds.add( citationValueObject.getPubmedAccession() );
-            }
 
-            for ( String pubmed : pubmeds ) {
-
-                BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmed );
-
-                if ( bibliographicReferenceValueObject == null ) {
-                    validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                    validateEvidenceValueObject.setPubmedIdInvalid( true );
-                    return validateEvidenceValueObject;
-                }
-
-                determineSameGeneAndPhenotypeAnnotated( bibliographicReferenceValueObject, evidence,
-                        validateEvidenceValueObject );
+                String pubmedId = experimentalEvidenceValueObject.getPrimaryPublicationCitationValueObject()
+                        .getPubmedAccession();
+                validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, pubmedId );
             }
         }
         return validateEvidenceValueObject;
@@ -1004,95 +984,111 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** populates the ValidateEvidenceValueObject with the correct flags if necessary */
-    private void determineSameGeneAndPhenotypeAnnotated(
-            BibliographicReferenceValueObject bibliographicReferenceValueObject, EvidenceValueObject evidence,
-            ValidateEvidenceValueObject validateEvidenceParameterValueObject ) {
+    private ValidateEvidenceValueObject determineSameGeneAndPhenotypeAnnotated( EvidenceValueObject evidence,
+            String pubmed ) {
 
-        ValidateEvidenceValueObject validateEvidenceValueObject = validateEvidenceParameterValueObject;
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        // rule to determine if its an Update
-        if ( evidence.getId() != null ) {
+        BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmed );
 
-            PhenotypeAssociation phenotypeAssociation = this.associationService.load( evidence.getId() );
+        if ( bibliographicReferenceValueObject == null ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setPubmedIdInvalid( true );
+        } else {
 
-            if ( phenotypeAssociation == null ) {
-                validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                validateEvidenceValueObject.setEvidenceNotFound( true );
-                return;
-            }
-
-            // check for the race condition
-            if ( phenotypeAssociation.getStatus().getLastUpdateDate().getTime() != evidence.getLastUpdated() ) {
-                validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                validateEvidenceValueObject.setLastUpdateDifferent( true );
-                return;
-            }
-        }
-
-        for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
-                .getBibliographicPhenotypes() ) {
-
+            // rule to determine if its an Update
             if ( evidence.getId() != null ) {
-                // dont compare evidence to itself since it already exists
-                if ( evidence.getId().equals( bibliographicPhenotypesValueObject.getEvidenceId() ) ) {
-                    continue;
+
+                PhenotypeAssociation phenotypeAssociation = this.associationService.load( evidence.getId() );
+
+                if ( phenotypeAssociation == null ) {
+                    validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                    validateEvidenceValueObject.setEvidenceNotFound( true );
+                    return validateEvidenceValueObject;
+                }
+
+                // check for the race condition
+                if ( phenotypeAssociation.getStatus().getLastUpdateDate().getTime() != evidence.getLastUpdated() ) {
+                    validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                    validateEvidenceValueObject.setLastUpdateDifferent( true );
+                    return validateEvidenceValueObject;
                 }
             }
 
-            // look if the gene have already been annotated
-            if ( evidence.getGeneNCBI().equals( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
+            for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
+                    .getBibliographicPhenotypes() ) {
 
-                if ( validateEvidenceValueObject == null ) {
-                    validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                }
-
-                validateEvidenceValueObject.setSameGeneAnnotated( true );
-
-                boolean containsExact = true;
-
-                for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
-
-                    if ( !bibliographicPhenotypesValueObject.getPhenotypesValues().contains( phenotype ) ) {
-                        containsExact = false;
+                if ( evidence.getId() != null ) {
+                    // dont compare evidence to itself since it already exists
+                    if ( evidence.getId().equals( bibliographicPhenotypesValueObject.getEvidenceId() ) ) {
+                        continue;
                     }
                 }
 
-                if ( containsExact ) {
-                    validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                }
+                // look if the gene have already been annotated
+                if ( evidence.getGeneNCBI().equals( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
 
-                if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject.getPhenotypesValues().size()
-                        && evidence.getPhenotypes().containsAll(
-                                bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
-                    validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                }
-
-                Set<String> parentOrChildTerm = new HashSet<String>();
-
-                // for the phenotype already present we add his children and direct parents, and check that
-                // the phenotype we want to add is not in that subset
-                for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
-                        .getPhenotypesValues() ) {
-
-                    OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotypeAlreadyPresent.getValueUri() );
-
-                    for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
-                        parentOrChildTerm.add( ot.getUri() );
+                    if ( validateEvidenceValueObject == null ) {
+                        validateEvidenceValueObject = new ValidateEvidenceValueObject();
+                        validateEvidenceValueObject
+                                .setBibliographicReferenceValueObject( bibliographicReferenceValueObject );
                     }
 
-                    for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
-                        parentOrChildTerm.add( ot.getUri() );
+                    validateEvidenceValueObject.setSameGeneAnnotated( true );
+                    bibliographicPhenotypesValueObject.setToHighlight( true );
+
+                    boolean containsExact = true;
+
+                    for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+
+                        if ( !bibliographicPhenotypesValueObject.getPhenotypesValues().contains( phenotype ) ) {
+                            containsExact = false;
+                        }
                     }
-                }
 
-                for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
+                    if ( containsExact ) {
+                        validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
+                        bibliographicPhenotypesValueObject.setToHighlight( true );
+                    }
 
-                    if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
-                        validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
+                    if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject.getPhenotypesValues()
+                            .size()
+                            && evidence.getPhenotypes().containsAll(
+                                    bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
+                        validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
+                        bibliographicPhenotypesValueObject.setToHighlight( true );
+                    }
+
+                    Set<String> parentOrChildTerm = new HashSet<String>();
+
+                    // for the phenotype already present we add his children and direct parents, and check that
+                    // the phenotype we want to add is not in that subset
+                    for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
+                            .getPhenotypesValues() ) {
+
+                        OntologyTerm ontologyTerm = this.ontologyService
+                                .getTerm( phenotypeAlreadyPresent.getValueUri() );
+
+                        for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
+                            parentOrChildTerm.add( ot.getUri() );
+                        }
+
+                        for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
+                            parentOrChildTerm.add( ot.getUri() );
+                        }
+                    }
+
+                    for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
+
+                        if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
+                            validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
+                            bibliographicPhenotypesValueObject.setToHighlight( true );
+                        }
                     }
                 }
             }
         }
+        return validateEvidenceValueObject;
     }
 
     /** checks to see if the evidence is already in the database */
@@ -1107,6 +1103,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // verify that the evidence is not a duplicate
         for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
             if ( evidenceFound.equals( evidence ) ) {
+
+                // if doing an update dont take into account the current evidence
+                if ( evidence.getId() != null ) {
+                    if ( evidenceFound.getId().equals( evidence.getId() ) ) {
+                        continue;
+                    }
+                }
                 return true;
             }
         }

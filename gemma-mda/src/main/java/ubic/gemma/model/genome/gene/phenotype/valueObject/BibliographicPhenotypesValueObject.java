@@ -14,6 +14,8 @@ public class BibliographicPhenotypesValueObject {
     private String geneName = "";
     private Long evidenceId = null;
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
+    
+    private boolean toHighlight = false;
 
     public BibliographicPhenotypesValueObject() {
         super();
@@ -82,4 +84,14 @@ public class BibliographicPhenotypesValueObject {
     public void setEvidenceId( Long evidenceId ) {
         this.evidenceId = evidenceId;
     }
+
+    public boolean isToHighlight() {
+        return this.toHighlight;
+    }
+
+    public void setToHighlight( boolean toHighlight ) {
+        this.toHighlight = toHighlight;
+    }
+    
+    
 }

@@ -1,5 +1,7 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+
 public class ValidateEvidenceValueObject {
 
     private boolean sameGeneAnnotated = false;
@@ -12,6 +14,9 @@ public class ValidateEvidenceValueObject {
     private boolean accessDenied = false;
     private boolean userNotLoggedIn = false;
     private boolean sameEvidenceFound = false;
+    
+    // this is used to indicate the gene-phenotype conflicts while validating
+    private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -92,5 +97,13 @@ public class ValidateEvidenceValueObject {
     public void setSameEvidenceFound( boolean sameEvidenceFound ) {
         this.sameEvidenceFound = sameEvidenceFound;
     }
-	
+
+    public BibliographicReferenceValueObject getBibliographicReferenceValueObject() {
+        return this.bibliographicReferenceValueObject;
+    }
+
+    public void setBibliographicReferenceValueObject( BibliographicReferenceValueObject bibliographicReferenceValueObject ) {
+        this.bibliographicReferenceValueObject = bibliographicReferenceValueObject;
+    }
+
 }
