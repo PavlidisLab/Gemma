@@ -287,6 +287,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 
 				}, this);
+				
+		this.getTopToolbar().on("filter", function(text) {
+			this.searchForText(text);
+		}, this);
 
 		if (this.editable) {
 
@@ -491,7 +495,41 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		tpl : new Ext.Template(
 				"<dl style='background-color:#EEE;padding:2px;margin-left:1em;margin-bottom:2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
 				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>")
-	})
+	}),
+	
+	searchForText : function(text) {
+		if (text.length < 1) {
+			this.getStore().clearFilter();
+			return;
+		}
+		this.getStore().filterBy(this.filter(text), this, 0);
+	},
+	
+	filter : function(text) {
+		var valueRegEx = new RegExp(Ext.escapeRe(text), 'i');
+		var fvColumnRegEx = new RegExp(/^fv\d+$/);
+		var columnArr = this.getColumnModel().config;
+		
+		return function(r, id) {
+			var fields = r.fields; 
+			var found = false;
+			var value;
+			fields.each(function(item, index, length){
+				if (!found) {
+					value = r.get(item.name);
+					if (fvColumnRegEx.test(value)) {
+						value = (this.fvMap[value]) ? this.fvMap[value] : value;
+					}
+					if (item.name !== "id" && item.name !== "bmDesc" && 
+							item.name !== "bmChars"  && item.name !== "baDesc" && 
+								valueRegEx.test(value)) {
+						found = true;
+					}
+				}
+			}, this);
+			return found;
+		};
+	}
 
 });
 
@@ -570,6 +608,24 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 							' ', this.factorValueCombo, this.applyButton];
 				}
 
+				var textFilter = new Ext.form.TextField({
+					ref: 'searchInGrid',
+					tabIndex: 1,
+					enableKeyEvents: true,
+					emptyText: 'Filter samples',
+					listeners: {
+						"keyup": {
+							fn: function(textField){
+								this.fireEvent('filter', textField.getValue());
+							},
+							scope: this,
+							options: {
+								delay: 100
+							}
+						}
+					}
+				});
+
 				var refreshButton = new Ext.Toolbar.Button({
 							text : "Refresh",
 							tooltip : "Reload the data",
@@ -589,6 +645,7 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 						});
 
 				this.items.push('->');
+				this.items.push(textFilter);
 				this.items.push(refreshButton);
 				this.items.push(expandButton);
 
