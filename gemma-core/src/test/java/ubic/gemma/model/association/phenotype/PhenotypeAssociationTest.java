@@ -150,7 +150,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testFindBibliographicReference() {
 
-        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1" ) );
+        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
     }
 
     private void makeGene( int ncbiId ) {

@@ -16,6 +16,8 @@ public class BibliographicPhenotypesValueObject {
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
     
     private boolean toHighlight = false;
+    
+    private boolean originalPhenotype = false;
 
     public BibliographicPhenotypesValueObject() {
         super();
@@ -61,7 +63,7 @@ public class BibliographicPhenotypesValueObject {
         this.geneName = geneName;
     }
 
-    public Collection<CharacteristicValueObject> getPhenotypesValues() {
+    public Set<CharacteristicValueObject> getPhenotypesValues() {
         return this.phenotypesValues;
     }
 
@@ -92,6 +94,12 @@ public class BibliographicPhenotypesValueObject {
     public void setToHighlight( boolean toHighlight ) {
         this.toHighlight = toHighlight;
     }
-    
-    
+
+    public boolean isOriginalPhenotype() {
+        return this.originalPhenotype;
+    }
+
+    public void setOriginalPhenotype( boolean originalPhenotype ) {
+        this.originalPhenotype = originalPhenotype;
+    }
 }

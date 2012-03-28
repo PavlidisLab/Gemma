@@ -133,9 +133,10 @@ public interface PhenotypeAssociationManagerService {
      * Find all phenotypes associated to a pubmedID
      * 
      * @param pubMedId
+     * @param evidenceId optional, used if we are updating to know current annotation
      * @return BibliographicReferenceValueObject
      */
-    public abstract BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
+    public abstract BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId );
 
     /**
      * Validate an Evidence before we create it

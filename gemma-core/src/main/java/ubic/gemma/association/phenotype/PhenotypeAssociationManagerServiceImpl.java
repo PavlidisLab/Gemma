@@ -548,10 +548,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Find all phenotypes associated to a pubmedID
      * 
      * @param pubMedId
+     * @param evidenceId optional, used if we are updating to know current annotation
      * @return BibliographicReferenceValueObject
      */
     @Override
-    public BibliographicReferenceValueObject findBibliographicReference( String pubMedId ) {
+    public BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId ) {
 
         // check if the given pubmedID is already in the database
         BibliographicReference bibliographicReference = this.bibliographicReferenceService.findByExternalId( pubMedId );
@@ -591,7 +592,25 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return null;
         }
 
-        return new BibliographicReferenceValueObject( bibliographicReference );
+        BibliographicReferenceValueObject bibliographicReferenceValueObject = new BibliographicReferenceValueObject(
+                bibliographicReference );
+
+        // we are in an update, we want to know which phenotypes from the literature are on this evidence
+        if ( evidenceId != null ) {
+            // evidence being updated, original from the database
+            EvidenceValueObject evidence = EvidenceValueObject.convert2ValueObjects( this.associationService
+                    .load( evidenceId ) );
+            Set<CharacteristicValueObject> allPhenotypeOnEvidence = evidence.getPhenotypes();
+
+            for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
+                    .getBibliographicPhenotypes() ) {
+
+                if ( allPhenotypeOnEvidence.equals( bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
+                    bibliographicPhenotypesValueObject.setOriginalPhenotype( true );
+                }
+            }
+        }
+        return bibliographicReferenceValueObject;
     }
 
     /**
@@ -989,7 +1008,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmed );
+        BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmed,
+                evidence.getId() );
 
         if ( bibliographicReferenceValueObject == null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
