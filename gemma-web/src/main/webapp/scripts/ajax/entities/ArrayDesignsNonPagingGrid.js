@@ -481,7 +481,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					disabled: true,
 					tooltip: 'Clear your search',
 					icon: '/Gemma/images/icons/cross.png',
-					handler: this.clearFilter,
+					handler: function(){
+						this.clearFilter();
+					},
 					scope: this
 				},'-',{
 					ref: 'refreshButton',
