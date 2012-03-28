@@ -15,6 +15,7 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -72,6 +73,9 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                 if ( numnew == 0 ) break;
             }
         } catch ( IOException e ) {
+            return e;
+        }
+        catch (ParseException e ) {
             return e;
         }
         return null;
