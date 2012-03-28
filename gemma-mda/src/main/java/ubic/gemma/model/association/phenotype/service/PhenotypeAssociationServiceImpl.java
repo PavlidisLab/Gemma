@@ -192,4 +192,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidenceMgedCategoryTerms();
     }
 
+    /** find all evidences from a specific external database */
+    @Override
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
+        return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
+    }
+
 }

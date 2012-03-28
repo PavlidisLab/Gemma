@@ -57,4 +57,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find MGED category terms currently used in the database by evidence */
     public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
 
+    /** find all evidences from a specific external database */
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
 }

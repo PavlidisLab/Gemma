@@ -162,8 +162,16 @@ public interface PhenotypeAssociationManagerService {
      * @param taxonId the taxon id (can be null)
      * @return Collection<CharacteristicValueObject> the terms found
      */
-    public abstract Collection<CharacteristicValueObject> findExperimentOntologyValue(
-            String givenQueryString, String categoryUri, Long taxonId );
+    public abstract Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
+            String categoryUri, Long taxonId );
+
+    /**
+     * this method can be used if we want to reimport data from a specific external Database, this method will remove
+     * from the database ALL evidences link to the given external database
+     * 
+     * @param externalDatabaseName
+     */
+    public abstract void removeEvidencesWithExternalDatabaseName( String externalDatabaseName );
 
     public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
 

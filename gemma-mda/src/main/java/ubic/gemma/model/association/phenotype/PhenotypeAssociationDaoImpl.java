@@ -280,4 +280,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return mgedCategory;
     }
 
+    /** delete all evidences from a specific external database */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
+
+        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
+                .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
+
+        return geneQueryCriteria.list();
+    }
+
 }

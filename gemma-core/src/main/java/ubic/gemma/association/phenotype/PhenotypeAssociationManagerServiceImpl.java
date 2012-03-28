@@ -688,6 +688,22 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.phenotypeAssoManagerServiceHelper.setOntologyHelper( this.ontologyHelper );
     }
 
+    /**
+     * this method can be used if we want to reimport data from a specific external Database, this method will remove
+     * from the database ALL evidences link to the given external database
+     * 
+     * @param externalDatabaseName
+     */
+    @Override
+    public void removeEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findEvidencesWithExternalDatabaseName( externalDatabaseName );
+
+        for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
+            remove( phenotypeAssociation.getId() );
+        }
+    }
+
     /** Given a geneId finds all phenotypes for that gene */
     private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
 

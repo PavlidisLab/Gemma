@@ -137,4 +137,8 @@ public interface PhenotypeAssociationService {
     /** find mged category term that were used in the database, used to annotated Experiments */
     public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
 
+    /** delete all evidences from a specific external database */
+    @Secured({ "GROUP_ADMIN" })
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
 }
