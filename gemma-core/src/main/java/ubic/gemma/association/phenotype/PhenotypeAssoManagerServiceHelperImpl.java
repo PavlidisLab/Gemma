@@ -280,10 +280,12 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             // 2- The bibliographic references
             // ***************************************************************
 
-            String primaryPubMed = experimentalVO.getPrimaryPublicationCitationValueObject().getPubmedAccession();
-
-            // primary bibliographic reference
-            experiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubMed ) );
+            if ( experimentalVO.getPrimaryPublicationCitationValueObject() != null ) {
+                String primaryPubMed = experimentalVO.getPrimaryPublicationCitationValueObject().getPubmedAccession();
+                experiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubMed ) );
+            } else {
+                experiment.setPrimaryPublication( null );
+            }
 
             Set<String> otherRelevantPubMed = new HashSet<String>();
 
