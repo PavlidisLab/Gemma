@@ -196,16 +196,16 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					ref: 'colorLegend',
 					x: 200,
 					y: 0,
-					title: 'Log fold change & p-value',
-					cellSize: 10,
+					title: 'Fold change & p-value',
+					cellSize: 14,
 					
-					foldChangeLabels: ["No Data", "-3", "-2", "-1", "0", "1", "2", "3"],
-					foldChangeValues: [null, -3, -2, -1, 0, 1, 2, 3],
+					foldChangeLabels: ["Down, >2 fold", "Down, <2 fold", "Up, <2 fold", "Up, >2 fold"],
+					foldChangeValues: [-3, -1, 1, 3],
 					
 					discreteColorRangeObject: Gemma.Metaheatmap.Config.contrastsColourRange,
 					
-					pValueLabels: ["1~0.1", "0.05", "0.01", "0.001", "0.0001", "0.00001", "< 0.00001"],
-					pValueValues: [0, 2, 3, 5, 8, 9, 10],
+					pValueLabels: ["No Data", "Not Significant","0.1~0.05", "0.05~0.01", "0.01~0.005", "< 0.005"],
+					pValueValues: [0, 0, 1.1, 4, 7, 10],
 					
 					fontSize: 12
 				}
@@ -346,7 +346,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		canvas.width = ctxMain.canvas.width + 1 + ctxSide.canvas.width;
 		canvas.height = ctxMain.canvas.height + 1 + ctxTop.canvas.height;
 		var ctx = canvas.getContext('2d');
-
+		ctx.fillStyle = "white";  
+		ctx.fillRect (0, 0, canvas.width, canvas.height);  
+		
 		var topImage  =  ctxTop.getImageData(0, 0, ctxTop.canvas.width, ctxTop.canvas.height);
 		var sideImage = ctxSide.getImageData(0, 0, ctxSide.canvas.width, ctxSide.canvas.height);
 		var mainImage = ctxMain.getImageData(0, 0, ctxMain.canvas.width, ctxMain.canvas.height);
