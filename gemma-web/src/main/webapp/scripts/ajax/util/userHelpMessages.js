@@ -99,6 +99,10 @@ Gemma.HelpText.CommonWarnings = {
 						
 		// TODO this one should be looked into and maybe updated
 		ie7: 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.'
+	},
+	Timeout: {
+		title: 'Gemma is Busy',
+		text: "Gemma appears to be under heavy usage, please try your query again in a few minutes"
 	}
 };
 

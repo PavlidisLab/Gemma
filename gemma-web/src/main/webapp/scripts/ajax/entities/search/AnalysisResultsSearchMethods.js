@@ -503,7 +503,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			this.lastCSC = csc;
 			ExtCoexpressionSearchController.doSearchQuick2(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
-						errorHandler : errorHandler.createDelegate(this)
+						timeout: 420000,						
+						errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
 					});
 		} else {
 			this.fireEvent('error', msg);
@@ -877,6 +878,22 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			this.fireEvent('showOptions', csc.stringency, csc.forceProbeLevelSearch, csc.queryGenesOnly);
 		}
 		*/
+	},
+
+	timeoutFromCoexSearch : function(result) {
+		this.doneCoex = true;
+		// if both coex and diff ex searches were called, don't hide load mask
+		// until both have returned
+		if (this.runningDiffEx && this.runningCoex) {
+			if (!this.doneDiffEx) {
+				return;
+			} else {
+				//var data = this.getDataForDiffVisualization();
+				this.fireEvent('showDiffExResults', result, data);
+			}
+		}
+		this.fireEvent('aftersearch', result);
+		Ext.Msg.alert(Gemma.HelpText.CommonWarnings.Timeout.title, Gemma.HelpText.CommonWarnings.Timeout.text);
 	},
 	returnFromDiffExSearch : function(result) {
 		this.doneDiffEx = true;
