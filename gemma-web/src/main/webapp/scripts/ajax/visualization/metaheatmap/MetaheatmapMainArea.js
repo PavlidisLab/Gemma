@@ -144,7 +144,36 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var foldChange, isProbeMissing, numberOfProbes, numberOfProbesDiffExpressed;
 		var isGeneOnTop = this.isGeneOnTop;
 		var cell  = this.cells.getCell (gene, condition); 		
-		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cell.logFoldChange);
+		//var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cell.logFoldChange);
+		
+		var colorScale = {
+			     "5"  : "rgb(142, 1, 82)",
+			     "4" : "rgb(197, 27, 125)",
+			     "3" : "rgb(222, 119, 174)",
+			     "2" : "rgb(241, 182, 218)",
+			     "1" : "rgb(253, 224, 239)",
+			     "0" : "rgb(247, 247, 247)",
+			    "-1" : "rgb(230, 245, 208)",
+			    "-2" : "rgb(184, 225, 134)",
+			    "-3" : "rgb(127, 188, 65)",
+			    "-4" : "rgb(77, 146, 33)",
+			    "-5" : "rgb(39, 100, 25)"
+		};
+		var color;
+		
+		if (cell.logFoldChange > 0) {
+			if (cell.logFoldChange > 1) {
+				color =  colorScale["3"];
+			} else {
+				color =  colorScale["1"];				
+			}			
+		} else {
+			if (cell.logFoldChange < -1) {
+				color = colorScale["-3"];
+			} else {
+				color = colorScale["-1"];				
+			}
+		}
 		
 		var transparency = 0;
 
@@ -208,44 +237,44 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		};
 	},
 	
-	getVisualizationValue : function (gene, condition) {
-		var color;
-		var cellData = this.cells.getCell (gene,condition);
-		if (cellData === null) {
-			// Contrast not stored. Assuming high pValue.
-			color = 'black';			
-		} else {
-			if (cellData.isProbeMissing) {
-				 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (null); // Gray cell.				
-			} else {
-				if (this.isShowPvalue) {
-					 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (						
-							 this.calculateVisualizationValueBasedOnPvalue (cellData.pValue) );
-				} else {					
-					color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
-				}
-			}
-		}		
-
-		return color;
-	},
-		
+//	getVisualizationValue : function (gene, condition) {
+//		var color;
+//		var cellData = this.cells.getCell (gene,condition);
+//		if (cellData === null) {
+//			// Contrast not stored. Assuming high pValue.
+//			color = 'black';			
+//		} else {
+//			if (cellData.isProbeMissing) {
+//				 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (null); // Gray cell.				
+//			} else {
+//				if (this.isShowPvalue) {
+//					 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (						
+//							 this.calculateVisualizationValueBasedOnPvalue (cellData.pValue) );
+//				} else {					
+//					color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
+//				}
+//			}
+//		}		
+//
+//		return color;
+//	},
+			
     calculateVisualizationValueBasedOnPvalue : function ( pValue ) {
-        var visualizationValue = 0;
+        var visualizationValue = 0.5;
         if ( pValue < 0.5 && pValue >= 0.25 )
-            visualizationValue = 0;
+            visualizationValue = 0.5;
         else if ( pValue < 0.25 && pValue >= 0.1 )
-            visualizationValue = 0;
-        else if ( pValue < 0.1 && pValue >= 0.05 )
             visualizationValue = 1;
+        else if ( pValue < 0.1 && pValue >= 0.05 )
+            visualizationValue = 1.1;
         else if ( pValue < 0.05 && pValue >= 0.01 )
-            visualizationValue = 3;
-        else if ( pValue < 0.01 && pValue >= 0.001 )
-            visualizationValue = 5;
-        else if ( pValue < 0.001 && pValue >= 0.0001 )
+            visualizationValue = 4;
+        else if ( pValue < 0.01 && pValue >= 0.005 )
             visualizationValue = 7;
+        else if ( pValue < 0.005 && pValue >= 0.0001 )
+            visualizationValue = 10;
         else if ( pValue < 0.0001 && pValue >= 0.00001 )
-            visualizationValue = 9;
+            visualizationValue = 10;
         else if ( pValue < 0.00001 ) visualizationValue = 10;
         return visualizationValue;
     },
@@ -254,8 +283,37 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var cellData = this.cells.getCell (gene,condition);		
 
     	var transparency = 0;
-		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
+		//var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
+
+		var colorScale = {
+			     "5"  : "rgb(142, 1, 82)",
+			     "4" : "rgb(197, 27, 125)",
+			     "3" : "rgb(222, 119, 174)",
+			     "2" : "rgb(241, 182, 218)",
+			     "1" : "rgb(253, 224, 239)",
+			     "0" : "rgb(247, 247, 247)",
+			    "-1" : "rgb(230, 245, 208)",
+			    "-2" : "rgb(184, 225, 134)",
+			    "-3" : "rgb(127, 188, 65)",
+			    "-4" : "rgb(77, 146, 33)",
+			    "-5" : "rgb(39, 100, 25)"
+		};
+		var color;
 		
+		if (cellData.logFoldChange > 0) {
+			if (cellData.logFoldChange > 1) {
+				color =  colorScale["3"];
+			} else {
+				color =  colorScale["1"];				
+			}			
+		} else {
+			if (cellData.logFoldChange < -1) {
+				color = colorScale["-3"];
+			} else {
+				color = colorScale["-1"];				
+			}
+		}
+   	    	
 		if (cellData.pValue > 0.1) {
 			color = 'white';
 		}
@@ -282,22 +340,22 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 				ctx.restore();
 			} else {
 //				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
-				ctx.fillStyle = 'white';
+				ctx.fillStyle = 'white';//"rgba(240, 240,240, 1)";
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 
-				var innerBoxWidth = Math.floor(0.6*condition.display.pxlSize);
-				var innerBoxHeight = Math.floor(0.6*gene.display.pxlSize) 
+				var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
+				var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) 
 
-				ctx.save();
-				ctx.strokeStyle = "gray";
-				ctx.translate (condition.display.pxlStart, gene.display.pxlStart);
-				ctx.beginPath();
-				ctx.moveTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
-				ctx.lineTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
-				ctx.moveTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
-				ctx.lineTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
-				ctx.stroke();
-				ctx.restore();
+//				ctx.save();
+//				ctx.strokeStyle = "rgba(210, 210,210, 0.8)";//"gray";
+//				ctx.translate (condition.display.pxlStart, gene.display.pxlStart);
+//				ctx.beginPath();
+//				ctx.moveTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+//				ctx.lineTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+//				ctx.moveTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+//				ctx.lineTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+//				ctx.stroke();
+//				ctx.restore();
 			}					
 			
 		} else {
@@ -306,10 +364,17 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);			
 			} else {
 				var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
-				var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) 
+				var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize);
+				
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
-				ctx.fillStyle = "rgba(0,0,0,"+transparency+")";
-				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlStart + gene.display.pxlSize/2 - innerBoxHeight/2, innerBoxWidth, innerBoxHeight);				
+
+				if (transparency <= 0.1) {
+					ctx.strokeStyle = "rgba(0,0,0,0.1)";
+					ctx.strokeRect (condition.display.pxlStart + condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlStart + gene.display.pxlSize/2 - innerBoxHeight/2, innerBoxWidth, innerBoxHeight);					
+				} else {
+					ctx.fillStyle = "rgba(0,0,0,"+transparency+")";
+					ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlStart + gene.display.pxlSize/2 - innerBoxHeight/2, innerBoxWidth, innerBoxHeight);
+				}
 			}
 		}
 	},		
