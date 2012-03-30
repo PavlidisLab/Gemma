@@ -18,7 +18,12 @@ Ext.ux.RadioFieldset = Ext.extend(Ext.form.FieldSet, {
 				type: 'radio',
 				name: this.radioName || this.id + '-radio',
 				id: this.radioId || this.id +'radioId'
+				// this will not work, always causes it to be disabled
+				// disabled: this.disableRadio
 			};
+			if(this.disableRadio){
+				o.disabled = true;
+			}
             this.radio = this.header.insertFirst(o);
             this.radio.dom.checked = !this.collapsed;
             this.mon(this.radio, 'click', this.onCheckClick, this);

@@ -34,6 +34,23 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 				src : "/Gemma/images/loading.gif"
 			});
 
+
+	/*
+	 * Initialization.
+	 */
+	SecurityController.getSecurityInfo({
+				classDelegatingFor : clazz,
+				id : id
+			}, {
+				callback : function(securityInfo) {
+					showSecurityForm(securityInfo);
+				},
+				errorHandler : function(data) {
+					alert("There was an error getting your group information: " + data);
+				}
+
+			});
+	
 	/*
 	 * Need to get: public status from server; group sharing; available groups.
 	 */
@@ -42,6 +59,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		var widgetWidth = 500;
 		var isPublic = securityInfo.publiclyReadable;
 		var isShared = securityInfo.shared;
+		// only owner can edit permissions
 		var canEdit = securityInfo.currentUserOwns;
 		
 		var ownerName = securityInfo.owner.authority;
@@ -79,20 +97,21 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 						checked : readers.indexOf(groupName) >= 0,
 						boxLabel : boxLabel,
 						id : groupName + "-read-chk",
-						disabled : groupName === Gemma.SecurityManager.adminGroupName
+						disabled : groupName === Gemma.SecurityManager.adminGroupName || !canEdit
 					}));
 			writerChecks.push(new Ext.form.Checkbox({
 						checked : writers.indexOf(groupName) >= 0,
 						boxLabel : boxLabel,
 						id : groupName + "-write-chk",
-						disabled : groupName === Gemma.SecurityManager.adminGroupName
+						disabled : groupName === Gemma.SecurityManager.adminGroupName || !canEdit
 					}));
 		}
 
 		var publicReadingFieldSet = new Ext.ux.RadioFieldset({
-            radioToggle:true,
+            radioToggle: true,
 			radioName: 'readingRadio',
 			radioId: 'public-radio',
+			disableRadio: !canEdit,
             title: 'Public',
             defaultType: 'checkbox',
             collapsed: !isPublic,
@@ -113,6 +132,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
             radioToggle:true,
 			radioName: 'readingRadio',
 			radioId: 'private-radio',
+			disableRadio: !canEdit,
             title: 'Private',
             defaultType: 'checkbox',
             collapsed: isPublic,
@@ -146,6 +166,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		var privateWritingFieldSet = new Ext.ux.RadioFieldset({
             radioToggle:true,
 			radioName: 'writingRadio',
+			disableRadio: !canEdit,
             title: 'Private',
             defaultType: 'checkbox',
             collapsed: false,
@@ -161,6 +182,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 			width: widgetWidth,
             xtype:'fieldset',
             title: 'Writing Permissions',
+			disableRadio: !canEdit,
             collapsed: false,
 			style:'margin-top:40px',
             layout: 'anchor',
@@ -174,11 +196,68 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 				border:false
 			}]
         };	
+
+
+		var saveChanges = function(b, e) {
+
+			if (securityPanel && securityPanel.getEl()) {
+				var loadMask = new Ext.LoadMask(securityPanel.getEl(), {
+					msg : "Saving changes..."
+				});
+				loadMask.show();
+			}
+
+			securityInfo.publiclyReadable = Ext.get('public-radio').dom.checked;
+
+			var updatedGroupsThatCanRead = [];
+			var updatedGroupsThatCanWrite = [];
+
+			var shared = false;
+			for (var i = 0, len = availableGroups.length; i < len; i++) {
+				var groupName = availableGroups[i];
+				if (groupName === Gemma.SecurityManager.adminGroupName) {
+					continue;
+				}
+				if (Ext.getCmp(groupName + "-write-chk").getValue()) {
+					updatedGroupsThatCanWrite.push(groupName);
+					shared = true;
+				}
+				// if you can write, then you need to be able to read
+				if (Ext.getCmp(groupName + "-read-chk").getValue() ||
+						Ext.getCmp(groupName + "-write-chk").getValue()) {
+					updatedGroupsThatCanRead.push(groupName);
+					shared = true;
+				}
+			}
+
+			securityInfo.groupsThatCanWrite = updatedGroupsThatCanWrite;
+			securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
+			
+			SecurityController.updatePermission(securityInfo, {
+						callback : function(updatedInfo) {
+							securityPanel.destroy();
+
+							Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
+									updatedInfo.entityId, updatedInfo.publiclyReadable, updatedInfo.shared,
+									updatedInfo.currentUserOwns);
+						},
+						errorHandler : function() {
+							securityPanel.destroy();
+							alert("There was an error saving the settings.");
+
+							Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
+									updatedInfo.entityId, updatedInfo.publiclyReadable,
+									updatedInfo.shared, updatedInfo.currentUserOwns);
+
+						}
+					});
+		};
+		
 		
 		/*
 		 * show panel...
 		 */
-		var sp = new Ext.Window({
+		var securityPanel = new Ext.Window({
 					title : "Security for: " +
 								(securityFormTitle == null ?
 									Ext.util.Format.ellipsis(securityInfo.entityName, 70, true) :
@@ -205,89 +284,25 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 					buttons : [{
 						text : "Save changes",
 						disabled : !canEdit,
-						handler : function(b, e) {
-
-							var loadMask = new Ext.LoadMask(sp.getEl(), {
-										msg : "Saving changes..."
-									});
-							//loadMask.show();
-
-							securityInfo.publiclyReadable = Ext.get('public-radio').dom.checked;
-
-							var updatedGroupsThatCanRead = [];
-							var updatedGroupsThatCanWrite = [];
-
-							var shared = false;
-							for (var i = 0, len = availableGroups.length; i < len; i++) {
-								var groupName = availableGroups[i];
-								if (groupName === Gemma.SecurityManager.adminGroupName) {
-									continue;
-								}
-								if (Ext.getCmp(groupName + "-write-chk").getValue()) {
-									updatedGroupsThatCanWrite.push(groupName);
-									shared = true;
-								}
-								// if you can write, then you need to be able to read
-								if (Ext.getCmp(groupName + "-read-chk").getValue() ||
-										Ext.getCmp(groupName + "-write-chk").getValue()) {
-									updatedGroupsThatCanRead.push(groupName);
-									shared = true;
-								}
-							}
-
-							securityInfo.groupsThatCanWrite = updatedGroupsThatCanWrite;
-							securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
-							
-							SecurityController.updatePermission(securityInfo, {
-										callback : function(updatedInfo) {
-											sp.destroy();
-
-											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
-													updatedInfo.entityId, updatedInfo.publiclyReadable, updatedInfo.shared,
-													updatedInfo.currentUserOwns);
-										},
-										errorHandler : function() {
-											sp.destroy();
-											alert("There was an error saving the settings.");
-
-											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
-													updatedInfo.entityId, updatedInfo.publiclyReadable,
-													updatedInfo.shared, updatedInfo.currentUserOwns);
-
-										}
-									});
-						}
+						hidden: !canEdit,
+						handler : saveChanges.createDelegate(this),
+						scope: this
 					}, {
-						text : 'Cancel',
+						text : (canEdit)?'Cancel':'OK',
 						handler : function(b, e) {
-							sp.destroy();
+							securityPanel.destroy();
 							// remove the load mask from the icon.
 							Gemma.SecurityManager.updateSecurityLink(elid, clazz, id, isPublic, isShared, canEdit);
 						}
 					}]
 				});
 
-		sp.show();
+		securityPanel.show();
 
-
+		
 	};
-
-	/*
-	 * Initialization.
-	 */
-	SecurityController.getSecurityInfo({
-				classDelegatingFor : clazz,
-				id : id
-			}, {
-				callback : function(securityInfo) {
-					showSecurityForm(securityInfo);
-				},
-				errorHandler : function(data) {
-					alert("There was an error getting your group information: " + data);
-				}
-
-			});
-
+	
+	
 };
 
 Gemma.SecurityManager.updateSecurityLink = function(elid, clazz, id, isPublic, isShared, canEdit) {
@@ -324,8 +339,8 @@ Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, 
 
 	} else {
 		icon = isPublic
-				? '<img src="/Gemma/images/icons/world.png" ext:qtip="Public" ext:qtip="Public"  alt="public"/>'
-				: '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private" ext:qtip="Private"  alt="private"/>';
+				? '<img src="/Gemma/images/icons/world.png" ext:qtip="Public; click to view details" ext:qtip="Public"  alt="public"/>'
+				: '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private click to view details" ext:qtip="Private"  alt="private"/>';
 	}
 
 	var sharedIcon = isShared ? '<img src="/Gemma/images/icons/group.png" ext:qtip="Shared"  alt="shared"/>' : '';
@@ -334,8 +349,8 @@ Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, 
 		var elid = Ext.id();
 	}
 
-	var dialog = canEdit ? 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid +
-			'\', \'' + clazz + '\',\'' + id + '\'' + (securityFormTitle == null ? '' : ', \'' + securityFormTitle + '\'') + ');"' : '';
+	var dialog = 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid +
+			'\', \'' + clazz + '\',\'' + id + '\'' + (securityFormTitle == null ? '' : ', \'' + securityFormTitle + '\'') + ');"';
 	if (forUpdate) {
 		return icon + '&nbsp;' + sharedIcon;
 	} else {
@@ -367,7 +382,7 @@ Gemma.SecurityManager.getSecurityUrl = function(clazz, id) {
 
 					var isPublic = securityInfo.publiclyReadable;
 					var isShared = securityInfo.shared;
-					var canEdit = securityInfo.currentUserCanwrite;
+					var canEdit = securityInfo.currentUserOwns;
 					return Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared, canEdit);
 
 				},
