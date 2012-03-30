@@ -68,7 +68,7 @@ public class PubMedXMLFetcherTest extends TestCase {
             assertEquals( "Miles, Judith H; McCathren, Rebecca B; Stichter, Janine; Shinawi, Marwan",
                     br.getAuthorList() );
 
-            assertEquals( "GeneReviews", br.getPublication() );
+            assertEquals( "GeneReviews™", br.getPublication() );
             assertEquals( "Autism Spectrum Disorders", br.getTitle() );
 
             SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
