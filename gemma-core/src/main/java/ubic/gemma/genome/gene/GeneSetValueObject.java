@@ -73,21 +73,21 @@ public class GeneSetValueObject implements Serializable {
      * @return
      */
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     /**
      * @return
      */
     public Collection<Long> getGeneIds() {
-        return geneIds;
+        return this.geneIds;
     }
 
     /**
      * @return
      */
     public Long getId() {
-        return id;
+        return this.id;
     }
         
 
@@ -95,7 +95,7 @@ public class GeneSetValueObject implements Serializable {
      * @return
      */
     public String getName() {
-        return name;
+        return this.name;
     }
 
     /**
@@ -111,7 +111,7 @@ public class GeneSetValueObject implements Serializable {
      * @return the currentUserHasWritePermission
      */
     public boolean isCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
+        return this.currentUserHasWritePermission;
     }
 
     public boolean isPublik() {
@@ -190,6 +190,6 @@ public class GeneSetValueObject implements Serializable {
      * @return the currentUserIsOwner
      */
     public boolean isCurrentUserIsOwner() {
-        return currentUserIsOwner;
+        return this.currentUserIsOwner;
     }
 }

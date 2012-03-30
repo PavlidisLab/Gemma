@@ -86,87 +86,87 @@ public class SecurityInfoValueObject {
     }
 
     public Collection<String> getAvailableGroups() {
-        return availableGroups;
+        return this.availableGroups;
     }
 
     public String getCurrentGroup() {
-        return currentGroup;
+        return this.currentGroup;
     }
 
     /**
      * @return the currentUserCanwrite
      */
     public Boolean getCurrentUserCanwrite() {
-        return currentUserCanwrite;
+        return this.currentUserCanwrite;
     }
 
     /**
      * @return the entityClazz
      */
     public String getEntityClazz() {
-        return entityClazz;
+        return this.entityClazz;
     }
 
     /**
      * @return the entityDescription
      */
     public String getEntityDescription() {
-        return entityDescription;
+        return this.entityDescription;
     }
 
     /**
      * @return the entityId
      */
     public Long getEntityId() {
-        return entityId;
+        return this.entityId;
     }
 
     /**
      * @return the entityName
      */
     public String getEntityName() {
-        return entityName;
+        return this.entityName;
     }
 
     /**
      * @return the entityShortName
      */
     public String getEntityShortName() {
-        return entityShortName;
+        return this.entityShortName;
     }
 
     /**
      * @return the groupsThatCanRead
      */
     public Collection<String> getGroupsThatCanRead() {
-        return groupsThatCanRead;
+        return this.groupsThatCanRead;
     }
 
     /**
      * @return the groupsThatCanWrite
      */
     public Collection<String> getGroupsThatCanWrite() {
-        return groupsThatCanWrite;
+        return this.groupsThatCanWrite;
     }
 
     public SidValueObject getOwner() {
-        return owner;
+        return this.owner;
     }
 
     public boolean isCurrentGroupCanRead() {
-        return currentGroupCanRead;
+        return this.currentGroupCanRead;
     }
 
     public boolean isCurrentGroupCanWrite() {
-        return currentGroupCanWrite;
+        return this.currentGroupCanWrite;
     }
 
     public boolean isPubliclyReadable() {
-        return isPubliclyReadable;
+        return this.isPubliclyReadable;
     }
 
     public boolean isShared() {
-        return isShared;
+        return this.isShared;
     }
 
     public void setAvailableGroups( Collection<String> availableGroups ) {
@@ -258,7 +258,7 @@ public class SecurityInfoValueObject {
     }
 
     public Boolean getCurrentUserOwns() {
-        return currentUserOwns;
+        return this.currentUserOwns;
     }
 
 }

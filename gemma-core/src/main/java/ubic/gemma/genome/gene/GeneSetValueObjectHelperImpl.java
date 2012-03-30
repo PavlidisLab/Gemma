@@ -63,7 +63,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
             // no duplicates
-            Set<Long> ids = new HashSet<Long>(geneSetDao.getGeneIds( gs.getId() ));
+            Set<Long> ids = new HashSet<Long>(this.geneSetDao.getGeneIds( gs.getId() ));
             dbgsvo.setGeneIds( ids );
             dbgsvo.setSize( ids.size() );
         }
@@ -89,9 +89,9 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         dbgsvo.setGeneIds( null );
         
         dbgsvo.setDescription( gs.getDescription() );
-        dbgsvo.setSize( geneSetDao.getGeneCount( gs.getId() ) );
+        dbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
         
-        Taxon tax = geneSetDao.getTaxon( gs.getId() );
+        Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
         if( tax != null){
             while(tax.getParentTaxon() != null){
                 tax = tax.getParentTaxon();
@@ -103,10 +103,10 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             dbgsvo.setTaxonName( null );
         }
  
-        dbgsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
-        dbgsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );
-        dbgsvo.setPublik( securityService.isPublic( gs ) );
-        dbgsvo.setShared( securityService.isShared( gs ) );
+        dbgsvo.setCurrentUserHasWritePermission( this.securityService.isEditable( gs ) );
+        dbgsvo.setCurrentUserIsOwner( this.securityService.isOwnedByCurrentUser( gs ) );
+        dbgsvo.setPublik( this.securityService.isPublic( gs ) );
+        dbgsvo.setShared( this.securityService.isShared( gs ) );
         
         return dbgsvo;
     }
@@ -148,7 +148,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && geneSetDao.getGeneCount( gs.getId() ) <= 0 ) {
+            if ( !includeOnesWithoutGenes && this.geneSetDao.getGeneCount( gs.getId() ) <= 0 ) {
                 continue;
             }
 
@@ -182,7 +182,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         
         ggvo.setName( gs.getName() );
         ggvo.setDescription( gs.getDescription() );
-        ggvo.setSize( geneSetDao.getGeneCount( gs.getId() ) );
+        ggvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
         
         Collection<Long> gids = new HashSet<Long>();
         for ( GeneSetMember gm : gs.getMembers() ) {
@@ -191,7 +191,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         ggvo.setGeneIds( gids );
         
         
-        Taxon tax = geneSetDao.getTaxon( gs.getId() );
+        Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
         if( tax != null){
             while(tax.getParentTaxon() != null){
                 tax = tax.getParentTaxon();
