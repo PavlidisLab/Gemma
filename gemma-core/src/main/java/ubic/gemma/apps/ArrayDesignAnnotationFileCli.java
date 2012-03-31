@@ -518,6 +518,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
         }
+        log.info( "Processing all genes for " + taxon );
         Collection<Gene> genes = geneService.loadKnownGenes( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
@@ -612,14 +613,20 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @param n
      * @throws InterruptedException
      */
-    private void waitForGeneOntologyReady() throws InterruptedException {
+    private void waitForGeneOntologyReady() {
         int n = 0;
-        log.info( "Waiting for Gene Ontology to load" );
+
         while ( !goService.isReady() ) {
-            Thread.sleep( 500 );
-            if ( ++n % 100 == 0 ) {
-                log.info( "Waiting ..." );
+            try {
+                Thread.sleep( 5000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+            log.info( "Waiting for Gene Ontology to load ..." );
+            if ( ++n > 20 ) {
+                throw new RuntimeException( "Gave up on waiting for GO" );
             }
         }
+        log.info( "GO is ready." );
     }
 }
