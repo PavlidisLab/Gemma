@@ -316,8 +316,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         }
     };
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer, java.util.Map, ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer,
+     * java.util.Map, ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType, boolean)
      */
     @Override
     public int generateAnnotationFile( Writer writer,
@@ -391,21 +394,25 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return compositeSequencesProcessed;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer, java.util.Collection, ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer,
+     * java.util.Collection, ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType)
      */
     @Override
     public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontos = getGoTerms( gene, type );
 
-            Integer ncbiId = gene.getNcbiGeneId();
+            Integer ncbiGeneId = gene.getNcbiGeneId();
+            Integer ncbiId = ncbiGeneId;
             String ncbiIds = ncbiId == null ? "" : ncbiId.toString();
             String geneString = gene.getOfficialSymbol();
             String geneDescriptionString = gene.getOfficialName();
             try {
-                writeAnnotationLine( writer, geneString, ncbiIds, geneDescriptionString, ontos,
-                        gene.getId().toString(), gene.getNcbiGeneId().toString() );
+                Long id = gene.getId();
+                writeAnnotationLine( writer, geneString, ncbiIds, geneDescriptionString, ontos, id.toString(), ncbiIds );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -426,8 +433,12 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return fileBaseName.replaceAll( Pattern.quote( File.separator ), "_" );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService#initOutputFile(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.service.ArrayDesignAnnotationService#initOutputFile(ubic.gemma.model.expression.arrayDesign
+     * .ArrayDesign, java.lang.String, boolean)
      */
     @Override
     public Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException {
