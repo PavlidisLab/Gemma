@@ -91,7 +91,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 							margins: '0 0 4 0',
 							store :	new Ext.data.ArrayStore({
 										fields : ['text', 'id'],
-										data : this.ownerCt.genePresetNames,
+										data : Gemma.Metaheatmap.ControlPresets.getSortGroupPresetsNames (Gemma.Metaheatmap.ControlPresets.geneSortGroupPresets),
 										idIndex : 0
 									}),
 							listeners : {
@@ -161,9 +161,9 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        }]
 				},	// eo gene fieldset		    
 				{
-					xtype: 'fieldset',
-					title:'Conditions',
-					ref:'conditionsControlPanel',
+					xtype : 'fieldset',
+					title : 'Conditions',
+					ref   : 'conditionsControlPanel',
 					flex: 1,
 					layout : { 
 						type  : 'vbox',
@@ -191,8 +191,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 							forceSelection : true,
 							autoSelect 	   : true,
 							store :	new Ext.data.ArrayStore({
-										fields : ['text', 'index'],
-										data : this.ownerCt.conditionPresetNames,
+										fields  : ['text', 'index'],
+										data    : Gemma.Metaheatmap.ControlPresets.getSortGroupPresetsNames (Gemma.Metaheatmap.ControlPresets.conditionSortGroupPresets),
 										idIndex : 0
 									}),
 							listeners : {
@@ -331,7 +331,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 	
 	applySortFilter : function () {			
 		this.ownerCt.visualizationPanel.mask.show();
-		this.doFiltering_.defer(100, this);		
+		this.doFiltering_.defer(100, this);
+		
 	},
 	
 	doFiltering_ : function () {

@@ -276,7 +276,11 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		this.fixedWidthCol.pnlMiniControl.setHeight(Math.max(140, this.variableWidthCol.boxTopLabels.getHeight()) + topPadding);
 	},
 	
-	redraw : function () {
+	redraw : function (wasHeatmapChanged) {
+		if (wasHeatmapChanged) {
+			this.updateVisibleScores();
+		}
+		
   	    if (this.variableWidthCol.boxHeatmap.isGeneOnTop) {
       	    this.conditionTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldVerticalZoom.getValue());
       	    this.geneTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldHorizontalZoom.getValue());
@@ -291,9 +295,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		
 		// update size of top left control panel so that gene labels line up with data rows 
 		this.updatePnlMiniControlSize();
-
-		//this.updateVisibleScores(); // TODO: do this only if filtering options
-									// have changed
 		
 		this.doLayout();
 		

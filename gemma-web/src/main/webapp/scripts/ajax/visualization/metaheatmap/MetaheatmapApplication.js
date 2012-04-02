@@ -53,14 +53,137 @@ Ext.namespace('Gemma.Metaheatmap');
  * 
  */
 
+var makeSortFunction = function ( property , direction) {
+	if (direction === 'DESC') {
+		return function ( a, b ) {
+			if (typeof a[property] == "number") {
+				return (b[property] - a[property]);
+			} else {
+			return ((a[property] > b[property]) ? -1 : ((a[property] < b[property]) ? 1 : 0));
+			}
+		};			
+	} else {
+		return function ( a, b ) {
+			if (typeof a[property] == "number") {
+				return (a[property] - b[property]);
+			} else {
+				return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));
+			}
+		};
+	}		
+};	
+
+Gemma.Metaheatmap.ControlPresets = {
+	
+	geneSortGroupPresets : [
+	   { 
+		 name : 'sort alphabetically',
+		 sort : [ 
+		            { sortFn  : makeSortFunction ('groupName'),
+		              groupBy : 'groupName'
+		            },
+                    { sortFn  : makeSortFunction ('name'),
+		              groupBy : null
+		            }
+		        ],
+		 filter : []
+	   },
+	   { 
+		 name : 'sort by meta p-value',
+		 sort : [ 
+		            { sortFn  : makeSortFunction ('groupName'),
+			 	      groupBy : 'groupName'
+			 	    },
+                    { sortFn  : makeSortFunction ('metaPvalue', 'ASC'),
+			 	      groupBy : null
+			 	    }
+		 		],
+		 filter : []
+	   }       	                        
+	],
+	                        
+	conditionSortGroupPresets : [
+	   {
+		 name   : 'sort by experiment',
+		 sort   : [
+		             { 
+		               sortFn  : makeSortFunction ('experimentGroupName'),
+		               groupBy : 'experimentGroupName'
+		             },
+                     { 
+		               sortFn  : makeSortFunction ('datasetShortName'),
+		               groupBy : 'datasetShortName'
+		             },
+                     { 
+		               sortFn  : makeSortFunction ('contrastFactorValue'),
+		               groupBy : null}
+		            ],
+		 filter : []
+	   },         
+	   {
+		 name : 'sort by specificity (group by factor)',
+		 sort : [
+		           { 
+		        	 sortFn  : makeSortFunction ('factorCategory'),
+		        	 groupBy : 'factorCategory'
+		           },
+                   { 
+		        	 sortFn  : makeSortFunction ('miniPieValue'),
+		        	 groupBy : null
+		           }
+		          ],
+		 filter : []},
+	   {
+		 name : 'sort by enrichment (group by factor)',
+		 sort : [
+		           { 
+		        	 sortFn  : makeSortFunction ('factorCategory'),
+		        	 groupBy : 'factorCategory'
+		           },
+                   { 
+		        	 sortFn  : makeSortFunction ('ora', 'ASC'),
+		             groupBy : null
+		           }
+		        ],
+		 filter : []
+	   }                             	                             
+	],
+	
+	factorTreeSortGroupPreset : [	                             
+	   { 
+		 sortFn  : makeSortFunction ('factorCategory'),
+		 groupBy : 'factorCategory'
+	   },
+	   { 
+		 sortFn  : makeSortFunction ('contrastFactorValue'),
+		 groupBy : 'contrastFactorValue'
+	   },
+	   { 
+		 sortFn  : makeSortFunction ('contrastFactorValue'),
+		 groupBy : null
+	   }
+	],
+	
+	getSortGroupPresetsNames : function (sortGroupPresets) {
+		var names = [];
+		for (var i = 0; i < sortGroupPresets.length; i++) {
+			names.push ([sortGroupPresets[i]['name'], i]);
+		}
+		return names;
+	}
+		
+};
+
 Gemma.Metaheatmap.defaultConditionZoom = 10;
 Gemma.Metaheatmap.defaultGeneZoom = 10;
 
 Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	
 	tutorialReady : false,
+	
 	initComponent : function () {
 
+		// Build required data structures.
 		this.conditions = this.visualizationData.conditions;
 		this.genes	    = this.visualizationData.genes;
 		this.cells 		= {};		
@@ -80,80 +203,13 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			}			
 			return null;
 		};
-
-//TODO		
-//		var visualizerState = {
-//				filterSorter : { genes : null,
-//					   	   		 conditions : null},
-//				zoom   : { genes      : null,
-//					       conditions : null}			
-//		};
-//		if ( savedState ) {
-//			visualizerState = savedState;
-//		}
 		
-		var filters = [];
-						
-		var sortByExperimentGroupFn = this.createSortByPropertyFunction_('experimentGroupName');
-		var sortBySpecificityFn = this.createSortByPropertyFunction_('miniPieValue');
-		var sortByFactorCategoryFn = this.createSortByPropertyFunction_ ('factorCategory');
-		var sortByContrastFactorValueFn = this.createSortByPropertyFunction_ ('contrastFactorValue');
-		var sortByDatasetNameFn = this.createSortByPropertyFunction_ ('datasetShortName');
-
-		var sortByPvaluesFn = this.createSortByPropertyFunction_('inverseSumPvalue', 'DESC');
-		var sortByMetaPvalueFn = this.createSortByPropertyFunction_('metaPvalue', 'ASC');
-		var sortByEnrichmentFn = this.createSortByPropertyFunction_('ora', 'ASC');
-		
-
-		var sortByGeneNameFn = this.createSortByPropertyFunction_ ('name'); 
-		var sortGeneByGroupFn = this.createSortByPropertyFunction_ ('groupName');
-						
-		var sortFactorTree = [{'sortFn' : sortByFactorCategoryFn, 'groupBy' : 'factorCategory'},
-		                      {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : 'contrastFactorValue'},
-		                      {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : null}];		
-		
+		this.genePresets 	  = Gemma.Metaheatmap.ControlPresets.geneSortGroupPresets;
+		this.conditionPresets = Gemma.Metaheatmap.ControlPresets.conditionSortGroupPresets;
 				
-		var geneSortPreset1 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupName'},
-		                       {'sortFn' : sortByGeneNameFn, 'groupBy' : null}];
-		
-		var geneSortPreset2 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupName'},
-		                       {'sortFn' : sortByMetaPvalueFn, 'groupBy' : null}];
-		
-		var conditionSortPreset1 = [{'sortFn' : sortByExperimentGroupFn , 'groupBy' : 'experimentGroupName'},
-		                            {'sortFn' : sortByDatasetNameFn , 'groupBy' : 'datasetShortName'},
-		                            {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : null}];
-
-		var conditionSortPreset2 = [{'sortFn' : sortByFactorCategoryFn , 'groupBy' : 'factorCategory'},
-		                            {'sortFn' : sortBySpecificityFn, 'groupBy' : null}]; 
-
-		var conditionSortPreset3 = [{'sortFn' : sortByFactorCategoryFn , 'groupBy' : 'factorCategory'},
-		                            {'sortFn' : sortByEnrichmentFn, 'groupBy' : null}]; 
-		
-		this.genePresets = [
-		                    {'name' : 'sort alphabetically', 'sort' : geneSortPreset1, 'filter' : []},
-		                   	{'name' : 'sort by meta p-value', 'sort' : geneSortPreset2, 'filter' : []}
-		                   ];
-		
-		this.genePresetNames = [];
-		var i;
-		for ( i = 0; i < this.genePresets.length; i++) {
-			this.genePresetNames.push ([this.genePresets[i]['name'], i]);
-		}
-		
-		this.conditionPresets = [            
-		                  {'name' : 'sort by experiment', 'sort' : conditionSortPreset1, 'filter' : []},         
-		                  {'name' : 'sort by specificity (group by factor)', 'sort' : conditionSortPreset2, 'filter' : []},
-		                  {'name' : 'sort by enrichment (group by factor)', 'sort' : conditionSortPreset3, 'filter' : []}
-		                ];		
-		
-		this.conditionPresetNames = [];		
-		for ( i = 0; i < this.conditionPresets.length; i++) {
-			this.conditionPresetNames.push ([this.conditionPresets[i]['name'], i]);
-		}		
-		
-		this.geneTree 	   = new Gemma.Metaheatmap.SortedFilteredTree (this.genes, geneSortPreset1, []); 			
-		this.conditionTree = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, conditionSortPreset1, []);		
-		this.factorTree    = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, sortFactorTree, []);
+		this.geneTree 	   = new Gemma.Metaheatmap.SortedFilteredTree (this.genes, this.genePresets[0].sort, []); 			
+		this.conditionTree = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, this.conditionPresets[0].sort, []);		
+		this.factorTree    = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, Gemma.Metaheatmap.ControlPresets.factorTreeSortGroupPreset, []);
 		
 		Ext.apply ( this, {
 			layout : 'border',
@@ -310,20 +366,20 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						autoScroll : true
 			       	 },
 			       	 {	ref		: 'controlPanel',
-				       		xtype   : 'Metaheatmap.ControlPanel',
-				       		conditionTree	  : this.conditionTree,
-				       		geneTree		  : this.geneTree,
-				       		geneControls 	  : this.geneControls,
-				       		conditionControls : this.conditionControls,
-				       		sortedTree		  : this.factorTree,
-							collapsible       : true,
-							floatable: false,
-							animFloat: false,
-							title: 'Sort & Filter',
-							border:true,
-				       		region  : 'east',
-							split : true,
-				       		width   : 300
+				       	xtype   : 'Metaheatmap.ControlPanel',
+				       	conditionTree	  : this.conditionTree,
+				       	geneTree		  : this.geneTree,
+				       	geneControls 	  : this.geneControls,
+				       	conditionControls : this.conditionControls,
+				       	sortedTree		  : this.factorTree,
+						collapsible       : true,
+						floatable: false,
+						animFloat: false,
+						title: 'Sort & Filter',
+						border:true,
+				       	region  : 'east',
+						split : true,
+				       	width   : 300
 				     }
 				    ]
 		});
@@ -345,7 +401,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.visualizationPanel.setConditionTree (this.conditionTree);
 			this.visualizationPanel.setGeneTree (this.geneTree);	
 									
-			this.visualizationPanel.redraw();
+			this.visualizationPanel.redraw(true);
 						
 			this.visualizationPanel.mask.hide();			
 		}, this);	
@@ -356,31 +412,12 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		
 	},	
 	
-	createSortByPropertyFunction_ : function ( property , direction) {
-		if (direction === 'DESC') {
-			return function ( a, b ) {
-				if (typeof a[property] == "number") {
-					return (b[property] - a[property]);
-				} else {
-					return ((a[property] > b[property]) ? -1 : ((a[property] < b[property]) ? 1 : 0));
-				}
-			};			
-		} else {
-			return function ( a, b ) {
-				if (typeof a[property] == "number") {
-					return (a[property] - b[property]);
-				} else {
-					return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));
-				}
-			};
-		}		
-	},				
-	
 	refreshVisualization : function() {	
 		this.visualizationPanel.updateVisibleScores();
 		this.controlPanel.doFiltering_();
 	},
 			
+	//TODO: finish this, this is currently out of scope.
 	getApplicationState : function() {
 		var state = {};
 		// Get gene group ids.
@@ -501,6 +538,19 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	getApplicationStateFromURL : function (url) {
 	},
 		
+	
+	//TODO		
+//	var visualizerState = {
+//			filterSorter : { genes : null,
+//				   	   		 conditions : null},
+//			zoom   : { genes      : null,
+//				       conditions : null}			
+//	};
+//	if ( savedState ) {
+//		visualizerState = savedState;
+//	}
+
+	
 		
 	showHelpConditionally: function(){
 		
