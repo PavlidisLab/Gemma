@@ -18,10 +18,10 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -31,7 +31,7 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
-    private Set<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
+    private Collection<CharacteristicValueObject> experimentCharacteristics = new ArrayList<CharacteristicValueObject>();
     private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
@@ -96,11 +96,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         }
     }
 
-    public Set<CharacteristicValueObject> getExperimentCharacteristics() {
+    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
         return this.experimentCharacteristics;
     }
 
-    public void setExperimentCharacteristics( Set<CharacteristicValueObject> experimentCharacteristics ) {
+    public void setExperimentCharacteristics( Collection<CharacteristicValueObject> experimentCharacteristics ) {
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
