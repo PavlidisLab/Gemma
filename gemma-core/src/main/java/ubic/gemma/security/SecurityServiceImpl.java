@@ -379,7 +379,7 @@ public class SecurityServiceImpl implements SecurityService {
         }
 
         if ( !isOwnedByCurrentUser( userManager.findGroupByName( groupName ) ) ) {
-            throw new IllegalArgumentException( "Only the owner of a group can delete it" );
+            throw new AccessDeniedException( "Only the owner of a group can delete it" );
         }
         
         String authority = getGroupAuthorityNameFromGroupName( groupName );

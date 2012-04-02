@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils; 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +35,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -46,9 +48,15 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class UserGroupServiceTest extends BaseSpringContextTest {
-
+    
     @Autowired
     private UserManager userManager = null;
+
+    @Autowired
+    private UserService userService = null;
+
+    @Autowired
+    private SecurityService securityService = null;
 
     private String groupName = null;
 
@@ -56,15 +64,15 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setup() throws Exception {
-        groupName = RandomStringUtils.randomAlphabetic( 6 );
+        this.groupName = RandomStringUtils.randomAlphabetic( 6 );
 
         /*
          * Create a user with default privileges.
          */
         try {
-            userManager.loadUserByUsername( aDifferentUsername );
+            this.userManager.loadUserByUsername( this.aDifferentUsername );
         } catch ( UsernameNotFoundException e ) {
-            userManager.createUser( new UserDetailsImpl( "foo", aDifferentUsername, true, null, "foo@gmail.com", "key",
+            this.userManager.createUser( new UserDetailsImpl( "foo", this.aDifferentUsername, true, null, "foo@gmail.com", "key",
                     new Date() ) );
         }
     }
@@ -77,9 +85,9 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
         authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
-        userManager.createGroup( groupName, authos );
+        this.userManager.createGroup( this.groupName, authos );
 
-        List<GrantedAuthority> findGroupAuthorities = userManager.findGroupAuthorities( groupName );
+        List<GrantedAuthority> findGroupAuthorities = this.userManager.findGroupAuthorities( this.groupName );
 
         for ( GrantedAuthority grantedAuthority : findGroupAuthorities ) {
             assertEquals( "GROUP_TESTING", grantedAuthority.getAuthority() );
@@ -89,13 +97,13 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testUserAddSelvesToAdmin() {
-        super.runAsUser( aDifferentUsername );
+        super.runAsUser( this.aDifferentUsername );
 
         try {
-            userManager.addUserToGroup( aDifferentUsername, "Administrators" );
+            this.userManager.addUserToGroup( this.aDifferentUsername, "Administrators" );
             fail( "Should have gotten access denied when user tried to make themselves admin" );
         } catch ( AccessDeniedException ok ) {
-
+            // expected behaviour
         }
     }
 
@@ -106,9 +114,9 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     public void testUpdateUserGroup() {
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
         authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
-        userManager.createGroup( groupName, authos );
+        this.userManager.createGroup( this.groupName, authos );
 
-        List<GrantedAuthority> findGroupAuthorities = userManager.findGroupAuthorities( groupName );
+        List<GrantedAuthority> findGroupAuthorities = this.userManager.findGroupAuthorities( this.groupName );
 
         for ( GrantedAuthority grantedAuthority : findGroupAuthorities ) {
             assertEquals( "GROUP_TESTING", grantedAuthority.getAuthority() );
@@ -118,38 +126,44 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Add a user to the group
          */
 
-        userManager.addUserToGroup( aDifferentUsername, groupName );
+        this.userManager.addUserToGroup( this.aDifferentUsername, this.groupName );
 
-        List<String> users = userManager.findUsersInGroup( groupName );
-        assertTrue( users.contains( aDifferentUsername ) );
+        List<String> users = this.userManager.findUsersInGroup( this.groupName );
+        assertTrue( users.contains( this.aDifferentUsername ) );
+                
+        /*
+         * Make sure user can see group (from bug 2822)
+         */
+        UserGroup group = this.userService.findGroupByName( this.groupName );
+        this.securityService.isViewableByUser( group, this.aDifferentUsername );
 
         /*
          * Remove a user from the group.
          */
-        userManager.removeUserFromGroup( aDifferentUsername, groupName );
-        users = userManager.findUsersInGroup( groupName );
-        assertTrue( !users.contains( aDifferentUsername ) );
+        this.userManager.removeUserFromGroup( this.aDifferentUsername, this.groupName );
+        users = this.userManager.findUsersInGroup( this.groupName );
+        assertTrue( !users.contains( this.aDifferentUsername ) );
 
-        super.runAsUser( aDifferentUsername );
+        super.runAsUser( this.aDifferentUsername );
 
         /*
          * Can the user remove themselves from the group?
          */
         try {
-            userManager.removeUserFromGroup( aDifferentUsername, groupName );
+            this.userManager.removeUserFromGroup( this.aDifferentUsername, this.groupName );
             fail( "Should have gotten access denied when user tried to remove themselves from a group" );
         } catch ( AccessDeniedException ok ) {
-
+            // expected behaviour
         }
 
         /*
          * Can they elevate the group authority?
          */
         try {
-            userManager.addGroupAuthority( groupName, new GrantedAuthorityImpl( "GROUP_ADMIN" ) );
+            this.userManager.addGroupAuthority( this.groupName, new GrantedAuthorityImpl( "GROUP_ADMIN" ) );
             fail( "Should have gotten access denied when user tried to make group ADMIN" );
         } catch ( AccessDeniedException ok ) {
-
+            // expected behaviour
         }
 
     }
