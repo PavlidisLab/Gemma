@@ -16,13 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.auditAndSecurity;
+package ubic.gemma.security.authentication;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
  * The default exception thrown for unexpected errors occurring within
- * {@link ubic.gemma.model.common.auditAndSecurity.UserService}.
+ * {@link ubic.gemma.security.authentication.UserService}.
  */
 public class UserServiceException extends java.lang.RuntimeException {
     /**

@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.common.auditAndSecurity;
+package ubic.gemma.security.authentication;
 
 import java.util.Collection;
 
@@ -21,33 +21,52 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
+import ubic.gemma.security.SecurityService;
+
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.UserService
+ * @see ubic.gemma.security.authentication.UserService
  * @author pavlidis
  * @version $Id$
  */
 @Service
 public class UserServiceImpl implements UserService {
-
+    
     @Autowired
     private UserDao userDao;
 
     @Autowired
+    private SecurityService securityService;
+
+    @Autowired
     private UserGroupDao userGroupDao;
 
+    @Override
     public void addGroupAuthority( UserGroup group, String authority ) {
         this.userGroupDao.addAuthority( group, authority );
     }
 
+    @Override
     public void addUserToGroup( UserGroup group, User user) {
+        // add user to list of members
         group.getGroupMembers().add( user );
         this.userGroupDao.update( group );
+        // grant read permissions to newly added user
+        this.securityService.makeReadableByGroup( group, group.getName() );
+        
     }
 
+    @Override
     public UserGroup create( UserGroup group ) {
         return this.userGroupDao.create( group );
     }
 
+    @Override
     public void delete( User user ) {
         for ( UserGroup group : this.userDao.loadGroups( user ) ) {                     
             group.getGroupMembers().remove( user );            
@@ -57,30 +76,37 @@ public class UserServiceImpl implements UserService {
         this.userDao.remove( user );
     }
 
+    @Override
     public void delete( UserGroup group ) {
         this.userGroupDao.remove( group );
     }
 
+    @Override
     public UserGroup findGroupByName( String name ) {
         return this.userGroupDao.findByUserGroupName( name );
     }
 
+    @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.userGroupDao.findGroupsForUser( user );
     }
  
+    @Override
     public Collection<UserGroup> listAvailableGroups() {
         return ( Collection<UserGroup> ) this.userGroupDao.loadAll();
     }
 
+    @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
         return this.userDao.loadGroupAuthorities( u );
     }
 
+    @Override
     public void removeGroupAuthority( UserGroup group, String authority ) {
         this.userGroupDao.removeAuthority( group, authority );
     }
 
+    @Override
     public void removeUserFromGroup( User user, UserGroup group ) {
         group.getGroupMembers().remove( user );
         this.userGroupDao.update( group );
@@ -90,19 +116,22 @@ public class UserServiceImpl implements UserService {
          */
     }
 
+    @Override
     public void update( UserGroup group ) {
         this.userGroupDao.update( group );
     }
 
 
+    @Override
     public boolean groupExists( String name ) {
         return this.userGroupDao.findByUserGroupName( name ) != null;
     }
 
     
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#create(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.security.authentication.UserService#create(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public User create( final User user ) throws UserExistsException {
         try {
 
@@ -137,8 +166,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#findByEmail(java.lang.String)
+     * @see ubic.gemma.security.authentication.UserService#findByEmail(java.lang.String)
      */
+    @Override
     public User findByEmail( final String email ) {
         try {
             
@@ -152,8 +182,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#findByUserName(java.lang.String)
+     * @see ubic.gemma.security.authentication.UserService#findByUserName(java.lang.String)
      */
+    @Override
     public User findByUserName( final String userName ) {
         try {
         
@@ -168,8 +199,9 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#load(java.lang.Long)
+     * @see ubic.gemma.security.authentication.UserService#load(java.lang.Long)
      */
+    @Override
     public User load( final Long id ) {
         try {
         
@@ -183,8 +215,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#loadAll()
+     * @see ubic.gemma.security.authentication.UserService#loadAll()
      */
+    @Override
     public java.util.Collection<User> loadAll() {
         try {
             
@@ -197,8 +230,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#update(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.security.authentication.UserService#update(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public void update( final User user ) {
         try {
             

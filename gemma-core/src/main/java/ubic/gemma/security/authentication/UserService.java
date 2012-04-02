@@ -16,12 +16,17 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.auditAndSecurity;
+package ubic.gemma.security.authentication;
 
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
 /**
  * @version $Id$

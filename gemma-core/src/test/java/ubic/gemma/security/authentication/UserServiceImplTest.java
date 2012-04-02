@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.auditAndSecurity;
+package ubic.gemma.security.authentication;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expectLastCall;
@@ -28,6 +28,13 @@ import java.util.HashSet;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
+import ubic.gemma.model.common.auditAndSecurity.User.Factory;
+import ubic.gemma.security.authentication.UserServiceImpl;
 
 /**
  * @author pavlidis

@@ -504,16 +504,16 @@ Ext.onReady(function() {
 							}
 						}, '-',{
 							tooltip : "Show/hide public data. Public experiments will never be shown.",
-							text: "Show public data",
+							text: "Show your public data",
 							showPublicData : false,
 							id : "manager-data-panel-show-public",
 							//enableToggle : true,
 							//icon : "/Gemma/images/icons/world_add.png",
 							handler : function() {
 								if(this.showPublicData){
-									this.setText("Show public data");
+									this.setText("Show your public data");
 								}else{
-									this.setText("Hide public data");
+									this.setText("Hide your public data");
 								}
 								refreshData(currentGroup, this.showPublicData);
 								this.showPublicData = !this.showPublicData;

@@ -52,7 +52,6 @@ import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
