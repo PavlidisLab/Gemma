@@ -57,7 +57,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>Baseline</b>: {baselineFactorValue} <br>',
 				'<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',				
 				'<b>p-value</b>: {pvalue:sciNotation}<br>',
-				'<b>log fold change</b>: {foldChange:sciNotation}',				
+				'<b>log fold change</b>: {foldChange}',				
 				'</tpl>', '</tpl></span>');
 	},
 

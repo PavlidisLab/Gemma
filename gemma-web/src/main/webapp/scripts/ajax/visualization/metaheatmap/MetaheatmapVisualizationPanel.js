@@ -530,7 +530,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					numberOfProbesDiffExpressed : item.numberOfProbesDiffExpressed,
 					
 					pvalue : (item.isProbeMissing)?'No data':item.pValue,
-					foldChange : (item.isProbeMissing)?'No data':item.foldChange
+					foldChange : (item.isProbeMissing)?'No data': Math.round(item.foldChange*100)/100
 			};
 		}
 		return msg;
