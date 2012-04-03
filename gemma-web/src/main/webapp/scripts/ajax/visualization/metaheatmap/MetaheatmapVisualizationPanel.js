@@ -430,7 +430,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			condition.inverseSumPvalue = GemmaStatUtils.computeOraPvalue( condition.numberOfProbesOnArray, numProbesInSet, numOverThresholdInSet, condition.numberDiffExpressedProbes );
 			condition.ora = condition.inverseSumPvalue;
 			condition.oraDisplayValue = this.calculateBarChartValueBasedOnPvalue (condition.ora);
-
+			condition.numInSet = numProbesInSet;
+			condition.numDiffExpressed = numOverThresholdInSet; 
 			condition.percentProbesMissing = numProbesMissing / this.geneTree.items.length;
 		}	
 
@@ -505,6 +506,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					contrastFactorValue	: item.contrastFactorValue,
 					baselineFactorValue : item.baselineFactorValue,				
 					
+					numDiffExpressed    : item.numDiffExpressed,
+					numInSet			: item.numInSet,	
 					ora					: item.ora,
 					specificityPercent  : specificity,
 					numberDiffExpressedProbes : item.numberDiffExpressedProbes,

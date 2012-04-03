@@ -32,7 +32,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
 				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br> ',				
 				'<b>Baseline</b>: {baselineFactorValue} <br> ',				
-				'<b>Enrichment</b>: {ora:sciNotation} <br> ',				
+				'<b>Enrichment</b>: {numDiffExpressed} out of {numInSet} probes are differentially expressed with p-value {ora:sciNotation} <br> ',				
 				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
