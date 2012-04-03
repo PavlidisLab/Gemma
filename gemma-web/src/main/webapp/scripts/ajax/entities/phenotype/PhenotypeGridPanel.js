@@ -18,8 +18,6 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
         forceFit: true
     },
     initComponent: function() {
-		this.addEvents('phenotypeSelectionChange');
-
 		var phenotypeAssociationFormWindow = null;
 
 		var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({

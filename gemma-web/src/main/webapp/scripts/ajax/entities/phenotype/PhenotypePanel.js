@@ -194,10 +194,5 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
     },
     applyCurrentFilter: function() {
     	this.onTrigger2Click();
-    },
-    initComponent: function() {
-    	this.addEvents('filterApplied', 'filterRemoved');
-
-        this.superclass().initComponent.call(this);
     }
 });
