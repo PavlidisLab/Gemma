@@ -193,7 +193,9 @@ Ext.Panel, {
             this.loadMask.show();
             ExtCoexpressionSearchController.doSearchQuick2(
             this.coexCommand, {
-                callback: this.initialCoexSearchCallback.createDelegate(this)
+                callback: this.initialCoexSearchCallback.createDelegate(this),
+                timeout: 420000,						
+				errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
             });
 
         } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
@@ -259,7 +261,9 @@ Ext.Panel, {
         this.loadMask.show();
         ExtCoexpressionSearchController.doSearchQuick2(
         this.coexCommand, {
-            callback: this.extendThisNodeInitialCoexSearchCallback.createDelegate(this)
+            callback: this.extendThisNodeInitialCoexSearchCallback.createDelegate(this),
+            timeout: 420000,						
+			errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
         });
 
     },
@@ -462,7 +466,15 @@ Ext.Panel, {
     stringencyUpdate: function (stringency, trimmed) {
         this.display.updateStringency(stringency);
         this.display.filter(stringency, trimmed.trimmedNodeIds);
+    },
+    
+    timeoutFromCoexSearch : function(result) {
+    	Ext.Msg.alert(Gemma.HelpText.CommonWarnings.Timeout.title, Gemma.HelpText.CommonWarnings.Timeout.text);
+    	this.loadMask.hide();
+    	this.fireEvent('beforesearch');
     }
+    
+    
 
 });
 

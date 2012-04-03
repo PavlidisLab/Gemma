@@ -298,7 +298,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		searchPanel.collapse();
 		
 		knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz','coexWarningAlreadyDisplayed']);	    
-	    searchForm.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz']);
+	    searchForm.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz', 'beforesearch']);
 		
 		coexResultsTabPanel.add(knownGeneGrid);
 		coexResultsTabPanel.add(cytoscapePanel);
