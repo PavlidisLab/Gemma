@@ -615,14 +615,15 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 						this.validateForm(true);
 				    },
 					scope: this
-				},			
-				{
-					text: 'Reset',
-					handler: function() {
-						this.resetForm(true);
-					},
-					scope: this
 				},
+// TODO: Should remove all the code related to this Reset button				
+//				{
+//					text: 'Reset',
+//					handler: function() {
+//						this.resetForm(true);
+//					},
+//					scope: this
+//				},
 				{
 				    text: 'Cancel',
 				    handler: function() {
