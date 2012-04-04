@@ -7,19 +7,12 @@
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 
 Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.ComboBox, {
-	hiddenName: 'phenotypes[]',
 	currentGeneNcbiId: null,    
 	allowBlank: false,
 	forceSelection: true,				
     store: new Ext.data.JsonStore({
 		proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),
-	    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId', {
-	    	name: 'comboText',
-	    	convert: function(value, record) {
-	    		return '<div style="font-size:12px;" class="x-combo-list-item" >' +
-	    			record.value + '</div>';
-	    	}
-	    }],
+	    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
 	    idProperty: 'valueUri'
 	}),
     valueField: 'valueUri', 
@@ -53,15 +46,14 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 										'ext:qtip="{value}">' + valueToBeDisplayed + '</div>').apply(values);
 				}
 			}),
-	selectPhenotype: function (phenotypeSelection) {
+	selectPhenotype: function(phenotypeSelection) {
 		if (phenotypeSelection != null) {
-			var PhenotypeRecord = Ext.data.Record.create([	
-				'valueUri', 'value'
-			]);
-			this.getStore().add(new PhenotypeRecord({
-				valueUri: phenotypeSelection.valueUri,
-				value: phenotypeSelection.value
-			}));
+			this.getStore().loadData(
+				[{
+					valueUri: phenotypeSelection.valueUri,
+					value: phenotypeSelection.value
+				}],
+				true); // true to append the new record
 			this.setValue(phenotypeSelection.valueUri);
 		}    	
 	}

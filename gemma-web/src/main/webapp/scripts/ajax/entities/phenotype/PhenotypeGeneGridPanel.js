@@ -16,8 +16,6 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
     },
     currentPhenotypes: null,
     initComponent: function() {
-		this.addEvents('geneSelectionChange');
-		
 		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current phenotypes.
 				
 		var titleText = this.title; // Contains the title's text without any HTML code whereas title may contain HTML code.
@@ -130,7 +128,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					messageProperty: 'message', // optional
 					totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
 					idProperty: 'id', // same as default
-					fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', 'evidence' ]
+					fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', 'taxonId' ]
 			    }),
 			    sortInfo: {	field: 'officialSymbol', direction: 'ASC' },
 			    listeners: {
@@ -171,7 +169,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								ncbiId: geneGridSelection.get('ncbiId'),
 								officialSymbol: geneGridSelection.get('officialSymbol'),
 								officialName: geneGridSelection.get('officialName'),
-								taxonCommonName: geneGridSelection.get('taxonCommonName')
+								taxonCommonName: geneGridSelection.get('taxonCommonName'),
+								taxonId: geneGridSelection.get('taxonId')
 							};
 						}						
 						this.fireEvent('geneSelectionChange', this.currentPhenotypes, selectedGene);

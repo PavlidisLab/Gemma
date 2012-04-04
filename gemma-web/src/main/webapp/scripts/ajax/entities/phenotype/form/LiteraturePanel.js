@@ -7,47 +7,32 @@
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 
 Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
+	pubMedIdFieldAllowBlank: false,
+	pubMedIdFieldLabel: 'PubMed Id',
+	evidenceId: null,
 	border: false,
 	layout: 'form',
 	hidden: true,
     autoHeight:true,
-	anchor: '96%', // Use anchor instead of width so that this panel can be resized as the main window is resized.
     defaultType: 'textfield',
     initComponent: function() {
 		var pubMedIdField = new Ext.form.NumberField({
-			// It is a validator that can decide if this field is valid.
-			pudMedIdValidator: (this.pudMedIdValidator ?
-									this.pudMedIdValidator :
-									function() { return true; }),			
-			name: "pubmedId",
-			fieldLabel: 'PubMed Id',
 			minValue: 1,			
 			minLength: 1,
 			maxLength: 9,
-			allowBlank: false,
+			// It is set to true initially because it is hidden and will 
+			// be set to this.pubMedIdFieldAllowBlank when the panel is shown. 
+			allowBlank: true,
 			allowDecimals: false,
 			allowNegative: false,
 			width: 100,
 			autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '9'},
 			enableKeyEvents: true,
 		    initComponent: function() {
-				// This is set to true initially because we will see it having invalid red border 
-				// very briefly and then the border disappears after its initial value is set.		    	
-				var keyPressed = true;
-		    	
 				Ext.apply(this, {
-					validator: function() {
-						// When a user press a key, the validator should return true. Otherwise, the
-						// user cannot press the OK button to submit the form containing this field.  
-						return keyPressed || this.pudMedIdValidator(); 
-					},
 					listeners: {
-						keypress: function(numberField, event) {
-							keyPressed = true;
-						},
 						blur: function(numberField) {
-							keyPressed = false;
-							updateBibliographicReferenceDetailsPanel();
+							updateBibliographicReferenceDetailsPanel(true);
 						}
 					}
 				});
@@ -55,7 +40,16 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				this.superclass().initComponent.call(this);
 	    	}
 		});
-		this.relayEvents(pubMedIdField, ['blur', 'keypress']);
+
+		pubMedIdField.on({
+			blur: function(numberField) {
+				this.fireEvent('pubMedIdFieldBlur', this);
+			},
+			keypress: function(numberField, event) {
+				this.fireEvent('pubMedIdFieldKeyPress', this, event);							
+			},
+			scope: this
+		})
 		
 		var statusDisplayField = new Ext.form.DisplayField({
 			value: 'Searching for publication ...',
@@ -89,8 +83,8 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			    	        read: {
 			        	        dwrFunction: PhenotypeController.findBibliographicReference,
 			            	    getDwrArgsFunction: function(request){
-			            	    	return [request.params["pubMedId"]];
-				                }
+			            	    	return [request.params["pubMedId"], this.evidenceId];
+				                }.createDelegate(this)
 			    	        }
 				        }
 			    	}),
@@ -100,7 +94,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		});
 		pubMedStore.on({
 		    'load': {
-		        fn: function(store, records, options){
+		        fn: function(store, records, options) {
 					statusDisplayField.hide();
 					bibliographicReferenceDetailsPanel.loadMask.hide();
 
@@ -117,14 +111,17 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 							
 							bibliographicReferenceDetailsPanel.hide();
 			        	}
-		        	}		        	
+		        	}
+
+					if (options.params.shouldFireEvent) {
+						this.fireEvent('pubMedIdStoreLoad', this, store, records, options);
+					}					
 		        },
 		        scope:this
 		    }
 		});
-		this.relayEvents(pubMedStore, ['load']);
 
-		var updateBibliographicReferenceDetailsPanel = function() {
+		var updateBibliographicReferenceDetailsPanel = function(shouldFireEvent) {
 			var pubMedId = pubMedIdField.getValue();
 
 			if (pubMedId === "") {
@@ -137,7 +134,8 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 
 				pubMedStore.reload({
 					params: {
-						'pubMedId': pubMedId
+						'pubMedId': pubMedId,
+						'shouldFireEvent': shouldFireEvent						
 					}
 				});
 			} else {
@@ -146,8 +144,39 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		};
         
 		Ext.apply(this, {
+			listeners: {
+				show: function(thisComponent) {
+					pubMedIdField.allowBlank = this.pubMedIdFieldAllowBlank;		
+				},
+				hide: function(thisComponent) {
+					pubMedIdField.allowBlank = true;
+				},
+				scope:this
+			},
+			isValid: function() {
+				var pubMedId = pubMedIdField.getValue(); 
+				var isPubMedIdValid = false;
+				if (pubMedId === '') {
+					isPubMedIdValid = this.pubMedIdFieldAllowBlank;
+				} else if (pubMedId > 0) {
+					isPubMedIdValid = pubMedStore.getTotalCount() > 0;
+				}
+				
+				return isPubMedIdValid;
+			},
 			getPubMedId: function() {
 				return pubMedIdField.getValue();
+			},
+			getCitationValueObject: function() {
+				var pubMedId = this.getPubMedId();
+				if (pubMedId === '') {
+					return null;
+				} else {
+					var citationValueObject = new CitationValueObject();
+					citationValueObject.pubmedAccession = pubMedId;
+	
+					return citationValueObject;
+				}
 			},
 			setPubMedId: function(pubMedId) {
 				// Don't use !== because pubMedId is a string while pubMedIdField.getValue() is a number.
@@ -155,7 +184,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 					pubMedIdField.setValue(pubMedId);
 					pubMedIdField.originalValue = pubMedId;
 					
-					updateBibliographicReferenceDetailsPanel();				
+					updateBibliographicReferenceDetailsPanel(false);
 				}
 				
 				if (pubMedId === '') {
@@ -165,6 +194,9 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 					this.show();
 				}
 			},
+			setEvidenceId: function(evidenceId) {
+				this.evidenceId = evidenceId;
+			},
 			reset: function() {
 				this.setPubMedId(pubMedIdField.originalValue);
 			},
@@ -173,7 +205,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 					xtype: 'compositefield',
 					border: false,
 					layout: 'form',
-					fieldLabel: 'PubMed Id',
+					fieldLabel: this.pubMedIdFieldLabel,
 				    items: [
 						pubMedIdField,
 						statusDisplayField

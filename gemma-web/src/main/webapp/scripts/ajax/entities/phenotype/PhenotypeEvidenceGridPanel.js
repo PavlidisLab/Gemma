@@ -137,7 +137,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    reader: new Ext.data.JsonReader({
 				idProperty: 'id',		    	
 		        fields: [
-					'id', 'description', 'lastUpdated',	'securityInfoValueObject',        
+					'id', 'description', 'lastUpdated',	'evidenceSecurityValueObject',
 		        	'relevance', 'phenotypes', 'className', 'evidenceCode', 'evidenceSource', 'experimentCharacteristics',
 		 			'isNegativeEvidence', 'primaryPublicationCitationValueObject', 'citationValueObject',
 		            {
@@ -378,8 +378,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-						if (!this.hidden && record.data.className === 'LiteratureEvidenceValueObject') {
-		            		if (record.data.securityInfoValueObject.currentUserHasWritePermission) {
+						if ((!this.hidden) &&
+							(record.data.className === 'LiteratureEvidenceValueObject' ||
+							 record.data.className === 'ExperimentalEvidenceValueObject')) {
+		            		if (record.data.evidenceSecurityValueObject.currentUserHasWritePermission) {
 			            		adminLinks += generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
 											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
 		            		}
@@ -387,9 +389,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							adminLinks += Gemma.SecurityManager.getSecurityLink(
 								'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
 								record.data.id,
-								record.data.securityInfoValueObject.public,
-								record.data.securityInfoValueObject.shared,
-								record.data.securityInfoValueObject.currentUserIsOwner,
+								record.data.evidenceSecurityValueObject.public,
+								record.data.evidenceSecurityValueObject.shared,
+								record.data.evidenceSecurityValueObject.currentUserIsOwner,
 								null,
 								null,
 								'Phenotype Association'); // Evidence name for the title in Security dialog.  											
@@ -412,13 +414,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				if (currentGene != null) {
 					this.setTitle("Evidence for " + currentGene.officialSymbol);
 					
-			    	this.currentGene = {
-			    		id: currentGene.id,
-			    		ncbiId: currentGene.ncbiId,
-			    		officialSymbol: currentGene.officialSymbol,
-			    		officialName: currentGene.officialName,
-			    		taxonCommonName: currentGene.taxonCommonName
-			    	};
+					this.currentGene = currentGene;
 			    	
 					var phenotypeValueUris = [];
 					for (var i = 0; i < currentPhenotypes.length; i++) {
@@ -450,8 +446,27 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				var record = this.getStore().getById(id);
 				var evidenceClassName = record.data.className; 
 			
-// TODO: Do ONLY LiteratureEvidenceValueObject for now.
+				var data = null;
+				
 				if (evidenceClassName === 'LiteratureEvidenceValueObject') {
+					data = {
+						pubMedId: record.data.citationValueObject.pubmedAccession
+					};
+				} else if (evidenceClassName === 'ExperimentalEvidenceValueObject') {
+					data = {
+						primaryPubMedId: record.data.primaryPublicationCitationValueObject != null ?
+											record.data.primaryPublicationCitationValueObject.pubmedAccession :
+											null,
+						// Assume we have at most one other PubMed Id.
+						secondaryPubMedId: record.data.relevantPublicationsValueObjects != null &&
+									 	   record.data.relevantPublicationsValueObjects.length > 0 ?
+												record.data.relevantPublicationsValueObjects[0].pubmedAccession :
+												null,
+						experimentCharacteristics: record.data.experimentCharacteristics
+					}
+				}
+				
+				if (data != null) {
 					var evidencePhenotypes = [];
 					for (var i = 0; i < record.data.phenotypes.length; i++) {
 						evidencePhenotypes.push({
@@ -465,17 +480,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
 						this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 					}
-					editPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT,
-						{
-							evidenceId: record.data.id,
-							gene: this.currentGene,
-							phenotypes: evidencePhenotypes,
-							evidenceClassName: evidenceClassName,
-							pubMedId: record.data.citationValueObject.pubmedAccession,
-							description: record.data.description,
-							evidenceCode: record.data.evidenceCode,
-							lastUpdated: record.data.lastUpdated
-						});
+
+					data.evidenceId = record.data.id;
+					data.gene = this.currentGene;
+					data.phenotypes = evidencePhenotypes;
+					data.evidenceClassName = evidenceClassName;
+					data.description = record.data.description;
+					data.evidenceCode = record.data.evidenceCode;
+					data.lastUpdated = record.data.lastUpdated;
+									
+					editPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT, data);
 				}
 			},
 			removeEvidence: function(id) {

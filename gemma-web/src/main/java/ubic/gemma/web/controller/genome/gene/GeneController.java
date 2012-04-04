@@ -188,6 +188,7 @@ public class GeneController extends BaseController {
         mav.addObject( "geneOfficialName", gene.getOfficialName() );
         mav.addObject( "geneNcbiId", gene.getNcbiId());
         mav.addObject( "geneTaxonCommonName", gene.getTaxonCommonName());
+        mav.addObject( "geneTaxonId", gene.getTaxonId());
 
         return mav;
     }

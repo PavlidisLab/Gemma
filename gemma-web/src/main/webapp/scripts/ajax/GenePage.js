@@ -120,7 +120,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 	    		ncbiId: this.geneNcbiId,
 	    		officialSymbol: this.geneSymbol,
 	    		officialName: this.geneName,
-	    		taxonCommonName: this.geneTaxonName
+	    		taxonCommonName: this.geneTaxonName,
+	    		taxonId: this.geneTaxonId
     		},
 			evidencePhenotypeColumnRenderer: function(value, metadata, record, row, col, ds) {
 				var phenotypesHtml = '';

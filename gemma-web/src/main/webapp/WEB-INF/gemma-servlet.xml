@@ -410,10 +410,13 @@
 	<bean id="phenotypeController" class="ubic.gemma.web.controller.PhenotypeController">
 		<dwr:remote javascript="PhenotypeController">
 			<dwr:include method="findCandidateGenes" />
+			<dwr:include method="findExperimentMgedCategory" />
+			<dwr:include method="findExperimentOntologyValue" />
 			<dwr:include method="loadAllPhenotypes" />
 			<dwr:include method="searchOntologyForPhenotypes" />
 			<dwr:include method="findBibliographicReference" />
-			<dwr:include method="validatePhenotypeAssociation" />
+			<dwr:include method="validatePhenotypeAssociationForm" />
+			<dwr:include method="processPhenotypeAssociationForm" />
 			<dwr:include method="removePhenotypeAssociation" />
 		</dwr:remote>
 	</bean>
@@ -744,18 +747,22 @@
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneDetailsValueObject" javascript="GeneDetailsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" 
+			javascript="CitationValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject"
+			javascript="CharacteristicValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject"
 			javascript="EvidenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
 			javascript="ExperimentalEvidenceValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject"
+			javascript="LiteratureEvidenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
 			javascript="ExpressionExperimentSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
@@ -783,7 +790,6 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
 
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject" />

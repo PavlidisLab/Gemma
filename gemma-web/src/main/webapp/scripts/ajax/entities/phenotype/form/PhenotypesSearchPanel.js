@@ -17,49 +17,52 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 		var comboBoxCount = 0;
 		var currentGeneNcbiId = null;
 
-		var createComboButtonPanel = function(phenotypeSelection) {
+		var createRowPanel = function(phenotypeSelection) {
 			var phenotypeSearchComboBox = new Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox({
 				currentGeneNcbiId: currentGeneNcbiId
 			});
 			
-			this.relayEvents(phenotypeSearchComboBox,	['blur', 'select']);			
+			this.relayEvents(phenotypeSearchComboBox, ['blur', 'select']);			
 			phenotypeSearchComboBox.selectPhenotype(phenotypeSelection);	
 			
-			var comboButtonPanel = new Ext.Panel({
+			var rowPanel = new Ext.Panel({
 				border: false,
 				layout: 'hbox',
-			    	items: [ 
-						phenotypeSearchComboBox,
-						{
-							xtype: 'button', // Remove phenotype button
-							icon:'/Gemma/images/icons/subtract.png',
-							margins: '0 0 3 3',			
-							handler: function() {
-								if (comboBoxCount > 1) {
-									rowsPanel.remove(comboButtonPanel);
-									rowsPanel.doLayout();
-									comboBoxCount--;
-				    				this.fireEvent('phenotypeFieldRemoved');
-								} else {
-									phenotypeSearchComboBox.clearValue();
-				    				this.fireEvent('phenotypeFieldCleared');
-								}
-				    		},
-							scope: this				    		
-				    	}					
-			    	] 
+				getPhenotypeSearchComboBox: function() {
+					return phenotypeSearchComboBox;
+				},
+		    	items: [ 
+					phenotypeSearchComboBox,
+					{
+						xtype: 'button', // Remove phenotype button
+						icon:'/Gemma/images/icons/subtract.png',
+						margins: '0 0 3 3',			
+						handler: function() {
+							if (comboBoxCount > 1) {
+								rowsPanel.remove(rowPanel);
+								rowsPanel.doLayout();
+								comboBoxCount--;
+			    				this.fireEvent('phenotypeFieldRemoved');
+							} else {
+								phenotypeSearchComboBox.clearValue();
+			    				this.fireEvent('phenotypeFieldCleared');
+							}
+			    		},
+						scope: this				    		
+			    	}					
+		    	] 
 			}); 
 			
 			comboBoxCount++;
 			
-			return comboButtonPanel;
+			return rowPanel;
 		}.createDelegate(this);
     	
 		var rowsPanel = new Ext.Panel({
 			border: false,
 			layout: 'form',
 	    	items: [
-	    		createComboButtonPanel()
+	    		createRowPanel()
 	    	] 
 		}); 
     	
@@ -68,7 +71,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 			fieldLabel: "&nbsp;",
 			labelSeparator : '',
 			handler: function() {
-				rowsPanel.add(createComboButtonPanel());
+				rowsPanel.add(createRowPanel());
 				rowsPanel.doLayout();
 				this.fireEvent('phenotypeFieldAdded');
 			},
@@ -76,7 +79,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 		});
 		
 		Ext.apply(this, {
-			selectPhenotypes: function (phenotypeSelections, geneSelection) {
+			selectPhenotypes: function(phenotypeSelections, geneSelection) {
 				originalPhenotypeSelections = phenotypeSelections;
 				originalGeneSelection = geneSelection;
 				
@@ -92,10 +95,8 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				}
 				comboBoxCount++;
 
-				var firstPhenotypeSearchComboBox = rowsPanel.items.itemAt(comboBoxCount - 1).items.find(function(item) {
-				    return item instanceof Ext.form.ComboBox;
-				});
-				
+				var firstPhenotypeSearchComboBox = rowsPanel.items.itemAt(comboBoxCount - 1).getPhenotypeSearchComboBox();
+				firstPhenotypeSearchComboBox.currentGeneNcbiId = currentGeneNcbiId;
 				
 				if (phenotypeSelections == null || phenotypeSelections.length <= 0) {
 					firstPhenotypeSearchComboBox.setValue('');
@@ -103,30 +104,27 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 					firstPhenotypeSearchComboBox.clearInvalid();
 				} else {
 					firstPhenotypeSearchComboBox.selectPhenotype(phenotypeSelections[0]);
-					firstPhenotypeSearchComboBox.currentGeneNcbiId = currentGeneNcbiId;
 					
 					for (var i = 1; i < phenotypeSelections.length; i++) {
-						rowsPanel.add(createComboButtonPanel(phenotypeSelections[i]));
+						rowsPanel.add(createRowPanel(phenotypeSelections[i]));
 					}
 					rowsPanel.doLayout();					
 				}
 			},
-			validatePhenotypes: function() {
-				var phenotypeValueUris = [];
-				for (var i = 0; i < rowsPanel.items.length; ++i) {
-					// Find the only one ComboBox in each item in rowsPanel.items.
-				    var currPhenotypeSearchComboBox = rowsPanel.items.itemAt(i).items.find(function(item) {
-				        return item instanceof Ext.form.ComboBox;
-				    });
+			getSelectedPhenotypes: function() {
+				var selectedPhenotypes = [];
+				for (var i = 0; selectedPhenotypes != null && i < rowsPanel.items.length; i++) {
+				    var currPhenotypeSearchComboBox = rowsPanel.items.itemAt(i).getPhenotypeSearchComboBox();
 				
 				    if (currPhenotypeSearchComboBox.getValue() === '') {
-			        	currPhenotypeSearchComboBox.markInvalid('This field is required');
-			        	phenotypeValueUris = null;
-				    } else if (phenotypeValueUris != null) {
-			        	phenotypeValueUris.push(currPhenotypeSearchComboBox.getValue());
+			        	selectedPhenotypes = null;
+				    } else {
+						var characteristicValueObject = new CharacteristicValueObject();
+						characteristicValueObject.valueUri = currPhenotypeSearchComboBox.getValue();
+						selectedPhenotypes.push(characteristicValueObject);				    	
 					}
 				}
-				return phenotypeValueUris;
+				return selectedPhenotypes;
 			},
 			reset: function() {
 				this.selectPhenotypes(originalPhenotypeSelections, originalGeneSelection);
@@ -135,10 +133,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				currentGeneNcbiId = newCurrentGeneNcbiId;
 
 				for (var i = 0; i < rowsPanel.items.length; ++i) {
-					// Find the only one ComboBox in each item in rowsPanel.items.
-				    var currPhenotypeSearchComboBox = rowsPanel.items.itemAt(i).items.find(function(item) {
-				        return item instanceof Ext.form.ComboBox;
-				    });
+				    var currPhenotypeSearchComboBox = rowsPanel.items.itemAt(i).getPhenotypeSearchComboBox();
 				    currPhenotypeSearchComboBox.currentGeneNcbiId = currentGeneNcbiId;
 				}
 			},

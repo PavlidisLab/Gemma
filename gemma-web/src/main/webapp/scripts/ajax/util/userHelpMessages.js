@@ -417,16 +417,21 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	PhenotypeAssociationForm: {
 		ErrorMessage: {
-		    lastUpdateDifferent: 'This evidence has been modified by someone else.<br />Please reload the page to view the updated version.',
+			// The followings are from ValidateEvidenceValueObject.
+		    userNotLoggedIn: 'You have not logged in. Please log in to try again.',
+		    accessDenied: 'Your access is denied.',
+		    lastUpdateDifferent: 'This evidence has been modified by someone else. Please reload the page to view the updated version.',
 		    evidenceNotFound: 'This evidence cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest phenotype association.',
-		    pubmedIdInvalid: 'PubMed Id is not valid.',
+		    pubmedIdInvalid: '{0} is not valid.',
 		    sameGeneAndPhenotypesAnnotated: 'An identical annotation (same gene and same phenotype(s)) already exists for this PubMed Id.',
 		    sameGeneAnnotated: 'An annotation for this gene already exists for this PubMed Id.',
 		    sameGeneAndOnePhenotypeAnnotated: 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
 		    sameGeneAndPhenotypeChildOrParentAnnotated: 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
+		    sameEvidenceFound: 'The same evidence already exists.',
+			// The followings are NOT from ValidateEvidenceValueObject.
 		    errorUnknown: 'System error has occurred. Please contact the system administrator for assistance.',
-		    accessDenied: 'Your access is denied.',
-		    userNotLoggedIn: 'You have not logged in. Please log in to try again.'
+		    pubMedIdsDuplicate: '{0} and {1} should not be the same.',
+		    pubMedIdOnlyPrimaryEmpty: '{0} is required if you specify {1}.'		    
 		}
 	},
 	ProbeLevelDiffExGrid: {

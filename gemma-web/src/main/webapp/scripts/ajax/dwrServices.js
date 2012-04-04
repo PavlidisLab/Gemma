@@ -987,17 +987,26 @@ PhenotypeController._path = '/Gemma/dwr';
 PhenotypeController.findCandidateGenes = function(p0, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, callback);
 }
+PhenotypeController.findExperimentMgedCategory = function(callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentMgedCategory', callback);
+}
+PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentOntologyValue', p0, p1, p2, callback);
+}
 PhenotypeController.loadAllPhenotypes = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypes', callback);
 }
 PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'searchOntologyForPhenotypes', p0, p1, callback);
 }
-PhenotypeController.findBibliographicReference = function(p0, callback) {
-	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findBibliographicReference', p0, callback);
+PhenotypeController.findBibliographicReference = function(p0, p1, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findBibliographicReference', p0, p1, callback);
 }
-PhenotypeController.validatePhenotypeAssociation = function(p0, p1, p2, p3, p4, p5, p6, p7, callback) {
-	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'validatePhenotypeAssociation', p0, p1, p2, p3, p4, p5, p6, p7, callback);
+PhenotypeController.processPhenotypeAssociationForm = function(p0, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'processPhenotypeAssociationForm', p0, callback);
+}
+PhenotypeController.validatePhenotypeAssociationForm = function(p0, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'validatePhenotypeAssociationForm', p0, callback);
 }
 PhenotypeController.removePhenotypeAssociation = function(p0, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removePhenotypeAssociation', p0, callback);

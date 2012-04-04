@@ -7,18 +7,18 @@
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 
 Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox, {
-	hiddenName: "geneNCBI",
 	allowBlank: false,
 	forceSelection: true,				
     store: new Ext.data.JsonStore({
 		proxy: new Ext.data.DWRProxy(GenePickerController.searchGenes),
-		fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', {
+		fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', 'taxonId', {
    			name: 'comboText',
 	    	convert: function(value, record) {
    				return '<div style="font-size:12px;" class="x-combo-list-item" >' +
 	    			record.officialName + ' <span style="color:grey">(' + record.taxonCommonName + ')</span></div>';
    			}
-	    }]
+	    }],
+   	    idProperty: 'ncbiId'
 	}),
     valueField: 'ncbiId',
     displayField: 'officialSymbol',
@@ -85,7 +85,8 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
 						ncbiId: geneSelection.ncbiId,
 						officialSymbol: geneSelection.officialSymbol,
 						officialName: geneSelection.officialName,
-						taxonCommonName: geneSelection.taxonCommonName
+						taxonCommonName: geneSelection.taxonCommonName,
+						taxonId: geneSelection.taxonId
 					}]);
 					this.setValue(geneSelection.ncbiId);
 					geneSelectedLabel.setText(this.getStore().getAt(0).data.comboText, false);

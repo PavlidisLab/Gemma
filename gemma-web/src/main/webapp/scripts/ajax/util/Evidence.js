@@ -63,6 +63,9 @@ Gemma.convertToEvidenceError = function(validateEvidenceValueObject) {
 	} else if (validateEvidenceValueObject.sameGeneAndPhenotypeChildOrParentAnnotated) {
 		isWarning = true;
 		errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.sameGeneAndPhenotypeChildOrParentAnnotated;
+	} else if (validateEvidenceValueObject.sameEvidenceFound) {
+		isWarning = false;
+		errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.sameEvidenceFound;
 	} else {
 		isWarning = false;
 		errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.errorUnknown;
