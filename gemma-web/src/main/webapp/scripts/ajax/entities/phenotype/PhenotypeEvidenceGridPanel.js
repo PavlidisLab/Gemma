@@ -378,14 +378,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-						if ((!this.hidden) &&
-							(record.data.className === 'LiteratureEvidenceValueObject' ||
-							 record.data.className === 'ExperimentalEvidenceValueObject')) {
-		            		if (record.data.evidenceSecurityValueObject.currentUserHasWritePermission) {
-			            		adminLinks += generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
-											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
-		            		}
-		            		
+						if (!this.hidden) {
 							adminLinks += Gemma.SecurityManager.getSecurityLink(
 								'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
 								record.data.id,
@@ -394,7 +387,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								record.data.evidenceSecurityValueObject.currentUserIsOwner,
 								null,
 								null,
-								'Phenotype Association'); // Evidence name for the title in Security dialog.  											
+								'Phenotype Association'); // Evidence name for the title in Security dialog.
+
+							if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
+							 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
+		            		    (record.data.evidenceSecurityValueObject.currentUserHasWritePermission)) {
+			            		adminLinks += '&nbsp;&nbsp;' +
+			            					  generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
+			            					  '&nbsp;&nbsp;' +
+											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
+		            		}
 		            	}
 		            	
 						return adminLinks;
@@ -485,6 +487,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					data.gene = this.currentGene;
 					data.phenotypes = evidencePhenotypes;
 					data.evidenceClassName = evidenceClassName;
+					data.isNegativeEvidence = record.data.isNegativeEvidence;
 					data.description = record.data.description;
 					data.evidenceCode = record.data.evidenceCode;
 					data.lastUpdated = record.data.lastUpdated;

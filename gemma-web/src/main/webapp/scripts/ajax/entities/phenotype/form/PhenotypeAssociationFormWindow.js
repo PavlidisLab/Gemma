@@ -90,6 +90,17 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		var evidenceId = null;		
 		var lastUpdated = null;
 
+		// loadMask needs to be set up on render because this.getEl() has not been defined yet before render.     	
+		this.on('render', function(thisPanel) {
+			if (!thisPanel.loadMask) {
+				thisPanel.loadMask = new Ext.LoadMask(thisPanel.getEl(), {
+					msg: evidenceId == null ?
+							"Adding new phenotype association ..." :
+							"Updating phenotype association ..."
+				});
+			}
+		});    	
+
 		var geneSearchComboBox = new Gemma.PhenotypeAssociationForm.GeneSearchComboBox({
 			listeners: {
 				blur: function(combo) {
@@ -323,6 +334,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			}
 		});
 
+		var isNegativeEvidenceCheckbox = new Ext.form.Checkbox({
+			fieldLabel: 'Negative Evidence'
+		});
+
 		var descriptionTextArea = new Ext.form.TextArea({
 			fieldLabel: 'Note',
 			anchor: ANCHOR_VALUE,
@@ -363,6 +378,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				evidenceValueObject.geneNCBI = geneSearchComboBox.getValue();
 				evidenceValueObject.phenotypes = validatedPhenotypeValueUris;
 				evidenceValueObject.className = evidenceType;
+				evidenceValueObject.isNegativeEvidence = isNegativeEvidenceCheckbox.getValue();
 				evidenceValueObject.description = descriptionTextArea.getValue();
 				evidenceValueObject.evidenceCode = evidenceCodeComboBox.getValue();
 				evidenceValueObject.id = evidenceId;
@@ -409,6 +425,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 						},
 						phenotypesSearchPanel,							
 						evidenceTypeComboBox,
+						isNegativeEvidenceCheckbox,
 						experimentalPanel,							
 						literaturePanel,
 						descriptionTextArea,
@@ -472,7 +489,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							literaturePanel.setPubMedId('');	
 							break;
 					}
-					
+					isNegativeEvidenceCheckbox.setValue(data.isNegativeEvidence);
 					descriptionTextArea.setDescription(data.description);
 					evidenceCodeComboBox.selectEvidenceCode(data.evidenceCode);
 				}
@@ -485,20 +502,24 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			    if (this.getForm().isValid()) {
 			    	var isCreating = (evidenceId == null);
 
-					PhenotypeController.processPhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {			    	
+					this.loadMask.show();
+
+					PhenotypeController.processPhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
+						this.loadMask.hide();
+
 						if (validateEvidenceValueObject == null) {	
 			            	Ext.Msg.alert('Phenotype association ' + (isCreating ? 'added' : 'updated'), 'Phenotype association has been ' + (isCreating ? 'added' : 'updated') + '.');
 							this.fireEvent('phenotypeAssociationChanged');			
 			            } else {
 			            	var title = 'Cannot ' + (isCreating ? 'add' : 'edit') + ' phenotype association';
 
-									Ext.Msg.alert(title, Gemma.convertToEvidenceError(validateEvidenceValueObject).errorMessage,
-										function() {
-											if (validateEvidenceValueObject.userNotLoggedIn) {
-												Gemma.AjaxLogin.showLoginWindowFn();
-											}
-										}
-									);
+							Ext.Msg.alert(title, Gemma.convertToEvidenceError(validateEvidenceValueObject).errorMessage,
+								function() {
+									if (validateEvidenceValueObject.userNotLoggedIn) {
+										Gemma.AjaxLogin.showLoginWindowFn();
+									}
+								}
+							);
 				        }
 					}.createDelegate(this));
 			    }
@@ -513,7 +534,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			},
 			validateForm: function(shouldSubmitAfterValidating) {
 				hasError = false;
-				errorPanel.hide();
+//				errorPanel.hide();
 				
 				var evidenceType = evidenceTypeComboBox.getValue();
 				
@@ -525,7 +546,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 									
 					if (phenotypeValueUris == null || phenotypeValueUris.length <= 0) {
 						hasError = true;
-						errorPanel.hide();
+//						errorPanel.hide();
 					} else {
 						if (evidenceType === 'ExperimentalEvidenceValueObject') {
 							if (!experimentalPanel.isValid()) {
@@ -598,6 +619,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				geneSearchComboBox.reset();
 				phenotypesSearchPanel.reset();
 				evidenceTypeComboBox.reset();	
+				isNegativeEvidenceCheckbox.setValue(false);
 			    literaturePanel.reset();
 				experimentalPanel.reset();
 				descriptionTextArea.reset();
