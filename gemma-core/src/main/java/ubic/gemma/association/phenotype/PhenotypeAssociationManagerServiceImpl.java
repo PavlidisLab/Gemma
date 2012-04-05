@@ -33,6 +33,7 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -100,6 +101,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private UserManager userManager;
+    
+    @Autowired
+    private GeneService geneService;
 
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
@@ -139,6 +143,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .valueObject2Entity( evidence );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
+        
+        Gene gene = phenotypeAssociation.getGene();
+        gene.getPhenotypeAssociations().add(phenotypeAssociation);
+        
+        this.geneService.update( gene);
 
         return validateEvidenceValueObject;
     }

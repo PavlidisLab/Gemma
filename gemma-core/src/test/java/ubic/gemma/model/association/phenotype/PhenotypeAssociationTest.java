@@ -75,14 +75,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
 
-        // make sure all evidence are deleted
-        for ( PhenotypeAssociation p : this.phenotypeAssociationService.loadAll() ) {
-            this.phenotypeAssociationService.remove( p );
-        }
-
-        // delete the test gene
         this.gene = this.geneService.load( this.gene.getId() );
-        this.gene.getPhenotypeAssociations().clear();
+
+        for ( PhenotypeAssociation phenotypeAssociation : this.gene.getPhenotypeAssociations() ) {
+            this.phenotypeAssociationService.remove( phenotypeAssociation );
+        }
+        
+        this.geneService.update( this.gene );
         this.geneService.remove( this.gene );
     }
 
