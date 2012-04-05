@@ -46,11 +46,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @SuppressWarnings("unchecked")
     @Override
     public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct g from GeneImpl as g inner join fetch g.phenotypeAssociations pheAsso inner join fetch pheAsso.phenotypes phe where phe.valueUri in (:phenotypesValueUri)",
-                        "phenotypesValueUri", phenotypesValueUri );
+
+        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+                .createCriteria( "phenotypeAssociations" ).createCriteria( "phenotypes" )
+                .add( Restrictions.in( "valueUri", phenotypesValueUri ) );
+
+        return geneQueryCriteria.list();
     }
 
     /**
