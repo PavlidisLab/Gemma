@@ -66,9 +66,9 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		});
 
 		// loadMask needs to be set up on render because this.getEl() has not been defined yet before render.     	
-		bibliographicReferenceDetailsPanel.on('render', function() {
-			if (!bibliographicReferenceDetailsPanel.loadMask) {
-				bibliographicReferenceDetailsPanel.loadMask = new Ext.LoadMask(bibliographicReferenceDetailsPanel.getEl(), {
+		bibliographicReferenceDetailsPanel.on('render', function(thisPanel) {
+			if (!thisPanel.loadMask) {
+				thisPanel.loadMask = new Ext.LoadMask(thisPanel.getEl(), {
 					msg: "Loading ..."
 				});
 				
