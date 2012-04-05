@@ -86,7 +86,11 @@ public class HomePageController {
                     public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
                         int cf = e1.getValue().compareTo( e2.getValue() );
                         if ( cf == 0 ) {
-                            cf = e1.getKey().getCommonName().compareTo( e2.getKey().getCommonName() );
+                            try{
+                                cf = e1.getKey().getCommonName().compareTo( e2.getKey().getCommonName() );
+                            }catch(Exception e){
+                                cf = 1;
+                            }
                         }
                         return cf;
                     }
