@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
@@ -60,11 +59,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.security.authorization.acl.AclService;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -155,9 +154,12 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
-
+    
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private UserService userService;
 
     /*
      * (non-Javadoc)
@@ -355,6 +357,14 @@ public class SecurityServiceImpl implements SecurityService {
 
         this.userManager.createGroup( groupName, auths );
         addUserToGroup( userManager.getCurrentUsername(), groupName );
+        
+        // make sure all current and future members of the group will be able to see the group
+        UserGroup group = userService.findGroupByName( groupName );
+        if ( group != null ) { // really shouldn't be null
+            this.makeReadableByGroup( group, group.getName() );
+        } else {
+            log.error( "Loading group that was just created failed. Read permissions were not granted to group, see bug 2840." );
+        }
 
     }
 
