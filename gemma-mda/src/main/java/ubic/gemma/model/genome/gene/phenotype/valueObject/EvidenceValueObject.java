@@ -173,7 +173,7 @@ public class EvidenceValueObject {
         return this.evidenceCode;
     }
 
-    public Boolean getIsNegativeEvidence() {
+    public boolean getIsNegativeEvidence() {
         return this.isNegativeEvidence;
     }
 
@@ -219,7 +219,7 @@ public class EvidenceValueObject {
     public void setIsNegativeEvidence( boolean isNegativeEvidence ) {
         this.isNegativeEvidence = isNegativeEvidence;
     }
-
+    
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
