@@ -45,7 +45,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -101,7 +100,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private UserManager userManager;
-    
+
     @Autowired
     private GeneService geneService;
 
@@ -143,11 +142,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .valueObject2Entity( evidence );
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
-        
+
         Gene gene = phenotypeAssociation.getGene();
-        gene.getPhenotypeAssociations().add(phenotypeAssociation);
-        
-        this.geneService.update( gene);
+        gene.getPhenotypeAssociations().add( phenotypeAssociation );
+
+        this.geneService.update( gene );
 
         return validateEvidenceValueObject;
     }
@@ -359,7 +358,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // modify phenotypes
-        populateModifiedPhenotypes( modifedEvidenceValueObject, phenotypeAssociation );
+        populateModifiedPhenotypes( modifedEvidenceValueObject.getPhenotypes(), phenotypeAssociation );
 
         // modify all other values needed
         this.phenotypeAssoManagerServiceHelper
@@ -952,43 +951,53 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 currentUserHasWritePermission, currentUserIsOwner, isPublic, isShared, owner ) );
     }
 
-    private void populateModifiedPhenotypes( EvidenceValueObject evidenceValueObject,
+    /** take care of populating new values for the phenotypes in an update */
+    private void populateModifiedPhenotypes( Set<CharacteristicValueObject> updatedPhenotypes,
             PhenotypeAssociation phenotypeAssociation ) {
 
-        // new phenotypes found on the evidence that will be compared to current phenotypes in the database
-        Set<String> updatedPhenotypesValuesUri = evidenceValueObject.getPhenotypesValueUri();
+        // the modified final phenotype to update
+        Collection<Characteristic> finalPhenotypes = new HashSet<Characteristic>();
 
-        // the final phenotypes to update the evidence with
-        Collection<Characteristic> updatedPhenotypes = new HashSet<Characteristic>();
+        HashMap<Long, CharacteristicValueObject> updatedPhenotypesMap = new HashMap<Long, CharacteristicValueObject>();
 
-        // for each phenotypes determine if it is new or delete
-        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+        for ( CharacteristicValueObject updatedPhenotype : updatedPhenotypes ) {
 
-            if ( cha instanceof VocabCharacteristicImpl ) {
-                String valueUri = ( ( VocabCharacteristicImpl ) cha ).getValueUri();
-
-                // this phenotype been deleted
-                if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
-                    // delete phenotype from the database
-                    this.characteristicService.delete( cha.getId() );
-                }
-                // this phenotype is already on the evidence
-                else {
-                    updatedPhenotypes.add( cha );
-                    updatedPhenotypesValuesUri.remove( valueUri );
-                }
+            // updated
+            if ( updatedPhenotype.getId() != 0 ) {
+                updatedPhenotypesMap.put( updatedPhenotype.getId(), updatedPhenotype );
+            }
+            // new one
+            else {
+                finalPhenotypes.add( this.ontologyHelper.valueUri2Characteristic( updatedPhenotype.getValueUri() ) );
             }
         }
 
-        // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
-        for ( String valueUri : updatedPhenotypesValuesUri ) {
-            Characteristic cha = this.ontologyHelper.valueUri2Characteristic( valueUri );
-            updatedPhenotypes.add( cha );
-        }
+        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
 
-        // set the correct new phenotypes
+            VocabCharacteristic phenotype = ( VocabCharacteristic ) cha;
+
+            CharacteristicValueObject updatedPhenotype = updatedPhenotypesMap.get( phenotype.getId() );
+
+            // found an update, same database id
+            if ( updatedPhenotype != null ) {
+
+                // same values as before
+                if ( updatedPhenotype.getValueUri().equals( phenotype.getValueUri() ) ) {
+                    finalPhenotypes.add( phenotype );
+                } else {
+                    // different values found
+                    phenotype.setValueUri( updatedPhenotype.getValueUri() );
+                    phenotype.setValue( updatedPhenotype.getValue() );
+                    finalPhenotypes.add( phenotype );
+                }
+            }
+            // this phenotype was deleted
+            else {
+                this.characteristicService.delete( cha.getId() );
+            }
+        }
         phenotypeAssociation.getPhenotypes().clear();
-        phenotypeAssociation.getPhenotypes().addAll( updatedPhenotypes );
+        phenotypeAssociation.getPhenotypes().addAll( finalPhenotypes );
     }
 
     /** return a collection of Gene that the user is allowed to see */
