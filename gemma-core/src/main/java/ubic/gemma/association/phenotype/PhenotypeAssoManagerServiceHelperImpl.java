@@ -21,7 +21,6 @@ package ubic.gemma.association.phenotype;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -223,58 +222,63 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             // 1- take care of the characteristic an investigation can have
             // ***************************************************************
 
-            // the final characteristics to update the evidence with
-            Collection<Characteristic> characteristicsUpdated = new HashSet<Characteristic>();
+            Collection<Characteristic> finalCharacteristics = new HashSet<Characteristic>();
 
-            // To determine the change in the Characteristic for an Investigation, the id will be used
-            Map<Long, Characteristic> databaseIds = new HashMap<Long, Characteristic>();
+            HashMap<Long, CharacteristicValueObject> updatedCharacteristicsMap = new HashMap<Long, CharacteristicValueObject>();
 
-            for ( Characteristic cha : experiment.getCharacteristics() ) {
-                databaseIds.put( cha.getId(), cha );
-            }
+            for ( CharacteristicValueObject updatedCharacteristic : experimentalVO.getExperimentCharacteristics() ) {
 
-            Set<Long> newDatabaseIds = new HashSet<Long>();
-
-            for ( CharacteristicValueObject chaVO : experimentalVO.getExperimentCharacteristics() ) {
-
-                // new characteristic, since no database id received
-                if ( chaVO.getId() == 0 ) {
-
-                    VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
-
-                    characteristic.setValue( chaVO.getValue() );
-                    characteristic.setCategory( chaVO.getCategory() );
-                    characteristic.setValueUri( chaVO.getValueUri() );
-                    characteristic.setCategoryUri( chaVO.getCategoryUri() );
-                    characteristicsUpdated.add( characteristic );
-
+                // updated
+                if ( updatedCharacteristic.getId() != 0 ) {
+                    updatedCharacteristicsMap.put( updatedCharacteristic.getId(), updatedCharacteristic );
                 }
-                // not new but could be modified, take the values inside VO
+                // new one
                 else {
-                    newDatabaseIds.add( chaVO.getId() );
-
-                    VocabCharacteristic cha = ( VocabCharacteristic ) databaseIds.get( chaVO.getId() );
-
-                    cha.setValue( chaVO.getValue() );
-                    cha.setValueUri( chaVO.getValueUri() );
-                    cha.setCategory( chaVO.getCategory() );
-                    cha.setCategoryUri( chaVO.getCategoryUri() );
-
-                    characteristicsUpdated.add( cha );
+                    // from ontology
+                    if ( !updatedCharacteristic.getValueUri().equals( "" ) ) {
+                        finalCharacteristics.add( this.ontologyHelper.valueUri2Characteristic( updatedCharacteristic
+                                .getValueUri() ) );
+                    }
+                    // free text
+                    else {
+                        VocabCharacteristic vocabCharacteristic = VocabCharacteristic.Factory.newInstance();
+                        vocabCharacteristic.setValue( updatedCharacteristic.getValue() );
+                        vocabCharacteristic.setCategory( updatedCharacteristic.getCategory() );
+                        vocabCharacteristic.setCategoryUri( updatedCharacteristic.getCategoryUri() );
+                        finalCharacteristics.add( vocabCharacteristic );
+                    }
                 }
             }
 
-            // verify if something was deleted
             for ( Characteristic cha : experiment.getCharacteristics() ) {
 
-                if ( !newDatabaseIds.contains( cha.getId() ) ) {
-                    // delete characteristic from the database
+                VocabCharacteristic experimentCharacteristic = ( VocabCharacteristic ) cha;
+
+                CharacteristicValueObject updatedCharacteristic = updatedCharacteristicsMap
+                        .get( experimentCharacteristic.getId() );
+
+                // found an update, same database id
+                if ( updatedCharacteristic != null ) {
+
+                    // same values as before
+                    if ( updatedCharacteristic.equals( experimentCharacteristic ) ) {
+                        finalCharacteristics.add( experimentCharacteristic );
+                    } else {
+                        // different values found
+                        experimentCharacteristic.setValueUri( updatedCharacteristic.getValueUri() );
+                        experimentCharacteristic.setValue( updatedCharacteristic.getValue() );
+                        experimentCharacteristic.setCategory( updatedCharacteristic.getCategory() );
+                        experimentCharacteristic.setCategoryUri( updatedCharacteristic.getCategoryUri() );
+                        finalCharacteristics.add( experimentCharacteristic );
+                    }
+                }
+                // this experimentCharacteristic was deleted
+                else {
                     this.characteristicService.delete( cha.getId() );
                 }
             }
-
             experiment.getCharacteristics().clear();
-            experiment.getCharacteristics().addAll( characteristicsUpdated );
+            experiment.getCharacteristics().addAll( finalCharacteristics );
 
             // ***************************************************************
             // 2- The bibliographic references
@@ -517,11 +521,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     /** calls findOrCreateBibliographicReference for a Collection */
     private Collection<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
 
-        Collection<BibliographicReference> bibliographicReferences = null;
+        Collection<BibliographicReference> bibliographicReferences = new HashSet<BibliographicReference>();
 
         if ( pubMedIds != null && !pubMedIds.isEmpty() ) {
-
-            bibliographicReferences = new HashSet<BibliographicReference>();
 
             for ( String pubmedId : pubMedIds ) {
 
