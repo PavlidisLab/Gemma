@@ -56,9 +56,15 @@ public class UserServiceImpl implements UserService {
         // add user to list of members
         group.getGroupMembers().add( user );
         this.userGroupDao.update( group );
-        // grant read permissions to newly added user
-        this.securityService.makeReadableByGroup( group, group.getName() );
         
+        //FIXME: Maybe user registration should be a completely separate, isolated code path.
+        // Or maybe call to makeReadableByGroup shouldn't be here in the first place.
+        //if (group.getName().equals( "Users" )) {
+            // USERS group is a special case                 
+//        } else {
+            // grant read permissions to newly added user
+//            this.securityService.makeReadableByGroup( group, group.getName() );
+ //       }
     }
 
     @Override
