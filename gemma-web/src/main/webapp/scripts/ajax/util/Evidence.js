@@ -52,7 +52,7 @@ Gemma.convertToEvidenceError = function(validateEvidenceValueObject) {
 		isWarning = false;
 		errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid;
 	} else if (validateEvidenceValueObject.sameGeneAndPhenotypesAnnotated) {
-		isWarning = false;
+		isWarning = true;
 		errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.sameGeneAndPhenotypesAnnotated;
 	} else if (validateEvidenceValueObject.sameGeneAnnotated) {
 		isWarning = true;
