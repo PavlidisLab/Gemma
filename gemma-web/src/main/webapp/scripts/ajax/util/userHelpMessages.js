@@ -431,7 +431,9 @@ Gemma.HelpText.WidgetDefaults = {
 			// The followings are NOT from ValidateEvidenceValueObject.
 		    errorUnknown: 'System error has occurred. Please contact the system administrator for assistance.',
 		    pubMedIdsDuplicate: '{0} and {1} should not be the same.',
-		    pubMedIdOnlyPrimaryEmpty: '{0} is required if you specify {1}.'		    
+		    pubMedIdOnlyPrimaryEmpty: '{0} is required if you specify {1}.',
+		    phenotypesDuplicate: 'Phenotypes should not have duplicate.',
+		    experimentTagsDuplicate: 'Experiment tags should not have duplicate.'
 		}
 	},
 	ProbeLevelDiffExGrid: {
