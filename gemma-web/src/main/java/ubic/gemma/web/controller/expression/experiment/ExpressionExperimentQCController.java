@@ -164,7 +164,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         SVDValueObject svdo = null;
         try {
-            svdo = svdService.svdFactorAnalysis( ee );
+            svdo = svdService.getSvdFactorAnalysis( ee.getId() );
         } catch ( Exception e ) {
             // if there is no pca
             // log.error( e, e );
@@ -192,7 +192,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDValueObject svdo = svdService.getSvd( ee.getId() );
 
         if ( svdo != null ) {
             this.writePCAScree( os, svdo );
@@ -362,7 +362,7 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id " + eeid ); // or access deined.
         }
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDValueObject svdo = svdService.getSvd( ee.getId() );
 
         DoubleMatrix<Long, Integer> vMatrix = svdo.getvMatrix();
 
@@ -743,7 +743,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws Exception
      */
     private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
-        SVDValueObject svdo = svdService.svdFactorAnalysis( ee );
+        SVDValueObject svdo = svdService.getSvdFactorAnalysis( ee.getId() );
         if ( svdo == null ) return false;
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {

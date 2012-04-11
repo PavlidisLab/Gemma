@@ -14,71 +14,16 @@
  */
 package ubic.gemma.analysis.preprocess.svd;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
-
-import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-/**
- * Performs Singular value decomposition on experiment data to get eigengenes, and does comparison of those PCs to
- * factors recorded in the experimental design.
- * 
- * @author paul
- * @version $Id$
- */
 public interface SVDService {
+    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count );
+    public boolean hasPca( Long eeId );
+    public SVDValueObject getSvd( Long eeId );
+    public SVDValueObject svd( Long eeId );   
+    public SVDValueObject getSvdFactorAnalysis( Long eeId );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee );
-
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void svd( Collection<ExpressionExperiment> ees );
-
-    /**
-     * @param ee
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public SVDValueObject svd( ExpressionExperiment ee );
-
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
-            int count );
-
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public boolean hasPca( ExpressionExperiment ee );
-
-    /**
-     * @param ee
-     * @param experimentalFactors to consider
-     * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
-     * @return factors which are "significantly" associated with one of the first three PCs
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
-            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold );
-
-    /**
-     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     * 
-     * @param ee
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
-
-    /**
-     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     * 
-     * @param ee
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
 }

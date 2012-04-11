@@ -18,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -46,7 +47,7 @@ public class SvdTaskImpl implements SvdTask {
         TaskResult result = new TaskResult( command, null );
 
         if ( command.getExpressionExperiment() != null ) {
-            svdService.svd( command.getExpressionExperiment() );
+            svdService.svd( command.getExpressionExperiment().getId() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

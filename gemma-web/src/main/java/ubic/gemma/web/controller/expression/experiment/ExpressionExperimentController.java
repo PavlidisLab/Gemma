@@ -312,7 +312,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
+        
     @Autowired
     private SVDService svdService;
 
@@ -733,7 +733,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         qc.setEe( ee.getId() ); 
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
-        qc.setHasPCA( svdService.hasPca( ee ) );
+        qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setHasPvalueDist( ExpressionExperimentQCUtils.hasPvalueDistFiles( ee ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         return qc.getQChtml();
@@ -1535,7 +1535,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) { 
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment ) );
+        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
         mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) ); // this is not
         // fully
         // implemented
@@ -1682,7 +1682,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                SVDValueObject svd = svdService.svdFactorAnalysis( ee );
+                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
                 if ( svd == null ) break;
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );

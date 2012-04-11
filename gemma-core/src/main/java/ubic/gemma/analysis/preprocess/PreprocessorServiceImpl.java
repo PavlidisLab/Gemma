@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -94,7 +94,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private TwoChannelMissingValues twoChannelMissingValueService;
 
     @Autowired
-    private SVDService svdService;
+    private SVDServiceHelper svdService;
 
     @Autowired
     private BatchInfoPopulationService batchInfoPopulationService;

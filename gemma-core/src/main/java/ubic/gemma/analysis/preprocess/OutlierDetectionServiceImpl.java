@@ -27,7 +27,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig; 
-import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -62,7 +62,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private SVDService svdService;
+    private SVDServiceHelper svdService;
 
     /*
      * (non-Javadoc)

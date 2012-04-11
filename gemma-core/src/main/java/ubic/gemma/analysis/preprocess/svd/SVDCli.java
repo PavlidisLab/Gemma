@@ -79,10 +79,11 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
             try {
                 log.info( "Processing: " + bas );
+                ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                 if ( postAnalysisOnly ) {
-                    svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas );
+                    svdser.getSvdFactorAnalysis( ee.getId() );
                 } else {
-                    svdser.svd( ( ExpressionExperiment ) bas );
+                    svdser.svd( ee.getId() );
                 }
                 this.successObjects.add( bas.toString() );
 

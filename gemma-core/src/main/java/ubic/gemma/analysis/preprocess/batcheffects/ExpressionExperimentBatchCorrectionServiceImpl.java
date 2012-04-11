@@ -34,7 +34,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -71,7 +71,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private SVDService svdService;
+    private SVDServiceHelper svdService;
 
     /* (non-Javadoc)
      * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#checkBatchEffectSeverity(ubic.gemma.model.expression.experiment.ExpressionExperiment)

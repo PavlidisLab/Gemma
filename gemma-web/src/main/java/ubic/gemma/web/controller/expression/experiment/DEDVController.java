@@ -236,12 +236,12 @@ public class DEDVController {
     public VisualizationValueObject[] getDEDVForPcaVisualization( Long eeId, int component, int count ) {
         StopWatch watch = new StopWatch();
         watch.start();
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) return null;
-
-        Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
+        
+        Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( eeId,
                 component, count );
+        
+        if (topLoadedVectors == null) return null;
+        
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
@@ -667,11 +667,12 @@ public class DEDVController {
 
         if ( request.getParameter( "pca" ) != null ) {
             int component = Integer.parseInt( request.getParameter( "component" ) );
-            ExpressionExperiment ee = expressionExperimentService.load( eeIds.iterator().next() );
-            if ( ee == null ) return null;
+            Long eeId = eeIds.iterator().next();            
 
-            Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
+            Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( eeId,
                     component, thresh.intValue() );
+            
+            if (topLoadedVectors == null) return null;
 
             mav.addObject( "text", format4File( topLoadedVectors.values() ) );
             return mav;
