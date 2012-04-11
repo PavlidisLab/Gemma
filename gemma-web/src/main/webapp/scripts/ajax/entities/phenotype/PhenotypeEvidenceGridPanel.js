@@ -392,10 +392,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
 							 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
 		            		    (record.data.evidenceSecurityValueObject.currentUserHasWritePermission)) {
-			            		adminLinks += '&nbsp;&nbsp;' +
+			            		adminLinks += ' ' +
 			            					  generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
-			            					  '&nbsp;&nbsp;' +
-											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png') + ' ';
+											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png');
 		            		}
 		            	}
 		            	
