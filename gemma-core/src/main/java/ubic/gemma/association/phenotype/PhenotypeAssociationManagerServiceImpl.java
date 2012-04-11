@@ -326,6 +326,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( modifedEvidenceValueObject.getId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
         }
+        
+        if ( isEvidenceAlreadyInDatabase( modifedEvidenceValueObject ) ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setSameEvidenceFound( true );
+            return validateEvidenceValueObject;
+        }
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
 
