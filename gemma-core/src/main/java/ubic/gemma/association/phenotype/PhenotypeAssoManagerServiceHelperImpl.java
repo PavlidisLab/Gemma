@@ -234,19 +234,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                 }
                 // new one
                 else {
-                    // from ontology
-                    if ( !updatedCharacteristic.getValueUri().equals( "" ) ) {
-                        finalCharacteristics.add( this.ontologyHelper.valueUri2Characteristic( updatedCharacteristic
-                                .getValueUri() ) );
-                    }
-                    // free text
-                    else {
-                        VocabCharacteristic vocabCharacteristic = VocabCharacteristic.Factory.newInstance();
-                        vocabCharacteristic.setValue( updatedCharacteristic.getValue() );
-                        vocabCharacteristic.setCategory( updatedCharacteristic.getCategory() );
-                        vocabCharacteristic.setCategoryUri( updatedCharacteristic.getCategoryUri() );
-                        finalCharacteristics.add( vocabCharacteristic );
-                    }
+                    Characteristic characteristic = this.ontologyHelper
+                            .characteristicValueObject2Characteristic( updatedCharacteristic );
+                    finalCharacteristics.add( characteristic );
                 }
             }
 
@@ -265,10 +255,13 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                         finalCharacteristics.add( experimentCharacteristic );
                     } else {
                         // different values found
-                        experimentCharacteristic.setValueUri( updatedCharacteristic.getValueUri() );
-                        experimentCharacteristic.setValue( updatedCharacteristic.getValue() );
-                        experimentCharacteristic.setCategory( updatedCharacteristic.getCategory() );
-                        experimentCharacteristic.setCategoryUri( updatedCharacteristic.getCategoryUri() );
+                        VocabCharacteristic vocabCharacteristic = this.ontologyHelper
+                                .characteristicValueObject2Characteristic( updatedCharacteristic );
+
+                        experimentCharacteristic.setValueUri( vocabCharacteristic.getValueUri() );
+                        experimentCharacteristic.setValue( vocabCharacteristic.getValue() );
+                        experimentCharacteristic.setCategory( vocabCharacteristic.getCategory() );
+                        experimentCharacteristic.setCategoryUri( vocabCharacteristic.getCategoryUri() );
                         finalCharacteristics.add( experimentCharacteristic );
                     }
                 }

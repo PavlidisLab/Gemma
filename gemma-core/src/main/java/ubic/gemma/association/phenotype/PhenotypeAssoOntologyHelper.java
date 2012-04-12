@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -17,13 +19,14 @@ import ubic.gemma.ontology.OntologyService;
 
 public class PhenotypeAssoOntologyHelper {
 
+    private OntologyService ontologyService = null;
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
-    
-    
+
     /** used to set the Ontology terms */
     public PhenotypeAssoOntologyHelper( OntologyService ontologyService ) throws Exception {
+        this.ontologyService = ontologyService;
         this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
         this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
         this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
@@ -97,6 +100,34 @@ public class PhenotypeAssoOntologyHelper {
 
         }
         return characteristicsVO;
+    }
+
+    /** CharacteristicValueObject to Characteristic with no valueUri given */
+    public VocabCharacteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject ) {
+
+        VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
+        characteristic.setCategory( characteristicValueObject.getCategory() );
+        characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
+        characteristic.setValue( characteristicValueObject.getValue() );
+
+        if ( characteristic.getValueUri() != null && !characteristic.getValueUri().equals( "" ) ) {
+            characteristic.setValueUri( characteristicValueObject.getValueUri() );
+        } else {
+
+            // format the query for lucene to look for ontology terms with an exact match for the value
+            String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " )
+                    + "\"";
+
+            Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
+
+            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+                if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
+                    characteristic.setValueUri( ontologyTerm.getUri() );
+                    break;
+                }
+            }
+        }
+        return characteristic;
     }
 
 }
