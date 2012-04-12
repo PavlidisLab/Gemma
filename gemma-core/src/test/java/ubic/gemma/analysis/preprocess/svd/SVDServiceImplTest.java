@@ -57,7 +57,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
         assertNotNull( ee );
 
-        SVDValueObject svd = svdService.svd( ee );
+        SVDValueObject svd = svdService.svd( ee.getId() );
 
         assertNotNull( svd );
 
