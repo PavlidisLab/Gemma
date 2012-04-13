@@ -545,7 +545,7 @@
 	</bean>
 
 
-	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
+	<bean id="indexController" class="ubic.gemma.web.controller.IndexController">
 		<dwr:remote javascript="IndexService">
 			<dwr:include method="index" />
 		</dwr:remote>
