@@ -554,6 +554,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	extraPanelParams:{}, // used for class extensions, allows more configs to be passed on to panel
+	layout:'fit',
 	constructor: function(config){
 		
 		// don't want panel and window to have title
