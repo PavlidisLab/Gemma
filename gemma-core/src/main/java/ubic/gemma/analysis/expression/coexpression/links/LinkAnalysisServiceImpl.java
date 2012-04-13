@@ -42,7 +42,8 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
@@ -92,7 +93,7 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul
  * @version $Id$
  */
-@Component
+@Service
 public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private static class Creator {

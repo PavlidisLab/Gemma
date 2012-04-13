@@ -40,6 +40,8 @@ import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -77,6 +79,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Autowired
     BioAssayService bioAssayService;
+    
+    @Autowired
+    BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
     FactorValueService factorValueService;
@@ -218,7 +223,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             i = 0;
             log.debug( vector.getDesignElement().getName() + " ........................." );
 
-            for ( BioAssay ba : vector.getBioAssayDimension().getBioAssays() ) {
+            //thawingto avoid lazy error because we are outside of transaction in this test. All references in code run inside a transaction
+            BioAssayDimension bioAssayDimension = bioAssayDimensionService.thawLite(vector.getBioAssayDimension() );
+            
+            Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
+            
+            for ( BioAssay ba : bioAssays ) {
 
                 assertEquals( 1, ba.getSamplesUsed().size() );
 
