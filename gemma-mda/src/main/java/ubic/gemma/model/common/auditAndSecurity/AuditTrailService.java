@@ -35,21 +35,20 @@ public interface AuditTrailService {
     /**
      * 
      */
-
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public void addComment( Auditable auditable, java.lang.String comment, java.lang.String detail );
-
-    /**
-     * 
-     */
-    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public void addOkFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
+    public void addComment( Auditable auditable, String comment, String detail );
 
     /**
      * 
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public void addTroubleFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
+    public void addOkFlag( Auditable auditable, String comment, String detail );
+
+    /**
+     * 
+     */
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void addTroubleFlag( Auditable auditable, String comment, String detail );
 
     /**
      * <p>
@@ -57,39 +56,31 @@ public interface AuditTrailService {
      * </p>
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, java.lang.String note );
+    public AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     /**
      * 
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, java.lang.String note );
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
 
     /**
      * 
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, java.lang.String note,
-            java.lang.String detail );
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
 
     /**
      * 
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, java.lang.String note,
-            java.lang.String detail );
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail );
 
     /**
      * 
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public void addValidatedFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
-
-    /**
-     * 
-     */
-    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public void audit( Auditable entity, AuditEvent auditEvent );
+    public void addValidatedFlag( Auditable auditable, String comment, String detail );
 
     /**
      * 
@@ -112,5 +103,11 @@ public interface AuditTrailService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
+
+    /**
+     * 
+     */
+//    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+//    public void audit( Auditable entity, AuditEvent auditEvent );
 
 }

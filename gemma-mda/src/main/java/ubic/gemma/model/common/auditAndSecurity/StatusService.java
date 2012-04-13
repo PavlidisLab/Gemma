@@ -22,11 +22,11 @@ import ubic.gemma.model.common.Auditable;
  */
 public interface StatusService {
 
-    public void initializeStatus( Auditable auditable );
+    //public void initializeStatus( Auditable auditable );
 
-    public Status create();
+    //public Status create();
 
-    public void update( Status status );
+    //public void update( Status status );
     
     public Status getStatus( Auditable auditable );
 

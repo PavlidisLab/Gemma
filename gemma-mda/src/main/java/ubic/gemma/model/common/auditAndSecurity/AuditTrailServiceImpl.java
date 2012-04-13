@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.Auditable;
@@ -39,9 +40,18 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl
  * @version $Id$
  */
 @Service
-public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase {
+public class AuditTrailServiceImpl implements AuditTrailService {
 
     private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
+   
+    @Autowired
+    private AuditTrailDao auditTrailDao;
+
+    @Autowired
+    private AuditEventDao auditEventDao;
+
+    @Autowired
+    private StatusDao statusDao;
 
     /*
      * (non-Javadoc)
@@ -49,9 +59,10 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
      * java.lang.Class, java.lang.String, java.lang.String)
      */
-    @Override
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
-            String detail ) {
+    public AuditEvent addUpdateEvent( Auditable auditable,
+                                      Class<? extends AuditEventType> type,
+                                      String note,
+                                      String detail ) {
 
         AuditEventType auditEventType = null;
 
@@ -66,132 +77,228 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         return this.addUpdateEvent( auditable, auditEventType, note, detail );
     }
 
-    @Override
-    protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = new CommentedEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
-
+    public List<AuditEvent> getEvents( Auditable ad ) {
+        return this.auditEventDao.getEvents( ad );
+    }
+    
+    /**
+     * @see AuditTrailService#addComment(Auditable, String, String)
+     */
+    public void addComment( final Auditable auditable,
+                            final String comment,
+                            final String detail ) {
+        try {           
+            AuditEventType type = new CommentedEventImpl();
+            this.addUpdateEvent( auditable, type, comment, detail );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addComment(Auditable auditable, String comment, String detail)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected void handleAddOkFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
-        // should only be used to reverse "trouble".
-        AuditEventType type = new OKStatusFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
+    /**
+     * @see AuditTrailService#addOkFlag(Auditable, String, String)
+     */
+    public void addOkFlag( final Auditable auditable,
+                           final String comment,
+                           final String detail ) {
+        try {
+            // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
+            // should only be used to reverse "trouble".
+            AuditEventType type = new OKStatusFlagEventImpl();
+            this.addUpdateEvent( auditable, type, comment, detail );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addOkFlag(Auditable auditable, String comment, String detail)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected void handleAddTroubleFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = new TroubleStatusFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
+    /**
+     * @see AuditTrailService#addTroubleFlag(Auditable, String, String)
+     */
+    public void addTroubleFlag( final Auditable auditable, 
+                                final String comment,
+                                final String detail ) {
+        try {
+            AuditEventType type = new TroubleStatusFlagEventImpl();
+            this.addUpdateEvent( auditable, type, comment, detail );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addTroubleFlag(Auditable auditable, String comment, String detail)' --> "
+                            + th, th );
+        }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleAddUpdateEvent(ubic.gemma.model.common.Auditable
-     * , ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, String)
+     */
+    public AuditEvent addUpdateEvent ( final Auditable auditable,
+                                       final String note ) {
+        try {
+            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+            auditEvent.setDate( new Date() );
+            auditEvent.setAction( AuditAction.UPDATE );
+            auditEvent.setNote( note );
+            this.statusDao.update( auditable, null );
+            return this.auditTrailDao.addEvent( auditable, auditEvent );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
+     */
+    public AuditEvent addUpdateEvent( final Auditable auditable,
+                                      final AuditEventType auditEventType,
+                                      final String note ) {
+        try {
+            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+            auditEvent.setDate( new Date() );
+            auditEvent.setAction( AuditAction.UPDATE );
+            auditEvent.setEventType( auditEventType );
+            auditEvent.setNote( note );
+            this.statusDao.update( auditable, auditEventType );
+            return this.auditTrailDao.addEvent( auditable, auditEvent );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note )
-            throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-        this.getStatusDao().update( auditable, auditEventType );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    public AuditEvent addUpdateEvent( final Auditable auditable,
+                                      final AuditEventType auditEventType,
+                                      final String note,
+                                      final String detail ) {
+        try {
+                AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+                auditEvent.setDate( new Date() );
+                auditEvent.setAction( AuditAction.UPDATE );
+                auditEvent.setEventType( auditEventType );
+                auditEvent.setNote( note );
+                auditEvent.setDetail( detail );
+                this.statusDao.update( auditable, auditEventType );
+                return this.auditTrailDao.addEvent( auditable, auditEvent );            
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note, String detail)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
-            String detail ) throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-        auditEvent.setDetail( detail );
-        this.getStatusDao().update( auditable, auditEventType );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
+     *      java.lang.String, java.lang.String)
+     */
+    public void addValidatedFlag( final Auditable auditable,
+                                  final String comment,
+                                  final String detail ) {
+        try {
+            AuditEventType type = new ValidatedFlagEventImpl();
+            this.addUpdateEvent( auditable, type, comment, detail );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addValidatedFlag(Auditable auditable, String comment, String detail)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( note );
-        this.getStatusDao().update( auditable, null );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public AuditTrail create( final AuditTrail auditTrail ) {
+        try {
+            return this.auditTrailDao.create( auditTrail );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.create(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                            + th, th );
+        }
     }
 
-    @Override
-    protected void handleAddValidatedFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = new ValidatedFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
-
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
+     */
+    public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
+        try {
+            AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
+            if ( troubleEvent == null ) {
+                return null;
+            }
+            AuditEvent okEvent = this.auditEventDao.getLastEvent( auditable, OKStatusFlagEventImpl.class );
+            if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
+                return null;
+            }
+            return troubleEvent;
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.getLastTroubleEvent(Auditable auditable)' --> "
+                            + th, th );
+        }
     }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(Auditable)
+     */
+    public AuditEvent getLastValidationEvent( final Auditable auditable ) {
+        try {
+            return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.getLastValidationEvent(Auditable auditable)' --> "
+                            + th, th );
+        }
+    }
+
+    
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Auditable,
+     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+//    public void audit( final Auditable entity, final AuditEvent auditEvent ) {
+//        try {
+//            this.handleAudit( entity, auditEvent );
+//        } catch ( Throwable th ) {
+//            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+//                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.audit(ubic.gemma.model.common.Auditable entity, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
+//                            + th, th );
+//        }
+//    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Describable,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
-    @Override
-    protected void handleAudit( Auditable entity, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
-            throws java.lang.Exception {
-
-        if ( entity == null || entity.getId() == null ) return;
-
-        AuditTrail at = entity.getAuditTrail();
-        if ( at == null ) {
-            at = AuditTrail.Factory.newInstance();
-            at.start(); // uh-oh, have to update the entity. Hard to do from here.
-            if ( auditEvent != null ) at.addEvent( auditEvent ); // should we do that? I guess so.
-            this.getAuditTrailDao().create( at );
-            log.warn( "Creating new audit trail for " + entity );
-        } else {
-            if ( auditEvent == null ) throw new IllegalArgumentException( "auditEvent cannot be null" );
-            at.addEvent( auditEvent );
-            this.getStatusDao().update( entity, auditEvent.getEventType());
-            this.getAuditTrailDao().update( at );
-            log.debug( "Added event " + auditEvent.getAction() + " to " + entity );
-        }
-    }
-
-    /**
-     * @param auditTrail
-     * @return
-     */
-    @Override
-    protected AuditTrail handleCreate( AuditTrail auditTrail ) {
-        return this.getAuditTrailDao().create( auditTrail );
-    }
-
-    @Override
-    protected AuditEvent handleGetLastTroubleEvent( Auditable auditable ) throws Exception {
-        AuditEvent troubleEvent = getAuditEventDao().getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
-        if ( troubleEvent == null ) {
-            return null;
-        }
-        AuditEvent okEvent = getAuditEventDao().getLastEvent( auditable, OKStatusFlagEventImpl.class );
-        if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
-            return null;
-        }
-        return troubleEvent;
-
-    }
-
-    @Override
-    protected AuditEvent handleGetLastValidationEvent( Auditable auditable ) throws Exception {
-        return getAuditEventDao().getLastEvent( auditable, ValidatedFlagEventImpl.class );
-    }
-
-    @Override
-    public List<AuditEvent> getEvents( Auditable ad ) {
-        return getAuditEventDao().getEvents( ad );
-    }
+//    protected void handleAudit( Auditable entity, AuditEvent auditEvent )
+//            throws Exception {
+//
+//        if ( entity == null || entity.getId() == null ) return;
+//
+//        AuditTrail at = entity.getAuditTrail();
+//        if ( at == null ) {
+//            at = AuditTrail.Factory.newInstance();
+//            at.start(); // uh-oh, have to update the entity. Hard to do from here.
+//            if ( auditEvent != null ) at.addEvent( auditEvent ); // should we do that? I guess so.
+//            this.auditTrailDao.create( at );
+//            log.warn( "Creating new audit trail for " + entity );
+//        } else {
+//            if ( auditEvent == null ) throw new IllegalArgumentException( "auditEvent cannot be null" );
+//            at.addEvent( auditEvent );
+//            this.statusDao.update( entity, auditEvent.getEventType());
+//            this.auditTrailDao.update( at );
+//            log.debug( "Added event " + auditEvent.getAction() + " to " + entity );
+//        }
+//    }
+    
+    
 }
