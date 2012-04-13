@@ -53,6 +53,10 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 					}
 				});
 
+		// if the user is an admin, show the "refresh all" button
+		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin')
+				.getValue() : false;
+				
 		/*
 		 * If the URL contains a list of IDs, limit ourselves to that.
 		 */
@@ -61,6 +65,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 		var ids = null;
 		var taxonid = null;
 		var filterMode = null;
+		var showPublic = true;//!isAdmin;
 		if (queryStart > -1) {
 			var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
 			ids = urlParams.ids ? urlParams.ids.split(',') : null;
@@ -69,6 +74,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 					? urlParams.limit
 					: Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 			filterMode = urlParams.filter ? urlParams.filter : null;
+			showPublic = urlParams.showPublic ? urlParams.showPublic : showPublic;
 		}
 
 		var reportGrid = new Gemma.EEReportGrid({
@@ -76,7 +82,8 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 					taxonid : taxonid,
 					limit : limit,
 					filterType : filterMode,
-					ids : ids
+					ids : ids,
+					showPublic : showPublic
 				});
 
 		reportGrid.getSelectionModel().on('rowselect', showEEDetails, this, {
@@ -92,10 +99,6 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 					height : 200,
 					autoScroll : true
 				});
-
-		// if the user is an admin, show the "refresh all" button
-		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin')
-				.getValue() : false;
 
 		this.refreshAllLink = (isAdmin)
 				? '<span style="font-weight:normal"> &nbsp;&nbsp | &nbsp;&nbsp; To update all reports click '
@@ -172,7 +175,8 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 		var ids = (this.ids) ? this.ids : null;
 		var taxonid = (this.taxonid) ? this.taxonid : null;
 		var filterMode = (this.filterMode) ? this.filterMode : null;
-
+		var showPublic = (this.showPublic) ? this.showPublic : false;
+		
 		var store = new Gemma.PagingDataStore({
 			autoLoad : true,
 			proxy : new Ext.data.DWRProxy({
@@ -184,7 +188,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 									&& request.options.params instanceof Array) {
 								return request.options.params;
 							}
-							return [ids, taxonid, limit, filterMode];
+							return [ids, taxonid, limit, filterMode, showPublic];
 						}
 					}
 				}
@@ -306,13 +310,18 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 									+ ".  \nPlease try again.");
 				});
 
-		var topToolbar = new Gemma.EEReportGridToolbar();
+		var topToolbar = new Gemma.EEReportGridToolbar({
+					showPublic : showPublic,
+					listeners : {
+						'loadStore' : function(paramArr) {
+							this.store.load({
+										params : paramArr
+									});
+						},
+						scope : this
 
-		topToolbar.on('loadStore', function(paramArr) {
-					this.store.load({
-								params : paramArr
-							});
-				}, this);
+					}
+				});
 
 		this.searchInGridField = new Ext.form.TextField({
 					enableKeyEvents : true,
@@ -817,15 +826,15 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 	refresh : function() {
 		this.setFiltersToDefault();
 		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType]);
+						this.filterType, this.showPublic]);
 	},
 
 	filterType : null,
-
+	
 	filterByNeed : function(box, record, index) {
 		this.filterType = record.get('filterType');
 		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType]);
+						this.filterType, this.showPublic]);
 	},
 
 	filterByTaxon : function(box, record, index) {
@@ -838,7 +847,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		}
 
 		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType]);
+						this.filterType, this.showPublic]);
 
 	},
 
@@ -848,7 +857,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		// this.searchCombo.clearValue();
 
 		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType]);
+						this.filterType, this.showPublic]);
 	},
 
 	filterBySearch : function(box, record, index) {
@@ -862,7 +871,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		// this.limitCombo.clearValue();
 
 		this.fireEvent('loadStore', [this.taxonid, this.ids,
-						Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType]);
+						Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType, this.showPublic]);
 	},
 
 	downloadAsText : function() {
@@ -883,6 +892,9 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		}
 		if (this.filterType) {
 			url += "&filter=" + this.filterType;
+		}
+		if (this.showPublic) {
+			url += "&showPublic=" + this.showPublic;
 		}
 
 		Ext.Msg.alert("Your link to this list", '<a href="' + url + '">' + url
@@ -974,6 +986,21 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 					}
 				});
 
+		// hacky fix for reference needed to "this" in applyState
+		var toolbarScope = this;
+		this.showPublicCheck = new Ext.form.Checkbox({
+					tooltip : "Show/hide your public data sets.",
+					boxLabel : "Show your public data",
+					checked : this.showPublic,
+					handler : function(checkbox, event) {
+						this.showPublic = checkbox.getValue();
+						this.fireEvent('loadStore', [this.taxonid, this.ids,
+										this.limit, this.filterType,
+										this.showPublic]);
+					},
+					scope : this
+				});
+
 		// set combos to initial values
 		this.on('afterrender', function() {
 					this.taxonCombo.getStore().on('doneLoading', function() {
@@ -1030,7 +1057,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 								handler : this.refresh,
 								tooltip : "Clear filters",
 								scope : this
-							}, '->', {
+							}, '->', this.showPublicCheck, {
 								xtype : 'button',
 								minWidth : 20,
 								cls : 'x-btn-icon',
