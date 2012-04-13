@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -37,6 +40,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class FactorProfile {
 
+    private static Log log = LogFactory.getLog( FactorProfile.class );
     /**
      * In which case the Y values will not be constant and we provide but a single vector.
      */
@@ -108,31 +112,39 @@ public class FactorProfile {
         int i = 0;
         Double lastValue = 0.0;
         boolean first = true;
+        int nullCount = 0;
 
         for ( Double d : values ) {
-            if ( this.isContinuous ) {
-                currentList.add( new DoublePoint( i, d ) );
-                i++;
-                continue;
-            }
-
-            if ( first ) {
-                currentList.add( new DoublePoint( i, 0 ) );
-                first = false;
-            } else if ( d != lastValue ) {
-                // save the list we just finished.
-                currentList.add( new DoublePoint( i, 0 ) );
-                if ( currentList.size() > 0 ) {
-                    this.plots.add( currentList );
+            if ( d == null ) {
+                nullCount++;
+            }else{
+                if ( this.isContinuous ) {
+                    currentList.add( new DoublePoint( i, d ) );
+                    i++;
+                    continue;
                 }
 
-                // start a new list, don't increment the X axis.
-                currentList = new ArrayList<DoublePoint>();
-                currentList.add( new DoublePoint( i, 0 ) );
-            } else {
-                i++;
+                if ( first ) {
+                    currentList.add( new DoublePoint( i, 0 ) );
+                    first = false;
+                } else if ( d != lastValue ) {
+                    // save the list we just finished.
+                    currentList.add( new DoublePoint( i, 0 ) );
+                    if ( currentList.size() > 0 ) {
+                        this.plots.add( currentList );
+                    }
+
+                    // start a new list, don't increment the X axis.
+                    currentList = new ArrayList<DoublePoint>();
+                    currentList.add( new DoublePoint( i, 0 ) );
+                } else {
+                    i++;
+                }
+                lastValue = d;
             }
-            lastValue = d;
+        }
+        if(nullCount > 0){
+            log.warn( nullCount+" null value(s) not added to plot list of DoublePoints." );
         }
 
         if ( currentList.size() > 0 ) {
