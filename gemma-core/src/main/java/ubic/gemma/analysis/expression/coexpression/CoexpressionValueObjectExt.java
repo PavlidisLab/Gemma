@@ -72,9 +72,13 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
-        if ( sortKey == null ) {
+        if ( this.sortKey == null ) {
             if ( other.sortKey != null ) return false;
-        } else if ( !sortKey.equals( other.sortKey ) ) return false;
+        } else if ( !sortKey.equals( other.sortKey ) ) {            
+            return false;
+        } else if (!this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() )) {
+            return false;
+        }
         return true;
     }
     public Boolean getContainsMyData() {
