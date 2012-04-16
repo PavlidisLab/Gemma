@@ -25,7 +25,10 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			disabled: true,
 			icon: '/Gemma/images/download.gif',
 			handler: function() {
-				var columnConfig = this.getColumnModel().config;
+				var columnConfig = [{
+						header: 'NCBI ID', dataIndex: 'ncbiId' // first column
+					}].concat(this.getColumnModel().config); // rest of columns 
+
 				var downloadData = [];
 			    var downloadDataRow = [];
 				
