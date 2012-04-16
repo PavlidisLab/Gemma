@@ -19,6 +19,8 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
@@ -28,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.authorization.acl.AclService;
 
 /**
  * @see ubic.gemma.security.authentication.UserService
@@ -41,11 +44,14 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
 
     @Autowired
-    private SecurityService securityService;
+    private UserGroupDao userGroupDao;
+    
+    @Autowired
+    private AclService aclService;
 
     @Autowired
-    private UserGroupDao userGroupDao;
-
+    private SecurityService securityService;
+    
     @Override
     public void addGroupAuthority( UserGroup group, String authority ) {
         this.userGroupDao.addAuthority( group, authority );
@@ -84,7 +90,36 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete( UserGroup group ) {
+        String groupName = group.getName();
+
+        if ( !groupExists( groupName ) ) {
+            throw new IllegalArgumentException( "No group with that name: " + groupName );
+        }
+
+        /*
+         * make sure this isn't one of the special groups - Administrators, Users, Agents
+         */
+        if ( groupName.equalsIgnoreCase( "Administrator" ) || groupName.equalsIgnoreCase( "Users" )
+                || groupName.equalsIgnoreCase( "Agents" ) ) {
+            throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
+        }
+
+        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) ) {
+            throw new AccessDeniedException( "Only the owner of a group can delete it" );
+        }
+        
+        String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
+
         this.userGroupDao.remove( group );
+
+        /*
+         * clean up acls that use this group...do that last!
+         */
+        try{
+            aclService.deleteSid( new GrantedAuthoritySid( authority ) );
+        }catch(DataIntegrityViolationException div){
+            throw div;
+        }
     }
 
     @Override

@@ -173,28 +173,6 @@ Ext.onReady(function() {
 					// hidden : true,
 					handler: function(){
 					
-						var recs = Ext.getCmp("group-data-grid").getStore().getRange();
-						var msg = null;
-						Ext.each(recs, function(rec){
-							if (rec.get('publiclyReadable') ||
-							rec.get('currentGroupCanRead') ||
-							rec.get('currentGroupCanWrite')) {
-								msg = Gemma.HelpText.WidgetDefaults.ManageGroups.groupInUseErrorText;
-								return false;//to break "each" loop
-							}
-							return true; // just for symmetry
-						}, this);
-						
-						if (msg !== null) {
-							Ext.Msg.show({
-								title: Gemma.HelpText.WidgetDefaults.ManageGroups.groupInUseErrorTitle,
-								msg: msg,
-								buttons: Ext.Msg.OK,
-								icon: Ext.MessageBox.ERROR
-							});
-							
-						} else {
-							
 							var sel = Ext.getCmp('manager-groups-listview').getSelectionModel().getSelected();
 							var groupName = sel.get("groupName");
 							
@@ -222,13 +200,13 @@ Ext.onReady(function() {
 							Ext.Msg.show({
 								title: 'Are you sure?',
 								msg: 'The group "' + groupName +
-								'" will be permanently deleted. This cannot be undone.',
+								'" will be permanently deleted. All associated permissions will be cleared. This cannot be undone.',
 								buttons: Ext.Msg.YESNO,
 								fn: processResult,
 								animEl: 'elId',
 								icon: Ext.MessageBox.QUESTION
 							});
-						}
+						
 						
 					}
 				}]

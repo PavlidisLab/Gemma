@@ -83,8 +83,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     private AclService aclService;
     
     @Autowired
-    private UserManager userManager;
-
+    private UserManager userManager; 
+    
     @Autowired
     private MutableAclService mutableAclService;
 
@@ -124,6 +124,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.arrayDesign.setCompositeSequences( col );
 
         this.arrayDesign = this.arrayDesignService.findOrCreate( this.arrayDesign );
+        
     }
 
     @Test
@@ -248,13 +249,13 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         assertNull( entity );
 
         try {
-            this.securityService.deleteGroup( groupName );
+            this.userManager.deleteGroup( groupName );
             fail( "Should have gotten 'access denied'" );
         } catch ( AccessDeniedException ok ) {
             // expected behaviour
         }
         this.runAsUser( username );
-        this.securityService.deleteGroup( groupName );
+        this.userManager.deleteGroup( groupName );
 
     }
 
@@ -421,5 +422,4 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
 
     }
-
 }

@@ -100,6 +100,7 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#addGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
+    @Override
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = loadGroup( groupName );
 
@@ -123,6 +124,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#addUserToGroup(java.lang.String, java.lang.String)
      */
+    @Override
     public void addUserToGroup( String username, String groupName ) {
         User u = loadUser( username );
         UserGroup g = loadGroup( groupName );
@@ -134,6 +136,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#changePassword(java.lang.String, java.lang.String)
      */
+    @Override
     @Secured({ "GROUP_USER" })
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
@@ -165,6 +168,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#changePasswordForUser(java.lang.String, java.lang.String)
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public String changePasswordForUser( String email, String username, String newPassword )
             throws AuthenticationException {
@@ -206,6 +210,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#createGroup(java.lang.String, java.util.List)
      */
+    @Override
     public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
 
         UserGroup g = UserGroup.Factory.newInstance();
@@ -225,6 +230,7 @@ public class UserManagerImpl implements UserManager {
      * ubic.gemma.security.authentication.UserManagerI#createUser(org.springframework.security.core.userdetails.UserDetails
      * )
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void createUser( UserDetails user ) {
 
@@ -271,9 +277,9 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteGroup(java.lang.String)
      */
+    @Override
     public void deleteGroup( String groupName ) {
         UserGroup group = loadGroup( groupName );
-        group.getGroupMembers().clear();
         userService.delete( group );
     }
 
@@ -282,6 +288,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteUser(java.lang.String)
      */
+    @Override
     public void deleteUser( String username ) {
 
         User user = loadUser( username );
@@ -295,6 +302,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findAllGroups()
      */
+    @Override
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
 
@@ -306,6 +314,7 @@ public class UserManagerImpl implements UserManager {
 
     }
 
+    @Override
     public Collection<String> findAllUsers() {
         Collection<User> users = userService.loadAll();
 
@@ -321,6 +330,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
      */
+    @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findbyEmail( String emailAddress ) {
         return findByEmail( emailAddress );
@@ -331,6 +341,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
      */
+    @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findByEmail( String emailAddress ) {
         return userService.findByEmail( emailAddress );
@@ -341,6 +352,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findByUserName(java.lang.String)
      */
+    @Override
     public User findByUserName( String userName ) {
         return this.userService.findByUserName( userName );
     }
@@ -350,6 +362,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupAuthorities(java.lang.String)
      */
+    @Override
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
 
         String groupToSearch = groupName;
@@ -372,6 +385,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
      */
+    @Override
     public UserGroup findGroupByName( String name ) {
         return this.userService.findGroupByName( name );
     }
@@ -381,6 +395,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupsForUser(java.lang.String)
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
 
@@ -405,6 +420,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#findUsersInGroup(java.lang.String)
      */
+    @Override
     public List<String> findUsersInGroup( String groupName ) {
 
         UserGroup group = loadGroup( groupName );
@@ -424,6 +440,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#generateSignupToken(java.lang.String)
      */
+    @Override
     public String generateSignupToken( String username ) {
         return RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
     }
@@ -433,6 +450,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#getCurrentUser()
      */
+    @Override
     public User getCurrentUser() {
         return getUserForUserName( getCurrentUsername() );
     }
@@ -442,6 +460,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @return
      */
+    @Override
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -455,10 +474,12 @@ public class UserManagerImpl implements UserManager {
         return auth.getPrincipal().toString();
     }
 
+    @Override
     public String getRolePrefix() {
         return rolePrefix;
     }
 
+    @Override
     public boolean groupExists( String groupName ) {
         return userService.groupExists( groupName );
     }
@@ -486,6 +507,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#loadAll()
      */
+    @Override
     public Collection<User> loadAll() {
         return this.userService.loadAll();
     }
@@ -495,6 +517,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#loadUserByUsername(java.lang.String)
      */
+    @Override
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
         List<UserDetails> users = loadUsersByUsername( username );
 
@@ -530,6 +553,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#loggedIn()
      */
+    @Override
     public boolean loggedIn() {
 
         Authentication currentUser = SecurityContextHolder.getContext().getAuthentication();
@@ -543,6 +567,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#reauthenticate(java.lang.String, java.lang.String)
      */
+    @Override
     public void reauthenticate( String username, String password ) {
         // If an authentication manager has been set, re-authenticate the user with the supplied password.
         if ( authenticationManager != null ) {
@@ -560,6 +585,7 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#removeGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
+    @Override
     public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
 
         UserGroup group = loadGroup( groupName );
@@ -573,6 +599,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#removeUserFromGroup(java.lang.String, java.lang.String)
      */
+    @Override
     public void removeUserFromGroup( String username, String groupName ) {
 
         User user = userService.findByUserName( username );
@@ -591,6 +618,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#renameGroup(java.lang.String, java.lang.String)
      */
+    @Override
     public void renameGroup( String oldName, String newName ) {
 
         UserGroup group = userService.findGroupByName( oldName );
@@ -656,6 +684,7 @@ public class UserManagerImpl implements UserManager {
      * ubic.gemma.security.authentication.UserManager#updateUser(org.springframework.security.core.userdetails.UserDetails
      * )
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
@@ -678,6 +707,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
@@ -688,6 +718,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userWithEmailExists( String emailAddress ) {
         return userService.findByEmail( emailAddress ) != null;
@@ -698,6 +729,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#validateSignupToken(java.lang.String, java.lang.String)
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean validateSignupToken( String username, String key ) {
 

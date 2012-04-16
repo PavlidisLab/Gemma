@@ -36,6 +36,7 @@ import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
@@ -60,7 +61,9 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
     private String groupName = null;
 
-    private String aDifferentUsername = "jonesey";
+    private String userName1 = "jonesey";
+    
+    private String userName2 = "mark";
 
     @Before
     public void setup() throws Exception {
@@ -70,9 +73,16 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Create a user with default privileges.
          */
         try {
-            this.userManager.loadUserByUsername( this.aDifferentUsername );
+            this.userManager.loadUserByUsername( this.userName1 );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", this.aDifferentUsername, true, null, "foo@gmail.com", "key",
+            this.userManager.createUser( new UserDetailsImpl( "foo", this.userName1, true, null, "foo@gmail.com", "key",
+                    new Date() ) );
+        }
+
+        try {
+            this.userManager.loadUserByUsername( this.userName2 );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo2", this.userName2, true, null, "foo2@gmail.com", "key2",
                     new Date() ) );
         }
     }
@@ -94,13 +104,43 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         }
 
     }
+    /**
+     * Test for deleting a user group
+     */
+    @Test
+    public void testDeleteUserGroup() {
+
+        runAsAdmin();
+        List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
+        authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
+        this.userManager.createGroup( this.groupName, authos );
+        
+        // add another user to group
+        this.userManager.addUserToGroup( this.userName1, this.groupName );
+        this.userManager.addUserToGroup( this.userName2, this.groupName );
+        
+        // grant read permission to group
+        ExpressionExperiment ee = getTestPersistentExpressionExperiment();
+        UserGroup group = this.userService.findGroupByName( this.groupName );
+        
+        this.securityService.makeOwnedByUser( ee, userName1 );
+        this.securityService.makeOwnedByUser( group, userName1 );
+        
+        runAsUser( userName1 );
+        this.securityService.makePrivate( ee );
+        this.securityService.makeReadableByGroup( ee, this.groupName );
+        
+        // delete the group
+        this.userManager.deleteGroup( this.groupName );
+        
+    }
 
     @Test
     public void testUserAddSelvesToAdmin() {
-        super.runAsUser( this.aDifferentUsername );
+        super.runAsUser( this.userName1 );
 
         try {
-            this.userManager.addUserToGroup( this.aDifferentUsername, "Administrators" );
+            this.userManager.addUserToGroup( this.userName1, "Administrators" );
             fail( "Should have gotten access denied when user tried to make themselves admin" );
         } catch ( AccessDeniedException ok ) {
             // expected behaviour
@@ -126,31 +166,31 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Add a user to the group
          */
 
-        this.userManager.addUserToGroup( this.aDifferentUsername, this.groupName );
+        this.userManager.addUserToGroup( this.userName1, this.groupName );
 
         List<String> users = this.userManager.findUsersInGroup( this.groupName );
-        assertTrue( users.contains( this.aDifferentUsername ) );
+        assertTrue( users.contains( this.userName1 ) );
                 
         /*
          * Make sure user can see group (from bug 2822)
          */
         UserGroup group = this.userService.findGroupByName( this.groupName );
-        this.securityService.isViewableByUser( group, this.aDifferentUsername );
+        this.securityService.isViewableByUser( group, this.userName1 );
 
         /*
          * Remove a user from the group.
          */
-        this.userManager.removeUserFromGroup( this.aDifferentUsername, this.groupName );
+        this.userManager.removeUserFromGroup( this.userName1, this.groupName );
         users = this.userManager.findUsersInGroup( this.groupName );
-        assertTrue( !users.contains( this.aDifferentUsername ) );
+        assertTrue( !users.contains( this.userName1 ) );
 
-        super.runAsUser( this.aDifferentUsername );
+        super.runAsUser( this.userName1 );
 
         /*
          * Can the user remove themselves from the group?
          */
         try {
-            this.userManager.removeUserFromGroup( this.aDifferentUsername, this.groupName );
+            this.userManager.removeUserFromGroup( this.userName1, this.groupName );
             fail( "Should have gotten access denied when user tried to remove themselves from a group" );
         } catch ( AccessDeniedException ok ) {
             // expected behaviour

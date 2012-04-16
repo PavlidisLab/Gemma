@@ -54,7 +54,7 @@ import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.MailEngine; 
+import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -93,7 +93,7 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Autowired
     private SecurityService securityService = null;
-
+    
     @Autowired
     private UserManager userManager = null;
 
@@ -175,7 +175,7 @@ public class SecurityControllerImpl implements SecurityController {
          * Additional checks for ability to delete group handled by ss.
          */
         try {
-            securityService.deleteGroup( groupName );
+            userManager.deleteGroup( groupName );
         } catch ( DataIntegrityViolationException div ) {
             throw div;
         }
@@ -338,7 +338,7 @@ public class SecurityControllerImpl implements SecurityController {
 
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
 
-        result.addAll( securables2VOs( getUsersGeneGroups( privateOnly ), currentGroup ) );
+        result.addAll( securables2VOs( geneSetService.getUsersGeneGroups( privateOnly, null, true ), currentGroup ) );
 
         result.addAll( securables2VOs( getUsersExperimentSets( privateOnly ), currentGroup ) );
 
@@ -356,17 +356,26 @@ public class SecurityControllerImpl implements SecurityController {
     public Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
+        // gets all groups shared with the user and all groups owned by the user, except public ones
         Collection<GeneSet> geneSets = geneSetService.loadMySharedGeneSets();
         if ( privateOnly ) {
+            // this filtering is to filter out public sets
             try {
-                secs.addAll( securityService.choosePrivate( geneSets ) );
+                if(!geneSets.isEmpty()){
+                    secs.addAll( securityService.choosePrivate( geneSets ) );
+                }
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
         } else {
+            // add public ones owned by user
+            Collection<GeneSet> allUsersGeneSets = geneSetService.loadMyGeneSets();
+            if(!allUsersGeneSets.isEmpty()){
+                secs.addAll( securityService.choosePublic( allUsersGeneSets ) );
+            }
+            
             secs.addAll( geneSets );
         }
-
         return secs;
     }
 
@@ -662,7 +671,9 @@ public class SecurityControllerImpl implements SecurityController {
                 // okay, they just aren't allowed to see those.
             }
         } else {
+            Collection<ExpressionExperiment> usersEEs = expressionExperimentService.loadUserOwnedExpressionExperiments();
             secs.addAll( ees );
+            secs.addAll( usersEEs );
         }
         return secs;
     }

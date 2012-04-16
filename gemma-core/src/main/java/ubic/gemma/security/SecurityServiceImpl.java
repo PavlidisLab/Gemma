@@ -368,45 +368,6 @@ public class SecurityServiceImpl implements SecurityService {
 
     }
 
-    /**
-     * This will throw an error if the group has any permissions set (if there are any entries for this sid in the acl_entry table)
-     * 
-     * @see ubic.gemma.security.SecurityService#deleteGroup(java.lang.String)
-     */
-    @Override
-    public void deleteGroup( String groupName ) throws DataIntegrityViolationException{
-
-        if ( !userManager.groupExists( groupName ) ) {
-            throw new IllegalArgumentException( "No group with that name: " + groupName );
-        }
-
-        /*
-         * make sure this isn't one of the special groups - Administrators, Users, Agents
-         */
-        if ( groupName.equalsIgnoreCase( "Administrator" ) || groupName.equalsIgnoreCase( "Users" )
-                || groupName.equalsIgnoreCase( "Agents" ) ) {
-            throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
-        }
-
-        if ( !isOwnedByCurrentUser( userManager.findGroupByName( groupName ) ) ) {
-            throw new AccessDeniedException( "Only the owner of a group can delete it" );
-        }
-        
-        String authority = getGroupAuthorityNameFromGroupName( groupName );
-
-        userManager.deleteGroup( groupName );
-
-        /*
-         * clean up acls that use this group...do that last!
-         */
-        try{
-            aclService.deleteSid( new GrantedAuthoritySid( authority ) );
-        }catch(DataIntegrityViolationException div){
-            throw div;
-        }
-
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -1243,7 +1204,8 @@ public class SecurityServiceImpl implements SecurityService {
      * @param The group name e.g. fish
      * @return The authority e.g. GROUP_FISH_...
      */
-    private String getGroupAuthorityNameFromGroupName( String groupName ) {
+    @Override
+    public String getGroupAuthorityNameFromGroupName( String groupName ) {
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
         if ( !groups.contains( groupName ) && !isUserAdmin() ) {

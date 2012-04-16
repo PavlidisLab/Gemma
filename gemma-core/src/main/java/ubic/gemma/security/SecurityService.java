@@ -61,10 +61,15 @@ public interface SecurityService {
     /**
      * @param securables
      * @return
+     * @throws AuthorizationServiceException if the collection is empty, see comments in
+     *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}
      */
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public abstract java.util.Map<Securable, Boolean> arePrivate( Collection<? extends Securable> securables );
-
+    /**
+     * @throws AuthorizationServiceException if the collection is empty, see comments in
+     *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}
+     */
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public abstract Map<Securable, Boolean> areShared( Collection<? extends Securable> securables );
 
@@ -77,6 +82,8 @@ public interface SecurityService {
     /**
      * @param securables
      * @return the subset that are public, if any
+     * @throws AuthorizationServiceException if the collection is empty, see comments in
+     *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}
      */
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public abstract Collection<Securable> choosePublic( Collection<? extends Securable> securables );
@@ -90,14 +97,10 @@ public interface SecurityService {
     public abstract void createGroup( String groupName );
 
     /**
-     * @param groupName
-     */
-    @Transactional
-    public abstract void deleteGroup( String groupName );
-
-    /**
      * @param s
      * @return list of userNames who can edit the given securable.
+     * @throws AuthorizationServiceException if the collection is empty, see comments in
+     *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}
      */
     @Secured({ "ACL_SECURABLE_READ" })
     public abstract Collection<String> editableBy( Securable s );
@@ -125,7 +128,8 @@ public interface SecurityService {
 
     /**
      * @param s
-     * @return
+     * @throws AuthorizationServiceException if the collection is empty, see comments in
+     *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}
      */
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public abstract Map<Securable, Collection<String>> getGroupsEditableBy( Collection<? extends Securable> securables );
@@ -334,4 +338,5 @@ public interface SecurityService {
     @Secured("GROUP_ADMIN")
     public abstract void setOwner( Securable s, String userName );
 
+    public String getGroupAuthorityNameFromGroupName( String groupName );
 }
