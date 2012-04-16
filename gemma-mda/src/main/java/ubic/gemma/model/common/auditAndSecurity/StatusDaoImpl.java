@@ -51,7 +51,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
             a.setStatus( create() );
         } else {
             a.getStatus().setLastUpdateDate( now );
-            this.update( a.getStatus() );
+            this.merge( a.getStatus() );
         }
         if(auditEventType instanceof TroubleStatusFlagEventImpl){
             a.getStatus().setTroubled( true );
@@ -69,7 +69,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         if ( value ) {
             a.getStatus().setValidated( false );
         }
-        this.update( a.getStatus() );
+        this.merge( a.getStatus() );
     }
 
     @Override
@@ -78,7 +78,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         if ( value ) {
             a.getStatus().setTroubled( false );
         }
-        this.update( a.getStatus() );
+        this.merge( a.getStatus() );
     }
 
     @Override

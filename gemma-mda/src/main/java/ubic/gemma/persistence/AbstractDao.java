@@ -159,4 +159,9 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
         this.getHibernateTemplate().update( entity );
 
     }
+    
+    public void merge( T entity ) {
+        this.getHibernateTemplate().merge( entity );
+
+    }
 }
