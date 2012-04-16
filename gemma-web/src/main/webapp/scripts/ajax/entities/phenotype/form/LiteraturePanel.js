@@ -28,11 +28,10 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			allowDecimals: false,
 			allowNegative: false,
 			width: 100,
-			autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '9'},
 			enableKeyEvents: true,
 		    initComponent: function() {
-
 				Ext.apply(this, {
+					autoCreate: { tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: this.maxLength },
 					listeners: {
 						blur: function(numberField) {
 							updateBibliographicReferenceDetailsPanel(true);
