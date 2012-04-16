@@ -220,6 +220,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 					text: 'Cancel',
 					handler: function(){
 						warningWindow.close();
+						// clears loading mask
+						this.fireEvent('searchAborted');
 						return;
 					},
 					scope:this
