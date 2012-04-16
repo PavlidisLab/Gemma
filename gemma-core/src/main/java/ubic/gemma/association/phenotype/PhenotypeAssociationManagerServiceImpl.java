@@ -33,6 +33,7 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -326,7 +327,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( modifedEvidenceValueObject.getId() == null ) {
             throw new IllegalArgumentException( "No database id provided" );
         }
-        
+
         if ( isEvidenceAlreadyInDatabase( modifedEvidenceValueObject ) ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
@@ -762,10 +763,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             } else {
 
-                // find the ontology term using the valueURI
-                OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( c.getValueUri() );
-
-                if ( ontologyTerm != null ) {
+                try {
+                    // find the ontology term using the valueURI
+                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( c.getValueUri() );
 
                     // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
                     TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
@@ -779,10 +779,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
 
                     treesPhenotypes.add( treeCharacteristicValueObject );
+
+                } catch ( EntityNotFoundException entityNotFoundException ) {
+                    System.err.println( "A valueUri found in the database was not found in the ontology" );
+                    System.err.println( "This can happen when a valueUri is updated in the ontology" );
+                    System.err.println( "Value : " + c.getValue() + "      valueUri: " + c.getValueUri() );
                 }
             }
         }
-
         // remove all nodes in the trees found in the Ontology but not in the database
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.removeUnusedPhenotypes( tc.getValueUri() );
