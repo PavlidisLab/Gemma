@@ -9,6 +9,7 @@ Ext.namespace('Gemma.PhenotypeAssociationForm');
 Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.ComboBox, {
 	currentGeneNcbiId: null,    
 	allowBlank: false,
+	enableKeyEvents: true,
 	forceSelection: true,				
     store: new Ext.data.JsonStore({
 		proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),

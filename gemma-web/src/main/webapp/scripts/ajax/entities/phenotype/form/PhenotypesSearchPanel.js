@@ -11,6 +11,8 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 	border: false,
 	layout: 'form',
     initComponent: function() {
+		var errorMessages = [];
+    	
 		var originalPhenotypeSelections = null;
 		var originalGeneSelection = null;
 
@@ -22,7 +24,15 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				currentGeneNcbiId: currentGeneNcbiId
 			});
 			
-			this.relayEvents(phenotypeSearchComboBox, ['blur', 'select']);			
+			phenotypeSearchComboBox.on({
+				keyup: function(component) {
+					updateValidity(true);	
+				},
+				select: function(component) {
+					updateValidity(false);
+				}
+			});
+			
 			phenotypeSearchComboBox.selectPhenotype(phenotypeSelection);	
 			
 			var rowPanel = new Ext.Panel({
@@ -42,11 +52,12 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 								rowsPanel.remove(rowPanel);
 								rowsPanel.doLayout();
 								comboBoxCount--;
-			    				this.fireEvent('phenotypeFieldRemoved');
 							} else {
 								phenotypeSearchComboBox.clearValue();
-			    				this.fireEvent('phenotypeFieldCleared');
 							}
+							
+							// Clearing combo box should also update validity.
+							updateValidity(false);
 			    		},
 						scope: this				    		
 			    	}					
@@ -73,11 +84,44 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 			handler: function() {
 				rowsPanel.add(createRowPanel());
 				rowsPanel.doLayout();
-				this.fireEvent('phenotypeFieldAdded');
 			},
 			scope: this			
 		});
+
+		var checkDuplicate = function() {
+			var hasDuplicate = false;
+			for (var i = 0; i < rowsPanel.items.length; i++) {
+				rowsPanel.items.itemAt(i).getPhenotypeSearchComboBox().clearInvalid();
+			}
+			
+			for (var i = 0; i < rowsPanel.items.length; i++) {
+				var currComboBox = rowsPanel.items.itemAt(i).getPhenotypeSearchComboBox();
+				var currValue = currComboBox.getRawValue();
+				
+				for (var j = i + 1; currValue !== '' && j < rowsPanel.items.length; j++) {
+					var currTestComboBox = rowsPanel.items.itemAt(j).getPhenotypeSearchComboBox();
+					var currTestValue = currTestComboBox.getRawValue();
+					
+					if (currValue === currTestValue) {
+						currComboBox.markInvalid();
+						currTestComboBox.markInvalid();
 		
+						hasDuplicate = true;
+					}
+				}
+			}
+			return hasDuplicate;
+		};
+
+		var updateValidity = function(isModifying) {
+			errorMessages.clear();
+		
+			if (checkDuplicate()) {
+				errorMessages.push(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.phenotypesDuplicate);
+			}
+			this.fireEvent('validtyStatusChanged', isModifying, errorMessages);
+		}.createDelegate(this);
+
 		Ext.apply(this, {
 			selectPhenotypes: function(phenotypeSelections, geneSelection) {
 				originalPhenotypeSelections = phenotypeSelections;
@@ -112,7 +156,10 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				}
 			},
 			getSelectedPhenotypes: function() {
-				var selectedPhenotypes = [];
+				var selectedPhenotypes = errorMessages.length === 0 ?
+					[] :
+					null;
+
 				for (var i = 0; selectedPhenotypes != null && i < rowsPanel.items.length; i++) {
 				    var currPhenotypeSearchComboBox = rowsPanel.items.itemAt(i).getPhenotypeSearchComboBox();
 				
@@ -124,6 +171,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 						selectedPhenotypes.push(characteristicValueObject);				    	
 					}
 				}
+
 				return selectedPhenotypes;
 			},
 			reset: function() {

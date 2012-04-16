@@ -16,12 +16,12 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 	width: 700,
 	height: 500,
 	shadow: true,
-	closeAction: 'hide',
+	closeAction: 'close',
 	initComponent: function() {
 		var formPanel = new Gemma.PhenotypeAssociationForm.Panel();
 		formPanel.on({
-			'hide' : function(thisFormPanel) {
-				this.hide();
+			'cancelButtonClicked' : function() {
+				this.close();
 			},
  			scope: this
 		});
@@ -46,10 +46,7 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 		Ext.apply(this, {
 			listeners: {
 				phenotypeAssociationChanged: function() {
-					this.hide();
-				},
-				hide: function(thisWindow) {
-					formPanel.resetForm(false);
+					this.close();
 				},
 				scope: this
 			},
@@ -84,8 +81,13 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
     initComponent: function() {
     	var ANCHOR_VALUE = '96%';
     	
-		var hasError = true;
+		var hasLocalErrorMessages = false;
+		var hasServerErrorMessages = false;
 
+		var phenotypeErrorMessages = [];
+		var literatureErrorMessages = [];
+		var experimentalErrorMessages = [];
+    	
 		// They are null when this form is used for creating evidence.
 		var evidenceId = null;		
 		var lastUpdated = null;
@@ -101,6 +103,81 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			}
 		});    	
 
+		var errorPanel = new Gemma.PhenotypeAssociationForm.ErrorPanel({
+		    region: 'north'	
+		});   	
+
+		var updateErrorMessages = function() {
+			// Reset it to false so that the OK button is not disabled any more.	
+			hasServerErrorMessages = false;
+		
+			var allErrorMessages = phenotypeErrorMessages;
+			
+			switch (evidenceTypeComboBox.getValue()) {
+				case 'ExperimentalEvidenceValueObject':
+					if (experimentalErrorMessages.length > 0) {
+						allErrorMessages = allErrorMessages.concat(experimentalErrorMessages);
+					}
+					break;
+				case 'LiteratureEvidenceValueObject':
+					if (literatureErrorMessages.length > 0) {
+						allErrorMessages = allErrorMessages.concat(literatureErrorMessages);
+					}
+					break;
+			}
+			
+			hasLocalErrorMessages = allErrorMessages.length > 0;						
+		
+			if (hasLocalErrorMessages) {					
+				var formattedErrorMessages = '';
+				for (var i = 0; i < allErrorMessages.length; i++) {
+					formattedErrorMessages += allErrorMessages[i];
+					if (i < allErrorMessages.length - 1) {
+						formattedErrorMessages += '<br />';
+					}
+				}
+				errorPanel.showError(formattedErrorMessages);
+			} else {
+				errorPanel.hide();
+			}
+		}
+
+		// Note: it should be called when all form values are valid.
+		var generateEvidenceValueObject = function(validatedPhenotypeValueUris) {
+			var evidenceType = evidenceTypeComboBox.getValue();
+
+			var evidenceValueObject;
+
+			if (evidenceType === 'ExperimentalEvidenceValueObject') {
+				if (experimentalPanel.isValid()) {
+					var experimentalValues = experimentalPanel.getValues();
+					
+					evidenceValueObject = new ExperimentalEvidenceValueObject();
+					evidenceValueObject.primaryPublicationCitationValueObject = experimentalValues.primaryPublicationCitationValueObject;
+					evidenceValueObject.relevantPublicationsCitationValueObjects = experimentalValues.relevantPublicationsCitationValueObjects;
+					evidenceValueObject.experimentCharacteristics = experimentalValues.experimentCharacteristics;
+				}
+			} else if (evidenceType === 'LiteratureEvidenceValueObject') {
+				if (literaturePanel.isValid()) {
+					evidenceValueObject = new LiteratureEvidenceValueObject();
+					evidenceValueObject.citationValueObject = literaturePanel.getCitationValueObject();
+				}
+			}
+		
+			if (evidenceValueObject != null) {
+				evidenceValueObject.geneNCBI = geneSearchComboBox.getValue();
+				evidenceValueObject.phenotypes = validatedPhenotypeValueUris;
+				evidenceValueObject.className = evidenceType;
+				evidenceValueObject.isNegativeEvidence = isNegativeEvidenceCheckbox.getValue();
+				evidenceValueObject.description = descriptionTextArea.getValue();
+				evidenceValueObject.evidenceCode = evidenceCodeComboBox.getValue();
+				evidenceValueObject.id = evidenceId;
+				evidenceValueObject.lastUpdated = lastUpdated;
+			}
+			
+			return evidenceValueObject;
+		};
+		
 		var geneSearchComboBox = new Gemma.PhenotypeAssociationForm.GeneSearchComboBox({
 			listeners: {
 				blur: function(combo) {
@@ -121,9 +198,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							experimentalPanel.setCurrentGeneTaxonId(geneRecord.data.taxonId);
 						}
 					}
-					
-					
-					this.validateForm(false);
 				},
 				select: function(combo, record, index) {
 					this.validateForm(false);
@@ -135,20 +209,27 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		var phenotypesSearchPanel = new Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel({
 			anchor: ANCHOR_VALUE,
 			listeners: {
-				blur: function() {
-					this.validateForm(false);
+				validtyStatusChanged: function(isModifying, errorMessages) {
+					phenotypeErrorMessages = errorMessages;
+					updateErrorMessages();
+					if (!isModifying && errorPanel.getErrorMessage() === '') {
+						this.validateForm(false);
+					} 
 				},
-				select: function(combo, record, index) {
-					this.validateForm(false);
-				},
-				phenotypeFieldAdded: function() {
-					this.validateForm(false);
-				},
-				phenotypeFieldCleared: function() {
-					this.validateForm(false);
-				},
-				phenotypeFieldRemoved: function() {
-					this.validateForm(false);
+				scope: this
+			}
+		});
+    	
+		var experimentalPanel = new Gemma.PhenotypeAssociationForm.ExperimentalPanel({
+			anchor: ANCHOR_VALUE, // Use anchor instead of width so that this panel can be resized as the main window is resized.
+			listeners: {
+				validtyStatusChanged: function(isModifying, errorMessages) {
+					experimentalErrorMessages = errorMessages;
+					updateErrorMessages();
+					
+					if (!isModifying && errorPanel.getErrorMessage() === '') {
+							this.validateForm(false);
+					}	
 				},
 				scope: this
 			}
@@ -161,26 +242,29 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					var pubMedId = thisLiteraturePanel.getPubMedId();					
 			
 					if (pubMedId === "") {
-						this.hideErrorPanel();					
+						literatureErrorMessages = [];
 					} else if (pubMedId <= 0) {
-						hasError = true;
-						this.showPubMedIdError();
+						literatureErrorMessages = [ String.format(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid, thisLiteraturePanel.pubMedIdFieldLabel) ];
 					}
+
+					updateErrorMessages();
 				},
-				pubMedIdFieldKeyPress: function(thisLiteraturePanel, event) {
-					hasError = false;					
-					this.hideErrorPanel();
+				pubMedIdFieldKeyUp: function(thisLiteraturePanel, event) {
+					literatureErrorMessages = [];
+					updateErrorMessages();
 				},
 				pubMedIdStoreLoad: function(thisLiteraturePanel, store, records, options) {
 		        	// Because it takes time to reload the store, show errors
 		        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
 					if (options.params.pubMedId === thisLiteraturePanel.getPubMedId()) {
 				    	if (store.getTotalCount() > 0) {
-							this.hideErrorPanel();
+							literatureErrorMessages = [];
+							updateErrorMessages();
+
 							this.validateForm(false);
 				    	} else {
-							hasError = true;
-							this.showPubMedIdError();
+							literatureErrorMessages = [ String.format(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid, thisLiteraturePanel.pubMedIdFieldLabel) ];
+							updateErrorMessages();
 				    	}
 					}			    	
 				},
@@ -188,89 +272,45 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			}			
     	});
 
-		var experimentalPanel = new Gemma.PhenotypeAssociationForm.ExperimentalPanel({
-			anchor: ANCHOR_VALUE, // Use anchor instead of width so that this panel can be resized as the main window is resized.
+		var evidenceTypeComboBox = new Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox({
 			listeners: {
-				pubMedIdsDuplicate: function(primaryPubMedIdLabel, secondaryPubMedIdLabel) {
-					errorPanel.showError(String.format(
-   						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubMedIdsDuplicate,
-   						primaryPubMedIdLabel, secondaryPubMedIdLabel));
-					hasError = true;						
-				},
-				pubMedIdOnlyPrimaryEmpty: function(primaryPubMedIdLabel, secondaryPubMedIdLabel) {
-					errorPanel.showError(String.format(
-   						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubMedIdOnlyPrimaryEmpty,
-   						primaryPubMedIdLabel, secondaryPubMedIdLabel));
-					hasError = true;						
-				},
-				pubMedIdsInvalid: function(pubMedIdLabels) {
-					// if we don't have any invalid PubMed Id fields
-					if (pubMedIdLabels.length === 0) {
-						this.hideErrorPanel();
-						hasError = false;						
-					} else {
-		    			var errorMessages = '';
-		    			for (var i = 0; i < pubMedIdLabels.length; i++) {
-		   					errorMessages += String.format(
-		   						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid,
-		   						pubMedIdLabels[i]);
-			   				if (i < pubMedIdLabels.length - 1) {
-			   					errorMessages += '<br />';
-			   				}
-		    			}
-						errorPanel.showError(errorMessages);
-						hasError = true;						
+				select: function(combo, record, index) {
+					switch (record.data.evidenceClassName) {
+						case 'ExperimentalEvidenceValueObject':
+							experimentalPanel.show();
+							literaturePanel.hide();
+							break;
+						case 'LiteratureEvidenceValueObject':
+							experimentalPanel.hide();						
+							literaturePanel.show();
+							break;
 					}
-				},
-				pubMedIdStoreLoad: function() {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}
-				},
-				keyup: function(component) {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}	
-				}, 
-				select: function(component) {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}
-				},
-				experimentTagFieldAdded: function() {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}
-				},
-				experimentTagFieldCleared: function() {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}
-				},
-				experimentTagFieldRemoved: function() {
-					if (experimentalPanel.isValid()) {
-						this.validateForm(false);
-					} else {
-						hasError = true;
-					}
+
+					updateErrorMessages();
+
+					this.validateForm(false);
 				},
 				scope: this
 			}
 		});
-    	
-		var errorPanel = new Gemma.PhenotypeAssociationForm.ErrorPanel({
-		    region: 'north'	
-		});   	
+
+		var isNegativeEvidenceCheckbox = new Ext.form.Checkbox({
+			fieldLabel: 'Negative Evidence'
+		});
+
+		var descriptionTextArea = new Ext.form.TextArea({
+			fieldLabel: 'Note',
+			anchor: ANCHOR_VALUE,
+		    initComponent: function() {
+				Ext.apply(this, {
+					setDescription: function(description) {
+						this.setValue(description);
+						this.originalValue = description;
+					}
+				});
+				this.superclass().initComponent.call(this);
+		    }
+		});
 
 		var evidenceCodeComboBox = new Ext.form.ComboBox({
 			valueField: 'evidenceCode',
@@ -315,79 +355,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		    }
 		});
     	
-		var evidenceTypeComboBox = new Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox({
-			listeners: {
-				select: function(combo, record, index) {
-					switch (record.data.evidenceClassName) {
-						case 'ExperimentalEvidenceValueObject':
-							experimentalPanel.show();
-							literaturePanel.hide();
-							break;
-						case 'LiteratureEvidenceValueObject':
-							experimentalPanel.hide();						
-							literaturePanel.show();
-							break;
-					}
-					this.validateForm(false);
-				},
-				scope: this
-			}
-		});
-
-		var isNegativeEvidenceCheckbox = new Ext.form.Checkbox({
-			fieldLabel: 'Negative Evidence'
-		});
-
-		var descriptionTextArea = new Ext.form.TextArea({
-			fieldLabel: 'Note',
-			anchor: ANCHOR_VALUE,
-		    initComponent: function() {
-				Ext.apply(this, {
-					setDescription: function(description) {
-						this.setValue(description);
-						this.originalValue = description;
-					}
-				});
-				this.superclass().initComponent.call(this);
-		    }
-		});
-
-		// Assume all form values are valid.
-		var generateEvidenceValueObject = function(validatedPhenotypeValueUris) {
-			var evidenceType = evidenceTypeComboBox.getValue();
-
-			var evidenceValueObject;
-
-			if (evidenceType === 'ExperimentalEvidenceValueObject') {
-				if (experimentalPanel.isValid()) {
-					var experimentalValues = experimentalPanel.getValues();
-					
-					evidenceValueObject = new ExperimentalEvidenceValueObject();
-					evidenceValueObject.primaryPublicationCitationValueObject = experimentalValues.primaryPublicationCitationValueObject;
-					evidenceValueObject.relevantPublicationsCitationValueObjects = experimentalValues.relevantPublicationsCitationValueObjects;
-					evidenceValueObject.experimentCharacteristics = experimentalValues.experimentCharacteristics;
-				}
-			} else if (evidenceType === 'LiteratureEvidenceValueObject') {
-				if (literaturePanel.isValid()) {
-					evidenceValueObject = new LiteratureEvidenceValueObject();
-					evidenceValueObject.citationValueObject = literaturePanel.getCitationValueObject();
-				}
-			}
-		
-			if (evidenceValueObject != null) {
-				evidenceValueObject.geneNCBI = geneSearchComboBox.getValue();
-				evidenceValueObject.phenotypes = validatedPhenotypeValueUris;
-				evidenceValueObject.className = evidenceType;
-				evidenceValueObject.isNegativeEvidence = isNegativeEvidenceCheckbox.getValue();
-				evidenceValueObject.description = descriptionTextArea.getValue();
-				evidenceValueObject.evidenceCode = evidenceCodeComboBox.getValue();
-				evidenceValueObject.id = evidenceId;
-				evidenceValueObject.lastUpdated = lastUpdated;
-			}
-			
-			return evidenceValueObject;
-		};
-		
     	Ext.apply(this, {
 			layout: 'border',    	
 			monitorValid : true,
@@ -411,7 +378,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							xtype: 'textfield', 
 							hidden: true,
 							validator: function() {
-								return !hasError;
+								return !hasLocalErrorMessages && !hasServerErrorMessages;
 							}
 						},						
 						{
@@ -459,8 +426,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				
 				// if we are editing evidence
 				if (evidenceId != null) {
-					hasError = false;
-					
 					lastUpdated = data.lastUpdated;
 			
 					evidenceTypeComboBox.selectEvidenceType(data.evidenceClassName);
@@ -524,60 +489,41 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					}.createDelegate(this));
 			    }
 			},
-// TODO: Remove it later			
-			showPubMedIdError: function() {
-//				errorPanel.showError(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid);
-				errorPanel.showError(String.format(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid, 'PubMed Id'));
-			},
-			hideErrorPanel: function() {
-				errorPanel.hide();
-			},
 			validateForm: function(shouldSubmitAfterValidating) {
-				hasError = false;
-//				errorPanel.hide();
+				hasServerErrorMessages = false;
 				
-				var evidenceType = evidenceTypeComboBox.getValue();
+				if (!hasLocalErrorMessages) {
+					errorPanel.hide(); // Hide validation error messages if any.
+//console.log('frances: validateForm is called');				
 				
-				if (evidenceType === '' || geneSearchComboBox.getValue() === '') {
-					hasError = true;
-					errorPanel.hide();
-				} else {
-					var phenotypeValueUris = phenotypesSearchPanel.getSelectedPhenotypes();					
-									
-					if (phenotypeValueUris == null || phenotypeValueUris.length <= 0) {
-						hasError = true;
-//						errorPanel.hide();
-					} else {
-						if (evidenceType === 'ExperimentalEvidenceValueObject') {
-							if (!experimentalPanel.isValid()) {
-								hasError = true;
-							} 
-						} else if (evidenceType === 'LiteratureEvidenceValueObject') {
-							if (!literaturePanel.isValid()) {
-								hasError = true;
-								if (literaturePanel.getPubMedId() !== '') {
-									this.showPubMedIdError(literaturePanel.pubMedIdFieldLabel);
+					var evidenceType = evidenceTypeComboBox.getValue();
+					
+					if (evidenceType !== '' && geneSearchComboBox.getValue() !== '') {
+						var phenotypeValueUris = phenotypesSearchPanel.getSelectedPhenotypes();					
+										
+						if (phenotypeValueUris != null && phenotypeValueUris.length > 0) {
+							var isValid = false;
+	
+							if (evidenceType === 'ExperimentalEvidenceValueObject') {
+								if (experimentalPanel.isValid()) {
+									isValid = true;
+								} 
+							} else if (evidenceType === 'LiteratureEvidenceValueObject') {
+								if (literaturePanel.isValid()) {
+									isValid = true;
 								}
 							}
-						}
-						
-						if (!hasError) {
-							if (evidenceCodeComboBox.getValue() === '') {
-								hasError = true;
-								errorPanel.hide();
-							} else {
+							
+							if (isValid && evidenceCodeComboBox.getValue() !== '') {
 								var evidenceValueObject = generateEvidenceValueObject(phenotypeValueUris);
-								
+									
 								// Ask the controller to validate only after all fields are filled.
 								PhenotypeController.validatePhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
-						
-// TODO: Because using the controller to validate takes time, fields such as gene value MAY have been changed. 
-// Thus, I may need to show error ONLY when no fields have been changed after the controller call.  
+									var hasError = false;								
 									var hasWarning = false;
-		
+			
 									if (validateEvidenceValueObject == null) {
 										hasError = false;
-										errorPanel.hide();
 									} else {
 										var errorCode = Gemma.convertToEvidenceError(validateEvidenceValueObject); 
 										hasWarning = errorCode.isWarning;
@@ -585,11 +531,12 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 										if (hasWarning) {
 											errorPanel.showWarning(errorCode.errorMessage);
 										} else {
+											hasServerErrorMessages = true;										
 											errorPanel.showError(errorCode.errorMessage);
 										}
-		
+			
 									}						
-		
+			
 									if (shouldSubmitAfterValidating) {
 										if (!hasError) {
 											if (hasWarning) {
@@ -608,26 +555,25 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 										}
 									}
 								}.createDelegate(this));
-							}				
-						} // if (!hasError)
-					}
-				}
+							}
+						}
+					} 
+				} // if (!hasLocalErrorMessages)
 			},
-			resetForm: function(shouldValidate) {
-			    this.hideErrorPanel();
-			    
-				geneSearchComboBox.reset();
-				phenotypesSearchPanel.reset();
-				evidenceTypeComboBox.reset();	
-				isNegativeEvidenceCheckbox.setValue(false);
-			    literaturePanel.reset();
-				experimentalPanel.reset();
-				descriptionTextArea.reset();
-				evidenceCodeComboBox.reset();
-				if (shouldValidate) {				
-					this.validateForm(false);
-				}
-			},	
+// TODO: should remove all reset() methods in each field's class			
+//			resetForm: function(shouldValidate) {
+//				geneSearchComboBox.reset();
+//				phenotypesSearchPanel.reset();
+//				evidenceTypeComboBox.reset();	
+//				isNegativeEvidenceCheckbox.setValue(false);
+//			    literaturePanel.reset();
+//				experimentalPanel.reset();
+//				descriptionTextArea.reset();
+//				evidenceCodeComboBox.reset();
+//				if (shouldValidate) {				
+//					this.validateForm(false);
+//				}
+//			},	
 			buttonAlign: 'right',
 			buttons: [
 				{
@@ -638,18 +584,10 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				    },
 					scope: this
 				},
-// TODO: Should remove all the code related to this Reset button				
-//				{
-//					text: 'Reset',
-//					handler: function() {
-//						this.resetForm(true);
-//					},
-//					scope: this
-//				},
 				{
 				    text: 'Cancel',
 				    handler: function() {
-				    	this.hide();
+				    	this.fireEvent('cancelButtonClicked');
 				    },
 					scope: this
 				}

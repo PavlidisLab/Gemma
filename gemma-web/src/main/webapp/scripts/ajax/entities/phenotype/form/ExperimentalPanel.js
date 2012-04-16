@@ -13,94 +13,86 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
     autoHeight:true,
     defaultType: 'textfield',
     initComponent: function() {
-    	var hasDuplicate = false;
-    	var isOnlyPrimaryEmpty = false;
-
-    	var firePubMedIdInvalid = function(literaturePanel, shouldShow) {
-    		if (hasDuplicate || isOnlyPrimaryEmpty || literaturePanel.isErrorShown !== shouldShow) {
-    			literaturePanel.isErrorShown = shouldShow;
-
-    			var invalidPubMedIdLabels = [];
-    			if (primaryLiteraturePanel.isErrorShown) {
-    				invalidPubMedIdLabels.push(primaryLiteraturePanel.pubMedIdFieldLabel);
-    			}
-    			if (secondaryLiteraturePanel.isErrorShown) {
-    				invalidPubMedIdLabels.push(secondaryLiteraturePanel.pubMedIdFieldLabel);
-    			}
-    			this.fireEvent('pubMedIdsInvalid', invalidPubMedIdLabels);
-    		}
-    		hasDuplicate = false;
-			isOnlyPrimaryEmpty = false;    		
-    	}.createDelegate(this);
-
+		var isPrimaryPubMedIdValid = true;
+		var isSecondaryPubMedIdValid = true;
+		var pubMedIdErrorMessages = [];
+		var experimentTagErrorMessages = [];
+		
+		// Specify if the given literaturePanel is valid. 
+		var updatePubMedIdsValidity = function(isModifying, literaturePanel, isValid) {
+			var primaryPubMedId = primaryLiteraturePanel.getPubMedId();
+			var secondaryPubMedId = secondaryLiteraturePanel.getPubMedId();
+			
+			pubMedIdErrorMessages.clear();
+		
+			if (literaturePanel === primaryLiteraturePanel) {
+				isPrimaryPubMedIdValid = isValid;
+			} else if (literaturePanel === secondaryLiteraturePanel) {
+				isSecondaryPubMedIdValid = isValid;
+			} 
+			
+			if (primaryPubMedId === '') {
+				if (secondaryPubMedId !== '') {
+					pubMedIdErrorMessages.push(String.format(
+						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubMedIdOnlyPrimaryEmpty,
+						primaryLiteraturePanel.pubMedIdFieldLabel, secondaryLiteraturePanel.pubMedIdFieldLabel));
+				}
+			} else if (primaryPubMedId === secondaryPubMedId) {
+				pubMedIdErrorMessages.push(String.format(
+		   			Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubMedIdsDuplicate,
+		   			primaryLiteraturePanel.pubMedIdFieldLabel, secondaryLiteraturePanel.pubMedIdFieldLabel));
+			} else {
+				if (primaryPubMedId !== '' &&
+					(primaryPubMedId <= 0 || !isPrimaryPubMedIdValid)) {
+					pubMedIdErrorMessages.push(String.format(
+						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid,
+						primaryLiteraturePanel.pubMedIdFieldLabel));
+				}
+				if (secondaryPubMedId !== '' && 
+					(secondaryPubMedId <= 0 || !isSecondaryPubMedIdValid)) {
+					pubMedIdErrorMessages.push(String.format(
+						Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.pubmedIdInvalid,
+						secondaryLiteraturePanel.pubMedIdFieldLabel));
+				}
+			}
+		
+			this.fireEvent('validtyStatusChanged', isModifying, pubMedIdErrorMessages.concat(experimentTagErrorMessages));
+		}.createDelegate(this);
+	
+		var updateExperimentTagsValidity = function(isModifying) {
+			experimentTagErrorMessages.clear();
+		
+			if (experimentTagsPanel.checkDuplicate()) {
+				experimentTagErrorMessages.push(Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.experimentTagsDuplicate);
+				this.fireEvent('validtyStatusChanged', isModifying, pubMedIdErrorMessages.concat(experimentTagErrorMessages));
+			} else {
+				this.fireEvent('validtyStatusChanged', isModifying, pubMedIdErrorMessages);
+			}
+		}.createDelegate(this);	
+		
 		var pubMedIdFieldBlurHandler = function(literaturePanel) {
 			var pubMedId = literaturePanel.getPubMedId();
-			
+		
 			if (pubMedId === "") {
-				if (isOnlyPrimaryEmpty) {
-					if (literaturePanel === secondaryLiteraturePanel) {
-						firePubMedIdInvalid(literaturePanel, false);
-					}
-				} else {
-					if (literaturePanel === primaryLiteraturePanel && secondaryLiteraturePanel.getPubMedId() !== '') {
-						this.fireEvent('pubMedIdOnlyPrimaryEmpty',
-							primaryLiteraturePanel.pubMedIdFieldLabel, secondaryLiteraturePanel.pubMedIdFieldLabel);
-						isOnlyPrimaryEmpty = true;
-					} else {
-						firePubMedIdInvalid(literaturePanel, false);
-					}
-				}
+				updatePubMedIdsValidity(false, literaturePanel, true);
 			} else if (pubMedId <= 0) {
-				if (isOnlyPrimaryEmpty) {
-					if (literaturePanel === primaryLiteraturePanel) {
-				    	firePubMedIdInvalid(literaturePanel, true);
-					}
-				} else {
-					firePubMedIdInvalid(literaturePanel, true);
-				}
+				updatePubMedIdsValidity(false, literaturePanel, false);
 			}
-//			if (pubMedId === "") {
-//				firePubMedIdInvalid(literaturePanel, false);
-//			} else if (pubMedId <= 0) {
-//				firePubMedIdInvalid(literaturePanel, true);
-//			}
-		}.createDelegate(this);
-			
-		var pubMedIdFieldKeyPressHandler = function(literaturePanel, event) {
-			if (isOnlyPrimaryEmpty) {
-				if (literaturePanel === primaryLiteraturePanel) {
-					firePubMedIdInvalid(literaturePanel, false);
-				}
-			} else {
-				firePubMedIdInvalid(literaturePanel, false);
-			}
-			
-//			firePubMedIdInvalid(literaturePanel, false);
+		}
+		var pubMedIdFieldKeyUpHandler = function(literaturePanel, event) {
+			updatePubMedIdsValidity(true, literaturePanel, true);			
 		};
-
 		var pubMedIdStoreLoadHandler = function(literaturePanel, store, records, options) {
-        	// Because it takes time to reload the store, show errors
-        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+	      	// Because it takes time to reload the store, show errors
+	       	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
 			if (options.params.pubMedId === literaturePanel.getPubMedId()) {
-				if (literaturePanel === secondaryLiteraturePanel && primaryLiteraturePanel.getPubMedId() === '') {
-					this.fireEvent('pubMedIdOnlyPrimaryEmpty',
-						primaryLiteraturePanel.pubMedIdFieldLabel, secondaryLiteraturePanel.pubMedIdFieldLabel);
-					isOnlyPrimaryEmpty = true;
-				} else if (store.getTotalCount() > 0) {
-					if (primaryLiteraturePanel.getPubMedId() === secondaryLiteraturePanel.getPubMedId()) {
-						this.fireEvent('pubMedIdsDuplicate',
-							primaryLiteraturePanel.pubMedIdFieldLabel, secondaryLiteraturePanel.pubMedIdFieldLabel);
-						hasDuplicate = true;
-					} else {
-//			    		firePubMedIdInvalid(literaturePanel, false);
-						this.fireEvent('pubMedIdStoreLoad');
-							    		
-					}
-		    	} else {
-		    		firePubMedIdInvalid(literaturePanel, true);
+				 if (store.getTotalCount() > 0) {
+				 	updatePubMedIdsValidity(false, literaturePanel, true);
+				 } else {
+		    		updatePubMedIdsValidity(false, literaturePanel, false);
 		    	}
 			}			    	
-		}.createDelegate(this);
+		};
 
 		var primaryLiteraturePanel = new Gemma.PhenotypeAssociationForm.LiteraturePanel({
 			isErrorShown: false,
@@ -108,7 +100,7 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 			pubMedIdFieldLabel: 'PubMed Id',
 			listeners: {
 				pubMedIdFieldBlur: pubMedIdFieldBlurHandler,  
-				pubMedIdFieldKeyPress: pubMedIdFieldKeyPressHandler,
+				pubMedIdFieldKeyUp: pubMedIdFieldKeyUpHandler,
 				pubMedIdStoreLoad: pubMedIdStoreLoadHandler
 			}
     	});
@@ -119,15 +111,24 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 			pubMedIdFieldLabel: 'Secondary PubMed Id',
 			listeners: {
 				pubMedIdFieldBlur: pubMedIdFieldBlurHandler,  
-				pubMedIdFieldKeyPress: pubMedIdFieldKeyPressHandler,
+				pubMedIdFieldKeyUp: pubMedIdFieldKeyUpHandler,
 				pubMedIdStoreLoad: pubMedIdStoreLoadHandler
 			}
 		});
     	
-    	var experimentTagsPanel = new Gemma.PhenotypeAssociationForm.ExperimentTagsPanel();
-
-		this.relayEvents(experimentTagsPanel, ['keyup', 'select',  
-			'experimentTagFieldAdded', 'experimentTagFieldCleared', 'experimentTagFieldRemoved']);
+		var experimentTagsPanel = new Gemma.PhenotypeAssociationForm.ExperimentTagsPanel({
+			listeners: {
+				keyup: function(component) {
+					updateExperimentTagsValidity(true);	
+				}, 
+				select: function(component) {
+					updateExperimentTagsValidity(false);
+				},
+				experimentTagFieldRemoved: function() {
+					updateExperimentTagsValidity(false);
+				}
+			}
+		});
 
     	var setAllItemsVisible = function(container, isVisible) {
     		for (var i = 0; i < container.items.length; i++) {

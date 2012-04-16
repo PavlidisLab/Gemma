@@ -212,6 +212,48 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 				}
 				return selectedExperimentTags;
 			},
+			checkDuplicate: function() {
+				var hasDuplicate = false;
+				for (var i = 0; i < rowsPanel.items.length; i++) {
+					var currRowPanel = rowsPanel.items.itemAt(i);
+					
+					currRowPanel.getCategoryComboBox().clearInvalid();
+					currRowPanel.getValueComboBox().clearInvalid();
+				}
+				
+				for (var i = 0; i < rowsPanel.items.length; i++) {
+					var currRowPanel = rowsPanel.items.itemAt(i);
+					var currCategoryRecord = currRowPanel.getCategoryComboBox().getSelectedRecord();
+					
+					var currCategory = currCategoryRecord == null ?
+											null :
+											currCategoryRecord.category;
+
+					// Use getRawValue() instead of getValue() because getRawValue() returns whatever text typed by users.
+					var currValue = currRowPanel.getValueComboBox().getRawValue();
+					
+					for (var j = i + 1; currCategory != null && currValue !== '' && j < rowsPanel.items.length; j++) {
+						var currTestRowPanel = rowsPanel.items.itemAt(j);
+						var currTestCategoryRecord = currTestRowPanel.getCategoryComboBox().getSelectedRecord();
+						
+						var currTestCategory = currTestCategoryRecord == null ?
+													null :
+													currTestCategoryRecord.category;
+	
+						var currTestValue = currTestRowPanel.getValueComboBox().getRawValue();
+						
+						if (currCategory === currTestCategory && currValue === currTestValue) {
+							currRowPanel.getCategoryComboBox().markInvalid();
+							currRowPanel.getValueComboBox().markInvalid();
+							currTestRowPanel.getCategoryComboBox().markInvalid();
+							currTestRowPanel.getValueComboBox().markInvalid();
+
+							hasDuplicate = true;
+						}
+					}
+				}
+				return hasDuplicate;
+			},
 			reset: function() {
 				this.selectExperimentTags(originalExperimentTagSelections, originalGeneSelection);
 				if (originalExperimentTagSelections == null) {

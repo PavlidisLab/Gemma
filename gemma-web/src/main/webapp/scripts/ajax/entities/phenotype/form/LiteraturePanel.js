@@ -16,6 +16,8 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
     autoHeight:true,
     defaultType: 'textfield',
     initComponent: function() {
+    	var previousPubMedId = '';
+    	
 		var pubMedIdField = new Ext.form.NumberField({
 			minValue: 1,			
 			minLength: 1,
@@ -29,6 +31,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '9'},
 			enableKeyEvents: true,
 		    initComponent: function() {
+
 				Ext.apply(this, {
 					listeners: {
 						blur: function(numberField) {
@@ -45,8 +48,17 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			blur: function(numberField) {
 				this.fireEvent('pubMedIdFieldBlur', this);
 			},
-			keypress: function(numberField, event) {
-				this.fireEvent('pubMedIdFieldKeyPress', this, event);							
+			// Don't use keypress because when I do pubMedIdField.getValue(), I
+			// just get the PubMed Id before keypress event occurs. 
+			keyup: function(numberField, event) {
+				var currentPubMedId = pubMedIdField.getValue();
+				
+				// Fire event only when PubMed Id has been changed.
+				if (previousPubMedId !== currentPubMedId) {
+					previousPubMedId = currentPubMedId;
+	
+					this.fireEvent('pubMedIdFieldKeyUp', this, event);
+				}
 			},
 			scope: this
 		})
