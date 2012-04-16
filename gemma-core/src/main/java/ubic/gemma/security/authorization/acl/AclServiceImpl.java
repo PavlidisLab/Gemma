@@ -58,11 +58,18 @@ public class AclServiceImpl extends JdbcMutableAclService implements AclService 
 
         Long sidId = super.createOrRetrieveSidPrimaryKey( sid, false );
 
-        String deleteAces = "delete e from acl_entry e inner join acl_sid s on s.id=e.sid where s.sid = ?";
-        jdbcTemplate.update( deleteAces, new Object[] { sidId } );
+        // note: this version failed to delete all relevant acl_entry rows
+        //String deleteAces = "delete e from acl_entry e inner join acl_sid s on s.id=e.sid where s.sid = ?";
+        
+        String deleteAces = "delete from acl_entry where sid = ?";
+        int rowsAff = jdbcTemplate.update( deleteAces, new Object[] { sidId } );
+        
+        log.debug( "Deleted "+rowsAff+" entries from the acl_entry table." );
 
         String deleteSid = "delete from acl_sid where id = ?";
-        jdbcTemplate.update( deleteSid, new Object[] { sidId } );
+        rowsAff = jdbcTemplate.update( deleteSid, new Object[] { sidId } );
+        
+        log.debug( "Deleted "+rowsAff+" entries from the acl_sid table." );
 
     }
 

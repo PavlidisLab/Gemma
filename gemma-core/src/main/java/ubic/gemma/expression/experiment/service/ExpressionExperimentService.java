@@ -455,7 +455,7 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
-
+    
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
      * current user has specific write permissions on (as opposed to data sets which are public). Important: This method
@@ -468,6 +468,20 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<ExpressionExperiment> loadMyExpressionExperiments();
+
+    /**
+     * Returns the {@link ExpressionExperiment}s owned by the {@link User} currently logged in. Note: this includes
+     * public and private entities. Important: This method will return all experiments if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     */
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
+    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
+    
+    
 
     /**
      * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the

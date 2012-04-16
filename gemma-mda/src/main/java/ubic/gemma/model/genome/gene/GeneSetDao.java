@@ -119,6 +119,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<? extends GeneSet> loadMySharedGeneSets();
     
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
+    public Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax );
     
     @Override
     @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
@@ -163,5 +165,6 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * @return taxon of a random member of the set or null
      */    
     public Taxon getTaxon( Long id );
+
 
 }

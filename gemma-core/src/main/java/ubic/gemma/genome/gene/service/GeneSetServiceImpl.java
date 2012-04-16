@@ -21,6 +21,7 @@ package ubic.gemma.genome.gene.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
     @Override
@@ -83,7 +83,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -93,7 +92,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -112,7 +110,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -122,7 +119,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @Override
@@ -133,7 +129,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
      */
     @Override
@@ -143,7 +138,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
     @Override
@@ -153,7 +147,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -163,7 +156,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
     @Override
@@ -173,7 +165,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -186,9 +177,13 @@ public class GeneSetServiceImpl implements GeneSetService {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
     }
 
+    @Override
+    public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
+        return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets( tax );
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     @Override
@@ -198,7 +193,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -212,7 +206,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
      */
     @Override
@@ -223,7 +216,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -474,14 +466,17 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     /**
-     * Returns just the current users gene sets
+     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
+     * or private
      * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @param privateOnly only return private sets owned by the user or private sets shared with the user
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon (can be null)
+     * @param sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
+     *        been shared with the user. If param privateOnly is true, this will have no effect.
      * @return
      */
     @Override
-    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
+    public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly ) {
 
         Taxon tax = null;
         if ( taxonId != null ) {
@@ -491,21 +486,43 @@ public class GeneSetServiceImpl implements GeneSetService {
             }
         }
 
-        Collection<GeneSet> geneSets = new HashSet<GeneSet>();
+        Collection<GeneSet> geneSets = new LinkedList<GeneSet>();
+        
         if ( privateOnly ) {
+            // gets all groups user can see (includes: owned by user, shared with user & public)
+            geneSets = loadAll( tax );
+            
+            // this filtering is to filter out public sets
             try {
-                geneSets = loadMyGeneSets( tax );
-                geneSets.retainAll( securityService.choosePrivate( geneSets ) );
+                if ( !geneSets.isEmpty() ) {
+                    geneSets.retainAll( securityService.choosePrivate( geneSets ) );
+                }
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-
-        } else {
+        }else if ( sharedPublicOnly ){
+            // gets all groups shared with the user and all groups owned by the user, except public ones
+            geneSets = loadMySharedGeneSets( tax );
+        }else{
             geneSets = loadAll( tax );
         }
 
-        Collection<DatabaseBackedGeneSetValueObject> result = geneSetValueObjectHelper.convertToValueObjects( geneSets );
-        return result;
+        return geneSets;
+    }
+
+    /**
+     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
+     * or private
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
+            Long taxonId ) {
+        Collection<GeneSet> geneSets = getUsersGeneGroups( privateOnly, taxonId, false );
+        return geneSetValueObjectHelper.convertToValueObjects( geneSets );
     }
 
     /**

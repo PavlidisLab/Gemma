@@ -51,7 +51,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
     @Override
@@ -69,7 +68,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     @Override
@@ -85,7 +83,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -96,7 +93,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -108,7 +104,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -125,7 +120,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @Override
@@ -135,7 +129,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
     @Override
@@ -149,7 +142,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
     @Override
@@ -160,7 +152,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#loadAll(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -173,7 +164,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
     @Override
@@ -186,7 +176,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
     @Override
@@ -200,7 +189,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
     @Override
@@ -217,7 +205,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
     @Override
@@ -234,7 +221,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
     @Override
@@ -247,7 +233,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     @Override
     public Collection<? extends GeneSet> loadMyGeneSets() {
-        return loadAll( );
+        return loadAll();
     }
 
     @Override
@@ -259,70 +245,75 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     public Collection<? extends GeneSet> loadMySharedGeneSets() {
         return loadAll();
     }
-    
+
+    @Override
+    public Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax ) {
+        return loadAll( tax );
+    }
+
     @Override
     public int getGeneCount( Long id ) {
 
         List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select g.id, count(i) from GeneSetImpl g join g.members i where g.id in (:ids)",
-                "ids", id );
+                "select g.id, count(i) from GeneSetImpl g join g.members i where g.id in (:ids)", "ids", id );
 
         for ( Object object : o ) {
             Object[] oa = ( Object[] ) object;
             return ( ( Long ) oa[1] ).intValue();
         }
-        
+
         return 0;
 
     }
-    
+
     @Override
     public Collection<Long> getGeneIds( Long id ) {
 
         List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select gs.id, g.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :ids",
-                "ids", id );
+                "select gs.id, g.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :ids", "ids", id );
         Collection<Long> results = new ArrayList<Long>();
-        
+
         for ( Object object : o ) {
             Object[] oa = ( Object[] ) object;
-            results.add( (Long)oa[1] ); 
+            results.add( ( Long ) oa[1] );
         }
 
         return results;
 
     }
-    
+
     @Override
     public Long getTaxonId( Long id ) {
-        
+
         // using Query because I want to be able to limit the number of row returned to one
-        
-        Query q = this.getSession().createQuery( "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+
+        Query q = this.getSession().createQuery(
+                "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
-        
+
         List<?> list = q.list();
-        for(Object obj : list){
+        for ( Object obj : list ) {
             Object[] oa = ( Object[] ) obj;
             return ( ( Long ) oa[1] );
         }
 
-        return new Long(-1);
+        return new Long( -1 );
 
     }
-    
+
     @Override
     public Taxon getTaxon( Long id ) {
-        
+
         // using Query because I want to be able to limit the number of row returned to one
-        
-        Query q = this.getSession().createQuery( "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+
+        Query q = this.getSession().createQuery(
+                "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
-        
+
         List<?> list = q.list();
-        for(Object obj : list){
+        for ( Object obj : list ) {
             Object[] oa = ( Object[] ) obj;
             return ( ( Taxon ) oa[1] );
         }

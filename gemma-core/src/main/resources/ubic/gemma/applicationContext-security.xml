@@ -148,6 +148,7 @@
 		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
 		<s:after-invocation-provider ref="afterAclMyDataRead" />
 		<s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
+		<s:after-invocation-provider ref="afterAclAllMyData" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
 		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- 
@@ -493,6 +494,23 @@
 	<!-- special filter that returns only Non-public data that user can read -->
 	<bean id="afterAclMyPrivateDataRead"
 		class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyPrivateData">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant
+					static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant
+					static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
+				<util:constant
+					static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
+	
+	<!-- special filter that returns all data user owns -->
+	<bean id="afterAclAllMyData"
+		class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForUserOwnedData">
 		<constructor-arg ref="aclService" />
 		<constructor-arg>
 			<list>

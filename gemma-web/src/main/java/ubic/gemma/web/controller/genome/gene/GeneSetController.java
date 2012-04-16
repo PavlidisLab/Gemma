@@ -218,7 +218,7 @@ public class GeneSetController {
      */
     public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
 
-        return geneSetService.getUsersGeneGroups( privateOnly, taxonId );
+        return geneSetService.getUsersGeneGroupsValueObjects( privateOnly, taxonId );
     }
 
     /**

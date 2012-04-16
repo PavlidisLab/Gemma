@@ -143,13 +143,20 @@ public interface GeneSetService {
      * @return
      */
     public Collection<GeneSet> loadMyGeneSets( Taxon tax );
-
+    
     /**
      * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
      * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
      * @return
      */
     public Collection<GeneSet> loadMySharedGeneSets();
+
+    /**
+     * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
+     * @see ubic.gemma.model.genome.gene.GeneSetDao GeneSetDao for security filtering
+     * @return
+     */
+    public Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
 
     /**
      * Given a collection of genesets remove them all from the db
@@ -246,9 +253,19 @@ public interface GeneSetService {
      * 
      * @param privateOnly
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @param sharedPublicOnly TODO
      * @return
      */
-    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId );
+    public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly );
+    
+    /**
+     * Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly, Long taxonId );
 
     /**
      * Get the gene value objects for the members of the group param

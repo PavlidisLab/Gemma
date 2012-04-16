@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -809,6 +810,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#loadValueObjects(Collection)
      */
+    @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids ) {
         try {
             /*
@@ -1051,13 +1053,22 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
         return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
     }
-
+    
     /*
      * Note: implemented via SpringSecurity.
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
      */
     public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
+        return loadAll();
+    }
+
+    /*
+     * Note: implemented via SpringSecurity.
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadUserOwnedExpressionExperiments()
+     */
+    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
         return loadAll();
     }
 
@@ -1162,7 +1173,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         // FIXME I'm not sure if this filtering actually works. See note for handleLoadValueObjects.
         Collection<ExpressionExperiment> experiments = this.loadAll();
 
-        Collection<Long> filteredIds = new HashSet<Long>();
+        List<Long> filteredIds = new LinkedList<Long>();
         for ( ExpressionExperiment ee : experiments ) {
             filteredIds.add( ee.getId() );
         }

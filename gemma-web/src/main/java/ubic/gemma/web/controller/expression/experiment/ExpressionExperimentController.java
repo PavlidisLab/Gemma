@@ -75,6 +75,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.Status;
 import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -750,7 +751,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             return new HashSet<ExpressionExperimentValueObject>();
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
-                false, -1 );
+                false, -1, true );
         // populateAnalyses( result ); // FIXME make this optional.
         return result;
     }
@@ -759,14 +760,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * AJAX. Data summarizing the status of experiments.
      * 
      * @param taxonId can be null
-     * @param sIds - ids
      * @param limit If >0, get the most recently updated N experiments, where N <= limit; or if < 0, get the least
      *        recently updated; if 0, or null, return all.
      * @param filter if non-null, limit data sets to ones meeting criteria.
+     * @param showPublic return user's public datasets too
+     * @param sIds - ids
      * @return
      */
     public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
-            Integer limit, Integer filter ) {
+            Integer limit, Integer filter, Boolean showPublic ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -788,7 +790,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // will keep from loading a ridiculous number of experiments
         if(limit == null || limit <= 0) limit = 50;
 
-        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter );
+        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter, showPublic );
 
         if ( eeValObjectCol.isEmpty() ) {
             return new HashSet<ExpressionExperimentValueObject>();
@@ -1708,10 +1710,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param limit - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or all
      *        (limit == 0)
      * @param filter setting
+     * @param showPublic return the user's public datasets as well
      * @return
      */
     private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
-            boolean filterDataByUser, Integer limit, Integer filter ) {
+            boolean filterDataByUser, Integer limit, Integer filter, boolean showPublic ) {
         List<ExpressionExperimentValueObject> eeValObjectCol;
 
         Integer limitToUse = limit;
@@ -1733,18 +1736,18 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
             if ( ids == null || ids.isEmpty() ) {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser,
-                        limitToUse );
+                        limitToUse, showPublic );
             } else {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, ids, filterDataByUser,
-                        limitToUse );
+                        limitToUse, showPublic );
             }
 
         } else if ( ids == null || ids.isEmpty() ) {
             // load everything (up to the limit)
             eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limitToUse );
+                    .getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limitToUse, showPublic );
         } else {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse, showPublic );
         }
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
@@ -1816,11 +1819,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return List<ExpressionExperimentValueObject> in the same order as the EEs passed in
      */
     private List<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
-            Collection<ExpressionExperiment> securedEEsCol ) {
+            List<ExpressionExperiment> securedEEs ) {
 
-        List<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>( securedEEsCol );
-
-        if ( securedEEsCol.size() == 0 ) {
+        if ( securedEEs.size() == 0 ) {
             return new ArrayList<ExpressionExperimentValueObject>();
         }
         StopWatch timer = new StopWatch();
@@ -1857,7 +1858,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             log.info( "Value objects for " + securedEEs.size() + " in " + timer.getTime() + "ms" );
         }
 
-        assert securedEEsCol.size() >= valueObjs.size();
+        assert securedEEs.size() >= valueObjs.size();
         return valueObjs;
     }
 
@@ -1865,15 +1866,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * Get the expression experiment value objects for the expression experiments.
      * 
      * @param taxon can be null
-     * @param eeids can be null; if taxon is non-null, this is ignored.
      * @param filterDataForUser if true, then only the data owned by the user are returned (this has no effect if you
      *        are an administrator)
+     * @param showPublic TODO
+     * @param eeids can be null; if taxon is non-null, this is ignored.
      * @param maximum # to retrieve, in order of most recently updated. Enter -1 to have no limit. (not the guaranteed
      *        maximum)
      * @return Collection<ExpressionExperimentValueObject>
      */
     private List<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            Collection<Long> eeIds, boolean filterDataForUser, int limit ) {
+            Collection<Long> eeIds, boolean filterDataForUser, int limit, boolean showPublic ) {
 
         List<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
@@ -1888,8 +1890,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( filterDataForUser ) {
             try {
 
-                securedEEs = new ArrayList<ExpressionExperiment>( expressionExperimentService
-                        .loadMySharedExpressionExperiments() ); // limit won't really
+                securedEEs = (showPublic)? new ArrayList<ExpressionExperiment>( expressionExperimentService
+                        .loadUserOwnedExpressionExperiments() ): new ArrayList<ExpressionExperiment>( expressionExperimentService
+                                .loadMySharedExpressionExperiments() ); 
+                // limit won't really
                 // work! Most experiments
                 // are filtered out.
 
@@ -1963,6 +1967,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             } else {
                 securedEEs = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( eeIds ) );
             }
+            if(!securedEEs.isEmpty() && !showPublic){
+                Collection<Securable> publicEEs = securityService.choosePublic( securedEEs );
+                securedEEs.removeAll( publicEEs );
+            }
+            
         }
 
         if ( timer.getTime() > 1000 ) {
