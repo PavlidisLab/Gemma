@@ -127,7 +127,14 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					messageProperty: 'message', // optional
 					totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
 					idProperty: 'id', // same as default
-					fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', 'taxonId' ]
+					fields: [
+							'id',
+							'ncbiId',
+							'taxonId',
+							{ name: 'officialSymbol', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
+							{ name: 'officialName', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
+							'taxonCommonName'
+						]
 			    }),
 			    sortInfo: {	field: 'officialSymbol', direction: 'ASC' },
 			    listeners: {
