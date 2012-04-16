@@ -123,8 +123,11 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 					
 						var currentValue = currRowPanel.getCategoryComboBox().getValue();
 						
-						currRowPanel.getCategoryComboBox().getStore().loadData(Gemma.PhenotypeAssociationForm.ExperimentTagCategories);
-
+						// TODO: Make sure if there is a better way to do the following.
+						// Because store is shared among all the combo boxes, just load data for the first one.
+						if (i === 0) {
+							currRowPanel.getCategoryComboBox().getStore().loadData(Gemma.PhenotypeAssociationForm.ExperimentTagCategories);
+						}
 						if (currentValue !== '') {
 							currRowPanel.getCategoryComboBox().setValue(currentValue);
 						}
@@ -190,22 +193,17 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 					var currRowPanel = rowsPanel.items.itemAt(i);
 				
 					var currCategoryRecord = currRowPanel.getCategoryComboBox().getSelectedRecord();
-					
-					// Use getRawValue() instead of getValue() because 
-					// getRawValue() returns whatever text typed by users.
-					var currValue = currRowPanel.getValueComboBox().getRawValue();
+					var currValueRecord = currRowPanel.getValueComboBox().getSelectedRecord();					
 				    
-				    if (currCategoryRecord == null || currValue === '') {
+				    if (currCategoryRecord == null || currValueRecord == null) {
 			        	selectedExperimentTags = null;
 				    } else {
-				    	// Don't set valueUri because users may have typed a  
-				    	// value that has corresponding valueUri without selecting
-				    	// it from the drop-down list. So, we have decided not to set. 
 						var characteristicValueObject = new CharacteristicValueObject();
 						characteristicValueObject.id = currCategoryRecord.id;
 						characteristicValueObject.category = currCategoryRecord.category;
 						characteristicValueObject.categoryUri = currCategoryRecord.categoryUri;
-						characteristicValueObject.value = currValue;
+						characteristicValueObject.value = currValueRecord.value;
+						characteristicValueObject.valueUri = currValueRecord.valueUri;
 						
 						selectedExperimentTags.push(characteristicValueObject);				    	
 					}

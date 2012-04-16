@@ -299,10 +299,12 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		});
 
 		var descriptionTextArea = new Ext.form.TextArea({
+			maxLength: 65535, // Data type is TEXT in the database.
 			fieldLabel: 'Note',
 			anchor: ANCHOR_VALUE,
 		    initComponent: function() {
 				Ext.apply(this, {
+					autoCreate: { tag: 'textarea', rows: '4', maxlength: this.maxLength },
 					setDescription: function(description) {
 						this.setValue(description);
 						this.originalValue = description;

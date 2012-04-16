@@ -11,11 +11,6 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 	allowBlank: false,
 	enableKeyEvents: true,
 	forceSelection: true,				
-    store: new Ext.data.JsonStore({
-		proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),
-	    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
-	    idProperty: 'valueUri'
-	}),
     valueField: 'valueUri', 
     displayField: 'value',
     typeAhead: false,
@@ -50,12 +45,23 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 	selectPhenotype: function(phenotypeSelection) {
 		if (phenotypeSelection != null) {
 			this.getStore().loadData(
-				[{
-					valueUri: phenotypeSelection.valueUri,
-					value: phenotypeSelection.value
-				}],
+				[ phenotypeSelection ],
 				true); // true to append the new record
 			this.setValue(phenotypeSelection.valueUri);
 		}    	
-	}
+	},
+	getSelectedPhenotype: function() {
+		var record = this.store.getById(this.getValue());
+		return record.data;
+	},
+    initComponent: function() {
+		Ext.apply(this, {
+		    store: new Ext.data.JsonStore({
+				proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),
+			    fields: [ 'id', 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
+			    idProperty: 'valueUri'
+			})
+		});
+		this.superclass().initComponent.call(this);
+    }
 });

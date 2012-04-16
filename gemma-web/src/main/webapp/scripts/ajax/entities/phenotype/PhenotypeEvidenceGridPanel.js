@@ -463,21 +463,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				}
 				
 				if (data != null) {
-					var evidencePhenotypes = [];
-					for (var i = 0; i < record.data.phenotypes.length; i++) {
-						evidencePhenotypes.push({
-							value: record.data.phenotypes[i].value,
-							valueUri: record.data.phenotypes[i].valueUri
-						});
-					}
-					
-					
 					var editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
 					this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 
 					data.evidenceId = record.data.id;
 					data.gene = this.currentGene;
-					data.phenotypes = evidencePhenotypes;
+					data.phenotypes = record.data.phenotypes;
 					data.evidenceClassName = evidenceClassName;
 					data.isNegativeEvidence = record.data.isNegativeEvidence;
 					data.description = record.data.description;

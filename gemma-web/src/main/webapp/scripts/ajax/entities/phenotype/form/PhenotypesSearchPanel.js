@@ -166,9 +166,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				    if (currPhenotypeSearchComboBox.getValue() === '') {
 			        	selectedPhenotypes = null;
 				    } else {
-						var characteristicValueObject = new CharacteristicValueObject();
-						characteristicValueObject.valueUri = currPhenotypeSearchComboBox.getValue();
-						selectedPhenotypes.push(characteristicValueObject);				    	
+						selectedPhenotypes.push(currPhenotypeSearchComboBox.getSelectedPhenotype());
 					}
 				}
 
