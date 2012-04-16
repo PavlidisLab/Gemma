@@ -24,9 +24,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
 
-		var createPhenotypeAssociationFormWindow = null;
-		var editPhenotypeAssociationFormWindow = null;
-		
 		if (!this.createPhenotypeAssociationHandler) {		
 	   		// Show Admin column after user logs in. 
 			Gemma.Application.currentUser.on("logIn", 
@@ -79,11 +76,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			handler: this.createPhenotypeAssociationHandler ?
 				this.createPhenotypeAssociationHandler :
 				function() {
-					if (createPhenotypeAssociationFormWindow == null) {
-						createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-						this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-					}
-	
+					var createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					
+					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 					createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
 						{
 							gene: this.currentGene,
@@ -477,10 +472,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					}
 					
 					
-					if (editPhenotypeAssociationFormWindow == null) {
-						editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-						this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-					}
+					var editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 
 					data.evidenceId = record.data.id;
 					data.gene = this.currentGene;

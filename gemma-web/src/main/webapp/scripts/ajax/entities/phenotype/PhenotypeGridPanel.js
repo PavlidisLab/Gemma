@@ -18,8 +18,6 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
         forceFit: true
     },
     initComponent: function() {
-		var phenotypeAssociationFormWindow = null;
-
 		var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
 			dataIndex: 'isChecked',
 			singleSelect: false,
@@ -144,10 +142,9 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					handler: this.createPhenotypeAssociationHandler ?
 						this.createPhenotypeAssociationHandler :
 						function() {
-							if (phenotypeAssociationFormWindow == null) {
-								phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-								this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-							}
+							var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+
+							this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 							phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
 								{
 									gene: this.currentGene,
