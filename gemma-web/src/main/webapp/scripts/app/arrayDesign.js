@@ -1,21 +1,4 @@
 Ext.namespace('Gemma');
-Ext.onReady(function() {
-
-			var panel = Ext.TabPanel({
-
-						renderTo : 'arrayDesign',
-						activeTab : 0,
-						items : [{
-									title : 'Information'
-								}, {
-									title : 'Probes'
-								}, {
-									title : 'Experiments'
-								}]
-
-					});
-
-		});
 
 function handleFailure(data, e) {
 	reportFeedback("error", data, e);
