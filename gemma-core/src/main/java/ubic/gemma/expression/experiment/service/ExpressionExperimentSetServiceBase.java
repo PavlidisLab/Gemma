@@ -50,6 +50,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     public ExpressionExperimentSet create(
             final ExpressionExperimentSet expressionExperimentSet ) {
         try {
@@ -64,6 +65,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     public void delete( final ExpressionExperimentSet expressionExperimentSet ) {
         try {
             
@@ -89,6 +91,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#findByName(java.lang.String)
      */
+    @Override
     public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
@@ -102,6 +105,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         try {
@@ -116,6 +120,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -129,6 +134,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadAll()
      */
+    @Override
     public java.util.Collection<ExpressionExperimentSet> loadAll() {
         try {
             return this.handleLoadAll();
@@ -142,6 +148,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public java.util.Collection<ExpressionExperimentSet> loadUserSets(
             final ubic.gemma.model.common.auditAndSecurity.User user ) {
         try {
@@ -165,6 +172,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     public void update( final ExpressionExperimentSet expressionExperimentSet ) {
         try {
             if ( expressionExperimentSet == null ) {
