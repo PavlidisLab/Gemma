@@ -192,11 +192,22 @@ public class EvidenceValueObject {
         return phenotypesValueUri;
     }
 
+    public Set<Long> getPhenotypesId() {
+
+        Set<Long> phenotypesId = new HashSet<Long>();
+
+        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
+            phenotypesId.add( characteristicValueObject.getId() );
+        }
+
+        return phenotypesId;
+    }
+
     public String getClassName() {
         return this.className;
     }
 
-    public void setClassName(String className) {
+    public void setClassName( String className ) {
         this.className = className;
     }
 
@@ -219,7 +230,7 @@ public class EvidenceValueObject {
     public void setIsNegativeEvidence( boolean isNegativeEvidence ) {
         this.isNegativeEvidence = isNegativeEvidence;
     }
-    
+
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }

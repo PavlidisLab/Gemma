@@ -133,7 +133,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        if ( isEvidenceAlreadyInDatabase( evidence ) ) {
+        if ( evidenceAlreadyInDatabase( evidence ) != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
             return validateEvidenceValueObject;
@@ -328,7 +328,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "No database id provided" );
         }
 
-        if ( isEvidenceAlreadyInDatabase( modifedEvidenceValueObject ) ) {
+        if ( evidenceAlreadyInDatabase( modifedEvidenceValueObject ) != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
             return validateEvidenceValueObject;
@@ -602,9 +602,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        if ( isEvidenceAlreadyInDatabase( evidence ) ) {
+        EvidenceValueObject evidenceValueObjectInDatabase = evidenceAlreadyInDatabase( evidence );
+
+        if ( evidenceValueObjectInDatabase != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
+            validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
+                    evidenceValueObjectInDatabase.getPhenotypesId() );
             return validateEvidenceValueObject;
         }
 
@@ -1195,7 +1199,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** checks to see if the evidence is already in the database */
-    private boolean isEvidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
+    private EvidenceValueObject evidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI() );
@@ -1213,9 +1217,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         continue;
                     }
                 }
-                return true;
+                return evidenceFound;
             }
         }
-        return false;
+        return null;
     }
 }
