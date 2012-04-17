@@ -132,9 +132,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    reader: new Ext.data.JsonReader({
 				idProperty: 'id',		    	
 		        fields: [
-					'id', 'description', 'lastUpdated',	'evidenceSecurityValueObject',
-		        	'relevance', 'phenotypes', 'className', 'evidenceCode', 'evidenceSource', 'experimentCharacteristics',
-		 			'isNegativeEvidence', 'primaryPublicationCitationValueObject', 'citationValueObject',
+			        // for EvidenceValueObject
+					'id', 'className', 'description', 'evidenceCode', 'evidenceSecurityValueObject',
+		        	'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes', 'relevance',
+		        	// for ExperimentalEvidenceValueObject
+		 			'experimentCharacteristics', 'primaryPublicationCitationValueObject',
+		 			'relevantPublicationsCitationValueObjects',
+		 			// for LiteratureEvidenceValueObject
+		 			'citationValueObject',
 		            {
 						name: 'rowExpanderText',
 						convert: function(value, record) {
@@ -153,7 +158,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						        			convertToPudmedAnchor(record.primaryPublicationCitationValueObject.pubmedURL) + '</p>';
 						        	}
 						
-									var relPub = record.relevantPublicationsValueObjects;
+									var relPub = record.relevantPublicationsCitationValueObjects;
 						        	if (relPub != null && relPub.length > 0) {
 						        		descriptionHtml += '<p><b>Relevant Publication</b>: ';
 						        		
@@ -454,9 +459,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 											record.data.primaryPublicationCitationValueObject.pubmedAccession :
 											null,
 						// Assume we have at most one other PubMed Id.
-						secondaryPubMedId: record.data.relevantPublicationsValueObjects != null &&
-									 	   record.data.relevantPublicationsValueObjects.length > 0 ?
-												record.data.relevantPublicationsValueObjects[0].pubmedAccession :
+						secondaryPubMedId: record.data.relevantPublicationsCitationValueObjects != null &&
+									 	   record.data.relevantPublicationsCitationValueObjects.length > 0 ?
+												record.data.relevantPublicationsCitationValueObjects[0].pubmedAccession :
 												null,
 						experimentCharacteristics: record.data.experimentCharacteristics
 					}
