@@ -1134,7 +1134,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     }
 
                     validateEvidenceValueObject.setSameGeneAnnotated( true );
-                    validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                    validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
                             bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
 
                     boolean containsExact = true;
@@ -1148,7 +1148,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( containsExact ) {
                         validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                        validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                        validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
                                 bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                     }
 
@@ -1157,7 +1157,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             && evidence.getPhenotypes().containsAll(
                                     bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                         validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                        validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                        validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
                                 bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                     }
 
@@ -1184,7 +1184,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
                             validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
-                            validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                            validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
                                     bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                         }
                     }
