@@ -22,10 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author keshav
@@ -37,14 +35,10 @@ public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
     @Autowired
     private LinkAnalysisService linkAnalysisService = null;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
     @TaskMethod
     public TaskResult execute( LinkAnalysisTaskCommand command ) {
-
-        ExpressionExperiment ee = expressionExperimentService.thawLite( command.getExpressionExperiment() );
-        linkAnalysisService.process( ee, command.getFilterConfig(), command.getLinkAnalysisConfig() );
+        
+        linkAnalysisService.process( command.getExpressionExperiment().getId(), command.getFilterConfig(), command.getLinkAnalysisConfig() );
         TaskResult result = new TaskResult( command, null );
         return result;
 

@@ -35,7 +35,7 @@ public interface LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    public abstract LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+    public abstract LinkAnalysis process( Long eeId, FilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig );
 
     /**

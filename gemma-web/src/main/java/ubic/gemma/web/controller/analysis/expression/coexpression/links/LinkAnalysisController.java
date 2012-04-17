@@ -107,7 +107,7 @@ public class LinkAnalysisController extends AbstractTaskService {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        //ee = expressionExperimentService.thawLite( ee );
         LinkAnalysisConfig lac = new LinkAnalysisConfig();
         FilterConfig fc = new FilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( ee, lac, fc );

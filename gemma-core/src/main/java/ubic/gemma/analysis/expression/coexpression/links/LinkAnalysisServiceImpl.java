@@ -162,15 +162,17 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
      */
     @Override
-    public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+    public LinkAnalysis process(Long eeId, FilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig ) {
 
+        ExpressionExperiment ee = eeService.load( eeId );
+        
         try {
             LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
             la.clear();
 
             log.info( "Fetching expression data ... " + ee );
-            ee = eeService.thawLite( ee );
+            
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
 
@@ -525,10 +527,10 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
             ees.add( ee );
+            
+            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
             saveLinks( p2v, la );
-
-            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
         } else if ( linkAnalysisConfig.isTextOut() ) {
             try {

@@ -68,7 +68,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         linkAnalysisConfig.setCdfCut( 0.1 );
         linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
-        LinkAnalysis result = linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+        LinkAnalysis result = linkAnalysisService.process( ee.getId(), filterConfig, linkAnalysisConfig );
 
         Collection<CoexpressionProbe> probesUsed = result.getAnalysisObj().getProbesUsed();
         assertEquals( 132, probesUsed.size() );

@@ -512,7 +512,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         .setOutputFile( new File( ee.getShortName().replaceAll( "\\s", "_" ) + "-links.txt" ) );
             }
 
-            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+            linkAnalysisService.process( ee.getId(), filterConfig, linkAnalysisConfig );
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
