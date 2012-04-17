@@ -103,7 +103,7 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			linksFound.push(thisSummary.linksFound);
 			linksPositive.push(thisSummary.linksMetPositiveStringency);
 			linksNegative.push(thisSummary.linksMetNegativeStringency);
-			geneDetails.push(String.format("<a href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ",
+			geneDetails.push(String.format("<a target=\"_blank\" href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ",
 					genes[i].id, genes[i].officialName, genes[i].officialSymbol));
 		}
 
