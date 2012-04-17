@@ -19,6 +19,7 @@
 package ubic.gemma.testing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -327,10 +328,26 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * 
+     * @return
+     */
+    protected BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
+        return testHelper.getTestPersistentBioAssay( ad, bm );
+    }
+
+    /**
      * @return
      */
     protected BioMaterial getTestPersistentBioMaterial() {
         return testHelper.getTestPersistentBioMaterial();
+    }
+
+    /**
+     * @return
+     */
+    protected BioMaterial getTestPersistentBioMaterial(Taxon tax) {
+        return testHelper.getTestPersistentBioMaterial( tax );
     }
 
     /**
@@ -449,6 +466,27 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
         return testHelper.getTestPersistentExpressionExperiment();
+    }
+    
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects. This implementation does NOT fill in associations of the created object.
+     * 
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentExpressionExperiment(Collection<BioAssay> bioAssays) {
+        return testHelper.getTestPersistentExpressionExperiment( bioAssays );
+    }
+
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects. This implementation does NOT fill in associations of the created object except for the creation of
+     * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
+     * 
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentExpressionExperiment( Taxon taxon ) {
+        return testHelper.getTestPersistentExpressionExperiment( taxon );
     }
 
     /**

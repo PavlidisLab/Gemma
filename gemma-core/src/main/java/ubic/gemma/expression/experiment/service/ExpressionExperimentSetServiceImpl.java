@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -357,44 +358,43 @@ public class ExpressionExperimentSetServiceImpl extends
             throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded. "+
                        "Either it does not exist or you do not have permission to view it." );
         }
+        Taxon groupTaxon = eeSet.getTaxon();
         
-        Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
-
         // check that new member ids are valid
-        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> newExperiments = expressionExperimentService.loadMultiple( eeIds );
 
-        if ( experiments.isEmpty() ) {
+        if ( newExperiments.isEmpty() ) {
             throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
                     + " provided)" );
         }
-        if ( experiments.size() < eeIds.size() ) {
+        if ( newExperiments.size() < eeIds.size() ) {
             throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
-                    + experiments.size() + " out of " + eeIds.size() + " provided)" );
+                    + newExperiments.size() + " out of " + eeIds.size() + " provided)" );
         }
 
-        assert experiments.size() == eeIds.size();
-        boolean exists = false;
-        for ( ExpressionExperiment experiment : experiments ) {
-
-            for ( BioAssaySet bas : eeSet.getExperiments() ) {
-                if ( bas.getId().equals( experiment.getId() ) ) {
-                    exists = true;
-                    break;
-                }
+        assert newExperiments.size() == eeIds.size();
+        Collection<BioAssaySet> basColl = new LinkedList<BioAssaySet>();
+        Taxon eeTaxon = null;
+        int mismatchTaxa = 0;
+        for ( ExpressionExperiment experiment : newExperiments ) {
+            // make sure experiments being added are from the right taxon
+            eeTaxon = expressionExperimentService.getTaxon( experiment.getId() );
+            // get top level parent taxon
+            while(eeTaxon != null && eeTaxon.getParentTaxon() != null){
+                eeTaxon = eeTaxon.getParentTaxon();
+            }  
+            if(eeTaxon != null && eeTaxon.getId() == groupTaxon.getId() ){
+                basColl.add( experiment );
+            }else{
+                mismatchTaxa++;
             }
-
-            if ( !exists ) {
-                eeSet.getExperiments().add( experiment );
-                updatedExperimentlist.add( experiment );
-            } else {
-                updatedExperimentlist.add( experiment );
-            }
-
-            exists = false;
         }
-
-        eeSet.getExperiments().clear();
-        eeSet.getExperiments().addAll( updatedExperimentlist );
+        if(mismatchTaxa > 0){
+            throw new IllegalArgumentException( "Failed to add experiments of wrong taxa to set. "+
+                    mismatchTaxa + ((mismatchTaxa>1)? " experiments were":"experiment was" )
+                    +" of the wrong taxa. Set taxon is "+groupTaxon.getCommonName()+".");
+        }
+        eeSet.setExperiments( basColl );
 
         this.update( eeSet );
 
@@ -430,7 +430,11 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public void updateDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo ) {
         try {
-            update( load( eesvo.getId() ) );
+            ExpressionExperimentSet eeset = expressionExperimentValueObjectHelper.convertToEntity( eesvo );
+            if( eeset == null){
+                throw new IllegalArgumentException( "Cannot update null set");
+            }
+            update( eeset );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }

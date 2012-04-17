@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
@@ -543,6 +544,14 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
+     * @return
+     */
+    public BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
+        BioMaterial bm = getTestNonPersistentBioMaterial( tax );
+        return ( BioMaterial ) persisterHelper.persist( bm );
+    }
+
+    /**
      * Slightly misleading, associations are persistent.
      * 
      * @return
@@ -555,6 +564,23 @@ public class PersistentDummyObjectHelper {
             assert geo != null;
         }
         bm.setSourceTaxon( getTestNonPersistentTaxon() );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
+        return bm;
+    }
+
+    /**
+     * Slightly misleading, associations are persistent.
+     * 
+     * @return
+     */
+    private BioMaterial getTestNonPersistentBioMaterial( Taxon tax ) {
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiomaterial" );
+        if ( geo == null ) {
+            geo = externalDatabaseService.find( "GEO" );
+            assert geo != null;
+        }
+        bm.setSourceTaxon( tax );
         bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
         return bm;
     }
@@ -705,6 +731,46 @@ public class PersistentDummyObjectHelper {
     public ExpressionExperiment getTestPersistentExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testee" );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        return ee;
+    }
+    
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects. This implementation does NOT fill in associations of the created object.
+     * 
+     * @return
+     */
+    public ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testee" );
+        ee.setBioAssays( bioAssays );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        return ee;
+    }
+
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects. This implementation does NOT fill in associations of the created object except for the creation of
+     * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
+     * 
+     * @param taxon the experiment will have this taxon
+     * @return
+     */
+    public ExpressionExperiment getTestPersistentExpressionExperiment( Taxon taxon ) {
+        BioAssay ba = null;
+        BioMaterial bm = null;
+        ArrayDesign ad = null;
+        
+        bm = this.getTestPersistentBioMaterial( taxon );
+        ad = this.getTestPersistentArrayDesign( 4, true, true );
+        ba = this.getTestPersistentBioAssay( ad, bm );
+        Set<BioAssay> bas1 = new HashSet<BioAssay>();
+        bas1.add( ba );
+
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testee" );
+        ee.setBioAssays( bas1 );
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
         return ee;
     }

@@ -26,6 +26,8 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * <p>
@@ -37,9 +39,13 @@ import ubic.gemma.model.common.auditAndSecurity.User;
  */
 public abstract class ExpressionExperimentSetServiceBase implements
         ExpressionExperimentSetService {
-
+    
     @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
+    
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -164,12 +170,28 @@ public abstract class ExpressionExperimentSetServiceBase implements
             if ( expressionExperimentSet == null ) {
                 throw new IllegalArgumentException( "Cannot update null set");
             }
-            if ( expressionExperimentSet.getId() == null ) {
+            if ( expressionExperimentSet.getId() == null || expressionExperimentSet.getId() < 0 ) {
                 throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + expressionExperimentSet.getId() + ")" );
             }
 
             if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
                 throw new IllegalArgumentException( "You must provide a name" );
+            }
+            
+            // make sure potentially new experiment members are of the right taxon
+            Taxon groupTaxon = expressionExperimentSet.getTaxon();
+            Taxon eeTaxon = null;
+            for(BioAssaySet ee : expressionExperimentSet.getExperiments()){
+                eeTaxon = expressionExperimentService.getTaxon( ee.getId() );
+                // get top level parent taxon
+                while(eeTaxon != null && eeTaxon.getId() != groupTaxon.getId() && eeTaxon.getParentTaxon() != null){
+                    eeTaxon = eeTaxon.getParentTaxon();
+                }
+                if(eeTaxon== null || eeTaxon.getId() != groupTaxon.getId()){
+                    throw new IllegalArgumentException( "Failed to add experiments of wrong taxa ("+
+                            ((eeTaxon==null)?"null":eeTaxon.getCommonName())+") to set. "+
+                            "Set taxon is "+groupTaxon.getCommonName()+".");
+                }
             }
             
             this.handleUpdate( expressionExperimentSet );

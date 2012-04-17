@@ -39,13 +39,19 @@ package ubic.gemma.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.SecurityService;
 
@@ -67,6 +73,12 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+    
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -152,6 +164,41 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
         }
 
         return vo;
+    }
+
+    /*
+     * @see
+     * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObject(ubic.gemma
+     * .model.analysis.expression.ExpressionExperimentSet)
+     */
+    @Override
+    public ExpressionExperimentSet convertToEntity( DatabaseBackedExpressionExperimentSetValueObject setVO ) {
+        if ( setVO == null ) {
+            return null;
+        }
+        ExpressionExperimentSet entity;
+        if (setVO.getId() == null || setVO.getId() < 0 ) {
+            entity = ExpressionExperimentSet.Factory.newInstance();
+            entity.setId( null );
+        }else{
+            entity = expressionExperimentSetDao.load( setVO.getId() );
+        }
+        
+        entity.setDescription( setVO.getDescription() );
+        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( setVO.getExpressionExperimentIds() );
+        Collection<BioAssaySet> bas = new LinkedList<BioAssaySet>();
+        bas.addAll( experiments );
+        entity.setExperiments( bas );
+        entity.setName( setVO.getName() );
+        
+        if(setVO.getTaxonId() != null && setVO.getTaxonId() >= 0 ){
+            Log.debug( "Trying to convert DatabaseBackedExpressionExperimentSetValueObject with id ="+
+                    setVO.getId()+" to ExpressionExperimentSet entity. ValueObject.getTaxonId() was null." );
+            Taxon tax = taxonService.load( setVO.getTaxonId() );
+            entity.setTaxon( tax );
+        }
+
+        return entity;
     }
 
     /*

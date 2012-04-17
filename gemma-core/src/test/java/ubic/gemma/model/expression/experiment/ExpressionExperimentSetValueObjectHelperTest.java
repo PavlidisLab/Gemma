@@ -22,22 +22,20 @@ package ubic.gemma.model.expression.experiment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -62,37 +60,15 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     @Autowired
     ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     private Taxon tax1;
     private ExpressionExperiment ee = null;
     private ExpressionExperimentSet eeSet = null;
-    private BioAssay ba = null;
-    private BioMaterial bm1 = null;
-    private BioMaterial bm2 = null;
-    private ArrayDesign ad = null;
 
     @Before
     public void setUp() throws Exception {
 
         tax1 = this.getTaxon( "human" );
-
-        bm1 = this.getTestPersistentBioMaterial();
-        bm2 = this.getTestPersistentBioMaterial();
-        bm1.setSourceTaxon( tax1 );
-        bm2.setSourceTaxon( tax1 );
-        Collection<BioMaterial> bms = new ArrayList<BioMaterial>();
-        bms.add( bm1 );
-        bms.add( bm2 );
-
-        ad = this.getTestPersistentArrayDesign( 4, true );
-        ba = this.getTestPersistentBioAssay( ad );
-        ba.setSamplesUsed( bms );
-        Collection<BioAssay> bas = new ArrayList<BioAssay>();
-        bas.add( ba );
-
-        ee = this.getTestPersistentExpressionExperiment();
-        ee.setName( EE_NAME );
-        ee.setBioAssays( bas );
+        ee = this.getTestPersistentExpressionExperiment( tax1 );
 
         // needs to be a set
         Collection<BioAssaySet> ees = new HashSet<BioAssaySet>();
@@ -102,11 +78,22 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         eeSet.setName( "CreateTest" );
         eeSet.setDescription( "CreateDesc" );
         eeSet.setExperiments( ees );
+        eeSet.setTaxon( tax1 );
 
         eeSet = expressionExperimentSetService.create( eeSet );
 
     }
+    
+    @After
+    public void tearDown() {
 
+        // delete by id because otherwise get HibernateException: reassociated object has dirty collection reference
+        expressionExperimentService.delete( ee.getId() );
+
+        // getting "access is denied" error here, even with this.runAsAdmin()
+        //expressionExperimentSetService.delete( eeSet );
+    }
+    
     @Test
     public void testConvertToValueObject() {
 
@@ -116,10 +103,11 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         ExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
                 .convertToValueObject( eeSet );
 
-        assertEquals( eeSet.getId(), eesvo.getId() );
-        assertEquals( eeSet.getExperiments().size(), eesvo.getNumExperiments().intValue() );
-        assertEquals( eeSet.getName(), eesvo.getName() );
-        assertEquals( eeSet.getDescription(), eesvo.getDescription() );
+        assertEquals( eesvo.getId(), eeSet.getId() );
+        assertEquals( eesvo.getNumExperiments().intValue(), eeSet.getExperiments().size() );
+        assertEquals( eesvo.getName(), eeSet.getName() );
+        assertEquals( eesvo.getDescription(), eeSet.getDescription() );
+        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
     }
 
     @Test
@@ -137,6 +125,36 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( eeSet.getExperiments().size(), eesvo.getNumExperiments().intValue() );
         assertEquals( eeSet.getName(), eesvo.getName() );
         assertEquals( eeSet.getDescription(), eesvo.getDescription() );
+        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
+
+    }
+
+    @Test
+    public void testConvertToEntity() {
+
+        // create VO from entity
+        Long id = eeSet.getId();
+        assertNotNull( id );
+
+        DatabaseBackedExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
+                .convertToValueObject( eeSet );
+        
+        // create entity from VO
+        ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );
+        
+        assertEquals( eeSet.getId(), remadeEE.getId() );
+        assertEquals( eeSet.getExperiments().size(), remadeEE.getExperiments().size() );
+        
+        Set<Object> set1 = new HashSet<Object>();
+        set1.addAll(eeSet.getExperiments());
+        Set<Object> set2 = new HashSet<Object>();
+        set2.addAll(remadeEE.getExperiments());
+        set1.equals(set2);
+        
+        assertEquals( eeSet.getName(), remadeEE.getName() );
+        assertEquals( eeSet.getDescription(), remadeEE.getDescription() );
+        assertEquals( eeSet.getStatus(), remadeEE.getStatus() );
+        assertEquals( eeSet.getTaxon(), remadeEE.getTaxon() );
 
     }
 
