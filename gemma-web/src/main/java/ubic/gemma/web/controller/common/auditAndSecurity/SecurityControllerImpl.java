@@ -503,10 +503,11 @@ public class SecurityControllerImpl implements SecurityController {
                 && !( currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || currentGroupName
                         .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
 
-            if ( !getGroupsUserCanEdit().contains( currentGroupName ) ) {
-                throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
-
-            }
+            // this test only makes sense for changing the group's name, not for changing the permissions
+            // of potentially shared entities
+            //if ( !getGroupsUserCanEdit().contains( currentGroupName ) ) {
+            //    throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
+           // }
 
             Boolean readable = settings.isCurrentGroupCanRead();
             Boolean writeable = settings.isCurrentGroupCanWrite();
