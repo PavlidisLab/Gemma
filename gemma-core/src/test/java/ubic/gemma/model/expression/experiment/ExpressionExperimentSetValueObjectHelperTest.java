@@ -142,9 +142,13 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         // create entity from VO
         ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );
         
+        // check that entity is valid
+        expressionExperimentSetService.update( remadeEE );
+        
         assertEquals( eeSet.getId(), remadeEE.getId() );
         assertEquals( eeSet.getExperiments().size(), remadeEE.getExperiments().size() );
         
+        // check that experiment members are the same
         Set<Object> set1 = new HashSet<Object>();
         set1.addAll(eeSet.getExperiments());
         Set<Object> set2 = new HashSet<Object>();
