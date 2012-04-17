@@ -84,17 +84,26 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 	tpl: new Ext.XTemplate('<div id="dataSummaryTable">'+
 	'<div class="roundedcornr_box_777249" style="margin-bottom: 15px; padding: 10px; -moz-border-radius: 15px; border-radius: 15px;">'+
 		'<div class="roundedcornr_content_777249">'+
-			'<div style="font-size: small; padding-bottom: 5px;">'+
-				'<b> <a target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">'+
-				'Updates in the last week</a> </b>'+
-			'</div>'+
-
+				'<td align="right" style="padding-right: 10px">'+
+					'<div style="font-size: small; padding-bottom: 5px;">'+
+						'<b>Data Summary</b>'+
+						'<tpl if="drawNewColumn == true && drawUpdatedColumn == true ">'+
+							'<b> and Changes in the Last Week:</b>'+
+						'</tpl>'+
+						'<tpl if="drawNewColumn == true && drawUpdatedColumn == false ">'+
+							'<b> and Additions in the Last Week:</b>'+
+						'</tpl>'+
+						'<tpl if="drawNewColumn == false && drawUpdatedColumn == true ">'+
+							'<b> and Updates in the Last Week:</b>'+
+						'</tpl>'+
+					'</div>'+
+				'</td>'+
 			'<div id="dataSummary" style="margin-left: 15px; margin-right: 15px">'+
 				'<table style="white-space: nowrap">'+
 					'<tr>'+
 						'<td style="padding-right: 10px">'+
 							'<span style="white-space: nowrap">'+
-							'<strong>Data Summary</strong> </span>'+
+							'&nbsp; </span>'+
 						'</td>'+
 						'<td style="padding-right: 10px" align="right">'+
 							'Total'+
@@ -112,7 +121,7 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 					'</tr><tr>'+
 						'<td style="padding-right: 10px">'+
 							'<span style="white-space: nowrap"> <!-- for IE --> '+
-							'Expression Experiments:</span>'+
+							'<b>Expression Experiments:</b></span>'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
 							'<b><a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">{expressionExperimentCount}</b>'+
@@ -148,7 +157,7 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 					'<tr>'+
 						'<td style="padding-right: 10px">'+
 							'<span style="white-space: nowrap"> <!-- for IE -->'+ 
-									'Array Designs:  </span>'+
+									'<b>Array Designs:</b>  </span>'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
 							'<a href="/Gemma/arrays/showAllArrayDesigns.html">'+
@@ -164,11 +173,11 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 					'<tr>'+
 						'<td style="padding-right: 10px">'+
 
-							'<span style="white-space: nowrap"> <!-- for IE --> Assays:'+
+							'<span style="white-space: nowrap"> <!-- for IE --> <b>Assays:</b>'+
 							'</span>'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
-							'<b>{bioAssayCount}</b>'+
+							'{bioAssayCount}'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
 							'&nbsp;&nbsp;'+
