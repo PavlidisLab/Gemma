@@ -475,38 +475,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Using all the phenotypes in the database, builds a tree structure using the Ontology
-     * 
-     * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
-     */
-    @Override
-    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
-
-        Collection<TreeCharacteristicValueObject> treesPhenotypes = buildTree();
-
-        Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
-
-        String username = null;
-
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
-            // find user
-            username = this.userManager.getCurrentUsername();
-            // TODO find also groups
-        }
-
-        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-
-            // count occurrence recursively for each phenotype in the branch
-            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin(), username );
-            if ( tc.getPublicGeneCount() + tc.getPrivateGeneCount() != 0 ) {
-                finalTree.add( tc );
-            }
-        }
-
-        return finalTree;
-    }
-
-    /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      * 
      * @param query
@@ -713,36 +681,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** Given a geneId finds all phenotypes for that gene */
-    private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
-
-        Set<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
-
-        Collection<EvidenceValueObject> evidence = findEvidenceByGeneId( geneId );
-
-        for ( EvidenceValueObject evidenceVO : evidence ) {
-            phenotypes.addAll( evidenceVO.getPhenotypes() );
-        }
-        return phenotypes;
-    }
-
-    /** This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future */
-    private void addChildren( Collection<CharacteristicValueObject> characteristcsVO, TreeCharacteristicValueObject t ) {
-
-        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getCategory(),
-                t.getValueUri(), t.getCategoryUri() );
-
-        cha.setPublicGeneCount( t.getPublicGeneCount() );
-        cha.setPrivateGeneCount( t.getPrivateGeneCount() );
-
-        characteristcsVO.add( cha );
-
-        for ( TreeCharacteristicValueObject tree : t.getChildren() ) {
-            addChildren( characteristcsVO, tree );
-        }
-    }
-
-    private Collection<TreeCharacteristicValueObject> buildTree() {
+    /**
+     * Using all the phenotypes in the database, builds a tree structure using the Ontology
+     * 
+     * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
+     */
+    @Override
+    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
@@ -787,12 +732,110 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
             }
         }
+
         // remove all nodes in the trees found in the Ontology but not in the database
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.removeUnusedPhenotypes( tc.getValueUri() );
         }
 
-        return treesPhenotypes;
+        Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
+
+        String username = null;
+
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+            // find user
+            username = this.userManager.getCurrentUsername();
+            // TODO find also groups
+        }
+
+        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+
+            // count occurrence recursively for each phenotype in the branch
+            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin(), username );
+            if ( tc.getPublicGeneCount() + tc.getPrivateGeneCount() != 0 ) {
+                finalTree.add( tc );
+            }
+        }
+
+        return finalTree;
+
+        /*
+         * TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
+         * 
+         * for ( TreeCharacteristicValueObject tc : finalTree ) { findParentRoot( tc, finalTreesWithRoots,
+         * phenotypeFoundInTree ); }
+         * 
+         * for ( TreeCharacteristicValueObject t : finalTreesWithRoots ) { t.determineNewGeneCount(); }
+         * 
+         * return finalTreesWithRoots;
+         */
+    }
+
+    /** Given a geneId finds all phenotypes for that gene */
+    private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
+
+        Set<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
+
+        Collection<EvidenceValueObject> evidence = findEvidenceByGeneId( geneId );
+
+        for ( EvidenceValueObject evidenceVO : evidence ) {
+            phenotypes.addAll( evidenceVO.getPhenotypes() );
+        }
+        return phenotypes;
+    }
+
+    /** This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future */
+    private void addChildren( Collection<CharacteristicValueObject> characteristcsVO, TreeCharacteristicValueObject t ) {
+
+        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getCategory(),
+                t.getValueUri(), t.getCategoryUri() );
+
+        cha.setPublicGeneCount( t.getPublicGeneCount() );
+        cha.setPrivateGeneCount( t.getPrivateGeneCount() );
+
+        characteristcsVO.add( cha );
+
+        for ( TreeCharacteristicValueObject tree : t.getChildren() ) {
+            addChildren( characteristcsVO, tree );
+        }
+    }
+
+    /** build the full trees of the Ontology with the given branches */
+    @SuppressWarnings("unused")
+    private void findParentRoot( TreeCharacteristicValueObject tc,
+            TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
+            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
+
+        OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
+
+        Collection<OntologyTerm> ontologyParents = ontologyTerm.getParents( true );
+
+        if ( !ontologyParents.isEmpty() ) {
+
+            for ( OntologyTerm onTerm : ontologyParents ) {
+
+                // see if the node is already in the tree
+                TreeCharacteristicValueObject alreadyOnTree = phenotypeFoundInTree.get( onTerm.getUri() );
+
+                if ( alreadyOnTree != null ) {
+                    alreadyOnTree.getChildren().add( tc );
+                } else {
+                    TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( onTerm.getLabel(),
+                            onTerm.getUri() );
+
+                    // add children to the parent
+                    tree.getChildren().add( tc );
+
+                    // put node in the hashmap for fast acces
+                    phenotypeFoundInTree.put( tree.getValueUri(), tree );
+
+                    findParentRoot( tree, finalTreesWithRoots, phenotypeFoundInTree );
+                }
+            }
+        } else {
+            // found a root, no more parents
+            finalTreesWithRoots.add( tc );
+        }
     }
 
     /** map query phenotypes given to the set of possible children phenotypes in the database */
@@ -1088,12 +1131,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( validateEvidenceValueObject == null ) {
                         validateEvidenceValueObject = new ValidateEvidenceValueObject();
-                        validateEvidenceValueObject
-                                .setBibliographicReferenceValueObject( bibliographicReferenceValueObject );
                     }
 
                     validateEvidenceValueObject.setSameGeneAnnotated( true );
-                    bibliographicPhenotypesValueObject.setToHighlight( true );
+                    validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                            bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
 
                     boolean containsExact = true;
 
@@ -1106,7 +1148,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( containsExact ) {
                         validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                        bibliographicPhenotypesValueObject.setToHighlight( true );
+                        validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                                bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                     }
 
                     if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject.getPhenotypesValues()
@@ -1114,7 +1157,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             && evidence.getPhenotypes().containsAll(
                                     bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                         validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                        bibliographicPhenotypesValueObject.setToHighlight( true );
+                        validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                                bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                     }
 
                     Set<String> parentOrChildTerm = new HashSet<String>();
@@ -1140,7 +1184,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
                             validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
-                            bibliographicPhenotypesValueObject.setToHighlight( true );
+                            validateEvidenceValueObject.getIdSamePhenotypes().addAll(
+                                    bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
                         }
                     }
                 }

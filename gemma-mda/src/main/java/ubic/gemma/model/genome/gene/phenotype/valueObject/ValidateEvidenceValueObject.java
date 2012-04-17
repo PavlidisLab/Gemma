@@ -1,6 +1,7 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ValidateEvidenceValueObject {
 
@@ -14,9 +15,9 @@ public class ValidateEvidenceValueObject {
     private boolean accessDenied = false;
     private boolean userNotLoggedIn = false;
     private boolean sameEvidenceFound = false;
-    
+
     // this is used to indicate the gene-phenotype conflicts while validating
-    private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
+    private Set<Long> idSamePhenotypes = new HashSet<Long>();
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -74,21 +75,21 @@ public class ValidateEvidenceValueObject {
         this.evidenceNotFound = evidenceNotFound;
     }
 
-	public boolean isAccessDenied() {
-		return this.accessDenied;
-	}
+    public boolean isAccessDenied() {
+        return this.accessDenied;
+    }
 
-	public void setAccessDenied(boolean accessDenied) {
-		this.accessDenied = accessDenied;
-	}
+    public void setAccessDenied( boolean accessDenied ) {
+        this.accessDenied = accessDenied;
+    }
 
-	public boolean isUserNotLoggedIn() {
-		return this.userNotLoggedIn;
-	}
+    public boolean isUserNotLoggedIn() {
+        return this.userNotLoggedIn;
+    }
 
-	public void setUserNotLoggedIn(boolean userNotLoggedIn) {
-		this.userNotLoggedIn = userNotLoggedIn;
-	}
+    public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
+        this.userNotLoggedIn = userNotLoggedIn;
+    }
 
     public boolean isSameEvidenceFound() {
         return this.sameEvidenceFound;
@@ -98,12 +99,11 @@ public class ValidateEvidenceValueObject {
         this.sameEvidenceFound = sameEvidenceFound;
     }
 
-    public BibliographicReferenceValueObject getBibliographicReferenceValueObject() {
-        return this.bibliographicReferenceValueObject;
+    public Set<Long> getIdSamePhenotypes() {
+        return this.idSamePhenotypes;
     }
 
-    public void setBibliographicReferenceValueObject( BibliographicReferenceValueObject bibliographicReferenceValueObject ) {
-        this.bibliographicReferenceValueObject = bibliographicReferenceValueObject;
+    public void setIdSamePhenotypes( Set<Long> idSamePhenotypes ) {
+        this.idSamePhenotypes = idSamePhenotypes;
     }
-
 }

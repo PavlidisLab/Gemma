@@ -39,8 +39,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String valueUri = "";
 
     /** number of occurence in all genes */
-    private long publicGeneCount = 0L;
-    private long privateGeneCount = 0L;
+    protected long publicGeneCount = 0L;
+    protected long privateGeneCount = 0L;
 
     /** what Ontology uses this term */
     private String ontologyUsed = null;
@@ -107,8 +107,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.category = vocabCharacteristic.getCategory();
         this.categoryUri = vocabCharacteristic.getCategoryUri();
         this.value = vocabCharacteristic.getValue();
-        if (vocabCharacteristic.getId() != null) {
-            this.id = vocabCharacteristic.getId(); 
+        if ( vocabCharacteristic.getId() != null ) {
+            this.id = vocabCharacteristic.getId();
         }
     }
 
@@ -163,9 +163,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public void setValue( String value ) {
-        this.value = (value == null) ?
-        		null : 
-        		value.toLowerCase();
+        this.value = ( value == null ) ? null : value.toLowerCase();
     }
 
     public boolean isChild() {

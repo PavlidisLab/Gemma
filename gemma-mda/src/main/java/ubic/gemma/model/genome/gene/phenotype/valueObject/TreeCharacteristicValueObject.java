@@ -29,7 +29,7 @@ import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationServic
 
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
-    private Collection<TreeCharacteristicValueObject> children = null;
+    private Collection<TreeCharacteristicValueObject> children = new TreeSet<TreeCharacteristicValueObject>();
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
 
@@ -40,6 +40,10 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             Collection<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
         this.children = children;
+    }
+
+    public TreeCharacteristicValueObject( String value, String valueUri ) {
+        super( value, "", valueUri, "" );
     }
 
     public Collection<TreeCharacteristicValueObject> getChildren() {
@@ -203,6 +207,23 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                 ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
 
         return treeCharacteristicVO;
+    }
+
+    public long determineNewGeneCount() {
+        long publicCount = 0;
+
+        if ( this.publicGeneCount != 0l ) {
+            return this.publicGeneCount;
+        }
+
+        for ( TreeCharacteristicValueObject child : this.children ) {
+
+            publicCount += child.determineNewGeneCount();
+        }
+
+        this.publicGeneCount = publicCount;
+
+        return publicCount;
     }
 
 }

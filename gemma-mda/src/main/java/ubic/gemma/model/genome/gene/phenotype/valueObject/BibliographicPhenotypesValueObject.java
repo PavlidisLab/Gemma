@@ -14,9 +14,7 @@ public class BibliographicPhenotypesValueObject {
     private String geneName = "";
     private Long evidenceId = null;
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
-    
-    private boolean toHighlight = false;
-    
+
     private boolean originalPhenotype = false;
 
     public BibliographicPhenotypesValueObject() {
@@ -87,19 +85,21 @@ public class BibliographicPhenotypesValueObject {
         this.evidenceId = evidenceId;
     }
 
-    public boolean isToHighlight() {
-        return this.toHighlight;
-    }
-
-    public void setToHighlight( boolean toHighlight ) {
-        this.toHighlight = toHighlight;
-    }
-
     public boolean isOriginalPhenotype() {
         return this.originalPhenotype;
     }
 
     public void setOriginalPhenotype( boolean originalPhenotype ) {
         this.originalPhenotype = originalPhenotype;
+    }
+
+    public Collection<Long> getAllIdOfPhenotype() {
+
+        Collection<Long> allPhenotypesID = new HashSet<Long>();
+
+        for ( CharacteristicValueObject phenotype : this.phenotypesValues ) {
+            allPhenotypesID.add( phenotype.getId() );
+        }
+        return allPhenotypesID;
     }
 }
