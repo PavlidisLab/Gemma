@@ -572,21 +572,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         BibliographicReferenceValueObject bibliographicReferenceValueObject = new BibliographicReferenceValueObject(
                 bibliographicReference );
 
-        // we are in an update, we want to know which phenotypes from the literature are on this evidence
-        if ( evidenceId != null ) {
-            // evidence being updated, original from the database
-            EvidenceValueObject evidence = EvidenceValueObject.convert2ValueObjects( this.associationService
-                    .load( evidenceId ) );
-            Set<CharacteristicValueObject> allPhenotypeOnEvidence = evidence.getPhenotypes();
-
-            for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
-                    .getBibliographicPhenotypes() ) {
-
-                if ( allPhenotypeOnEvidence.equals( bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
-                    bibliographicPhenotypesValueObject.setOriginalPhenotype( true );
-                }
-            }
-        }
         return bibliographicReferenceValueObject;
     }
 

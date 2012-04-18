@@ -15,8 +15,6 @@ public class BibliographicPhenotypesValueObject {
     private Long evidenceId = null;
     private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
 
-    private boolean originalPhenotype = false;
-
     public BibliographicPhenotypesValueObject() {
         super();
     }
@@ -83,14 +81,6 @@ public class BibliographicPhenotypesValueObject {
 
     public void setEvidenceId( Long evidenceId ) {
         this.evidenceId = evidenceId;
-    }
-
-    public boolean isOriginalPhenotype() {
-        return this.originalPhenotype;
-    }
-
-    public void setOriginalPhenotype( boolean originalPhenotype ) {
-        this.originalPhenotype = originalPhenotype;
     }
 
     public Collection<Long> getAllIdOfPhenotype() {
