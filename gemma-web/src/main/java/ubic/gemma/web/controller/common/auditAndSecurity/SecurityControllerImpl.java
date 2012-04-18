@@ -350,36 +350,6 @@ public class SecurityControllerImpl implements SecurityController {
     }
 
     /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getUsersGeneGroups(boolean)
-     */
-    @Override
-    public Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        // gets all groups shared with the user and all groups owned by the user, except public ones
-        Collection<GeneSet> geneSets = geneSetService.loadMySharedGeneSets();
-        if ( privateOnly ) {
-            // this filtering is to filter out public sets
-            try {
-                if(!geneSets.isEmpty()){
-                    secs.addAll( securityService.choosePrivate( geneSets ) );
-                }
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            // add public ones owned by user
-            Collection<GeneSet> allUsersGeneSets = geneSetService.loadMyGeneSets();
-            if(!allUsersGeneSets.isEmpty()){
-                secs.addAll( securityService.choosePublic( allUsersGeneSets ) );
-            }
-            
-            secs.addAll( geneSets );
-        }
-        return secs;
-    }
-
-    /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupReadable(ubic.gemma.web.remote.EntityDelegator, java.lang.String)
      */
     @Override

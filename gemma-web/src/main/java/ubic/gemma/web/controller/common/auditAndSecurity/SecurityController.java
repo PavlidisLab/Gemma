@@ -19,7 +19,6 @@ import java.util.Collection;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -116,11 +115,6 @@ public interface SecurityController {
      */
     public abstract Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly );
 
-    /**
-     * @param privateOnly
-     * @return
-     */
-    public abstract Collection<Securable> getUsersGeneGroups( boolean privateOnly );
 
     /**
      * AJAX
