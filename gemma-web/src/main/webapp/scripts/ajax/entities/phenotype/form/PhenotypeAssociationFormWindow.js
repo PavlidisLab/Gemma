@@ -277,12 +277,16 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				select: function(combo, record, index) {
 					switch (record.data.evidenceClassName) {
 						case 'ExperimentalEvidenceValueObject':
-							experimentalPanel.show();
 							literaturePanel.hide();
+							experimentalPanel.show();
+
+							experimentalPanel.setEvidenceId(evidenceId);
 							break;
 						case 'LiteratureEvidenceValueObject':
 							experimentalPanel.hide();						
 							literaturePanel.show();
+
+							literaturePanel.setEvidenceId(evidenceId);
 							break;
 					}
 
@@ -496,9 +500,15 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				
 				if (!hasLocalErrorMessages) {
 					errorPanel.hide(); // Hide validation error messages if any.
-//console.log('frances: validateForm is called');				
 				
 					var evidenceType = evidenceTypeComboBox.getValue();
+
+					// Clear error.
+					if (evidenceType === 'ExperimentalEvidenceValueObject') {
+						experimentalPanel.showAnnotationError([], null);
+					} else if (evidenceType === 'LiteratureEvidenceValueObject') {
+						literaturePanel.showAnnotationError([], null);
+					}
 					
 					if (evidenceType !== '' && geneSearchComboBox.getValue() !== '') {
 						var phenotypeValueUris = phenotypesSearchPanel.getSelectedPhenotypes();					
@@ -527,6 +537,20 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 									if (validateEvidenceValueObject == null) {
 										hasError = false;
 									} else {
+										if (validateEvidenceValueObject.sameEvidenceIds.length > 0) {
+											var errorColor = validateEvidenceValueObject.sameEvidenceFound ?
+												'red' :
+												'orange';
+										
+											if (evidenceType === 'ExperimentalEvidenceValueObject') {
+												experimentalPanel.showAnnotationError(
+													validateEvidenceValueObject.sameEvidenceIds, errorColor);
+											} else if (evidenceType === 'LiteratureEvidenceValueObject') {
+												literaturePanel.showAnnotationError(
+													validateEvidenceValueObject.sameEvidenceIds, errorColor);
+											}
+										}
+										
 										var errorCode = Gemma.convertToEvidenceError(validateEvidenceValueObject); 
 										hasWarning = errorCode.isWarning;
 										hasError = !hasWarning; 

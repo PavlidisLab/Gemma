@@ -69,6 +69,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		});
 		
 		var bibliographicReferenceDetailsPanel = new Gemma.BibliographicReference.DetailsPanel({
+			autoScroll: false, // DO NOT show scroll bars automatically.
 			hidden: true,			
 			border: false,
 			header: false,
@@ -115,7 +116,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			        	if (pubMedStore.getTotalCount() > 0) {
 							pubMedIdField.clearInvalid();
 							
-							bibliographicReferenceDetailsPanel.updateFields(pubMedStore.getAt(0));
+							bibliographicReferenceDetailsPanel.updateFields(pubMedStore.getAt(0), this.evidenceId);
 							bibliographicReferenceDetailsPanel.show();
 			        	} else {
 							pubMedIdField.markInvalid("PubMed Id is not valid");
@@ -210,6 +211,9 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			},
 			reset: function() {
 				this.setPubMedId(pubMedIdField.originalValue);
+			},
+			showAnnotationError: function(evidenceIds, errorColor) {
+				bibliographicReferenceDetailsPanel.showAnnotationError(evidenceIds, errorColor);
 			},
 	        items :[
 				{

@@ -185,6 +185,9 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 			setCurrentGeneTaxonId: function(newCurrentGeneTaxonId) {
 				experimentTagsPanel.setCurrentGeneTaxonId(newCurrentGeneTaxonId);
 			},
+			showAnnotationError: function(errorEvidenceIds, errorColor) {
+				primaryLiteraturePanel.showAnnotationError(errorEvidenceIds, errorColor);
+			},
 	        items :[
 	        	primaryLiteraturePanel,
 	        	secondaryLiteraturePanel,

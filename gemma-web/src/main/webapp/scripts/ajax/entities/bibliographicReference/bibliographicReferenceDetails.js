@@ -8,20 +8,42 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 	genePhenotypeSeparator: '&hArr;',
 	layout: 'form',
 	title: 'Bibliographic Reference Details',
+	autoScroll: true, // Use overflow:'auto' to show scroll bars automatically
 	collapseByDefault: false,	
 	defaults: {
 		hidden: true,
 		labelWidth: 120
 	},
-	initComponent: function(){
+	initComponent: function() {
+		var currentBibliographicPhenotypes = null;
+		var currentEvidenceId = null;
+
 		var getPudmedAnchor = function(pudmedUrl) {
 		    return '<a target="_blank" href="' +
 		        pudmedUrl +
 		        '"><img ext:qtip="Go to PubMed (in new window)"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
 		}; 
 		
+		var getGenePhenotypeRow = function(bibliographicPhenotype) {
+			var genePhenotypeRow = bibliographicPhenotype.geneName + ' ' + this.genePhenotypeSeparator + ' ';
+			for (var i = 0; i <	bibliographicPhenotype.phenotypesValues.length; i++) {
+				genePhenotypeRow += bibliographicPhenotype.phenotypesValues[i].value;
+				
+				if (i < bibliographicPhenotype.phenotypesValues.length - 1) {
+					genePhenotypeRow += '; ';
+				}
+			}
+
+			if (bibliographicPhenotype.evidenceId == currentEvidenceId) {
+				genePhenotypeRow += ' <img height="12" src="/Gemma/images/icons/asterisk_yellow.png" ext:qtip="This is the annotation you are editing." /> ';
+			}
+			
+			return genePhenotypeRow;
+		}.createDelegate(this);
+		
 		Ext.apply(this, {
-			updateFields: function(bibRefRecord) {
+			// evidenceId is optional.
+			updateFields: function(bibRefRecord, evidenceId) {
 				this.citation.show();		
 				this.detailsFieldset.show();		
 				this.bibtitle.setValue(bibRefRecord.get('title'));
@@ -64,21 +86,16 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 				}
 				this.chemicals.setValue(allChemicalsTerms);
 				
-				var allgenePhenotypeAssociations = "";
-				if (bibRefRecord.get('bibliographicPhenotypes') != null) {
-					for (i = 0; i <	bibRefRecord.get('bibliographicPhenotypes').length; i++) {
-						allgenePhenotypeAssociations += bibRefRecord.get('bibliographicPhenotypes')[i].geneName + ' ' + this.genePhenotypeSeparator + ' ';
-						for (j = 0; j <	bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues.length; j++) {
-							allgenePhenotypeAssociations += bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues[j].value;
-							
-							if (j < bibRefRecord.get('bibliographicPhenotypes')[i].phenotypesValues.length - 1) {
-								allgenePhenotypeAssociations += '; ';
-							}
-						}
-						allgenePhenotypeAssociations += '<br />';
+				currentBibliographicPhenotypes = bibRefRecord.get('bibliographicPhenotypes');
+				currentEvidenceId = evidenceId;
+
+				var allGenePhenotypeAssociations = "";
+				if (currentBibliographicPhenotypes != null) {
+					for (i = 0; i <	currentBibliographicPhenotypes.length; i++) {
+						allGenePhenotypeAssociations += getGenePhenotypeRow(currentBibliographicPhenotypes[i]) + '<br />';
 					}
 				}
-				this.genePhenotypeAssociation.setValue(allgenePhenotypeAssociations);
+				this.genePhenotypeAssociation.setValue(allGenePhenotypeAssociations);
 						
 				this.detailsFieldset.items.each(function(field) {
 					if (field.getValue() == "") {
@@ -99,6 +116,31 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 						field.show();
 					}
 				});
+			},
+			showAnnotationError: function (errorEvidenceIds, errorColor) {
+				var allGenePhenotypeAssociations = "";
+				if (currentBibliographicPhenotypes != null) {
+					for (var i = 0; i <	currentBibliographicPhenotypes.length; i++) {
+						var hasError = false;
+						for (var j = 0; !hasError && j < errorEvidenceIds.length; j++) {
+							hasError = (currentBibliographicPhenotypes[i].evidenceId == errorEvidenceIds[j]); 
+						}
+						
+						if (hasError && errorColor != null) {
+							allGenePhenotypeAssociations += '<span style="color: ' + errorColor + ';">';
+						}
+						
+						allGenePhenotypeAssociations += getGenePhenotypeRow(currentBibliographicPhenotypes[i]);
+						
+						if (hasError && errorColor != null) {
+							allGenePhenotypeAssociations += '</span>';
+						}
+						
+						allGenePhenotypeAssociations += '<br />';
+					}
+				}
+				
+				this.genePhenotypeAssociation.setValue(allGenePhenotypeAssociations);
 			}
 		});
 		
