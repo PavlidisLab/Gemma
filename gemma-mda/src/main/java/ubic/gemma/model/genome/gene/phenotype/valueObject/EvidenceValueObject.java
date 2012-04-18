@@ -192,17 +192,6 @@ public class EvidenceValueObject {
         return phenotypesValueUri;
     }
 
-    public Set<Long> getPhenotypesId() {
-
-        Set<Long> phenotypesId = new HashSet<Long>();
-
-        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
-            phenotypesId.add( characteristicValueObject.getId() );
-        }
-
-        return phenotypesId;
-    }
-
     public String getClassName() {
         return this.className;
     }

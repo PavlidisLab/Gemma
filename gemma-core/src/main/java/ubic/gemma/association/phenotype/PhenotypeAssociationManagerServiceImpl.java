@@ -607,8 +607,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( evidenceValueObjectInDatabase != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
-            validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
-                    evidenceValueObjectInDatabase.getPhenotypesId() );
+            validateEvidenceValueObject.getSameEvidenceIds().add( evidenceValueObjectInDatabase.getId() );
             return validateEvidenceValueObject;
         }
 
@@ -1138,8 +1137,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     }
 
                     validateEvidenceValueObject.setSameGeneAnnotated( true );
-                    validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
-                            bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
+                    validateEvidenceValueObject.getSameEvidenceIds().add(
+                            bibliographicPhenotypesValueObject.getEvidenceId() );
 
                     boolean containsExact = true;
 
@@ -1152,8 +1151,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( containsExact ) {
                         validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                        validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
-                                bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
+                        validateEvidenceValueObject.getSameEvidenceIds().add(
+                                bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
                     if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject.getPhenotypesValues()
@@ -1161,8 +1160,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             && evidence.getPhenotypes().containsAll(
                                     bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                         validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                        validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
-                                bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
+                        validateEvidenceValueObject.getSameEvidenceIds().add(
+                                bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
                     Set<String> parentOrChildTerm = new HashSet<String>();
@@ -1188,8 +1187,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
                             validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
-                            validateEvidenceValueObject.getSameBibliographicPhenotypeEvidenceIds().addAll(
-                                    bibliographicPhenotypesValueObject.getAllIdOfPhenotype() );
+                            validateEvidenceValueObject.getSameEvidenceIds().add(
+                                    bibliographicPhenotypesValueObject.getEvidenceId() );
                         }
                     }
                 }
