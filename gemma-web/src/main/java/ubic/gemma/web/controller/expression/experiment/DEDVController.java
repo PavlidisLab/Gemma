@@ -1071,6 +1071,7 @@ public class DEDVController {
                 "#d89561", "#f8bc2e" }; // 10
         String[] greens = { "#98da95", "#82b998", "#257e21", "#36b52f", "#38b990", "#a9da5f", "#4cfe42", "#73c000",
                 "#0fa345", "#99fe01", "#508500" }; // 10
+        String missingValue = "#DCDCDC";
         String[][] colourArrs = { blues, greens, purples, redYellows };
         int j = 0;
 
@@ -1110,7 +1111,8 @@ public class DEDVController {
         // continue;
         // }
         List<List<String>> factorValues = new ArrayList<List<String>>();
-
+        Collection<String> factorsMissingValues = new ArrayList<String>();
+        
         if ( layouts != null && layouts.get( ee ) != null ) {
             for ( BioAssay ba : layouts.get( ee ).keySet() ) {
                 // double should be the factorValue id, defined in
@@ -1122,8 +1124,9 @@ public class DEDVController {
                 // for each experimental factor, store the name and value
                 for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
                     if ( pair.getValue() == null ) {
-                        String[] facValAndColour = new String[] { "", "#FFFFFF" };
+                        String[] facValAndColour = new String[] { "No value", missingValue };
                         factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
+                        factorsMissingValues.add(pair.getKey().getName());
                         continue;
                     }
                     /*
@@ -1137,8 +1140,9 @@ public class DEDVController {
                     if ( facVal == null ) {
                         log.warn( "Failed to load factorValue with id = " + pair.getValue() + ". Load returned null. " );
 
-                        String[] facValAndColour = new String[] { "No value", "#FFFFFF" };
+                        String[] facValAndColour = new String[] { "No value", missingValue };
                         factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
+                        factorsMissingValues.add(pair.getKey().getName());
                     } else {
 
                         if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
@@ -1181,6 +1185,15 @@ public class DEDVController {
                     }
                 }
                 factorValueMaps.add( factorValuesToNames );
+            }
+        }
+        // add them here so they're at the end of the value lists
+        if( !factorsMissingValues.isEmpty() ){
+            for(String factorName : factorsMissingValues ){
+                if ( !factorNames.containsKey( factorName ) ) {
+                    factorNames.put( factorName, new LinkedHashMap<String, String>() );
+                }
+                ( factorNames.get( factorName )).put( "No value", missingValue );
             }
         }
         vvo.setFactorNames( factorNames );
