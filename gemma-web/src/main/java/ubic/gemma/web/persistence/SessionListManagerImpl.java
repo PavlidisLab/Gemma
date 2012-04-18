@@ -215,7 +215,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids, false );
         expressionExperimentReportService.fillReportInformation( result );
         return result;
     }

@@ -555,7 +555,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-                .loadValueObjects( diffAnalyses.keySet() );
+                .loadValueObjects( diffAnalyses.keySet(), false );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {

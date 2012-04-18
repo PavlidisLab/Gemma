@@ -502,13 +502,13 @@ public interface ExpressionExperimentService {
 
     /**
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
-     * <p>
-     * If the argument is a list, this will return a list in the same order.
      * 
      * @param ids
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
+     * passed in. 
      * @return
      */
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids );
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
     /**
      * @param expressionExperiment

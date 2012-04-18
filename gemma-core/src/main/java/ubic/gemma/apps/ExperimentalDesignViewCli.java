@@ -57,7 +57,7 @@ public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
 
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects( EntityUtils.getIds( ees
-                .loadAll() ) );
+                .loadAll() ), false );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<Long, ExpressionExperimentValueObject>();
 

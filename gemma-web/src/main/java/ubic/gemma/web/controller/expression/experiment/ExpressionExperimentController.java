@@ -599,7 +599,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
 
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids, false );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -843,6 +843,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         int limit = batch.getLimit();
         int origStart = batch.getStart();
+        // have to load entities instead of directly loading value objects because we need security filtering
         List<ExpressionExperiment> records = loadAllOrdered( batch );
 
 
@@ -1826,10 +1827,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         StopWatch timer = new StopWatch();
         timer.start();
+        
+        List<Long> ids = new ArrayList<Long>(EntityUtils.getIds( securedEEs ));
 
         // this method keeps order.
         List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
-                .loadValueObjects( EntityUtils.getIds( securedEEs ) );
+                .loadValueObjects( ids, true );
 
         if ( SecurityServiceImpl.isUserAdmin() ) {
             for ( ExpressionExperimentValueObject vo : valueObjs ) {
@@ -2082,7 +2085,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             return mav;
         }
 
-        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds );
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
 
         for ( Long id : eeSetIds ) {
             ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );

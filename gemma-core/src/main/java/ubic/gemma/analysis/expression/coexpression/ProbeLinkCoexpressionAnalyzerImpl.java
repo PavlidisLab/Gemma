@@ -234,7 +234,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
             eeIds.add( evo.getId() );
         }
-        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds );
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
         Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject evo : ees ) {
             em.put( evo.getId(), evo );

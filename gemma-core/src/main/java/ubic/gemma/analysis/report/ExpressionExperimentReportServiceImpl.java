@@ -508,7 +508,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public void generateSummaryObjects() {
         initDirectories( false );
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
         updateStats( vos );
     }
 
@@ -521,7 +521,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         initDirectories( false );
 
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds, false );
         updateStats( vos );
         return vos;
     }

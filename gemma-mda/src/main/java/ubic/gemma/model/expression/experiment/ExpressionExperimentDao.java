@@ -271,9 +271,11 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ubic.gemma.model.genome.Taxon getTaxon( Long ExpressionExperimentID );
 
     /**
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
+     * passed in.
      * 
      */
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids );
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
     /**
      * 

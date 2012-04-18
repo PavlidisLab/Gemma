@@ -1328,7 +1328,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         }
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>(
-                expressionExperimentService.loadValueObjects( filteredIds ) );
+                expressionExperimentService.loadValueObjects( filteredIds, false ) );
 
         Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
             @Override

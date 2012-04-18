@@ -187,7 +187,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<Long> ids = new HashSet<Long>();
         Long id = ee.getId();
         ids.add( id );
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( ids, false );
         assertNotNull( list );
         assertEquals( 1, list.size() );
     }

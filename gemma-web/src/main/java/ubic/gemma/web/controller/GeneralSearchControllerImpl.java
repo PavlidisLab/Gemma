@@ -325,7 +325,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         Collection vos = null;
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ), settings );
 
             if ( !SecurityServiceImpl.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( vos );

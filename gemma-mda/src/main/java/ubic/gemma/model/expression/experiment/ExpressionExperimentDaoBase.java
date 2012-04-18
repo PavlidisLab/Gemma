@@ -649,11 +649,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#loadValueObjects(Collection)
+     * @see ExpressionExperimentDao#loadValueObjects(Collection, boolean)
      */
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids, boolean maintainOrder ) {
         try {
-            return this.handleLoadValueObjects( ids );
+            return this.handleLoadValueObjects( ids, maintainOrder );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.loadValueObjects(Collection ids)' --> " + th, th );
@@ -976,9 +976,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     protected abstract Collection<ExpressionExperiment> handleLoad( Collection<Long> ids ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #loadValueObjects(Collection)}
+     * Performs the core logic for {@link #loadValueObjects(Collection, boolean)}
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
+     * passed in.
      */
-    protected abstract Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids )
+    protected abstract Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids, boolean maintainOrder )
             throws Exception;
 
     /**

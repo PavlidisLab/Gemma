@@ -808,16 +808,16 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#loadValueObjects(Collection)
+     * @see ExpressionExperimentService#loadValueObjects(Collection, boolean)
      */
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids, boolean maintainOrder ) {
         try {
             /*
              * NOTE: Don't try and call this.loadMultiple(ids) to have security filter out experiments. The security
              * filtering just doesn't work. You need to call loadMultiple before calling loadValueObjects.
              */
-            return this.expressionExperimentDao.loadValueObjects( ids );
+            return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.loadValueObjects(Collection ids)' --> " + th, th );
@@ -1179,7 +1179,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         /* now load the value objects for the filterd ids */
-        return this.loadValueObjects( filteredIds );
+        return this.loadValueObjects( filteredIds, false );
 
     }
 

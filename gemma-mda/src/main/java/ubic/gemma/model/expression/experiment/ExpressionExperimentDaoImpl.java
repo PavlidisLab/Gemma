@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1487,20 +1488,19 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
-    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids )
+    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids, boolean maintainOrder )
             throws Exception {
-        Map<Long, ExpressionExperimentValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
+        Map<Long, ExpressionExperimentValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>(ids.size());
 
-        boolean isList = ids != null && ids instanceof List;
-        if ( ids != null && ids.size() == 0 ) {
+        boolean isList = (ids != null && ids instanceof List);
+        if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return new ArrayList<ExpressionExperimentValueObject>();
             }
             return new HashSet<ExpressionExperimentValueObject>();
         }
 
-        String idRestrictionClause = "";
-        if ( ids != null ) idRestrictionClause = "where ee.id in (:ids) ";
+        String idRestrictionClause = "where ee.id in (:ids) ";
 
         final String queryString = "select ee.id as id, " // 0
                 + "ee.name, " // 1
@@ -1594,9 +1594,20 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
          * Remove items we didn't get back out. This is defensiveness!
          */
 
-        Collection<ExpressionExperimentValueObject> finalValues = new HashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
 
-        for ( Long id : vo.keySet() ) {
+        Set<Long> voIds = vo.keySet();
+        if( maintainOrder ){
+            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() ); 
+            for(Long eeId : ids){
+                if(voIds.contains( eeId )){
+                    orderedVoIds.add( eeId );
+                }
+            }
+            voIds = orderedVoIds;
+        }
+        
+        for ( Long id : voIds ) {
             if ( vo.get( id ).getId() != null ) {
                 finalValues.add( vo.get( id ) );
             } else {
