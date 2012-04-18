@@ -42,23 +42,31 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 										'ext:qtip="{value}">' + valueToBeDisplayed + '</div>').apply(values);
 				}
 			}),
-	selectPhenotype: function(phenotypeSelection) {
-		if (phenotypeSelection != null) {
-			this.getStore().loadData(
-				[ phenotypeSelection ],
-				true); // true to append the new record
-			this.setValue(phenotypeSelection.valueUri);
-		}    	
-	},
-	getSelectedPhenotype: function() {
-		var record = this.store.getById(this.getValue());
-		return record.data;
-	},
     initComponent: function() {
+    	var id = 0;
+
 		Ext.apply(this, {
+			selectPhenotype: function(phenotypeSelection) {
+				if (phenotypeSelection != null) {
+					id = phenotypeSelection.id;
+
+					this.getStore().loadData(
+						[ phenotypeSelection ],
+						true); // true to append the new record
+					this.setValue(phenotypeSelection.valueUri);
+				}    	
+			},
+			getSelectedPhenotype: function() {
+				var record = this.store.getById(this.getValue());
+				
+				record.data.id = id;
+				
+				return record.data;
+			},
 		    store: new Ext.data.JsonStore({
 				proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),
-			    fields: [ 'id', 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
+				// Don't use 'id' because if this combo box is not removed, I should return the same id back to the server.
+			    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
 			    idProperty: 'valueUri'
 			})
 		});
