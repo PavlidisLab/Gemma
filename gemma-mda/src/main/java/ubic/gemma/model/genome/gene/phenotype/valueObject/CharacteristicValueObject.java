@@ -163,7 +163,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public void setValue( String value ) {
-        this.value = ( value == null ) ? null : value.toLowerCase();
+        this.value = value;
     }
 
     public boolean isChild() {
