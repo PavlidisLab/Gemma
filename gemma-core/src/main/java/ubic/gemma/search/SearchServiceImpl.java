@@ -2228,10 +2228,15 @@ public class SearchServiceImpl implements SearchService {
         StopWatch watch = startTiming();
 
         String query = settings.getQuery().trim();
+        // Replace whitespace with single spaces.
+        query = query.replaceAll("\\s+", " ");
+        // Search results should contain all the words from the query.
+        query = StringUtils.replace( query, " ", " AND " );
+        
         if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 
-        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
+        CompassQuery compassQuery = session.queryBuilder().queryString( query ).toQuery();
         CompassHits hits = compassQuery.hits();
 
         watch.stop();
