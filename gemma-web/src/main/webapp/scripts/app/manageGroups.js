@@ -480,23 +480,19 @@ Ext.onReady(function() {
 							handler : function() {
 								refreshData(currentGroup);
 							}
-						}, '-',{
-							tooltip : "Show/hide public data. Public experiments will never be shown.",
-							text: "Show your public data",
-							showPublicData : false,
+						}, '-',		{
+							xtype:'checkbox',
 							id : "manager-data-panel-show-public",
-							//enableToggle : true,
-							//icon : "/Gemma/images/icons/world_add.png",
-							handler : function() {
-								if(this.showPublicData){
-									this.setText("Show your public data");
-								}else{
-									this.setText("Hide your public data");
-								}
-								refreshData(currentGroup, this.showPublicData);
-								this.showPublicData = !this.showPublicData;
+							tooltip : "Show/hide your public data sets.",
+							boxLabel : "Show your public data",
+							// hide by default if admin user
+							showPublicData : !((Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false),
+							checked : !((Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false),
+							handler : function(checkbox, event) {
+								this.showPublicData = checkbox.getValue();
+								refreshData(currentGroup, !this.showPublicData);
 							}
-						},'-',{
+						}/*,'-',{
 							tooltip : "Select All/None",
 							id : "manager-data-panel-select-all",
 							text: "Select All / None",
@@ -509,7 +505,7 @@ Ext.onReady(function() {
 								this.selectAll = !this.selectAll;
 
 							}
-						}]
+						}*/]
 			},
 			items : [new Ext.grid.EditorGridPanel({
 				height : 535,
