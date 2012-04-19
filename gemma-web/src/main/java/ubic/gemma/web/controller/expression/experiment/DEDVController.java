@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1049,6 +1050,44 @@ public class DEDVController {
         }
 
     }
+    
+    /**
+     * Assign colour lists (queues actually) to factors. The idea is that every factor value will get a colour assigned
+     * from its factor's list.
+     * 
+     * @param factorNames using names here because multiple experimentalFactors can have the same name (want them
+     *        collapsed for legend)
+     * @return
+     */
+    private static Map<String, Queue<String>> createFactorNameToColoursMap( Collection<String> factorNames ) {
+
+        // colours for conditions/factor values bar chart
+        Map<String, Queue<String>> factorColoursMap = new HashMap<String, Queue<String>>();
+        String[] blues = { "#85c6ff", "#6b90ff", "#105bfe", "#005589", "#0090e9", "#0400fe", "#008998", "#3e3c90",
+                "#020090", "#105bfe" }; // 10
+        String[] purples = { "#d19bff", "#a30064", "#7d00ea", "#893984", "#f05eb8", "#9c00d0", "#b66ccf", "#e7008f",
+                "#670089", "#bf00b2", "#890080", "#8865a6", "#3f0076" }; // 13
+        String[] redYellows = { "#ffd78d", "#d85d00", "#b40101", "#944343", "#ff6d48", "#d36b62", "#ff8001", "#c74f34",
+                "#d89561", "#f8bc2e" }; // 10
+        String[] greens = { "#98da95", "#82b998", "#257e21", "#36b52f", "#38b990", "#a9da5f", "#4cfe42", "#73c000",
+                "#0fa345", "#99fe01", "#508500" }; // 10
+        String[][] colourArrs = { blues, greens, purples, redYellows };
+
+        int j = 0;
+        for ( String factorName : factorNames ) {
+            if ( !factorColoursMap.containsKey( factorName ) ) {
+                factorColoursMap.put( factorName, new LinkedList<String>() );
+            }
+            if ( j < colourArrs.length ) {
+                for ( int i = 0; i < colourArrs[j].length; i++ ) {
+                    factorColoursMap.get( factorName ).add( colourArrs[j][i] ); // array to queue
+                }
+            }
+            j++;
+        }
+
+        return factorColoursMap;
+    }
 
     /**
      * Get the factor values we'll use for grouping the columns of the vectors. Uses factors and factor values from
@@ -1061,72 +1100,66 @@ public class DEDVController {
     private void getFactorValues( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
-        // colours for conditions/factor values bar chart
-        Map<ExperimentalFactor, Queue<String>> factorColoursMap = new HashMap<ExperimentalFactor, Queue<String>>();
-        String[] blues = { "#85c6ff", "#6b90ff", "#105bfe", "#005589", "#0090e9", "#0400fe", "#008998", "#3e3c90",
-                "#020090", "#105bfe" }; // 10
-        String[] purples = { "#d19bff", "#a30064", "#7d00ea", "#893984", "#f05eb8", "#9c00d0", "#b66ccf", "#e7008f",
-                "#670089", "#bf00b2", "#890080", "#8865a6", "#3f0076" }; // 13
-        String[] redYellows = { "#ffd78d", "#d85d00", "#b40101", "#944343", "#ff6d48", "#d36b62", "#ff8001", "#c74f34",
-                "#d89561", "#f8bc2e" }; // 10
-        String[] greens = { "#98da95", "#82b998", "#257e21", "#36b52f", "#38b990", "#a9da5f", "#4cfe42", "#73c000",
-                "#0fa345", "#99fe01", "#508500" }; // 10
-        String missingValue = "#DCDCDC";
-        String[][] colourArrs = { blues, greens, purples, redYellows };
-        int j = 0;
-
-        /* assign colours to factors */
-        for ( DoubleVectorValueObject vec : vectors ) {
-            ExpressionExperiment ee = vec.getExpressionExperiment();
-            if ( layouts != null && layouts.get( ee ) != null ) {
-                for ( BioAssay ba : layouts.get( ee ).keySet() ) {
-                    LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
-                    // for each experimental factor, store the name and value
-                    for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
-                        if ( !factorColoursMap.containsKey( pair.getKey() ) ) {
-                            factorColoursMap.put( pair.getKey(), new LinkedList<String>() );
-                        }
-                        if ( j < colourArrs.length ) {
-                            for ( int i = 0; i < colourArrs[j].length; i++ ) {
-                                factorColoursMap.get( pair.getKey() ).add( colourArrs[j][i] ); // array to queue
-                            }
-                        }
-                        j++;
-                    }
-                }
-            }
-        }
-
-        Random random = new Random();
-
-        // >1 vector can have same ee, but no need to do the same thing >1
-        // Collection<ExpressionExperiment> usedEEs = new ArrayList<ExpressionExperiment>();
-        LinkedHashMap<String, LinkedHashMap<String, String>> factorNames = new LinkedHashMap<String, LinkedHashMap<String, String>>();
-        /* list of maps with entries: key = factorName, value=array of factor values */
-        ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>();
         DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example. TODO
         // for ( DoubleVectorValueObject vec : vectors ) {
         ExpressionExperiment ee = vec.getExpressionExperiment();
         // if ( usedEEs.contains( ee ) ) {
         // continue;
         // }
-        List<List<String>> factorValues = new ArrayList<List<String>>();
-        Collection<String> factorsMissingValues = new ArrayList<String>();
-        
+
+        // get list of factor names for colour assignment (doing this separately for readability)
+        // getting factor from factor value, because this is more robust to data errors that have been seen
+        // (for more explanations of this process, see below)
+        LinkedHashSet<String> factorNames = new LinkedHashSet<String>(); // need uniqueness & order
+        if ( layouts != null && layouts.get( ee ) != null ) {
+            for ( BioAssay ba : layouts.get( ee ).keySet() ) {
+                LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
+                // for each experimental factor, store the name and value
+                for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
+                    if ( pair.getValue() != null ) {
+                        FactorValue facVal = factorValueService.load( new Long( Math.round( pair.getValue() ) ) );
+                        if ( facVal.getExperimentalFactor() != null )
+                            factorNames.add( facVal.getExperimentalFactor().getName() );
+                    }
+                }
+            }
+        }
+
+        // colours for conditions/factor values bar chart
+        Map<String, Queue<String>> factorColoursMap = createFactorNameToColoursMap( factorNames );
+        String missingValueColour = "#DCDCDC";
+
+        Random random = new Random();
+
+        // >1 vector can have same ee, but no need to do the same thing >1
+        // Collection<ExpressionExperiment> usedEEs = new ArrayList<ExpressionExperiment>();
+        LinkedHashMap<String, LinkedHashMap<String, String>> factorToValueNames = new LinkedHashMap<String, LinkedHashMap<String, String>>();
+        // list of maps with entries: key = factorName, value=array of factor values 
+        // 1 entry per sample
+        ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>();
+
+        Collection<String> factorsMissingValues = new HashSet<String>();
+
         if ( layouts != null && layouts.get( ee ) != null ) {
             for ( BioAssay ba : layouts.get( ee ).keySet() ) {
                 // double should be the factorValue id, defined in
                 // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
                 // BioAssayDimension)
                 LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
-                LinkedHashMap<String, String[]> factorValuesToNames = new LinkedHashMap<String, String[]>();
+                LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<String, String[]>(factorNames.size());
 
+                // this is defensive, should only come into play when there's something messed up with the data.
+                // for every factor, add a missing-value entry (guards against missing data messing up the layout)
+                for ( String facName : factorNames ) {
+                    String[] facValAndColour = new String[] { "No value", missingValueColour };
+                    factorNamesToValueColourPairs.put( facName, facValAndColour );
+                }
+                    
                 // for each experimental factor, store the name and value
                 for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
+                    
                     if ( pair.getValue() == null ) {
-                        String[] facValAndColour = new String[] { "No value", missingValue };
-                        factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
-                        factorsMissingValues.add(pair.getKey().getName());
+                        factorsMissingValues.add( pair.getKey().getName() );
                         continue;
                     }
                     /*
@@ -1139,11 +1172,9 @@ public class DEDVController {
                     StringBuffer facValsStrBuff = new StringBuffer();
                     if ( facVal == null ) {
                         log.warn( "Failed to load factorValue with id = " + pair.getValue() + ". Load returned null. " );
-
-                        String[] facValAndColour = new String[] { "No value", missingValue };
-                        factorValuesToNames.put( pair.getKey().getName(), facValAndColour );
-                        factorsMissingValues.add(pair.getKey().getName());
-                    } else {
+                        factorsMissingValues.add( pair.getKey().getName() );
+                        continue;
+                    }
 
                         if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
                             facValsStrBuff.append( facVal.getValue() + ", " );
@@ -1160,45 +1191,47 @@ public class DEDVController {
                         }
 
                         String facValsStr = facValsStrBuff.toString();
-                        String colourString = "";
-                        if ( !factorNames.containsKey( facVal.getExperimentalFactor().getName() ) ) {
-                            factorNames.put( facVal.getExperimentalFactor().getName(),
+                        if ( !factorToValueNames.containsKey( facVal.getExperimentalFactor().getName() ) ) {
+                            factorToValueNames.put( facVal.getExperimentalFactor().getName(),
                                     new LinkedHashMap<String, String>() );
                         }
-                        if ( !( factorNames.get( facVal.getExperimentalFactor().getName() ) ).containsKey( facValsStr ) ) {
-                            if ( factorColoursMap.containsKey( facVal.getExperimentalFactor() ) ) {
-                                colourString = factorColoursMap.get( facVal.getExperimentalFactor() ).poll();
+                        // assign colour
+                        String colourString = "";
+                        if ( !( factorToValueNames.get( facVal.getExperimentalFactor().getName() ) )
+                                .containsKey( facValsStr ) ) {
+                            if ( factorColoursMap.containsKey( facVal.getExperimentalFactor().getName() ) ) {
+                                colourString = factorColoursMap.get( facVal.getExperimentalFactor().getName() ).poll();
                             }
                             if ( colourString == null || colourString == "" ) { // ran out of predefined colours
                                 colourString = "#" + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
                                         + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0"
                                         + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0";
                             }
-                            ( factorNames.get( facVal.getExperimentalFactor().getName() ) ).put( facValsStr,
+                            ( factorToValueNames.get( facVal.getExperimentalFactor().getName() ) ).put( facValsStr,
                                     colourString );
                         } else {
-                            colourString = ( factorNames.get( facVal.getExperimentalFactor().getName() ) )
+                            colourString = ( factorToValueNames.get( facVal.getExperimentalFactor().getName() ) )
                                     .get( facValsStr );
                         }
                         String[] facValAndColour = new String[] { facValsStr, colourString };
-                        factorValuesToNames.put( facVal.getExperimentalFactor().getName(), facValAndColour );
-                    }
+
+                        factorNamesToValueColourPairs.put( facVal.getExperimentalFactor().getName(), facValAndColour );
+                    
                 }
-                factorValueMaps.add( factorValuesToNames );
+                factorValueMaps.add( factorNamesToValueColourPairs );
             }
         }
-        // add them here so they're at the end of the value lists
-        if( !factorsMissingValues.isEmpty() ){
-            for(String factorName : factorsMissingValues ){
-                if ( !factorNames.containsKey( factorName ) ) {
-                    factorNames.put( factorName, new LinkedHashMap<String, String>() );
+        // add missing value entries here so they show up at the end of the legend's value lists
+        if ( !factorsMissingValues.isEmpty() ) {
+            for ( String factorName : factorsMissingValues ) {
+                if ( !factorToValueNames.containsKey( factorName ) ) {
+                    factorToValueNames.put( factorName, new LinkedHashMap<String, String>() );
                 }
-                ( factorNames.get( factorName )).put( "No value", missingValue );
+                ( factorToValueNames.get( factorName ) ).put( "No value", missingValueColour );
             }
         }
-        vvo.setFactorNames( factorNames );
-        vvo.setFactorValues( factorValues );
-        vvo.setFactorValuesToNames( factorValueMaps );
+        vvo.setFactorNames( factorToValueNames ); // this is summary of values & colours by factor, used for legend
+        vvo.setFactorValuesToNames( factorValueMaps ); // this is list of maps for each sample
         // } end of vec in vectors loop
     }
 
