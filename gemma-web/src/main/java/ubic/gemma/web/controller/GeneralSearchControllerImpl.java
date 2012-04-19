@@ -235,7 +235,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return new SearchSettings();
+        SearchSettings searchSettings = new SearchSettings();
+        //Reset default settings.
+        searchSettings.setSearchArrays( false );
+        searchSettings.setSearchBibrefs( false );
+        searchSettings.setSearchBioSequences( false );
+        searchSettings.setSearchExperiments( false );
+        searchSettings.setSearchExperimentSets( false );
+        searchSettings.setSearchGenes( false );
+        searchSettings.setSearchGenesByGO( false );
+        searchSettings.setSearchGeneSets( false );
+        searchSettings.setSearchProbes( false );
+        return searchSettings;
     }
 
     @Override
