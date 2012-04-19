@@ -42,7 +42,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
@@ -73,6 +73,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -93,7 +94,7 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul
  * @version $Id$
  */
-@Service
+@Component
 public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private static class Creator {
@@ -152,7 +153,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private Probe2ProbeCoexpressionService ppService = null;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    
     /*
      * (non-Javadoc)
      * 
@@ -175,11 +178,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
+            
+            processedExpressionDataVectorService.thaw( dataVectors );
 
             process( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
 
             log.info( "Done with processing of " + ee );
             return la;
+            
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
@@ -187,6 +193,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
             throw new RuntimeException( e );
         }
+        
 
     }
 
@@ -268,7 +275,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        auditTrailService.addUpdateEvent( ee, eventType, note, true);
     }
 
     /**

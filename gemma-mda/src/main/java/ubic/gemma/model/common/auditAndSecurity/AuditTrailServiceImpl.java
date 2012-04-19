@@ -149,6 +149,32 @@ public class AuditTrailServiceImpl implements AuditTrailService {
                             + th, th );
         }
     }
+    
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
+     */
+    public AuditEvent addUpdateEvent( final Auditable auditable,
+                                      final AuditEventType auditEventType,
+                                      final String note, boolean detachedAuditable ) {
+        try {
+            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+            auditEvent.setDate( new Date() );
+            auditEvent.setAction( AuditAction.UPDATE );
+            auditEvent.setEventType( auditEventType );
+            auditEvent.setNote( note );
+            
+            if (detachedAuditable){
+                auditable.setStatus( this.statusDao.load( auditable.getStatus().getId() ) );
+            }
+            
+            this.statusDao.update( auditable, auditEventType );
+            return this.auditTrailDao.addEvent( auditable, auditEvent );
+        } catch ( Throwable th ) {
+            throw new AuditTrailServiceException(
+                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)

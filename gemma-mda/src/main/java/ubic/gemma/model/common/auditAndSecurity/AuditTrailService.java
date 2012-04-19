@@ -63,6 +63,9 @@ public interface AuditTrailService {
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
+    
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, boolean detachedAuditable );
 
     /**
      * 
