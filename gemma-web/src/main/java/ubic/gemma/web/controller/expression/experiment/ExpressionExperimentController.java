@@ -701,7 +701,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
         finalResult.setDoesCurrentUserOwnExperiment( doesCurrentUserOwnExperiment( id ) );
-
+        finalResult.setIsPublic( securityService.isPublic( ee ) );
+        finalResult.setShared( securityService.isShared( ee ) );
+        
         return finalResult;
 
     }

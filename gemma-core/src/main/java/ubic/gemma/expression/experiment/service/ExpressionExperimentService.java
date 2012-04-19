@@ -501,6 +501,7 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadTroubled();
 
     /**
+     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc)
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
      * @param ids
