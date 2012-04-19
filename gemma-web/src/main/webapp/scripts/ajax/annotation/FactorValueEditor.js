@@ -52,7 +52,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		if (value) {
 			return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.valueUri);
 		} else {
-			return '<span style="color:grey">Double-click to define the value</span>';
+			return '<span style="color:grey">'+((this.editable)? 'Double-click to define the value':
+				'(no value)')+'</span>';
 		}
 	},
 
