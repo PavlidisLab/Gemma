@@ -257,9 +257,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 						            		},
 						                    {
-						        	        	xtype  : 'label',
-						        				
-						        	        	html   : '<img ext:qtip="'+
+						        	        	xtype  : 'label',						        				
+						        	        	html   : '&nbsp&nbsp<img ext:qtip="'+
 						        						Gemma.HelpText.WidgetDefaults.CoexpressionGrid.stringencySpinnerTT	
 						        	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
 						        	        	//text   : 'Specificity filter',
