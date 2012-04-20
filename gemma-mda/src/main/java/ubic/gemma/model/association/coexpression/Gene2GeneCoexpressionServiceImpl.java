@@ -24,6 +24,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
@@ -76,6 +77,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceBase#handleFindCoexpressionRelationships
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
@@ -100,6 +102,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceBase#handleFindInterCoexpressionRelationship
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
@@ -132,4 +135,10 @@ public class Gene2GeneCoexpressionServiceImpl extends
 
         return true;
     }
+
+    @Override
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
+        return this.getGene2GeneCoexpressionDao().getNumberOfLinks( gene, analysis );
+    }
+
 }

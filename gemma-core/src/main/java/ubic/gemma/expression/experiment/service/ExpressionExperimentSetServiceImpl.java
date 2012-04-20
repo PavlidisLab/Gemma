@@ -313,7 +313,7 @@ public class ExpressionExperimentSetServiceImpl extends
         
         Collection<Long> eeids = getExperimentIdsInSet( id );
         Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids, false );
-        expressionExperimentReportService.fillReportInformation( result );
+        expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 

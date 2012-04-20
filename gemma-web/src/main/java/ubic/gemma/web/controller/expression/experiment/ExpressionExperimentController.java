@@ -870,7 +870,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // if admin, want to show why experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.fillEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( valueObjects );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
@@ -930,7 +930,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.fillEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( valueObjects );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
@@ -976,7 +976,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.fillEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( valueObjects );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
@@ -1999,11 +1999,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
         /*
          * This is only populated with experiments that have reports available on disk.
          */
-        Map<Long, Date> lastUpdated = expressionExperimentReportService.fillReportInformation( expressionExperiments );
+        Map<Long, Date> lastUpdated = expressionExperimentReportService.getReportInformation( expressionExperiments );
 
-        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
+        expressionExperimentReportService.getAnnotationInformation( expressionExperiments );
 
-        Map<Long, Date> eventDates = expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        Map<Long, Date> eventDates = expressionExperimentReportService.getEventInformation( expressionExperiments );
 
         for ( Long k : eventDates.keySet() ) {
             if ( lastUpdated.containsKey( k ) ) {

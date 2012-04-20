@@ -492,6 +492,17 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         }
     }
 
+    @Override
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
+        // Assume SINGLE_QUERY_FOR_LINKS.
+        final String q = "select count (g2g) from " + getClassName( gene ) + " as g2g where g2g.firstGene = :qgene "
+                + " and g2g.sourceAnalysis = :sourceAnalysis";
+        List<?> r = this.getHibernateTemplate().findByNamedParam( q, new String[] { "qgene", "sourceAnalysis" },
+                new Object[] { gene, analysis } );
+
+        return ( ( Long ) r.iterator().next() ).intValue();
+
+    }
 }
 
 class GeneLink {

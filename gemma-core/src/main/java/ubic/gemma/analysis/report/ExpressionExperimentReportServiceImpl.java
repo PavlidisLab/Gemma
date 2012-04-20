@@ -120,7 +120,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Autowired
     private SecurityService securityService;
-    
+
     /**
      * Batch of classes we can get events for all at once.
      */
@@ -185,7 +185,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @param vos
      */
-    public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -218,7 +218,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @return Map of EE ids to the most recent update.
      */
-    public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    @Override
+    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -407,7 +408,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Collection<Long> getValidated( Collection<ExpressionExperiment> ees ) {
         Collection<Long> result = new HashSet<Long>();
         for ( ExpressionExperiment ee : ees ) {
-            
+
             if ( ee.getStatus().getValidated() ) {
                 result.add( ee.getId() );
             }
@@ -427,7 +428,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @return map of when the objects were most recently updated (or created)
      */
-    public Map<Long, Date> fillReportInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    @Override
+    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
         Map<Long, Date> result = new HashMap<Long, Date>();
         timer.start();
@@ -488,6 +490,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
+    @Override
     public ExpressionExperimentValueObject generateSummary( Long id ) {
         assert id != null;
         Collection<Long> ids = new ArrayList<Long>();
@@ -521,7 +524,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         initDirectories( false );
 
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds, false );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds,
+                false );
         updateStats( vos );
         return vos;
     }
@@ -850,7 +854,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private void updateStats( ExpressionExperimentValueObject eeVo ) {
         assert eeVo.getId() != null;
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
-       
+
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
         eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
 
@@ -868,7 +872,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         saveValueObject( eeVo );
 
         log.debug( "Generated report for " + eeVo.getShortName() );
-        
+
     }
 
 }

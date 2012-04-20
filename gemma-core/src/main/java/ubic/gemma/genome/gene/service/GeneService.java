@@ -88,7 +88,7 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> findByAlias( String search );
-    
+
     /**
      * @param accession
      * @return
@@ -281,7 +281,6 @@ public interface GeneService {
      */
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
 
-
     /**
      * @param ids
      * @return
@@ -315,9 +314,10 @@ public interface GeneService {
      * @param gene
      */
     public Gene thawLite( Gene gene );
-    
+
     /**
      * Only thaw the Aliases, very light version
+     * 
      * @param gene
      */
     public Gene thawAliases( Gene gene );
@@ -340,7 +340,6 @@ public interface GeneService {
     public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
 
     /**
-     * 
      * @param geneId
      * @return empty collection if no products
      */

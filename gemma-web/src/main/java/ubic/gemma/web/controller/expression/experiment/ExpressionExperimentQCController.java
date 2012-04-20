@@ -440,15 +440,25 @@ public class ExpressionExperimentQCController extends BaseController {
 
         for ( FactorValue fv : ef.getFactorValues() ) {
             String value = fv.getValue();
-            if ( StringUtils.isBlank( value ) ) {
+            if ( StringUtils.isBlank( value ) || value.equals( "null" ) ) {
                 for ( Characteristic c : fv.getCharacteristics() ) {
-                    value = c.getValue();
+                    if ( StringUtils.isNotBlank( c.getValue() ) ) {
+                        if ( StringUtils.isNotBlank( value ) ) {
+                            value = value + "; " + c.getValue();
+                        } else {
+                            value = c.getValue();
+                        }
+                    }
                 }
             }
+
+            if ( StringUtils.isBlank( value ) ) {
+                value = fv.toString() + "--??";
+            }
+
             if ( value.startsWith( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX ) ) {
                 value = value.replaceFirst( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX, "" );
             } else {
-
                 value = StringUtils.abbreviate( value, maxCategoryLabelLength );
             }
 
@@ -778,8 +788,12 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * FACTORS
          */
+        String componentShorthand = "PC";
         for ( Integer component : factorCorrelations.keySet() ) {
+
             if ( component >= MAX_COMP ) break;
+            String xaxisLabel = componentShorthand + ( component + 1 );
+
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
 
                 /*
@@ -808,7 +822,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 }
 
                 Double a = factorCorrelations.get( component ).get( efId );
-                String plotname = ( efs.get( efId ) == null ? "?" : efs.get( efId ) ) + " eigen" + ( component + 1 ); // unique?
+                String plotname = ( efs.get( efId ) == null ? "?" : efs.get( efId ) ) + " " + xaxisLabel; // unique?
 
                 if ( a != null && !Double.isNaN( a ) ) {
                     Double corr = a;
@@ -828,7 +842,7 @@ public class ExpressionExperimentQCController extends BaseController {
                          */
 
                         // use the absolute value of the correlation, since direction is arbitrary.
-                        title = plotname + " " + String.format( "%.2f", Math.abs( corr ) );
+                        title = plotname + " " + String.format( "r=%.2f", Math.abs( corr ) );
 
                         DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
@@ -860,7 +874,7 @@ public class ExpressionExperimentQCController extends BaseController {
                         }
 
                         // don't show the name of the X axis: it's redundant with the title.
-                        NumberAxis rangeAxis = new NumberAxis( "eigen" + ( component + 1 ) );
+                        NumberAxis rangeAxis = new NumberAxis( xaxisLabel );
                         rangeAxis.setAutoRangeIncludesZero( false );
                         // rangeAxis.setAutoRange( false );
                         rangeAxis.setAutoRangeMinimumSize( 4.0 );
@@ -889,27 +903,17 @@ public class ExpressionExperimentQCController extends BaseController {
                          */
 
                         DefaultXYDataset series = new DefaultXYDataset();
-                        series.addSeries(
-                                plotname,
-                                new double[][] { ArrayUtils.toPrimitive( eigenGene ),
-                                        ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
+                        series.addSeries( plotname,
+                                new double[][] { ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ),
+                                        ArrayUtils.toPrimitive( eigenGene ) } );
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
-                        chart = ChartFactory.createScatterPlot( title, null, "eigen" + ( component + 1 ), series,
+                        chart = ChartFactory.createScatterPlot( title, null, xaxisLabel, series,
                                 PlotOrientation.VERTICAL, false, false, false );
                         XYPlot plot = chart.getXYPlot();
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
-                        // NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
-                        // ValueAxis xaxis = plot.getDomainAxis();
-                        // double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
-                        // double xsize = xaxis.getUpperBound() - xaxis.getLowerBound();
 
-                        // XYTextAnnotation annotation = new XYTextAnnotation( "R2="
-                        // + String.format( "%.2f", Math.pow( corr, 2 ) ), xsize / 2.0, ysize / 2.0 );
-                        // annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
-                        // annotation.setTextAnchor( TextAnchor.HALF_ASCENT_LEFT );
-                        // plot.addAnnotation( annotation );
                         XYItemRenderer renderer = plot.getRenderer();
                         renderer.setBasePaint( Color.white );
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
@@ -930,6 +934,8 @@ public class ExpressionExperimentQCController extends BaseController {
          */
         charts.put( -1L, new ArrayList<JFreeChart>() );
         for ( Integer component : dateCorrelations.keySet() ) {
+            String xaxisLabel = componentShorthand + ( component + 1 );
+
             List<Date> dates = svdo.getDates();
             if ( dates.isEmpty() ) break;
 
@@ -950,9 +956,10 @@ public class ExpressionExperimentQCController extends BaseController {
                 }
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
-                JFreeChart chart = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
-                        + String.format( "%.2f", corr ), null, "eigen" + ( component + 1 ), dataset, false, false,
-                        false );
+
+                JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                        "Dates: " + xaxisLabel + " " + String.format( "r=%.2f", corr ), null, xaxisLabel, dataset,
+                        false, false, false );
 
                 XYPlot xyPlot = chart.getXYPlot();
 
@@ -1190,23 +1197,4 @@ public class ExpressionExperimentQCController extends BaseController {
         return true;
     }
 
-    /**
-     * @param response
-     * @param f
-     * @param contentType
-     */
-    private void writeToClient( OutputStream os, File f, String contentType ) {
-
-        try {
-            InputStream in = new FileInputStream( f );
-            byte[] buf = new byte[1024];
-            int len;
-            while ( ( len = in.read( buf ) ) > 0 ) {
-                os.write( buf, 0, len );
-            }
-            in.close();
-        } catch ( IOException e ) {
-            log.error( "While writing content", e );
-        }
-    }
 }

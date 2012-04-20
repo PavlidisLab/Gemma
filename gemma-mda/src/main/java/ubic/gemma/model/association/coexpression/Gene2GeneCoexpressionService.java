@@ -37,21 +37,21 @@ public interface Gene2GeneCoexpressionService {
      * @param gene2geneCoexpression A collection of Gene2GeneCoexpression object to create
      */
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public java.util.Collection<Gene2GeneCoexpression> create(
             java.util.Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
 
     /**
      * @param Create the given gene2geneCoexpression object
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public ubic.gemma.model.association.coexpression.Gene2GeneCoexpression create(
             ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene );
 
     /**
      * @param the gene2geneCoexpression object to remove from the DB
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void delete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete );
 
     /**
@@ -61,6 +61,17 @@ public interface Gene2GeneCoexpressionService {
      */
     public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
             java.util.Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
+
+    /**
+     * This should typically only be called directly during analysis. The values can be more readily retrieved using the
+     * GeneCoexpressionNodeDegreeService.
+     * 
+     * @param gene
+     * @param analysis
+     * @return the total number of coexpression links we have stored for this gene.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis );
 
     /**
      * 

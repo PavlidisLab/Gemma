@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -180,7 +181,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     private GeneCoexpressionNodeDegreeService geneCoexpressionNodeDegreeService;
 
     // Caution stateful
-    private List<GeneCoexpressionNodeDegree> allGeneNodeDegrees = new ArrayList<GeneCoexpressionNodeDegree>();
+    private Map<Gene, GeneCoexpressionNodeDegree> allGeneNodeDegrees = new ConcurrentHashMap<Gene, GeneCoexpressionNodeDegree>();
 
     /*
      * (non-Javadoc)
@@ -239,15 +240,25 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
             boolean useDB ) {
         allGeneNodeDegrees.clear();
+
+        GeneCoexpressionAnalysis toUseAnalysis = getActiveAnalysis( toUseGenes );
+
         int count = 0;
         for ( Gene queryGene : toUseGenes ) {
-            computeNodeDegree( queryGene, expressionExperiments );
+            computeNodeDegree( queryGene, -1, expressionExperiments );
+
+            Integer numberOfLinks = gene2GeneCoexpressionService.getNumberOfLinks( queryGene, toUseAnalysis );
+
+            allGeneNodeDegrees.get( queryGene ).setNumLinks( numberOfLinks );
+
             if ( count++ % 200 == 0 ) {
                 log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
             }
         }
         log.info( "Finalizing node degree computation" );
         completeNodeDegreeComputations( useDB );
+
+        allGeneNodeDegrees.clear();
     }
 
     /**
@@ -258,20 +269,20 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     private void completeNodeDegreeComputations( boolean useDB ) {
 
         DoubleArrayList vals = new DoubleArrayList();
+        DoubleArrayList rawCountVals = new DoubleArrayList();
 
-        for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
+        for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees.values() ) {
             // l.add( n.getMedian() );
             /*
              * The final ranks are based on the pvalues, not the medians.
              */
             vals.add( n.getPvalue() );
+            rawCountVals.add( n.getNumLinks() );
         }
 
         DoubleArrayList ranks = Rank.rankTransform( vals );
 
-        if ( ranks == null ) {
-            // FIXME
-        }
+        DoubleArrayList rawCountRanks = Rank.rankTransform( rawCountVals );
 
         QuantileBin1D f = new QuantileBin1D( true, vals.size(), 0.0, 0.0, vals.size(), randomNumberGenerator );
         f.addAllOf( vals );
@@ -284,13 +295,16 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
             n.setRank( rank / ranks.size() );
 
+            n.setRankNumLinks( rawCountRanks.get( i ) / rawCountRanks.size() );
+
             if ( useDB ) {
                 geneCoexpressionNodeDegreeService.deleteFor( n.getGene() );
                 geneCoexpressionNodeDegreeService.create( n );
             } else {
-                System.out.print( String.format( "%d\t%s\t%d\t%.2f\t%.2f\t%.2f\t%d\t%.2f\t%s\n", n.getGene().getId(), n
-                        .getGene().getOfficialSymbol(), n.getGene().getTaxon().getId(), n.getMedian(), n
-                        .getMedianDeviation(), n.getPvalue(), n.getNumTests(), n.getRank(), n.getDistribution() ) );
+                System.out.print( String.format( "%d\t%s\t%d\t%.2f\t%.2f\t%.2f\t%d\t%.2f\t%s\t%d\t%.2f\n", n.getGene()
+                        .getId(), n.getGene().getOfficialSymbol(), n.getGene().getTaxon().getId(), n.getMedian(), n
+                        .getMedianDeviation(), n.getPvalue(), n.getNumTests(), n.getRank(), n.getDistribution(), n
+                        .getNumLinks(), n.getRankNumLinks() ) );
             }
         }
 
@@ -322,10 +336,11 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
     /**
      * @param queryGene
+     * @param usedLinks number of links we stored for this gene. If < 0, this will not be used.
      * @param expressionExperiments
      * @see completeNodeDegreeComputations(boolean) for the final computation.
      */
-    private void computeNodeDegree( Gene queryGene, Collection<BioAssaySet> expressionExperiments ) {
+    private void computeNodeDegree( Gene queryGene, int usedLinks, Collection<BioAssaySet> expressionExperiments ) {
 
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
@@ -340,6 +355,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
         n.setGene( queryGene );
         n.setNumTests( nodeDegrees.size() );
+
+        if ( usedLinks >= 0 ) n.setNumLinks( usedLinks ); // we populate the rank later.
 
         double[] array = ArrayUtils.toPrimitive( nodeDegrees.values().toArray( new Double[] {} ) );
         DoubleArrayList vals = new DoubleArrayList( array );
@@ -360,7 +377,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         n.setDistribution( distribution );
 
         // so we can compute summary stats at the end.
-        this.allGeneNodeDegrees.add( n );
+        this.allGeneNodeDegrees.put( queryGene, n );
 
     }
 
@@ -504,18 +521,19 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 // persist it or write out
 
                 StopWatch timer = new StopWatch();
+                int usedLinks = 0;
                 if ( analysis != null ) {
                     timer.start();
                     List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions,
                             analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
+                    usedLinks = created.size();
                     timer.stop();
                     if ( timer.getTime() > 2000 ) {
                         log.info( "Persist links: " + timer.getTime() + "ms" );
                     }
                 } else {
                     List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-                    int usedLinks = 0;
                     for ( CoexpressionValueObject co : coexps ) {
                         if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
                             continue;
@@ -531,7 +549,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                     if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
                 }
 
-                computeNodeDegree( queryGene, expressionExperiments );
+                computeNodeDegree( queryGene, usedLinks, expressionExperiments );
 
                 processedGenes.add( queryGene );
                 if ( processedGenes.size() % 100 == 0 ) {
@@ -645,6 +663,41 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         buf.append( BitUtil.prettyPrint( co.getDatasetsTestedInBytes() ) );
 
         return buf.toString();
+    }
+
+    /**
+     * @param toUseGenes
+     * @return
+     * @throw exception if the genes are not from the same taxon or if the analysis is not found.
+     */
+    private GeneCoexpressionAnalysis getActiveAnalysis( Collection<Gene> toUseGenes ) {
+        Taxon t = null;
+        for ( Gene g : toUseGenes ) {
+            if ( t == null )
+                t = g.getTaxon();
+            else if ( !t.equals( g.getTaxon() ) ) {
+                throw new IllegalArgumentException( "Genes must all be from one taxon" );
+            }
+
+        }
+
+        Collection<GeneCoexpressionAnalysis> analyses = this.findExistingAnalysis( t );
+        if ( analyses.isEmpty() ) {
+            throw new IllegalStateException();
+        }
+
+        GeneCoexpressionAnalysis toUseAnalysis = null;
+        for ( GeneCoexpressionAnalysis a : analyses ) {
+            if ( a.getEnabled() ) {
+                toUseAnalysis = a;
+                break;
+            }
+        }
+
+        if ( toUseAnalysis == null ) {
+            throw new IllegalStateException( "No active analysis found" );
+        }
+        return toUseAnalysis;
     }
 
     /**

@@ -70,19 +70,19 @@ public interface ExpressionExperimentReportService {
      * @param vos
      * @return
      */
-    public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos );
+    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
 
     public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees );
 
     /**
      * @param vos
      */
-    public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
+    public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
 
     /**
      * @param vos
      * @return
      */
-    public Map<Long, Date> fillReportInformation( Collection<ExpressionExperimentValueObject> vos );
+    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
 
 }

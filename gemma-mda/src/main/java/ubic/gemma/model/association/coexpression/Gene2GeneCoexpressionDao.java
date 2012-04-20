@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
@@ -28,27 +30,30 @@ import ubic.gemma.persistence.BaseDao;
 public interface Gene2GeneCoexpressionDao extends BaseDao<Gene2GeneCoexpression> {
 
     /**
-     * <p>
      * Returns a collection of gene2geneCoexpression objects. Set maxResults to 0 to remove limits.
-     * </p>
      */
-    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
-            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
-
-    /**
-     * <p>
-     * Returns a map of genes to coexpression results. Set maxResults to 0 to remove limits.
-     * </p>
-     */
-    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships( Gene gene, int stringency,
             int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
-     * <p>
-     * Return coexpression relationships among the given genes.
-     * </p>
+     * Returns a map of genes to coexpression results. Set maxResults to 0 to remove limits.
      */
-    public java.util.Map findInterCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
+    public java.util.Map findCoexpressionRelationships( Collection<Gene> genes, int stringency, int maxResults,
             GeneCoexpressionAnalysis sourceAnalysis );
+
+    /**
+     * Return coexpression relationships among the given genes.
+     */
+    public java.util.Map findInterCoexpressionRelationships( Collection<Gene> genes, int stringency,
+            GeneCoexpressionAnalysis sourceAnalysis );
+
+    /**
+     * This should usually only be called directly during analysis. Once populated, the values can be more rapidly
+     * retrieved using the GeneCoexpressionNodeDegreeService.
+     * 
+     * @param gene
+     * @return
+     */
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis );
 
 }

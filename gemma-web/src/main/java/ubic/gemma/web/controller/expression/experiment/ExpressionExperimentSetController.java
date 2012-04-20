@@ -148,7 +148,7 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<ExpressionExperimentValueObject> result = expressionExperimentSetService
                 .getExperimentValueObjectsInSet( id );
-        expressionExperimentReportService.fillReportInformation( result );
+        expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 

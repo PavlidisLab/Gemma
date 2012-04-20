@@ -49,6 +49,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * This is used to create a 'platform' for linking non-array based data to the system, or data for which we have only
  * gene or transcript-level information.
  * <p>
+ * See also: To generate annotation files for all genes in a taxon, this can also accomplished by
+ * ArrayDesignAnnotationFileCli. The difference here is that an array design is actually created.
  * 
  * @author paul
  * @version $Id$
@@ -66,8 +68,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" ).withDescription(
-                "Taxon of the genes" ).withLongOpt( "taxon" ).isRequired().create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
+                .withDescription( "Taxon of the genes" ).withLongOpt( "taxon" ).isRequired().create( 't' );
         addOption( taxonOption );
 
     }

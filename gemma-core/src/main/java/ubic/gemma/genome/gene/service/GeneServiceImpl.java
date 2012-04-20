@@ -85,13 +85,13 @@ public class GeneServiceImpl implements GeneService {
 
     @Autowired
     AnnotationAssociationService annotationAssociationService;
-    
+
     @Autowired
     GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Autowired
     private GeneDao geneDao;
-    
+
     @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
         return this.getGeneDao().find( physicalLocation );
@@ -178,24 +178,22 @@ public class GeneServiceImpl implements GeneService {
             // gene products in advance to remove the outliers. Currently this method is assuming the 1st gene product
             // is not the outlier.
             if ( !currentStrand.equalsIgnoreCase( strand ) ) {
-                log
-                        .warn( "Gene products for "
-                                + gene.getOfficialSymbol()
-                                + " , Id="
-                                + gene.getId()
-                                + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
-                                + gp.getId() );
+                log.warn( "Gene products for "
+                        + gene.getOfficialSymbol()
+                        + " , Id="
+                        + gene.getId()
+                        + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
+                        + gp.getId() );
                 continue;
             }
 
             if ( !currentChromosone.equals( chromosome ) ) {
-                log
-                        .warn( "Gene products for "
-                                + gene.getOfficialSymbol()
-                                + " , Id="
-                                + gene.getId()
-                                + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
-                                + gp.getId() );
+                log.warn( "Gene products for "
+                        + gene.getOfficialSymbol()
+                        + " , Id="
+                        + gene.getId()
+                        + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
+                        + gp.getId() );
 
                 continue;
             }
@@ -215,7 +213,6 @@ public class GeneServiceImpl implements GeneService {
         return result;
 
     }
-
 
     public Collection<Gene> handleThawLite( Collection<Gene> genes ) {
         return this.getGeneDao().thawLite( genes );
@@ -244,14 +241,12 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().thawLite( gene );
     }
 
-
     /**
      * @see gene.GeneService#handleFindByID(java.lang.long)
      */
     protected Gene handleFindByID( Long id ) throws java.lang.Exception {
         return this.getGeneDao().load( id );
     }
-
 
     // @Override
     // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
@@ -371,8 +366,6 @@ public class GeneServiceImpl implements GeneService {
         Gene gene = findByNCBIId( accession );
         return new GeneValueObject( gene );
     }
-    
-    
 
     /**
      * @see GeneService#countAll()
@@ -754,5 +747,6 @@ public class GeneServiceImpl implements GeneService {
         return this.geneDao;
     }
 
+   
 
 }

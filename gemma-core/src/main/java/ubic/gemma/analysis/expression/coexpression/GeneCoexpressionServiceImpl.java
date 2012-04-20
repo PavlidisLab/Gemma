@@ -110,12 +110,16 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     @Autowired
     private TfGeneAssociationService tfGeneAssociationService;
-    
+
     @Autowired
     private StatusService statusService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.util.Collection, java.util.Collection, int, int, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.util.Collection,
+     * java.util.Collection, int, int, boolean, boolean)
      */
     @Override
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Collection<Long> inputEeIds,
@@ -143,8 +147,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearch(java.util.Collection, java.util.Collection, int, int, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearch(java.util.Collection,
+     * java.util.Collection, int, int, boolean, boolean)
      */
     @Override
     public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Gene> genes,
@@ -290,8 +297,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.lang.Long, java.util.Collection, int, int, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.lang.Long,
+     * java.util.Collection, int, int, boolean, boolean)
      */
     @Override
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Long eeSetId, Collection<Gene> queryGenes,
@@ -1320,9 +1330,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         Collection<Long> filteredIds = new HashSet<Long>();
         for ( ExpressionExperiment ee : filteredExperiments ) {
-            
-            Status eestatus =statusService.getStatus( ee );
-            
+
+            Status eestatus = statusService.getStatus( ee );
+
             if ( eestatus.getTroubled() ) continue;
             filteredIds.add( ee.getId() );
         }
