@@ -189,6 +189,7 @@ public class ExperimentQCTag extends TagSupport {
                             + this.eeid + "\" />" );
             buf.append( "<br/>" );
             for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
+                // id : 'ee-details-panel - declared in ExpressionExperimentPage.js
                 String linkText = "<span style='cursor:pointer' onClick=\"Ext.getCmp('ee-details-panel').visualizePcaHandler("
                         + this.eeid
                         + ","

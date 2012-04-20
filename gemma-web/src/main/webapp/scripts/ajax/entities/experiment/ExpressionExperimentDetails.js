@@ -81,8 +81,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
      *
      */
     visualizePcaHandler: function(eeid, component, count){
-    
-        var params = {};
+     
         this.vispcaWindow = new Gemma.VisualizationWithThumbsWindow({
             thumbnails: false,
             readMethod: DEDVController.getDEDVForPcaVisualization,

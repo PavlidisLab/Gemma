@@ -61,6 +61,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 // DETAILS TAB
                 this.add(new Gemma.ExpressionExperimentDetails({
                     title: 'Details',
+                    id : 'ee-details-panel',
                     experimentDetails: experimentDetails,
                     editable: this.editable,
 					owned: this.ownedByCurrentUser,
