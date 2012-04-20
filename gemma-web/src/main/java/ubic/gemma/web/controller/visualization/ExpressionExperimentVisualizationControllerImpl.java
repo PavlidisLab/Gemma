@@ -43,7 +43,7 @@ import ubic.gemma.web.view.TextView;
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
  * 
- * @deprecatd in favour of client-side rendering, though this could see use if revamped
+ * @deprecated in favour of client-side rendering, though this could see use if revamped
  * @author keshav
  * @version $Id$
  */
