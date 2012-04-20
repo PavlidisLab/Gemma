@@ -516,6 +516,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         Map<String, Collection<GeneValueObject>> queryToGenes = new HashMap<String, Collection<GeneValueObject>>();
         while ( ( line = reader.readLine() ) != null ) {
+            
+            line = StringUtils.strip( line );
             queryToGenes.put( line, new HashSet<GeneValueObject>() );
         }
 
