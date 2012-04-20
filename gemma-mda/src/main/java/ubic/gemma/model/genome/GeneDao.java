@@ -238,6 +238,6 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
 
-    Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
+    public Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
 }
