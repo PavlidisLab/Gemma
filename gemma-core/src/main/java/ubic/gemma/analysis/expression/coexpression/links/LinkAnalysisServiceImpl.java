@@ -534,10 +534,10 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
             ees.add( ee );
-            
-            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
             saveLinks( p2v, la );
+            
+            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
         } else if ( linkAnalysisConfig.isTextOut() ) {
             try {
