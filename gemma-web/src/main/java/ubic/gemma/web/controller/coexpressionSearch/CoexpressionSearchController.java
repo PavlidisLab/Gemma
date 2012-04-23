@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.diff.DifferentialExpressionSearchController;
@@ -179,8 +180,8 @@ public class CoexpressionSearchController {
         if ( stringencyTrimLimit > 1400 ) {
             stringencyTrimLimit = 1400;
         }
-
-        int resultsLimit = 850;
+               
+        int resultsLimit = ConfigUtils.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
         
         // strip down results for front end if data is too large
         if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {
