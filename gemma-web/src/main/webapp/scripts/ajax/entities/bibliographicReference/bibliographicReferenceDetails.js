@@ -25,7 +25,14 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 		}; 
 		
 		var getGenePhenotypeRow = function(bibliographicPhenotype) {
-			var genePhenotypeRow = bibliographicPhenotype.geneName + ' ' + this.genePhenotypeSeparator + ' ';
+			var genePhenotypeRow = '';
+			
+			if (bibliographicPhenotype.evidenceId == currentEvidenceId) {
+				genePhenotypeRow += '<b>';
+			}
+			
+			genePhenotypeRow += bibliographicPhenotype.geneName + ' ' + this.genePhenotypeSeparator + ' ';
+			
 			for (var i = 0; i <	bibliographicPhenotype.phenotypesValues.length; i++) {
 				genePhenotypeRow += bibliographicPhenotype.phenotypesValues[i].value;
 				
@@ -35,7 +42,8 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			}
 
 			if (bibliographicPhenotype.evidenceId == currentEvidenceId) {
-				genePhenotypeRow += ' <img height="12" src="/Gemma/images/icons/asterisk_yellow.png" ext:qtip="This is the annotation you are editing." /> ';
+				genePhenotypeRow += '</b>' +
+					' <img height="12" src="/Gemma/images/icons/asterisk_black.png" ext:qtip="This is the annotation you are editing." /> ';
 			}
 			
 			return genePhenotypeRow;

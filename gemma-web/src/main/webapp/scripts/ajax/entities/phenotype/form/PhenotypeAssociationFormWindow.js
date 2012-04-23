@@ -537,17 +537,17 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 									if (validateEvidenceValueObject == null) {
 										hasError = false;
 									} else {
-										if (validateEvidenceValueObject.sameEvidenceIds.length > 0) {
+										if (validateEvidenceValueObject.problematicEvidenceIds.length > 0) {
 											var errorColor = validateEvidenceValueObject.sameEvidenceFound ?
 												'red' :
 												'orange';
 										
 											if (evidenceType === 'ExperimentalEvidenceValueObject') {
 												experimentalPanel.showAnnotationError(
-													validateEvidenceValueObject.sameEvidenceIds, errorColor);
+													validateEvidenceValueObject.problematicEvidenceIds, errorColor);
 											} else if (evidenceType === 'LiteratureEvidenceValueObject') {
 												literaturePanel.showAnnotationError(
-													validateEvidenceValueObject.sameEvidenceIds, errorColor);
+													validateEvidenceValueObject.problematicEvidenceIds, errorColor);
 											}
 										}
 										
