@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
-import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -102,9 +101,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private UserManager userManager;
 
-    @Autowired
-    private GeneService geneService;
-
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
@@ -144,10 +140,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
 
+        // updates the gene in the cache
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
-
-        this.geneService.update( gene );
 
         return validateEvidenceValueObject;
     }
@@ -220,12 +215,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( String key : phenotypesWithChildren.keySet() ) {
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
+        Collection<Gene> genesAfterAcl = null;
 
         // find all Genes containing the first phenotypeValueUri
         Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( possibleChildrenPhenotypes );
-
-        // dont keep genes with evidence that the user doesnt have the permissions to see
-        Collection<Gene> genesAfterAcl = filterGeneAfterAcl( genes );
+        if ( SecurityServiceImpl.isUserAdmin() ) {
+            genesAfterAcl = genes;
+        } else {
+            // dont keep genes with evidence that the user doesnt have the permissions to see
+            genesAfterAcl = filterGeneAfterAcl( genes );
+        }
 
         Collection<GeneValueObject> genesVO = null;
 
@@ -592,7 +591,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( evidenceValueObjectInDatabase != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
-            validateEvidenceValueObject.getSameEvidenceIds().add( evidenceValueObjectInDatabase.getId() );
+            validateEvidenceValueObject.getProblematicEvidenceIds().add( evidenceValueObjectInDatabase.getId() );
             return validateEvidenceValueObject;
         }
 
@@ -677,28 +676,87 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
-        // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
-        TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
+        // all Public phenotypes in Gemma linked to all the genes containing them
+        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = null;
 
-        // all phenotypes in Gemma
-        Set<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
+        // all phenotypes in Gemma that is owned by the user, they might be public or private
+        HashMap<String, HashSet<Integer>> userOwnedPhenotypesGenesAssociations = null;
 
-        // keep track of all phenotypes found in the trees, used to find quickly the position to add subtrees
+        // all private phenotypes in Gemma linked that the user own (admin can see all)
+        HashMap<String, HashSet<Integer>> privatePhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+
+        // public phenotypes + private phenotypes (what the user can see)
+        Set<String> allPhenotypesGenesAssociations = new HashSet<String>();
+
+        // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
         HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
-        // for each phenotype in Gemma construct its subtree of children if necessary
-        for ( CharacteristicValueObject c : allPhenotypes ) {
+        // find all public gene count, same for any user
+        publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations();
+
+        if ( SecurityServiceImpl.isUserAdmin() ) {
+            // admin can see all private data
+            userOwnedPhenotypesGenesAssociations = this.associationService.findAllPhenotypesGenesAssociations();
+        } else {
+
+            String userName = "";
+
+            if ( SecurityServiceImpl.isUserLoggedIn() ) {
+                // find user
+                userName = this.userManager.getCurrentUsername();
+                // TODO find also groups
+            }
+            userOwnedPhenotypesGenesAssociations = this.associationService
+                    .findPrivatePhenotypesGenesAssociations( userName );
+        }
+
+        // make the private set of Phenotype Gene assossiation
+        for ( String valueUri : userOwnedPhenotypesGenesAssociations.keySet() ) {
+
+            if ( publicPhenotypesGenesAssociations.get( valueUri ) != null ) {
+                HashSet<Integer> publicGeneSet = publicPhenotypesGenesAssociations.get( valueUri );
+                HashSet<Integer> userOwnedGeneSet = userOwnedPhenotypesGenesAssociations.get( valueUri );
+
+                HashSet<Integer> privateGeneSet = new HashSet<Integer>();
+
+                for ( int geneNCBI : userOwnedGeneSet ) {
+
+                    if ( !publicGeneSet.contains( geneNCBI ) ) {
+                        privateGeneSet.add( geneNCBI );
+                    }
+                }
+
+                if ( privateGeneSet.size() > 0 ) {
+                    privatePhenotypesGenesAssociations.put( valueUri, privateGeneSet );
+                }
+            } else {
+                privatePhenotypesGenesAssociations.put( valueUri, userOwnedPhenotypesGenesAssociations.get( valueUri ) );
+            }
+        }
+
+        for ( String phenotype : privatePhenotypesGenesAssociations.keySet() ) {
+            allPhenotypesGenesAssociations.add( phenotype );
+        }
+        for ( String phenotype : publicPhenotypesGenesAssociations.keySet() ) {
+            allPhenotypesGenesAssociations.add( phenotype );
+        }
+
+        // represents each phenotype and children found in the Ontology, TreeSet used to order trees
+        TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
+
+        // creates the tree structure
+        for ( String valueUri : allPhenotypesGenesAssociations ) {
 
             // dont create the tree if it is already present in an other
-            if ( phenotypeFoundInTree.get( c.getValueUri() ) != null ) {
+            if ( phenotypeFoundInTree.get( valueUri ) != null ) {
                 // flag the node as phenotype found in database
-                phenotypeFoundInTree.get( c.getValueUri() ).setDbPhenotype( true );
+                phenotypeFoundInTree.get( valueUri ).setDbPhenotype( true );
 
             } else {
 
                 try {
                     // find the ontology term using the valueURI
-                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( c.getValueUri() );
+                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
                     // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
                     TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
@@ -716,7 +774,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     System.err.println( "A valueUri found in the database was not found in the ontology" );
                     System.err.println( "This can happen when a valueUri is updated in the ontology" );
-                    System.err.println( "Value : " + c.getValue() + "      valueUri: " + c.getValueUri() );
+                    System.err.println( "valueUri: " + valueUri );
                 }
             }
         }
@@ -726,37 +784,34 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             tc.removeUnusedPhenotypes( tc.getValueUri() );
         }
 
-        Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
-
-        String username = null;
-
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
-            // find user
-            username = this.userManager.getCurrentUsername();
-            // TODO find also groups
-        }
-
+        // set the public count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-
-            // count occurrence recursively for each phenotype in the branch
-            tc.countGeneOccurence( this.associationService, SecurityServiceImpl.isUserAdmin(), username );
-            if ( tc.getPublicGeneCount() + tc.getPrivateGeneCount() != 0 ) {
-                finalTree.add( tc );
-            }
+            tc.countPublicGeneForEachNode( publicPhenotypesGenesAssociations );
         }
 
-        return finalTree;
+        // set the private count
+        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+            tc.countPrivateGeneForEachNode( privatePhenotypesGenesAssociations );
+        }
 
+        return treesPhenotypes;
+
+        // to be used later to get the full tree
         /*
          * TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
          * 
-         * for ( TreeCharacteristicValueObject tc : finalTree ) { findParentRoot( tc, finalTreesWithRoots,
+         * for ( TreeCharacteristicValueObject tc : treesPhenotypes ) { findParentRoot( tc, finalTreesWithRoots,
          * phenotypeFoundInTree ); }
          * 
-         * for ( TreeCharacteristicValueObject t : finalTreesWithRoots ) { t.determineNewGeneCount(); }
+         * for ( TreeCharacteristicValueObject tc : finalTreesWithRoots ) { tc.countPublicGeneForEachNode(
+         * publicPhenotypesGenesAssociations ); }
+         * 
+         * for ( TreeCharacteristicValueObject tc : finalTreesWithRoots ) { tc.countPrivateGeneForEachNode(
+         * privatePhenotypesGenesAssociations ); }
          * 
          * return finalTreesWithRoots;
          */
+
     }
 
     /** Given a geneId finds all phenotypes for that gene */
@@ -1122,7 +1177,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     }
 
                     validateEvidenceValueObject.setSameGeneAnnotated( true );
-                    validateEvidenceValueObject.getSameEvidenceIds().add(
+                    validateEvidenceValueObject.getProblematicEvidenceIds().add(
                             bibliographicPhenotypesValueObject.getEvidenceId() );
 
                     boolean containsExact = true;
@@ -1136,7 +1191,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( containsExact ) {
                         validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                        validateEvidenceValueObject.getSameEvidenceIds().add(
+                        validateEvidenceValueObject.getProblematicEvidenceIds().add(
                                 bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
@@ -1145,7 +1200,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             && evidence.getPhenotypes().containsAll(
                                     bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                         validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
-                        validateEvidenceValueObject.getSameEvidenceIds().add(
+                        validateEvidenceValueObject.getProblematicEvidenceIds().add(
                                 bibliographicPhenotypesValueObject.getEvidenceId() );
                     }
 
@@ -1172,7 +1227,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
                             validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
-                            validateEvidenceValueObject.getSameEvidenceIds().add(
+                            validateEvidenceValueObject.getProblematicEvidenceIds().add(
                                     bibliographicPhenotypesValueObject.getEvidenceId() );
                         }
                     }

@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
@@ -79,7 +78,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             output = output + " ******* ";
         }
 
-        output = output + getValue() + "   " + getPublicGeneCount() + "\n";
+        output = output + getValue() + "   " + getPublicGeneCount() + " (" + getPrivateGeneCount() + ")\n";
 
         int currentLevel = level + 1;
         for ( TreeCharacteristicValueObject treeVO : this.children ) {
@@ -120,32 +119,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
     }
 
-    /** counts gene on a TreeCharacteristicValueObject */
-    public void countGeneOccurence( PhenotypeAssociationService associationService, boolean isAdmin, String username ) {
-
-        // everyone can see public
-        setPublicGeneCount( associationService.countGenesWithPublicPhenotype( getAllChildrenUri() ) );
-
-        // admin see all private evidence
-        if ( isAdmin ) {
-            setPrivateGeneCount( associationService.countGenesWithPhenotype( getAllChildrenUri() )
-                    - getPublicGeneCount() );
-        }
-        // user is logged in
-        else if ( username != null ) {
-            setPrivateGeneCount( associationService.countGenesWithPrivatePhenotype( getAllChildrenUri(), username ) );
-        }
-
-        if ( getPublicGeneCount() + getPrivateGeneCount() == 0 ) {
-            this.getChildren().clear();
-        } else {
-            // count for each node of the tree
-            for ( TreeCharacteristicValueObject tree : getChildren() ) {
-                countGeneOccurence( associationService, tree );
-            }
-        }
-    }
-
     private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds, String rootValueUri ) {
 
         for ( TreeCharacteristicValueObject t : this.children ) {
@@ -155,18 +128,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             } else {
                 t.findRealChild( newRealChilds, rootValueUri );
             }
-        }
-    }
-
-    /** counts gene on a TreeCharacteristicValueObject */
-    private void countGeneOccurence( PhenotypeAssociationService associationService, TreeCharacteristicValueObject tc ) {
-
-        // set the public gene count
-        tc.setPublicGeneCount( associationService.countGenesWithPublicPhenotype( tc.getAllChildrenUri() ) );
-
-        // count for each node of the tree
-        for ( TreeCharacteristicValueObject tree : tc.getChildren() ) {
-            countGeneOccurence( associationService, tree );
         }
     }
 
@@ -209,21 +170,63 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return treeCharacteristicVO;
     }
 
-    public long determineNewGeneCount() {
-        long publicCount = 0;
+    /** counts each public occurrence of genes for a phenotype */
+    public void countPublicGeneForEachNode( HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
 
-        if ( this.publicGeneCount != 0l ) {
-            return this.publicGeneCount;
+        HashSet<Integer> allGenes = new HashSet<Integer>();
+
+        for ( TreeCharacteristicValueObject tc : this.children ) {
+
+            tc.countPublicGeneForEachNode( phenotypesGenesAssociations );
+
+            if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+                allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+
+                if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
+                    phenotypesGenesAssociations.get( this.valueUri ).addAll(
+                            phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                } else {
+                    HashSet<Integer> genesNBCI = new HashSet<Integer>();
+                    genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                    phenotypesGenesAssociations.put( this.valueUri, genesNBCI );
+                }
+            }
         }
 
-        for ( TreeCharacteristicValueObject child : this.children ) {
-
-            publicCount += child.determineNewGeneCount();
+        if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
+            allGenes.addAll( phenotypesGenesAssociations.get( this.valueUri ) );
         }
 
-        this.publicGeneCount = publicCount;
+        this.publicGeneCount = allGenes.size();
+    }
 
-        return publicCount;
+    /** counts each private occurrence of genes for a phenotype */
+    public void countPrivateGeneForEachNode( HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+
+        HashSet<Integer> allGenes = new HashSet<Integer>();
+
+        for ( TreeCharacteristicValueObject tc : this.children ) {
+
+            tc.countPrivateGeneForEachNode( phenotypesGenesAssociations );
+
+            if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
+                allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+
+                if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
+                    phenotypesGenesAssociations.get( this.valueUri ).addAll(
+                            phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                } else {
+                    HashSet<Integer> genesNBCI = new HashSet<Integer>();
+                    genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                    phenotypesGenesAssociations.put( this.valueUri, genesNBCI );
+                }
+            }
+        }
+
+        if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
+            allGenes.addAll( phenotypesGenesAssociations.get( this.valueUri ) );
+        }
+        this.privateGeneCount = allGenes.size();
     }
 
 }

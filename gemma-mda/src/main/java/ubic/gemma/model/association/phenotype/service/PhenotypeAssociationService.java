@@ -15,6 +15,8 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
@@ -66,12 +68,6 @@ public interface PhenotypeAssociationService {
     public Collection<PhenotypeAssociation> loadAll();
 
     /**
-     * @return all the characteristics (phenotypes) used in the system.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Set<CharacteristicValueObject> loadAllPhenotypes();
-
-    /**
      * find GenericExperiments by PubMed ID
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -107,17 +103,6 @@ public interface PhenotypeAssociationService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( PhenotypeAssociation evidence );
 
-    /**
-     * count the number of Genes with public phenotype
-     */
-    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri );
-
-    /** count the number of Genes with a public or private phenotype */
-    public Long countGenesWithPhenotype( Collection<String> phenotypesUri );
-
-    /** count the number of Genes with a private phenotype */
-    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName );
-
     /** load all valueURI of Phenotype in the database */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Set<String> loadAllPhenotypesUri();
@@ -140,5 +125,14 @@ public interface PhenotypeAssociationService {
     /** delete all evidences from a specific external database */
     @Secured({ "GROUP_ADMIN" })
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
+    /** find all public phenotypes associated with genes */
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations();
+
+    /** find all phenotypes associated with genes for a user */
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName );
+
+    /** find all phenotypes associated with genes */
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations();
 
 }

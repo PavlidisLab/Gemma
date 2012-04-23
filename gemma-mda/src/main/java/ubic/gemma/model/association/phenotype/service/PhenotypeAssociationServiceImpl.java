@@ -15,6 +15,8 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,14 +131,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         this.phenotypeAssociationDao.update( evidence );
     }
 
-    /**
-     * @return all the characteristics (phenotypes) used in the system.
-     */
-    @Override
-    public Set<CharacteristicValueObject> loadAllPhenotypes() {
-        return this.phenotypeAssociationDao.loadAllPhenotypes();
-    }
-
     /** load all valueURI of Phenotype in the database */
     @Override
     public Set<String> loadAllPhenotypesUri() {
@@ -152,26 +146,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public PhenotypeAssociation create( PhenotypeAssociation p ) {
         return this.phenotypeAssociationDao.create( p );
-    }
-
-    /**
-     * count the number of Genes with public phenotype
-     */
-    @Override
-    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri ) {
-        return this.phenotypeAssociationDao.countGenesWithPublicPhenotype( phenotypesUri );
-    }
-
-    /** count the number of Genes with a public or private phenotype */
-    @Override
-    public Long countGenesWithPhenotype( Collection<String> phenotypesUri ) {
-        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypesUri );
-    }
-
-    /** count the number of Genes with a private phenotype */
-    @Override
-    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String userName ) {
-        return this.phenotypeAssociationDao.countGenesWithPrivatePhenotype( phenotypesUri, userName );
     }
 
     /** find all PhenotypeAssociation for a specific gene id */
@@ -198,4 +172,21 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
     }
 
+    /** find all public phenotypes associated with genes */
+    @Override
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations() {
+        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations();
+    }
+
+    /** find all phenotypes associated with genes for a user */
+    @Override
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName ) {
+        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( userName );
+    }
+
+    /** find all phenotypes associated with genes */
+    @Override
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations() {
+        return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations();
+    }
 }

@@ -15,6 +15,8 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import ubic.gemma.model.genome.Gene;
@@ -29,18 +31,6 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
     public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
-
-    /** find all phenotypes */
-    public Set<CharacteristicValueObject> loadAllPhenotypes();
-
-    /** count the number of Genes with a public phenotype */
-    public Long countGenesWithPublicPhenotype( Collection<String> phenotypesUri );
-
-    /** count the number of Genes with a public or private phenotype */
-    public Long countGenesWithPhenotype( Collection<String> phenotypesUri );
-
-    /** count the number of Genes with private phenotype */
-    public Long countGenesWithPrivatePhenotype( Collection<String> phenotypesUri, String username );
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
@@ -59,5 +49,14 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all evidences from a specific external database */
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
+    /** find all public phenotypes associated with genes */
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations();
+
+    /** find all phenotypes associated with genes for a user */
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName );
+
+    /** find all phenotypes associated with genes */
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations();
 
 }

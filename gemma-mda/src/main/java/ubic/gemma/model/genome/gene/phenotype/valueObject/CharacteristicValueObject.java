@@ -36,7 +36,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String categoryUri = "";
 
     private String value = "";
-    private String valueUri = "";
+    protected String valueUri = "";
 
     /** number of occurence in all genes */
     protected long publicGeneCount = 0L;

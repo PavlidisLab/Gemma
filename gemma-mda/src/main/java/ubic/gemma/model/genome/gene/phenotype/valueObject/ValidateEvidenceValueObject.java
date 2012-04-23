@@ -17,7 +17,7 @@ public class ValidateEvidenceValueObject {
     private boolean sameEvidenceFound = false;
 
     // this is used to indicate the gene-phenotype conflicts while validating
-    private Set<Long> sameEvidenceIds = new HashSet<Long>();
+    private Set<Long> problematicEvidenceIds = new HashSet<Long>();
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -99,12 +99,12 @@ public class ValidateEvidenceValueObject {
         this.sameEvidenceFound = sameEvidenceFound;
     }
 
-    public Set<Long> getSameEvidenceIds() {
-        return this.sameEvidenceIds;
+    public Set<Long> getProblematicEvidenceIds() {
+        return this.problematicEvidenceIds;
     }
 
-    public void setSameEvidenceIds( Set<Long> sameEvidenceIds ) {
-        this.sameEvidenceIds = sameEvidenceIds;
+    public void setProblematicEvidenceIds( Set<Long> problematicEvidenceIds ) {
+        this.problematicEvidenceIds = problematicEvidenceIds;
     }
 
 
