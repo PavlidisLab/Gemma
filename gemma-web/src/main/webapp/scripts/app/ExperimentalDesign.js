@@ -57,16 +57,29 @@ var showDesignUploadForm = function() {
 			});
 
 	w.show();
+	
+	w.loadMask = new Ext.LoadMask('experimental-design-upload-form-window', {
+		msg : "Submitting..."
+	});
 };
 
+
 var submitDesign = function() {
+	
+	Ext.getCmp('experimental-design-upload-form-window').loadMask.show();
+	
 	ExperimentalDesignController.createDesignFromFile(dwr.util.getValue("expressionExperimentID"), serverFilePath, {
 				callback : function() {
-					Ext.getCmp('experimental-design-upload-form-window').close();
+					Ext.getCmp('experimental-design-upload-form-window').loadMask.hide();
 					Ext.Msg.alert("Success", "Design imported.");
 					Ext.getCmp('experimental-factor-grid').getStore().reload();
 
-				}
+				},
+				errorHandler : function(errorString, exception) {
+					
+					Ext.Msg.alert('Error', errorString);
+					Ext.getCmp('experimental-design-upload-form-window').loadMask.hide();
+					}
 			});
 };
 
