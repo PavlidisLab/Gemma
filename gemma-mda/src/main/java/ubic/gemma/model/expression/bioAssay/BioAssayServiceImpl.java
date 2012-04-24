@@ -128,13 +128,12 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#removeBioMaterialAssociation(BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    public void removeBioMaterialAssociation( final BioAssay bioAssay,
-            final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+    public void removeBioMaterialAssociation( final BioAssay bioAssay, final BioMaterial bioMaterial ) {
         try {
             this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
         } catch ( Throwable th ) {
             throw new BioAssayServiceException(
-                    "Error performing 'BioAssayService.removeBioMaterialAssociation(BioAssay bioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
+                    "Error performing 'BioAssayService.removeBioMaterialAssociation(BioAssay bioAssay, BioMaterial bioMaterial)' --> "
                             + th, th );
         }
     }
@@ -281,26 +280,27 @@ public class BioAssayServiceImpl implements BioAssayService {
      * ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.
      * bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    //TODO: Refactor so that it accepts ids and does security check later.
     protected void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
-        // remove bioMaterial from bioAssay
-        this.getBioAssayDao().thaw( bioAssay );
+        BioAssay bioAssayTemp = this.getBioAssayDao().load( bioAssay.getId() );
+        BioMaterial biomaterialToBeRemoved  = this.getBioMaterialDao().load( bioMaterial.getId() );
 
-        Collection<BioMaterial> currentBioMaterials = bioAssay.getSamplesUsed();
-        currentBioMaterials.remove( bioMaterial );
-        bioAssay.setSamplesUsed( currentBioMaterials );
+        Collection<BioMaterial> currentBioMaterials = bioAssayTemp.getSamplesUsed();
+        currentBioMaterials.remove( biomaterialToBeRemoved );
+        bioAssayTemp.setSamplesUsed( currentBioMaterials );
 
-        // remove bioAssay from bioMaterial
-        Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
-        currentBioAssays.remove( bioAssay );
-        bioMaterial.setBioAssaysUsedIn( currentBioAssays );
+        // Remove bioAssay from bioMaterial
+        Collection<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();
+        currentBioAssays.remove( bioAssayTemp );
+        biomaterialToBeRemoved.setBioAssaysUsedIn( currentBioAssays );
 
-        this.getBioMaterialDao().update( bioMaterial );
-        this.update( bioAssay );
+        this.getBioMaterialDao().update( biomaterialToBeRemoved );
+        this.update( bioAssayTemp );
 
-        // check to see if the bioMaterial is now orphaned.
-        // if it is, delete it; if not, update it
+        // Check to see if the bioMaterial is now orphaned.
+        // If it is, delete it; if not, update it.
         if ( currentBioAssays.size() == 0 ) {
-            this.getBioMaterialDao().remove( bioMaterial );
+            this.getBioMaterialDao().remove( biomaterialToBeRemoved );
         }
 
     }
@@ -308,8 +308,8 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
-    protected void handleSaveBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
-            throws java.lang.Exception {
+    protected void handleSaveBioAssay( BioAssay bioAssay )
+            throws Exception {
         this.getBioAssayDao().create( bioAssay );
     }
 
