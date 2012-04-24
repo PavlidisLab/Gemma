@@ -114,13 +114,6 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
 
     /**
-     * Using all the phenotypes in the database, builds a tree structure using the Ontology
-     * 
-     * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
-     */
-    public abstract Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
-
-    /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      * 
      * @param query
@@ -172,6 +165,14 @@ public interface PhenotypeAssociationManagerService {
      * @param externalDatabaseName
      */
     public abstract void removeEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
+    /**
+     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
+     * using parents of terms, and will return 3 trees representing Disease, HP and MP
+     * 
+     * @return A collection of the phenotypes with the gene occurence
+     */
+    public abstract Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree();
 
     public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
 

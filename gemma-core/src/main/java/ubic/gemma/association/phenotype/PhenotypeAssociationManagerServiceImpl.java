@@ -241,7 +241,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future
+     * This method loads all phenotypes in the database and counts their occurrence using the database
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
@@ -251,7 +251,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> characteristcsVO = new TreeSet<CharacteristicValueObject>();
 
         // load the tree
-        Collection<TreeCharacteristicValueObject> treeCharacteristicValueObject = findAllPhenotypesByTree();
+        Collection<TreeCharacteristicValueObject> treeCharacteristicValueObject = findAllPhenotypesByTree( false );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : treeCharacteristicValueObject ) {
@@ -259,6 +259,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return characteristcsVO;
+    }
+
+    /**
+     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
+     * using parents of terms, and will return 3 trees representing Disease, HP and MP
+     * 
+     * @return A collection of the phenotypes with the gene occurence
+     */
+    @Override
+    public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
+        return findAllPhenotypesByTree( true );
     }
 
     /**
@@ -671,10 +682,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
+     * @param withParentTerms if we want to include the parents terms from the Ontology
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
-    @Override
-    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
+    private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms ) {
 
         // all Public phenotypes in Gemma linked to all the genes containing them
         HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = null;
@@ -751,9 +762,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( phenotypeFoundInTree.get( valueUri ) != null ) {
                 // flag the node as phenotype found in database
                 phenotypeFoundInTree.get( valueUri ).setDbPhenotype( true );
-
             } else {
-
                 try {
                     // find the ontology term using the valueURI
                     OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
@@ -784,6 +793,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             tc.removeUnusedPhenotypes( tc.getValueUri() );
         }
 
+        if ( withParentTerms ) {
+            TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
+
+            for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+                findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
+            }
+            treesPhenotypes = finalTreesWithRoots;
+        }
+
         // set the public count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.countPublicGeneForEachNode( publicPhenotypesGenesAssociations );
@@ -795,23 +813,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return treesPhenotypes;
-
-        // to be used later to get the full tree
-        /*
-         * TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
-         * 
-         * for ( TreeCharacteristicValueObject tc : treesPhenotypes ) { findParentRoot( tc, finalTreesWithRoots,
-         * phenotypeFoundInTree ); }
-         * 
-         * for ( TreeCharacteristicValueObject tc : finalTreesWithRoots ) { tc.countPublicGeneForEachNode(
-         * publicPhenotypesGenesAssociations ); }
-         * 
-         * for ( TreeCharacteristicValueObject tc : finalTreesWithRoots ) { tc.countPrivateGeneForEachNode(
-         * privatePhenotypesGenesAssociations ); }
-         * 
-         * return finalTreesWithRoots;
-         */
-
     }
 
     /** Given a geneId finds all phenotypes for that gene */
@@ -844,7 +845,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** build the full trees of the Ontology with the given branches */
-    @SuppressWarnings("unused")
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
