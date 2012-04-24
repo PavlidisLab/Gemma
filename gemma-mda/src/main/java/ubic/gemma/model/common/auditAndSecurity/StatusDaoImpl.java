@@ -54,11 +54,11 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
             this.update( a.getStatus() );
         }
         if(auditEventType instanceof TroubleStatusFlagEventImpl){
-            a.getStatus().setTroubled( true );
+            this.setTroubled( a, true );
         }else if (auditEventType instanceof OKStatusFlagEventImpl){
-            a.getStatus().setTroubled( false );
+            this.setTroubled( a, false );
         }else if (auditEventType instanceof ValidatedFlagEventImpl){
-            a.getStatus().setValidated( true );
+            this.setValidated( a, true );
         }
 
     }
