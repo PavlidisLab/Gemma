@@ -862,7 +862,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			}
 
 			var zoomLegendDiv = $(this.zoomLegendId);
-			if (zoomLegendDiv) {
+			if (zoomLegendDiv && zoomLegendDiv != null) {
 				zoomLegendDiv.innerHTML = '';
 			}
 			btn.setText("Switch to line plots");
@@ -1075,7 +1075,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			this.getBottomToolbar().toggleSampleNamesBtn.setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
 		// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
 		// ? "Unsmooth" : "Smooth");
-		}
 			if (this.heatmapMode) {
 				this.getBottomToolbar().toggleLegendBtn.hide();
 			// Ext.getCmp(this.smoothBtnId).hide();
@@ -1086,6 +1085,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			// Ext.getCmp(this.smoothBtnId).show();
 			//Ext.getCmp(this.toggleLegendBtnId).show();
 			}
+		}
 			
 		}, this);
 
@@ -1443,7 +1443,10 @@ var FactorValueLegend = function() {
 
 	return {
 		clean : function(element) {
-			element.innerHTML = '';
+			if(element && element != null && element.inner){
+				element.innerHTML = '';
+			}
+			
 		},
 
 		draw : function(target, conditionLabelKey) {

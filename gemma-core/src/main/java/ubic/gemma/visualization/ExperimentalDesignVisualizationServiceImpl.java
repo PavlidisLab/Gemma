@@ -177,7 +177,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             Collection<FactorValue> fvs = bm.getFactorValues();
 
             for ( BioAssay ba : bas ) {
-                result.put( ba, new LinkedHashMap<ExperimentalFactor, Double>() );
+                result.put( ba, new LinkedHashMap<ExperimentalFactor, Double>(fvs.size()) );
                 for ( FactorValue fv : fvs ) {
                     ExperimentalFactor ef = fv.getExperimentalFactor();
 
@@ -344,16 +344,18 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
      */
     @Override
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+            final Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
         StopWatch timer = new StopWatch();
         timer.start();
         for ( ExpressionExperiment ee : layouts.keySet() ) {
 
-            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
-            if ( layout == null ) {
-                log.warn( "Null layout for ee: " + ee ); // does this happen?
+            final LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
+            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
+            
+            if ( layout == null || layout.size() == 0 ) {
+                log.warn( "Null or empty layout for ee: " + ee ); // does this happen?
                 continue;
             }
 
@@ -366,7 +368,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             }
             if ( filteredFactors.isEmpty() ) continue; // batch was the only factor.
 
-            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
             List<BioMaterial> bmList = new ArrayList<BioMaterial>();
             Map<BioMaterial, BioAssay> BMtoBA = new HashMap<BioMaterial, BioAssay>();
 
@@ -407,10 +408,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 }
 
                 assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + ", got " + sortedFacs.size();
-                layout.remove( ba );
-                layout.put( ba, sortedFacs );
-
-                sortedLayout.put( BMtoBA.get( bm ), layout.get( ba ) );
+                sortedLayout.put( ba, sortedFacs );
             }
             sortedLayouts.put( ee, sortedLayout );
 

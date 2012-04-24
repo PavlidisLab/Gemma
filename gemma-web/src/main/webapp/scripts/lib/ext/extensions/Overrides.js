@@ -8,7 +8,7 @@
  * - vbox to handle collapsible elements
  * - sliders to make them work in IE9
  * - grid to make cell text selectable
- * 
+ * - window to make multiple windows cascade across the screen (instead of on top of each other)
  */
 
 
@@ -521,6 +521,52 @@ Ext.override(Ext.dd.DragTracker, {
         this.fireEvent('mousemove', this, e);
         this.onDrag(e);
         this.fireEvent('drag', this, e);
+    }
+});
+
+/**
+ * override to make windows show up with some pixel offset from previously opened windows.
+ * This is to avoid windows from openeing one on top of the other, which is the default
+ * 
+ * http://www.sencha.com/forum/showthread.php?28255-Cascading-Windows&s=77d80402fdee4ef623ea61131f16fa18&p=132817&viewfull=1#post132817
+ * 
+ */
+Ext.override(Ext.Window, {
+    beforeShow : function(){
+        delete this.el.lastXY;
+        delete this.el.lastLT;
+        if(this.x === undefined || this.y === undefined){
+            var xy = this.el.getAlignToXY(this.container, 'c-c');
+            var pos = this.el.translatePoints(xy[0], xy[1]);
+            this.x = this.x === undefined? pos.left : this.x;
+            this.y = this.y === undefined? pos.top : this.y;
+            if (this.cascadeOnFirstShow) {
+                var prev;
+                this.manager.each(function(w) {
+                    if (w == this) {
+                        if (prev) {
+                        	var o = (typeof this.cascadeOnFirstShow == 'number') ? this.cascadeOnFirstShow : 20;
+                            var p = prev.getPosition();
+                            this.x = p[0] + o;
+                            this.y = p[1] + o;
+                        }
+                        return false;
+                    }
+                    if (w.isVisible()) prev = w;
+                }, this);
+            }
+        }
+        this.el.setLeftTop(this.x, this.y);
+
+        if(this.expandOnShow){
+            this.expand(false);
+        }
+
+        if(this.modal){
+            Ext.getBody().addClass("x-body-masked");
+            this.mask.setSize(Ext.lib.Dom.getViewWidth(true), Ext.lib.Dom.getViewHeight(true));
+            this.mask.show();
+        }
     }
 });
 

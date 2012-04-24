@@ -134,11 +134,6 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			if (fieldName == 'visualize') {
 
-				// destroy if already open
-				if (this.visWindow) {
-					this.visWindow.close();
-				}
-
 				var activeExperiments = record.data.activeExperiments;
 				var activeExperimentIds = [];
 
@@ -154,13 +149,14 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				var downloadDedvLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", activeExperimentIds
 								.join(','), gene.id);
 
-				this.visWindow = new Gemma.VisualizationDifferentialWindow({
+				var visWindow = new Gemma.VisualizationDifferentialWindow({
+							cascadeOnFirstShow: true,
 							readMethod : DEDVController.getDEDVForDiffExVisualization,
 							downloadLink : downloadDedvLink,
 							title : "Differential expression of " + gene.officialSymbol
 						});
 
-				this.visWindow.show({
+				visWindow.show({
 							params : [activeExperimentIds, [gene.id], Ext.getCmp('thresholdField').getValue(),
 									this.searchPanel.efChooserPanel.eeFactorsMap]
 						});

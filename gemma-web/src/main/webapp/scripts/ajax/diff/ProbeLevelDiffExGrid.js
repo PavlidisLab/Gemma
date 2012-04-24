@@ -265,9 +265,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else {
 				geneId = dwr.util.getValue("gene"); // would be nice if there was a way to get the gene object....
 			}
-			if (this.visDifWindow != null)
-				this.visDifWindow.close();
-
+			
 			var title = "Visualization of Probes ";
 
 			/*
@@ -275,13 +273,14 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			 */
 			var eeid = ee.sourceExperiment ? ee.sourceExperiment : ee.id;
 
-			this.visDifWindow = new Gemma.VisualizationDifferentialWindow({
+			var visDifWindow = new Gemma.VisualizationDifferentialWindow({
+						cascadeOnFirstShow: true,
 						title : title,
 						thumbnails : false,
 						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', eeid, geneId),
 						readMethod: DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
-			this.visDifWindow.show({
+			visDifWindow.show({
 						params : [eeid, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
 					});
 		}
