@@ -1118,7 +1118,7 @@ public class DEDVController {
                 for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
                     if ( pair.getValue() != null ) {
                         FactorValue facVal = factorValueService.load( new Long( Math.round( pair.getValue() ) ) );
-                        if ( facVal.getExperimentalFactor() != null )
+                        if ( facVal != null && facVal.getExperimentalFactor() != null )
                             factorNames.add( facVal.getExperimentalFactor().getName() );
                     }
                 }
