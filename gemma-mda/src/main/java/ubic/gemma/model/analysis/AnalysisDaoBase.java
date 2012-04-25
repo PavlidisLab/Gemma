@@ -18,11 +18,15 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * <p>
@@ -32,18 +36,17 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
  * 
  * @see ubic.gemma.model.analysis.Analysis
  */
-public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSupport implements
-        ubic.gemma.model.analysis.AnalysisDao<T> {
+public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSupport implements AnalysisDao<T> {
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
-    public java.util.Collection<T> findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
+    public Collection<T> findByInvestigation( final Investigation investigation ) {
         try {
             return this.handleFindByInvestigation( investigation );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigation(ubic.gemma.model.analysis.Investigation investigation)' --> "
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigation(Investigation investigation)' --> "
                             + th, th );
         }
     }
@@ -51,7 +54,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigations(java.util.Collection)
      */
-    public java.util.Map findByInvestigations( final java.util.Collection investigators ) {
+    public Map findByInvestigations( final Collection investigators ) {
         try {
             return this.handleFindByInvestigations( investigators );
         } catch ( Throwable th ) {
@@ -64,20 +67,18 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
      */
-
-    public java.util.Collection<T> findByName( final int transform, final java.lang.String name ) {
+    public Collection<T> findByName( final int transform, final String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
      */
-
     @SuppressWarnings("unchecked")
-    public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
-            final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+    public Collection<T> findByName( final int transform, final String queryString,
+            final String name ) {
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
         java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
@@ -88,25 +89,25 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
      */
-    public java.util.Collection<T> findByName( java.lang.String name ) {
+    public Collection<T> findByName( String name ) {
         return this.findByName( TRANSFORM_NONE, name );
     }
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
      */
-    public java.util.Collection<T> findByName( final java.lang.String queryString, final java.lang.String name ) {
+    public Collection<T> findByName( final String queryString, final String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection<T> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public Collection<T> findByParentTaxon( final Taxon taxon ) {
         try {
             return this.handleFindByParentTaxon( taxon );
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
+            throw new RuntimeException(
                     "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
@@ -115,11 +116,11 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public Collection<T> findByTaxon( final Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
+            throw new RuntimeException(
                     "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
@@ -128,26 +129,26 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
      */
-    protected abstract java.util.Collection<T> handleFindByInvestigation(
-            ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
+    protected abstract Collection<T> handleFindByInvestigation(
+            Investigation investigation ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
      */
-    protected abstract java.util.Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
-            java.util.Collection<Investigation> investigatons ) throws java.lang.Exception;
+    protected abstract Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+            Collection<Investigation> investigatons ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<T> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon )
+            throws Exception;
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<T> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract Collection<T> handleFindByTaxon( Taxon taxon )
+            throws Exception;
  
 
 }
