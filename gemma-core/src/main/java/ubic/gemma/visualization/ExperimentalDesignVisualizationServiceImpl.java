@@ -256,9 +256,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         // cachedThawedBioAssayDimensions.clear(); // TEMPORARY FOR DEBUGGING.
         // cachedLayouts.clear(); // TEMPORARY FOR DEBUGGING.
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
+        if ( dedvs == null ) return new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(0);
 
-        if ( dedvs == null ) return returnedLayouts;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(dedvs.size());
 
         StopWatch timer = new StopWatch();
         timer.start();
