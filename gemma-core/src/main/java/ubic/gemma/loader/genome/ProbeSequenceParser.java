@@ -80,6 +80,27 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         String sequenceName = sArray[1].trim();
 
         String sequence = sArray[2].trim();
+
+        // Rarely there are extra junk characters. See bug 2719
+        sequence = sequence.replaceAll( "[^a-yA-Y]", "" );
+
+        // A Adenine
+        // C Cytosine
+        // G Guanine
+        // T Thymine
+        // U Uracil
+        // R Purine (A or G)
+        // Y Pyrimidine (C, T, or U)
+        // M C or A
+        // K T, U, or G
+        // W T, U, or A
+        // S C or G
+        // B C, T, U, or G (not A)
+        // D A, T, U, or G (not C)
+        // H A, T, U, or C (not G)
+        // V A, C, or G (not T, not U)
+        // N Any base (A, C, G, T, or U)
+
         if ( StringUtils.isBlank( sequence ) ) {
             return null;
         }
