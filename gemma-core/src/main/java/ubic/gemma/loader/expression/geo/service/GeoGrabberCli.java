@@ -50,8 +50,8 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
         try {
             int start = 0;
             int numfails = 0;
-
             int chunksize = 100;
+
             while ( true ) {
                 List<GeoRecord> recs = gbs.getRecentGeoRecords( start, chunksize );
 
@@ -59,16 +59,21 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                     log.info( "No records received for start=" + start );
                     numfails++;
 
-                    if ( numfails > 5 ) {
+                    if ( numfails > 10 ) {
                         log.info( "Giving up" );
                         break;
                     }
 
-                    start += chunksize;
+                    try {
+                        Thread.sleep( 500 );
+                    } catch ( InterruptedException e ) {
+                    }
+
+                    start++;
                     continue;
                 }
 
-                start += chunksize;
+                start++;
 
                 for ( GeoRecord geoRecord : recs ) {
                     if ( seen.contains( geoRecord.getGeoAccession() ) ) {

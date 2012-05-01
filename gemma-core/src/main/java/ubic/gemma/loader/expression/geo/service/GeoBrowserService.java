@@ -35,8 +35,8 @@ public interface GeoBrowserService {
     public abstract String getDetails( String accession );
 
     /**
-     * @param start
-     * @param count
+     * @param start page number, not starting record
+     * @param count page size
      * @return
      * @throws IOException
      * @throws ParseException 

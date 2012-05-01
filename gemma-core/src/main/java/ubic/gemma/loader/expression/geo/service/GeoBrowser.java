@@ -137,6 +137,10 @@ public class GeoBrowser {
         }
 
         is.close();
+
+        if ( records.isEmpty() ) {
+            log.warn( "No records obatined" );
+        }
         return records;
 
     }

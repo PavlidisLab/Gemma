@@ -157,6 +157,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException {
         GeoBrowser browser = new GeoBrowser();
         List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
+
+        if ( records.isEmpty() ) return records;
+
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<GeoRecord>();
         assert geo != null;
