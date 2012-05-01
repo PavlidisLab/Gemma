@@ -1544,6 +1544,8 @@ public class GeoFamilyParser implements Parser<Object> {
             // noop.
         } else if ( startsWithIgnoreCase( line, "!Sample_taxid_ch" ) ) {
             // noop.
+        } else if ( startsWithIgnoreCase( line, "!Sample_relation" ) ) {
+            // noop, for now. Example is "!Sample_relation = Reanalyzed by: GSE26971" in GSE12093
         } else {
             log.error( "Unknown flag in sample: " + line );
         }

@@ -54,7 +54,11 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                 List<GeoRecord> recs = gbs.getRecentGeoRecords( start, chunksize );
                 start += chunksize;
 
-                int numnew = 0;
+                if ( recs.isEmpty() ) {
+                    log.info( "No records received for start=" + start );
+                    break;
+                }
+
                 for ( GeoRecord geoRecord : recs ) {
                     if ( seen.contains( geoRecord.getGeoAccession() ) ) {
                         continue;
@@ -64,18 +68,15 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                         continue;
                     }
 
-                    numnew++;
                     System.out.println( geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next()
                             + "\t" + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t"
                             + StringUtils.join( geoRecord.getCorrespondingExperiments(), "," ) );
                     seen.add( geoRecord.getGeoAccession() );
                 }
-                if ( numnew == 0 ) break;
             }
         } catch ( IOException e ) {
             return e;
-        }
-        catch (ParseException e ) {
+        } catch ( ParseException e ) {
             return e;
         }
         return null;
@@ -83,7 +84,10 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
 
     public static void main( String[] args ) {
         GeoGrabberCli d = new GeoGrabberCli();
-        d.doWork( args );
+        Exception e = d.doWork( args );
+        if ( e != null ) {
+            log.error( e, e );
+        }
     }
 
 }

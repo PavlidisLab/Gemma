@@ -33,10 +33,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 
 /**
@@ -48,16 +50,20 @@ import ubic.gemma.loader.expression.geo.model.GeoRecord;
  */
 public class GeoBrowser {
 
+    private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
+
     private static Log log = LogFactory.getLog( GeoBrowser.class.getName() );
-    // mode=tsv  : tells GEO to give us tab delimited file
-    private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=tsv&page=";    
+
+    // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv because of garbled tabbed lines returned
+    // from GEO.
+    private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
     private String GEO_BROWSE_SUFFIX = "&display=";
 
     private String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
-    
+
     /**
-     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.   
-     *  
+     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.
+     * 
      * @param startPage
      * @param pageSize
      * @return list of GeoRecords
@@ -65,60 +71,73 @@ public class GeoBrowser {
      * @throws ParseException
      */
     public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException, ParseException {
-        
+
+        if ( startPage < 0 || pageSize < 0 ) throw new IllegalArgumentException( "Values must be greater than zero " );
+
         List<GeoRecord> records = new ArrayList<GeoRecord>();
         URL url = null;
         try {
             url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
-
-            URLConnection conn = url.openConnection();
-            conn.connect();
-            InputStream is = conn.getInputStream();
-
-            // We are getting a tab delimited file.                                  
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            
-            // Read columns headers.            
-            String headerLine = br.readLine();
-            String[] headers = headerLine.split( "\t" );
-
-            // Map column names to their indices (handy later). 
-            Map<String,Integer> columnNameToIndex = new HashMap<String,Integer>();
-            for (int i = 0; i < headers.length; i++) {
-                columnNameToIndex.put( headers[i], i );                
-            }
-
-            // Read the rest of the file.
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
-                String[] fields = line.split("\t");
-                
-                GeoRecord geoRecord = new GeoRecord();                
-                geoRecord.setGeoAccession ( 
-                        fields[ columnNameToIndex.get( "Accession" ) ] );
-                geoRecord.setTitle ( 
-                        fields[ columnNameToIndex.get( "Title" ) ].replaceAll("^\"|\"$", "") );
-                geoRecord.setNumSamples ( 
-                        Integer.parseInt( 
-                                fields[ columnNameToIndex.get( "Sample Count" ) ] ) );                
-                geoRecord.setContactName (
-                        fields[ columnNameToIndex.get( "Contact" ) ].replaceAll("^\"|\"$", "") );
-                                
-                String[] taxons = fields[ columnNameToIndex.get( "Taxonomy" ) ].replaceAll("^\"|\"$", "").split( ";" );
-                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
-                
-                Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )].replaceAll("^\"|\"$", ""), DATE_FORMATS );
-                geoRecord.setReleaseDate( date );
-                              
-                records.add( geoRecord );
-            }
-                            
-            is.close();
-            return records;
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Invalid URL " + url, e );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Could not parse sample count" );
         }
+
+        URLConnection conn = url.openConnection();
+        conn.connect();
+        InputStream is = conn.getInputStream();
+
+        // We are getting a tab delimited file.
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        // Read columns headers.
+        String headerLine = br.readLine();
+        String[] headers = StringUtil.csvSplit( headerLine );
+
+        // Map column names to their indices (handy later).
+        Map<String, Integer> columnNameToIndex = new HashMap<String, Integer>();
+        for ( int i = 0; i < headers.length; i++ ) {
+            columnNameToIndex.put( headers[i], i );
+        }
+
+        // Read the rest of the file.
+        String line = null;
+        while ( ( line = br.readLine() ) != null ) {
+            String[] fields = StringUtil.csvSplit( line );
+
+            GeoRecord geoRecord = new GeoRecord();
+            geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
+            geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )].replaceAll(
+                    FLANKING_QUOTES_REGEX, "" ) ) );
+
+            String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
+            if ( StringUtils.isNotBlank( sampleCountS ) ) {
+                try {
+                    geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
+                } catch ( NumberFormatException e ) {
+                    throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
+                }
+            } else {
+                log.warn( "No sample count for " + geoRecord.getGeoAccession() );
+            }
+            geoRecord
+                    .setContactName( fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX, "" ) );
+
+            String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
+                    .split( ";" );
+            geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+
+            Date date = DateUtils.parseDate(
+                    fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
+                    DATE_FORMATS );
+            geoRecord.setReleaseDate( date );
+
+            geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
+
+            records.add( geoRecord );
+        }
+
+        is.close();
+        return records;
+
     }
 }

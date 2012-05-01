@@ -37,6 +37,7 @@ public class GeoRecord extends GeoData {
 
     private int numSamples;
     private String contactName;
+    private String seriesType;
     private Date releaseDate;
     private Collection<String> organisms;
     private Collection<Long> correspondingExperiments;
@@ -46,22 +47,6 @@ public class GeoRecord extends GeoData {
      * for usefulness.
      */
     private int previousClicks = 0;
-
-    public int getPreviousClicks() {
-        return previousClicks;
-    }
-
-    public void setPreviousClicks( int previousClicks ) {
-        this.previousClicks = previousClicks;
-    }
-
-    public boolean isUsable() {
-        return usable;
-    }
-
-    public void setUsable( boolean usable ) {
-        this.usable = usable;
-    }
 
     /*
      * Curator judgement about whether this is loadable. False indicates a problem.
@@ -78,45 +63,69 @@ public class GeoRecord extends GeoData {
         return contactName;
     }
 
-    public void setContactName( String contactName ) {
-        this.contactName = contactName;
+    public Collection<Long> getCorrespondingExperiments() {
+        return correspondingExperiments;
     }
 
     public int getNumSamples() {
         return numSamples;
     }
 
-    public void setNumSamples( int numSamples ) {
-        this.numSamples = numSamples;
-    }
-
     public Collection<String> getOrganisms() {
         return organisms;
     }
 
-    public void setOrganisms( Collection<String> organisms ) {
-        this.organisms = organisms;
+    public int getPreviousClicks() {
+        return previousClicks;
     }
 
     public Date getReleaseDate() {
         return releaseDate;
     }
 
+    public String getSeriesType() {
+        return seriesType;
+    }
+
+    public boolean isUsable() {
+        return usable;
+    }
+
+    public void setContactName( String contactName ) {
+        this.contactName = contactName;
+    }
+
+    public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
+        this.correspondingExperiments = correspondingExperiments;
+    }
+
+    public void setNumSamples( int numSamples ) {
+        this.numSamples = numSamples;
+    }
+
+    public void setOrganisms( Collection<String> organisms ) {
+        this.organisms = organisms;
+    }
+
+    public void setPreviousClicks( int previousClicks ) {
+        this.previousClicks = previousClicks;
+    }
+
     public void setReleaseDate( Date releaseDate ) {
         this.releaseDate = releaseDate;
+    }
+
+    public void setSeriesType( String seriesType ) {
+        this.seriesType = seriesType;
+    }
+
+    public void setUsable( boolean usable ) {
+        this.usable = usable;
     }
 
     @Override
     public String toString() {
         return super.toString() + " " + this.getTitle();
-    }
-
-    public Collection<Long> getCorrespondingExperiments() {
-        return correspondingExperiments;
-    }
-
-    public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
-        this.correspondingExperiments = correspondingExperiments;
     }
 
 }
