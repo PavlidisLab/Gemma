@@ -19,6 +19,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current phenotypes.
 				
 		var titleText = this.title; // Contains the title's text without any HTML code whereas title may contain HTML code.
+		
+		var currentStoreData = null;
     	
     	var downloadButton = new Ext.Button({
 			text: '<b>Download</b>',
@@ -122,10 +124,6 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					    	}) :
 					   		this.geneStoreProxy,
 				reader: new Ext.data.JsonReader({
-					root: 'records', // required.
-					successProperty: 'success', // same as default.
-					messageProperty: 'message', // optional
-					totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
 					idProperty: 'id', // same as default
 					fields: [
 							'id',
@@ -140,7 +138,32 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			    listeners: {
 					clear: onStoreRecordChange,
 					datachanged: onStoreRecordChange,
-					load: onStoreRecordChange,
+					// The main purpose of this load listener is to fix the problem that loading genes for current phenotypes
+					// may take a very long time and current phenotypes may have been changed by users during this loading period.  
+					// By the time genes are loaded, these genes will replace existing genes for current phenotypes.
+					// The solution is to check if load options' params have been changed. If they have been changed, we should
+					// load back previous gene data.
+					load: function(store, records, options) {
+						// options.params can be null if we use loadData() to fix the problem.
+						if (options.params != null) {
+							var haveSameParams = (options.params.phenotypeValueUris.length === this.currentPhenotypes.length); 
+							
+							if (haveSameParams) {
+								for (var i = 0; haveSameParams && i < options.params.phenotypeValueUris.length; i++) {
+									haveSameParams = (options.params.phenotypeValueUris[i] === this.currentPhenotypes[i].valueUri);
+								}
+							}
+							
+							if (haveSameParams) {
+								currentStoreData = [];
+								for (var i = 0; i < records.length; i++) {
+									currentStoreData.push(Object.clone(records[i].data));
+								}
+							} else {
+								store.loadData(currentStoreData);
+							}
+						}
+					},
 		            scope: this
 			    }
 			}),

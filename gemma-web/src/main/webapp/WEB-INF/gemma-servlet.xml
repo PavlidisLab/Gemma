@@ -413,6 +413,7 @@
 			<dwr:include method="findExperimentMgedCategory" />
 			<dwr:include method="findExperimentOntologyValue" />
 			<dwr:include method="loadAllPhenotypes" />
+			<dwr:include method="loadAllPhenotypesByTree" />
 			<dwr:include method="searchOntologyForPhenotypes" />
 			<dwr:include method="findBibliographicReference" />
 			<dwr:include method="validatePhenotypeAssociationForm" />

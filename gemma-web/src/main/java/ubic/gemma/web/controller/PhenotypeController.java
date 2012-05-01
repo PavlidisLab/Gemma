@@ -15,9 +15,9 @@
 package ubic.gemma.web.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +34,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -80,6 +81,10 @@ public class PhenotypeController extends BaseController {
         return mav;
     }
 
+    public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
+      return phenotypeAssociationManagerService.loadAllPhenotypesByTree();
+    }
+
     /**
      * Returns all phenotypes in the system.
      * 
@@ -96,14 +101,8 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes(String[] phenotypes) {
-        Set<String> myPhenotypes = new HashSet<String>();
-        for (String pheno : phenotypes) {
-            myPhenotypes.add(pheno);
-        }
-
-        return new JsonReaderResponse<GeneValueObject>(new ArrayList<GeneValueObject>(
-                phenotypeAssociationManagerService.findCandidateGenes(myPhenotypes)));
+    public Collection<GeneValueObject> findCandidateGenes(String[] phenotypes) {
+        return phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(Arrays.asList(phenotypes)));
     }
 
     /**

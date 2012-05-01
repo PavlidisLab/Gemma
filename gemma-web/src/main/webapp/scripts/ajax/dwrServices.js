@@ -996,6 +996,9 @@ PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback)
 PhenotypeController.loadAllPhenotypes = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypes', callback);
 }
+PhenotypeController.loadAllPhenotypesByTree = function(callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', callback);
+}
 PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'searchOntologyForPhenotypes', p0, p1, callback);
 }
