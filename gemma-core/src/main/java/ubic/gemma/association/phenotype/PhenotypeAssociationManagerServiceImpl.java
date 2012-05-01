@@ -19,6 +19,7 @@
 package ubic.gemma.association.phenotype;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -269,7 +270,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
-        return findAllPhenotypesByTree( true );
+
+        Collection<TreeCharacteristicValueObject> ontologyTrees = findAllPhenotypesByTree( true );
+
+        return customTreeFeatures( ontologyTrees );
     }
 
     /**
@@ -1261,4 +1265,26 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
         return null;
     }
+
+    /** Changing the root names and the order to present them */
+    private Collection<TreeCharacteristicValueObject> customTreeFeatures(
+            Collection<TreeCharacteristicValueObject> ontologyTrees ) {
+
+        TreeCharacteristicValueObject[] customOntologyTrees = new TreeCharacteristicValueObject[3];
+
+        for ( TreeCharacteristicValueObject tree : ontologyTrees ) {
+            if ( tree.getValueUri().equals( "http://purl.org/obo/owl/DOID#DOID_4" ) ) {
+                tree.setValue( "Disease Ontology" );
+                customOntologyTrees[0] = tree;
+            } else if ( tree.getValueUri().equals( "http://purl.org/obo/owl/HP#HP_0000001" ) ) {
+                tree.setValue( "Human Phenotype Ontology" );
+                customOntologyTrees[1] = tree;
+            } else if ( tree.getValueUri().equals( "http://purl.org/obo/owl/MP#MP_0000001" ) ) {
+                tree.setValue( "Mammalian Phenotype Ontology" );
+                customOntologyTrees[2] = tree;
+            }
+        }
+        return Arrays.asList( customOntologyTrees );
+    }
+
 }
