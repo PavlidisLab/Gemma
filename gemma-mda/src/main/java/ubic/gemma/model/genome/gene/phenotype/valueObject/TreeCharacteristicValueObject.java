@@ -28,15 +28,14 @@ import ubic.basecode.ontology.model.OntologyTerm;
 
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
-    private Collection<TreeCharacteristicValueObject> children = new TreeSet<TreeCharacteristicValueObject>();
+    private TreeSet<TreeCharacteristicValueObject> children = new TreeSet<TreeCharacteristicValueObject>();
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
 
     // if we need to reconstruct part of the tree in the cache we need to know highest root parent
     private String rootOfTree = "";
 
-    public TreeCharacteristicValueObject( String value, String valueUri,
-            Collection<TreeCharacteristicValueObject> children ) {
+    public TreeCharacteristicValueObject( String value, String valueUri, TreeSet<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
         this.children = children;
     }
@@ -110,7 +109,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database */
     public void removeUnusedPhenotypes( String rootValueUri ) {
 
-        Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
+        TreeSet<TreeCharacteristicValueObject> newRealChilds = new TreeSet<TreeCharacteristicValueObject>();
         findRealChild( newRealChilds, rootValueUri );
         this.children = newRealChilds;
 
@@ -148,7 +147,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
-        Collection<TreeCharacteristicValueObject> childs = new HashSet<TreeCharacteristicValueObject>();
+        TreeSet<TreeCharacteristicValueObject> childs = new TreeSet<TreeCharacteristicValueObject>();
 
         for ( OntologyTerm ot : ontologyTerms ) {
 
