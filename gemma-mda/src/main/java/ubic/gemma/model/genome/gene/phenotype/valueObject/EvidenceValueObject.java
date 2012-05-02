@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
@@ -228,7 +227,7 @@ public class EvidenceValueObject {
         this.evidenceSource = evidenceSource;
     }
 
-    public DatabaseEntryValueObject getEvidenceSource() {
+    public EvidenceSourceValueObject getEvidenceSource() {
         return this.evidenceSource;
     }
 

@@ -57,6 +57,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueO
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
@@ -175,7 +176,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findPhenotypeAssociationForGeneId( geneId );
 
-        return this.convert2ValueObjects( phenotypeAssociations );
+        Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
+
+        // for all similar literature evidences combine them into 1 evidence without loosing information
+        /** code ready waiting for client implementation */
+        // return groupCommonEvidences( evidenceValueObjects );
+
+        return evidenceValueObjects;
     }
 
     /**
@@ -1285,6 +1292,67 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
         return Arrays.asList( customOntologyTrees );
+    }
+
+    /** Literature Evidence that are very similar are grouped together into a new type called GroupEvidenceValueObject */
+    @SuppressWarnings("unused")
+    private Collection<EvidenceValueObject> groupCommonEvidences( Collection<EvidenceValueObject> evidenceValueObjects ) {
+
+        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new HashSet<EvidenceValueObject>();
+
+        HashMap<String, Collection<LiteratureEvidenceValueObject>> commonEvidences = new HashMap<String, Collection<LiteratureEvidenceValueObject>>();
+
+        for ( EvidenceValueObject evidence : evidenceValueObjects ) {
+
+            if ( evidence.getEvidenceSource() != null && evidence instanceof LiteratureEvidenceValueObject ) {
+
+                LiteratureEvidenceValueObject litEvidenceValueObject = ( LiteratureEvidenceValueObject ) evidence;
+
+                // we want to regroup evidence with the same key, (key representing what makes 2 evidences very similar)
+                String key = makeUniqueKey( litEvidenceValueObject );
+
+                if ( commonEvidences.get( key ) == null ) {
+                    Collection<LiteratureEvidenceValueObject> setCommonEvidences = new HashSet<LiteratureEvidenceValueObject>();
+                    setCommonEvidences.add( litEvidenceValueObject );
+                    commonEvidences.put( key, setCommonEvidences );
+                } else {
+                    commonEvidences.get( key ).add( litEvidenceValueObject );
+                }
+            } else {
+                evidenceValueObjectsRegrouped.add( evidence );
+            }
+        }
+
+        for ( Collection<LiteratureEvidenceValueObject> groupedLiteratureEvidences : commonEvidences.values() ) {
+
+            if ( groupedLiteratureEvidences.size() == 1 ) {
+                evidenceValueObjectsRegrouped.addAll( groupedLiteratureEvidences );
+            } else {
+                // create the new type of evidence that regroup common evidences
+                GroupEvidenceValueObject groupEvidenceValueObject = new GroupEvidenceValueObject(
+                        groupedLiteratureEvidences );
+                evidenceValueObjectsRegrouped.add( groupEvidenceValueObject );
+            }
+        }
+        return evidenceValueObjectsRegrouped;
+    }
+
+    // to be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative
+    private String makeUniqueKey( LiteratureEvidenceValueObject evidence ) {
+
+        String key = "";
+
+        for ( CharacteristicValueObject cha : evidence.getPhenotypes() ) {
+            key = key + cha.getValueUri();
+        }
+
+        key = key + evidence.getDescription();
+        key = key + evidence.getGeneNCBI();
+        key = key + evidence.getIsNegativeEvidence();
+        key = key + evidence.getEvidenceCode();
+        key = key + evidence.getEvidenceSource().getAccession();
+
+        return key;
     }
 
 }
