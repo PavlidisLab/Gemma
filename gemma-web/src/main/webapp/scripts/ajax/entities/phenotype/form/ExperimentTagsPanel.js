@@ -24,7 +24,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 
 		var createRowPanel = function(experimentTagSelection) {
 			var experimentTagCategoryComboBox = new Gemma.PhenotypeAssociationForm.ExperimentTagCategoryComboBox({
-				storeData: Gemma.PhenotypeAssociationForm.ExperimentTagCategories,
 				listeners: {
 					blur: function(combo) {
 						var currentCategoryUri = combo.getValue();
