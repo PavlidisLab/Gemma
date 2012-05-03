@@ -25,10 +25,10 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 			});
 			
 			phenotypeSearchComboBox.on({
-				keyup: function(component) {
+				keyup: function(comboBox, event) {
 					updateValidity(true);	
 				},
-				select: function(component) {
+				select: function(comboBox, record, index) {
 					updateValidity(false);
 				}
 			});
