@@ -257,9 +257,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
         if ( !this.category.equalsIgnoreCase( o.category ) ) {
             return ( this.category.compareToIgnoreCase( o.category ) );
+        } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
+            return this.value.compareToIgnoreCase( o.value );
+        } else {
+            return this.valueUri.compareToIgnoreCase( o.valueUri );
         }
-
-        return this.value.compareToIgnoreCase( o.value );
     }
 
 }
