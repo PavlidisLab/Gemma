@@ -58,6 +58,7 @@ var DesignMatrix = {
 				});
 		this.ds.load();
 
+		var height = Ext.get('eeDesignMatrix').getHeight();
 		Ext.DomHelper.overwrite(Ext.get('eeDesignMatrix'), '');
 		this.grid = new Ext.grid.GridPanel({
 					ds : this.ds,
@@ -65,7 +66,7 @@ var DesignMatrix = {
 					//collapsible : true,
 					title : "Experimental Design overview",
 					renderTo : "eeDesignMatrix",
-					height : 300,
+					height : height,
 					//width : 600,
 					viewConfig : {
 						forceFit : true

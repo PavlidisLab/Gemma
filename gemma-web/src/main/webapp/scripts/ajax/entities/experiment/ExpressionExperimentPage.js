@@ -93,7 +93,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                             window.open("/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=" + experimentDetails.id);
                         }
                     }],
-                    html: '<div id="eeDesignMatrix">Loading...</div>' + batchInfo,
+                    html: '<div id="eeDesignMatrix" style="height:100%">Loading...</div>' + batchInfo,
                     layout: 'absolute',
                     //items -> bar chart and table?
                     listeners: {
