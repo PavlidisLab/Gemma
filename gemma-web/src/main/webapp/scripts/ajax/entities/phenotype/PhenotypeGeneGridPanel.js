@@ -20,7 +20,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				
 		var titleText = this.title; // Contains the title's text without any HTML code whereas title may contain HTML code.
 		
-		var currentStoreData = null;
+		var currentStoreData = [];
     	
     	var downloadButton = new Ext.Button({
 			text: '<b>Download</b>',
@@ -256,6 +256,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						"ext:qtip='" + selectedPhenotypeTooltip + "'>" + selectedPhenotypeHeader + "</div>");
 					titleText = selectedPhenotypeHeader;
 				} else {
+					currentStoreData = [];
+
 					this.setTitle(DEFAULT_TITLE);						
 					this.getStore().removeAll(false);
 				}				
