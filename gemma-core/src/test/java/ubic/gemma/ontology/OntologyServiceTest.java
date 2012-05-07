@@ -58,4 +58,21 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         assertTrue( name.size() > 0 );
     }
 
+    @Test
+    public void testObsolete() throws Exception {
+        if ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
+            os.getDiseaseOntologyService().startInitializationThread( true );
+            while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 1000 );
+                log.info( "Waiting for DiseaseOntology to load" );
+            }
+        }
+
+        // Actinomadura madurae infectious disease
+        assertTrue( os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050001" ) );
+
+        // inflammatory diarrhea, not obolete as of May 2012.
+        assertTrue( !os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050132" ) );
+
+    }
 }

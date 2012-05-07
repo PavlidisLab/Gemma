@@ -80,7 +80,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @version $Id$
  */
 @Component
-public class OntologyServiceImpl implements  OntologyService {
+public class OntologyServiceImpl implements OntologyService {
 
     // Private class for sorting Characteristics
     static class TermComparator implements Comparator<Characteristic>, Serializable {
@@ -257,14 +257,11 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
-    @Override
-    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri, Taxon taxon ) {
-        Collection<Characteristic> terms = findExactTerm(givenQueryString, categoryUri, taxon);
-        return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
-        
-    }
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String, ubic.gemma.model.genome.Taxon)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String,
+     * ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon ) {
@@ -345,7 +342,17 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
-    /* (non-Javadoc)
+    @Override
+    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
+            Taxon taxon ) {
+        Collection<Characteristic> terms = findExactTerm( givenQueryString, categoryUri, taxon );
+        return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#findIndividuals(java.lang.String)
      */
     @Override
@@ -362,7 +369,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return results;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#findTermAsCharacteristic(java.lang.String)
      */
     @Override
@@ -383,7 +392,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return results;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#findTerms(java.lang.String)
      */
     @Override
@@ -407,7 +418,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return results;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getBirnLexOntologyService()
      */
     @Override
@@ -415,7 +428,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return birnLexOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getChebiOntologyService()
      */
     @Override
@@ -423,7 +438,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return chebiOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getDiseaseOntologyService()
      */
     @Override
@@ -431,7 +448,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return diseaseOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getFmaOntologyService()
      */
     @Override
@@ -439,7 +458,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return fmaOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getHumanPhenotypeOntologyService()
      */
     @Override
@@ -447,7 +468,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return humanPhenotypeOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getMammalianPhenotypeOntologyService()
      */
     @Override
@@ -455,7 +478,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return mammalianPhenotypeOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getMgedOntologyService()
      */
     @Override
@@ -463,7 +488,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return mgedOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getNifstfOntologyService()
      */
     @Override
@@ -471,7 +498,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return nifstdOntologyService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getObiService()
      */
     @Override
@@ -479,7 +508,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return obiService;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getResource(java.lang.String)
      */
     @Override
@@ -491,7 +522,9 @@ public class OntologyServiceImpl implements  OntologyService {
         return null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getTerm(java.lang.String)
      */
     @Override
@@ -503,7 +536,26 @@ public class OntologyServiceImpl implements  OntologyService {
         return null;
     }
 
-    /* (non-Javadoc)
+    /**
+     * @param vc
+     * @return true if the valudUri isa ObsoleteClass. This will only work if the ontology in question is loaded.
+     */
+    @Override
+    public boolean isObsolete( String uri ) {
+        OntologyTerm t = this.getTerm( uri );
+        if ( t != null ) {
+            for ( OntologyTerm p : t.getParents( false ) ) {
+                if ( p.getUri().equals( "http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#reinitializeAllOntologies()
      */
     @Override
@@ -513,7 +565,9 @@ public class OntologyServiceImpl implements  OntologyService {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.util.Collection, java.util.Collection)
      */
     @Override
@@ -553,8 +607,11 @@ public class OntologyServiceImpl implements  OntologyService {
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.lang.Long, ubic.gemma.model.expression.biomaterial.BioMaterial)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.lang.Long,
+     * ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     public void removeBioMaterialStatement( Long characterId, BioMaterial bm ) {
@@ -565,8 +622,12 @@ public class OntologyServiceImpl implements  OntologyService {
         characteristicService.delete( characterId );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#saveBioMaterialStatement(ubic.gemma.model.common.description.Characteristic, ubic.gemma.model.expression.biomaterial.BioMaterial)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.ontology.OntologyService#saveBioMaterialStatement(ubic.gemma.model.common.description.Characteristic,
+     * ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     public void saveBioMaterialStatement( Characteristic vc, BioMaterial bm ) {
@@ -592,8 +653,12 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#saveBioMaterialStatement(ubic.gemma.model.common.description.Characteristic, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.ontology.OntologyService#saveBioMaterialStatement(ubic.gemma.model.common.description.Characteristic,
+     * java.util.Collection)
      */
     @Override
     public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
@@ -609,8 +674,11 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#saveExpressionExperimentStatement(ubic.gemma.model.common.description.Characteristic, ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#saveExpressionExperimentStatement(ubic.gemma.model.common.description.
+     * Characteristic, ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
@@ -630,6 +698,13 @@ public class OntologyServiceImpl implements  OntologyService {
             // characteristic
         }
 
+        if ( vc instanceof VocabCharacteristic && isObsolete( ( ( VocabCharacteristic ) vc ).getValueUri() ) ) {
+            log.info( vc + " is obsolete, not saving" );
+            return;
+        }
+
+        if ( ee == null ) throw new IllegalArgumentException( "Experiment cannot be null" );
+
         log.info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
                 + ") : " + vc );
 
@@ -638,8 +713,11 @@ public class OntologyServiceImpl implements  OntologyService {
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#saveExpressionExperimentStatements(java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#saveExpressionExperimentStatements(java.util.Collection,
+     * ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
@@ -647,50 +725,6 @@ public class OntologyServiceImpl implements  OntologyService {
             // load necessary to make sure we are dealing with the persistent version.
             saveExpressionExperimentStatement( characteristic, eeService.thawLite( eeService.load( ee.getId() ) ) );
         }
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#setBioMaterialService(ubic.gemma.model.expression.biomaterial.BioMaterialService)
-     */
-    @Override
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#setCharacteristicService(ubic.gemma.model.common.description.CharacteristicService)
-     */
-    @Override
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#setExpressionExperimentService(ubic.gemma.model.expression.experiment.ExpressionExperimentService)
-     */
-    @Override
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.eeService = expressionExperimentService;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#setFmaOntologyService(ubic.basecode.ontology.providers.FMAOntologyService)
-     */
-    @Override
-    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
-        if ( this.ontologyServices.contains( this.fmaOntologyService ) ) {
-            this.ontologyServices.remove( this.fmaOntologyService );
-        }
-        this.fmaOntologyService = fmaOntologyService;
-        this.ontologyServices.add( this.fmaOntologyService );
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.ontology.OntologyService#setSearchService(ubic.gemma.search.SearchService)
-     */
-    @Override
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
     }
 
     /**

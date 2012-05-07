@@ -29,17 +29,13 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.providers.MgedOntologyService;
-import ubic.gemma.search.SearchService;
 
 /**
  * @author paul
@@ -59,6 +55,9 @@ public interface OntologyService extends InitializingBean {
      * @return
      */
     public abstract Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon );
+
+    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
+            Taxon taxon );
 
     /**
      * @param search
@@ -139,6 +138,8 @@ public interface OntologyService extends InitializingBean {
      */
     public abstract OntologyTerm getTerm( String uri );
 
+    public abstract boolean isObsolete( String uri );
+
     /**
      * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
@@ -188,35 +189,5 @@ public interface OntologyService extends InitializingBean {
      * @param ee
      */
     public abstract void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
-
-    /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public abstract void setBioMaterialService( BioMaterialService bioMaterialService );
-
-    /**
-     * @param characteristicService the characteristicService to set
-     */
-    public abstract void setCharacteristicService( CharacteristicService characteristicService );
-
-    /**
-     * @param expressionExperimentService
-     */
-    public abstract void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService );
-
-    /**
-     * This is provided for testing purposes. Normally this is set internally.
-     * 
-     * @param fmaOntologyService the fmaOntologyService to set
-     */
-    public abstract void setFmaOntologyService( FMAOntologyService fmaOntologyService );
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public abstract void setSearchService( SearchService searchService );
-
-    Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
-            Taxon taxon );
 
 }
