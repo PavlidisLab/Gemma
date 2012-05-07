@@ -61,7 +61,7 @@ public interface Persister {
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
      * supplied instance. This means that any existing data may be lost. Otherwise a new persistent instance will be
-     * created from the supplied instance. Non-nullable dependencies will be replaced with exsiting persistent ones or
+     * created from the supplied instance. Non-nullable dependencies will be replaced with existing persistent ones or
      * created anew: <strong>Associated objects will not be updated if they already exist</strong>. Therefore this
      * method has limited usefulness: when the provided object has new data but the associated objects are either new or
      * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
