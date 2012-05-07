@@ -334,11 +334,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( log.isDebugEnabled() ) log.debug( "Searching Gene Ontology for '" + queryString + "'" );
 
         // make sure we are all-inclusive
-        // String pquery = queryString.replaceAll( "\\s+", " +" );
+        queryString = queryString.trim();
+        queryString = queryString.replaceAll( "\\s+", " AND " );
 
         Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
         for ( IndexLARQ index : this.indices ) {
-            // rawMatches.addAll( OntologySearch.matchClasses( model, index, pquery ) );
             rawMatches.addAll( OntologySearch.matchIndividuals( model, index, queryString ) );
         }
 
