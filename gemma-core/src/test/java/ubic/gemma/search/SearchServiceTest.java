@@ -166,7 +166,13 @@ public class SearchServiceTest extends BaseSpringContextTest {
         fmaOntologyService.loadTermsInNameSpace( is );
 
         // In case the fma ontology isn't set to be initialized the the Gemma.properties file
-        ontologyService.setFmaOntologyService( fmaOntologyService );
+        if ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
+            ontologyService.getFmaOntologyService().startInitializationThread( true );
+            while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 1000 );
+                log.info( "Waiting for FMA to load" );
+            }
+        }
 
         log.info( "Ready to test" );
 
