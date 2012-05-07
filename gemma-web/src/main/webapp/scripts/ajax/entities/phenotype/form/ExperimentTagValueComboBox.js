@@ -21,7 +21,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
     emptyText: 'Enter term',
     minChars: 2,
     width: 200,
-    listWidth: 200,
+    listWidth: 320,
     pageSize: 0,
     hideTrigger: true,
     triggerAction: 'all',
@@ -34,7 +34,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
 		];
 	},
 	autoSelect: false,
-	tpl: new Ext.XTemplate('<tpl for="."><div ext:qtip="{qtip}"  style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>'),
+	tpl: new Ext.XTemplate('<tpl for="."><div ext:qtip="{qtip}" style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>'),
 	getSelectedRecord: function() {
 		// Use getRawValue() instead of getValue() because getRawValue() 
 		// returns whatever text typed by users.
@@ -69,9 +69,10 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
 			    fields: [ 'valueUri', 'value', {	    
 				    	name: 'qtip',
 				    	convert: function(value, record) {
-				    		return record.valueUri ? 
-				    			record.valueUri :
-				    			record.value;
+				    		return record.value +
+				    			(record.valueUri ?
+					    			'<br />' + record.valueUri :
+					    			'');
 				    	}
 					}, {
 				    	name: 'style',
@@ -79,7 +80,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
 							if (record.alreadyPresentInDatabase) {
 								return record.valueUri ? "usedWithUri" : "usedNoUri";
 							} else {
-								return record.valueUri ? "unusedWithUri" : "unusedNoUri";
+								return "unusedWithUri";
 							}
 				    	}
 					}			

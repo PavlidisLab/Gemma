@@ -28,20 +28,7 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 			this.currentGeneNcbiId ];
 	},
 	autoSelect: false,
-	tpl: new Ext.XTemplate('<tpl for=".">' +
-			'{[ this.renderItem(values) ]}' +
-			'</tpl>', {
-				renderItem: function(values){
-					var valueToBeDisplayed = "{value}";
-					
-					if (values.alreadyPresentInDatabase || values.alreadyPresentOnGene) {
-						valueToBeDisplayed = "<b>" + valueToBeDisplayed + "</b>";
-					}
-					
-					return new Ext.XTemplate('<div style="font-size:11px; background-color:#ECF4FF;" class="x-combo-list-item" ' +
-										'ext:qtip="{value}">' + valueToBeDisplayed + '</div>').apply(values);
-				}
-			}),
+	tpl: new Ext.XTemplate('<tpl for="."><div ext:qtip="{qtip}" style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>'),	
     initComponent: function() {
     	var id = 0;
 
@@ -66,7 +53,24 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 		    store: new Ext.data.JsonStore({
 				proxy: new Ext.data.DWRProxy(PhenotypeController.searchOntologyForPhenotypes),
 				// Don't use 'id' because if this combo box is not removed, I should return the same id back to the server.
-			    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId' ],
+			    fields: [ 'valueUri', 'value', 'alreadyPresentInDatabase', 'alreadyPresentOnGene', 'urlId', {	    
+				    	name: 'qtip',
+				    	convert: function(value, record) {
+				    		return record.value +
+				    			(record.valueUri ?
+					    			'<br />' + record.valueUri :
+					    			'');
+				    	}
+					}, {
+				    	name: 'style',
+				    	convert: function(value, record) {
+							if (record.alreadyPresentInDatabase) {
+								return "usedWithUri";
+							} else {
+								return "unusedWithUri";
+							}
+				    	}
+					}],
 			    idProperty: 'valueUri'
 			})
 		});
