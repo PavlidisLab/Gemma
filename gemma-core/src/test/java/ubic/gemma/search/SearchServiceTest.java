@@ -32,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -160,16 +159,14 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
-        FMAOntologyService fmaOntologyService = new FMAOntologyService();
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
-        fmaOntologyService.loadTermsInNameSpace( is );
 
         // In case the fma ontology isn't set to be initialized the the Gemma.properties file
         if ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
             ontologyService.getFmaOntologyService().startInitializationThread( true );
             while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-                Thread.sleep( 1000 );
+                Thread.sleep( 3000 );
                 log.info( "Waiting for FMA to load" );
             }
         }
