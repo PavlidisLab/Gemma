@@ -86,7 +86,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * @version $Id$
  */
 @Service
-public class ExpressionDataFileServiceImpl implements ExpressionDataFileSerivce {
+public class ExpressionDataFileServiceImpl implements ExpressionDataFileService {
 
     private static final String DECIMAL_FORMAT = "%.4g";
 
@@ -371,7 +371,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileSerivce 
             zipOut.closeEntry();
 
             // Add a file for each result set with contrasts information.
-            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            for (ExpressionAnalysisResultSet resultSet : analysis.getResultSets()) {                
+                if ( resultSet.getExperimentalFactors().size() > 1 ) {
+                    continue; // Skip interactions.
+                }
                 String resultSetData = convertDiffExpressionResultSetData( resultSet, geneAnnotations );
                 zipOut.putNextEntry( new ZipEntry( "resultset_" + resultSet.getId() + ".data.txt" ) );
                 zipOut.write( resultSetData.getBytes() );
@@ -620,7 +623,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileSerivce 
      * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#analysisResultSetsToString(java.util.Collection,
      * java.util.Map, java.lang.StringBuilder)
      */
-    @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
@@ -994,18 +996,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileSerivce 
         writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 
-    // TODO: Support interactions.
     public String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
             Map<Long, String[]> geneAnnotations ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
         StringBuilder buf = new StringBuilder();
-
-        boolean isInteraction = false;
-        ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
-        if ( resultSet.getExperimentalFactors().size() > 1 ) {
-            isInteraction = true;
-            return "Text output for interactions is not currently supported. Coming soon!\n";
-        }
+        
+        ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next(); 
 
         Long baselineId = resultSet.getBaselineGroup().getId();
         List<Long> factorValueIdOrder = new ArrayList<Long>();
