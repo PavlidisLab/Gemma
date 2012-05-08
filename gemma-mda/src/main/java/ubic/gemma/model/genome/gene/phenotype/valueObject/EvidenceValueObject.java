@@ -27,8 +27,7 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.UrlEvidence;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation; 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
@@ -75,9 +74,7 @@ public class EvidenceValueObject {
 
         EvidenceValueObject evidence = null;
 
-        if ( phe instanceof UrlEvidence ) {
-            evidence = new UrlEvidenceValueObject( ( UrlEvidence ) phe );
-        } else if ( phe instanceof ExperimentalEvidence ) {
+       if ( phe instanceof ExperimentalEvidence ) {
             evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
         } else if ( phe instanceof GenericEvidence ) {
             evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );

@@ -33,8 +33,17 @@ public class GeneDetailsValueObject extends GeneValueObject {
     private static final long serialVersionUID = -8145779822182567113L;
     private Collection<GeneValueObject> homologues;
     private Collection<GeneSetValueObject> geneSets;
-    private Long compositeSequenceCount; // number of probes
+    private Long compositeSequenceCount = 0L; // number of probes
+
+    private Integer numGoTerms = 0;
+    private Double multifunctionalityRank = 0.0;
+
+    private Double nodeDegreeRank = 0.0;
     
+    /**
+     * How many experiments "involve" (manipulate, etc.) this gene
+     */
+    private Integer associatedExperimentCount = 0;
 
     public GeneDetailsValueObject() {
         super();
@@ -44,41 +53,78 @@ public class GeneDetailsValueObject extends GeneValueObject {
         super( otherBean );
     }
 
-    /**
-     * @return the homologues
-     */
-    public Collection<GeneValueObject> getHomologues() {
-        return homologues;
+    public Integer getAssociatedExperimentCount() {
+        return associatedExperimentCount;
     }
-    /**
-     * @param homologues the homologues to set
-     */
-    public void setHomologues( Collection<GeneValueObject> homologues ) {
-        this.homologues = homologues;
-    }
-    /**
-     * @return the geneSets
-     */
-    public Collection<GeneSetValueObject> getGeneSets() {
-        return geneSets;
-    }
-    /**
-     * @param geneSets the geneSets to set
-     */
-    public void setGeneSets( Collection<GeneSetValueObject> geneSets ) {
-        this.geneSets = geneSets;
-    }
+
     /**
      * @return the compositeSequenceCount
      */
     public Long getCompositeSequenceCount() {
         return compositeSequenceCount;
     }
+
+    /**
+     * @return the geneSets
+     */
+    public Collection<GeneSetValueObject> getGeneSets() {
+        return geneSets;
+    }
+
+    /**
+     * @return the homologues
+     */
+    public Collection<GeneValueObject> getHomologues() {
+        return homologues;
+    }
+
+    public Double getMultifunctionalityRank() {
+        return multifunctionalityRank;
+    }
+
+    public Double getNodeDegreeRank() {
+        return nodeDegreeRank;
+    }
+
+    public Integer getNumGoTerms() {
+        return numGoTerms;
+    }
+
+    public void setAssociatedExperimentCount( Integer associatedExperimentCount ) {
+        this.associatedExperimentCount = associatedExperimentCount;
+    }
+
     /**
      * @param compositeSequenceCount the compositeSequenceCount to set
      */
     public void setCompositeSequenceCount( Long compositeSequenceCount ) {
         this.compositeSequenceCount = compositeSequenceCount;
     }
-    
+
+    /**
+     * @param geneSets the geneSets to set
+     */
+    public void setGeneSets( Collection<GeneSetValueObject> geneSets ) {
+        this.geneSets = geneSets;
+    }
+
+    /**
+     * @param homologues the homologues to set
+     */
+    public void setHomologues( Collection<GeneValueObject> homologues ) {
+        this.homologues = homologues;
+    }
+
+    public void setMultifunctionalityRank( Double multifunctionalityRank ) {
+        this.multifunctionalityRank = multifunctionalityRank;
+    }
+
+    public void setNodeDegreeRank( Double nodeDegreeRank ) {
+        this.nodeDegreeRank = nodeDegreeRank;
+    }
+
+    public void setNumGoTerms( Integer numGoTerms ) {
+        this.numGoTerms = numGoTerms;
+    }
+
 }

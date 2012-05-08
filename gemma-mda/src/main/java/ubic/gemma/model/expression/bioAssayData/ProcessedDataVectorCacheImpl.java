@@ -63,7 +63,9 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache()
      */
     @Override
@@ -111,7 +113,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
                 this.cache = new Cache( config );
-                //                
+                //
                 // this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
                 // eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
                 // maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
@@ -127,25 +129,42 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#get(ubic.gemma.model.expression.experiment.BioAssaySet, ubic.gemma.model.genome.Gene)
-     */ 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#get(ubic.gemma.model.expression.experiment.
+     * BioAssaySet, ubic.gemma.model.genome.Gene)
+     */
     @Override
     public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Gene g ) {
         Element element = cache.get( new CacheKey( ee.getId(), g.getId() ) );
         if ( element == null ) return null;
-        return ( Collection<DoubleVectorValueObject> ) element.getValue();
+        Collection<DoubleVectorValueObject> result = ( Collection<DoubleVectorValueObject> ) element.getValue();
+
+        /*
+         * See 2878 - we don't want to keep these values cached, so the vectors can be re-used.
+         */
+        for ( DoubleVectorValueObject dvvo : result ) {
+            dvvo.setPvalue( null );
+        }
+        return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#addToCache(java.lang.Long, ubic.gemma.model.genome.Gene, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#addToCache(java.lang.Long,
+     * ubic.gemma.model.genome.Gene, java.util.Collection)
      */
     @Override
     public void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection ) {
         cache.put( new Element( new CacheKey( eeid, g.getId() ), collection ) );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache(java.lang.Long)
      */
     @Override

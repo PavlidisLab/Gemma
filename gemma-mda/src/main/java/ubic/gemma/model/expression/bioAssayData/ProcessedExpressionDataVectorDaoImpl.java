@@ -369,7 +369,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         Collection<ProcessedExpressionDataVector> result = this.getHibernateTemplate().findByNamedParam( queryString,
                 "ee", ee );
-        //this.thaw( result );
+        // this.thaw( result );
         return result;
     }
 
@@ -1082,5 +1082,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @Override
+    public void clearCache() {
+        processedDataVectorCache.clearCache();
     }
 }

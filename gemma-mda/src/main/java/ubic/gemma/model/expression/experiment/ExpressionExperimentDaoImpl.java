@@ -1488,17 +1488,19 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
-    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids, boolean maintainOrder )
-            throws Exception {
-        Map<Long, ExpressionExperimentValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>(ids.size());
+    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids,
+            boolean maintainOrder ) throws Exception {
 
-        boolean isList = (ids != null && ids instanceof List);
+        boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return new ArrayList<ExpressionExperimentValueObject>();
             }
             return new HashSet<ExpressionExperimentValueObject>();
         }
+
+        Map<Long, ExpressionExperimentValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>(
+                ids.size() );
 
         String idRestrictionClause = "where ee.id in (:ids) ";
 
@@ -1529,18 +1531,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Query queryObject = super.getSession().createQuery( queryString );
 
         Map<Long, Collection<QuantitationType>> qtMap;
-        if ( ids != null ) {
-            for ( Long id : ids ) {
-                ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                vo.put( id, v );
-            }
-            List<Long> idl = new ArrayList<Long>( ids );
-            Collections.sort( idl ); // so it's consistent and therefore cacheable.
-            qtMap = getQuantitationTypeMap( idl );
-            queryObject.setParameterList( "ids", idl );
-        } else {
-            qtMap = getQuantitationTypeMap( null );
+
+        for ( Long id : ids ) {
+            ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
+            vo.put( id, v );
         }
+        List<Long> idl = new ArrayList<Long>( ids );
+        Collections.sort( idl ); // so it's consistent and therefore cacheable.
+        qtMap = getQuantitationTypeMap( idl );
+        queryObject.setParameterList( "ids", idl );
 
         queryObject.setCacheable( true );
         List<?> list = queryObject.list();
@@ -1573,9 +1572,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
             v.setTroubled( ( ( Boolean ) res[17] ) );
-            if(( ( Boolean ) res[17] ) ){
+            if ( ( ( Boolean ) res[17] ) ) {
                 v.setTroubleDetails( "Troubled reason not loaded" );
-            }else{
+            } else {
                 v.setTroubleDetails( "Not troubled" );
             }
             Object technology = res[12];
@@ -1597,16 +1596,16 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
 
         Set<Long> voIds = vo.keySet();
-        if( maintainOrder ){
-            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() ); 
-            for(Long eeId : ids){
-                if(voIds.contains( eeId )){
+        if ( maintainOrder ) {
+            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() );
+            for ( Long eeId : ids ) {
+                if ( voIds.contains( eeId ) ) {
                     orderedVoIds.add( eeId );
                 }
             }
             voIds = orderedVoIds;
         }
-        
+
         for ( Long id : voIds ) {
             if ( vo.get( id ).getId() != null ) {
                 finalValues.add( vo.get( id ) );

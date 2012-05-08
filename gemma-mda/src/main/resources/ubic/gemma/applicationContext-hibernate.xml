@@ -67,6 +67,7 @@
 				<value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml</value>				
 				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml</value>

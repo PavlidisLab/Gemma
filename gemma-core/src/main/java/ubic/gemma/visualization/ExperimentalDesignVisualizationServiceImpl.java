@@ -85,8 +85,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
      */
     private Map<Long, BioAssayDimension> cachedThawedBioAssayDimensions = new HashMap<Long, BioAssayDimension>();
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
      */
     @Override
     public LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
@@ -122,8 +126,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
     public LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
@@ -177,7 +185,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             Collection<FactorValue> fvs = bm.getFactorValues();
 
             for ( BioAssay ba : bas ) {
-                result.put( ba, new LinkedHashMap<ExperimentalFactor, Double>(fvs.size()) );
+                result.put( ba, new LinkedHashMap<ExperimentalFactor, Double>( fvs.size() ) );
                 for ( FactorValue fv : fvs ) {
                     ExperimentalFactor ef = fv.getExperimentalFactor();
 
@@ -200,8 +208,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#plotExperimentalDesign(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.visualization.ExperimentalDesignVisualizationService#plotExperimentalDesign(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     public void plotExperimentalDesign( ExpressionExperiment e ) {
@@ -246,7 +258,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortVectorDataByDesign(java.util.Collection)
      */
     @Override
@@ -339,7 +353,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortLayoutSamplesByFactor(java.util.Map)
      */
     @Override
@@ -353,7 +369,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             final LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
-            
+
             if ( layout == null || layout.size() == 0 ) {
                 log.warn( "Null or empty layout for ee: " + ee ); // does this happen?
                 continue;
@@ -479,8 +495,8 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                     log.debug( "Already got" );
                     bioAssayDimension = cachedThawedBioAssayDimensions.get( bioAssayDimension.getId() );
                 } else {
-                    log.debug( "Thawing" );
-                    bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
+                    // log.debug( "Thawing" );
+                    // bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
                     cachedThawedBioAssayDimensions.put( bioAssayDimension.getId(), bioAssayDimension );
                 }
                 vec.setBioAssayDimension( bioAssayDimension );

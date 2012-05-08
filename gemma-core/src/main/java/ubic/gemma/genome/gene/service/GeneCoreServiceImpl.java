@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,6 +16,8 @@ import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneAlias;
@@ -30,10 +33,10 @@ import ubic.gemma.search.SearchSettings;
 public class GeneCoreServiceImpl implements GeneCoreService {
 
     private static Log log = LogFactory.getLog( GeneCoreService.class );
-    
+
     @Autowired
     private GeneService geneService = null;
-    
+
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper = null;
 
@@ -59,8 +62,6 @@ public class GeneCoreServiceImpl implements GeneCoreService {
     public GeneDetailsValueObject loadGeneDetails( long geneId ) {
 
         Gene gene = this.geneService.load( geneId );
-        // need to thaw for aliases (at least)
-        gene = this.geneService.thawAliases( gene );
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( gene.getId() );
@@ -80,6 +81,9 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         }
         details.setAliases( aliasStrs );
 
+        details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
+        details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
+
         Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount );
 
@@ -92,8 +96,33 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
         details.setHomologues( homologues );
 
+        /*
+         * Look for the gene as an attribute in experiments.
+         */
+        if ( details.getNcbiId() != null ) {
+            getAssociatedExperimentsCount( details );
+        }
+
+        GeneCoexpressionNodeDegree nodeDegree = geneService.getGeneCoexpressionNodeDegree( gene );
+        if ( nodeDegree != null ) details.setNodeDegreeRank( nodeDegree.getRankNumLinks() );
+
         return details;
 
+    }
+
+    /**
+     * @param details
+     */
+    private void getAssociatedExperimentsCount( GeneDetailsValueObject details ) {
+        SearchSettings s = new SearchSettings();
+        s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + details.getNcbiId() );
+        s.noSearches();
+        s.setSearchExperiments( true );
+        Map<Class<?>, List<SearchResult>> r = this.searchService.search( s );
+        if ( r.containsKey( ExpressionExperiment.class ) ) {
+            List<SearchResult> hits = r.get( ExpressionExperiment.class );
+            details.setAssociatedExperimentCount( hits.size() );
+        }
     }
 
     /**

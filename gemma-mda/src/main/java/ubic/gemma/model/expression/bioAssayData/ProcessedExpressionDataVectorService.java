@@ -42,7 +42,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param expressionExperiment
      * @return updated expressionExperiment
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
@@ -50,7 +50,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param genes
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
@@ -60,7 +60,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param fullMapping if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs),
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
             Collection<Gene> genes, Boolean fullMapping );
 
@@ -68,7 +68,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param expressionExperiment
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     /**
@@ -76,7 +76,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param genes
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
 
@@ -86,7 +86,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param boolean fullMap true returns pars, predicted genes and known genes, false just returns known genes
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
             boolean fullMap );
 
@@ -98,7 +98,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param fullMap
      * @return DVVOs
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
             boolean fullMap );
@@ -107,7 +107,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param expressionExperiment
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
@@ -116,7 +116,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param method
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
@@ -126,7 +126,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param method
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
@@ -135,7 +135,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param method
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     /**
@@ -145,11 +145,11 @@ public interface ProcessedExpressionDataVectorService {
      * @param genes
      * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
 
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
     /**
@@ -160,7 +160,10 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * Updates a collection of ProcessedExpressionDataVectors
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
+
+    @Secured({ "GROUP_ADMIN" })
+    public void clearCache();
 
 }

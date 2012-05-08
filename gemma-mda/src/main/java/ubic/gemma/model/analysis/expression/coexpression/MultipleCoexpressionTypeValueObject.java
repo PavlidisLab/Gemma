@@ -27,8 +27,6 @@ import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * @author klc This object is thread safe. Used for storing the information regarding different types of coexpressed
@@ -153,19 +151,12 @@ public class MultipleCoexpressionTypeValueObject {
         // lookup might be unnecessary optimization; whole thing might be unnecessary if we can use load...
         // another option is to just maintain the 4 things we have in a local object until we create the
         // CommonCoexpressionValueObject...
-        Gene gene;
+        Gene gene = null;
         synchronized ( geneLookup ) {
             gene = geneLookup.get( coexpressed.getGeneId() );
             if ( gene == null ) {
-                if ( coexpressed.getGeneType().equalsIgnoreCase( GENE_IMPL ) ) {
-                    gene = Gene.Factory.newInstance();
-                } else if ( coexpressed.getGeneType().equalsIgnoreCase( PREDICTED_GENE_IMPL ) ) {
-                    gene = PredictedGene.Factory.newInstance();
-                } else if ( coexpressed.getGeneType().equals( PROBE_ALIGNED_REGION_IMPL ) ) {
-                    gene = ProbeAlignedRegion.Factory.newInstance();
-                } else {
-                    return null;
-                }
+
+                gene = Gene.Factory.newInstance();
                 gene.setId( coexpressed.getGeneId() );
                 gene.setName( coexpressed.getGeneName() );
                 gene.setOfficialName( coexpressed.getGeneOfficialName() );
@@ -262,7 +253,7 @@ public class MultipleCoexpressionTypeValueObject {
     // this.coexpressionData = coexpressionData;
     // }
     //
-    // 
+    //
     // /**
     // * @return the stringencyLinkCount
     // */
@@ -297,7 +288,7 @@ public class MultipleCoexpressionTypeValueObject {
     // public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
     // return expressionExperiments.values();
     // }
-    //    
+    //
     // /**
     // * @return a collection of expressionExperiment Ids that were searched for coexpression
     // */

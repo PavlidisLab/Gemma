@@ -141,18 +141,6 @@ public class ProbeMapperTest extends TestCase {
         assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011, hg19.
     }
 
-    public void testLocateNscan() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because human db could not be configured" );
-            return;
-        }
-        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 16295104 ), new Long(
-                16550770 ), "+" );
-        assertEquals( 2, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "chr3.1.114.a", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011.
-    }
-
     public void testProcessBlatResults() throws Exception {
         if ( !hasMousegp ) {
             log.warn( "Skipping test because mm could not be configured" );

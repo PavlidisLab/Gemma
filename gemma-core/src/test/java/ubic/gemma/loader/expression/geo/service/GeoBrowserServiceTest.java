@@ -79,9 +79,9 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
         GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
 
         try {
-            List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 1010, 1 );
+            List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 10, 10 );
 
-            if ( recentGeoRecords.size() == 0 ) {
+            if ( recentGeoRecords.isEmpty() ) {
                 log.warn( "Skipping test: no GEO records returned, check test settings" );
                 return;
             }
@@ -93,7 +93,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             // this should cause the increment.
             gbs.getDetails( firstAccession );
 
-            recentGeoRecords = gbs.getRecentGeoRecords( 1000, 1 );
+            recentGeoRecords = gbs.getRecentGeoRecords( 11, 10 );
 
             /*
              * Do this check in case it gets filtered out.

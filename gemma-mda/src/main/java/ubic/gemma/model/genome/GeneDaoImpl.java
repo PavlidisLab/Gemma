@@ -1116,7 +1116,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
-                        + "join fetch g.taxon t left join fetch g.products gp where g.id in (:gids)", "gids", ids );
+                        + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
+                        + "where g.id in (:gids)", "gids", ids );
     }
 
     /**

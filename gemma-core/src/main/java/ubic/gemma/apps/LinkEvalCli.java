@@ -58,9 +58,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
+import ubic.gemma.model.genome.Gene; 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.GoMetric;
 import ubic.gemma.ontology.GoMetric.Metric;
@@ -1403,10 +1401,9 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 // desired
                 continue;
             }
-            if ( !( firstGene instanceof PredictedGene ) && !( firstGene instanceof ProbeAlignedRegion ) ) {// known
-                // gene
+           
                 genePair.addFirstGene( firstGene );
-            }
+            
         }
 
         for ( Gene secondGene : secondGenes ) {
@@ -1422,10 +1419,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 continue;
             }
 
-            if ( !( secondGene instanceof PredictedGene ) && !( secondGene instanceof ProbeAlignedRegion ) ) {// known
-                // gene
-                genePair.addSecondGene( secondGene );
-            }
+             genePair.addSecondGene( secondGene );
+            
         }
 
         return genePair;

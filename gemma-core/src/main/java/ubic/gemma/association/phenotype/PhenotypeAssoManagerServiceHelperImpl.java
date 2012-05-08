@@ -39,7 +39,6 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
@@ -57,7 +56,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.Persister;
 
@@ -114,8 +112,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             return conversion2ExperimentalEvidence( ( ExperimentalEvidenceValueObject ) evidence );
         } else if ( evidence instanceof GenericEvidenceValueObject ) {
             return conversion2GenericEvidence( ( GenericEvidenceValueObject ) evidence );
-        } else if ( evidence instanceof UrlEvidenceValueObject ) {
-            return conversion2UrlEvidence( ( UrlEvidenceValueObject ) evidence );
+
         } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
             // TODO
             // return conversion2DifferentialExpressionEvidence (( DiffExpressionEvidenceValueObject ) evidence );
@@ -295,29 +292,10 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         } else if ( phenotypeAssociation instanceof GenericEvidence ) {
             // nothing special to do
-        } else if ( phenotypeAssociation instanceof UrlEvidence ) {
-            // nothing special to do
+
         } else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
             // TODO
         }
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2UrlEvidence( UrlEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        UrlEvidence urlEvidence = UrlEvidence.Factory.newInstance();
-
-        // populate common field to all evidence
-        populatePhenotypeAssociation( urlEvidence, evidenceValueObject );
-
-        // populate specific fields for this evidence
-        urlEvidence.setUrl( evidenceValueObject.getUrl() );
-
-        return urlEvidence;
     }
 
     /**

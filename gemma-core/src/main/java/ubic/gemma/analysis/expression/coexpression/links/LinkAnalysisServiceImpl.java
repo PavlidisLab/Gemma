@@ -79,8 +79,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.TaxonUtility;
@@ -155,7 +153,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -165,27 +163,26 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
      */
     @Override
-    public LinkAnalysis process(Long eeId, FilterConfig filterConfig,
-            LinkAnalysisConfig linkAnalysisConfig ) {
+    public LinkAnalysis process( Long eeId, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
 
         ExpressionExperiment ee = eeService.load( eeId );
-        
+
         try {
             LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
             la.clear();
 
             log.info( "Fetching expression data ... " + ee );
-            
+
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
-            
+
             processedExpressionDataVectorService.thaw( dataVectors );
 
             process( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
 
             log.info( "Done with processing of " + ee );
             return la;
-            
+
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
@@ -193,7 +190,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
             throw new RuntimeException( e );
         }
-        
 
     }
 
@@ -275,7 +271,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
-        auditTrailService.addUpdateEvent( ee, eventType, note, true);
+        auditTrailService.addUpdateEvent( ee, eventType, note, true );
     }
 
     /**
@@ -536,7 +532,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             ees.add( ee );
 
             saveLinks( p2v, la );
-            
+
             audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
         } else if ( linkAnalysisConfig.isTextOut() ) {
@@ -549,15 +545,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 writeLinks( la, filterConfig, w );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
-            }
-        }
-    }
-
-    private void removeNonKnownGenes( Collection<Gene> cluster ) {
-        for ( Iterator<Gene> iterator = cluster.iterator(); iterator.hasNext(); ) {
-            Gene gene = iterator.next();
-            if ( gene instanceof PredictedGene || gene instanceof ProbeAlignedRegion ) {
-                iterator.remove();
             }
         }
     }
@@ -827,9 +814,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             List<String> genes1 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g1 ) {
-                if ( la.getConfig().useKnownGenesOnly() ) {
-                    removeNonKnownGenes( cluster );
-                }
 
                 if ( cluster.isEmpty() ) continue;
 
@@ -839,9 +823,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             List<String> genes2 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g2 ) {
-                if ( la.getConfig().useKnownGenesOnly() ) {
-                    removeNonKnownGenes( cluster );
-                }
 
                 if ( cluster.isEmpty() ) continue;
 

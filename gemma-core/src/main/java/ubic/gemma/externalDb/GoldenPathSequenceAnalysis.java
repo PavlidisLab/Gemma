@@ -37,8 +37,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.PhysicalLocation; 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -451,111 +450,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
     }
 
-    /**
-     * Similar to findGenesByQuery but the GeneProducts are associated with PredictedGene instead of Gene.
-     * 
-     * @param starti
-     * @param endi
-     * @param chromosome
-     * @param strand
-     * @param query
-     * @param source e.g. "Nscan".
-     * @return
-     */
-    private Collection<GeneProduct> findPredictedGenesByQuery( Long starti, Long endi, final String chromosome,
-            String strand, String query, final String source ) {
-        // Cases:
-        // 1. gene is contained within the region: txStart > start & txEnd < end;
-        // 2. region is contained within the gene: txStart < start & txEnd > end;
-        // 3. region overlaps start of gene: txStart > start & txStart < end.
-        // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //
-        try {
-
-            Object[] params;
-            if ( strand != null ) {
-                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome, strand };
-            } else {
-                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
-            }
-
-            return ( Collection<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
-
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<GeneProduct> r = new HashSet<GeneProduct>();
-                    while ( rs.next() ) {
-
-                        GeneProduct product = GeneProduct.Factory.newInstance();
-
-                        String name = rs.getString( 1 );
-                        assert StringUtils.isNotBlank( name );
-
-                        DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-                        accession.setAccession( name );
-                        accession.setExternalDatabase( getSearchedDatabase() );
-                        product.getAccessions().add( accession );
-
-                        product.setType( GeneProductType.RNA );
-
-                        PredictedGene gene = PredictedGene.Factory.newInstance();
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() );
-                        Taxon taxon = getTaxon();
-
-                        assert taxon != null;
-
-                        gene.setTaxon( taxon );
-                        gene.getAccessions().add( accession );
-                        gene.setMethod( source );
-
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( rs.getLong( 3 ) );
-                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
-                        pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
-
-                        PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
-                        genePl.setStrand( pl.getStrand() );
-
-                        /*
-                         * Do not use this as the official_name: it isn't.
-                         */
-                        gene.setDescription( "Predicted gene imported from Golden Path. " + rs.getString( 8 ) );
-
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( taxon );
-                        pl.setChromosome( c );
-                        genePl.setChromosome( c );
-
-                        /*
-                         * this only contains the chromosome and strand: the nucleotide positions are only valid for the
-                         * gene product
-                         */
-                        gene.setPhysicalLocation( genePl );
-
-                        product.setName( name );
-
-                        product.setDescription( "Predicted gene product imported from Golden Path" );
-                        product.setPhysicalLocation( pl );
-                        product.setGene( gene );
-
-                        Blob exonStarts = rs.getBlob( 6 );
-                        Blob exonEnds = rs.getBlob( 7 );
-                        product.setExons( getExons( c, exonStarts, exonEnds ) );
-
-                        r.add( product );
-
-                    }
-                    return r;
-                }
-
-            } );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+   
 
     /**
      * Find "Known" genes contained in or overlapping a region. Note that the NCBI symbol may be blank, when the gene is
@@ -724,97 +619,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         return findGenesByQuery( start, end, searchChrom, strand, query );
     }
 
-    /**
-     * Predicted genes.
-     * 
-     * @param chromosome
-     * @param start
-     * @param end
-     * @param strand
-     * @return
-     */
-    public Collection<GeneProduct> findEnsemblGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+   
 
-        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        /*
-         * Note: unlike refgene etc. queries, this requires a three table join. MUCH slower. This entire join is only
-         * required to get the known gene symbol that corresponds.
-         */
-        // String query =
-        // "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
-        // +
-        // "FROM ensGene as r inner join knownToEnsembl on r.name = knownToEnsembl.value inner join kgXref on kgXref.kgID = knownToEnsembl.name "
-        // + "WHERE "
-        // + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-        // + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
-        // Using denormalized table.
-        String query = "SELECT r.name, r.kgSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
-                + "FROM ensGene as r "
-                + "WHERE "
-                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? and r.kgSymbol IS NOT NULL";
-
-        if ( strand != null ) {
-            query = query + " AND r.strand = ?  ";
-        }
-        return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "Ensembl" );
-    }
-
-    /**
-     * Predicted genes.
-     * 
-     * @param chromosome
-     * @param queryStart
-     * @param queryEnd
-     * @param strand
-     * @return
-     */
-    public Collection<GeneProduct> findAcemblyGenesByLocation( String chromosome, Long start, Long end, String strand ) {
-
-        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it
-        // either.
-        if ( !TaxonUtility.isHuman( this.getTaxon() ) ) {
-            return null;
-        }
-
-        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, r.name, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Acembly gene, class=',ac.class) "
-                + "FROM acembly as r inner join acemblyClass as ac on r.name = ac.name "
-                + "WHERE "
-                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
-
-        if ( strand != null ) {
-            query = query + " AND r.strand = ?  ";
-        }
-        return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "Acembly" );
-    }
-
-    /**
-     * Predicted genes.
-     * 
-     * @param chromosome
-     * @param start
-     * @param end
-     * @param strand
-     * @return
-     */
-    public Collection<GeneProduct> findNscanGenesByLocation( String chromosome, Long start, Long end, String strand ) {
-
-        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, r.name, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('NScan gene prediction, alternative name=',r.name2) "
-                + "FROM nscanGene as r "
-                + "WHERE "
-                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
-
-        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
-
-        if ( strand != null ) {
-            query = query + " AND r.strand = ?  ";
-        }
-        return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "NScan" );
-    }
+  
 
     /**
      * Check to see if there are mRNAs that overlap with this region. We promote the mRNAs to the status of genes for
@@ -1150,24 +957,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             // microRNAs
             geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
-
-        // predicted genes if there is nothing else at this location: Ensembl genes
-        if ( geneProducts.size() == 0 && config.isUseEnsembl() && config.isAllowPredictedGenes() ) {
-            Collection<GeneProduct> acembly = findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand );
-            if ( acembly != null ) geneProducts.addAll( acembly );
-        }
-
-        // predicted genes if there is nothing else at this location: AceView genes
-        if ( geneProducts.size() == 0 && config.isUseAcembly() && config.isAllowPredictedGenes() ) {
-            Collection<GeneProduct> acembly = findAcemblyGenesByLocation( chromosome, queryStart, queryEnd, strand );
-            if ( acembly != null ) geneProducts.addAll( acembly );
-        }
-
-        // Last ditch: NSCAN
-        if ( geneProducts.size() == 0 && config.isUseNscan() && config.isAllowPredictedGenes() ) {
-            Collection<GeneProduct> nscan = findNscanGenesByLocation( chromosome, queryStart, queryEnd, strand );
-            if ( nscan != null ) geneProducts.addAll( nscan );
-        }
+ 
 
         if ( geneProducts.size() == 0 ) return null;
 

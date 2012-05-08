@@ -20,11 +20,13 @@ package ubic.gemma.ontology.providers;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.BeforeClass;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
@@ -39,27 +41,30 @@ public class GeneOntologyServiceTest extends TestCase {
     private static Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     public final void testAllParents() throws Exception {
-        String id = "GO:1234567";
+        String id = "GO:0035242";
+
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllParents( termForId );
 
-        for ( OntologyTerm term : terms ) {
-            log.info( term );
-        }
-        assertEquals( 2, terms.size() );
+        assertEquals( 9, terms.size() );
+    }
+
+    public final void testAllParents2() throws Exception {
+        String id = "GO:0000006";
+        OntologyTerm termForId = gos.getTermForId( id );
+        assertNotNull( termForId );
+        Collection<OntologyTerm> terms = gos.getAllParents( termForId );
+
+        assertEquals( 11, terms.size() );
     }
 
     public final void testGetAspect() throws Exception {
-        String aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase();
-        assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        String aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
         aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0016791" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase(); // should be cached.
-        assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase();
+        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
     }
 
@@ -77,10 +82,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllChildren( termForId );
 
-        for ( OntologyTerm term : terms ) {
-            log.info( term );
-        }
-        assertEquals( 2, terms.size() );
+        assertEquals( 136, terms.size() );
     }
 
     public final void testGetChildren() throws Exception {
@@ -89,35 +91,29 @@ public class GeneOntologyServiceTest extends TestCase {
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getChildren( termForId );
 
-        for ( OntologyTerm term : terms ) {
-            log.info( term );
-        }
-        assertEquals( 1, terms.size() );
+        assertEquals( 65, terms.size() );
     }
 
     public final void testGetChildrenPartOf() throws Exception {
-        String id = "GO:0003720";
+        String id = "GO:0023025";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllChildren( termForId, true );
 
-        for ( OntologyTerm term : terms ) {
-            log.info( term );
-        }
         // has a part.
         assertEquals( 1, terms.size() );
     }
 
-    public final void testGetDefinition() throws Exception {
-        String id = "GO:0000007";
-        String definition = gos.getTermDefinition( id );
-        assertNotNull( definition );
-        log.info( definition );
-        assertTrue( definition.startsWith( "Catalysis of the transfer" ) );
-    }
+    // latest versions do not have definitions included.
+    // public final void testGetDefinition() throws Exception {
+    // String id = "GO:0000007";
+    // String definition = gos.getTermDefinition( id );
+    // assertNotNull( definition );
+    // assertTrue( definition.startsWith( "I am a test definition" ) );
+    // }
 
     public final void testGetParents() throws Exception {
-        String id = "GO:1234567";
+        String id = "GO:0000014";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getParents( termForId );
@@ -138,7 +134,7 @@ public class GeneOntologyServiceTest extends TestCase {
             log.info( term );
         }
         // is a subclass and partof.
-        assertEquals( 2, terms.size() );
+        assertEquals( 12, terms.size() );
     }
 
     public final void testGetTermForId() throws Exception {
@@ -149,10 +145,11 @@ public class GeneOntologyServiceTest extends TestCase {
     }
 
     // note: no spring context.
-    @Override
+    @BeforeClass
     protected void setUp() throws Exception {
         gos = new GeneOntologyServiceImpl();
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl" );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/ontology/molecular-function.test.owl.gz" ) );
         assert is != null;
         gos.loadTermsInNameSpace( is );
         log.info( "Ready to test" );

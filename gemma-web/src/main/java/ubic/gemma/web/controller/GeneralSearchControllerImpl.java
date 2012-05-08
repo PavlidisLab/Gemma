@@ -110,7 +110,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Autowired
     private ExpressionExperimentSetService experimentSetService;
-    
+
     @Autowired
     private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
@@ -132,14 +132,13 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         ModelAndView mav = new ModelAndView( "generalSearch" );
 
-        if ( !searchStringValidator( settings.getQuery() ) ) {
-            this.saveMessage( request, "Invalid search string" );
-            log.info( "User entered an invalid search: " + settings.getQuery() );
-            return mav;
+        if ( !searchStringValidator( settings.getQuery() ) && StringUtils.isBlank( settings.getTermUri() ) ) {
+            throw new IllegalArgumentException( "Invalid query" );
         }
 
         // Need this for the bookmarkable links
         mav.addObject( "SearchString", settings.getQuery() );
+        mav.addObject( "SearchURI", settings.getTermUri() );
         if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
             mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
 
@@ -236,7 +235,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         SearchSettings searchSettings = new SearchSettings();
-        //Reset default settings.
+        // Reset default settings.
         searchSettings.setSearchArrays( false );
         searchSettings.setSearchBibrefs( false );
         searchSettings.setSearchBioSequences( false );
@@ -336,7 +335,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         Collection vos = null;
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ), settings );
+            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
+                    settings );
 
             if ( !SecurityServiceImpl.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( vos );

@@ -1,3 +1,6 @@
+/**
+ * $Id$
+ */
 Ext.namespace('Gemma');
 
 /**
@@ -5,7 +8,7 @@ Ext.namespace('Gemma');
  */
 Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 
-	height: 600,
+	height: 800,
 	padding:10,
 	defaults:{
 		border:false,
@@ -35,11 +38,10 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	},
 	
 	renderGeneSets:function(geneSets){
-		var geneSetLinks = [];
-		var i, geneSet;
-		for (i = 0; i < geneSets.length; i++) {
+		var geneSetLinks = []; 
+		for (var i = 0; i < geneSets.length; i++) {
 			if (geneSets[i] && geneSets[i].name && geneSets[i].id) {
-				geneSetLinks.push('<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+geneSets[i].id+'">'+geneSets[i].name+'</a>');
+				geneSetLinks.push('<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id=' + geneSets[i].id+'">' + geneSets[i].name + '</a>');
 			}
 		}
 		if(geneSetLinks.length === 0){
@@ -47,6 +49,38 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		}
 		return geneSetLinks;
 	},
+	
+	/**
+	 * 
+	 * @param geneDetails
+	 * @returns {String}
+	 */
+	renderMultifunctionality : function(geneDetails) {
+		if (geneDetails.multifunctionalityRank) {
+			return geneDetails.numGoTerms + " GO Terms; Overall multifunctionality " + geneDetails.multifunctionalityRank.toFixed(2);
+		} else {
+			return "[ Not available ]";
+		}
+	},
+	
+	/**
+	 * 
+	 * @param ncbiId
+	 * @param count
+	 * @returns {String}
+	 */
+	renderAssociatedExperiments : function(ncbiId, count) {
+		return '<a href="/Gemma/searcher.html?query=http%3A//purl.org/commons/record/ncbi_gene/' + ncbiId +'&scope=E">'+count+'</a>';
+	},
+	
+	renderNodeDegree : function(geneDetails) {
+		if (geneDetails.nodeDegreeRank) {
+			return geneDetails.nodeDegreeRank.toFixed(2);
+		} else {
+			return "[ Not available ]";
+		}
+	},
+	
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
 		
@@ -80,7 +114,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: geneDetails.aliases.join(', ')
 						}, {
 							fieldLabel: 'NCBI ID',
-							html: geneDetails.ncbiId + ' <a  target="_blank" title="NCBI Gene link"' +
+							html: geneDetails.ncbiId + ' <a target="_blank" title="NCBI Gene link"' +
 							'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=' +
 							geneDetails.ncbiId +
 							'"><img alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/></a>'
@@ -91,8 +125,23 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							fieldLabel: 'Gene Groups',
 							html: this.renderGeneSets(geneDetails.geneSets).join(', ')
 						}, {
-							fieldLabel: 'Probes' + '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
-								'\''+Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +
+							fieldLabel: 'Studies' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+							'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT +'\'); return false">' +
+							'<img src="/Gemma/images/help.png" /> </a>',
+							html: this.renderAssociatedExperiments( geneDetails.ncbiId, geneDetails.associatedExperimentCount ) 
+						}, {
+							fieldLabel: 'Multifunc.' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+							'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.multifuncTT +'\'); return false">' +
+							'<img src="/Gemma/images/help.png" /> </a>',
+							html: this.renderMultifunctionality( geneDetails ) 
+						}, {
+							fieldLabel: 'Hub score' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+							'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT +'\'); return false">' +
+							'<img src="/Gemma/images/help.png" /> </a>',
+							html: this.renderNodeDegree( geneDetails ) 
+						}, {
+							fieldLabel: 'Probes' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+								'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +
 								'<img src="/Gemma/images/help.png" /> </a>', 
 							html: geneDetails.compositeSequenceCount + 
 								' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id=' + geneDetails.id + '">' +

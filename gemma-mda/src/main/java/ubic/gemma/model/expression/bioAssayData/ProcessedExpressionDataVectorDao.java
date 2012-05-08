@@ -101,4 +101,6 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType );
 
+    public void clearCache();
+
 }

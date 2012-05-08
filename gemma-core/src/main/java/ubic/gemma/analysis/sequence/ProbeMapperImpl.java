@@ -36,12 +36,9 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
@@ -65,8 +62,12 @@ public class ProbeMapperImpl implements ProbeMapper {
     @Autowired
     private TaxonService taxonService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, java.util.Collection, ubic.gemma.analysis.sequence.ProbeMapperConfig)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.util.Collection, ubic.gemma.analysis.sequence.ProbeMapperConfig)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
@@ -165,15 +166,6 @@ public class ProbeMapperImpl implements ProbeMapper {
                     }
 
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
-                } else if ( config.isAllowMakeProbeAlignedRegion() ) {
-
-                    // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
-                    ProbeAlignedRegion par = makePar( blatResult );
-                    BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
-                    blatAssociationsForSequence.add( parAssociation );
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
-
                 }
 
                 // there are rarely this many, but it does happen.
@@ -244,8 +236,12 @@ public class ProbeMapperImpl implements ProbeMapper {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.util.Collection)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
@@ -272,58 +268,11 @@ public class ProbeMapperImpl implements ProbeMapper {
         return biosequenceToBlatResults;
     }
 
-    /**
-     * @param blatResult
-     * @param par
-     * @return
-     */
-    private BlatAssociation makeBlatAssociationWithPar( BlatResult blatResult, ProbeAlignedRegion par ) {
-        BlatAssociation parAssociation = BlatAssociation.Factory.newInstance();
-        parAssociation.setGeneProduct( par.getProducts().iterator().next() );
-        parAssociation.setBlatResult( blatResult );
-        parAssociation.setBioSequence( blatResult.getQuerySequence() );
-        parAssociation.setOverlap( blatResult.getQuerySequence().getLength().intValue() ); // by definition, because
-        // this is for a new PAR
-        assert parAssociation.getBioSequence() != null;
-        return parAssociation;
-    }
-
-    /**
-     * @param blatResult
-     * @return
-     */
-    private ProbeAlignedRegion makePar( BlatResult blatResult ) {
-        ProbeAlignedRegion par = ProbeAlignedRegion.Factory.newInstance();
-        PhysicalLocation pl = blatResultToPhysicalLocation( blatResult );
-        par.setPhysicalLocation( pl );
-
-        /*
-         * We form a hopefully unique name of the PAR using the query sequence and the coordinates of the blat result
-         */
-        par.setName( blatResult.getQuerySequence().getName() + ".par." + blatResult.getTargetChromosome().getName()
-                + "." + blatResult.getTargetStart() + "." + blatResult.getTargetEnd() );
-
-        /*
-         * The official name isn't really what we have, as we made it up...but it will do
-         */
-        par.setOfficialSymbol( par.getName() );
-
-        par.setDescription( "Based only on BLAT alignment to genome, symbol is assigned by system" );
-        par.setTaxon( blatResult.getQuerySequence().getTaxon() );
-
-        GeneProduct pargp = GeneProduct.Factory.newInstance();
-        pargp.setName( par.getName() );
-        pargp.setDescription( "Hypothetical RNA product based on alignment of probe to genome sequence" );
-        pargp.setType( GeneProductType.RNA );
-        pargp.setGene( par );
-        pargp.setPhysicalLocation( pl );
-
-        par.getProducts().add( pargp );
-        return par;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processGbId(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.sequence.ProbeMapper#processGbId(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.lang.String)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processGbId( GoldenPathSequenceAnalysis goldenPathDb,
@@ -341,8 +290,11 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processGbIds(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.sequence.ProbeMapper#processGbIds(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.util.Collection)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
@@ -374,8 +326,11 @@ public class ProbeMapperImpl implements ProbeMapper {
         return allRes;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processSequence(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, ubic.gemma.model.genome.biosequence.BioSequence)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.sequence.ProbeMapper#processSequence(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
@@ -393,8 +348,11 @@ public class ProbeMapperImpl implements ProbeMapper {
         return allRes.values().iterator().next();
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.sequence.ProbeMapper#processSequences(ubic.gemma.externalDb.GoldenPathSequenceAnalysis, java.util.Collection, ubic.gemma.analysis.sequence.ProbeMapperConfig)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.sequence.ProbeMapper#processSequences(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.util.Collection, ubic.gemma.analysis.sequence.ProbeMapperConfig)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
@@ -472,43 +430,4 @@ public class ProbeMapperImpl implements ProbeMapper {
         return ignoreStrand;
     }
 
-    /**
-     * @param blatResult
-     * @return
-     */
-    private PhysicalLocation blatResultToPhysicalLocation( BlatResult blatResult ) {
-        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = blatResult.getTargetChromosome();
-        Taxon taxon = blatResult.getQuerySequence().getTaxon();
-        if ( taxon.getId() == null ) {
-            taxon = taxonService.findOrCreate( taxon ); // usually only during tests.
-        }
-
-        assert taxon.getId() != null;
-
-        chrom.setTaxon( taxon );
-        if ( chrom.getId() == null ) {
-            Collection<Chromosome> chromosomes = chromosomeService.find( chrom.getName(), taxon );
-            if ( chromosomes.size() > 1 ) {
-                log.warn( "More than one chromosome matches " + chrom.getName() + " " + taxon );
-            }
-            if ( chromosomes.size() > 0 ) {
-                chrom = chromosomes.iterator().next();
-            } else {
-                chrom = chromosomeService.findOrCreate( chrom.getName(), taxon ); // typically only during tests, but
-                // see bug 1936
-            }
-        }
-
-        assert chrom.getId() != null;
-
-        pl.setChromosome( chrom );
-        pl.setNucleotide( blatResult.getTargetStart() );
-        pl.setNucleotideLength( ( int ) ( blatResult.getTargetEnd() - blatResult.getTargetStart() ) );
-        pl.setStrand( blatResult.getStrand() );
-        pl.setBin( SequenceBinUtils.binFromRange( pl.getNucleotide().intValue(), pl.getNucleotide().intValue()
-                + pl.getNucleotideLength().intValue() ) );
-
-        return pl;
-    }
 }

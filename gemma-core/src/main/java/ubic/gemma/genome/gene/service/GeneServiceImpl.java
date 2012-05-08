@@ -121,6 +121,12 @@ public class GeneServiceImpl implements GeneService {
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
         return this.getGeneDao().getGeneCoexpressionNodeDegree( genes );
     }
+    
+    @Override
+    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene ) {
+        return this.getGeneDao().getGeneCoexpressionNodeDegree( gene );
+    }
+
 
     @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
@@ -747,6 +753,7 @@ public class GeneServiceImpl implements GeneService {
         return this.geneDao;
     }
 
+  
    
 
 }

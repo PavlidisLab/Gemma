@@ -25,8 +25,7 @@ import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.UrlEvidence;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation; 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -92,10 +91,6 @@ public interface PhenotypeAssociationService {
     /** load an LiteratureEvidence given an ID */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public LiteratureEvidence loadLiteratureEvidence( Long id );
-
-    /** load an UrlEvidence given an ID */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public UrlEvidence loadUrlEvidence( Long id );
 
     /**
      * update a PhenotypeAssociation

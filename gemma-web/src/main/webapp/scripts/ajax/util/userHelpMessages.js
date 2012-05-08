@@ -352,11 +352,16 @@ Gemma.HelpText.WidgetDefaults = {
 		
 	},
 	GeneAllenBrainAtlasImages:{
-		helpTT: "Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas"
+		helpTT: "Below is a sampling of in situ hybridization from the Allen Brain Atlas. Beside is a link to the Allen Brain Atlas"
 	},
+	
 	GeneDetails:{
-		probesTT: 'Number of probes for this gene on expression platforms in Gemma'
+		probesTT: 'Number of probes for this gene on expression platforms in Gemma',
+		assocExpTT: 'Experiments that specifically involve manipulation (or naturally-occurring variation/mutations) of this gene as part of their design.',
+		multifuncTT : 'Overall multifunctionality is a function of both the number of GO terms and the sizes of the groups. Values range from 0-1 where 1 indicates the highest multifunctionality',
+		nodeDegreeTT : 'Relative measure estimating how &quot;hubby&quot; this gene is, based on coexpression. Values range from 0-1 where 1 indicates the highest number of associations.'
 	},
+	
 	GeneImportPanel:{
 		instructions: "Type or paste in gene symbols, one per line, up to {0}. (Note that searches are "+
 							"limited to a smaller number of genes.)"

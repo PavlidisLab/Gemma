@@ -19,7 +19,6 @@
 package ubic.gemma.analysis.preprocess.filter;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,9 +36,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * Methods to handle filtering expression experiments for analysis.
@@ -60,27 +56,6 @@ public class ExpressionExperimentFilter {
     public static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
 
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
-
-    /**
-     * @param probesToGenesMap Map of "clusters"
-     * @return
-     */
-    public static Collection<CompositeSequence> getProbesForKnownGenes(
-            Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
-        Collection<CompositeSequence> keepers = new HashSet<CompositeSequence>();
-        for ( CompositeSequence cs : probesToGenesMap.keySet() ) {
-            cluster: for ( Collection<Gene> cluster : probesToGenesMap.get( cs ) ) {
-                for ( Gene g : cluster ) {
-                    if ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) {
-                        continue;
-                    }
-                    keepers.add( cs );
-                    break cluster;
-                }
-            }
-        }
-        return keepers;
-    }
 
     Collection<ArrayDesign> arrayDesignsUsed;
 
@@ -134,23 +109,6 @@ public class ExpressionExperimentFilter {
 
         }
 
-    }
-
-    /**
-     * Remove probes which to not map to at least one "known gene" (that is, not just probe-aligned regions or predicted
-     * genes).
-     * 
-     * @param matrix
-     * @param probesToGenesMap Map of probes to collection of gene 'clusters'. The gene information associated with each
-     *        probe is used to determine if it is filtered; it's up to the caller to populate this properly. Probes that
-     *        are not represented in the map will not be retained!
-     * @return filtered matrix
-     */
-    public ExpressionDataDoubleMatrix knownGenesOnlyFilter( ExpressionDataDoubleMatrix matrix,
-            Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
-        Collection<CompositeSequence> keepers = getProbesForKnownGenes( probesToGenesMap );
-        RowNameFilter rowNameFilter = new RowNameFilter( keepers );
-        return rowNameFilter.filter( matrix );
     }
 
     /**

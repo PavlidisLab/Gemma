@@ -91,13 +91,12 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
 
-    // private DirectedGraph graph = null;
-
-    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
+    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#part_of";
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
     private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
+
     // map of uris to terms
     private static Map<String, OntologyTerm> uri2Term = new HashMap<String, OntologyTerm>();
 
@@ -570,7 +569,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         for ( OntologyTerm term : parents ) {
             // The isRoot() returns true for the MolecularFunction, BiologicalProcess, CellularComponent
-            // if ( term.isRoot() ) continue;
+            if ( term.isRoot() ) continue;
             if ( term.getUri().equalsIgnoreCase( ALL_ROOT ) ) continue;
 
             if ( term instanceof OntologyClassRestriction ) {

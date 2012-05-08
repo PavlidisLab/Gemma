@@ -123,6 +123,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return ctx.getBean( name );
     }
 
+    protected <T> T getBean( Class<T> clz ) {
+        assert ctx != null : "Spring context was not initialized";
+        return ctx.getBean( clz );
+    }
+
     /**
      * @return
      */
@@ -175,8 +180,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         // special case for expression experiments - check associated ADs.
         if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
-            ExpressionExperimentService ees = ( ExpressionExperimentService ) this
-                    .getBean( "expressionExperimentService" );
+            ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
             for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
                 lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
             }
@@ -237,8 +241,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void processOptions() {
         createSpringContext();
         authenticate();
-        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-        this.auditEventService = ( AuditEventService ) this.getBean( "auditEventService" );
+        this.auditTrailService = this.getBean( AuditTrailService.class );
+        this.auditEventService = this.getBean( AuditEventService.class );
     }
 
     /** check username and password. */
@@ -249,8 +253,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
-        ManualAuthenticationService manAuthentication = ( ManualAuthenticationService ) ctx
-                .getBean( "manualAuthenticationService" );
+        ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
@@ -289,7 +292,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, false,
                 getAdditionalSpringConfigLocations() );
 
-        QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
+        QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
 
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).
@@ -297,14 +300,5 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
     }
-
-    // private void addSpecialServiceOptions() {
-    // Option gigaspacesOnOpt = new Option(
-    // GIGASPACES_ON,
-    // false,
-    // "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file."
-    // );
-    // options.addOption( gigaspacesOnOpt );
-    // }
 
 }

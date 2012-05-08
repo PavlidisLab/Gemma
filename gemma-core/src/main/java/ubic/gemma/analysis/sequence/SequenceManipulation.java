@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.loader.expression.arrayDesign.Reporter;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
@@ -166,8 +165,8 @@ public class SequenceManipulation {
         }
 
         if ( gene.getPhysicalLocation().getChromosome() != null
-                && !gene.getPhysicalLocation().getChromosome().getName().equals(
-                        deBlatFormatChromosomeName( chromosome ) ) ) return 0;
+                && !gene.getPhysicalLocation().getChromosome().getName()
+                        .equals( deBlatFormatChromosomeName( chromosome ) ) ) return 0;
 
         int bestOverlap = 0;
         for ( GeneProduct geneProduct : gene.getProducts() ) {
@@ -210,15 +209,12 @@ public class SequenceManipulation {
 
         if ( exons.size() == 0 ) {
             /*
-             * simply use the gene product location itself. This is the case if we have ProbeAlignedRegion...otherwise
+             * simply use the gene product location itself. This was the case if we have ProbeAlignedRegion...otherwise
              * it's not expected
              */
-            if ( ProbeAlignedRegion.class.isAssignableFrom( geneProduct.getGene().getClass() ) ) {
-                exons.add( gpPhysicalLocation );
-            } else {
-                log.warn( "No exons for " + geneProduct );
-                return 0;
-            }
+            log.warn( "No exons for " + geneProduct );
+            return 0;
+
         }
 
         // this was happening when data was truncated by the database!
@@ -300,7 +296,7 @@ public class SequenceManipulation {
     private static char complement( char baseLetter ) {
 
         switch ( baseLetter ) {
-            // basics
+        // basics
             case 'A':
                 return 'T';
             case 'T':
@@ -430,9 +426,8 @@ public class SequenceManipulation {
             return 0;
         }
 
-        return computeOverlap( a.getNucleotide(), a.getNucleotide() + a.getNucleotideLength(), b.getNucleotide(), b
-                .getNucleotide()
-                + b.getNucleotideLength() );
+        return computeOverlap( a.getNucleotide(), a.getNucleotide() + a.getNucleotideLength(), b.getNucleotide(),
+                b.getNucleotide() + b.getNucleotideLength() );
 
     }
 

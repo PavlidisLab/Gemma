@@ -33,7 +33,6 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
-import ubic.gemma.model.common.auditAndSecurity.User.Factory;
 import ubic.gemma.security.authentication.UserServiceImpl;
 
 /**

@@ -104,7 +104,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -422,7 +422,7 @@ public class SearchServiceImpl implements SearchService {
      * @return results, if the settings.termUri is populated. This includes gene uris.
      */
     private Map<Class<?>, List<SearchResult>> ontologyUriSearch( SearchSettings settings ) {
-        Map<Class<?>, List<SearchResult>> sortedFilteredResults = new HashMap<Class<?>, List<SearchResult>>();
+        Map<Class<?>, List<SearchResult>> results = new HashMap<Class<?>, List<SearchResult>>();
 
         // 1st check to see if the query is a URI (from an ontology).
         // Do this by seeing if we can find it in the loaded ontologies.
@@ -434,15 +434,13 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( !termUri.startsWith( "http://" ) ) {
-            return sortedFilteredResults;
+            return results;
         }
 
         OntologyTerm matchingTerm = null;
         String uriString = null;
 
         uriString = StringEscapeUtils.escapeJava( StringUtils.strip( termUri ) );
-
-        log.info( "URI converted to " + uriString );
 
         if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
             // Perhaps is a valid gene URL. Want to search for the gene in gemma.
@@ -453,59 +451,62 @@ public class SearchServiceImpl implements SearchService {
             Collection<Characteristic> foundCharacteristics = characteristicService.findByUri( uriString );
             Map<Characteristic, Object> parentMap = characteristicService.getParents( foundCharacteristics );
 
-            Collection<SearchResult> characteriticOwnerResults = filterCharacteristicOwnersByClass( classesToFilterOn,
+            Collection<SearchResult> characteristicOwnerResults = filterCharacteristicOwnersByClass( classesToFilterOn,
                     parentMap );
 
-            // Get results from general search using the found gene's gene symbol
-            String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
-            Gene g = null;
-
-            try {
-                g = geneService.findByNCBIId( Integer.parseInt( ncbiAccessionFromUri ) );
-            } catch ( NumberFormatException e ) {
-                // ok
-            }
-            if ( g == null ) {
-                Map<Class<?>, List<SearchResult>> justCharacteristicResults = new HashMap<Class<?>, List<SearchResult>>();
-                List<SearchResult> sortedCharacteristicResults = new ArrayList<SearchResult>();
-                sortedCharacteristicResults.addAll( characteriticOwnerResults );
-                justCharacteristicResults.put( ExpressionExperiment.class, sortedCharacteristicResults );
-                return justCharacteristicResults;
+            if ( !characteristicOwnerResults.isEmpty() ) {
+                results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
+                results.get( ExpressionExperiment.class ).addAll( characteristicOwnerResults );
             }
 
-            settings.setQuery( g.getOfficialSymbol() );
-            sortedFilteredResults = this.search( settings );
-            sortedFilteredResults.get( ExpressionExperiment.class ).addAll( characteriticOwnerResults );
-        } else {
+            if ( settings.isSearchGenes() ) {
+                // Get the gene
+                String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
+                Gene g = null;
 
-            matchingTerm = this.ontologyService.getTerm( uriString );
-            if ( matchingTerm == null || matchingTerm.getUri() == null ) return sortedFilteredResults;
-
-            log.info( "Found ontology term: " + matchingTerm );
-
-            // Was a URI from a loaded ontology soo get the children.
-            Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
-            terms2Search4.add( matchingTerm );
-
-            Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
-            classesToSearch.add( ExpressionExperiment.class );
-            classesToSearch.add( BioMaterial.class );
-
-            Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners(
-                    classesToSearch, terms2Search4 );
-
-            for ( SearchResult searchR : matchingResults ) {
-                if ( sortedFilteredResults.containsKey( searchR.getResultClass() ) ) {
-                    sortedFilteredResults.get( searchR.getResultClass() ).add( searchR );
-                } else {
-                    List<SearchResult> rs = new ArrayList<SearchResult>();
-                    rs.add( searchR );
-                    sortedFilteredResults.put( searchR.getResultClass(), rs );
+                try {
+                    g = geneService.findByNCBIId( Integer.parseInt( ncbiAccessionFromUri ) );
+                } catch ( NumberFormatException e ) {
+                    // ok
                 }
+
+                if ( g != null ) {
+                    results.put( Gene.class, new ArrayList<SearchResult>() );
+                    results.get( Gene.class ).add( new SearchResult( g ) );
+                }
+            }
+            return results;
+        }
+        /*
+         * Not searching for a gene.
+         */
+        matchingTerm = this.ontologyService.getTerm( uriString );
+        if ( matchingTerm == null || matchingTerm.getUri() == null ) return results;
+
+        log.info( "Found ontology term: " + matchingTerm );
+
+        // Was a URI from a loaded ontology soo get the children.
+        Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
+        terms2Search4.add( matchingTerm );
+
+        Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
+        classesToSearch.add( ExpressionExperiment.class );
+        classesToSearch.add( BioMaterial.class );
+
+        Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners( classesToSearch,
+                terms2Search4 );
+
+        for ( SearchResult searchR : matchingResults ) {
+            if ( results.containsKey( searchR.getResultClass() ) ) {
+                results.get( searchR.getResultClass() ).add( searchR );
+            } else {
+                List<SearchResult> rs = new ArrayList<SearchResult>();
+                rs.add( searchR );
+                results.put( searchR.getResultClass(), rs );
             }
         }
 
-        return sortedFilteredResults;
+        return results;
     }
 
     /*
@@ -1669,19 +1670,19 @@ public class SearchServiceImpl implements SearchService {
                 if ( o instanceof ExpressionExperiment ) {
                     ExpressionExperiment ee = ( ExpressionExperiment ) o;
                     currentTaxon = expressionExperimentService.getTaxon( ee.getId() );
-                    
+
                 } else if ( o instanceof ExpressionExperimentSet ) {
                     ExpressionExperimentSet ees = ( ExpressionExperimentSet ) o;
                     currentTaxon = ees.getTaxon();
-                    
+
                 } else if ( o instanceof Gene ) {
                     Gene gene = ( Gene ) o;
                     currentTaxon = gene.getTaxon();
-                    
+
                 } else if ( o instanceof GeneSet ) {
                     GeneSet geneSet = ( GeneSet ) o;
                     currentTaxon = geneSetService.getTaxonForGeneSet( geneSet );
-                    
+
                 } else {
                     Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
                     currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
@@ -1886,7 +1887,7 @@ public class SearchServiceImpl implements SearchService {
         results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
         results.put( CompositeSequence.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
-        results.put( Gene.class, new ArrayList<SearchResult>() ); 
+        results.put( Gene.class, new ArrayList<SearchResult>() );
         results.put( GeneSet.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperimentSet.class, new ArrayList<SearchResult>() );
 
@@ -2226,7 +2227,7 @@ public class SearchServiceImpl implements SearchService {
         String query = settings.getQuery().trim();
         // Search results should contain all the words from the query.
         query = query.replaceAll("\\s+", " AND ");
-        
+
         if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 

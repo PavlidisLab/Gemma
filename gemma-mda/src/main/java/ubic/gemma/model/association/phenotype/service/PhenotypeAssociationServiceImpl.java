@@ -31,9 +31,7 @@ import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
-import ubic.gemma.model.association.phenotype.UrlEvidence;
-import ubic.gemma.model.association.phenotype.UrlEvidenceDao;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao; 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -54,9 +52,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     @Autowired
     private LiteratureEvidenceDao literatureEvidenceDao;
-
-    @Autowired
-    private UrlEvidenceDao urlEvidenceDao;
+ 
 
     @Autowired
     private GenericExperimentDao genericExperimentDao;
@@ -111,13 +107,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public LiteratureEvidence loadLiteratureEvidence( Long id ) {
         return this.literatureEvidenceDao.load( id );
-    }
-
-    /** load an UrlEvidence given an ID */
-    @Override
-    public UrlEvidence loadUrlEvidence( Long id ) {
-        return this.urlEvidenceDao.load( id );
-    }
+    } 
 
     /** load an ExperimentalEvidence given an ID */
     @Override

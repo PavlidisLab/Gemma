@@ -18,11 +18,11 @@
  */
 package ubic.gemma.web.controller.security;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;

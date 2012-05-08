@@ -204,11 +204,20 @@ public interface GeneService {
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
 
     /**
+     * Get summarized node degree
+     * 
+     * @param gene
+     * @return
+     */
+    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene );
+
+    /**
      * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
      * 
      * @param genes
      * @param ees
      * @return
+     * @deprecated
      */
     @Deprecated
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,

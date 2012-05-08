@@ -55,8 +55,6 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.util.DateUtil;
@@ -347,7 +345,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 // common case, do it quickly.
                 BioSequence2GeneProduct b2g = geneclusters.iterator().next();
                 Gene g = b2g.getGeneProduct().getGene();
-                if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                if ( knownGenesOnly ) {
                     continue;
                 }
                 Collection<OntologyTerm> goTerms = getGoTerms( g, ty );
@@ -367,7 +365,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
-                if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                if ( knownGenesOnly ) {
                     continue;
                 }
 

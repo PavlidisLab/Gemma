@@ -120,6 +120,10 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         v = processedDataVectorService.getProcessedDataArrays( ees, genes );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
 
+       
+        processedDataVectorService.clearCache();
+        
+        
     }
 
     /**
