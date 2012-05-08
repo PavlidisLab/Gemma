@@ -18,8 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -29,8 +36,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  * @see ubic.gemma.model.common.auditAndSecurity.User
  * @version $Id$
  */
-public abstract class UserDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.common.auditAndSecurity.UserDao {
+public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao {
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int, java.util.Collection)
@@ -39,17 +45,9 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends User> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        for ( User user : entities ) {
+            create( user );
+        }
         return entities;
     }
 
@@ -62,7 +60,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.User)
      */
-    public User create( final ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public User create( final User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.create - 'user' can not be null" );
         }
@@ -82,11 +80,11 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(int, java.lang.String,
      *      java.lang.String)
      */
-    public java.util.Collection<User> findByFirstAndLastName( final java.lang.String name,
-            final java.lang.String secondName ) {
+    public Collection<User> findByFirstAndLastName( final String name,
+            final String secondName ) {
         return this
                 .findByFirstAndLastName(
-                        "from ubic.gemma.model.common.auditAndSecurity.UserImpl as user where user.name = :name and user.secondName = :secondName",
+                        "from UserImpl as user where user.name = :name and user.secondName = :secondName",
                         name, secondName );
     }
 
@@ -95,15 +93,15 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      *      java.lang.String, java.lang.String)
      */
     
-    public java.util.Collection<User> findByFirstAndLastName( final java.lang.String queryString,
-            final java.lang.String name, final java.lang.String secondName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+    public Collection<User> findByFirstAndLastName( final String queryString,
+            final String name, final String secondName ) {
+        List<String> argNames = new java.util.ArrayList<String>();
+        List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
         args.add( secondName );
         argNames.add( "secondName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        List results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
         return results;
     }
@@ -113,7 +111,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     
-    public java.util.Collection<User> findByFullName( final java.lang.String name, final java.lang.String secondName ) {
+    public Collection<User> findByFullName( final String name, final String secondName ) {
         return this.findByFullName(
                 "from PersonImpl p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
                 name, secondName );
@@ -122,14 +120,14 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(int, java.lang.String)
      */
-    public java.util.Collection<User> findByLastName( final java.lang.String lastName ) {
+    public Collection<User> findByLastName( final String lastName ) {
         return this.findByLastName( "from  UserImpl as user where user.lastName = :lastName", lastName );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
      */
-    public User findByUserName( final java.lang.String userName ) {
+    public User findByUserName( final String userName ) {
         return this.findByUserName( "from UserImpl u where u.userName=:userName", userName );
     }
 
@@ -140,18 +138,16 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "User.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.common.auditAndSecurity.UserImpl.class,
-                id );
+        final Object entity = this.getHibernateTemplate().get( UserImpl.class, id );
         return ( User ) entity;
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#loadAll(int)
      */
-    public java.util.Collection<? extends User> loadAll() {
-        final java.util.Collection<? extends User> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.auditAndSecurity.UserImpl.class );
-
+    public Collection<? extends User> loadAll() {
+        final Collection<? extends User> results = this.getHibernateTemplate().loadAll(
+                UserImpl.class );
         return results;
     }
 
@@ -163,7 +159,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "User.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.auditAndSecurity.User entity = this.load( id );
+        User entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -173,7 +169,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<? extends User> entities ) {
+    public void remove( Collection<? extends User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
         }
@@ -183,7 +179,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#remove(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public void remove( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.remove - 'user' can not be null" );
         }
@@ -194,27 +190,19 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<? extends User> entities ) {
+    public void update( final Collection<? extends User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends User> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        for ( User user : entities) {
+            update( user );
+        }
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#update(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    public void update( ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public void update( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );
         }
@@ -226,17 +214,17 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     
-    private User findByEmail( final java.lang.String queryString, final java.lang.String email ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+    private User findByEmail( final String queryString, final String email ) {
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( email );
         argNames.add( "email" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
+                    "More than one instance of 'Contact"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
@@ -250,15 +238,15 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     
-    private java.util.Collection findByFullName( final java.lang.String queryString, final java.lang.String name,
-            final java.lang.String secondName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+    private Collection findByFullName( final String queryString, final String name,
+            final String secondName ) {
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
         args.add( secondName );
         argNames.add( "secondName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        List results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
         return results;
@@ -269,13 +257,13 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     
-    private java.util.Collection<User> findByLastName( final java.lang.String queryString,
+    private Collection<User> findByLastName( final String queryString,
             final java.lang.String lastName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( lastName );
         argNames.add( "lastName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        List results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
         return results;
     }
@@ -284,18 +272,24 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String, java.lang.String)
      */
     
-    private User findByUserName( final java.lang.String queryString, final java.lang.String userName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( userName );
-        argNames.add( "userName" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+    private User findByUserName( final String queryString, final String userName ) {
+//        List<String> argNames = new ArrayList<String>();
+//        List<Object> args = new ArrayList<Object>();
+//        args.add( userName );
+//        argNames.add( "userName" );
+
+        Criteria searchCriteria = this.getSessionFactory().getCurrentSession().createCriteria( UserImpl.class );
+        List results = searchCriteria.add( Restrictions.eq( "userName", userName ) ).list();
+
+//        Set results = new LinkedHashSet( 
+//                
+//                .getHibernateTemplate().findByNamedParam( queryString,
+//                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.User"
+            throw new InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'User"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
