@@ -292,9 +292,11 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         f.addAllOf( vals );
         log.info( "Finalizing node degree computation" );
 
-        for ( int i = 0; i < this.allGeneNodeDegrees.size(); i++ ) {
+        int i = 0;
+        for ( Gene gene : this.allGeneNodeDegrees.keySet() ) {
 
-            GeneCoexpressionNodeDegree n = this.allGeneNodeDegrees.get( i );
+            GeneCoexpressionNodeDegree n = this.allGeneNodeDegrees.get( gene );
+
             double rank = ranks.get( i );
 
             n.setRank( rank / ranks.size() );
@@ -311,7 +313,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                         .getNumLinks(), n.getRankNumLinks() ) );
             }
 
-            if ( i % 2000 == 0 ) {
+            if ( ++i % 2000 == 0 ) {
                 log.info( "Completed node degree computation for " + i + " genes" );
             }
         }
@@ -614,7 +616,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         }
 
-        log.info( "Found " + oldAnalyses.size() + " analyses that will be disabled when this one is finished" );
+        log.info( "Found " + oldAnalyses.size() + " old analyses" );
         return oldAnalyses;
 
     }
