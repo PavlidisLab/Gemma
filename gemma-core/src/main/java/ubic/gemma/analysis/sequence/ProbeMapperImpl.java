@@ -27,22 +27,16 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeService;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
@@ -56,11 +50,6 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     private Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
-
-    @Autowired
-    private ChromosomeService chromosomeService;
-    @Autowired
-    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)

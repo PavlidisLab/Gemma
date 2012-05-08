@@ -18,7 +18,6 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -36,7 +35,7 @@ public interface GeneCoreService {
      * @param geneId The gene id
      * @return GeneDetailsValueObject a representation of that gene
      */
-    public GeneDetailsValueObject loadGeneDetails( long geneId );
+    public GeneValueObject loadGeneDetails( long geneId );
 
     /**
      * Search for genes (by name or symbol)

@@ -38,7 +38,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
@@ -111,21 +110,19 @@ public class GeneController extends BaseController {
      * @param geneId
      * @return
      */
-    public GeneDetailsValueObject loadGeneDetails( Long geneId ) {
-
+    public GeneValueObject loadGeneDetails( Long geneId ) {
         return geneCoreService.loadGeneDetails( geneId );
     }
 
     /** used to show gene info in the phenotype tab */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId(geneId,
-        		phenotypeValueUris == null ?
-    				new HashSet<String>() :
-    				new HashSet<String>(Arrays.asList(phenotypeValueUris)));
+        return phenotypeAssociationManagerService.findEvidenceByGeneId(
+                geneId,
+                phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
+                        .asList( phenotypeValueUris ) ) );
     }
 
-    public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {
-        
+    public GeneValueObject loadGenePhenotypes( Long geneId ) {
         return geneService.loadGenePhenotypes( geneId );
     }
 
@@ -140,7 +137,7 @@ public class GeneController extends BaseController {
 
         String idString = request.getParameter( "id" );
         String ncbiId = request.getParameter( "ncbiid" );
-        
+
         if ( idString == null && ncbiId == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene" } );
             return new ModelAndView( "index" );
@@ -186,9 +183,9 @@ public class GeneController extends BaseController {
         mav.addObject( "geneId", id );
         mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
         mav.addObject( "geneOfficialName", gene.getOfficialName() );
-        mav.addObject( "geneNcbiId", gene.getNcbiId());
-        mav.addObject( "geneTaxonCommonName", gene.getTaxonCommonName());
-        mav.addObject( "geneTaxonId", gene.getTaxonId());
+        mav.addObject( "geneNcbiId", gene.getNcbiId() );
+        mav.addObject( "geneTaxonCommonName", gene.getTaxonCommonName() );
+        mav.addObject( "geneTaxonId", gene.getTaxonId() );
 
         return mav;
     }
@@ -273,7 +270,6 @@ public class GeneController extends BaseController {
 
         return mav;
     }
-
 
     // /**
     // * @param gene

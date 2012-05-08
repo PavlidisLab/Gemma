@@ -27,44 +27,44 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 
 /**
- * RESTful web services for gene 
+ * RESTful web services for gene
  * 
  * @author frances
  * @version $Id $
-*/
+ */
 
 @Component
 @Path("/gene")
 public class GeneWebService {
-	
+
     @Autowired
     private GeneCoreService geneCoreService = null;
-    
+
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService = null;
 
     @GET
     @Path("/find-gene-details")
-	@Produces(MediaType.APPLICATION_JSON)
-//    public GeneDetailsValueObject findGeneDetails(@QueryParam("geneId") Long geneId) {
-//    	return geneCoreService.loadGeneDetails( geneId );
-//    }
-	public Collection<GeneDetailsValueObject> findGeneDetails(@QueryParam("geneId") Long geneId) {
-		ArrayList<GeneDetailsValueObject> valueObjects = new ArrayList<GeneDetailsValueObject>(1); // Contain only 1 element.
-		valueObjects.add(geneCoreService.loadGeneDetails(geneId));
-		
-		return valueObjects;
+    @Produces(MediaType.APPLICATION_JSON)
+    // public GeneDetailsValueObject findGeneDetails(@QueryParam("geneId") Long geneId) {
+    // return geneCoreService.loadGeneDetails( geneId );
+    // }
+    public Collection<GeneValueObject> findGeneDetails( @QueryParam("geneId") Long geneId ) {
+        ArrayList<GeneValueObject> valueObjects = new ArrayList<GeneValueObject>( 1 ); // Contain only 1 element.
+        valueObjects.add( geneCoreService.loadGeneDetails( geneId ) );
+
+        return valueObjects;
     }
 
     @GET
     @Path("/find-genes-with-evidence")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Collection<GeneEvidenceValueObject> findGenesWithEvidence(@QueryParam("geneSymbol") String geneSymbol) {
-		return phenotypeAssociationManagerService.findGenesWithEvidence(geneSymbol, null);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
+        return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
     }
 }

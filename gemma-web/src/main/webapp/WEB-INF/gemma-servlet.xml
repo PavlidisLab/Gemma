@@ -745,7 +745,6 @@
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneDetailsValueObject" javascript="GeneDetailsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" 

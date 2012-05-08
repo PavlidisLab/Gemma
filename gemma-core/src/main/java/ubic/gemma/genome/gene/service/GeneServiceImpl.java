@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
@@ -121,12 +120,11 @@ public class GeneServiceImpl implements GeneService {
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
         return this.getGeneDao().getGeneCoexpressionNodeDegree( genes );
     }
-    
+
     @Override
     public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene ) {
         return this.getGeneDao().getGeneCoexpressionNodeDegree( gene );
     }
-
 
     @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
@@ -300,7 +298,7 @@ public class GeneServiceImpl implements GeneService {
     }
 
     @Override
-    public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {
+    public GeneValueObject loadGenePhenotypes( Long geneId ) {
         Gene gene = load( geneId );
 
         Collection<Long> ids = new HashSet<Long>();
@@ -312,7 +310,7 @@ public class GeneServiceImpl implements GeneService {
         }
 
         GeneValueObject initialResult = initialResults.iterator().next();
-        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
+        GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjs = gene.getAliases();
         Collection<String> aliasStrs = new ArrayList<String>();
@@ -322,7 +320,7 @@ public class GeneServiceImpl implements GeneService {
         details.setAliases( aliasStrs );
 
         Long compositeSequenceCount = getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount );
+        details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
@@ -752,8 +750,5 @@ public class GeneServiceImpl implements GeneService {
     protected GeneDao getGeneDao() {
         return this.geneDao;
     }
-
-  
-   
 
 }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -69,6 +70,20 @@ public class GeneValueObject implements java.io.Serializable {
         return converted;
     }
 
+    public static Collection<String> getAliasStrings( Gene gene ) {
+        Collection<java.lang.String> aliases = new ArrayList<String>();
+        // catch doesn't prevent error messages in logs -- why?
+        /*
+         * try{
+         * 
+         * Collection<GeneAlias> aliasObjs = gene.getAliases(); Iterator<GeneAlias> iter = aliasObjs.iterator(); while(
+         * iter.hasNext()){ aliases.add( iter.next().getAlias() ); } }catch(org.hibernate.LazyInitializationException
+         * e){ return aliases; }
+         */
+        return aliases;
+
+    }
+
     private java.lang.String description;
 
     private java.lang.Long id;
@@ -90,6 +105,23 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.Long taxonId;
 
     private java.lang.String taxonScientificName;
+
+    private Collection<GeneValueObject> homologues = null;
+
+    private Collection<GeneSetValueObject> geneSets = null;
+
+    private Integer compositeSequenceCount = 0; // number of probes
+
+    private Integer numGoTerms = 0;
+
+    private Double multifunctionalityRank = 0.0;
+
+    private Double nodeDegreeRank = 0.0;
+
+    /**
+     * How many experiments "involve" (manipulate, etc.) this gene
+     */
+    private Integer associatedExperimentCount = 0;
 
     public GeneValueObject() {
     }
@@ -173,18 +205,16 @@ public class GeneValueObject implements java.io.Serializable {
         }
     }
 
-    public static Collection<String> getAliasStrings( Gene gene ) {
-        Collection<java.lang.String> aliases = new ArrayList<String>();
-        // catch doesn't prevent error messages in logs -- why?
-        /*
-         * try{
-         * 
-         * Collection<GeneAlias> aliasObjs = gene.getAliases(); Iterator<GeneAlias> iter = aliasObjs.iterator(); while(
-         * iter.hasNext()){ aliases.add( iter.next().getAlias() ); } }catch(org.hibernate.LazyInitializationException
-         * e){ return aliases; }
-         */
+    public Collection<java.lang.String> getAliases() {
         return aliases;
+    }
 
+    public Integer getAssociatedExperimentCount() {
+        return associatedExperimentCount;
+    }
+
+    public Integer getCompositeSequenceCount() {
+        return compositeSequenceCount;
     }
 
     /**
@@ -195,11 +225,23 @@ public class GeneValueObject implements java.io.Serializable {
         return this.description;
     }
 
+    public Collection<GeneSetValueObject> getGeneSets() {
+        return geneSets;
+    }
+
+    public Collection<GeneValueObject> getHomologues() {
+        return homologues;
+    }
+
     /**
      * 
      */
     public java.lang.Long getId() {
         return this.id;
+    }
+
+    public Double getMultifunctionalityRank() {
+        return multifunctionalityRank;
     }
 
     /**
@@ -209,19 +251,19 @@ public class GeneValueObject implements java.io.Serializable {
         return this.name;
     }
 
-    public Collection<java.lang.String> getAliases() {
-        return aliases;
-    }
-
-    public void setAliases( Collection<java.lang.String> aliases ) {
-        this.aliases = aliases;
-    }
-
     /**
      * 
      */
     public Integer getNcbiId() {
         return this.ncbiId;
+    }
+
+    public Double getNodeDegreeRank() {
+        return nodeDegreeRank;
+    }
+
+    public Integer getNumGoTerms() {
+        return numGoTerms;
     }
 
     /**
@@ -257,12 +299,36 @@ public class GeneValueObject implements java.io.Serializable {
         return taxonScientificName;
     }
 
+    public void setAliases( Collection<java.lang.String> aliases ) {
+        this.aliases = aliases;
+    }
+
+    public void setAssociatedExperimentCount( Integer associatedExperimentCount ) {
+        this.associatedExperimentCount = associatedExperimentCount;
+    }
+
+    public void setCompositeSequenceCount( Integer compositeSequenceCount ) {
+        this.compositeSequenceCount = compositeSequenceCount;
+    }
+
     public void setDescription( java.lang.String description ) {
         this.description = description;
     }
 
+    public void setGeneSets( Collection<GeneSetValueObject> geneSets ) {
+        this.geneSets = geneSets;
+    }
+
+    public void setHomologues( Collection<GeneValueObject> homologues ) {
+        this.homologues = homologues;
+    }
+
     public void setId( java.lang.Long id ) {
         this.id = id;
+    }
+
+    public void setMultifunctionalityRank( Double multifunctionalityRank ) {
+        this.multifunctionalityRank = multifunctionalityRank;
     }
 
     public void setName( java.lang.String name ) {
@@ -271,6 +337,14 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setNcbiId( Integer ncbiId ) {
         this.ncbiId = ncbiId;
+    }
+
+    public void setNodeDegreeRank( Double nodeDegreeRank ) {
+        this.nodeDegreeRank = nodeDegreeRank;
+    }
+
+    public void setNumGoTerms( Integer numGoTerms ) {
+        this.numGoTerms = numGoTerms;
     }
 
     public void setOfficialName( java.lang.String officialName ) {

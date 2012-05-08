@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -34,7 +34,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author kelsey
@@ -354,7 +353,7 @@ public interface GeneService {
      */
     public Collection<GeneProductValueObject> getProducts( Long geneId );
 
-    public GeneDetailsValueObject loadGenePhenotypes( Long geneId );
+    public GeneValueObject loadGenePhenotypes( Long geneId );
 
     public Collection<AnnotationValueObject> findGOTerms( Long geneId );
 

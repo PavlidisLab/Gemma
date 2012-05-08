@@ -65,8 +65,8 @@ public class MatrixWriter<T> {
      * @param matrix
      * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
      *        gene Name]
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
-     *      annotations are set up.
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the
+     *      stringified annotations are set up.
      * @param writeHeader
      * @throws IOException
      */
@@ -150,7 +150,6 @@ public class MatrixWriter<T> {
         int rows = matrix.rows();
 
         List<BioMaterial> bioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
-        int orderedBioMLastIndex = bioMaterials.size() - 1;
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
@@ -209,8 +208,8 @@ public class MatrixWriter<T> {
      * @param writeGeneInfo
      * @param columns
      * @param buf
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
-     *      annotations are set up.
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the
+     *      stringified annotations are set up.
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<T> matrix,
             Map<CompositeSequence, ? extends Object> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
@@ -244,8 +243,8 @@ public class MatrixWriter<T> {
      *        the text. If there are no genes for the probe, then blanks will be added. In each array, the first string
      *        is expected to respresent the gene symbols, the second the names. Any other array elements are ignored.
      *        The array of annotations is like this: [probe name,genes symbol, gene Name, gemma gene id, ncbi id]
-     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the stringified
-     *      annotations are set up.
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString for how the
+     *      stringified annotations are set up.
      */
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
             Map<CompositeSequence, String[]> geneAnnotations ) {
@@ -285,7 +284,7 @@ public class MatrixWriter<T> {
             names = names.replaceAll( "#", "_" );
 
             // initial tab has already been added before
-            buf.append( symbols + "\t" + names + "\t" + gemmaID + "\t" + ncbiID + "\t");
+            buf.append( symbols + "\t" + names + "\t" + gemmaID + "\t" + ncbiID + "\t" );
         } else {
             buf.append( "\t\t\t\t" );
         }

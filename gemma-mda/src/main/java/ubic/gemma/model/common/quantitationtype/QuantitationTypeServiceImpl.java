@@ -48,7 +48,6 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
         }
     }
 
-    
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
@@ -56,7 +55,7 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
             throws java.lang.Exception {
         this.getQuantitationTypeDao().update( quantitationType );
     }
-    
+
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
@@ -113,9 +112,9 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<QuantitationType> loadAll() {
         try {
-            return this.getQuantitationTypeDao().loadAll();
+            return ( Collection<QuantitationType> ) this.getQuantitationTypeDao().loadAll();
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
                     "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll()' --> "
@@ -149,6 +148,5 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
     protected ubic.gemma.model.common.quantitationtype.QuantitationTypeDao getQuantitationTypeDao() {
         return this.quantitationTypeDao;
     }
-
 
 }

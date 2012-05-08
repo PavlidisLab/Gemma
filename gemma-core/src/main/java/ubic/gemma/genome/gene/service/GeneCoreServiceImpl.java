@@ -10,8 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
+ 
 import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -59,7 +58,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
      * @return GeneDetailsValueObject a representation of that gene
      */
     @Override
-    public GeneDetailsValueObject loadGeneDetails( long geneId ) {
+    public GeneValueObject loadGeneDetails( long geneId ) {
 
         Gene gene = this.geneService.load( geneId );
 
@@ -72,7 +71,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         }
 
         GeneValueObject initialResult = initialResults.iterator().next();
-        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
+        GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjs = gene.getAliases();
         Collection<String> aliasStrs = new ArrayList<String>();
@@ -85,7 +84,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
 
         Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount );
+        details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
@@ -113,7 +112,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
     /**
      * @param details
      */
-    private void getAssociatedExperimentsCount( GeneDetailsValueObject details ) {
+    private void getAssociatedExperimentsCount( GeneValueObject details ) {
         SearchSettings s = new SearchSettings();
         s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + details.getNcbiId() );
         s.noSearches();

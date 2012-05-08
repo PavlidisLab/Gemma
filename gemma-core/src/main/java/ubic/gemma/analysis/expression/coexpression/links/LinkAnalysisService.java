@@ -18,7 +18,6 @@ import java.util.Collection;
 
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -35,8 +34,7 @@ public interface LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    public abstract LinkAnalysis process( Long eeId, FilterConfig filterConfig,
-            LinkAnalysisConfig linkAnalysisConfig );
+    public abstract LinkAnalysis process( Long eeId, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
 
     /**
      * Used when the input is data vectors from another source, instead of from a DB-bound expressionExperiment. Example
