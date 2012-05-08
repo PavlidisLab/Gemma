@@ -162,14 +162,17 @@ public class SearchServiceTest extends BaseSpringContextTest {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
 
-        // In case the fma ontology isn't set to be initialized the the Gemma.properties file
-        if ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-            ontologyService.getFmaOntologyService().startInitializationThread( true );
-            while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-                Thread.sleep( 3000 );
-                log.info( "Waiting for FMA to load" );
-            }
-        }
+        ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
+        // if ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
+        // ontologyService.getFmaOntologyService().startInitializationThread( true );
+        // while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
+        // Thread.sleep( 3000 );
+        // log.info( "Waiting for FMA to load" );
+        // if ( ++i > max ) {
+        // fail( "Could not load FMA" );
+        // }
+        // }
+        // }
 
         log.info( "Ready to test" );
 
