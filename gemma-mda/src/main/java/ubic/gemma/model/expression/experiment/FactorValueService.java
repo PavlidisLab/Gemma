@@ -36,14 +36,13 @@ public interface FactorValueService {
      * @return
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.expression.experiment.FactorValue create(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    public FactorValue create( FactorValue factorValue );
 
     /**
      * @param factorValue
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void delete( ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    public void delete( FactorValue factorValue );
 
     /**
      * @param valuePrefix
@@ -57,21 +56,20 @@ public interface FactorValueService {
      * @return
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    public FactorValue findOrCreate( FactorValue factorValue );
 
     /**
      * @param id
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.FactorValue load( java.lang.Long id );
+    public FactorValue load( java.lang.Long id );
 
     /**
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<FactorValue> loadAll();
+    public Collection<FactorValue> loadAll();
 
     /**
      * @param factorValues

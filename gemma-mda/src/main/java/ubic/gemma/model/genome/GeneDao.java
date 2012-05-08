@@ -23,6 +23,8 @@ import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.BaseDao;
@@ -46,20 +48,20 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
+    public Gene find( Gene gene );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
-            ubic.gemma.model.common.description.ExternalDatabase source );
+    public Gene findByAccession( String accession,
+            ExternalDatabase source );
 
     /**
      * <p>
      * Locate genes that match the given alias string
      * </p>
      */
-    public java.util.Collection<Gene> findByAlias( java.lang.String search );
+    public Collection<Gene> findByAlias( java.lang.String search );
 
     public Collection<? extends Gene> findByEnsemblId( String exactString );
 
@@ -143,13 +145,13 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene,
+            ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> getCompositeSequencesById( long id );
+    public Collection<CompositeSequence> getCompositeSequencesById( long id );
 
     /**
      * Get precomputed node degree based on all available data sets.

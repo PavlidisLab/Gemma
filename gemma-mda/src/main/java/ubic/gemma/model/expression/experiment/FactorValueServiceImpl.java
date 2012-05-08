@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
  * @see ubic.gemma.model.expression.experiment.FactorValueService
  */
 @Service
-public class FactorValueServiceImpl extends ubic.gemma.model.expression.experiment.FactorValueServiceBase {
+public class FactorValueServiceImpl extends FactorValueServiceBase {
 
     public Collection<FactorValue> create( Collection<FactorValue> fvs ) {
         return ( Collection<FactorValue> ) this.getFactorValueDao().create( fvs );

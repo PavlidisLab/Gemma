@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -28,34 +30,34 @@ public interface TaxonDao extends BaseDao<Taxon> {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon find( ubic.gemma.model.genome.Taxon taxon );
+    public Taxon find( Taxon taxon );
 
     /**
      * <p>
      * A finder method to find a taxon based on an abbreviation.
      * </p>
      */
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation );
+    public Taxon findByAbbreviation( String abbreviation );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
+    public Taxon findByCommonName( String commonName );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName );
+    public Taxon findByScientificName( String scientificName );
 
     /**
      * Find the child<code>taxa</code> for this parent.
      */
-    public java.util.Collection<Taxon> findChildTaxaByParent( ubic.gemma.model.genome.Taxon parentTaxon );
+    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
+    public Taxon findOrCreate( Taxon taxon );
 
     /**
      * Thaw the taxon

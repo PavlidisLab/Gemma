@@ -62,7 +62,7 @@ public abstract class BaseFormController extends SimpleFormController {
     private MessageUtil messageUtil;
 
     @Autowired
-    protected MailEngine mailEngine = null;
+    protected MailEngine mailEngine;
 
     /**
      * @return the messageUtil

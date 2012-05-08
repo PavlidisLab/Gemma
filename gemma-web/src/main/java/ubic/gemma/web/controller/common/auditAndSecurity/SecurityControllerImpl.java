@@ -34,7 +34,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -66,7 +66,7 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @author keshav
  * @version $Id$
  */
-@Controller
+@Component
 public class SecurityControllerImpl implements SecurityController {
 
     private static final String GROUP_MANAGER_URL = ConfigUtils.getBaseUrl() + "manageGroups.html";

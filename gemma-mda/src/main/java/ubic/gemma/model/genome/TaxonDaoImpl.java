@@ -40,7 +40,7 @@ import ubic.gemma.util.BusinessKey;
 @Repository
 public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
 
-    private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
+    private static Log log = LogFactory.getLog( TaxonDaoImpl.class.getName() );
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
@@ -363,8 +363,5 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         }
         this.getHibernateTemplate().update( taxon );
     }
-
-    
-    
     
 }
