@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.Gene;

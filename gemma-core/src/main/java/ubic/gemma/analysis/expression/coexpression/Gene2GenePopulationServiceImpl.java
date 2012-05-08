@@ -245,17 +245,21 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         int count = 0;
         for ( Gene queryGene : toUseGenes ) {
-            computeNodeDegree( queryGene, -1, expressionExperiments );
 
-            Integer numberOfLinks = gene2GeneCoexpressionService.getNumberOfLinks( queryGene, toUseAnalysis );
+            assert queryGene != null;
 
-            allGeneNodeDegrees.get( queryGene ).setNumLinks( numberOfLinks );
+            if ( computeNodeDegree( queryGene, -1, expressionExperiments ) ) {
 
-            if ( count++ % 200 == 0 ) {
-                log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
+                Integer numberOfLinks = gene2GeneCoexpressionService.getNumberOfLinks( queryGene, toUseAnalysis );
+
+                allGeneNodeDegrees.get( queryGene ).setNumLinks( numberOfLinks );
+
+                if ( ++count % 200 == 0 ) {
+                    log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
+                }
             }
+
         }
-        log.info( "Finalizing node degree computation" );
         completeNodeDegreeComputations( useDB );
 
         allGeneNodeDegrees.clear();
@@ -306,6 +310,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                         .getMedianDeviation(), n.getPvalue(), n.getNumTests(), n.getRank(), n.getDistribution(), n
                         .getNumLinks(), n.getRankNumLinks() ) );
             }
+
+            if ( i % 2000 == 0 ) {
+                log.info( "Completed node degree computation for " + i + " genes" );
+            }
         }
 
     }
@@ -338,9 +346,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param queryGene
      * @param usedLinks number of links we stored for this gene. If < 0, this will not be used.
      * @param expressionExperiments
+     * @return true if node degree was computed.
      * @see completeNodeDegreeComputations(boolean) for the final computation.
      */
-    private void computeNodeDegree( Gene queryGene, int usedLinks, Collection<BioAssaySet> expressionExperiments ) {
+    private boolean computeNodeDegree( Gene queryGene, int usedLinks, Collection<BioAssaySet> expressionExperiments ) {
 
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
@@ -350,7 +359,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
          * under the null, like pvalues. There are a lot of ties, but this really shouldn't matter. I
          */
 
-        if ( nodeDegrees == null || nodeDegrees.isEmpty() ) return;
+        if ( nodeDegrees == null || nodeDegrees.isEmpty() ) return false;
 
         GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
         n.setGene( queryGene );
@@ -378,7 +387,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         // so we can compute summary stats at the end.
         this.allGeneNodeDegrees.put( queryGene, n );
-
+        return true;
     }
 
     /**

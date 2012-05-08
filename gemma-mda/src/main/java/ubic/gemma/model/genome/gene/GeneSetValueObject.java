@@ -17,7 +17,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.genome.gene;
+package ubic.gemma.model.genome.gene;
 
 import java.io.Serializable;
 import java.util.Collection;

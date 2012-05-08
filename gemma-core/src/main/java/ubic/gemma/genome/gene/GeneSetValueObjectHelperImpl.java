@@ -34,6 +34,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.security.SecurityService;
 
 

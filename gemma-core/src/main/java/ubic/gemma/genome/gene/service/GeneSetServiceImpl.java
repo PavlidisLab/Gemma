@@ -29,7 +29,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.TaxonValueObject;
@@ -39,6 +38,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;

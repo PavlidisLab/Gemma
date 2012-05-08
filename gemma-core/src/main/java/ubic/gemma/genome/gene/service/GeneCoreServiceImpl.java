@@ -11,7 +11,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
  
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
@@ -21,6 +20,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;

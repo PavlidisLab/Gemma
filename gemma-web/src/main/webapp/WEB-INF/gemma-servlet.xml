@@ -740,7 +740,7 @@
 			javascript="SessionBoundExpressionExperimentSetValueObject" />
 
 
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />

@@ -37,6 +37,8 @@
 
 package ubic.gemma.genome.gene;
 
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+
 /**
  * TODO Document Me
  * 
