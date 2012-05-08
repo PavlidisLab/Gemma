@@ -89,7 +89,7 @@ public interface UserService {
      * @param userName
      * @return user or null if they don't exist.
      */
-    public User findByUserName( java.lang.String userName ); // don't secure,
+    public User findByUserName( String userName ); // don't secure,
 
     // to allow login
 
@@ -127,7 +127,7 @@ public interface UserService {
      * Retrieves a list of users
      */
     @Secured( { "GROUP_ADMIN" })
-    public java.util.Collection<User> loadAll();
+    public Collection<User> loadAll();
 
     /**
      * @param u
