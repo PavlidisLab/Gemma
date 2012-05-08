@@ -155,6 +155,7 @@ public class AclAdvice {
 
         if ( object.getId() == null ) {
             log.warn( "ACLs cannot be added or updated on non-persistent object" );
+            return null;
         }
 
         ObjectIdentity oi = makeObjectIdentity( object );
@@ -604,17 +605,6 @@ public class AclAdvice {
         Securable s = ( Securable ) o;
 
         assert s != null;
-
-        //Session session = getSessionFactory().getCurrentSession();
-
-        /*
-         * See AuditAdvice.process for a discussion of how difficult this is.
-         */
-//        if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
-//            session.buildLockRequest( LockOptions.NONE ).lock( s );
-//        }
-
-        Hibernate.initialize( s );
 
         if ( isUpdate ) {
             startUpdate( methodName, s );
