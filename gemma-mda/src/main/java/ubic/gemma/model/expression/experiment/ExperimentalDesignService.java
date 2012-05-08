@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -30,52 +32,50 @@ public interface ExperimentalDesignService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign create(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExperimentalDesign create( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( java.lang.String name );
+    public ExperimentalDesign findByName( String name );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
      * Gets the expression experiment for the specified experimental design object
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign load( java.lang.Long id );
+    public ExperimentalDesign load( Long id );
 
     /**
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public java.util.Collection<ExperimentalDesign> loadAll();
+    public Collection<ExperimentalDesign> loadAll();
 
     /**
      * 
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public void update( ExperimentalDesign experimentalDesign );
+    
+    
 
 }
