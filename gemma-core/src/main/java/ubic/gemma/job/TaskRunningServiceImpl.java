@@ -474,6 +474,11 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     private void checkSubmittedTaskStatus( String taskId ) {
         SubmittedTask t = submittedTasks.get( taskId );
 
+        if ( t == null ) {
+            ProgressManager.updateJob( taskId, "No task with ID " + taskId + " was found in the submitted task queue." );
+            return;
+        }
+
         TaskCommand command = t.getCommand();
         Date subTime = command.getSubmissionTime();
         Date startTime = command.getStartTime();
