@@ -106,11 +106,5 @@ public interface AuditTrailService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
-
-    /**
-     * 
-     */
-//    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-//    public void audit( Auditable entity, AuditEvent auditEvent );
-
+    
 }

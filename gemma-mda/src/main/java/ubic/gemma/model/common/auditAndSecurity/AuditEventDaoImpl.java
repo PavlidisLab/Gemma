@@ -33,6 +33,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
@@ -56,7 +57,7 @@ import ubic.gemma.util.EntityUtils;
  * @version $Id$
  */
 @Repository
-public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase {
+public class AuditEventDaoImpl extends AuditEventDaoBase {
 
     private static Log log = LogFactory.getLog( AuditEventDaoImpl.class.getName() );
 
@@ -101,7 +102,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atmap.keySet() );
 
         List<?> qr = queryObject.list();
@@ -287,8 +288,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
-
-        Hibernate.initialize( auditable );
 
         if ( auditable.getAuditTrail() == null ) {
             throw new IllegalStateException( "Auditable did not have an audit trail: " + auditable );
