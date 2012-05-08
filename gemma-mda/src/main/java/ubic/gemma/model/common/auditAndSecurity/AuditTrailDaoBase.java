@@ -53,17 +53,9 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditTrail.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends AuditTrail> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( transform, entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        for ( AuditTrail auditTrail : entities) {
+            create( transform, auditTrail );
+        }
         return entities;
     }
 
@@ -168,17 +160,9 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends AuditTrail> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        for ( AuditTrail auditTrail : entities) {
+            update( auditTrail );
+        }
     }
 
     /**

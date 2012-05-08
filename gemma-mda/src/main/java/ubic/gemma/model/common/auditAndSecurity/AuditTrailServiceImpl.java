@@ -34,6 +34,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
 
+// Currently, AuditTrail manages Status. That means apart from retrieving status, all operations should go through AuditTrailService.
+//FIXME: It's not ideal to have this manage Status. We should either make Status part of AuditTrail, ot AuditTrail part of Status, 
+// or have something a bit higher up to manage both Status and AuditTrail. There should be a single place with this logic.
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService
  * @author pavlidis
@@ -155,7 +158,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     public AuditEvent addUpdateEvent( final Auditable auditable,
                                       final AuditEventType auditEventType,
-                                      final String note, boolean detachedAuditable ) {
+                                      final String note,
+                                      boolean detachedAuditable ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
             auditEvent.setDate( new Date() );
@@ -163,7 +167,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             auditEvent.setEventType( auditEventType );
             auditEvent.setNote( note );
             
-            if (detachedAuditable){
+            if ( detachedAuditable ) {                
                 auditable.setStatus( this.statusDao.load( auditable.getStatus().getId() ) );
             }
             
@@ -286,6 +290,12 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         }
     }
 
+
+    
+    
+    
+}
+
     
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Auditable,
@@ -326,5 +336,3 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 //        }
 //    }
     
-    
-}

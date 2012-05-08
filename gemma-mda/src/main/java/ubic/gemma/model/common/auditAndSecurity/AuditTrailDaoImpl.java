@@ -40,7 +40,7 @@ import ubic.gemma.model.common.Auditable;
  * @version $Id$
  */
 @Repository
-public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoBase {
+public class AuditTrailDaoImpl extends AuditTrailDaoBase {
 
     private static Log log = LogFactory.getLog( AuditTrailDaoImpl.class.getName() );
 
@@ -72,36 +72,17 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             auditEvent.setPerformer( user );
         }
 
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+        /*
+         * Note: this step should be done by the AuditAdvice when the entity was first created, so this is
+         * just defensive.
+         */
+        if ( auditable.getAuditTrail() == null ) {
+            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+        }
 
-                try {
-                    session.lock( auditable, LockMode.NONE ); // always a bit dicey. We can get a non-unique
-                    // object
-                    // exception. Session.get won't work right if this is a proxy... etc.
+        auditable.getAuditTrail().addEvent( auditEvent );
 
-                    if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
-
-                    /*
-                     * Note: this step should be done by the AuditAdvice when the entity was first created, so this is
-                     * just defensive.
-                     */
-                    if ( auditable.getAuditTrail() == null ) {
-                        auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-                    }
-
-                    auditable.getAuditTrail().addEvent( auditEvent );
-
-                    /*
-                     * When the session is flushed at the close of the transaction, we'll get the change
-                     */
-                } catch ( HibernateException e ) {
-                    log.warn( "Failed to update audit event on" + auditable + ": " + e.getMessage() + "; event was: "
-                            + auditEvent );
-                }
-                return null;
-            }
-        } );
+        this.getHibernateTemplate().saveOrUpdate( auditable );
 
         return auditEvent;
     }

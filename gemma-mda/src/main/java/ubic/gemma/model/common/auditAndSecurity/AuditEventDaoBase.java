@@ -43,17 +43,10 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends AuditEvent> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        
+        for (AuditEvent auditEvent : entities ) {
+            create( auditEvent );
+        }
         return entities;
     }
 
@@ -213,17 +206,9 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends AuditEvent> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        for ( AuditEvent auditEvent : entities ) {
+            update( auditEvent );
+        }
     }
 
     /**
