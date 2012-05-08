@@ -46,7 +46,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private ExpressionDataFileSerivce expressionDataFileService = null;
+    private ExpressionDataFileService expressionDataFileService = null;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -66,7 +66,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
         }
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = ExpressionDataFileSerivce.DATA_DIR + ee.getId() + "_" + shortName + "_expmat.data.txt.gz";
+        String filename = ExpressionDataFileService.DATA_DIR + ee.getId() + "_" + shortName + "_expmat.data.txt.gz";
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( filename ) ) );
         writer.write( "File written from " + this.getClass().getName() + " on " + new Date() );
         writer.flush();
@@ -96,7 +96,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
         }
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = ExpressionDataFileSerivce.DATA_DIR + ee.getId() + "_" + shortName
+        String filename = ExpressionDataFileService.DATA_DIR + ee.getId() + "_" + shortName
                 + "_expmat.unfilt.data.txt.gz";
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( filename ) ) );
         writer.write( "File written from " + this.getClass().getName() + " on " + new Date() );
