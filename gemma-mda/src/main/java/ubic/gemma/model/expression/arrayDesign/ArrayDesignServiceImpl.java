@@ -606,30 +606,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithPredictedGenes(ubic
-     * .gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected long handleNumCompositeSequenceWithPredictedGenes( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().numCompositeSequenceWithPredictedGene( arrayDesign );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithProbeAlignedRegion
-     * (ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected long handleNumCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().numCompositeSequenceWithProbeAlignedRegion( arrayDesign );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumGeneProductsById(long)
      */
     @Override

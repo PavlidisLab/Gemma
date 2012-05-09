@@ -277,20 +277,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * <p>
-     * function to get the number of composite sequences that are aligned to a predicted gene.
-     * </p>
-     */
-    public long numCompositeSequenceWithPredictedGene( ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * function to get the number of composite sequences that are aligned to a probe-mapped region.
-     * </p>
-     */
-    public long numCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign );
-
-    /**
-     * <p>
      * Returns the number of Genes associated with this ArrayDesign
      * </p>
      */

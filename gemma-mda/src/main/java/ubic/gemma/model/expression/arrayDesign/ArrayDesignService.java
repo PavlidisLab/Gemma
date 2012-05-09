@@ -356,22 +356,6 @@ public interface ArrayDesignService {
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
-     * <p>
-     * function to get the number of composite sequences that are aligned to a predicted gene
-     * </p>
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithPredictedGenes( ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * function to get the number of composite sequences that are aligned to a probe-mapped region.
-     * </p>
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign );
-
-    /**
      * Returns the number of unique Genes associated with this ArrayDesign id
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

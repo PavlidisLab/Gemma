@@ -672,34 +672,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithPredictedGenes(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumCompositeSequenceWithPredictedGenes( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithProbeAlignedRegion(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumCompositeSequenceWithProbeAlignedRegion( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public long numGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
@@ -1096,20 +1068,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * {@link #numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract long handleNumCompositeSequenceWithGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumCompositeSequenceWithPredictedGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumCompositeSequenceWithProbeAlignedRegion(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**

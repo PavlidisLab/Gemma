@@ -42,9 +42,6 @@ import ubic.gemma.model.genome.GeneImpl;
 public class CoexpressionCollectionValueObject {
     public static final String GENE_IMPL = GeneImpl.class.getSimpleName();
 
-    // public static final String PREDICTED_GENE_IMPL = PredictedGeneImpl.class.getSimpleName();
-    // public static final String PROBE_ALIGNED_REGION_IMPL = ProbeAlignedRegionImpl.class.getSimpleName();
-
     private double postProcessSeconds;
     private double dbQuerySeconds;
 

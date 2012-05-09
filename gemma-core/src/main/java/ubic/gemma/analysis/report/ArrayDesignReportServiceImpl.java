@@ -304,18 +304,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
         long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
         long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
-        long numCsPredictedGenes = arrayDesignService.numCompositeSequenceWithPredictedGenes( ad );
-        long numCsProbeAlignedRegions = arrayDesignService.numCompositeSequenceWithProbeAlignedRegion( ad );
-        long numCsPureGenes = numCsGenes - numCsPredictedGenes - numCsProbeAlignedRegions;
         long numGenes = arrayDesignService.numGenes( ad );
 
         adVo.setDesignElementCount( numProbes );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
-        adVo.setNumProbesToKnownGenes( Long.toString( numCsPureGenes ) );
-        adVo.setNumProbesToPredictedGenes( Long.toString( numCsPredictedGenes ) );
-        adVo.setNumProbesToProbeAlignedRegions( Long.toString( numCsProbeAlignedRegions ) );
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 

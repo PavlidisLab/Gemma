@@ -34,8 +34,6 @@ import ubic.gemma.model.genome.Gene;
  */
 public class MultipleCoexpressionTypeValueObject {
 
-    public static final String PREDICTED_GENE_IMPL = "PredictedGeneImpl";
-    public static final String PROBE_ALIGNED_REGION_IMPL = "ProbeAlignedRegionImpl";
     public static final String GENE_IMPL = "GeneImpl";
     private Map<Long, ExpressionExperimentValueObject> expressionExperiments;
 
