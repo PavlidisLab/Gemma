@@ -36,7 +36,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -66,7 +66,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
-    ExpressionDataFileSerivce expressionDataFileService;
+    ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     protected GeoService geoService;
