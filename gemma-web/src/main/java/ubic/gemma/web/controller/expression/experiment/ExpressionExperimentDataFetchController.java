@@ -31,13 +31,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -75,7 +74,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                 throw new RuntimeException(
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
-
+            
             File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
 
             watch.stop();
@@ -288,7 +287,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ExpressionDataFileSerivce expressionDataFileService;
+    private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -304,7 +303,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
     public ModelAndView downloadFile( String file ) {
         ModelAndView mav = new ModelAndView( new DownloadBinaryFileView() );
-        String fullFilePath = ExpressionDataFileSerivce.DATA_DIR + file;
+        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
         mav.addObject( DownloadBinaryFileView.PATH_PARAM, fullFilePath );
         return mav;
     }
@@ -350,7 +349,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
         return startTask( runner );
     }
 
-    public void setExpressionDataFileService( ExpressionDataFileSerivce expressionDataFileService ) {
+    public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
         this.expressionDataFileService = expressionDataFileService;
     }
 
