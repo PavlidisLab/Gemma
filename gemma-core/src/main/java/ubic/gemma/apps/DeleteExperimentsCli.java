@@ -27,11 +27,13 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         DeleteExperimentsCli d = new DeleteExperimentsCli();
+
         d.doWork( args );
     }
 
     @Override
     protected Exception doWork( String[] args ) {
+        this.force = true;
         super.processCommandLine( "Delete experiments", args );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
