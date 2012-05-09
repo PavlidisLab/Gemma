@@ -133,63 +133,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param bioAssayDimensionDao The bioAssayDimensionDao to set.
-     */
-    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
-        this.bioAssayDimensionDao = bioAssayDimensionDao;
-    }
-
-    /**
-     * @param bioAssayDao The bioAssayDao to set.
-     */
-    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
-        this.bioAssayDao = bioAssayDao;
-    }
-
-    /**
-     * @param bioMaterialDao The bioMaterialDao to set.
-     */
-    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * @param compoundDao The compoundDao to set.
-     */
-    public void setCompoundDao( CompoundDao compoundDao ) {
-        this.compoundDao = compoundDao;
-    }
-
-    /**
-     * @param experimentalDesignDao the experimentalDesignDao to set
-     */
-    public void setExperimentalDesignDao( ExperimentalDesignDao experimentalDesignDao ) {
-        this.experimentalDesignDao = experimentalDesignDao;
-    }
-
-    public void setExperimentalFactorDao( ExperimentalFactorDao experimentalFactorDao ) {
-        this.experimentalFactorDao = experimentalFactorDao;
-    }
-
-    /**
-     * @param expressionExperimentDao The expressionExperimentDao to set.
-     */
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @param factorValueDao The factorValueDao to set.
-     */
-    public void setFactorValueDao( FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
-    }
-
-    /**
      * @param bioAssayDimensionCache
      * @param vect
      */
-    private BioAssayDimension checkBioAssayDimensionCache( DesignElementDataVector vect ) {
+    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vect ) {
         if ( !isTransient( vect.getBioAssayDimension() ) ) return vect.getBioAssayDimension();
         assert bioAssayDimensionCache != null;
         String dimensionName = vect.getBioAssayDimension().getName();
@@ -241,12 +188,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 }
 
                 boolean found = false;
-                // make sure there is at least one bioassay using it.
+                // Make sure there is at least one bioassay using it.
                 for ( BioAssay ba : bioAssays ) {
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         for ( FactorValue fvb : bm.getFactorValues() ) {
 
-                            // they should be persistent already at this point.
+                            // They should be persistent already at this point.
                             if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
                                 // Note we use == because they should be the same objects.
                                 found = true;
@@ -275,104 +222,99 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param assay
+     * @param bioAssay
      */
-    private void fillInBioAssayAssociations( BioAssay assay ) {
+    private void fillInBioAssayAssociations( BioAssay bioAssay ) {
 
-        ArrayDesign arrayDesign = assay.getArrayDesignUsed();
+        ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
         assert arrayDesign != null;
 
-        arrayDesign = cacheArrayDesign( arrayDesign );
+        arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign );
         assert arrayDesign.getId() != null;
-        assay.setArrayDesignUsed( arrayDesign );
-        assert assay.getArrayDesignUsed().getId() != null;
+        bioAssay.setArrayDesignUsed( arrayDesign );
+        assert bioAssay.getArrayDesignUsed().getId() != null;
 
-        for ( BioMaterial material : assay.getSamplesUsed() ) {
+        for ( BioMaterial material : bioAssay.getSamplesUsed() ) {
             for ( FactorValue factorValue : material.getFactorValues() ) {
-                // factors are not compositioned in any more, but by association with the ExperimentalFactor.
+                // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
                 fillInFactorValueAssociations( factorValue );
                 factorValue = persistFactorValue( factorValue );
             }
         }
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
-        if ( assay.getAccession() != null ) {
-            assay.getAccession().setExternalDatabase(
-                    persistExternalDatabase( assay.getAccession().getExternalDatabase() ) );
+        if ( bioAssay.getAccession() != null ) {
+            bioAssay.getAccession().setExternalDatabase(
+                    persistExternalDatabase( bioAssay.getAccession().getExternalDatabase() ) );
         }
 
-        if ( log.isDebugEnabled() ) log.debug( assay.getSamplesUsed().size() + " bioMaterials for " + assay );
+        if ( log.isDebugEnabled() ) log.debug( bioAssay.getSamplesUsed().size() + " bioMaterials for " + bioAssay );
 
-        /*
-         * BioMaterials
-         */
-        persistCollectionElements( assay.getSamplesUsed() );
+        // BioMaterials
+        persistCollectionElements( bioAssay.getSamplesUsed() );
 
-        if ( assay.getRawDataFile() != null ) {
-            assay.setRawDataFile( persistLocalFile( assay.getRawDataFile() ) );
+        if ( bioAssay.getRawDataFile() != null ) {
+            bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile() ) );
         }
 
-        for ( LocalFile file : assay.getDerivedDataFiles() ) {
+        for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
             file = persistLocalFile( file );
         }
 
     }
 
     /**
-     * @param vect
+     * @param dataVector
      */
-    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
-        CompositeSequence designElement = vect.getDesignElement();
+    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector dataVector ) {
+        CompositeSequence probe = dataVector.getDesignElement();
 
-        assert designElement != null;
+        assert probe != null;
 
-        ArrayDesign ad = designElement.getArrayDesign();
-        assert ad != null : designElement + " does not have an array design";
+        ArrayDesign arrayDesign = probe.getArrayDesign();
+        assert arrayDesign != null : probe + " does not have an array design";
 
-        ad = cacheArrayDesign( ad );
+        arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign );
 
-        String key = designElement.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + ad.getName();
+        String key = probe.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
         String seqName = null;
 
-        if ( designElement.getBiologicalCharacteristic() != null ) {
-            seqName = designElement.getBiologicalCharacteristic().getName();
+        if ( probe.getBiologicalCharacteristic() != null ) {
+            seqName = probe.getBiologicalCharacteristic().getName();
         }
 
         if ( log.isDebugEnabled() ) log.debug( "Seeking design element matching key=" + key );
         if ( getDesignElementCache().containsKey( key ) ) {
-            designElement = getDesignElementCache().get( key );
-            if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with key=" + key );
+            probe = getDesignElementCache().get( key );
+            if ( log.isDebugEnabled() ) log.debug( "Found " + probe + " with key=" + key );
         } else {
             /*
-             * because the names of design elements can change, we should try to go by the _sequence_.
+             * Because the names of design elements can change, we should try to go by the _sequence_.
              */
             if ( StringUtils.isNotBlank( seqName ) && getDesignElementSequenceCache().containsKey( seqName ) ) {
                 if ( log.isDebugEnabled() ) log.debug( "Using sequence name " + seqName + " to identify sequence" );
-                designElement = getDesignElementSequenceCache().get( seqName );
-                if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with sequence key=" + seqName );
+                probe = getDesignElementSequenceCache().get( seqName );
+                if ( log.isDebugEnabled() ) log.debug( "Found " + probe + " with sequence key=" + seqName );
             } else {
                 /*
                  * No sequence, or the sequence name isn't provided. Of course, if there is no sequence it isn't going
                  * to be very useful.
                  */
-                log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + designElement
-                        + " bioseq=" + designElement.getBiologicalCharacteristic() );
+                log.warn( "Adding new probe to existing array design " + arrayDesign.getShortName() + ": " + probe
+                        + " bioseq=" + probe.getBiologicalCharacteristic() );
 
-                // throw new IllegalStateException( "Adding new probe to existing array design " + ad.getShortName()
-                // + ": " + designElement + " bioseq=" + designElement.getBiologicalCharacteristic()
-                // + ": not supported, sorry" );
-                designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+                probe = addNewDesignElementToPersistentArrayDesign( arrayDesign, probe );
             }
         }
 
-        assert designElement != null && designElement.getId() != null;
-        vect.setDesignElement( designElement ); // use the persistent one.
+        assert probe != null && probe.getId() != null;
+        dataVector.setDesignElement( probe ); // use the persistent one.
 
-        BioAssayDimension baDim = checkBioAssayDimensionCache( vect );
+        BioAssayDimension bioAssayDimension = getBioAssayDimensionFromCacheOrCreate( dataVector );
 
-        assert vect.getQuantitationType() != null;
-        vect.setQuantitationType( persistQuantitationType( vect.getQuantitationType() ) );
+        assert dataVector.getQuantitationType() != null;
+        dataVector.setQuantitationType( persistQuantitationType( dataVector.getQuantitationType() ) );
 
-        return baDim;
+        return bioAssayDimension;
     }
 
     /**
@@ -389,17 +331,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param entity
+     * @param ee
      */
-    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
+    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee ) {
         log.info( "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
         int count = 0;
-        for ( DesignElementDataVector vect : entity.getRawExpressionDataVectors() ) {
-            BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
-            bioAssays.addAll( baDim.getBioAssays() );
+        for ( DesignElementDataVector dataVector : ee.getRawExpressionDataVectors() ) {
+            BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector );
+            bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             if ( ++count % 10000 == 0 ) {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
@@ -532,61 +474,60 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param expExp
+     * @param ee
      * @return
      */
-    private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment expExp ) {
+    private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment ee ) {
 
-        if ( expExp == null ) return null;
-        if ( !isTransient( expExp ) ) return expExp;
+        if ( ee == null ) return null;
+        if ( !isTransient( ee ) ) return ee;
 
-        log.info( "Persisting " + expExp );
+        log.info( "Persisting " + ee );
 
-        ExpressionExperiment existing = expressionExperimentDao.findByShortName( expExp.getShortName() );
-        if ( existing != null ) {
-            log.warn( "Expression experiment with same short name exists (" + existing
+        ExpressionExperiment existingEE = expressionExperimentDao.findByShortName( ee.getShortName() );
+        if ( existingEE != null ) {
+            log.warn( "Expression experiment with same short name exists (" + existingEE
                     + "), returning it (this method does not handle updates)" );
-            return existing;
+            return existingEE;
         }
 
-        expExp.setPrimaryPublication( ( BibliographicReference ) persist( expExp.getPrimaryPublication() ) );
+        ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
 
-        if ( expExp.getOwner() == null ) {
-            expExp.setOwner( defaultOwner );
+        if ( ee.getOwner() == null ) {
+            ee.setOwner( defaultOwner );
         }
-        expExp.setOwner( ( Contact ) persist( expExp.getOwner() ) );
+        ee.setOwner( ( Contact ) persist( ee.getOwner() ) );
 
-        persistCollectionElements( expExp.getQuantitationTypes() );
-        persistCollectionElements( expExp.getOtherRelevantPublications() );
-        persistCollectionElements( expExp.getInvestigators() );
+        persistCollectionElements( ee.getQuantitationTypes() );
+        persistCollectionElements( ee.getOtherRelevantPublications() );
+        persistCollectionElements( ee.getInvestigators() );
 
-        if ( expExp.getAccession() != null ) {
-            fillInDatabaseEntry( expExp.getAccession() );
+        if ( ee.getAccession() != null ) {
+            fillInDatabaseEntry( ee.getAccession() );
         }
 
-        // this has to come first and be persisted, so our factorvalues get persisted before we process the bioassays.
-        if ( expExp.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = expExp.getExperimentalDesign();
+        // This has to come first and be persisted, so our FactorValues get persisted before we process the BioAssays.
+        if ( ee.getExperimentalDesign() != null ) {
+            ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
             processExperimentalDesign( experimentalDesign );
             assert experimentalDesign.getId() != null;
-            expExp.setExperimentalDesign( experimentalDesign );
+            ee.setExperimentalDesign( experimentalDesign );
         }
 
-        checkExperimentalDesign( expExp );
+        checkExperimentalDesign( ee );
 
-        // this does most of the preparatory work.
-        processBioAssays( expExp );
-        expExp = expressionExperimentDao.create( expExp );
-        // this.getSession().flush(); // Yes, this is important.
+        // This does most of the preparatory work.
+        processBioAssays( ee );
+        ee = expressionExperimentDao.create( ee );
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            expressionExperimentDao.remove( expExp );
+            expressionExperimentDao.remove( ee );
             throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
                     + this.getClass() );
         }
 
-        return expExp;
+        return ee;
     }
 
     /**
@@ -634,54 +575,15 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
-        if ( expressionExperiment.getRawExpressionDataVectors().size() > 0 ) {
+        if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
+            for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
+                fillInBioAssayAssociations( bioAssay );
+                alreadyFilled.add( bioAssay );
+            }
+        } else {
             alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment );
             expressionExperiment.setBioAssays( alreadyFilled );
-        } else {
-            for ( BioAssay bA : expressionExperiment.getBioAssays() ) {
-                fillInBioAssayAssociations( bA );
-                alreadyFilled.add( bA );
-            }
         }
-
-        // for ( ExpressionExperimentSubSet subset : expressionExperiment.getSubsets() ) {
-        // for ( BioAssay bA : subset.getBioAssays() ) {
-        // bA.setId( persistBioAssay( bA ).getId() );
-        // assert bA.getArrayDesignUsed().getId() != null;
-        //
-        // final BioAssay baF = bA;
-        //
-        // // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
-        // HibernateTemplate templ = this.getHibernateTemplate();
-        // templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-        // public Object doInHibernate( org.hibernate.Session session )
-        // throws org.hibernate.HibernateException {
-        // ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
-        // session.update( arrayDesignUsed );
-        // if ( arrayDesignUsed.getDesignProvider() != null ) {
-        // session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
-        // arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
-        // }
-        // arrayDesignUsed.getMergees().size();
-        // return null;
-        // }
-        // } );
-        //
-        // if ( !alreadyFilled.contains( bA ) ) {
-        // /*
-        // * This is an exceptional circumstance that might indicate problems with the source.
-        // */
-        // log.error( "Subset bioassay " + bA + " found that isn't in the parent. Parent contains:" );
-        // StringBuilder buf = new StringBuilder();
-        // buf.append( "\n" );
-        // for ( BioAssay assay : alreadyFilled ) {
-        // buf.append( assay + "\n" );
-        // }
-        // log.error( buf );
-        // throw new IllegalStateException( bA + " in subset " + subset + " not in the parent experiment?" );
-        // }
-        // }
-        // }
     }
 
     /**
@@ -691,21 +593,21 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         persistCollectionElements( experimentalDesign.getTypes() );
 
-        // withhold to avoid premature cascade.
+        // Withhold to avoid premature cascade.
         Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
         experimentalDesign.setExperimentalFactors( null );
 
-        // note we use create because this is specific to the instance. (we're overriding a cascade)
+        // Note we use create because this is specific to the instance. (we're overriding a cascade)
         experimentalDesign = experimentalDesignDao.create( experimentalDesign );
 
-        // put back.
+        // Put back.
         experimentalDesign.setExperimentalFactors( factors );
 
         for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
 
             experimentalFactor.setExperimentalDesign( experimentalDesign );
 
-            // override cascade like above.
+            // Override cascade like above.
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
             experimentalFactor.setFactorValues( null );
             experimentalFactor = persistExperimentalFactor( experimentalFactor );
@@ -715,7 +617,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 fillInFactorValueAssociations( factorValue );
             }
 
-            // factorvalue is cascaded.
+            // FactorValue is cascaded.
             experimentalFactor.setFactorValues( factorValues );
             experimentalFactorDao.update( experimentalFactor );
         }
