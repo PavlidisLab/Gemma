@@ -35,12 +35,12 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
- * This class handles persisting array designs. This is a bit of a special case, because Arraydesigns are very large
- * (with associated reporters, compositesequences, and biosequences), and also very likely to be submitted more than
- * once to the system. Therefore we want to take care not to get multiple slighly different copies of them, but we also
+ * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
+ * (with associated reporters, CompositeSequences, and BioSequences), and also very likely to be submitted more than
+ * once to the system. Therefore we want to take care not to get multiple slightly different copies of them, but we also
  * don't want to have to spend an inordinate amount of time checking a submitted version against the database.
  * <p>
- * The association between Arraydesign and DesignElement is compositional - the lifecycle of a designelement is tied to
+ * The association between ArrayDesign and DesignElement is compositional - the lifecycle of a designelement is tied to
  * the arraydesign. However, designelements have associations with biosequence, which have their own lifecycle, in
  * general.
  * 
@@ -59,13 +59,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
-    Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
+    private Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
 
-    Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
-
-    // public ArrayDesignPersister( SessionFactory sessionFactory ) {
-    // super( sessionFactory );
-    // }
+    private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
 
     public Map<String, CompositeSequence> getDesignElementCache() {
         return designElementCache;
@@ -85,7 +81,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         Object result;
 
         if ( entity instanceof ArrayDesign ) {
-            result = persistArrayDesign( ( ArrayDesign ) entity );
+            result = findOrPersistArrayDesign( ( ArrayDesign ) entity );
             clearArrayDesignCache();
             return result;
         }
@@ -195,19 +191,19 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @param arrayDesignCache
      * @param cacheIsSetUp
      * @param designElementCache
-     * @param ad
+     * @param arrayDesign
      * @return the persistent array design.
      */
-    protected ArrayDesign cacheArrayDesign( ArrayDesign ad ) {
-        assert ad != null;
-        ArrayDesign cachedAd = ad;
+    protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign ) {
+        assert arrayDesign != null;
+        ArrayDesign cachedAd = arrayDesign;
         if ( !arrayDesignCache.containsKey( cachedAd.getName() )
                 && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
-            cachedAd = persistArrayDesign( ad );
+            cachedAd = findOrPersistArrayDesign( arrayDesign );
             // cachedAd = arrayDesignDao.thaw( cachedAd );
             assert !isTransient( cachedAd );
             addToDesignElementCache( cachedAd );
-            arrayDesignCache.put( ad.getName(), cachedAd );
+            arrayDesignCache.put( arrayDesign.getName(), cachedAd );
             if ( cachedAd.getShortName() != null ) {
                 arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
             }
@@ -235,7 +231,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * 
      * @param arrayDesign
      */
-    protected ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
+    protected ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) return null;
 
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
@@ -300,52 +296,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );
         }
 
-        Collection<CompositeSequence> c = arrayDesign.getCompositeSequences();
-        arrayDesign.setCompositeSequences( null ); // so we can perist it.
-        int count = 0;
-        long startTime = System.currentTimeMillis();
-        int numElementsPerUpdate = numElementsPerUpdate( c );
-        for ( CompositeSequence sequence : c ) {
-            sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
-            if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() && c.size() > 10000 ) {
-                log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
-                        + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
-
-            }
-            if ( count % SESSION_BATCH_SIZE == 0 ) {
-                // this.getHibernateTemplate().flush();
-                // this.getHibernateTemplate().clear();
-                if ( Thread.currentThread().isInterrupted() ) {
-                    log.info( "Cancelled" );
-                    /*
-                     * TODO after cancelling, we should clean up after ourselves (need to remove all the sequences that
-                     * were all ready persisted this will try to remove the entire collection but only some are in the
-                     * DB. Not sure how the collection delete will handle deletion of transtive objects not in db. might
-                     * need to fix.
-                     */
-                    compositeSequenceDao.remove( c ); // etc
-                    throw new java.util.concurrent.CancellationException(
-                            "Thread was terminated during persisting the arraydesign. " + this.getClass() );
-                }
-            }
-        }
-
-        if ( log.isInfoEnabled() && count > MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS ) {
-            log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
-                    + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
-        }
-
-        arrayDesign.setCompositeSequences( null );
-
-        arrayDesign = arrayDesignDao.create( arrayDesign );
-
-        arrayDesign.setCompositeSequences( c );
+        log.info( "Persisting " + arrayDesign );
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
-        log.info( "Persisting " + arrayDesign );
-
-        arrayDesignDao.update( arrayDesign );
+        arrayDesign = arrayDesignDao.create( arrayDesign );
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
@@ -370,7 +325,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         int persistedBioSequences = 0;
 
-        assert arrayDesign.getId() != null;
+        assert arrayDesign.getId() == null;
         int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
@@ -382,10 +337,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( ++persistedBioSequences % numElementsPerUpdate == 0 && numElements > 1000 ) {
                 log.info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
                         + arrayDesign );
-            }
-
-            if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
-                // this.getHibernateTemplate().flush();
             }
 
         }
