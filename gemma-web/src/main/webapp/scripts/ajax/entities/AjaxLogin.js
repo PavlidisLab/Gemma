@@ -54,8 +54,7 @@ Gemma.AjaxLogin.logoutFn = function(){
 				 * this is the default behaviour unless otherwise specified in the page's jsp
 				 */
 				var reloadOnLogout = Ext.getDom('reloadOnLogout');
-				var a = reloadOnLogout.getValue();
-				if( reloadOnLogout || reloadOnLogout.getValue() === "true" ){
+				if( reloadOnLogout == undefined || reloadOnLogout.getValue() === "true" ){
 					Ext.getBody().mask("Logging you out");
 					window.location.reload();
 				}
