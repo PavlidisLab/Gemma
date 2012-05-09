@@ -29,7 +29,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.analysis.service.ExpressionDataFileSerivce;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
@@ -57,7 +57,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
     private boolean force_write = false;
 
-    ExpressionDataFileSerivce expressionDataFileService;
+    ExpressionDataFileService expressionDataFileService;
 
     private String DESCRIPTION = "Generate Flat data files (diff expression, co-expression) for a given set of experiments";
 
@@ -167,7 +167,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             this.force_write = true;
         }
 
-        expressionDataFileService = ( ExpressionDataFileSerivce ) this.getBean( "expressionDataFileService" );
+        expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
