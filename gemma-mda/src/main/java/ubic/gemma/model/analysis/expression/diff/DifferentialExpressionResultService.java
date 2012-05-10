@@ -154,6 +154,11 @@ public interface DifferentialExpressionResultService {
     public void thawLite( ExpressionAnalysisResultSet resultSet );
     
     
-    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );    
+    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
+
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
+            Integer maxResultsToReturn, Integer minNumberOfResults );    
 
 }

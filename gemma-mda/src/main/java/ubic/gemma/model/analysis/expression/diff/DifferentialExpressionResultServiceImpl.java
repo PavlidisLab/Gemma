@@ -37,8 +37,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService
  */
 @Service
-public class DifferentialExpressionResultServiceImpl extends
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceBase {
+public class DifferentialExpressionResultServiceImpl extends DifferentialExpressionResultServiceBase {
 
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             Collection<BioAssaySet> experimentsAnalyzed, double threshold ) {
@@ -85,8 +84,8 @@ public class DifferentialExpressionResultServiceImpl extends
 
     }
 
-    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+    public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
 
         return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, limit );
     }
@@ -141,6 +140,13 @@ public class DifferentialExpressionResultServiceImpl extends
     public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold ) {
         return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId, threshold );                
     }
+
+    @Override
+    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
+            Integer maxResultsToReturn, Integer minNumberOfResults ) {
+        return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
+    }
+
     
     
 

@@ -54,8 +54,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult
  */
 @Repository
-public class DifferentialExpressionResultDaoImpl extends
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoBase {
+public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionResultDaoBase {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -89,6 +88,12 @@ public class DifferentialExpressionResultDaoImpl extends
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
             + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
+    private static final String fetchResultsBySingleResultSetQuery = "select distinct r "
+        + " from DifferentialExpressionAnalysisImpl a " + " inner join a.experimentAnalyzed e  "
+        + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
+        + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+
+    
     private static final String fetchResultsByResultSetAndGeneQuery = "select dear.CORRECTED_PVALUE "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
             + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
@@ -438,8 +443,8 @@ public class DifferentialExpressionResultDaoImpl extends
      * @param limit - max number of results to return.
      * @return
      */
-    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+    public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
 
         Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>>();
 
@@ -758,6 +763,61 @@ public class DifferentialExpressionResultDaoImpl extends
         }
 
         return probeResults;
+    }
+
+    @Override
+    public List<ProbeAnalysisResult> findInResultSet(ExpressionAnalysisResultSet resultSet, Double threshold, Integer limit,
+            Integer minNumberOfResults ) {
+
+        List<ProbeAnalysisResult> results = new ArrayList<ProbeAnalysisResult>();
+        
+        if ( resultSet == null ) {
+            return results;
+        }
+        Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<ExpressionAnalysisResultSet>();
+        resultsAnalyzed.add (resultSet);
+        
+        StopWatch timer = new StopWatch();
+        timer.start();
+        String qs = fetchResultsBySingleResultSetQuery + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
+
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+
+        if ( limit != null ) {
+            tpl.setMaxResults( limit );
+        }
+
+        String[] paramNames = { "resultsAnalyzed", "threshold" };
+        Object[] objectValues = { resultsAnalyzed, threshold };
+
+        List<?> qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
+        
+        // If too few probes meet threshold, just get top minNumberOfResults.
+        if (qresult.size() < minNumberOfResults) {
+            qs = fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
+
+            tpl = new HibernateTemplate( this.getSessionFactory() );
+
+            if ( minNumberOfResults != null ) {
+                tpl.setMaxResults( minNumberOfResults );
+            }
+
+            String[] paramName = { "resultsAnalyzed" };
+            Object[] objectValue = { resultsAnalyzed };
+
+            qresult = tpl.findByNamedParam( qs, paramName, objectValue );
+        }
+        
+        for ( Object o : qresult ) {
+            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) o;
+            results.add( probeResult );
+        }
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Diff ex results: " + timer.getTime() + " ms" );
+        }
+        return results;
     }
 
 }

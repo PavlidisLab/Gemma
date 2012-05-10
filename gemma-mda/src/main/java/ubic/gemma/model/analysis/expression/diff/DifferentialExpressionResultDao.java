@@ -130,4 +130,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit );
 
+
+    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold, Integer maxResultsToReturn,
+            Integer minNumberOfResults );
+
 }
