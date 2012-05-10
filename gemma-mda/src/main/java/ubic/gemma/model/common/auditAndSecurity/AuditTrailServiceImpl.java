@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +56,9 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired
     private StatusDao statusDao;
+    
+    @Autowired
+    private SessionFactory sessionFactory;
 
     /*
      * (non-Javadoc)
@@ -166,11 +170,14 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             auditEvent.setAction( AuditAction.UPDATE );
             auditEvent.setEventType( auditEventType );
             auditEvent.setNote( note );
-            
-            if ( detachedAuditable ) {                
-                auditable.setStatus( this.statusDao.load( auditable.getStatus().getId() ) );
+
+            // FIXME: Temporary solution.  
+            if ( ! this.sessionFactory.getCurrentSession().contains( auditable ) ) {                
+                // Re-attach if it is not already in current session
+                this.sessionFactory.getCurrentSession().update( auditable );
             }
-            
+                        
+            //TODO: Use AuditHelper?
             this.statusDao.update( auditable, auditEventType );
             return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Throwable th ) {
@@ -289,50 +296,4 @@ public class AuditTrailServiceImpl implements AuditTrailService {
                             + th, th );
         }
     }
-
-
-    
-    
-    
 }
-
-    
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Auditable,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-//    public void audit( final Auditable entity, final AuditEvent auditEvent ) {
-//        try {
-//            this.handleAudit( entity, auditEvent );
-//        } catch ( Throwable th ) {
-//            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-//                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.audit(ubic.gemma.model.common.Auditable entity, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
-//                            + th, th );
-//        }
-//    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Describable,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-//    protected void handleAudit( Auditable entity, AuditEvent auditEvent )
-//            throws Exception {
-//
-//        if ( entity == null || entity.getId() == null ) return;
-//
-//        AuditTrail at = entity.getAuditTrail();
-//        if ( at == null ) {
-//            at = AuditTrail.Factory.newInstance();
-//            at.start(); // uh-oh, have to update the entity. Hard to do from here.
-//            if ( auditEvent != null ) at.addEvent( auditEvent ); // should we do that? I guess so.
-//            this.auditTrailDao.create( at );
-//            log.warn( "Creating new audit trail for " + entity );
-//        } else {
-//            if ( auditEvent == null ) throw new IllegalArgumentException( "auditEvent cannot be null" );
-//            at.addEvent( auditEvent );
-//            this.statusDao.update( entity, auditEvent.getEventType());
-//            this.auditTrailDao.update( at );
-//            log.debug( "Added event " + auditEvent.getAction() + " to " + entity );
-//        }
-//    }
-    
