@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.zip.GZIPInputStream;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -68,11 +69,12 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Autowired
     SessionFactory sessionFactory;
-    
+
     @Before
     public void setUp() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/ontology/molecular-function.test.owl.gz" ) );
         assert is != null;
         geneOntologyService.loadTermsInNameSpace( is );
 
@@ -198,32 +200,31 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         gset = geneSetService.create( gset );
         assertNotNull( gset.getId() );
-        
+
         Session session = sessionFactory.openSession();
         session.update( gset );
-        
+
         gmember = gset.getMembers().iterator().next();
         assertNotNull( gmember.getId() );
-        
+
         session.close();
-        
+
         // add one.
         gset = geneSetService.load( gset.getId() );
-        
+
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         session.update( gset );
         gset.getMembers().size();
         session.close();
-        
+
         gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g3 );
         gmember.setScore( 0.66 );
-                
+
         gset.getMembers().add( gmember );
         assertEquals( 2, gset.getMembers().size() );
 
-        
         // persist.
         geneSetService.update( gset );
 
@@ -235,7 +236,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         session.update( gset );
         gset.getMembers().size();
         session.close();
-        
+
         assertEquals( 2, gset.getMembers().size() );
 
         // remove one
@@ -249,7 +250,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         session.update( gset );
         gset.getMembers().size();
         session.close();
-                
+
         assertEquals( 1, gset.getMembers().size() );
 
         // clean
