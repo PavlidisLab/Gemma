@@ -72,7 +72,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl" );
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" );
         assert is != null;
         geneOntologyService.loadTermsInNameSpace( is );
 
