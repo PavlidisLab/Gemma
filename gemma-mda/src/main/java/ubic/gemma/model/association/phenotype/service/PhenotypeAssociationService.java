@@ -129,5 +129,8 @@ public interface PhenotypeAssociationService {
 
     /** find all phenotypes associated with genes */
     public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations();
+    
+    /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations(String taxon, Set<String> valuesUri);
 
 }

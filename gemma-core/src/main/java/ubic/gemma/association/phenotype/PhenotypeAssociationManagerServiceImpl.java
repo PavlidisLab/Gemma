@@ -427,13 +427,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<String> allPhenotypesInDatabase = this.associationService.loadAllPhenotypesUri();
 
         // rules to order the Ontology results found
-        Collection<CharacteristicValueObject> phenotypesWithExactMatch = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesAlreadyPresentOnGene = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesStartWithQueryAndInDatabase = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesStartWithQuery = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesSubstring = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> phenotypesNoRuleFound = new ArrayList<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesWithExactMatch = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesAlreadyPresentOnGene = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesStartWithQueryAndInDatabase = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesStartWithQuery = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesSubstring = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesNoRuleFound = new TreeSet<CharacteristicValueObject>();
 
         /*
          * for each CharacteristicVO found from the Ontology, filter them and add them to a specific list if they
@@ -649,7 +649,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * for a given search string look in the database and Ontology for matches
+     * For a given search string look in the database and Ontology for matches
      * 
      * @param givenQueryString the search query
      * @param categoryUri the mged category (can be null)
@@ -691,6 +691,86 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
+     * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
+     * including ontology children terms
+     * 
+     * @param searchQuery the query search that was type by the user
+     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurence
+     */
+    @Override
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
+
+        // final results from the search query
+        Collection<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
+
+        // prepare the searchQuery to correctly query the Ontology
+        String newSearchQuery = prepareOntologyQuery( searchQuery );
+
+        // search the Ontology with the search query
+        Collection<OntologyTerm> ontologyTermsFound = this.ontologyHelper.findValueUriInOntology( newSearchQuery );
+
+        // Set of valueUri of all Ontology Terms found + their children
+        Set<String> phenotypesFoundAndChildren = this.ontologyHelper.findAllChildrenAndParent( ontologyTermsFound );
+
+        if ( !phenotypesFoundAndChildren.isEmpty() ) {
+
+            // all gene count for phenotype on human genes
+            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_HUMAN,
+                    phenotypesFoundAndChildren ) );
+
+            // all gene count for phenotype on mouse genes
+            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_MOUSE,
+                    phenotypesFoundAndChildren ) );
+
+            // all gene count for phenotype on rat genes
+            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_RAT,
+                    phenotypesFoundAndChildren ) );
+        }
+
+        return phenotypes;
+
+    }
+
+    /** For a given Ontology Term, count the occurence of the term + children in the database */
+    private Collection<CharacteristicValueObject> findPhenotypeCount( Collection<OntologyTerm> ontologyTermsFound,
+            String taxon, Set<String> phenotypesFoundAndChildren ) {
+
+        Collection<CharacteristicValueObject> phenotypesFound = new HashSet<CharacteristicValueObject>();
+
+        // Phenotype ---> Genes
+        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
+                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren );
+
+        // for each Ontoly Term find in the search
+        for ( OntologyTerm ontologyTerm : ontologyTermsFound ) {
+
+            Set<Integer> geneFoundForOntologyTerm = new HashSet<Integer>();
+
+            if ( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) != null ) {
+                geneFoundForOntologyTerm.addAll( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) );
+            }
+
+            // for all his children
+            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
+
+                if ( publicPhenotypesGenesAssociations.get( ontologyTermChildren.getUri() ) != null ) {
+                    geneFoundForOntologyTerm.addAll( publicPhenotypesGenesAssociations.get( ontologyTermChildren
+                            .getUri() ) );
+                }
+            }
+            // count the number of distinct gene linked to this ontologyTerm ( or children) in the database
+            if ( !geneFoundForOntologyTerm.isEmpty() ) {
+                CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( ontologyTerm
+                        .getLabel().toLowerCase(), ontologyTerm.getUri() );
+                characteristicValueObject.setPublicGeneCount( geneFoundForOntologyTerm.size() );
+                characteristicValueObject.setTaxon( taxon );
+                phenotypesFound.add( characteristicValueObject );
+            }
+        }
+        return phenotypesFound;
+    }
+
+    /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
      * @param withParentTerms if we want to include the parents terms from the Ontology
@@ -699,7 +779,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms ) {
 
         // all Public phenotypes in Gemma linked to all the genes containing them
-        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = null;
+        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
+                .findPublicPhenotypesGenesAssociations();
 
         // all phenotypes in Gemma that is owned by the user, they might be public or private
         HashMap<String, HashSet<Integer>> userOwnedPhenotypesGenesAssociations = null;
@@ -712,9 +793,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
         HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
-
-        // find all public gene count, same for any user
-        publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations();
 
         if ( SecurityServiceImpl.isUserAdmin() ) {
             // admin can see all private data
@@ -847,6 +925,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         cha.setPublicGeneCount( t.getPublicGeneCount() );
         cha.setPrivateGeneCount( t.getPrivateGeneCount() );
+        cha.setTaxon( t.getTaxon() );
 
         characteristcsVO.add( cha );
 
@@ -855,7 +934,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** build the full trees of the Ontology with the given branches */
+    /** Build the full trees of the Ontology with the given branches */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
@@ -892,7 +971,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** map query phenotypes given to the set of possible children phenotypes in the database */
+    /** Map query phenotypes given to the set of possible children phenotypes in the database */
     private HashMap<String, Set<String>> findChildrenForEachPhenotypes( Set<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
@@ -964,7 +1043,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
-    /** add flags to Evidence and CharacteristicvalueObjects */
+    /** Add flags to Evidence and CharacteristicvalueObjects */
     private void flagEvidence( Collection<EvidenceValueObject> evidencesVO, Set<String> phenotypesValuesUri ) {
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
@@ -1002,7 +1081,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     }
 
-    /** change a searchQuery to make it search in the Ontology using * and AND */
+    /** Change a searchQuery to make it search in the Ontology using * and AND */
     private String prepareOntologyQuery( String searchQuery ) {
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
@@ -1033,7 +1112,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return returnEvidenceVO;
     }
 
-    /** determine permissions for an PhenotypeAssociation */
+    /** Determine permissions for an PhenotypeAssociation */
     private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
 
         Boolean currentUserHasWritePermission = false;
@@ -1052,7 +1131,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 currentUserHasWritePermission, currentUserIsOwner, isPublic, isShared, owner ) );
     }
 
-    /** take care of populating new values for the phenotypes in an update */
+    /** Take care of populating new values for the phenotypes in an update */
     private void populateModifiedPhenotypes( Set<CharacteristicValueObject> updatedPhenotypes,
             PhenotypeAssociation phenotypeAssociation ) {
 
@@ -1101,7 +1180,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation.getPhenotypes().addAll( finalPhenotypes );
     }
 
-    /** return a collection of Gene that the user is allowed to see */
+    /** Return a collection of Gene that the user is allowed to see */
     private Collection<Gene> filterGeneAfterAcl( Collection<Gene> genes ) {
 
         Collection<Gene> genesAfterAcl = new HashSet<Gene>();
@@ -1124,7 +1203,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesAfterAcl;
     }
 
-    /** get a Set of all phenotypes present ona gene */
+    /** Get a Set of all phenotypes present on a gene */
     private Set<String> findAllPhenotpyesOnGene( Gene gene ) {
 
         Set<String> allPhenotypesOnGene = new HashSet<String>();
@@ -1137,7 +1216,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return allPhenotypesOnGene;
     }
 
-    /** populates the ValidateEvidenceValueObject with the correct flags if necessary */
+    /** Populates the ValidateEvidenceValueObject with the correct flags if necessary */
     private ValidateEvidenceValueObject determineSameGeneAndPhenotypeAnnotated( EvidenceValueObject evidence,
             String pubmed ) {
 
@@ -1248,7 +1327,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /** checks to see if the evidence is already in the database */
+    /** Checks to see if the evidence is already in the database */
     private EvidenceValueObject evidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
@@ -1337,7 +1416,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return evidenceValueObjectsRegrouped;
     }
 
-    // to be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative
+    /** To be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative */
     private String makeUniqueKey( LiteratureEvidenceValueObject evidence ) {
 
         String key = "";

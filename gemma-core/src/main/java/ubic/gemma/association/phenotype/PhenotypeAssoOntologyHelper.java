@@ -1,6 +1,7 @@
 package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -34,23 +35,67 @@ public class PhenotypeAssoOntologyHelper {
 
     /** search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO */
     public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
-        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = new TreeSet<CharacteristicValueObject>();
+
+        HashMap<String, OntologyTerm> uniqueValueTerm = new HashMap<String, OntologyTerm>();
+
+        Collection<OntologyTerm> ontologyTermDisease = this.diseaseOntologyService.findTerm( searchQuery );
+
+        for ( OntologyTerm ontologyTerm : ontologyTermDisease ) {
+            uniqueValueTerm.put( ontologyTerm.getLabel().toLowerCase(), ontologyTerm );
+        }
+
+        Collection<OntologyTerm> ontologyTermMammalianPhenotype = this.mammalianPhenotypeOntologyService
+                .findTerm( searchQuery );
+
+        for ( OntologyTerm ontologyTerm : ontologyTermMammalianPhenotype ) {
+            if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
+                uniqueValueTerm.put( ontologyTerm.getLabel(), ontologyTerm );
+            }
+        }
+
+        Collection<OntologyTerm> ontologyTermHumanPhenotype = this.humanPhenotypeOntologyService.findTerm( searchQuery );
+
+        for ( OntologyTerm ontologyTerm : ontologyTermHumanPhenotype ) {
+            if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
+                uniqueValueTerm.put( ontologyTerm.getLabel(), ontologyTerm );
+            }
+        }
+
+        return ontology2CharacteristicValueObject( uniqueValueTerm.values() );
+    }
+
+    /** search the disease, hp and mp ontology for OntologyTerm */
+    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) {
+
+        Collection<OntologyTerm> ontologyFound = new TreeSet<OntologyTerm>();
 
         // search disease ontology
-        allPhenotypesFoundInOntology.addAll( ontology2CharacteristicValueObject(
-                this.diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
+        ontologyFound.addAll( this.diseaseOntologyService.findTerm( searchQuery ) );
 
         // search mp ontology
-        allPhenotypesFoundInOntology.addAll( ontology2CharacteristicValueObject(
-                this.mammalianPhenotypeOntologyService.findTerm( searchQuery ),
-                PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
+        ontologyFound.addAll( this.mammalianPhenotypeOntologyService.findTerm( searchQuery ) );
 
         // search hp ontology
-        allPhenotypesFoundInOntology.addAll( ontology2CharacteristicValueObject(
-                this.humanPhenotypeOntologyService.findTerm( searchQuery ),
-                PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
+        ontologyFound.addAll( this.humanPhenotypeOntologyService.findTerm( searchQuery ) );
 
-        return allPhenotypesFoundInOntology;
+        return ontologyFound;
+    }
+
+    /** Giving some Ontology terms return all valueUri of Ontology Terms + children */
+    public Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms ) {
+
+        Set<String> phenotypesFoundAndChildren = new HashSet<String>();
+
+        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+            // add the parent term found
+            phenotypesFoundAndChildren.add( ontologyTerm.getUri() );
+
+            // add all children of the term
+            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
+                phenotypesFoundAndChildren.add( ontologyTermChildren.getUri() );
+            }
+        }
+        return phenotypesFoundAndChildren;
     }
 
     /** For a valueUri return the OntologyTerm found */
@@ -86,24 +131,21 @@ public class PhenotypeAssoOntologyHelper {
     }
 
     /** Ontology term to CharacteristicValueObject */
-    private Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
-            String ontologyUsed ) {
+    private Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms ) {
 
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
 
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
+            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(),
                     ontologyTerm.getUri() );
-            phenotype.setOntologyUsed( ontologyUsed );
             characteristicsVO.add( phenotype );
-
         }
         return characteristicsVO;
     }
 
     /** CharacteristicValueObject to Characteristic with no valueUri given */
-    public VocabCharacteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject ) {
+    public VocabCharacteristic characteristicValueObject2Characteristic(
+            CharacteristicValueObject characteristicValueObject ) {
 
         VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
         characteristic.setCategory( characteristicValueObject.getCategory() );
@@ -129,5 +171,4 @@ public class PhenotypeAssoOntologyHelper {
         }
         return characteristic;
     }
-
 }

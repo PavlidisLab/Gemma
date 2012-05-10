@@ -53,6 +53,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     /** root of a query */
     private boolean root = false;
 
+    private String taxon = "";
+
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<Characteristic> characteristics ) {
 
@@ -222,6 +224,14 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.alreadyPresentInDatabase = alreadyPresentInDatabase;
     }
 
+    public String getTaxon() {
+        return this.taxon;
+    }
+
+    public void setTaxon( String taxon ) {
+        this.taxon = taxon;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -257,6 +267,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
         if ( !this.category.equalsIgnoreCase( o.category ) ) {
             return ( this.category.compareToIgnoreCase( o.category ) );
+        } else if ( !this.taxon.equalsIgnoreCase( o.taxon ) ) {
+            return this.taxon.compareToIgnoreCase( o.taxon );
         } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
             return this.value.compareToIgnoreCase( o.value );
         } else {

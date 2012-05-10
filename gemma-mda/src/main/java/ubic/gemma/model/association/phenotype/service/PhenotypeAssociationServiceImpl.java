@@ -31,7 +31,7 @@ import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao; 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -52,7 +52,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     @Autowired
     private LiteratureEvidenceDao literatureEvidenceDao;
- 
 
     @Autowired
     private GenericExperimentDao genericExperimentDao;
@@ -107,7 +106,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public LiteratureEvidence loadLiteratureEvidence( Long id ) {
         return this.literatureEvidenceDao.load( id );
-    } 
+    }
 
     /** load an ExperimentalEvidence given an ID */
     @Override
@@ -178,5 +177,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations() {
         return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations();
+    }
+
+    @Override
+    /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri ) {
+        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri );
     }
 }

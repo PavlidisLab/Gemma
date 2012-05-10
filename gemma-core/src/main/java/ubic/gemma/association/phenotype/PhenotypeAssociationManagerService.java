@@ -159,7 +159,7 @@ public interface PhenotypeAssociationManagerService {
             String categoryUri, Long taxonId );
 
     /**
-     * this method can be used if we want to reimport data from a specific external Database, this method will remove
+     * This method can be used if we want to reimport data from a specific external Database, this method will remove
      * from the database ALL evidences link to the given external database
      * 
      * @param externalDatabaseName
@@ -173,6 +173,15 @@ public interface PhenotypeAssociationManagerService {
      * @return A collection of the phenotypes with the gene occurence
      */
     public abstract Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree();
+
+    /**
+     * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
+     * including ontology children terms
+     * 
+     * @param searchQuery the query search that was type by the user
+     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurence
+     */
+    public abstract Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
 
     public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
 
