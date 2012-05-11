@@ -36,7 +36,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     private String rootOfTree = "";
 
     private String _id = "";
-    private String _parent = "";
+    private String _parent = null;
     private boolean _is_leaf = false;
 
     public TreeCharacteristicValueObject( String value, String valueUri, TreeSet<TreeCharacteristicValueObject> children ) {
