@@ -125,7 +125,8 @@ Gemma.prepareProfiles = function(data) {
 		var factor = geneExpressionProfile[i].factor;
 		var pvalue = geneExpressionProfile[i].PValue; // yes, it's PValue, not
 														// pValue.
-
+		var rank =  geneExpressionProfile[i].rank;
+		
 		var fade = factor < 2;
 
 		if (fade) {
@@ -177,14 +178,16 @@ Gemma.prepareProfiles = function(data) {
 		}
 
 		// Label for the thumbnail legend.
-		var pvalueLabel = (pvalue && pvalue != 1) ? (sprintf("%.2e", pvalue) + ": ") : "";
-
+		var pvalueLabel = "";
+		if ( pvalue != undefined ) {
+			pvalueLabel = sprintf("%.2e ", pvalue);
+		}
+		
 		var labelStyle = '';
 		var qtip = 'Probe: ' + probe + ' (' + geneSymbols + ') ';
 		if (factor && factor < 2) {
 			labelStyle = "font-style:italic";
-			qtip = qtip + " [Not significant]"; // FIXME this might not always
-												// be appropriate.
+			// qtip = qtip + " [Not significant]";  
 		}
 
 		/*
@@ -195,7 +198,7 @@ Gemma.prepareProfiles = function(data) {
 			data : points, // this is what gets plotted. Flotr wants this name.
 			color : color,
 			genes : genes,
-			rawLabel : pvalueLabel + " " + geneSymbols + " " + geneNames,
+			rawLabel : pvalueLabel +  geneSymbols + " " + geneNames,
 			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id="
 					+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>"
 					+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames
@@ -211,6 +214,7 @@ Gemma.prepareProfiles = function(data) {
 				name : probe
 			},
 			PValue : pvalue, // yes, it's PValue, not pValue.
+			rank : rank,
 			smoothed : false
 
 		};
@@ -227,7 +231,7 @@ Gemma.prepareProfiles = function(data) {
 	data.profiles.sort(Gemma.sortByImportance);
 
 	return data;
-}
+};
 
 /**
  * Used for thumbnails.
@@ -1248,10 +1252,11 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
  */
 Gemma.sortByImportance = function(a, b) {
 
-	// first level sort: by pvalue, if present.
+	// first level sort: by pvalue, if present, or by rank, if present.
 	if (a.PValue !== null && a.PValue !== undefined && b.PValue !== null && b.PValue !== undefined) {
-		return Math.log(a.PValue) - Math.log(b.PValue); // log to avoid roundoff
-														// trouble.
+		return Math.log(a.PValue) - Math.log(b.PValue); // log to avoid roundoff trouble.
+	} else if (a.rank !== null && a.rank !== undefined && b.rank !== null && b.rank !== undefined) {
+		return  a.rank - b.rank;  
 	}
 
 	// Second level sort: by factor > 1 means 'involved in sig. coexpression' or

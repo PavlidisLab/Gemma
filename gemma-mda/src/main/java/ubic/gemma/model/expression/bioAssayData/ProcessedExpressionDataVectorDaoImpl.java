@@ -358,17 +358,46 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<Gene> genesToSearch = new HashSet<Gene>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
 
+        Map<ProcessedExpressionDataVector, Collection<Gene>> rawResults = new HashMap<ProcessedExpressionDataVector, Collection<Gene>>();
+
         /*
-         * Small problem: noGeneProbes are never cached. FIXME
+         * Small problem: noGeneProbes are never really cached since we use the gene as part of that.
          */
         if ( !noGeneProbes.isEmpty() ) {
             Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<ExpressionExperiment>();
             eesForNoGeneProbes.addAll( ( Collection<? extends ExpressionExperiment> ) ees );
+            rawResults.putAll( getProcessedVectors( eesForNoGeneProbes, noGeneProbes ) );
+        }
 
-            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
-                    eesForNoGeneProbes, noGeneProbes );
+        /*
+         * Non-cached items.
+         */
+        if ( !needToSearch.isEmpty() ) {
 
-            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
+            rawResults.putAll( getProcessedVectors( needToSearch, cs2gene ) );
+        }
+
+        /*
+         * Deal with possibility of 'gaps' and unpack the fectors.
+         */
+        Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
+        for ( ExpressionExperiment ee : needToSearch ) {
+
+            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
+
+            if ( bioAssayDimensions.size() == 1 ) {
+                newResults.addAll( unpack( rawResults ) );
+            } else {
+                /*
+                 * See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>, Collection<Gene>,
+                 * boolean) and bug 1704.
+                 */
+                BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
+                if ( longestBad != null ) {
+                    newResults.addAll( unpack( rawResults, longestBad ) );
+                }
+            }
+
             cacheResults( newResults );
 
             newResults = sliceSubsets( ees, newResults );
@@ -376,39 +405,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             results.addAll( newResults );
         }
 
-        /*
-         * Non-cached items. FIXME check for gappiness.
-         */
-        if ( !needToSearch.isEmpty() ) {
-
-            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
-                    needToSearch, cs2gene );
-            Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
-            for ( ExpressionExperiment ee : needToSearch ) {
-
-                Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
-
-                if ( bioAssayDimensions.size() == 1 ) {
-                    newResults.addAll( unpack( processedDataVectors ) );
-                } else {
-                    /*
-                     * Deal with 'gaps'. See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>,
-                     * Collection<Gene>, boolean) and bug 1704.
-                     */
-                    BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
-                    if ( longestBad != null ) {
-                        newResults.addAll( unpack( processedDataVectors, longestBad ) );
-                    }
-
-                }
-
-                cacheResults( newResults );
-
-                newResults = sliceSubsets( ees, newResults );
-
-                results.addAll( newResults );
-            }
-        }
         return results;
 
     }

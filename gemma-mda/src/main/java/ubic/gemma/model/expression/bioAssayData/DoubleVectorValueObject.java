@@ -50,10 +50,20 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     private boolean reorganized = false;
 
     private Double pvalue;
+    private Double rank;
+
+    public Double getRank() {
+        return rank;
+    }
+
+    public void setRank( Double rank ) {
+        this.rank = rank;
+    }
 
     private Double rankByMax;
 
     private Double rankByMean;
+    
     private Long sourceVectorId = null;
 
     /**

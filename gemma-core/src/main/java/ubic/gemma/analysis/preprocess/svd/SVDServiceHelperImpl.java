@@ -180,9 +180,10 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 continue;
             }
 
-            // FIXME they are not pvalues
-            vct.setPvalue( ( double ) probeLoading.getLoadingRank() );
-            // vct.setBioAssayDimension( bioAssayDimension );
+            assert bioAssayDimension.getBioAssays().size() == vct.getData().length;
+
+            vct.setRank( probeLoading.getLoadingRank().doubleValue() );
+            vct.setBioAssayDimension( bioAssayDimension );
             vct.setExpressionExperiment( ee );
             result.put( probeLoading, vct );
         }
@@ -498,7 +499,6 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         }
     }
 
-   
     /**
      * Fill in NaN for any missing biomaterial factorvalues (dates were already done)
      */

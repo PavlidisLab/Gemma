@@ -58,12 +58,14 @@ public class GeneExpressionProfile {
     private Collection<GeneValueObject> genes;
     private CompositeSequence probe;
     private Double pValue = null;
+    private Double rank = null;
 
     /**
      * @param vector
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector ) {
         this( vector, null, null, null, true );
+        this.rank = vector.getRank();
     }
 
     /**
@@ -83,6 +85,7 @@ public class GeneExpressionProfile {
         this.probe.setArrayDesign( null );
         this.factor = factor;
         this.pValue = pValue;
+        this.rank = vector.getRank();
 
         if ( color != null ) {
             this.color = color;
@@ -133,6 +136,10 @@ public class GeneExpressionProfile {
         return pValue;
     }
 
+    public Double getRank() {
+        return rank;
+    }
+
     /**
      * @return the allMissing
      */
@@ -172,6 +179,10 @@ public class GeneExpressionProfile {
 
     public void setPValue( Double value ) {
         pValue = value;
+    }
+
+    public void setRank( Double rank ) {
+        this.rank = rank;
     }
 
 }

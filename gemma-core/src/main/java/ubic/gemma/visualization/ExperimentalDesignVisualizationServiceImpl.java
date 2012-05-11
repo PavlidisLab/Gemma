@@ -320,12 +320,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             double[] dol = ArrayUtils.clone( data );
 
             if ( bad.getId() != null && !cachedThawedBioAssayDimensions.containsKey( bad.getId() ) ) {
-                log.warn( "Missing bioassaydimension: " + bad.getId() ); // WHY?
+                // log.warn( "Missing bioassaydimension: " + bad.getId() ); // WHY?
                 continue;
             }
 
             if ( bad.getId() == null ) {
-                log.warn( "bioassaydimension has no id" );
+                // / if the bad was replaced with a pseudo one.
+                // log.warn( "bioassaydimension has no id" );
                 continue;
             }
 
