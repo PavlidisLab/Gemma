@@ -70,16 +70,6 @@ public interface GeoConverter extends Converter<GeoData, Object> {
     public abstract void convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet );
 
     /**
-     * @param externalDatabaseService the externalDatabaseService to set
-     */
-    public abstract void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService );
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public abstract void setTaxonService( TaxonService taxonService );
-
-    /**
      * If true, and the series uses more than one platform, split it up. This often isn't necessary/desirable. This is
      * overridden if the series uses more than one species, in which case it is always split up.
      * 

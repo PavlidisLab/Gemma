@@ -270,9 +270,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         // cachedThawedBioAssayDimensions.clear(); // TEMPORARY FOR DEBUGGING.
         // cachedLayouts.clear(); // TEMPORARY FOR DEBUGGING.
 
-        if ( dedvs == null ) return new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(0);
+        if ( dedvs == null )
+            return new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(
+                    0 );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(dedvs.size());
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(
+                dedvs.size() );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -296,6 +299,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             BioAssayDimension bad = vec.getBioAssayDimension();
 
+            /*
+             * FIXME this might be a 'gapped' dimension that has a null id.
+             */
+
             if ( bad == null || vec.isReorganized() ) {
                 /*
                  * We've already done this vector, probably - from the cache. If the experimental design changed in the
@@ -312,8 +319,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             double[] data = vec.getData();
             double[] dol = ArrayUtils.clone( data );
 
-            if ( !cachedThawedBioAssayDimensions.containsKey( bad.getId() ) ) {
+            if ( bad.getId() != null && !cachedThawedBioAssayDimensions.containsKey( bad.getId() ) ) {
                 log.warn( "Missing bioassaydimension: " + bad.getId() ); // WHY?
+                continue;
+            }
+
+            if ( bad.getId() == null ) {
+                log.warn( "bioassaydimension has no id" );
                 continue;
             }
 
@@ -423,7 +435,8 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                     sortedFacs.put( fac, facs.get( fac ) );
                 }
 
-                assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + ", got " + sortedFacs.size();
+                // assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + " factors, got "
+                // + sortedFacs.size();
                 sortedLayout.put( ba, sortedFacs );
             }
             sortedLayouts.put( ee, sortedLayout );

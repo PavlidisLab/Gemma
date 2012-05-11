@@ -91,7 +91,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
     protected ExpressionExperiment expressionExperiment = null;
-   
+
     protected final int NUM_TWA_RESULT_SETS = 3;
 
     @Autowired
@@ -165,7 +165,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
-        arrayDesign.setPrimaryTaxon( getTaxon("mouse" ) );
+        arrayDesign.setPrimaryTaxon( getTaxon( "mouse" ) );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
@@ -500,6 +500,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         biomaterials = new ArrayList<BioMaterial>();
         for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
+            if ( b.getSamplesUsed().size() > 1 )
+                throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
             biomaterials.add( b.getSamplesUsed().iterator().next() );
         }
 

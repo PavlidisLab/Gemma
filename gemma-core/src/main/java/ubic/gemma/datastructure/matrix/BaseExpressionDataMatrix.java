@@ -479,43 +479,43 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
          * we group them together. Each bioMaterialGroup corresponds to a single column in the matrix.
          */
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
-        Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions.values() ) {
             Collection<BioAssay> bioAssays = dimension.getBioAssays(); // this should in fact be a list.
             log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
-            getBioMaterialGroupsForAssays( bioMaterialMap, bioMaterialGroups, bioAssays );
+            getBioMaterialGroupsForAssays( bioMaterialMap, bioAssays );
         }
 
-        log.debug( bioMaterialGroups.size() + " biomaterialGroups (correspond to columns)" );
+        if ( log.isDebugEnabled() ) log.debug( bioMaterialMap.size() + " biomaterialGroups (correspond to columns)" );
         int column = 0;
-        for ( Collection<BioMaterial> bms : bioMaterialGroups ) {
-            for ( BioMaterial bioMaterial : bms ) {
-                log.debug( "Column " + column + " **--->>>> " + bms );
-                for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
-                    if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
-                        int existingColumn = columnBioMaterialMap.get( bioMaterial );
-                        this.columnAssayMap.put( assay, existingColumn );
-                        log.debug( assay + " --> column " + existingColumn );
 
-                        if ( columnBioAssayMapByInteger.get( existingColumn ) == null ) {
-                            columnBioAssayMapByInteger.put( existingColumn, new HashSet<BioAssay>() );
-                        }
-                        columnBioAssayMapByInteger.get( existingColumn ).add( assay );
-                    } else {
+        for ( BioMaterial bioMaterial : bioMaterialMap.keySet() ) {
+            if ( log.isDebugEnabled() ) log.debug( "Column " + column + " **--->>>> " + bioMaterial );
+            for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
+                if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
+                    int existingColumn = columnBioMaterialMap.get( bioMaterial );
+                    this.columnAssayMap.put( assay, existingColumn );
+                    if ( log.isDebugEnabled() ) log.debug( assay + " --> column " + existingColumn );
+
+                    if ( columnBioAssayMapByInteger.get( existingColumn ) == null ) {
+                        columnBioAssayMapByInteger.put( existingColumn, new HashSet<BioAssay>() );
+                    }
+                    columnBioAssayMapByInteger.get( existingColumn ).add( assay );
+                } else {
+                    if ( log.isDebugEnabled() ) {
                         log.debug( bioMaterial + " --> column " + column );
                         log.debug( assay + " --> column " + column );
-                        this.columnBioMaterialMap.put( bioMaterial, column );
-                        this.columnAssayMap.put( assay, column );
-                        if ( columnBioAssayMapByInteger.get( column ) == null ) {
-                            columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
-                        }
-
-                        // FIXME This really should be a collection of biomaterials. See bug 629.
-                        columnBioMaterialMapByInteger.put( column, bioMaterial );
-                        columnBioAssayMapByInteger.get( column ).add( assay );
                     }
+                    this.columnBioMaterialMap.put( bioMaterial, column );
+                    this.columnAssayMap.put( assay, column );
+                    if ( columnBioAssayMapByInteger.get( column ) == null ) {
+                        columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
+                    }
+
+                    columnBioMaterialMapByInteger.put( column, bioMaterial );
+                    columnBioAssayMapByInteger.get( column ).add( assay );
                 }
             }
+
             column++;
         }
 
@@ -525,64 +525,32 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             }
         }
 
-        assert bioMaterialGroups.size() == columnBioMaterialMapByInteger.keySet().size();
+        assert bioMaterialMap.size() == columnBioMaterialMapByInteger.keySet().size();
         return columnBioMaterialMapByInteger.keySet().size();
     }
 
     /**
      * @param bioMaterialMap
-     * @param bioMaterialGroups
+     * @param bioMaterials
      * @param bioAssays
      */
     private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
-            Collection<Collection<BioMaterial>> bioMaterialGroups, Collection<BioAssay> bioAssays ) {
+            Collection<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
             if ( log.isDebugEnabled() ) log.debug( "      " + ba );
-            Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
+            Collection<BioMaterial> bms = ba.getSamplesUsed();
 
-            if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
-                bioMaterialGroups.add( bioMaterials );
-            }
+            if ( bms.size() > 1 )
+                throw new UnsupportedOperationException( "Can't deal with more than one biomaterial per bioassay." );
 
-            for ( BioMaterial material : bioMaterials ) {
-                if ( log.isDebugEnabled() ) log.debug( "           " + material );
-                if ( !bioMaterialMap.containsKey( material ) ) {
-                    bioMaterialMap.put( material, new HashSet<BioAssay>() );
-                }
-                bioMaterialMap.get( material ).add( ba );
+            BioMaterial bm = bms.iterator().next();
+
+            if ( !bioMaterialMap.containsKey( bm ) ) {
+                bioMaterialMap.put( bm, new HashSet<BioAssay>() );
             }
+            bioMaterialMap.get( bm ).add( ba );
+
         }
-    }
-
-    /**
-     * Determine if the bioMaterial group has already been seen; this is necessary because it is possible to have
-     * multiple bioassays use the same biomaterials.
-     * 
-     * @param bioMaterialGroups
-     * @param candidateGroup
-     * @return
-     */
-    private boolean alreadySeenGroup( Collection<Collection<BioMaterial>> bioMaterialGroups,
-            Collection<BioMaterial> candidateGroup ) {
-        // assert candidateGroup.size() > 0;
-        for ( Collection<BioMaterial> existingGroup : bioMaterialGroups ) {
-            boolean alreadyIn = true;
-            for ( BioMaterial candidateMember : candidateGroup ) {
-                boolean contained = false;
-                for ( BioMaterial existing : existingGroup ) {
-                    if ( existing.equals( candidateMember ) ) {
-                        contained = true;
-                        break;
-                    }
-                }
-                if ( !contained ) {
-                    alreadyIn = false; // try the next group.
-                    break;
-                }
-            }
-            if ( alreadyIn ) return true;
-        }
-        return false;
     }
 
     /*

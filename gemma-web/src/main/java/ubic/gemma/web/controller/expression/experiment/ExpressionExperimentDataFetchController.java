@@ -227,25 +227,24 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
             if ( this.command.getAnalysisId() != null ) {
 
-                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile ( 
-                        command.getAnalysisId(),
+                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( command.getAnalysisId(),
                         command.isForceRewrite() );
 
                 files.add( f );
-               
 
-//TODO: Support this case (Do we really use it from somewhere?)                
-//            } else if ( this.command.getExpressionExperimentId() != null ) {
-//
-//                Long eeId = this.command.getExpressionExperimentId();
-//                ExpressionExperiment ee = expressionExperimentService.load( eeId );
-//
-//                if ( ee == null ) {
-//                    throw new RuntimeException(
-//                            "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
-//                }
-//
-//                files = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, command.isForceRewrite() );
+                // TODO: Support this case (Do we really use it from somewhere?)
+                // } else if ( this.command.getExpressionExperimentId() != null ) {
+                //
+                // Long eeId = this.command.getExpressionExperimentId();
+                // ExpressionExperiment ee = expressionExperimentService.load( eeId );
+                //
+                // if ( ee == null ) {
+                // throw new RuntimeException(
+                // "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+                // }
+                //
+                // files = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, command.isForceRewrite()
+                // );
 
             } else {
                 throw new IllegalArgumentException( "Must provide either experiment or specific analysis to provide" );
@@ -258,9 +257,9 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
             if ( files.isEmpty() ) {
                 throw new IllegalArgumentException(
                         "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
-            //} else if ( files.size() > 1 ) {
-            //   throw new UnsupportedOperationException(
-            //           "Sorry, you can't get multiple analyses at once using this method." );
+                // } else if ( files.size() > 1 ) {
+                // throw new UnsupportedOperationException(
+                // "Sorry, you can't get multiple analyses at once using this method." );
             } else {
                 String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
                 ModelAndView mav = new ModelAndView( new RedirectView( url ) );
@@ -272,8 +271,8 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     }
 
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
-    + "dataFiles" + File.separatorChar;
-    
+            + "dataFiles" + File.separatorChar;
+
     public File getOutputFile( String filename ) {
         String fullFilePath = DATA_DIR + filename;
         File f = new File( fullFilePath );
@@ -282,7 +281,6 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
         return f;
     }
 
-    
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 

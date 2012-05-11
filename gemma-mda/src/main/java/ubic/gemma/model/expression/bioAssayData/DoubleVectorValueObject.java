@@ -20,13 +20,18 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 
@@ -44,20 +49,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     private boolean reorganized = false;
 
-    /**
-     * @return true if the data has been rearranged relative to the bioassaydimension (as a matter of practice the
-     *         bioassaydimension should be nulled if it is not valid; this boolean is an additional check)
-     */
-    public boolean isReorganized() {
-        return reorganized;
-    }
-
-    public void setReorganized( boolean reorganized ) {
-        this.reorganized = reorganized;
-    }
-
     private Double pvalue;
+
     private Double rankByMax;
+
     private Double rankByMean;
     private Long sourceVectorId = null;
 
@@ -87,6 +82,23 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
         }
+    }
+
+    /**
+     * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
+     * 
+     * @param dedv
+     * @param genes
+     * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
+     *        that aren't in the dedv's bioAssayDimension.
+     */
+    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes, BioAssayDimension dimToMatch ) {
+        this( dedv, genes );
+
+        if ( dimToMatch.getBioAssays().size() != this.data.length ) {
+            addGaps( dimToMatch );
+        }
+
     }
 
     /**
@@ -145,12 +157,24 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return masked;
     }
 
+    /**
+     * @return true if the data has been rearranged relative to the bioassaydimension (as a matter of practice the
+     *         bioassaydimension should be nulled if it is not valid; this boolean is an additional check)
+     */
+    public boolean isReorganized() {
+        return reorganized;
+    }
+
     public void setMasked( boolean masked ) {
         this.masked = masked;
     }
 
     public void setPvalue( Double pvalue ) {
         this.pvalue = pvalue;
+    }
+
+    public void setReorganized( boolean reorganized ) {
+        this.reorganized = reorganized;
     }
 
     /**
@@ -206,5 +230,57 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setDesignElement( designElement );
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
+    }
+
+    /**
+     * @param dimToMatch
+     */
+    private void addGaps( BioAssayDimension dimToMatch ) {
+        double[] expandedData = new double[dimToMatch.getBioAssays().size()];
+        BioAssayDimension expandedDim = BioAssayDimension.Factory.newInstance();
+        expandedDim.setDescription( "Expanded bioassay dimension based on " + this.bioAssayDimension.getName() );
+        expandedDim.setName( "Expanded bioassay dimension based on " + this.bioAssayDimension.getName() );
+
+        Map<BioMaterial, BioAssay> bmap = new HashMap<BioMaterial, BioAssay>();
+        ArrayDesign arrayDesign = null;
+        for ( BioAssay b : this.getBioAssayDimension().getBioAssays() ) {
+            if ( b.getSamplesUsed().size() > 1 )
+                throw new UnsupportedOperationException( "Can only have one biomaterial per bioassay" );
+            bmap.put( b.getSamplesUsed().iterator().next(), b );
+            arrayDesign = b.getArrayDesignUsed();
+        }
+
+        List<BioAssay> expandedBioAssays = new ArrayList<BioAssay>();
+        int i = 0;
+        int indexInUngappedData = 0;
+        for ( BioAssay b : dimToMatch.getBioAssays() ) {
+            if ( b.getSamplesUsed().size() > 1 )
+                throw new UnsupportedOperationException( "Can only have one biomaterial per bioassay" );
+            BioMaterial bm = b.getSamplesUsed().iterator().next();
+
+            if ( !bmap.containsKey( bm ) ) {
+                /*
+                 * This is one where we have to put in a gap.
+                 */
+                expandedData[i] = Double.NaN;
+                BioAssay placeholder = BioAssay.Factory.newInstance();
+                placeholder.setName( "Missing bioassay for biomaterial=" + bm + " that was not run on " + arrayDesign );
+                placeholder
+                        .setDescription( "This is to represent a biomaterial that was not run on the platform for the rest of the bioassaydimension." );
+                placeholder.setArrayDesignUsed( arrayDesign );
+                placeholder.getSamplesUsed().add( bm );
+                expandedBioAssays.add( placeholder );
+            } else {
+                expandedBioAssays.add( ( ( List<BioAssay> ) this.bioAssayDimension.getBioAssays() )
+                        .get( indexInUngappedData ) );
+                expandedData[i] = data[indexInUngappedData];
+                indexInUngappedData++;
+            }
+            i++;
+        }
+
+        this.data = expandedData;
+        this.bioAssayDimension = expandedDim;
+        this.bioAssayDimension.setBioAssays( expandedBioAssays );
     }
 }

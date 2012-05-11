@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
@@ -64,6 +66,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Autowired
     public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public void clearCache() {
+        processedDataVectorCache.clearCache();
     }
 
     /*
@@ -214,8 +221,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(ubic.gemma.model
+     * .expression.experiment.BioAssaySet)
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment ) {
-        return getProcessedDataArrays( expressionExperiment, 50, false );
+        return getProcessedDataArrays( expressionExperiment, -1, false );
     }
 
     /*
@@ -258,9 +272,32 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         } else {
             cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
         }
+
+        Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
+
+        if ( bioAssayDimensions.size() == 1 ) {
+            return unpack( pedvs, cs2gene );
+        }
+
+        /*
+         * deal with 'misalignment problem'
+         */
+
+        BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
+
+        if ( longestBad != null ) {
+            return unpack( pedvs, cs2gene, longestBad );
+        }
         return unpack( pedvs, cs2gene );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(java.util.Collection
+     * , java.util.Collection, boolean)
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<Gene> genes, boolean fullMap ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
@@ -340,20 +377,38 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         /*
-         * Non-cached items.
+         * Non-cached items. FIXME check for gappiness.
          */
         if ( !needToSearch.isEmpty() ) {
+
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
+            Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
+            for ( ExpressionExperiment ee : needToSearch ) {
 
-            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
-            cacheResults( newResults );
+                Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
 
-            newResults = sliceSubsets( ees, newResults );
+                if ( bioAssayDimensions.size() == 1 ) {
+                    newResults.addAll( unpack( processedDataVectors ) );
+                } else {
+                    /*
+                     * Deal with 'gaps'. See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>,
+                     * Collection<Gene>, boolean) and bug 1704.
+                     */
+                    BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
+                    if ( longestBad != null ) {
+                        newResults.addAll( unpack( processedDataVectors, longestBad ) );
+                    }
 
-            results.addAll( newResults );
+                }
+
+                cacheResults( newResults );
+
+                newResults = sliceSubsets( ees, newResults );
+
+                results.addAll( newResults );
+            }
         }
-
         return results;
 
     }
@@ -367,10 +422,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
-        Collection<ProcessedExpressionDataVector> result = this.getHibernateTemplate().findByNamedParam( queryString,
-                "ee", ee );
-        // this.thaw( result );
-        return result;
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
     }
 
     /**
@@ -381,7 +433,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
 
-        if ( limit == null ) {
+        if ( limit == null || limit < 0 ) {
             return this.getProcessedVectors( ee );
         }
 
@@ -633,6 +685,46 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * @param ee
+     * @return
+     */
+    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @return the processedDataVectorCache
+     */
+    protected ProcessedDataVectorCache getProcessedDataVectorCache() {
+        return processedDataVectorCache;
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    /**
      * @param newResults
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -693,6 +785,100 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 needToSearch.add( experiment );
             }
         }
+    }
+
+    /**
+     * See if anything is 'ragged' (fewer bioassays per biomaterial than in some other sample)
+     * 
+     * @param bioAssayDimensions
+     * @return
+     */
+    private BioAssayDimension checkRagged( Collection<BioAssayDimension> bioAssayDimensions ) {
+        int s = -1;
+        int longest = -1;
+        BioAssayDimension longestBad = null;
+        boolean ragged = false;
+        for ( BioAssayDimension bad : bioAssayDimensions ) {
+            Collection<BioAssay> assays = bad.getBioAssays();
+            if ( s < 0 ) {
+                s = assays.size();
+            } else if ( s != assays.size() ) {
+                ragged = true;
+            }
+
+            if ( assays.size() > longest ) {
+                longest = assays.size();
+                longestBad = bad;
+            }
+        }
+        if ( ragged ) return longestBad;
+        return null;
+    }
+
+    /**
+     * @param ees
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet ee ) {
+        if ( ee instanceof ExpressionExperiment ) {
+            StopWatch timer = new StopWatch();
+            timer.start();
+            List<?> r = this
+                    .getHibernateTemplate()
+                    .findByNamedParam(
+                            // this does not look efficient.
+                            "select distinct bad from ExpressionExperimentImpl e, BioAssayDimensionImpl bad"
+                                    + " inner join e.bioAssays b inner join bad.bioAssays badba where e = :ee and b in (badba) ",
+                            "ee", ee );
+            timer.stop();
+            if ( timer.getTime() > 100 ) {
+                log.info( "Fetch " + r.size() + " bioassaydimensions for experiment id=" + ee.getId() + ": "
+                        + timer.getTime() + "ms" );
+            }
+            return ( Collection<BioAssayDimension> ) r;
+        }
+
+        return getBioAssayDimensions( getExperiment( ee ) );
+
+    }
+
+    /**
+     * @param ees
+     * @return
+     */
+    private Map<BioAssaySet, Collection<BioAssayDimension>> getBioAssayDimensions( Collection<ExpressionExperiment> ees ) {
+        Map<BioAssaySet, Collection<BioAssayDimension>> result = new HashMap<BioAssaySet, Collection<BioAssayDimension>>();
+
+        if ( ees.size() == 1 ) {
+            ExpressionExperiment ee = ees.iterator().next();
+            result.put( ee, getBioAssayDimensions( ee ) );
+            return result;
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<?> r = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct e, bad from ExpressionExperimentImpl e, BioAssayDimensionImpl bad"
+                                + " inner join e.bioAssays b inner join bad.bioAssays badba where e in (:ees) and b in (badba) ",
+                        "ees", ees );
+
+        for ( Object o : r ) {
+            Object[] tup = ( Object[] ) o;
+            if ( !result.containsKey( tup[0] ) )
+                result.put( ( BioAssaySet ) tup[0], new HashSet<BioAssayDimension>() );
+
+            result.get( tup[0] ).add( ( BioAssayDimension ) tup[1] );
+        }
+        if ( timer.getTime() > 100 ) {
+            log.info( "Fetch " + r.size() + " bioassaydimensions for " + ees.size() + " experiment(s): "
+                    + timer.getTime() + "ms" );
+        }
+
+        return result;
+
     }
 
     /**
@@ -782,14 +968,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         // ees must be thawed first as currently implemented (?)
 
         Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+
         /*
          * Check the cache.
          */
         Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
         Collection<Gene> genesToSearch = new HashSet<Gene>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
-        log.info( "using " + results.size() + " DoubleVectorValueObject(s) from cache; need to search for "
-                + needToSearch.size() );
+        log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache; need to search for vectors for "
+                + genes.size() + " genes from " + needToSearch.size() + " experiments" );
 
         if ( needToSearch.size() != 0 ) {
 
@@ -821,7 +1008,65 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
 
-            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
+            Map<BioAssaySet, Collection<BioAssayDimension>> bioAssayDimensions = this
+                    .getBioAssayDimensions( needToSearch );
+
+            Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
+
+            /*
+             * This loop is to ensure that we don't get misaligned vectors for experiments that use more than one array
+             * design. See bug 1704. This isn't that common, so we try to break out as soon as possible.
+             */
+            for ( BioAssaySet bas : needToSearch ) {
+                Collection<BioAssayDimension> dims = bioAssayDimensions.get( bas );
+
+                if ( dims.size() == 1 ) {
+                    if ( needToSearch.size() == 1 ) {
+                        // simple case.
+                        newResults.addAll( unpack( processedDataVectors ) );
+                        cacheResults( newResults );
+                        return newResults;
+                    }
+                } // might have more than one dim, but might just be one
+
+                /*
+                 * Get the vectors for just this experiment. This is made more efficient by removing things from the map
+                 * each time through.
+                 */
+                Map<ProcessedExpressionDataVector, Collection<Gene>> vecsForBas = new HashMap<ProcessedExpressionDataVector, Collection<Gene>>();
+                if ( needToSearch.size() == 1 ) {
+                    vecsForBas = processedDataVectors;
+                } else {
+                    // isolate the vectors for the current experiment.
+                    for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
+                            .hasNext(); ) {
+                        ProcessedExpressionDataVector v = it.next();
+                        if ( v.getExpressionExperiment().equals( bas ) ) {
+                            vecsForBas.put( v, processedDataVectors.get( v ) );
+                            it.remove(); // since we're done with it.
+                        }
+                    }
+                }
+
+                /*
+                 * Now see if anything is 'ragged' (fewer bioassays per biomaterial than in some other vector)
+                 */
+                if ( dims.size() == 1 ) {
+                    newResults.addAll( unpack( vecsForBas ) );
+                } else {
+                    BioAssayDimension longestBad = checkRagged( dims );
+                    if ( longestBad == null ) {
+                        newResults.addAll( unpack( vecsForBas ) );
+                    } else {
+                        newResults.addAll( unpack( vecsForBas, longestBad ) );
+                    }
+                }
+            }
+
+            /*
+             * Finally....
+             */
+
             cacheResults( newResults );
             results.addAll( newResults );
         }
@@ -1025,6 +1270,22 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param data
+     * @param cs2GeneMap
+     * @param longestBad
+     * @return
+     */
+    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
+            Map<? extends CompositeSequence, Collection<Gene>> cs2GeneMap, BioAssayDimension longestBad ) {
+        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+
+        for ( DesignElementDataVector v : data ) {
+            result.add( new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement() ), longestBad ) );
+        }
+        return result;
+    }
+
+    /**
+     * @param data
      * @return
      */
     private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Gene>> data ) {
@@ -1035,6 +1296,24 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
+    /**
+     * @param data
+     * @param longestBad
+     * @return
+     */
+    private Collection<? extends DoubleVectorValueObject> unpack(
+            Map<ProcessedExpressionDataVector, Collection<Gene>> data, BioAssayDimension longestBad ) {
+        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        for ( DesignElementDataVector v : data.keySet() ) {
+            result.add( new DoubleVectorValueObject( v, data.get( v ), longestBad ) );
+        }
+        return result;
+    }
+
+    /**
+     * @param data
+     * @return
+     */
     private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<BooleanVectorValueObject>();
 
@@ -1042,50 +1321,5 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             result.add( new BooleanVectorValueObject( v ) );
         }
         return result;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
-                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
-                + " and dedv.expressionExperiment  = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @return the processedDataVectorCache
-     */
-    protected ProcessedDataVectorCache getProcessedDataVectorCache() {
-        return processedDataVectorCache;
-    }
-
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
-
-            return ( Integer ) queryObject.iterate().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    @Override
-    public void clearCache() {
-        processedDataVectorCache.clearCache();
     }
 }

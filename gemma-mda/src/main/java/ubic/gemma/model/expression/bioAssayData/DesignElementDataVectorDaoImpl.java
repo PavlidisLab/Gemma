@@ -91,8 +91,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             if ( batch.size() > 0 ) {
                 getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
             }
-
-            session.clear();
+            // Is this important?
+            // session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

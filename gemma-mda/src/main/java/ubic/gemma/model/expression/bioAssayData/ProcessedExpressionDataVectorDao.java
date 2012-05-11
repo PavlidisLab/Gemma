@@ -48,19 +48,51 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
+    /**
+     * @param bioassaySets
+     * @param genes
+     * @param fullMap
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
             Collection<Gene> genes, boolean fullMap );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 
+    /**
+     * @param expressionExperiment
+     * @param genes
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
             Collection<Gene> genes );
 
+    /**
+     * @param ee
+     * @param limit
+     * @param fullMap
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, int limit, boolean fullMap );
 
+    /**
+     * @param expressionExperiments
+     * @param probes
+     * @param fullMap
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> probes,
             boolean fullMap );

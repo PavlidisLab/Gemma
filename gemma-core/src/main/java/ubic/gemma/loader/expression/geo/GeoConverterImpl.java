@@ -195,13 +195,12 @@ public class GeoConverterImpl implements GeoConverter {
      * @see ubic.gemma.loader.expression.geo.GeoConverter#convert(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<Object> convert( Collection<? extends GeoData> geoObjects ) {
         for ( Object geoObject : geoObjects ) {
             Object convertedObject = convert( ( GeoData ) geoObject );
             if ( convertedObject != null ) {
                 if ( convertedObject instanceof Collection ) {
-                    results.addAll( ( Collection ) convertedObject );
+                    results.addAll( ( Collection<?> ) convertedObject );
                 } else {
                     results.add( convertedObject );
                 }
@@ -534,33 +533,11 @@ public class GeoConverterImpl implements GeoConverter {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.loader.expression.geo.GeoConverter#setExternalDatabaseService(ubic.gemma.model.common.description.
-     * ExternalDatabaseService)
-     */
-    @Override
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.geo.GeoConverter#setSplitByPlatform(boolean)
      */
     @Override
     public void setSplitByPlatform( boolean splitByPlatform ) {
         this.splitByPlatform = splitByPlatform;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.expression.geo.GeoConverter#setTaxonService(ubic.gemma.model.genome.TaxonService)
-     */
-    @Override
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     @Override
@@ -1141,7 +1118,6 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * @param platform
      */
-    @SuppressWarnings("unchecked")
     private ArrayDesign convertPlatform( GeoPlatform platform ) {
 
         if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
@@ -1228,7 +1204,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         Pattern refSeqAccessionPattern = Pattern.compile( "^[A-Z]{2}_" );
 
-        Collection compositeSequences = new ArrayList( 5000 );
+        Collection<CompositeSequence> compositeSequences = new ArrayList<CompositeSequence>( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
             String externalAccession = null;
@@ -1345,7 +1321,7 @@ public class GeoConverterImpl implements GeoConverter {
 
             i++;
         }
-        arrayDesign.setCompositeSequences( new HashSet( compositeSequences ) );
+        arrayDesign.setCompositeSequences( new HashSet<CompositeSequence>( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
         // We don't get reporters from GEO SOFT files.
@@ -1679,7 +1655,6 @@ public class GeoConverterImpl implements GeoConverter {
      * @return
      * @see convertSeries
      */
-    @SuppressWarnings("unchecked")
     private ExpressionExperiment convertSeries( GeoSeries series, ExpressionExperiment resultToAddTo ) {
         if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccession() );
@@ -1762,7 +1737,7 @@ public class GeoConverterImpl implements GeoConverter {
         if ( samplesToSkip.size() > 0 ) {
             log.info( samplesToSkip.size() + " samples will be skipped" );
         }
-        expExp.setBioAssays( new HashSet() );
+        expExp.setBioAssays( new HashSet<BioAssay>() );
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
             throw new IllegalArgumentException( "No sample correspondence!" );
@@ -1777,14 +1752,14 @@ public class GeoConverterImpl implements GeoConverter {
          */
 
         Collection<String> seen = new HashSet<String>();
-        for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Set<String>> iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             String bioMaterialName = getBiomaterialPrefix( series, ++numBioMaterials );
             String bioMaterialDescription = BIOMATERIAL_DESCRIPTION_PREFIX;
 
             // From the series samples, find the sample that corresponds and convert it.
-            Set<String> correspondingSamples = ( Set<String> ) iter.next();
+            Set<String> correspondingSamples = iter.next();
             for ( String cSample : correspondingSamples ) {
                 boolean found = false;
                 for ( GeoSample sample : allSeriesSamples ) {
@@ -2712,7 +2687,7 @@ public class GeoConverterImpl implements GeoConverter {
              * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
              * quantitation type that was filtered out during parsing, or absent from some samples.
              */
-            List ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
+            List<Object> ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
             if ( ob == null || ob.size() == 0 ) continue;
             assert ob.size() == datasetSamples.size();
             dataVectors.put( designElementName, ob );

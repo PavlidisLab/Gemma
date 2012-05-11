@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -42,10 +43,12 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -79,7 +82,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Autowired
     BioAssayService bioAssayService;
-    
+
     @Autowired
     BioAssayDimensionService bioAssayDimensionService;
 
@@ -117,6 +120,90 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             assertNotNull( d.getRankByMean() );
             assertNotNull( d.getRankByMax() );
         }
+    }
+
+    /**
+     * Three platforms, one sample was not run on GPL81.
+     */
+    @Test
+    public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
+
+        String path = getTestFileBasePath();
+
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gse482short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE482", false, true, false, false );
+            this.ee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
+        }
+
+        ee = eeService.thawLite( ee );
+
+        Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
+
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
+        assertEquals( 10, mat.columns() );
+
+        boolean found = false;
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            Double[] row = mat.getRow( i );
+            CompositeSequence el = mat.getDesignElementForRow( i );
+            for ( int j = 0; j < row.length; j++ ) {
+                BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                if ( ba.getName().equals( "PGA-MurLungHyper-Norm-1aCv2-s2" )
+                        && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
+                                || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
+                                || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
+                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100011_at" )
+                                || el.getName().equals( "100009_r_at" ) || el.getName().equals( "100010_at" ) ) ) {
+                    assertEquals( Double.NaN, row[j], 0.0001 );
+                    found = true;
+                } else {
+                    assertTrue( !Double.isNaN( row[j] ) );
+                }
+            }
+        }
+        assertTrue( found );
+
+        /*
+         * Now do this through the processedExpressionDataVectorService
+         */
+        Collection<DoubleVectorValueObject> da = this.processedExpressionDataVectorService.getProcessedDataArrays( ee );
+        assertEquals( 30, da.size() );
+        found = false;
+        for ( DoubleVectorValueObject v : da ) {
+            CompositeSequence el = v.getDesignElement();
+            double[] row = v.getData();
+            // System.err.print( el.getName() + "\t" );
+            // for ( double d : row ) {
+            // System.err.print( String.format( "%4.2f\t", d ) );
+            // }
+
+            assertEquals( 10, row.length );
+            for ( int j = 0; j < row.length; j++ ) {
+                BioAssay ba = ( ( List<BioAssay> ) v.getBioAssayDimension().getBioAssays() ).get( j );
+                if ( ba.getName().startsWith( "Missing bioassay for biomaterial" )
+                        && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
+                                || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
+                                || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
+                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100011_at" )
+                                || el.getName().equals( "100009_r_at" ) || el.getName().equals( "100010_at" ) ) ) {
+                    assertEquals( Double.NaN, row[j], 0.0001 );
+                    found = true;
+                } else {
+                    assertTrue( !Double.isNaN( row[j] ) );
+                }
+            }
+            // System.err.print( "\n" );
+        }
+        assertTrue( found );
     }
 
     @Test
@@ -223,11 +310,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             i = 0;
             log.debug( vector.getDesignElement().getName() + " ........................." );
 
-            //thawingto avoid lazy error because we are outside of transaction in this test. All references in code run inside a transaction
-            BioAssayDimension bioAssayDimension = bioAssayDimensionService.thawLite(vector.getBioAssayDimension() );
-            
+            // thawingto avoid lazy error because we are outside of transaction in this test. All references in code run
+            // inside a transaction
+            BioAssayDimension bioAssayDimension = bioAssayDimensionService.thawLite( vector.getBioAssayDimension() );
+
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-            
+
             for ( BioAssay ba : bioAssays ) {
 
                 assertEquals( 1, ba.getSamplesUsed().size() );

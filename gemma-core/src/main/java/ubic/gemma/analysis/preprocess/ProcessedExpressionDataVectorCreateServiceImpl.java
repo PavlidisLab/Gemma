@@ -170,6 +170,9 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         BioAssayDimension bioassaydim = dims.iterator().next();
         List<BioMaterial> start = new ArrayList<BioMaterial>();
         for ( BioAssay ba : bioassaydim.getBioAssays() ) {
+            if ( ba.getSamplesUsed().size() > 1 )
+                throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
+
             start.add( ba.getSamplesUsed().iterator().next() );
         }
 
@@ -305,6 +308,9 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         for ( BioAssayDimension dim : dims ) {
             int j = 0;
             for ( BioAssay ba : dim.getBioAssays() ) {
+                if ( ba.getSamplesUsed().size() > 1 )
+                    throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
+
                 BioMaterial sample = ba.getSamplesUsed().iterator().next();
 
                 if ( i == 0 ) {

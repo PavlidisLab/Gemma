@@ -238,12 +238,12 @@ public class DEDVController {
     public VisualizationValueObject[] getDEDVForPcaVisualization( Long eeId, int component, int count ) {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( eeId,
                 component, count );
-        
-        if (topLoadedVectors == null) return null;
-        
+
+        if ( topLoadedVectors == null ) return null;
+
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
@@ -669,12 +669,12 @@ public class DEDVController {
 
         if ( request.getParameter( "pca" ) != null ) {
             int component = Integer.parseInt( request.getParameter( "component" ) );
-            Long eeId = eeIds.iterator().next();            
+            Long eeId = eeIds.iterator().next();
 
             Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( eeId,
                     component, thresh.intValue() );
-            
-            if (topLoadedVectors == null) return null;
+
+            if ( topLoadedVectors == null ) return null;
 
             mav.addObject( "text", format4File( topLoadedVectors.values() ) );
             return mav;
@@ -1044,7 +1044,7 @@ public class DEDVController {
         }
 
     }
-    
+
     /**
      * Assign colour lists (queues actually) to factors. The idea is that every factor value will get a colour assigned
      * from its factor's list.
@@ -1094,8 +1094,9 @@ public class DEDVController {
                 + ( Integer.toHexString( random.nextInt( 16 ) ) ) + "0";
         return colourString;
     }
-    
-    private LinkedHashSet<String> getFactorNames(LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> eeLayouts){
+
+    private LinkedHashSet<String> getFactorNames(
+            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> eeLayouts ) {
         LinkedHashSet<String> factorNames = new LinkedHashSet<String>(); // need uniqueness & order
         for ( BioAssay ba : eeLayouts.keySet() ) {
             LinkedHashMap<ExperimentalFactor, Double> factorMap = eeLayouts.get( ba );
@@ -1110,22 +1111,23 @@ public class DEDVController {
     /**
      * Get the factor values we'll use for grouping the columns of the vectors. Uses factors and factor values from
      * layouts
+     * 
      * @param vvo Note: This will be modified! It will be updated with the factorNames and factorValuesToNames
      * @param layouts
      */
-    private void getFactorValues( VisualizationValueObject vvo, 
+    private void getFactorValues( VisualizationValueObject vvo,
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
-        if (layouts == null){
-            throw new IllegalArgumentException("error: layouts are null");
+        if ( layouts == null ) {
+            throw new IllegalArgumentException( "error: layouts are null" );
         }
-        if (layouts.isEmpty()){
-            throw new IllegalArgumentException("error: layouts are empty");
+        if ( layouts.isEmpty() ) {
+            throw new IllegalArgumentException( "error: layouts are empty" );
         }
         ExpressionExperiment ee = layouts.keySet().iterator().next();// always just one? TODO
 
         // get list of factor names for colour assignment
         LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> eeLayouts = layouts.get( ee );
-        LinkedHashSet<String> factorNames = getFactorNames(eeLayouts);
+        LinkedHashSet<String> factorNames = getFactorNames( eeLayouts );
 
         // colours for conditions/factor values bar chart
         Map<String, Queue<String>> factorColoursMap = createFactorNameToColoursMap( factorNames );
@@ -1134,7 +1136,7 @@ public class DEDVController {
         Random random = new Random();
 
         LinkedHashMap<String, LinkedHashMap<String, String>> factorToValueNames = new LinkedHashMap<String, LinkedHashMap<String, String>>();
-        // list of maps with entries: key = factorName, value=array of factor values 
+        // list of maps with entries: key = factorName, value=array of factor values
         // 1 entry per sample
         ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>();
 
@@ -1145,7 +1147,8 @@ public class DEDVController {
             // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
             // BioAssayDimension)
             LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba );
-            LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<String, String[]>(factorNames.size());
+            LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<String, String[]>(
+                    factorNames.size() );
 
             // this is defensive, should only come into play when there's something messed up with the data.
             // for every factor, add a missing-value entry (guards against missing data messing up the layout)
@@ -1160,8 +1163,8 @@ public class DEDVController {
             for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
                 factor = pair.getKey();
                 /*
-                 * the double is only a double because it is meant to hold measurements when the factor is
-                 * continuous if the factor is categorical, the double value is set to the value's id see
+                 * the double is only a double because it is meant to hold measurements when the factor is continuous if
+                 * the factor is categorical, the double value is set to the value's id see
                  * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
                  * ExpressionExperiment, BioAssayDimension)
                  */
@@ -1170,22 +1173,21 @@ public class DEDVController {
                     factorsMissingValues.add( factor.getName() );
                     continue;
                 }
-                
+
                 String facValsStr;
-                if(factor.getType() == FactorType.CONTINUOUS){
+                if ( factor.getType() == FactorType.CONTINUOUS ) {
                     log.debug( "Experiment has continuous factor." );
                     facValsStr = valueOrId.toString();
-                }else{
+                } else {
                     FactorValue facVal = factorValueService.load( new Long( Math.round( valueOrId ) ) );
                     if ( facVal == null ) {
                         log.warn( "Failed to load factorValue with id = " + valueOrId + ". Load returned null. " );
                         factorsMissingValues.add( factor.getName() );
                         continue;
                     }
-                    facValsStr = getFactorValueDisplayString(facVal);
+                    facValsStr = getFactorValueDisplayString( facVal );
                 }
 
-                
                 if ( !factorToValueNames.containsKey( factor.getName() ) ) {
                     factorToValueNames.put( factor.getName(), new LinkedHashMap<String, String>() );
                 }
@@ -1222,10 +1224,10 @@ public class DEDVController {
         vvo.setFactorValuesToNames( factorValueMaps ); // this is list of maps for each sample
     }
 
-    private String getFactorValueDisplayString(FactorValue facVal){
+    private String getFactorValueDisplayString( FactorValue facVal ) {
 
         StringBuffer facValsStrBuff = new StringBuffer();
-        
+
         if ( facVal.getCharacteristics() == null || facVal.getCharacteristics().isEmpty() ) {
             facValsStrBuff.append( facVal.getValue() + ", " );
         }
@@ -1242,6 +1244,7 @@ public class DEDVController {
 
         return facValsStrBuff.toString();
     }
+
     /**
      * @param dedv
      * @return
