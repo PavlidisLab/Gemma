@@ -122,11 +122,13 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         assert mat != null;
 
         sampleCoexpressionMatrixDao.create( mat,
-                datamatrix.getBioAssayDimension( datamatrix.getRowElement( 0 ).getDesignElement() ),
+                datamatrix.getBestBioAssayDimension(),
                 datamatrix.getExpressionExperiment() );
 
         return mat;
     }
+
+    
 
     /* (non-Javadoc)
      * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#hasMatrix(ubic.gemma.model.expression.experiment.ExpressionExperiment)

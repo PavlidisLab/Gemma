@@ -70,6 +70,23 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
+     * @param vectors
+     */
+    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        init();
+
+        for ( DesignElementDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException( "Cannot convert non-double quantitation types into double matrix:"
+                        + dedv.getQuantitationType() );
+            }
+        }
+
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
+    }
+
+    /**
      * @param dataVectors
      * @param quantitationTypes
      */
@@ -102,20 +119,127 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
-     * @param vectors
+     * Create a data matrix like sourceMatrix but use the values from dataMatrix.
+     * 
+     * @param sourceMatrix
+     * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
      */
-    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
+            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
         init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
+        this.columnAssayMap = sourceMatrix.columnAssayMap;
+        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
+        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
+        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+        this.quantitationTypes = sourceMatrix.quantitationTypes;
+        this.matrix = dataMatrix;
 
-        for ( DesignElementDataVector dedv : vectors ) {
-            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-                throw new IllegalStateException( "Cannot convert non-double quantitation types into double matrix:"
-                        + dedv.getQuantitationType() );
-            }
+        for ( int i = 0; i < dataMatrix.rows(); i++ ) {
+            this.addToRowMaps( i, dataMatrix.getRowName( i ) );
         }
 
-        selectVectors( vectors );
-        vectorsToMatrix( vectors );
+    }
+
+    /**
+     * Create a matrix based on another one's selected rows.
+     * 
+     * @param sourceMatrix
+     * @param rowsToUse
+     */
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
+        init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
+        this.columnAssayMap = sourceMatrix.columnAssayMap;
+        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
+        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
+        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
+
+        log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
+
+        int i = 0;
+        for ( CompositeSequence element : rowsToUse ) {
+            super.addToRowMaps( i, element );
+            Double[] rowVals = sourceMatrix.getRow( element );
+            assert rowVals != null : "Source matrix does not have row for " + element;
+
+            this.matrix.addRowName( element );
+
+            for ( int j = 0; j < rowVals.length; j++ ) {
+                Double val = rowVals[j];
+                set( i, j, val );
+            }
+            i++;
+        }
+    }
+
+    /**
+     * Create a matrix based on another one's selected columns. The results will be somewhat butchered - only a single
+     * BioAssayDimension and the ranks will be copied over (not recomputed based on the selected columns).
+     * 
+     * @param columnsToUse
+     * @param sourceMatrix
+     */
+    public ExpressionDataDoubleMatrix( List<BioMaterial> columnsToUse, ExpressionDataDoubleMatrix sourceMatrix ) {
+        init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
+
+        this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
+
+        /*
+         * Indices of the biomaterials in the original matrix.
+         */
+        List<Integer> originalBioMaterialIndices = new ArrayList<Integer>();
+
+        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        for ( BioMaterial bm : columnsToUse ) {
+            originalBioMaterialIndices.add( sourceMatrix.getColumnIndex( bm ) );
+            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
+        }
+
+        this.matrix.setColumnNames( columnsToUse );
+
+        /*
+         * fix the upper level column name maps.
+         */
+        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
+        reorderedDim.setBioAssays( bioAssays );
+
+        this.bioAssayDimensions.clear();
+
+        reorderedDim.setName( "Slice" );
+
+        this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
+
+        int i = 0;
+        for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
+            CompositeSequence designElement = element.getDesignElement();
+            super.addToRowMaps( i, designElement );
+
+            Double[] sourceRow = sourceMatrix.getRow( designElement );
+
+            assert sourceRow != null : "Source matrix does not have row for " + designElement;
+
+            for ( int j = 0; j < originalBioMaterialIndices.size(); j++ ) {
+                Double val = sourceRow[originalBioMaterialIndices.get( j )];
+                set( i, j, val );
+            }
+            i++;
+
+            this.bioAssayDimensions.put( designElement, reorderedDim );
+
+        }
+
+        super.setUpColumnElements();
+
     }
 
     public int columns() {
@@ -186,6 +310,21 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public Double[][] getColumns( List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
+    }
+
+    /**
+     * @return
+     */
+    public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
+        return matrix;
+    }
+
+    /**
+     * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
+     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     */
+    public Map<CompositeSequence, Double> getRanks() {
+        return this.ranks;
     }
 
     /*
@@ -347,6 +486,30 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
+     * Convert {@link DesignElementDataVector}s into Double matrix.
+     * 
+     * @param vectors
+     * @return DoubleMatrixNamed
+     */
+    @Override
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.size() == 0 ) {
+            throw new IllegalArgumentException( "No vectors!" );
+        }
+
+        for ( DesignElementDataVector vector : vectors ) {
+            if ( vector instanceof ProcessedExpressionDataVector ) {
+                this.ranks
+                        .put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
+            }
+        }
+
+        int maxSize = setUpColumnElements();
+        this.matrix = createMatrix( vectors, maxSize );
+
+    }
+
+    /**
      * Fill in the data
      * 
      * @param vectors
@@ -435,169 +598,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         }
         log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
-    }
-
-    /**
-     * Convert {@link DesignElementDataVector}s into Double matrix.
-     * 
-     * @param vectors
-     * @return DoubleMatrixNamed
-     */
-    @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
-            throw new IllegalArgumentException( "No vectors!" );
-        }
-
-        for ( DesignElementDataVector vector : vectors ) {
-            if ( vector instanceof ProcessedExpressionDataVector ) {
-                this.ranks
-                        .put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
-            }
-        }
-
-        int maxSize = setUpColumnElements();
-        this.matrix = createMatrix( vectors, maxSize );
-
-    }
-
-    /**
-     * Create a matrix based on another one's selected rows.
-     * 
-     * @param sourceMatrix
-     * @param rowsToUse
-     */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
-        init();
-        this.expressionExperiment = sourceMatrix.expressionExperiment;
-        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
-        this.columnAssayMap = sourceMatrix.columnAssayMap;
-        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
-        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
-        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
-
-        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rowsToUse.size(), sourceMatrix.columns() );
-        this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
-
-        log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
-
-        int i = 0;
-        for ( CompositeSequence element : rowsToUse ) {
-            super.addToRowMaps( i, element );
-            Double[] rowVals = sourceMatrix.getRow( element );
-            assert rowVals != null : "Source matrix does not have row for " + element;
-
-            this.matrix.addRowName( element );
-
-            for ( int j = 0; j < rowVals.length; j++ ) {
-                Double val = rowVals[j];
-                set( i, j, val );
-            }
-            i++;
-        }
-    }
-
-    /**
-     * Create a matrix based on another one's selected columns. The results will be somewhat butchered - only a single
-     * BioAssayDimension and the ranks will be copied over (not recomputed based on the selected columns).
-     * 
-     * @param columnsToUse
-     * @param sourceMatrix
-     */
-    public ExpressionDataDoubleMatrix( List<BioMaterial> columnsToUse, ExpressionDataDoubleMatrix sourceMatrix ) {
-        init();
-        this.expressionExperiment = sourceMatrix.expressionExperiment;
-
-        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( sourceMatrix.rows(), columnsToUse.size() );
-        this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
-
-        this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
-
-        /*
-         * Indices of the biomaterials in the original matrix.
-         */
-        List<Integer> originalBioMaterialIndices = new ArrayList<Integer>();
-
-        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
-        for ( BioMaterial bm : columnsToUse ) {
-            originalBioMaterialIndices.add( sourceMatrix.getColumnIndex( bm ) );
-            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
-        }
-
-        this.matrix.setColumnNames( columnsToUse );
-
-        /*
-         * fix the upper level column name maps.
-         */
-        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
-        reorderedDim.setBioAssays( bioAssays );
-
-        this.bioAssayDimensions.clear();
-
-        reorderedDim.setName( "Slice" );
-
-        this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
-
-        int i = 0;
-        for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
-            CompositeSequence designElement = element.getDesignElement();
-            super.addToRowMaps( i, designElement );
-
-            Double[] sourceRow = sourceMatrix.getRow( designElement );
-
-            assert sourceRow != null : "Source matrix does not have row for " + designElement;
-
-            for ( int j = 0; j < originalBioMaterialIndices.size(); j++ ) {
-                Double val = sourceRow[originalBioMaterialIndices.get( j )];
-                set( i, j, val );
-            }
-            i++;
-
-            this.bioAssayDimensions.put( designElement, reorderedDim );
-
-        }
-
-        super.setUpColumnElements();
-
-    }
-
-    /**
-     * Create a data matrix like sourceMatrix but use the values from dataMatrix.
-     * 
-     * @param sourceMatrix
-     * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
-     */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
-            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
-        init();
-        this.expressionExperiment = sourceMatrix.expressionExperiment;
-        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
-        this.columnAssayMap = sourceMatrix.columnAssayMap;
-        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
-        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
-        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
-        this.quantitationTypes = sourceMatrix.quantitationTypes;
-        this.matrix = dataMatrix;
-
-        for ( int i = 0; i < dataMatrix.rows(); i++ ) {
-            this.addToRowMaps( i, dataMatrix.getRowName( i ) );
-        }
-
-    }
-
-    /**
-     * @return
-     */
-    public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
-        return matrix;
-    }
-
-    /**
-     * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
-     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
-     */
-    public Map<CompositeSequence, Double> getRanks() {
-        return this.ranks;
     }
 
 }

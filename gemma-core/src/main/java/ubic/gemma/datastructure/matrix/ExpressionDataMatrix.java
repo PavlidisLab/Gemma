@@ -194,13 +194,6 @@ public interface ExpressionDataMatrix<T> {
     public BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
 
     /**
-     * Get all the bioassaydimensions used by this
-     * 
-     * @return
-     */
-    public Collection<BioAssayDimension> getBioAssayDimensions();
-
-    /**
      * Total number of columns.
      * 
      * @return int
@@ -227,5 +220,12 @@ public interface ExpressionDataMatrix<T> {
      * @return
      */
     public Collection<QuantitationType> getQuantitationTypes();
+
+    /**
+     * @return The bioassaydimension that covers all the biomaterials in this matrix.
+     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
+     *         used in the experiment.
+     */
+    public BioAssayDimension getBestBioAssayDimension();
 
 }

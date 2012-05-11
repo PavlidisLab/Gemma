@@ -441,7 +441,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 		Ext.Msg.show({
 					title : 'PCA analysis',
-					msg : 'Please confirm. Previous PCA results will be deleted',
+					msg : 'Please confirm. Any previous PCA results will be deleted',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						var callParams = [];
@@ -466,7 +466,6 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								});
 
 						SvdController.run.apply(this, callParams);
-						w.close();
 					},
 
 					scope : this,
