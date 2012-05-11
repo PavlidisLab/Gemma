@@ -3852,7 +3852,8 @@ public class MageMLConverterHelper {
                 }
             }
             if ( result.getSamplesUsed().size() > 1 ) {
-                throw new UnsupportedOperationException( "More than one biomaterial per bioassay not supported" );
+                // throw new UnsupportedOperationException( "More than one biomaterial per bioassay not supported" );
+                log.warn( "More than one biomaterial per bioassay not supported." );
             }
         } else {
             result.setSamplesUsed( biomaterials );
