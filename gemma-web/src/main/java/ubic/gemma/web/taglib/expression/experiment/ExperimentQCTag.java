@@ -155,7 +155,7 @@ public class ExperimentQCTag extends TagSupport {
              */
             int width = 400;
             int height = 400;
-            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&showLabels=1";
+            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&forceShowLabels=1";
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
                             + "onClick=\"popupImage('"

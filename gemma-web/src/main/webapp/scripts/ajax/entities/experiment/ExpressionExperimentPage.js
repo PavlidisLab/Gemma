@@ -239,9 +239,8 @@ var popupImage = function(url, width, height){
         stateful: false,
         resizable: true,
         autoScroll: true,
-        autoHeight: height, // or false.
+        height: height, // or false.
         width: width || 200,
-        // x : 50,
         padding: 10,
         html: '<img src=\"' + url + '"\" />'
     });

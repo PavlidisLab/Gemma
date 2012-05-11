@@ -250,7 +250,7 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
     public ModelAndView visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
-            OutputStream os ) throws Exception {
+            Boolean forceShowLabels, OutputStream os ) throws Exception {
 
         if ( id == null ) {
             log.warn( "No id!" );
@@ -298,13 +298,18 @@ public class ExpressionExperimentQCController extends BaseController {
 
         MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
 
-        boolean reallyShowLabels = showLabels == null ? false : showLabels && cellsize > 8 /*
-                                                                                            * minimum size for text to
-                                                                                            * show up
-                                                                                            */;
+        boolean reallyShowLabels;
+        int minimumCellSizeForText = 9;
+        if ( forceShowLabels != null && forceShowLabels ) {
+            cellsize = Math.min( MAX_HEATMAP_CELLSIZE, minimumCellSizeForText );
+            reallyShowLabels = true;
+        } else {
+            reallyShowLabels = showLabels == null ? false : showLabels && cellsize >= minimumCellSizeForText;
+        }
 
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
-        writer.writeToPng( cm, os, reallyShowLabels, reallyShowLabels /* show scale if we show labels */);
+        boolean showScalebar = size > 2;
+        writer.writeToPng( cm, os, reallyShowLabels, showScalebar );
 
         return null; // nothing to return;
     }
