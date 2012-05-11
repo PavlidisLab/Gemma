@@ -30,7 +30,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     private Long id = 0L; // needs to be able to be null
     /** id used by url on the client side */
-    private String urlId = "";
+    protected String urlId = "";
 
     private String category = "";
     private String categoryUri = "";

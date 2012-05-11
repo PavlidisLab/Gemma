@@ -35,13 +35,19 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     // if we need to reconstruct part of the tree in the cache we need to know highest root parent
     private String rootOfTree = "";
 
+    private String _id = "";
+    private String _parent = "";
+    private boolean _is_leaf = false;
+
     public TreeCharacteristicValueObject( String value, String valueUri, TreeSet<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
         this.children = children;
+        this._id = this.urlId;
     }
 
     public TreeCharacteristicValueObject( String value, String valueUri ) {
         super( value, "", valueUri, "" );
+        this._id = this.urlId;
     }
 
     public Collection<TreeCharacteristicValueObject> getChildren() {
@@ -67,6 +73,30 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public void setRootOfTree( String rootOfTree ) {
         this.rootOfTree = rootOfTree;
+    }
+
+    public String get_id() {
+        return this._id;
+    }
+
+    public void set_id( String _id ) {
+        this._id = _id;
+    }
+
+    public String get_parent() {
+        return this._parent;
+    }
+
+    public void set_parent( String _parent ) {
+        this._parent = _parent;
+    }
+
+    public boolean is_is_leaf() {
+        return this._is_leaf;
+    }
+
+    public void set_is_leaf( boolean _is_leaf ) {
+        this._is_leaf = _is_leaf;
     }
 
     public String toString( int level ) {
@@ -113,7 +143,12 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         findRealChild( newRealChilds, rootValueUri );
         this.children = newRealChilds;
 
+        if ( this.children.isEmpty() ) {
+            this.set_is_leaf( true );
+        }
+
         for ( TreeCharacteristicValueObject tc : this.children ) {
+            tc.set_parent( this.getUrlId() );
             tc.removeUnusedPhenotypes( rootValueUri );
         }
     }

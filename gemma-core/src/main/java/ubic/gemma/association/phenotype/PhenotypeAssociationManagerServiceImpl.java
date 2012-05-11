@@ -148,7 +148,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         return validateEvidenceValueObject;
     }
-
+    
     /**
      * Return all evidence for a specific gene NCBI
      * 
@@ -952,12 +952,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 if ( alreadyOnTree != null ) {
                     alreadyOnTree.getChildren().add( tc );
+                    tc.set_parent( alreadyOnTree.getUrlId() );
                 } else {
                     TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( onTerm.getLabel(),
                             onTerm.getUri() );
 
                     // add children to the parent
                     tree.getChildren().add( tc );
+                    tc.set_parent( tree.getUrlId() );
 
                     // put node in the hashmap for fast acces
                     phenotypeFoundInTree.put( tree.getValueUri(), tree );
