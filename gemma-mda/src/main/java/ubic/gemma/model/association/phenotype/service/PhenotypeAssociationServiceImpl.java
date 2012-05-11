@@ -67,8 +67,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find Genes link to a phenotype */
     @Override
-    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri ) {
-        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon ) {
+        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon );
     }
 
     /** find all phenotypes */

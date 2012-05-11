@@ -148,7 +148,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         return validateEvidenceValueObject;
     }
-    
+
     /**
      * Return all evidence for a specific gene NCBI
      * 
@@ -206,10 +206,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Given a set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
+     * @param taxon the name of the taxon (optinal)
      * @return A collection of the genes found
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri ) {
+    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, String taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -226,7 +227,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<Gene> genesAfterAcl = null;
 
         // find all Genes containing the first phenotypeValueUri
-        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( possibleChildrenPhenotypes );
+        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon );
         if ( SecurityServiceImpl.isUserAdmin() ) {
             genesAfterAcl = genes;
         } else {
@@ -714,10 +715,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( !phenotypesFoundAndChildren.isEmpty() ) {
 
-            // gene counts for all phenotypes used 
-            for(int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ){
-                phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXA_IN_USE[i],
-                    phenotypesFoundAndChildren ) );
+            // gene counts for all phenotypes used
+            for ( int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ) {
+                phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound,
+                        PhenotypeAssociationConstants.TAXA_IN_USE[i], phenotypesFoundAndChildren ) );
             }
         }
 

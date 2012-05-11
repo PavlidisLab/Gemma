@@ -25,7 +25,7 @@ import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation; 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -50,7 +50,7 @@ public interface PhenotypeAssociationService {
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUr, String taxon );
 
     /**
      * create a GenericExperiment
@@ -129,8 +129,8 @@ public interface PhenotypeAssociationService {
 
     /** find all phenotypes associated with genes */
     public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations();
-    
+
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations(String taxon, Set<String> valuesUri);
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri );
 
 }

@@ -71,9 +71,10 @@ public interface PhenotypeAssociationManagerService {
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
+     * @param taxon the name of the taxon (optinal)
      * @return A collection of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
+    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, String taxon );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype

@@ -102,7 +102,7 @@ public class PhenotypeController extends BaseController {
      * @return all genes that have given phenotypes
      */
     public Collection<GeneValueObject> findCandidateGenes(String[] phenotypes) {
-        return phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(Arrays.asList(phenotypes)));
+        return phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(Arrays.asList(phenotypes)),null);
     }
 
     /**

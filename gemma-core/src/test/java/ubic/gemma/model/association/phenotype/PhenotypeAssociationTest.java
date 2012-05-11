@@ -80,7 +80,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         for ( PhenotypeAssociation phenotypeAssociation : this.gene.getPhenotypeAssociations() ) {
             this.phenotypeAssociationService.remove( phenotypeAssociation );
         }
-        
+
         this.geneService.update( this.gene );
         this.geneService.remove( this.gene );
     }
@@ -126,8 +126,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         Set<String> phenotypesValuesUri = new HashSet<String>();
         phenotypesValuesUri.add( "testUri" );
 
-        Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService
-                .findCandidateGenes( phenotypesValuesUri );
+        Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes(
+                phenotypesValuesUri, null );
 
         assertTrue( geneValueObjects != null && geneValueObjects.size() == 1 );
     }

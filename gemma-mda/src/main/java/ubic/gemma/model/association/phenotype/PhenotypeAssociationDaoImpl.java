@@ -45,13 +45,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find Genes link to a phenotype */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri ) {
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class );
+
+        geneQueryCriteria.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .createCriteria( "phenotypeAssociations" ).createCriteria( "phenotypes" )
                 .add( Restrictions.in( "valueUri", phenotypesValueUri ) );
-        
+
+        if ( taxon != null && !taxon.equalsIgnoreCase( "" ) ) {
+            geneQueryCriteria.createCriteria( "taxon" ).add( Restrictions.like( "commonName", taxon ) );
+        }
         return geneQueryCriteria.list();
     }
 
@@ -255,28 +259,29 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return phenotypesGenesAssociations;
     }
-    
+
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations(String taxon, Set<String> valuesUri) {
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and TAXON.COMMON_name='"+taxon+"'";
+        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and TAXON.COMMON_name='"
+                + taxon + "'";
 
         String queryStringValuesUri = "";
-        
-        if(!valuesUri.isEmpty()){
-            
+
+        if ( !valuesUri.isEmpty() ) {
+
             queryStringValuesUri = " AND CHARACTERISTIC.VALUE_URI in('";
-            
-            for(String value :valuesUri){
+
+            for ( String value : valuesUri ) {
                 queryStringValuesUri = queryStringValuesUri + value + "','";
             }
-            
-            queryStringValuesUri = queryStringValuesUri.substring( 0, queryStringValuesUri.length()-2 )+")";
+
+            queryStringValuesUri = queryStringValuesUri.substring( 0, queryStringValuesUri.length() - 2 ) + ")";
         }
-        
+
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString + queryStringValuesUri );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );

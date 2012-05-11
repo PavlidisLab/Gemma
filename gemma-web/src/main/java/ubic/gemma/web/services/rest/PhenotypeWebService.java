@@ -52,22 +52,26 @@ public class PhenotypeWebService {
     @Path("/load-all-phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
     public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
-        return new JsonReaderResponse<CharacteristicValueObject>(new ArrayList<CharacteristicValueObject>(
-                this.phenotypeAssociationManagerService.loadAllPhenotypes()));
+        return new JsonReaderResponse<CharacteristicValueObject>( new ArrayList<CharacteristicValueObject>(
+                this.phenotypeAssociationManagerService.loadAllPhenotypes() ) );
     }
 
     @GET
     @Path("/find-candidate-genes")
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes(@QueryParam("phenotypeValueUris") List<String> phenotypeValueUris) {
+    public JsonReaderResponse<GeneValueObject> findCandidateGenes(
+            @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
         return new JsonReaderResponse<GeneValueObject>( new ArrayList<GeneValueObject>(
-                this.phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(phenotypeValueUris))));
+                this.phenotypeAssociationManagerService.findCandidateGenes( new HashSet<String>( phenotypeValueUris ),
+                        null ) ) );
     }
 
     @GET
     @Path("/find-evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidence(@QueryParam("geneId") Long geneId, @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris) {
-        return this.phenotypeAssociationManagerService.findEvidenceByGeneId(geneId, new HashSet<String>(phenotypeValueUris));
+    public Collection<EvidenceValueObject> findEvidence( @QueryParam("geneId") Long geneId,
+            @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
+        return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, new HashSet<String>(
+                phenotypeValueUris ) );
     }
 }

@@ -30,7 +30,7 @@ import ubic.gemma.persistence.BaseDao;
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
-    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon );
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
@@ -52,9 +52,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all public phenotypes associated with genes */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations();
-    
+
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations(String taxon, Set<String> valuesUri);
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri );
 
     /** find all phenotypes associated with genes for a user */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName );
