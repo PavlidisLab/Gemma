@@ -279,9 +279,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
 
-        Collection<TreeCharacteristicValueObject> ontologyTrees = findAllPhenotypesByTree( true );
+        Collection<TreeCharacteristicValueObject> flatTree = new TreeSet<TreeCharacteristicValueObject>();
 
-        return customTreeFeatures( ontologyTrees );
+        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true ) );
+
+        // undo the tree in a simple structure
+        for ( TreeCharacteristicValueObject t : ontologyTrees ) {
+            flatenTrees( flatTree, t );
+        }
+
+        return flatTree;
     }
 
     /**
@@ -1429,6 +1436,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         key = key + evidence.getEvidenceSource().getAccession();
 
         return key;
+    }
+
+    private void flatenTrees( Collection<TreeCharacteristicValueObject> flatTree,
+            TreeCharacteristicValueObject treeCharacteristicValueObject ) {
+
+        flatTree.add( treeCharacteristicValueObject );
+
+        for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
+            flatenTrees( flatTree, tree );
+        }
     }
 
 }
