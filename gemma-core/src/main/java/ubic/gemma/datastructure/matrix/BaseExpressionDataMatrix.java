@@ -464,8 +464,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      *                ********
      * </pre>
      * <p>
-     * Because there can be limited or no overlap between the bioassay dimensions,we cannot assume the dimensions of the
-     * matrix will be defined by the longest bioassaydimension.
+     * Because there can be limited or no overlap between the bioassay dimensions, we cannot assume the dimensions of
+     * the matrix will be defined by the longest bioassaydimension. Note that later in processing, this possible lack of
+     * overlap is fixed by sample matching or vector merging; this class has to deal with the general case.
      * </p>
      * 
      * @return int
@@ -474,10 +475,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0 : "No bioAssayDimensions defined";
 
-        /*
-         * build a map of biomaterials to bioassays. Because there can be more than one biomaterial used per bioassay,
-         * we group them together. Each bioMaterialGroup corresponds to a single column in the matrix.
-         */
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions.values() ) {
             Collection<BioAssay> bioAssays = dimension.getBioAssays(); // this should in fact be a list.

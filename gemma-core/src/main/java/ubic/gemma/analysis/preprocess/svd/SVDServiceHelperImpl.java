@@ -94,6 +94,38 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     /*
      * (non-Javadoc)
      * 
+     * @seeubic.gemma.analysis.preprocess.svd.SVDService#getImportantFactors(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, java.util.Collection, java.lang.Double)
+     */
+    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
+            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
+        Set<ExperimentalFactor> importantFactors = new HashSet<ExperimentalFactor>();
+
+        if ( experimentalFactors.isEmpty() ) return importantFactors;
+        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
+        Map<Integer, Map<Long, Double>> factorPvals = svdFactorAnalysis.getFactorPvals();
+        for ( Integer cmp : factorPvals.keySet() ) {
+            Map<Long, Double> factorPv = factorPvals.get( cmp );
+            for ( Long efId : factorPv.keySet() ) {
+                Double pvalue = factorPv.get( efId );
+                ExperimentalFactor ef = factors.get( efId );
+
+                if ( pvalue < importanceThreshold ) {
+                    assert factors.containsKey( efId );
+                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                    importantFactors.add( ef );
+                } else {
+                    log.info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                }
+            }
+        }
+        return importantFactors;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#getTopLoadedVectors(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, int, int)
      */
@@ -203,7 +235,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      */
     public SVDValueObject svd( ExpressionExperiment ee ) {
         assert ee != null;
-                
+
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
@@ -222,21 +254,14 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         for ( int i = 0; i < mat.columns(); i++ ) {
             bioMaterialIds.add( mat.getBioMaterialForColumn( i ).getId() );
         }
-        
+
         principalComponentAnalysisService.removeForExperiment( ee );
 
-        Collection<BioAssayDimension> bioAssayDimensions = mat.getBioAssayDimensions();
-        if ( bioAssayDimensions.size() > 1 ) {
-            /* FIXME see bug 2139 */
-            log.warn( "Multiple bioassaydimensions" );
-        }
-        BioAssayDimension bad = bioAssayDimensions.iterator().next();
+        BioAssayDimension b = chooseBioMaterialToAssociateWithSvd( mat );
 
-                
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
-                svd.getEigenvalues(), v, bad, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
+                svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
 
-        
         /*
          * Add an audit event.
          */
@@ -474,6 +499,52 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     }
 
     /**
+     * @param mat
+     * @return
+     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
+     *         used in the experiment.
+     */
+    private BioAssayDimension chooseBioMaterialToAssociateWithSvd( ExpressionDataDoubleMatrix mat ) {
+        Collection<BioAssayDimension> bioAssayDimensions = mat.getBioAssayDimensions();
+
+        BioAssayDimension b = bioAssayDimensions.iterator().next();
+        if ( bioAssayDimensions.size() > 1 ) {
+            /* see bug 2139 */
+            int s = -1;
+            Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+            for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
+                if ( bioAssayDimension.getBioAssays().size() > s ) {
+                    s = bioAssayDimension.getBioAssays().size();
+                    b = bioAssayDimension;
+                }
+
+                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    if ( ba.getSamplesUsed().size() > 1 ) {
+                        throw new UnsupportedOperationException(
+                                "Can't deal with more than one biomaterial per bioassay" );
+                    }
+                    bms.add( ba.getSamplesUsed().iterator().next() );
+                }
+            }
+
+            /*
+             * Sanity check: make sure all the biomaterials are accounted for by the chosen bioassaydimension.
+             */
+            for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
+                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    if ( !bms.contains( ba.getSamplesUsed().iterator().next() ) ) {
+                        throw new IllegalStateException(
+                                "This data set seems to require further preprocessing before it can be used for SVD; Vector merge or sample match?" );
+                    }
+
+                }
+            }
+
+        }
+        return b;
+    }
+
+    /**
      * Fill in NaN for any missing biomaterial factorvalues (dates were already done)
      */
     private void fillInMissingValues( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
@@ -534,38 +605,6 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
             }
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.analysis.preprocess.svd.SVDService#getImportantFactors(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment, java.util.Collection, java.lang.Double)
-     */
-    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
-            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
-        Set<ExperimentalFactor> importantFactors = new HashSet<ExperimentalFactor>();
-
-        if ( experimentalFactors.isEmpty() ) return importantFactors;
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
-        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
-        Map<Integer, Map<Long, Double>> factorPvals = svdFactorAnalysis.getFactorPvals();
-        for ( Integer cmp : factorPvals.keySet() ) {
-            Map<Long, Double> factorPv = factorPvals.get( cmp );
-            for ( Long efId : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( efId );
-                ExperimentalFactor ef = factors.get( efId );
-
-                if ( pvalue < importanceThreshold ) {
-                    assert factors.containsKey( efId );
-                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
-                    importantFactors.add( ef );
-                } else {
-                    log.info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
-                }
-            }
-        }
-        return importantFactors;
     }
 
     /**

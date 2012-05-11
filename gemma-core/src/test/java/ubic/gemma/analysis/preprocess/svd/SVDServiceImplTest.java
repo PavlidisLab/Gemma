@@ -17,6 +17,7 @@ package ubic.gemma.analysis.preprocess.svd;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -53,20 +54,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     @Test
     public void testsvd() throws Exception {
-        ee = eeService.findByShortName( "GSE674" );
 
-        assertNotNull( ee );
-
-        SVDValueObject svd = svdService.svd( ee.getId() );
-
-        assertNotNull( svd );
-
-        assertNotNull( svd.getvMatrix() );
-        assertEquals( 5, svd.getFactorCorrelations().size() );
-    }
-
-    @Before
-    public void setUp() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "shortTest" ) );
@@ -81,6 +69,60 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         assertNotNull( ee );
         ee = eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee );
+
+        ee = eeService.findByShortName( "GSE674" );
+
+        assertNotNull( ee );
+
+        SVDValueObject svd = svdService.svd( ee.getId() );
+
+        assertNotNull( svd );
+
+        assertNotNull( svd.getvMatrix() );
+        assertEquals( 5, svd.getFactorCorrelations().size() );
+    }
+
+    /**
+     * See bug 2139; two different sets of bioassays in the data.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testsvdGapped() throws Exception {
+
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "shortTest" ) );
+        // also used in the GeoDatasetServiceIntegrationTest.
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            if ( e.getData() instanceof List ) {
+                ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            } else {
+                ee = ( ExpressionExperiment ) e.getData();
+            }
+        }
+        assertNotNull( ee );
+        ee = eeService.thaw( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee );
+
+        ee = eeService.findByShortName( "GSE482" );
+
+        assertNotNull( ee );
+
+        SVDValueObject svd = svdService.svd( ee.getId() );
+
+        assertNotNull( svd );
+        assertNotNull( svd.getvMatrix() );
+
+        assertEquals( 10, svd.getBioMaterialIds().length );
+    }
+
+    @Before
+    public void setUp() throws Exception {
 
     }
 
