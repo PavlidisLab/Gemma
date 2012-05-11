@@ -714,17 +714,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( !phenotypesFoundAndChildren.isEmpty() ) {
 
-            // all gene count for phenotype on human genes
-            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_HUMAN,
+            // gene counts for all phenotypes used 
+            for(int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ){
+                phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXA_IN_USE[i],
                     phenotypesFoundAndChildren ) );
-
-            // all gene count for phenotype on mouse genes
-            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_MOUSE,
-                    phenotypesFoundAndChildren ) );
-
-            // all gene count for phenotype on rat genes
-            phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound, PhenotypeAssociationConstants.TAXON_RAT,
-                    phenotypesFoundAndChildren ) );
+            }
         }
 
         return phenotypes;
