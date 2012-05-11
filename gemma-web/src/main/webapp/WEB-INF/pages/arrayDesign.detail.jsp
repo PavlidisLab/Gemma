@@ -266,7 +266,7 @@
 <security:authorize access="hasRole('GROUP_ADMIN')">
 	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
-	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
+	<input type="hidden" name="auditableClass" id="auditableClass" value="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 </security:authorize>
 
 <div style="padding-top: 20px;">

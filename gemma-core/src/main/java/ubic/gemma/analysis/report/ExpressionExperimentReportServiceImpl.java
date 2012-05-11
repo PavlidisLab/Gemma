@@ -343,25 +343,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setValidated( true );
 
             }
-            //
-            // if ( validatedAnnotationEvents.containsKey( ee ) ) {
-            // AuditEvent validated = validationEvents.get( ee );
-            //
-            // if ( validated != null ) {
-            //
-            // // auditEventService.thaw( validated );
-            //
-            // if ( validated.getDate().after( mostRecentDate ) ) {
-            // mostRecentDate = validated.getDate();
-            // }
-            //
-            // eeVo.setValidatedAnnotations( new AuditEventValueObject( validated ) );
-            // }
-            // }
 
             if ( autotaggerEvents.containsKey( ee ) ) {
                 AuditEvent taggerEvent = autotaggerEvents.get( ee );
-                // auditEventService.thaw( taggerEvent );
 
                 if ( taggerEvent.getDate().after( mostRecentDate ) ) {
                     mostRecentDate = taggerEvent.getDate();
@@ -390,7 +374,15 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             }
 
             if ( troubledEEs.contains( id ) ) {
-                eeVo.setTroubled( true );
+                Collection<Long> tids = new HashSet<Long>();
+                tids.add( id );
+                Map<Long, AuditEvent> troublM = expressionExperimentService.getLastTroubleEvent( tids );
+                if ( !troublM.isEmpty() ) {
+                    eeVo.setTroubleDetails( troublM.get( id ).getDate() + ": " + troublM.get( id ).getNote() );
+                    eeVo.setTroubled( true );
+                } else {
+                    log.warn( "Status was out of date? for EE=" + id );
+                }
             }
 
             if ( validatedEEs.contains( id ) ) {
