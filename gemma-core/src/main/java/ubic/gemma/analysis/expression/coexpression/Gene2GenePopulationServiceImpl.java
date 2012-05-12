@@ -36,6 +36,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import cern.colt.list.DoubleArrayList;
 import cern.jet.random.engine.DRand;
 import cern.jet.random.engine.RandomEngine;
@@ -736,7 +738,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param stringency
      * @return
      */
-    private GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
+    @Transactional
+    GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
             Collection<Gene> toUseGenes, String analysisName, int stringency ) {
         GeneCoexpressionAnalysisImpl analysis = ( GeneCoexpressionAnalysisImpl ) GeneCoexpressionAnalysis.Factory
                 .newInstance();
