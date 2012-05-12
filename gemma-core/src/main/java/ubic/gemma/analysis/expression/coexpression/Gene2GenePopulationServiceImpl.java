@@ -641,7 +641,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 // uh-oh.
             } else {
                 ExpressionExperimentSet oldSet = oldEESets.iterator().next();
-
+                expressionExperimentSetService.thaw( oldSet );
                 if ( oldSet.getExperiments().containsAll( expressionExperiments )
                         && oldSet.getExperiments().size() == expressionExperiments.size() ) {
                     log.info( "Reusing an old EE set" );
