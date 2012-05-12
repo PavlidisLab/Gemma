@@ -403,7 +403,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	 * Zoom panel update
 	 */
 	update : function(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey) {
-		if (profiles === undefined || profiles === null) {
+		if ( (profiles === undefined || profiles === null) && this.dv !== null) {
 			var record = this.dv.getSelectedOrFirst();
 
 			if (record === null || record === undefined) {
@@ -962,7 +962,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			 * factor value legend panel update
 			 */
 			update: function(conditionLabelKey){
-				if (conditionLabelKey === undefined || conditionLabelKey === null ) {
+				if ( (conditionLabelKey === undefined || conditionLabelKey === null) && this.dv !== undefined ) {
 					var record = this.dv.getSelectedOrFirst();
 					
 					if (record === null || record === undefined) {

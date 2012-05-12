@@ -59,13 +59,15 @@ public class VisualizationValueObject {
     private Collection<GeneExpressionProfile> profiles;
 
     private List<String> sampleNames;
-    
+
     /**
      * used for displaying factor info in heatmap
      */
     private List<List<String>> factorValues;
-    private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map (for labels)
-    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for colouring column headers)
+    private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map
+                                                                              // (for labels)
+    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
+                                                                        // colouring column headers)
 
     public VisualizationValueObject() {
         super();
@@ -286,9 +288,9 @@ public class VisualizationValueObject {
     public void setUpFactorProfiles( LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
         if ( layout == null ) {
             log.warn( "Null layout, ignoring" );
-            //new Exception().printStackTrace();
             return;
         }
+
         Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
         for ( LinkedHashMap<ExperimentalFactor, Double> maps : layout.values() ) {
             efs.addAll( maps.keySet() );
