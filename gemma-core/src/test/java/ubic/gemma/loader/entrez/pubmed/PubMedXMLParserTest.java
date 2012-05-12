@@ -47,6 +47,8 @@ public class PubMedXMLParserTest extends TestCase {
 
     public void testParse() throws Exception {
         try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
+
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
@@ -58,6 +60,33 @@ public class PubMedXMLParserTest extends TestCase {
             assertNotNull( br.getPages() );
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
+    }
+
+    public void testParseMultipartAbstract() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
+
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br.getAbstractText() );
+            assertTrue( br.getAbstractText().startsWith( "PURPOSE: To dete" ) );
+            assertTrue( br.getAbstractText().contains(
+                    "METHODS: RGCs of Brown Norway rats were retrogradely labeled bilaterally with the "
+                            + "fluorescent dye 4-(4-(dihexadecylamino)styryl)-N" ) );
+            assertTrue( br.getAbstractText()
+                    .contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
+            log.info( br.getAbstractText() );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
                 log.warn( "Test skipped due to connection exception" );
@@ -229,7 +258,6 @@ public class PubMedXMLParserTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
         testParser = new PubMedXMLParser();
     }
 

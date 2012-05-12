@@ -20,8 +20,10 @@ package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -96,16 +98,40 @@ public class XMLUtils {
         }
         return null;
     }
-    
+
+    /**
+     * When there are multiple elements of the same type.
+     * 
+     * @param parent
+     * @param elementName
+     * @return
+     * @throws IOException
+     */
+    public static List<String> extractMultipleChildren( Node parent, String elementName ) throws IOException {
+        List<String> r = new ArrayList<String>();
+
+        NodeList jNodes = parent.getChildNodes();
+        for ( int q = 0; q < jNodes.getLength(); q++ ) {
+            Node jitem = jNodes.item( q );
+            if ( !( jitem instanceof Element ) ) {
+                continue;
+            }
+            if ( jitem.getNodeName().equals( elementName ) ) {
+                r.add( getTextValue( ( Element ) jitem ) );
+            }
+        }
+        return r;
+    }
+
     /**
      * @param doc - the xml document to search through
-     * @param tag  -the name of the element we are looking for
-     * @return  a collection of strings that represent all the data contained within the given tag (for each instance of that tag)
+     * @param tag -the name of the element we are looking for
+     * @return a collection of strings that represent all the data contained within the given tag (for each instance of
+     *         that tag)
      */
-    public static Collection<String> extractTagData( Document doc, String tag) {
+    public static Collection<String> extractTagData( Document doc, String tag ) {
         Collection<String> result = new HashSet<String>();
-        if (doc == null)
-            return result;
+        if ( doc == null ) return result;
         NodeList idList = doc.getElementsByTagName( tag );
         assert idList != null;
         log.debug( "Got " + idList.getLength() );
@@ -124,8 +150,7 @@ public class XMLUtils {
 
         return result;
     }
-    
- 
+
     /**
      * @param is
      * @return
@@ -133,7 +158,8 @@ public class XMLUtils {
      * @throws ParserConfigurationException
      * @throws SAXException
      */
-    public static Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+    public static Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException,
+            SAXException {
         if ( is.available() == 0 ) {
             throw new IOException( "XML stream contains no data." );
         }
@@ -146,5 +172,5 @@ public class XMLUtils {
         Document document = builder.parse( is );
         return document;
     }
-    
+
 }

@@ -25,6 +25,7 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -459,7 +460,31 @@ public class PubMedXMLParser {
             } else if ( name.equals( "Pagination" ) ) {
                 bibRef.setPages( XMLUtils.extractOneChild( item, "MedlinePgn" ) );
             } else if ( name.equals( "Abstract" ) ) {
-                bibRef.setAbstractText( XMLUtils.extractOneChild( item, "AbstractText" ) );
+                // abstracts can have parts
+                List<String> abstractParts = XMLUtils.extractMultipleChildren( item, "AbstractText" );
+
+                if ( abstractParts.size() > 1 ) {
+                    StringBuilder buf = new StringBuilder();
+                    NodeList jNodes = item.getChildNodes();
+                    for ( int q = 0; q < jNodes.getLength(); q++ ) {
+                        Node jitem = jNodes.item( q );
+                        if ( !( jitem instanceof Element ) ) {
+                            continue;
+                        }
+                        if ( jitem.getNodeName().equals( "AbstractText" ) ) {
+                            String label = jitem.getAttributes().getNamedItem( "Label" ).getTextContent();
+                            String part = jitem.getTextContent();
+                            if ( StringUtils.isNotBlank( label ) ) {
+                                buf.append( label + ": " + part + "\n" );
+                            } else {
+                                buf.append( part + "\n" );
+                            }
+                        }
+                    }
+                    bibRef.setAbstractText( buf.toString() );
+                } else {
+                    bibRef.setAbstractText( abstractParts.iterator().next() );
+                }
             } else if ( name.equals( "PublicationTypeList" ) ) {
                 bibRef.setPublicationTypes( extractPublicationTypes( item ) );
             }

@@ -1,0 +1,183 @@
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st November 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd">
+<PubmedArticleSet>
+<PubmedArticle>
+    <MedlineCitation Owner="NLM" Status="MEDLINE">
+        <PMID Version="1">16799037</PMID>
+        <DateCreated>
+            <Year>2006</Year>
+            <Month>06</Month>
+            <Day>26</Day>
+        </DateCreated>
+        <DateCompleted>
+            <Year>2006</Year>
+            <Month>08</Month>
+            <Day>07</Day>
+        </DateCompleted>
+        <DateRevised>
+            <Year>2006</Year>
+            <Month>11</Month>
+            <Day>15</Day>
+        </DateRevised>
+        <Article PubModel="Print">
+            <Journal>
+                <ISSN IssnType="Print">0146-0404</ISSN>
+                <JournalIssue CitedMedium="Print">
+                    <Volume>47</Volume>
+                    <Issue>7</Issue>
+                    <PubDate>
+                        <Year>2006</Year>
+                        <Month>Jul</Month>
+                    </PubDate>
+                </JournalIssue>
+                <Title>Investigative ophthalmology &amp; visual science</Title>
+                <ISOAbbreviation>Invest. Ophthalmol. Vis. Sci.</ISOAbbreviation>
+            </Journal>
+            <ArticleTitle>In vivo imaging and counting of rat retinal ganglion cells using a scanning laser ophthalmoscope.</ArticleTitle>
+            <Pagination>
+                <MedlinePgn>2943-50</MedlinePgn>
+            </Pagination>
+            <Abstract>
+                <AbstractText Label="PURPOSE" NlmCategory="OBJECTIVE">To determine whether a scanning laser ophthalmoscope (SLO) is useful for in vivo imaging and counting of rat retinal ganglion cells (RGCs).</AbstractText>
+                <AbstractText Label="METHODS" NlmCategory="METHODS">RGCs of Brown Norway rats were retrogradely labeled bilaterally with the fluorescent dye 4-(4-(dihexadecylamino)styryl)-N-methylpyridinium iodine (DiA). The unilateral optic nerve was crushed intraorbitally with a clip. RGCs were imaged in vivo with an SLO with an argon blue laser (488 nm) and optical filter sets for fluorescein angiography, before and 1, 2, and 4 weeks after the crush. Fluorescent cells were also counted in retinal flatmounts at baseline and 1, 2, and 4 weeks after the crush. An image overlay analysis was performed to check cell positions in the SLO images over time. Lectin histochemical analysis was performed to determine the relationship of microglia to the newly emerged DiA fluorescence detected by image overlay analysis after the optic nerve crush.</AbstractText>
+                <AbstractText Label="RESULTS" NlmCategory="RESULTS">Fluorescent RGCs were visible in vivo with an SLO. RGC survival decreased gradually after the crush. In the retina after the optic nerve crush, newly emerged DiA fluorescence detected by image overlay analysis corresponded to fluorescent cells morphologically different from RGCs in the retinal flatmount and was colocalized mostly with lectin-stained microglial processes. RGC counts by SLO were comparable to those in retinal flatmounts.</AbstractText>
+                <AbstractText Label="CONCLUSIONS" NlmCategory="CONCLUSIONS">The SLO is useful for in vivo imaging of rat RGCs and therefore may be a valuable tool for monitoring RGC changes over time in various rat models of RGC damage.</AbstractText>
+            </Abstract>
+            <Affiliation>Department of Ophthalmology, Kanazawa University Graduate School of Medical Science, Kanazawa, Japan. eyetomo@kenroku.kanazawa-u.ac.jp</Affiliation>
+            <AuthorList CompleteYN="Y">
+                <Author ValidYN="Y">
+                    <LastName>Higashide</LastName>
+                    <ForeName>Tomomi</ForeName>
+                    <Initials>T</Initials>
+                </Author>
+                <Author ValidYN="Y">
+                    <LastName>Kawaguchi</LastName>
+                    <ForeName>Ichiro</ForeName>
+                    <Initials>I</Initials>
+                </Author>
+                <Author ValidYN="Y">
+                    <LastName>Ohkubo</LastName>
+                    <ForeName>Shinji</ForeName>
+                    <Initials>S</Initials>
+                </Author>
+                <Author ValidYN="Y">
+                    <LastName>Takeda</LastName>
+                    <ForeName>Hisashi</ForeName>
+                    <Initials>H</Initials>
+                </Author>
+                <Author ValidYN="Y">
+                    <LastName>Sugiyama</LastName>
+                    <ForeName>Kazuhisa</ForeName>
+                    <Initials>K</Initials>
+                </Author>
+            </AuthorList>
+            <Language>eng</Language>
+            <PublicationTypeList>
+                <PublicationType>Journal Article</PublicationType>
+                <PublicationType>Research Support, Non-U.S. Gov't</PublicationType>
+            </PublicationTypeList>
+        </Article>
+        <MedlineJournalInfo>
+            <Country>United States</Country>
+            <MedlineTA>Invest Ophthalmol Vis Sci</MedlineTA>
+            <NlmUniqueID>7703701</NlmUniqueID>
+            <ISSNLinking>0146-0404</ISSNLinking>
+        </MedlineJournalInfo>
+        <ChemicalList>
+            <Chemical>
+                <RegistryNumber>0</RegistryNumber>
+                <NameOfSubstance>Pyridinium Compounds</NameOfSubstance>
+            </Chemical>
+            <Chemical>
+                <RegistryNumber>114041-00-8</RegistryNumber>
+                <NameOfSubstance>4-(4-dihexadecylaminostyryl)-N-methylpyridium</NameOfSubstance>
+            </Chemical>
+        </ChemicalList>
+        <CitationSubset>IM</CitationSubset>
+        <CommentsCorrectionsList>
+            <CommentsCorrections RefType="ErratumIn">
+                <RefSource>Invest Ophthalmol Vis Sci. 2006 Oct;47(10):4198</RefSource>
+            </CommentsCorrections>
+        </CommentsCorrectionsList>
+        <MeshHeadingList>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Animals</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Cell Count</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Cell Survival</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Fluorescein Angiography</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Lasers</DescriptorName>
+                <QualifierName MajorTopicYN="N">diagnostic use</QualifierName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Male</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Nerve Crush</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Ophthalmoscopes</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Ophthalmoscopy</DescriptorName>
+                <QualifierName MajorTopicYN="Y">methods</QualifierName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Optic Nerve Injuries</DescriptorName>
+                <QualifierName MajorTopicYN="Y">pathology</QualifierName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Pyridinium Compounds</DescriptorName>
+                <QualifierName MajorTopicYN="N">diagnostic use</QualifierName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Rats</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Rats, Inbred BN</DescriptorName>
+            </MeshHeading>
+            <MeshHeading>
+                <DescriptorName MajorTopicYN="N">Retinal Ganglion Cells</DescriptorName>
+                <QualifierName MajorTopicYN="Y">pathology</QualifierName>
+            </MeshHeading>
+        </MeshHeadingList>
+    </MedlineCitation>
+    <PubmedData>
+        <History>
+            <PubMedPubDate PubStatus="pubmed">
+                <Year>2006</Year>
+                <Month>6</Month>
+                <Day>27</Day>
+                <Hour>9</Hour>
+                <Minute>0</Minute>
+            </PubMedPubDate>
+            <PubMedPubDate PubStatus="medline">
+                <Year>2006</Year>
+                <Month>8</Month>
+                <Day>8</Day>
+                <Hour>9</Hour>
+                <Minute>0</Minute>
+            </PubMedPubDate>
+            <PubMedPubDate PubStatus="entrez">
+                <Year>2006</Year>
+                <Month>6</Month>
+                <Day>27</Day>
+                <Hour>9</Hour>
+                <Minute>0</Minute>
+            </PubMedPubDate>
+        </History>
+        <PublicationStatus>ppublish</PublicationStatus>
+        <ArticleIdList>
+            <ArticleId IdType="pii">47/7/2943</ArticleId>
+            <ArticleId IdType="doi">10.1167/iovs.05-0708</ArticleId>
+            <ArticleId IdType="pubmed">16799037</ArticleId>
+        </ArticleIdList>
+    </PubmedData>
+</PubmedArticle>
+</PubmedArticleSet>
