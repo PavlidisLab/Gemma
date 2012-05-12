@@ -92,7 +92,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "shortTest" ) );
+                + "gse482short" ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false, false );
