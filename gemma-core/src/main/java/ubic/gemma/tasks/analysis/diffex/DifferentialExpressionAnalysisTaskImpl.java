@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService; 
+import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
@@ -108,7 +108,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         Collection<ExperimentalFactor> factors = command.getFactors();
         AnalysisType analyzer = analysisSelectionAndExecutionService.determineAnalysis( ee, factors,
-                command.getSubsetFactor() );
+                command.getSubsetFactor(), command.isIncludeInteractions() );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
@@ -135,6 +135,9 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             }
 
             config.addInteractionToInclude( factors );
+            config.setAnalysisType( AnalysisType.TWA );
+        } else {
+            config.setInteractionsToInclude( null );
         }
 
         results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );

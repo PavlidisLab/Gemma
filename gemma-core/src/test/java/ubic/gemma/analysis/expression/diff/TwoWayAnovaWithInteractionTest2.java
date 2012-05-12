@@ -131,7 +131,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     public void test() throws Exception {
 
         AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
-                null );
+                null, true );
 
         assertEquals( AnalysisType.TWA, aa );
 

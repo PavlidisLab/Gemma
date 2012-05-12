@@ -69,7 +69,10 @@ import ubic.gemma.persistence.Persister;
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
     public enum AnalysisType {
-        GENERICLM, OSTTEST, OWA, TTEST, TWA, TWANI
+        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way anova */, TTEST, TWA /* with interactions */, TWANI /*
+                                                                                                                 * no
+                                                                                                                 * interactions
+                                                                                                                 */
     }
 
     @Autowired
@@ -95,8 +98,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private Persister persisterHelper = null;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
      */
     @Override
     public int deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -126,8 +133,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
      */
     @Override
     public int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
@@ -172,8 +184,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return numDeleted;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalysis(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
     @Override
     public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
@@ -192,8 +209,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
@@ -209,8 +230,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return analysisSelectionAndExecutionService.analyze( expressionExperiment );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
@@ -218,8 +243,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
@@ -227,8 +257,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
@@ -236,8 +271,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#getAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#getAnalyses(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -247,8 +286,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return expressionAnalyses;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
@@ -272,8 +316,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     private static final int MAX_FACTORS_FOR_AUTO_ANALYSIS = 3;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
@@ -291,8 +339,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
@@ -312,8 +364,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
@@ -354,8 +411,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return results;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#updateScoreDistributionFiles(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#updateScoreDistributionFiles(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException {
@@ -374,8 +435,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee ) {
@@ -386,8 +451,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return !expressionAnalyses.isEmpty();
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     @Override
     public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee, Collection<ExperimentalFactor> factors ) {

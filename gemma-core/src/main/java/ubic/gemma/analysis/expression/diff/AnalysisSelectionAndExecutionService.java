@@ -65,26 +65,24 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
 
     /**
      * @param expressionExperiment
-     * @param factors
-     * @param type - preselected value rather than inferring it
-     * @param subsetFactor - can be null
+     * @param config
      * @return
      */
-    public abstract AnalysisType determineAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type,
-            ExperimentalFactor subsetFactor );
+    public abstract AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config );
 
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
      * @param expressionExperiment
      * @param factors which factors to use, or null if to use all from the experiment
-     * @param subsetFactor can ben null
+     * @param subsetFactor can be null
+     * @param includeInteractions if possible
      * @return an appropriate analyzer
      * @throws an exception if the experiment doesn't have a valid experimental design.
      */
-    public abstract AnalysisType determineAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors,
-            ExperimentalFactor subsetFactor );
+    public abstract AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
+            boolean includeInteractions );
 
 }

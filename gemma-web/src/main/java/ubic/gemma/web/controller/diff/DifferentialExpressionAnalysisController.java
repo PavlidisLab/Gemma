@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
-import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -118,7 +117,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
                 .getExperimentalDesign().getExperimentalFactors() );
 
         AnalysisType analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee, factorsWithoutBatch,
-                null );
+                null, true );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 

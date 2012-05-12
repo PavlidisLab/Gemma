@@ -67,7 +67,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment ) {
 
         AnalysisType analyzer = determineAnalysis( expressionExperiment, expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors(), null );
+                .getExperimentalFactors(), null, true );
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
@@ -88,8 +88,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = determineAnalysis( expressionExperiment, config.getFactorsToInclude(),
-                config.getAnalysisType(), config.getSubsetFactor() );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -112,7 +111,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
-        AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, null );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, null, true );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -139,7 +138,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
-        AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, type, null );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setAnalysisType( type );
+        config.setFactorsToInclude( factors );
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -162,17 +164,17 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
      */
     @Override
     public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors, AnalysisType type, ExperimentalFactor subsetFactor ) {
+            DifferentialExpressionAnalysisConfig config ) {
 
-        if ( factors.size() == 0 ) {
+        if ( config.getFactorsToInclude().isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
-        if ( type == null ) {
-            return determineAnalysis( expressionExperiment, factors, subsetFactor );
+        if ( config.getAnalysisType() == null ) {
+            return determineAnalysis( expressionExperiment, config );
         }
 
-        if ( subsetFactor != null ) {
+        if ( config.getSubsetFactor() != null ) {
             /*
              * Basically have to make the subsets, and then validate the choice of model on each of those. The following
              * just assumes that we're going to do something very simple.
@@ -180,27 +182,29 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             return AnalysisType.GENERICLM;
         }
 
-        switch ( type ) {
+        switch ( config.getAnalysisType() ) {
             case OWA:
-                if ( factors.size() != 1 ) {
+                if ( config.getFactorsToInclude().size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
                 }
                 return AnalysisType.OWA;
             case TWA:
-                validateFactorsForTwoWayANOVA( factors );
-                return AnalysisType.TWA;
-            case TWANI:
-                validateFactorsForTwoWayANOVA( factors );
-                if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, factors ) ) {
+                validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
+                if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment,
+                        config.getFactorsToInclude() ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }
+                return AnalysisType.TWA;
+            case TWANI:
+                // NO interactions.
+                validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
                 return AnalysisType.TWANI;
             case TTEST:
-                if ( factors.size() != 1 ) {
+                if ( config.getFactorsToInclude().size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                 }
-                for ( ExperimentalFactor experimentalFactor : factors ) {
+                for ( ExperimentalFactor experimentalFactor : config.getFactorsToInclude() ) {
                     if ( experimentalFactor.getFactorValues().size() < 2 ) {
                         throw new IllegalArgumentException(
                                 "Need at least two levels per factor to run two-sample t-test" );
@@ -209,10 +213,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 return AnalysisType.TTEST;
             case OSTTEST:
                 // one sample t-test.
-                if ( factors.size() != 1 ) {
+                if ( config.getFactorsToInclude().size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                 }
-                for ( ExperimentalFactor experimentalFactor : factors ) {
+                for ( ExperimentalFactor experimentalFactor : config.getFactorsToInclude() ) {
                     if ( experimentalFactor.getFactorValues().size() != 1 ) {
                         throw new IllegalArgumentException( "Need only one level for the factor for one-sample t-test" );
                     }
@@ -222,7 +226,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
                 return AnalysisType.GENERICLM;
             default:
-                throw new IllegalArgumentException( "Analyses of that type (" + type + ")are not yet supported" );
+                throw new IllegalArgumentException( "Analyses of that type (" + config.getAnalysisType()
+                        + ")are not yet supported" );
         }
 
     }
@@ -247,7 +252,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
      */
     @Override
     public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor ) {
+            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
+            boolean includeInteractionsIfPossible ) {
 
         Collection<ExperimentalFactor> efsToUse = getFactorsToUse( expressionExperiment, experimentalFactors );
 
@@ -330,11 +336,11 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, experimentalFactors )
+            if ( !includeInteractionsIfPossible
+                    || !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, experimentalFactors )
                     || !okForInteraction ) {
-                return AnalysisType.TWANI;
+                return AnalysisType.TWANI; // NO interactions
             }
-
             return AnalysisType.TWA;
         } else {
             /*
@@ -371,12 +377,6 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         return efsToUse;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
-     * ApplicationContext)
-     */
     /*
      * (non-Javadoc)
      * 
