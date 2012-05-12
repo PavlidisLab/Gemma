@@ -57,15 +57,17 @@ public class LocalSeriesFetcher extends SeriesFetcher {
         if ( seekFile.canRead() ) {
             return getFile( accession, seekFileName );
         }
+
         // try alternative naming scheme.
-        seekFileName = localPath + File.separatorChar + accession + ".soft.gz";
-        seekFile = new File( seekFileName );
+        String altSeekFileName = localPath + File.separatorChar + accession + ".soft.gz";
+        seekFile = new File( altSeekFileName );
 
         if ( seekFile.canRead() ) {
             return getFile( accession, seekFileName );
         }
 
-        throw new RuntimeException( "Failed to find " + seekFileName );
+        throw new RuntimeException( "Failed to find file for " + accession + "; Checked for " + seekFileName + " and "
+                + altSeekFileName );
     }
 
     /**
