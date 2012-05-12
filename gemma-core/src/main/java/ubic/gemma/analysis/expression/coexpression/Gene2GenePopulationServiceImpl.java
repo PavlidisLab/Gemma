@@ -738,7 +738,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param stringency
      * @return
      */
-    @Transactional
     public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
             Collection<Gene> toUseGenes, String analysisName, int stringency ) {
         GeneCoexpressionAnalysisImpl analysis = ( GeneCoexpressionAnalysisImpl ) GeneCoexpressionAnalysis.Factory
