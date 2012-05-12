@@ -58,7 +58,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
      * BioAssaySet)
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
@@ -70,7 +69,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentsInSet(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getHibernateTemplate().findByNamedParam(
@@ -82,7 +80,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where size(ees.experiments) > 1" );
@@ -93,31 +90,30 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
     }
 
     @Override
-    public Taxon getTaxon( Long id) {
-        
+    public Taxon getTaxon( Long id ) {
+
         // using Query because I want to be able to limit the number of row returned to one
-        
-        Query q = this.getSession().createQuery( 
+
+        Query q = this.getSession().createQuery(
                 "select ees.id, ees.taxon from ExpressionExperimentSetImpl ees where ees.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
-        
+
         List<?> list = q.list();
-        for(Object obj : list){
+        for ( Object obj : list ) {
             Object[] oa = ( Object[] ) obj;
             return ( ( Taxon ) oa[1] );
         }
 
         return null;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -146,10 +142,9 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
-        return this.getHibernateTemplate()
-                   .findByNamedParam( "from ExpressionExperimentSetImpl where name=:query", "query", name );
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
+                "query", name );
     }
 
     /*
@@ -159,7 +154,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
      * .expression.ExpressionExperimentSet)
      */
-    @SuppressWarnings("unchecked")
     protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
             throws Exception {
         return this
@@ -169,6 +163,11 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                         "eeset", expressionExperimentSet );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentCount(java.lang.Long)
+     */
     public int getExperimentCount( Long id ) {
 
         List<?> o = this.getHibernateTemplate().findByNamedParam(
@@ -184,9 +183,10 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
 
     }
 
-   
-    /**
-     * @see ExpressionExperimentSetDao#create(int, Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
     public Collection<? extends ExpressionExperimentSet> create(
             final Collection<? extends ExpressionExperimentSet> entities ) {
@@ -207,8 +207,10 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         return entities;
     }
 
-    /**
-     * @see ExpressionExperimentSetDao#create(int transform, ExpressionExperimentSet)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     public ExpressionExperimentSet create( final ExpressionExperimentSet expressionExperimentSet ) {
         if ( expressionExperimentSet == null ) {
@@ -219,8 +221,10 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         return expressionExperimentSet;
     }
 
-    /**
-     * @see ExpressionExperimentSetDao#findByName(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#findByName(java.lang.String)
      */
     public Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
@@ -243,7 +247,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                             + th, th );
         }
     }
-    
+
     public Collection<? extends ExpressionExperimentSet> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where id in (:ids)",
                 "ids", ids );
@@ -339,7 +343,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         this.getHibernateTemplate().update( expressionExperimentSet );
     }
 
-    
     @Override
     public Collection<Long> getExperimentIds( Long id ) {
 
