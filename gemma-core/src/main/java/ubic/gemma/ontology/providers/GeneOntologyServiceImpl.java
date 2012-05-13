@@ -757,37 +757,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         addTerms( terms );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.providers.GeneOntologyService#setCacheManager(net.sf.ehcache.CacheManager)
-     */
-    @Override
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.providers.GeneOntologyService#setGene2GOAssociationService(ubic.gemma.model.association.
-     * Gene2GOAssociationService)
-     */
-    @Override
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.providers.GeneOntologyService#setGeneService(ubic.gemma.model.genome.gene.GeneService)
-     */
-    @Override
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
     /**
      * 
      */
@@ -994,6 +963,23 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
         buf.append( " ]" );
         log.trace( buf.toString() );
+    }
+
+    @Override
+    public void shutDown() {
+        if ( this.isReady() ) {
+            this.cacheManager.clearAll();
+            this.goTerms.clear();
+            this.childrenCache.clear();
+            term2Aspect.clear();
+            for ( IndexLARQ l : indices ) {
+                l.close();
+            }
+
+            this.model.close();
+
+        }
+
     }
 
 }

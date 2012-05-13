@@ -56,7 +56,9 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     @Autowired
     private GeneService geneService;
-    Taxon testTaxon;
+
+    private Taxon testTaxon;
+
     private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
 
     @After
@@ -66,6 +68,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );
             if ( !genes.isEmpty() ) geneService.remove( genes );
         }
+        goService.shutDown();
     }
 
     /**

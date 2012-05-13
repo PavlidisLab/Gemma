@@ -255,18 +255,8 @@ public interface GeneOntologyService extends InitializingBean {
     public abstract void loadTermsInNameSpace( InputStream is );
 
     /**
-     * @param cacheManager the cacheManager to set
+     * Primarily here for testing, to recover memory.
      */
-    public abstract void setCacheManager( CacheManager cacheManager );
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public abstract void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService );
-
-    /**
-     * @param geneService the geneService to set
-     */
-    public abstract void setGeneService( GeneService geneService );
+    public abstract void shutDown();
 
 }
