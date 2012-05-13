@@ -83,8 +83,12 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             }
         }
 
+        log.info( "GO is ready" );
+
         gene2GoService.removeAll();
         geneService.remove( geneService.loadAll() );
+
+        log.info( "Database cleared of genes, creating new ones ..." );
 
         /*
          * Create genes
@@ -109,14 +113,16 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
                 g2Go1.setGene( gene );
                 gene2GoService.create( g2Go1 );
             }
-
         }
-
+        log.info( "Done with setup" );
     }
 
     @Test
     public void test() {
+        log.info( "Updating multifunctionality" );
         s.updateMultifunctionality();
+
+        log.info( "Checking results" );
 
         Collection<Gene> genes = geneService.loadAll();
 
