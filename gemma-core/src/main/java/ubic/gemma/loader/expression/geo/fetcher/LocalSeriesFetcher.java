@@ -63,7 +63,7 @@ public class LocalSeriesFetcher extends SeriesFetcher {
         seekFile = new File( altSeekFileName );
 
         if ( seekFile.canRead() ) {
-            return getFile( accession, seekFileName );
+            return getFile( accession, altSeekFileName );
         }
 
         throw new RuntimeException( "Failed to find file for " + accession + "; Checked for " + seekFileName + " and "

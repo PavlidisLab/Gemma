@@ -171,7 +171,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         if ( config.getAnalysisType() == null ) {
-            return determineAnalysis( expressionExperiment, config );
+            return determineAnalysis( expressionExperiment, config.getFactorsToInclude(), null, true );
         }
 
         if ( config.getSubsetFactor() != null ) {
