@@ -34,6 +34,7 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -55,13 +56,16 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     @Autowired
     private GeneService geneService;
-
+    Taxon testTaxon;
     private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
 
     @After
     public void tearDown() throws Exception {
         gene2GoService.removeAll();
-        geneService.remove( geneService.loadAll() );
+        if ( testTaxon != null ) {
+            Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );
+            if ( !genes.isEmpty() ) geneService.remove( genes );
+        }
     }
 
     /**
@@ -83,19 +87,23 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             }
         }
 
-        log.info( "GO is ready" );
+        testTaxon = taxonService.findOrCreate( Taxon.Factory.newInstance( "foobly", "doobly", "bar", "fo", "fo", 9999,
+                true, true, null, null, null ) );
+
+        log.info( "Cleaning ..." );
 
         gene2GoService.removeAll();
-        geneService.remove( geneService.loadAll() );
+        Collection<Gene> oldGenes = geneService.loadKnownGenes( testTaxon );
+        if ( !oldGenes.isEmpty() ) geneService.remove( oldGenes );
 
-        log.info( "Database cleared of genes, creating new ones ..." );
+        log.info( "Creating new genes  ..." );
 
         /*
          * Create genes
          */
         Collection<Gene> genes = new HashSet<Gene>();
         for ( int i = 0; i < 120; i++ ) {
-            Gene gene = getTestPeristentGene();
+            Gene gene = getTestPeristentGene( testTaxon );
             genes.add( gene );
 
             // Some genes get no terms.
