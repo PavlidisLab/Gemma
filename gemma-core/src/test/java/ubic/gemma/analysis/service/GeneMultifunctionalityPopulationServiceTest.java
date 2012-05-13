@@ -128,11 +128,11 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Test
     public void test() {
         log.info( "Updating multifunctionality" );
-        s.updateMultifunctionality();
+        s.updateMultifunctionality( testTaxon );
 
         log.info( "Checking results" );
 
-        Collection<Gene> genes = geneService.loadAll();
+        Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );
 
         assertEquals( 120, genes.size() );
 

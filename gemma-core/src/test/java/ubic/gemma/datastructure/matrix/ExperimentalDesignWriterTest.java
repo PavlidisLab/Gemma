@@ -18,29 +18,38 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
+import java.util.Collection;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
+public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
+
     @Autowired
-    ExpressionExperimentService eeService = null;
+    private ExpressionExperimentService eeService = null;
+
+    @Autowired
+    private GeoService geoService;
 
     ExpressionExperiment ee = null;
 
-    String shortName = "GSE1997";
+    private String shortName = "GSE1611";
 
     /*
      * (non-Javadoc)
@@ -50,30 +59,48 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
         ee = eeService.findByShortName( shortName );
+
+        if ( ee == null ) {
+            String path = getTestFileBasePath();
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gds868Short" ) );
+            Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        }
+        ee = eeService.thaw( ee );
     }
 
     /**
      * Tests writing out the experimental design
      */
     @Test
-    public void testWrite() {
+    public void testWrite() throws Exception {
         if ( ee == null ) {
             log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );
             return;
         }
 
-        boolean fail = false;
-        try {
-            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-            PrintWriter writer = new PrintWriter( "test_writer_" + ee.getShortName().replaceAll( "\\s", "" ) + ".txt" );
+        File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
+        PrintWriter writer = new PrintWriter( f );
 
-            edWriter.write( writer, ee, true, true );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            fail = true;
-        } finally {
-            assertFalse( fail );
-        }
+        edWriter.write( writer, ee, true, true );
+
+        writer.flush();
+        writer.close();
+
+        log.info( f );
+        FileReader fr = new FileReader( f );
+
+        char[] b = new char[( int ) f.length()];
+        fr.read( b );
+        fr.close();
+
+        String in = new String( b );
+
+        assertTrue( in.contains( "PoolTs1Cje_P0_hyb1" ) );
+        assertTrue( in.contains( "#$strain : Category=StrainOrLine Type=Categorical" ) );
+
     }
 }
