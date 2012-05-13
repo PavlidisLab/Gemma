@@ -978,6 +978,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
             this.model.close();
 
+            ready.set( false );
+            running.set( false );
         }
 
     }
