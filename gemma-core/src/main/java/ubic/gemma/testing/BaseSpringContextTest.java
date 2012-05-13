@@ -273,6 +273,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPeristentGene();
     }
 
+    public Gene getTestPeristentGene( Taxon taxon ) {
+        return testHelper.getTestPeristentGene( taxon );
+    }
+
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
      * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired. If composite seequences are
@@ -346,7 +350,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * @return
      */
-    protected BioMaterial getTestPersistentBioMaterial(Taxon tax) {
+    protected BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         return testHelper.getTestPersistentBioMaterial( tax );
     }
 
@@ -467,14 +471,14 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
         return testHelper.getTestPersistentExpressionExperiment();
     }
-    
+
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
      * 
      * @return
      */
-    protected ExpressionExperiment getTestPersistentExpressionExperiment(Collection<BioAssay> bioAssays) {
+    protected ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
         return testHelper.getTestPersistentExpressionExperiment( bioAssays );
     }
 

@@ -401,14 +401,27 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @return
+     * @return with default taxon
      */
     public Gene getTestPeristentGene() {
+        return this.getTestPeristentGene( null );
+    }
+
+    /**
+     * @return
+     */
+    public Gene getTestPeristentGene( Taxon t ) {
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         gene.setOfficialName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         gene.setOfficialSymbol( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ).toUpperCase() );
-        gene.setTaxon( this.getTestNonPersistentTaxon() );
+
+        if ( t == null ) {
+            gene.setTaxon( this.getTestNonPersistentTaxon() );
+        } else {
+            gene.setTaxon( t );
+        }
+
         GeneProduct gp = GeneProduct.Factory.newInstance();
         gp.setGene( gene );
         gp.setName( RandomStringUtils.randomNumeric( 5 ) + "_test" );
@@ -734,7 +747,7 @@ public class PersistentDummyObjectHelper {
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
         return ee;
     }
-    
+
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
@@ -761,7 +774,7 @@ public class PersistentDummyObjectHelper {
         BioAssay ba = null;
         BioMaterial bm = null;
         ArrayDesign ad = null;
-        
+
         bm = this.getTestPersistentBioMaterial( taxon );
         ad = this.getTestPersistentArrayDesign( 4, true, true );
         ba = this.getTestPersistentBioAssay( ad, bm );
