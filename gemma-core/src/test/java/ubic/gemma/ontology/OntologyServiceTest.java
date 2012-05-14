@@ -19,6 +19,7 @@
 package ubic.gemma.ontology;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
@@ -45,9 +46,13 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     public final void testFindExactMatch() throws Exception {
         if ( !os.getMgedOntologyService().isOntologyLoaded() ) {
             os.getMgedOntologyService().startInitializationThread( true );
+            int c = 0;
             while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 1000 );
                 log.info( "Waiting for Ontology to load" );
+                if ( ++c > 30 ) {
+                    fail( "Ontology load timeout" );
+                }
             }
         }
         Collection<Characteristic> name = os.findExactTerm( "male",
@@ -62,9 +67,14 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     public void testObsolete() throws Exception {
         if ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
             os.getDiseaseOntologyService().startInitializationThread( true );
+            int c = 0;
+
             while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 1000 );
                 log.info( "Waiting for DiseaseOntology to load" );
+                if ( ++c > 30 ) {
+                    fail( "Ontology load timeout" );
+                }
             }
         }
 
