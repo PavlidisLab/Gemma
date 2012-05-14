@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -155,13 +156,17 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @see ExpressionPersister.fillInDesignElementDataVectorAssociations
      */
     protected void addToDesignElementCache( final ArrayDesign arrayDesign ) {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         assert !isTransient( arrayDesign );
 
-        log.info( "Caching array design elements for " + arrayDesign );
+        log.info( "Loading sequence elements for " + arrayDesign );
 
-        final Collection<CompositeSequence> compositeSequences = arrayDesignDao.loadCompositeSequences( arrayDesign
-                .getId() );
+        final Collection<CompositeSequence> compositeSequences = arrayDesignDao.thaw( arrayDesign )
+                .getCompositeSequences();
+
+        // final Collection<CompositeSequence> compositeSequences = arrayDesignDao.loadCompositeSequences( arrayDesign
+        // .getId() );
 
         String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
         int count = 0;
@@ -175,12 +180,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 }
             }
             if ( ++count % 20000 == 0 ) {
-                log.info( "Cached " + count + " probes" );
+                log.info( "Cached " + count + " probes (" + timer.getTime() + "ms)" );
             }
             if ( count % 100 == 0 ) {
                 // session.clear();
             }
         }
+
+        log.info( timer.getTime() + "ms elapsed" );
 
     }
 
