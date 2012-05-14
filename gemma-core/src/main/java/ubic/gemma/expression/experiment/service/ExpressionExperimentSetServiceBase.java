@@ -197,9 +197,10 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
                 while ( eeTaxon.getParentTaxon() != null && !eeTaxon.equals( groupTaxon ) ) {
                     eeTaxon = eeTaxon.getParentTaxon();
                 }
+
                 if ( !eeTaxon.equals( groupTaxon ) ) {
-                    throw new IllegalArgumentException( "Failed to add experiments of wrong taxa (" + eeTaxon
-                            + ") to eeset. " + "EESet taxon is " + groupTaxon + "." );
+                    throw new IllegalArgumentException( "Failed to add experiments of wrong taxa (" + ee
+                            + ") to eeset. " + "EESet taxon is " + groupTaxon + ", experiment was " + eeTaxon );
                 }
             }
 
