@@ -27,7 +27,6 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,22 +95,11 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
     }
 
     @Override
-    public Taxon getTaxon( Long id ) {
-
-        // using Query because I want to be able to limit the number of row returned to one
-
-        Query q = this.getSession().createQuery(
-                "select ees.id, ees.taxon from ExpressionExperimentSetImpl ees where ees.id = :id" );
-        q.setParameter( "id", id );
-        q.setMaxResults( 1 );
-
-        List<?> list = q.list();
-        for ( Object obj : list ) {
-            Object[] oa = ( Object[] ) obj;
-            return ( ( Taxon ) oa[1] );
-        }
-
-        return null;
+    public Taxon getTaxon( Long eeSetId ) {
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "select ees.taxon from ExpressionExperimentSetImpl ees where ees.id = :id", "id", eeSetId );
+        if ( r.isEmpty() ) return null;
+        return ( Taxon ) r.iterator().next();
     }
 
     /*

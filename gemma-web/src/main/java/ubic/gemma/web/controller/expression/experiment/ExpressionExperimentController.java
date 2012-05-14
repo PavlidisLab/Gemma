@@ -313,7 +313,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-        
+
     @Autowired
     private SVDService svdService;
 
@@ -322,10 +322,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private SessionListManager sessionListManager;
-    
+
     @Autowired
     private StatusService statusService;
-
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
@@ -337,8 +336,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param id
      * @return taskId
      */
-    public String deleteById( Long id ) {        
-        if ( id == null ) return null;       
+    public String deleteById( Long id ) {
+        if ( id == null ) return null;
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
         startTask( job );
         return job.getTaskId();
@@ -370,8 +369,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         if ( ids.size() == 1 ) {
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + ids.iterator().next() ) ).addObject( "message", "Search Criteria: " + searchString + "; "
-                    + ids.size() + " Datasets matched." );
+                    + ids.iterator().next() ) ).addObject( "message",
+                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         String list = "";
@@ -411,8 +410,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // add session bound sets
         // get any session-bound groups
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
-                .getModifiedExperimentSets( taxonId )
-                : sessionListManager.getModifiedExperimentSets();
+                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
@@ -593,13 +591,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );        
+
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
 
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids, false );
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids,
+                false );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -661,8 +660,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation( CitationValueObject
-                    .convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            finalResult
+                    .setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {
@@ -703,7 +702,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setDoesCurrentUserOwnExperiment( doesCurrentUserOwnExperiment( id ) );
         finalResult.setIsPublic( securityService.isPublic( ee ) );
         finalResult.setShared( securityService.isShared( ee ) );
-        
+
         return finalResult;
 
     }
@@ -733,7 +732,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     public String getQCTagHTML( ExpressionExperiment ee ) {
         ExperimentQCTag qc = new ExperimentQCTag();
-        qc.setEe( ee.getId() ); 
+        qc.setEe( ee.getId() );
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
@@ -788,9 +787,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         // limit = 10;
-        // default limit to 50, should always be set on front end but it case it wasn't this 
+        // default limit to 50, should always be set on front end but it case it wasn't this
         // will keep from loading a ridiculous number of experiments
-        if(limit == null || limit <= 0) limit = 50;
+        if ( limit == null || limit <= 0 ) limit = 50;
 
         eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter, showPublic );
 
@@ -848,7 +847,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // have to load entities instead of directly loading value objects because we need security filtering
         List<ExpressionExperiment> records = loadAllOrdered( batch );
 
-
         // if user is not admin, remove troubled experiments
         if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
@@ -862,7 +860,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         int start = origStart;
         int stop = Math.min( origStart + limit, records.size() );
-        
+
         List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
@@ -891,7 +889,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // Long id = null;
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment record : records ) {
-            
+
             Status s = statusService.getStatus( record );
             if ( s != null && s.getTroubled() ) {
                 toRemove.add( record );
@@ -925,8 +923,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
-                        records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart,
+                        Math.min( origStart + origLimit, records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -971,8 +969,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         int count = records.size();
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
-                        records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart,
+                        Math.min( origStart + origLimit, records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -1165,8 +1163,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
                     .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
             Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getUpdatedExpressionExperiments() )
-                    : new ArrayList<Long>();
+                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
 
             int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
                     .getNewExpressionExperiments().size() : 0;
@@ -1267,8 +1264,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new EntityNotFoundException( id + " not found" );
         }
         request.setAttribute( "id", id );
-        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService
-                .thaw( expressionExperiment.getBioAssays() ) );
+        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays",
+                bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
 
         addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
@@ -1332,7 +1329,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping( { "/showExpressionExperiment.html", "/" })
+    @RequestMapping({ "/showExpressionExperiment.html", "/" })
     public ModelAndView showExpressionExperiment( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch timer = new StopWatch();
@@ -1537,7 +1534,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return runner.getTaskId();
     }
 
-    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) { 
+    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
@@ -1620,8 +1617,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( eesToKeep.isEmpty() ) {
                 return filtered;
             }
-//            Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
-            Collection<Long> ids= EntityUtils.getIds( eesToKeep );
+            // Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
+            Collection<Long> ids = EntityUtils.getIds( eesToKeep );
             for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
                 if ( ids.contains( eevo.getId() ) ) {
                     filtered.add( eevo );
@@ -1630,7 +1627,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             return filtered;
 
         }
-        if(eeVOsToKeep != null){
+        if ( eeVOsToKeep != null ) {
             return eeVOsToKeep;
         }
 
@@ -1638,23 +1635,23 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for
-     * which it is true
+     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is true
+     * 
      * @param ees
      * @return
      */
-    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees){
+    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees ) {
         List<ExpressionExperimentValueObject> troubled = new ArrayList<ExpressionExperimentValueObject>();
-        
-        for(ExpressionExperimentValueObject eevo : ees){
-            if(eevo.getTroubled()){
+
+        for ( ExpressionExperimentValueObject eevo : ees ) {
+            if ( eevo.getTroubled() ) {
                 troubled.add( eevo );
             }
         }
-        
+
         return troubled;
     }
-    
+
     /**
     
      */
@@ -1722,17 +1719,18 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         Integer limitToUse = limit;
         if ( filter != null && filter > 0 ) {
-            // HACK TO FIX!! THIS IS JUST SO IT DOESN'T LOAD ALLLLL EEs 
+            // HACK TO FIX!! THIS IS JUST SO IT DOESN'T LOAD ALLLLL EEs
             // NEED A BETTER WAY TO FIX THIS
-            // (can't just load the limit because we will be filtering later for experiments with differential expression, PCA, factors etc.)
-            //limitToUse = limit * 3;
-            
+            // (can't just load the limit because we will be filtering later for experiments with differential
+            // expression, PCA, factors etc.)
+            // limitToUse = limit * 3;
+
             // if using a filter, need to load all to guarantee we'll have enough post filtering
             limitToUse = -1;
         }
 
         // taxon specific?
-        if ( taxonId != null && taxonId > 0) {
+        if ( taxonId != null && taxonId > 0 ) {
             Taxon taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
@@ -1747,10 +1745,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         } else if ( ids == null || ids.isEmpty() ) {
             // load everything (up to the limit)
-            eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limitToUse, showPublic );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser,
+                    limitToUse, showPublic );
         } else {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse, showPublic );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse,
+                    showPublic );
         }
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
@@ -1829,8 +1828,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         StopWatch timer = new StopWatch();
         timer.start();
-        
-        List<Long> ids = new ArrayList<Long>(EntityUtils.getIds( securedEEs ));
+
+        List<Long> ids = new ArrayList<Long>( EntityUtils.getIds( securedEEs ) );
 
         // this method keeps order.
         List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
@@ -1895,9 +1894,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( filterDataForUser ) {
             try {
 
-                securedEEs = (showPublic)? new ArrayList<ExpressionExperiment>( expressionExperimentService
-                        .loadUserOwnedExpressionExperiments() ): new ArrayList<ExpressionExperiment>( expressionExperimentService
-                                .loadMySharedExpressionExperiments() ); 
+                securedEEs = ( showPublic ) ? new ArrayList<ExpressionExperiment>(
+                        expressionExperimentService.loadUserOwnedExpressionExperiments() )
+                        : new ArrayList<ExpressionExperiment>(
+                                expressionExperimentService.loadMySharedExpressionExperiments() );
                 // limit won't really
                 // work! Most experiments
                 // are filtered out.
@@ -1929,9 +1929,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     // only keep ExpressionExperiments that have the specified Taxon
                     for ( ExpressionExperiment ee : securedEEs ) {
 
-                        Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+                        Taxon t = expressionExperimentService.getTaxon( ee );
 
-                        if ( t != null && t.getId().equals( taxon.getId() ) ) {
+                        if ( t != null && t.equals( taxon ) ) {
                             securedEEsfilteredByTaxon.add( ee );
                         }
                     }
@@ -1947,7 +1947,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 if ( eeIds == null ) {
                     securedEEs = expressionExperimentService.findByTaxon( taxon, limit );
 
-                    if ( securedEEs.size() > limit && limit >= 0) {
+                    if ( securedEEs.size() > limit && limit >= 0 ) {
                         securedEEs = securedEEs.subList( 0, limit );
                     }
 
@@ -1957,7 +1957,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
                     for ( ExpressionExperiment ee : securedEEs ) {
 
-                        Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+                        Taxon t = expressionExperimentService.getTaxon( ee );
 
                         if ( t != null && t.getId().equals( taxon.getId() ) ) {
                             securedEEsfilteredByTaxon.add( ee );
@@ -1972,11 +1972,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             } else {
                 securedEEs = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( eeIds ) );
             }
-            if(!securedEEs.isEmpty() && !showPublic){
+            if ( !securedEEs.isEmpty() && !showPublic ) {
                 Collection<Securable> publicEEs = securityService.choosePublic( securedEEs );
                 securedEEs.removeAll( publicEEs );
             }
-            
+
         }
 
         if ( timer.getTime() > 1000 ) {

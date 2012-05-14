@@ -51,13 +51,11 @@ import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.util.EntityUtils;
 
 /**
- * 
  * Handles searching for experiments and experiment sets
  * 
  * @author tvrossum
  * @version $Id$
  */
-
 @Service
 public class ExpressionExperimentSearchServiceImpl implements ExpressionExperimentSearchService {
 
@@ -68,7 +66,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     private SecurityService securityService;
-    
+
     @Autowired
     private SearchService searchService;
 
@@ -77,12 +75,16 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    
+
     @Autowired
     private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExpressionExperiments(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExpressionExperiments(java.lang
+     * .String)
      */
     @Override
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
@@ -102,14 +104,11 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
     }
-    
+
     /**
      * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
      * sets called by ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController.
-     * searchExperimentsAndExperimentGroup(String, Long)
-     * 
-     * 
-     * does not include session bound sets
+     * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
      * 
      * @param taxonId
      * @return
@@ -128,7 +127,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );
             if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-                DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService.getValueObject( set.getId() );
+                DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService
+                        .getValueObject( set.getId() );
                 newSRDO = new SearchResultDisplayObject( eevo );
                 newSRDO.setUserOwned( securityService.isPrivate( set ) );
                 ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() ).setPublik( securityService
@@ -148,9 +148,13 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         return displayResults;
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExperimentsAndExperimentGroups(java.lang.String, java.lang.Long)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExperimentsAndExperimentGroups
+     * (java.lang.String, java.lang.Long)
      */
     @Override
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
@@ -196,18 +200,33 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // get all expressionExperiment results and convert result object into a value object
         List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
-        for(SearchResult sr : srEEs){
+        for ( SearchResult sr : srEEs ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject( ee );
+
+            Taxon taxon;
+            if ( taxonLimited ) {
+                // / we we sure this is correct? relies on contract of search to only return results of taxon.
+                taxon = taxonParam;
+            } else {
+                // this would always be safer.
+                taxon = expressionExperimentService.getTaxon( ee );
+            }
+
+            eevo.setTaxonId( taxon.getId() );
+            eevo.setTaxon( taxon.getCommonName() );
             sr.setResultObject( eevo );
         }
+
+        // FIXME this is the second time over this collection.
         // get all expressionExperimentSet results and convert result object into a value object
-        for(SearchResult sr : eesSR){
+        for ( SearchResult sr : eesSR ) {
             ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) sr.getResultObject();
-            DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
+            DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentValueObjectHelper
+                    .convertToValueObject( eeSet );
             sr.setResultObject( eevo );
         }
-        
+
         List<SearchResultDisplayObject> experiments = SearchResultDisplayObject
                 .convertSearchResults2SearchResultDisplayObjects( srEEs );
         List<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
@@ -228,30 +247,30 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
          * toRmvSRDO ); }
          */
 
-        Taxon taxon = null;
+        // Taxon taxon = null;
         // for each experiment search result display object, set the taxon -- pretty hacky,
         // but only way to get experiment's taxon is using service
         // can I do this in the SRDO constructor?
-        Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>();
-        for ( SearchResultDisplayObject srdo : experiments ) {
-
-            if ( taxonLimited ) {
-                taxon = taxonParam;
-            } else {
-                taxon = expressionExperimentService.getTaxon( ( ( ExpressionExperimentValueObject ) srdo
-                        .getResultValueObject() ).getId() );
-            }
-            if ( taxon == null ) {
-                log.warn( "Experiment had null taxon, was excluded from results: experiment id="
-                        + ( ( ExpressionExperimentValueObject ) srdo.getResultValueObject() ).getId() + " shortname="
-                        + srdo.getName() );
-                toRmvSRDO.add( srdo );
-            } else {
-                srdo.setTaxonId( taxon.getId() );
-                srdo.setTaxonName( taxon.getCommonName() );
-            }
-        }
-        experiments.removeAll( toRmvSRDO );
+        // Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>();
+        // for ( SearchResultDisplayObject srdo : experiments ) {
+        //
+        // if ( taxonLimited ) {
+        // taxon = taxonParam;
+        // } else {
+        // taxon = expressionExperimentService.getTaxon( ( ( ExpressionExperimentValueObject ) srdo
+        // .getResultValueObject() ).getId() );
+        // }
+        // if ( taxon == null ) {
+        // log.warn( "Experiment had null taxon, was excluded from results: experiment id="
+        // + ( ( ExpressionExperimentValueObject ) srdo.getResultValueObject() ).getId() + " shortname="
+        // + srdo.getName() );
+        // toRmvSRDO.add( srdo );
+        // } else {
+        // srdo.setTaxonId( taxon.getId() );
+        // srdo.setTaxonName( taxon.getCommonName() );
+        // }
+        // }
+        // experiments.removeAll( toRmvSRDO );
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
@@ -259,8 +278,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             // tag search result display objects appropriately
             for ( SearchResultDisplayObject srdo : experimentSets ) {
                 Long id = ( srdo.getResultValueObject() instanceof DatabaseBackedExpressionExperimentSetValueObject ) ? ( ( ExpressionExperimentSetValueObject ) srdo
-                        .getResultValueObject() ).getId()
-                        : new Long( -1 );
+                        .getResultValueObject() ).getId() : new Long( -1 );
                 srdo.setUserOwned( isSetOwnedByUser.get( id ) );
             }
         }
@@ -293,13 +311,14 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             if ( experimentSets.size() > 0 ) {
                 // for each group
                 for ( SearchResult eesSRO : eesSR ) {
-                    ExpressionExperimentSetValueObject set = ( ExpressionExperimentSetValueObject ) eesSRO.getResultObject();
+                    ExpressionExperimentSetValueObject set = ( ExpressionExperimentSetValueObject ) eesSRO
+                            .getResultObject();
                     Collection<Long> ids = expressionExperimentSetService.getExperimentIdsInSet( set.getId() );
                     // get the ids of the experiment members
-                    eeIds.addAll(ids);
-                    
+                    eeIds.addAll( ids );
+
                     if ( !eeIdsByTaxonId.containsKey( set.getTaxonId() ) ) {
-                       eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
+                        eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
                     }
                     eeIdsByTaxonId.get( set.getTaxonId() ).addAll( ids );
                 }
@@ -310,12 +329,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             Long taxonId2 = null;
             for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
                 taxonId2 = entry.getKey();
-                taxon = taxonService.load( taxonId2 );
+                Taxon taxon = taxonService.load( taxonId2 );
                 if ( taxon != null && entry.getValue().size() > 0 ) {
                     FreeTextExpressionExperimentResultsValueObject ftvo = new FreeTextExpressionExperimentResultsValueObject(
                             "All " + taxon.getCommonName() + " results for '" + query + "'", "All "
-                                    + taxon.getCommonName() + " experiments found for your query", taxon.getId(), taxon
-                                    .getCommonName(), entry.getValue(), query );
+                                    + taxon.getCommonName() + " experiments found for your query", taxon.getId(),
+                            taxon.getCommonName(), entry.getValue(), query );
                     displayResults.add( new SearchResultDisplayObject( ftvo ) );
                 }
             }

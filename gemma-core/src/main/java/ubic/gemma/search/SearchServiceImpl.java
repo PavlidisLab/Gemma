@@ -134,6 +134,8 @@ import ubic.gemma.util.ReflectionUtil;
 @Component
 public class SearchServiceImpl implements SearchService {
 
+    private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
+
     /**
      * Defines the properties we look at for 'highlighting'.
      */
@@ -246,9 +248,6 @@ public class SearchServiceImpl implements SearchService {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
     @Autowired
@@ -276,10 +275,10 @@ public class SearchServiceImpl implements SearchService {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @PostConstruct
-    private void initializeSearchService() throws Exception {
+    void initializeSearchService() throws Exception {
         try {
 
-            if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
+            if ( cacheManager.cacheExists( ONTOLOGY_CHILDREN_CACHE_NAME ) ) {
                 return;
             }
             boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
@@ -290,7 +289,7 @@ public class SearchServiceImpl implements SearchService {
 
             if ( terracottaEnabled ) {
 
-                CacheConfiguration config = new CacheConfiguration( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE );
+                CacheConfiguration config = new CacheConfiguration( ONTOLOGY_CHILDREN_CACHE_NAME, ONTOLOGY_INFO_CACHE_SIZE );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
                 config.setOverflowToDisk( false );
@@ -312,12 +311,12 @@ public class SearchServiceImpl implements SearchService {
                 // maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
                 // terracottaCoherentReads );
             } else {
-                childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
+                childTermCache = new Cache( ONTOLOGY_CHILDREN_CACHE_NAME, ONTOLOGY_INFO_CACHE_SIZE,
                         MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
                         ONTOLOGY_CACHE_TIME_TO_IDLE, false, diskExpiryThreadIntervalSeconds, null );
             }
             cacheManager.addCache( childTermCache );
-            childTermCache = cacheManager.getCache( "OntologyChildrenCache" );
+            childTermCache = cacheManager.getCache( ONTOLOGY_CHILDREN_CACHE_NAME );
 
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
@@ -713,7 +712,7 @@ public class SearchServiceImpl implements SearchService {
         Collection<Treatment> treatments = new HashSet<Treatment>();
 
         for ( SearchResult sr : characterSearchResults ) {
-            Class resultClass = sr.getResultClass();
+            Class<?> resultClass = sr.getResultClass();
             if ( ExpressionExperiment.class.isAssignableFrom( resultClass ) ) {
                 sr.setHighlightedText( sr.getHighlightedText() + " (characteristic)" );
                 results.add( sr );
@@ -993,14 +992,13 @@ public class SearchServiceImpl implements SearchService {
      * @param settings
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassSearch( Compass bean, final SearchSettings settings ) {
 
         if ( !settings.isUseIndices() ) return new HashSet<SearchResult>();
 
         CompassTemplate template = new CompassTemplate( bean );
-        Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute( new CompassCallback() {
-            public Object doInCompass( CompassSession session ) throws CompassException {
+        Collection<SearchResult> searchResults = template.execute( new CompassCallback<Collection<SearchResult>>() {
+            public Collection<SearchResult> doInCompass( CompassSession session ) throws CompassException {
                 return performSearch( settings, session );
             }
         } );
@@ -1054,9 +1052,9 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
         for ( SearchResult searchResult : searchResults ) {
             if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
-                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
-                        searchResult.getScore(), searchResult.getHighlightedText() );
+                SearchResult convertedSearchResult = new SearchResult(
+                        BioSequenceValueObject.fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult
+                                .getResultObject() ) ), searchResult.getScore(), searchResult.getHighlightedText() );
                 convertedSearchResults.add( convertedSearchResult );
             } // else if ...
             else {
@@ -1152,7 +1150,6 @@ public class SearchServiceImpl implements SearchService {
      * @return Collection of search results for the objects owning the found characteristics, where the owner is of
      *         class clazz
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
             Collection<OntologyTerm> terms ) {
 
@@ -1164,7 +1161,7 @@ public class SearchServiceImpl implements SearchService {
             characteristicURIMatches.addAll( characteristicService.findByUri( term.getUri() ) );
         }
 
-        Map parentMap = characteristicService.getParents( characteristicURIMatches );
+        Map<Characteristic, Object> parentMap = characteristicService.getParents( characteristicURIMatches );
         // parentMap.putAll( characteristicService.getParents(characteristicValueMatches ) );
 
         return filterCharacteristicOwnersByClass( classes, parentMap );
@@ -1669,7 +1666,7 @@ public class SearchServiceImpl implements SearchService {
 
                 if ( o instanceof ExpressionExperiment ) {
                     ExpressionExperiment ee = ( ExpressionExperiment ) o;
-                    currentTaxon = expressionExperimentService.getTaxon( ee.getId() );
+                    currentTaxon = expressionExperimentService.getTaxon( ee );
 
                 } else if ( o instanceof ExpressionExperimentSet ) {
                     ExpressionExperimentSet ees = ( ExpressionExperimentSet ) o;
@@ -1690,9 +1687,10 @@ public class SearchServiceImpl implements SearchService {
 
                 if ( currentTaxon == null || !currentTaxon.equals( t ) ) {
                     if ( currentTaxon == null ) {
-                        // Sanity check for bad data in db. Can happen that searchResults have a vaild getTaxon method
+                        // Sanity check for bad data in db (could happen if EE has no samples). Can happen that
+                        // searchResults have a vaild getTaxon method
                         // but the method returns null (shouldn't make it this far)
-                        log.debug( "Object has getTaxon method but it retuns null. Obj is: " + o );
+                        log.debug( "Object has getTaxon method but it returns null. Obj is: " + o );
                     }
                     toRemove.add( sr );
                 }
@@ -1724,13 +1722,12 @@ public class SearchServiceImpl implements SearchService {
      * @param characteristic2entity
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class<?>> classes,
             Map<Characteristic, Object> characteristic2entity ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Characteristic c : characteristic2entity.keySet() ) {
             Object o = characteristic2entity.get( c );
-            for ( Class clazz : classes ) {
+            for ( Class<?> clazz : classes ) {
                 if ( clazz.isAssignableFrom( o.getClass() ) ) {
                     String matchedText = c.getValue();
                     if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
@@ -2063,7 +2060,7 @@ public class SearchServiceImpl implements SearchService {
      * @param results
      * @return
      */
-    private Collection<? extends Object> retrieveResultEntities( Class entityClass, List<SearchResult> results ) {
+    private Collection<? extends Object> retrieveResultEntities( Class<?> entityClass, List<SearchResult> results ) {
         List<Long> ids = getIds( results );
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
             return expressionExperimentService.loadMultiple( ids );
@@ -2226,7 +2223,7 @@ public class SearchServiceImpl implements SearchService {
 
         String query = settings.getQuery().trim();
         // Search results should contain all the words from the query.
-        query = query.replaceAll("\\s+", " AND ");
+        query = query.replaceAll( "\\s+", " AND " );
 
         if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || query.equals( "*" ) ) return new ArrayList<SearchResult>();

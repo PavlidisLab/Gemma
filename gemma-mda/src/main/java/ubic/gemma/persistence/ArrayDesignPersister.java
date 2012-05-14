@@ -58,19 +58,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     @Autowired
     protected CompositeSequenceDao compositeSequenceDao;
 
+    // FIXME not thread safe.
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
+    // FIXME not thread safe.
     private Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
 
+    // FIXME not thread safe.
     private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
-
-    public Map<String, CompositeSequence> getDesignElementCache() {
-        return designElementCache;
-    }
-
-    public Map<String, CompositeSequence> getDesignElementSequenceCache() {
-        return designElementSequenceCache;
-    }
 
     /*
      * (non-Javadoc)
@@ -100,20 +95,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );
-    }
-
-    /**
-     * @param arrayDesignDao The arrayDesignDao to set.
-     */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
-     * @param compositeSequenceDao The compositeSequenceDao to set.
-     */
-    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
-        this.compositeSequenceDao = compositeSequenceDao;
     }
 
     /**
@@ -192,37 +173,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Put an array design in the cache. This is needed when loading designelementdatavectors, for example, to avoid
-     * repeated (and one-at-a-time) fetching of designelement.
-     * 
-     * @param arrayDesignCache
-     * @param cacheIsSetUp
-     * @param designElementCache
-     * @param arrayDesign
-     * @return the persistent array design.
-     */
-    protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign ) {
-        assert arrayDesign != null;
-        ArrayDesign cachedAd = arrayDesign;
-        if ( !arrayDesignCache.containsKey( cachedAd.getName() )
-                && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
-            cachedAd = findOrPersistArrayDesign( arrayDesign );
-            // cachedAd = arrayDesignDao.thaw( cachedAd );
-            assert !isTransient( cachedAd );
-            addToDesignElementCache( cachedAd );
-            arrayDesignCache.put( arrayDesign.getName(), cachedAd );
-            if ( cachedAd.getShortName() != null ) {
-                arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
-            }
-        }
-        if ( arrayDesignCache.containsKey( cachedAd.getName() ) ) {
-            return arrayDesignCache.get( cachedAd.getName() );
-        }
-        return arrayDesignCache.get( cachedAd.getShortName() );
-
-    }
-
-    /**
      * 
      *
      */
@@ -268,6 +218,45 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         return existing;
+
+    }
+
+    protected Map<String, CompositeSequence> getDesignElementCache() {
+        return designElementCache;
+    }
+
+    protected Map<String, CompositeSequence> getDesignElementSequenceCache() {
+        return designElementSequenceCache;
+    }
+
+    /**
+     * Put an array design in the cache. This is needed when loading designelementdatavectors, for example, to avoid
+     * repeated (and one-at-a-time) fetching of designelement.
+     * 
+     * @param arrayDesignCache
+     * @param cacheIsSetUp
+     * @param designElementCache
+     * @param arrayDesign
+     * @return the persistent array design.
+     */
+    protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign ) {
+        assert arrayDesign != null;
+        ArrayDesign cachedAd = arrayDesign;
+        if ( !arrayDesignCache.containsKey( cachedAd.getName() )
+                && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
+            cachedAd = findOrPersistArrayDesign( arrayDesign );
+            // cachedAd = arrayDesignDao.thaw( cachedAd );
+            assert !isTransient( cachedAd );
+            addToDesignElementCache( cachedAd );
+            arrayDesignCache.put( arrayDesign.getName(), cachedAd );
+            if ( cachedAd.getShortName() != null ) {
+                arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
+            }
+        }
+        if ( arrayDesignCache.containsKey( cachedAd.getName() ) ) {
+            return arrayDesignCache.get( cachedAd.getName() );
+        }
+        return arrayDesignCache.get( cachedAd.getShortName() );
 
     }
 

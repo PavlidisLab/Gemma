@@ -371,7 +371,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             zipOut.closeEntry();
 
             // Add a file for each result set with contrasts information.
-            for (ExpressionAnalysisResultSet resultSet : analysis.getResultSets()) {                
+            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
                 if ( resultSet.getExperimentalFactors().size() > 1 ) {
                     continue; // Skip interactions.
                 }
@@ -502,7 +502,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private void writeCoexpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
-        Taxon tax = expressionExperimentService.getTaxon( ee.getId() );
+        Taxon tax = expressionExperimentService.getTaxon( ee );
+        assert tax != null;
         Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService
                 .getProbeCoExpression( ee, tax.getCommonName() );
 
@@ -1000,8 +1001,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Map<Long, String[]> geneAnnotations ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
         StringBuilder buf = new StringBuilder();
-        
-        ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next(); 
+
+        ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
 
         Long baselineId = resultSet.getBaselineGroup().getId();
         List<Long> factorValueIdOrder = new ArrayList<Long>();

@@ -80,13 +80,11 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExpressionExperiment expressionExperiment );
 
-
     /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically, though this behavior could be changed)
-     * 
-     * Security handled with a check inside the method.
+     * will not be deleted automatically, though this behavior could be changed) Security handled with a check inside
+     * the method.
      */
     public void delete( Long id );
 
@@ -417,8 +415,11 @@ public interface ExpressionExperimentService {
 
     /**
      * Returns the taxon of the given expressionExperiment.
+     * 
+     * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
      */
-    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public ubic.gemma.model.genome.Taxon getTaxon( BioAssaySet expressionExperiment );
 
     /**
      * Of the given EE ids, get the ones which are not troubled.
@@ -455,7 +456,7 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
-    
+
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
      * current user has specific write permissions on (as opposed to data sets which are public). Important: This method
@@ -480,8 +481,6 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
     public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
-    
-    
 
     /**
      * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
@@ -501,12 +500,11 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadTroubled();
 
     /**
-     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc)
-     * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
+     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc) TODO SECURE:
+     * How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
      * @param ids
-     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
-     * passed in. 
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
@@ -522,7 +520,7 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
-    
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
@@ -532,9 +530,9 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
 
-
     /**
      * returns ids of search results
+     * 
      * @param searchString
      * @return collection of ids or an empty collection
      */

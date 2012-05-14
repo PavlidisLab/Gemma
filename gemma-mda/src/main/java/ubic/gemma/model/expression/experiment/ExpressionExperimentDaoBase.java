@@ -606,9 +606,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getTaxon(Long)
      */
-    public ubic.gemma.model.genome.Taxon getTaxon( final Long ExpressionExperimentID ) {
+    public ubic.gemma.model.genome.Taxon getTaxon( final BioAssaySet ee ) {
         try {
-            return this.handleGetTaxon( ExpressionExperimentID );
+            return this.handleGetTaxon( ee );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.getTaxon(Long ExpressionExperimentID)' --> " + th, th );
@@ -651,7 +651,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#loadValueObjects(Collection, boolean)
      */
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids, boolean maintainOrder ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
+            boolean maintainOrder ) {
         try {
             return this.handleLoadValueObjects( ids, maintainOrder );
         } catch ( Throwable th ) {
@@ -720,7 +721,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                             + th, th );
         }
     }
-    
+
     public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleThawLiter( expressionExperiment, false );
@@ -966,9 +967,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             ExpressionExperiment expressionExperiment ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #getTaxon(Long)}
+     * Performs the core logic for {@link #getTaxon(BioAssaySet)}
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( Long ExpressionExperimentID ) throws Exception;
+    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( BioAssaySet ee ) throws Exception;
 
     /**
      * Performs the core logic for {@link #load(Collection)}
@@ -977,19 +978,19 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
 
     /**
      * Performs the core logic for {@link #loadValueObjects(Collection, boolean)}
-     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
-     * passed in.
+     * 
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
-    protected abstract Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids, boolean maintainOrder )
-            throws Exception;
+    protected abstract Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids,
+            boolean maintainOrder ) throws Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */
     protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
             throws Exception;
-    
-    protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment, boolean thawVectors )
-        throws Exception;
+
+    protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment,
+            boolean thawVectors ) throws Exception;
 
 }

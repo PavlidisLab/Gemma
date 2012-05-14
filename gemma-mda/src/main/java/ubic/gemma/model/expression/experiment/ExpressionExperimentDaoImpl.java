@@ -1438,11 +1438,23 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetTaxon(java.lang.Long)
      */
     @Override
-    protected Taxon handleGetTaxon( Long id ) throws Exception {
-        final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
-                + "inner join EE.bioAssays as BA " + "inner join BA.samplesUsed as SU where EE.id = :id";
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
-        if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
+    protected Taxon handleGetTaxon( BioAssaySet ee ) throws Exception {
+
+        if ( ee instanceof ExpressionExperiment ) {
+            String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
+                    + "inner join EE.bioAssays as BA  inner join BA.samplesUsed as SU where EE  = :ee";
+            List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+            if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
+        } else if ( ee instanceof ExpressionExperimentSubSet ) {
+            String queryString = "select su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
+                    + " inner join ee.bioAssays as BA  inner join BA.samplesUsed as su where eess = :ee";
+            List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+            if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
+        } else {
+            throw new UnsupportedOperationException( "Can't get taxon of BioAssaySet of class "
+                    + ee.getClass().getName() );
+        }
+
         return null;
     }
 

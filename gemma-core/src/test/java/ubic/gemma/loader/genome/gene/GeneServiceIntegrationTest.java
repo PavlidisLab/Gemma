@@ -24,10 +24,10 @@ import java.util.zip.GZIPInputStream;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -54,6 +54,18 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
 
     static boolean setupDone = false;
 
+    @Autowired
+    ArrayDesignService arrayDesignService;
+
+    @Autowired
+    ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+
+    @Autowired
+    ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+
+    @Autowired
+    ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+
     @Before
     public void setup() throws Exception {
 
@@ -65,21 +77,17 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
                     true, false, false, true, true );
             ad = ads.iterator().next();
 
-            ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
             ad = arrayDesignService.thaw( ad );
 
-            Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+            Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
             // needed to fill in the sequence information for blat scoring.
             InputStream sequenceFile = this.getClass().getResourceAsStream(
                     "/data/loader/genome/gpl140.sequences.fasta" );
-            ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-            app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
+            arrayDesignSequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 
             // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
             // pile up)
-            ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
             InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
                     "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
@@ -87,11 +95,8 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
             Blat blat = new Blat();
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-            aligner.processArrayDesign( ad, taxon, results );
+            arrayDesignSequenceAlignmentService.processArrayDesign( ad, taxon, results );
 
-            // real stuff.
-            ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                    .getBean( "arrayDesignProbeMapperService" );
             arrayDesignProbeMapperService.processArrayDesign( ad );
             setupDone = true;
         }

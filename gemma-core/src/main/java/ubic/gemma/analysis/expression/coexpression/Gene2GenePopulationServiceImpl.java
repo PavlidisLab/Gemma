@@ -36,7 +36,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.random.engine.DRand;
@@ -638,22 +637,21 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         if ( oldEESets.size() > 0 ) {
             if ( oldEESets.size() > 1 ) {
-                // uh-oh.
-            } else {
-                ExpressionExperimentSet oldSet = oldEESets.iterator().next();
-                expressionExperimentSetService.thaw( oldSet );
-                if ( oldSet.getExperiments().containsAll( expressionExperiments )
-                        && oldSet.getExperiments().size() == expressionExperiments.size() ) {
-                    log.info( "Reusing an old EE set" );
-                    return oldSet;
-                }
-
-                log.info( "Flagging old EEset '" + oldSet.getName() + "'as 'old'" );
-                oldSet.setName( oldSet.getName() + " (old)" );
-                expressionExperimentSetService.update( oldSet );
-                return null;
-
+                throw new IllegalStateException( "There are multiple analyses existing with name=" + analysisName );
             }
+            ExpressionExperimentSet oldSet = oldEESets.iterator().next();
+            expressionExperimentSetService.thaw( oldSet );
+            if ( oldSet.getExperiments().containsAll( expressionExperiments )
+                    && oldSet.getExperiments().size() == expressionExperiments.size() ) {
+                log.info( "Reusing an old EE set" );
+                return oldSet;
+            }
+
+            log.info( "Flagging old EEset '" + oldSet.getName() + "'as 'old'" );
+            oldSet.setName( oldSet.getName() + " (old)" );
+            expressionExperimentSetService.update( oldSet );
+            return null;
+
         }
         log.info( "New EESet will be created" );
         return null;

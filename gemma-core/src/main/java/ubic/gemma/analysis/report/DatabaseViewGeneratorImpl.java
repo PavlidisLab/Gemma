@@ -92,7 +92,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#runAll(java.lang.Integer)
      */
     @Override
@@ -110,7 +112,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#runAll()
      */
     @Override
@@ -118,7 +122,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         runAll( null );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#generateDatasetView(int)
      */
     @Override
@@ -164,7 +170,10 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             description = StringUtils.replaceChars( description, '\n', ' ' );
             description = StringUtils.replaceChars( description, '\r', ' ' );
 
-            Taxon taxon = expressionExperimentService.getTaxon( gemmaId );
+            Taxon taxon = expressionExperimentService.getTaxon( vo );
+
+            if ( taxon == null ) continue;
+
             Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
             StringBuffer manufacturers = new StringBuffer();
 
@@ -189,7 +198,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         writer.close();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#generateDatasetTissueView(int)
      */
     @Override
@@ -252,7 +263,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         writer.close();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#generateDifferentialExpressionView(int)
      */
     @Override
@@ -404,7 +417,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         return getOutputFile( datasetDiffexViewBasename + VIEW_FILE_SUFFIX );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.DatabaseViewGenerator#getOutputFile(java.lang.String)
      */
     @Override

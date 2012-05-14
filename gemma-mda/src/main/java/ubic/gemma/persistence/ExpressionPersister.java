@@ -105,6 +105,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( entity instanceof ExpressionExperiment ) {
             clearCache();
             result = persistExpressionExperiment( ( ExpressionExperiment ) entity );
+            clearCache();
             return result;
         } else if ( entity instanceof BioAssayDimension ) {
             return persistBioAssayDimension( ( BioAssayDimension ) entity );

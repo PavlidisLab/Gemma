@@ -86,7 +86,7 @@ import ubic.gemma.security.SecurityService;
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
     private Log log = LogFactory.getLog( this.getClass() );
-    
+
     @Autowired
     private SecurityService securityService;
 
@@ -169,13 +169,14 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public void delete( final Long id ) {
         try {
             final ExpressionExperiment ee = this.load( id );
-            if(securityService.isEditable( ee )){
+            if ( securityService.isEditable( ee ) ) {
                 this.handleDelete( ee );
-            }else{
-                throw new SecurityException("Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "+
-                        " You do not have permission to edit this experiment.");
+            } else {
+                throw new SecurityException(
+                        "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
+                                + " You do not have permission to edit this experiment." );
             }
-            
+
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
@@ -749,9 +750,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getTaxon(java.lang.Long)
      */
-    public Taxon getTaxon( final Long ExpressionExperimentID ) {
+    public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
         try {
-            return this.expressionExperimentDao.getTaxon( ExpressionExperimentID );
+            return this.expressionExperimentDao.getTaxon( bioAssaySet );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.getTaxon(java.lang.Long ExpressionExperimentID)' --> "
@@ -811,7 +812,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#loadValueObjects(Collection, boolean)
      */
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids, boolean maintainOrder ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
+            boolean maintainOrder ) {
         try {
             /*
              * NOTE: Don't try and call this.loadMultiple(ids) to have security filter out experiments. The security
@@ -890,7 +892,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                             + th, th );
         }
     }
-    
+
     /**
      * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
      */
@@ -1053,7 +1055,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
         return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
     }
-    
+
     /*
      * Note: implemented via SpringSecurity.
      * 

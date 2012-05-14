@@ -82,6 +82,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObject(ubic.gemma.model
      * .analysis.expression.ExpressionExperimentSet)
@@ -104,6 +105,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToValueObjects(java.util.Collection
      * )
@@ -121,6 +123,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObject(ubic.gemma
      * .model.analysis.expression.ExpressionExperimentSet)
@@ -194,7 +197,8 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             entity.setTaxon( tax );
         } else {
             Log.debug( "Trying to convert DatabaseBackedExpressionExperimentSetValueObject with id =" + setVO.getId()
-                    + " to ExpressionExperimentSet entity. Unmatched ValueObject.getTaxonId() was :"+setVO.getTaxonId() );
+                    + " to ExpressionExperimentSet entity. Unmatched ValueObject.getTaxonId() was :"
+                    + setVO.getTaxonId() );
         }
 
         return entity;
@@ -202,6 +206,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper#convertToLightValueObjects(java.util
      * .Collection)

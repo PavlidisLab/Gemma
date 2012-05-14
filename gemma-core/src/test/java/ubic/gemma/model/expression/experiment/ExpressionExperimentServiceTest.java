@@ -106,7 +106,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
-        Taxon checkTaxon = eeService.getTaxon( list.iterator().next().getId() );
+        Taxon checkTaxon = eeService.getTaxon( list.iterator().next()  );
         assertEquals( taxon, checkTaxon );
 
     }

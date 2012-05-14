@@ -372,8 +372,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult sr : eeSearchResults ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
-            Taxon t = eeService.getTaxon( ee.getId() );
-            if ( t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
+            Taxon t = eeService.getTaxon( ee );
+            if ( t != null && t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
                 ees.add( ee );
             }
         }

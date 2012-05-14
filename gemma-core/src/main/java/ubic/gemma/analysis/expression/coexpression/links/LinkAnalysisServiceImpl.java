@@ -729,7 +729,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         la.setDataMatrix( eeDoubleMatrix );
 
         if ( ee != null ) {
-            la.setTaxon( eeService.getTaxon( ee.getId() ) );
+            la.setTaxon( eeService.getTaxon( ee  ) );
             la.setExpressionExperiment( ee );
         }
 

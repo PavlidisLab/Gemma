@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.sf.ehcache.CacheManager;
-
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -202,10 +200,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         String uriTerm = goId.replace( ":", "_" );
         return BASE_GO_URI + uriTerm;
     }
-
-    @SuppressWarnings("unused")
-    @Autowired
-    private CacheManager cacheManager;
 
     /**
      * Cache of go term -> child terms
@@ -968,18 +962,24 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public void shutDown() {
         if ( this.isReady() ) {
-            this.cacheManager.clearAll();
-            this.goTerms.clear();
-            this.childrenCache.clear();
-            term2Aspect.clear();
-            for ( IndexLARQ l : indices ) {
-                l.close();
+            try {
+                this.goTerms.clear();
+                this.childrenCache.clear();
+                this.parentsCache.clear();
+                term2Aspect.clear();
+                for ( IndexLARQ l : indices ) {
+                    l.close();
+                }
+
+                this.model.close();
+                this.model = null;
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            } finally {
+                ready.set( false );
+                running.set( false );
             }
 
-            this.model.close();
-
-            ready.set( false );
-            running.set( false );
         }
 
     }

@@ -266,14 +266,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
-     * Gets the taxon for the given expressionExperiment
+     * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
      */
-    public ubic.gemma.model.genome.Taxon getTaxon( Long ExpressionExperimentID );
+    public ubic.gemma.model.genome.Taxon getTaxon( BioAssaySet bioAssaySet );
 
     /**
-     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids
-     * passed in.
-     * 
+     * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
@@ -289,7 +287,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * </p>
      */
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
-    
+
     public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
 
     /**
