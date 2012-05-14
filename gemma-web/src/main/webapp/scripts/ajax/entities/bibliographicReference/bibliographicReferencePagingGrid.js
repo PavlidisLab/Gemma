@@ -1,38 +1,5 @@
 Ext.namespace('Gemma.BibliographicReference');
 
-Gemma.BibliographicReference.Record = new Ext.data.Record.create([{
-        name: "id",
-        type: "int"
-    }, {
-        name: "volume"
-    }, {
-        name: "title"
-    }, {
-        name: "publicationDate",
-        type: 'date'
-    }, {
-        name: "publication"
-    }, {
-        name: "pubAccession"
-    }, {
-        name: "pages"
-    }, {
-        name: "citation"
-    }, {
-        name: "authorList"
-    }, {
-        name: "abstractText"
-    }, {
-        name: "experiments"
-    }, {
-        name: "meshTerms"
-    }, {
-        name: "chemicalsTerms"
-	}, {
-		name: "bibliographicPhenotypes"
-	}
-]);
-
 Gemma.BibliographicReference.PagingStore = Ext.extend(Ext.data.Store, {
 	initComponent: function(){
 		Gemma.BibliographicReference.PagingStore.superclass.initComponent.call(this);
@@ -220,49 +187,3 @@ Gemma.BibliographicReference.PagingGrid = Ext.extend( Ext.grid.GridPanel, {
 		}// eo initC
 	});
 
-
-function doUpdate(id){
-    var callParams = [];
-    callParams.push(id);
-    
-    var delegate = updateDone.createDelegate(this, [], true);
-    var errorHandler = handleFailure.createDelegate(this, [], true);
-    
-    callParams.push({
-        callback: delegate,
-        errorHandler: errorHandler
-    });
-    
-    BibliographicReferenceController.update.apply(this, callParams);
-    Ext.DomHelper.overwrite("messages", {
-        tag: 'img',
-        src: '/Gemma/images/default/tree/loading.gif'
-    });
-    Ext.DomHelper.append("messages", {
-        tag: 'span',
-        html: "&nbsp;Please wait..."
-    });
-    
-}
-
-function updateDone(data){
-    Ext.DomHelper.overwrite("messages", {
-        tag: 'img',
-        src: '/Gemma/images/icons/ok.png'
-    });
-    Ext.DomHelper.append("messages", {
-        tag: 'span',
-        html: "&nbsp;Updated"
-    });
-}
-
-function handleFailure(data, e){
-    Ext.DomHelper.overwrite("messages", {
-        tag: 'img',
-        src: '/Gemma/images/icons/warning.png'
-    });
-    Ext.DomHelper.append("messages", {
-        tag: 'span',
-        html: "&nbsp;There was an error: " + data
-    });
-}

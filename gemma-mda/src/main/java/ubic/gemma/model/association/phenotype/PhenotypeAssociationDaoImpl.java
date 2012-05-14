@@ -47,6 +47,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon ) {
 
+        for(String url : phenotypesValueUri){
+            if(url.isEmpty()) phenotypesValueUri.remove( url );
+        }
+        if(phenotypesValueUri.isEmpty()) return new ArrayList<Gene>();
+        
         Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class );
 
         geneQueryCriteria.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )

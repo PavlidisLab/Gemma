@@ -58,6 +58,11 @@ public interface TaxonService {
     public void update( Taxon taxon );
 
     public void thaw( Taxon taxon );
+
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    public Collection<Taxon> loadAllTaxaWithGenes();
     
     public Collection<TaxonValueObject> loadAllValueObjects();
     /**

@@ -4,7 +4,6 @@
 	<title>My Expression Experiments</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'
 		useRandomParam="false" />
-	<jwr:script src='/scripts/app/ExpressionExperimentManage.js' />
 
 </head>
 	<script>

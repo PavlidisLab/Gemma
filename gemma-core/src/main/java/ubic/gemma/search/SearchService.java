@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
 
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+
 /**
  * @author paul
  * @version $Id$
@@ -66,5 +68,20 @@ public interface SearchService {
      * @return Collection of ids.
      */
     public abstract Collection<Long> searchExpressionExperiments( String query, Long taxonId );
+
+    /**
+     * convenience method to return only search results from one class
+     * @param settings
+     * @param resultClass
+     * @return
+     */
+    public abstract List<?> search( SearchSettings settings, Class<?> resultClass );
+
+    /**
+     * TO BE MOVED TO BibliographicReferenceService AFTER THIS COMMIT
+     * @param query
+     * @return
+     */
+    public List<BibliographicReferenceValueObject> searchBibliographicRecords( String query );
 
 }

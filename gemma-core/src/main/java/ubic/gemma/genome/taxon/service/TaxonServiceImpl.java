@@ -54,9 +54,17 @@ public class TaxonServiceImpl implements TaxonService {
     
     @Autowired
     private TaxonDao taxonDao;
-
-    private static Comparator<TaxonValueObject> TAXON_COMPARATOR = new Comparator<TaxonValueObject>() {
+    
+    private static Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
+        @Override
         public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
+            return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
+        }
+    };
+
+    private static Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
+        @Override
+        public int compare( Taxon o1, Taxon o2 ) {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
         }
     };
@@ -78,7 +86,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that are species. (only returns usable taxa)
      */
     public Collection<TaxonValueObject> getTaxaSpecies() {
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsSpecies() ) {
                 taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
@@ -86,12 +94,25 @@ public class TaxonServiceImpl implements TaxonService {
         }
         return taxaSpecies;
     }
+    
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    public Collection<Taxon> loadAllTaxaWithGenes() {
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : loadAll() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( taxon );
+            }
+        }
+        return taxaWithGenes;
+    }
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
                 taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
@@ -104,7 +125,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return collection of taxa that have expression experiments available.
      */
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
         Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
 
@@ -121,7 +142,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return List of taxa with array designs in gemma
      */
     public Collection<TaxonValueObject> getTaxaWithArrays() {
-        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_COMPARATOR );
+        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
         for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
             //taxonService.thaw( taxon );

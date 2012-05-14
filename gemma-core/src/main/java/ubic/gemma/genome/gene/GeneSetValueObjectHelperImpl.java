@@ -171,41 +171,56 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         return results;
     }
     
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet, java.lang.String, java.lang.String)
-     */
-    @Override
-    public GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm ) {
-
-        GOGroupValueObject ggvo = new GOGroupValueObject();
-
-        
-        ggvo.setName( gs.getName() );
-        ggvo.setDescription( gs.getDescription() );
-        ggvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+    private void fillSessionBoundValueObject( SessionBoundGeneSetValueObject sbgsvo, GeneSet gs, String searchTerm ) {
+                
+        sbgsvo.setName( gs.getName() );
+        sbgsvo.setDescription( gs.getDescription() );
+        sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
         
         Collection<Long> gids = new HashSet<Long>();
         for ( GeneSetMember gm : gs.getMembers() ) {
             gids.add( gm.getGene().getId() );
         }
-        ggvo.setGeneIds( gids );
-        
+        sbgsvo.setGeneIds( gids );
         
         Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
         if( tax != null){
             while(tax.getParentTaxon() != null){
                 tax = tax.getParentTaxon();
             }  
-            ggvo.setTaxonId( tax.getId() );
-            ggvo.setTaxonName( tax.getCommonName() );
+            sbgsvo.setTaxonId( tax.getId() );
+            sbgsvo.setTaxonName( tax.getCommonName() );
         }
         
-        ggvo.setId( new Long( -1 ) );
-        ggvo.setModified( false );
+        sbgsvo.setId( new Long( -1 ) );
+        sbgsvo.setModified( false );
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet, java.lang.String, java.lang.String)
+     */
+    @Override
+    public GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm ) {
+        
+        GOGroupValueObject ggvo = new GOGroupValueObject();
+        fillSessionBoundValueObject( ggvo, gs, searchTerm );
+
         ggvo.setGoId( goId );
         ggvo.setSearchTerm( searchTerm );
         
         return ggvo;
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet, java.lang.String, java.lang.String)
+     */
+    @Override
+    public PhenotypeGroupValueObject convertToPhenotypeValueObject( GeneSet gs, String searchTerm ){
+
+        PhenotypeGroupValueObject pgvo = new PhenotypeGroupValueObject();
+        fillSessionBoundValueObject( pgvo, gs, searchTerm );
+        
+        return pgvo;
+    }
+
 }

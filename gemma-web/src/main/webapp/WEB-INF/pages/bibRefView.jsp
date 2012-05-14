@@ -6,12 +6,14 @@
 <jsp:useBean id="bibliographicReference" scope="request"
 	class="ubic.gemma.model.common.description.BibliographicReferenceImpl"></jsp:useBean>
 
-<title>Bibliographic Reference record</title>
+<title>Bibliographic Reference</title>
 
 
 <h2>
 	Bibliographic Reference record
 </h2>
+
+				<c:if test="${byAccession}">
 <security:authorize access="hasRole('GROUP_ADMIN')">
 	<c:if test="${!requestScope.existsInSystem}">
 		<p>
@@ -40,22 +42,40 @@
 		</ul>
 	</div>
 </spring:hasBindErrors>
+</c:if>
+<div id="detailPanel"></div>
 
-<Gemma:bibref bibliographicReference="${bibliographicReference}" />
+<script type="text/javascript">
+Ext.namespace('Gemma');
+Ext.onReady(function() {
+	Ext.QuickTips.init();
+	var detailPanel = new Gemma.BibliographicReference.DetailsPanel({
+ 		//loadBibRefId : ${bibliographicReferenceVO.id}
+		//height: 400,
+		//width: 400,
+		renderTo: 'detailPanel'
+ 	});
+	
+	detailPanel.loadFromId(${bibliographicReferenceId});
+});
+</script>
+
 
 <br />
 <security:authorize access="hasRole('GROUP_ADMIN')">
 	<table>
 		<tr>
 			<td align="left">
-				<c:if test="${!requestScope.existsInSystem}">
+				<c:if test="${byAccession}">
+					<c:if test="${!requestScope.existsInSystem}">
 					<div align="left">
 						<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>">
 							<input type="hidden" name="acc"
-							value="${bibliographicReference.pubAccession.accession}">
+							value="${pubMedId}">
 						<input type="submit" value="Add to Gemma Database">
 					</form>
 				</div>
+				</c:if>
 			</c:if>
 		</td>
 	

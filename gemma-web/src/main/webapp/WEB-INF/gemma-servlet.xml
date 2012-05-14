@@ -440,6 +440,9 @@
 		<dwr:remote javascript="BibliographicReferenceController">
 			<dwr:include method="update" />
 			<dwr:include method="browse" />
+			<dwr:include method="load" />
+			<dwr:include method="search" />
+			<dwr:include method="loadFromPubmedID" />
 		</dwr:remote>
 	</bean>
 
@@ -743,6 +746,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.PhenotypeGroupValueObject" javascript="PhenotypeGroupValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
 

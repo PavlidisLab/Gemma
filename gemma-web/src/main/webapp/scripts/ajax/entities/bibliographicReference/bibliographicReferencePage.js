@@ -1,13 +1,13 @@
 Ext.namespace('Gemma.BibliographicReference');
 
-Gemma.BibliographicReference.Page =  Ext.extend(Ext.Panel, {
+Gemma.BibliographicReference.Browser =  Ext.extend(Ext.Panel, {
 	// would use vbox, but then user can't resize panels
 	layout: 'border',
 	initComponent: function(){
 		
-		Gemma.BibliographicReference.Page.superclass.initComponent.call(this);
+		Gemma.BibliographicReference.Browser.superclass.initComponent.call(this);
 		
-		var grid = new Gemma.BibliographicReference.PagingGrid({
+		var grid = new Gemma.BibliographicReference.SearchResultGrid({
 			region:'center',
 			title:'Bibliographic References'
 		});

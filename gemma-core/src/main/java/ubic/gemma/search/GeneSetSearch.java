@@ -20,6 +20,7 @@ import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 /**
  * @author paul
@@ -96,5 +97,7 @@ public interface GeneSetSearch {
      * @return collection of GeneSet
      */
     public abstract Collection<GeneSet> findGeneSetsByName( String query, Long taxonId );
+
+    public abstract Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon );
 
 }

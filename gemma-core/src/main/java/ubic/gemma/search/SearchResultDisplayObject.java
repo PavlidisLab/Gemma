@@ -29,6 +29,7 @@ import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
@@ -88,6 +89,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         if ( searchResult.getResultObject() instanceof GeneValueObject ) {
             GeneValueObject gene = ( GeneValueObject ) searchResult.getResultObject();
             setValues( gene );
+        } else if ( searchResult.getResultObject() instanceof Gene ) {
+            Gene gene = ( Gene ) searchResult.getResultObject();
+            setValues( gene );
         } else if ( searchResult.getResultObject() instanceof GeneSetValueObject ) {
             GeneSetValueObject geneSet = ( GeneSetValueObject ) searchResult.getResultObject();
             setValues( geneSet );
@@ -108,6 +112,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         }
     }
 
+    /**
+     * @param gene
+     */
+    public SearchResultDisplayObject( Gene gene ) {
+        setValues( gene );
+    }
+    
     /**
      * @param gene
      */
@@ -150,6 +161,24 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         setValues( expressionExperimentSet );
     }
 
+
+    /**
+     * @param gene
+     */
+    private void setValues( Gene gene ) {
+        setResultValueObject( new GeneValueObject( gene ) );
+        this.isGroup = false;
+        this.size = 1;
+        if( gene.getTaxon() != null ){
+            this.taxonId = gene.getTaxon().getId();
+            this.taxonName = gene.getTaxon().getCommonName();
+        }
+        
+        this.name = gene.getOfficialSymbol();
+        this.description = gene.getOfficialName();
+        this.memberIds.add(gene.getId());
+    }
+    
     /**
      * @param gene
      */

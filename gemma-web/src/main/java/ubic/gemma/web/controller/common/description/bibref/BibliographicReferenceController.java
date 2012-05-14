@@ -1,5 +1,7 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,7 +31,7 @@ public interface BibliographicReferenceController {
      */
     @RequestMapping("/bibRefAdd.html")
     public abstract ModelAndView add( HttpServletRequest request, HttpServletResponse response );
-
+    
     /**
      * AJAX
      * 
@@ -37,6 +39,14 @@ public interface BibliographicReferenceController {
      * @return
      */
     public abstract JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch );
+
+    /**
+     * AJAX
+     * 
+     * @param query
+     * @return
+     */
+    public abstract JsonReaderResponse<BibliographicReferenceValueObject> search( String query);
 
     /**
      * @param request
@@ -68,5 +78,26 @@ public interface BibliographicReferenceController {
      * @param id
      */
     public abstract void update( Long id );
+    
+    /**
+     * AJAX
+     * @param ids
+     * @return
+     */
+    public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids );
+    
+    /**
+     * AJAX
+     * @param ids
+     * @return
+     */
+    public BibliographicReferenceValueObject load( Long id );
+
+    /**
+     * AJAX
+     * @param pubmed ID id
+     * @return
+     */
+    public BibliographicReferenceValueObject loadFromPubmedID( String pubmedID );
 
 }

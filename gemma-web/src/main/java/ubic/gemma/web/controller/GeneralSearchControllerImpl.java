@@ -236,15 +236,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         SearchSettings searchSettings = new SearchSettings();
         // Reset default settings.
-        searchSettings.setSearchArrays( false );
-        searchSettings.setSearchBibrefs( false );
-        searchSettings.setSearchBioSequences( false );
-        searchSettings.setSearchExperiments( false );
-        searchSettings.setSearchExperimentSets( false );
-        searchSettings.setSearchGenes( false );
-        searchSettings.setSearchGenesByGO( false );
-        searchSettings.setSearchGeneSets( false );
-        searchSettings.setSearchProbes( false );
+        searchSettings.noSearches();
         return searchSettings;
     }
 
@@ -351,8 +343,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            vos = BibliographicReferenceValueObject.convert2ValueObjects( bibliographicReferenceService
-                    .loadMultiple( EntityUtils.getIds( results ) ) );
+            vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( results ) );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {

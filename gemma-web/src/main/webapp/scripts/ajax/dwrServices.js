@@ -120,6 +120,18 @@ BibliographicReferenceController.browse = function(p0, callback) {
 	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'browse', p0,
 			callback);
 }
+BibliographicReferenceController.load = function(p0, callback) {
+	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'load', p0,
+			callback);
+}
+BibliographicReferenceController.search = function(p0, callback) {
+	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'search', p0,
+			callback);
+}
+BibliographicReferenceController.loadFromPubmedID = function(p0, callback) {
+		dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'loadFromPubmedID', p0,
+				callback);
+}
 // ====================================================================================
 if (BioAssayController == null)
 	var BioAssayController = {};

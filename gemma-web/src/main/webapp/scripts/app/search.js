@@ -7,113 +7,6 @@
 Ext.namespace("Gemma.Search");
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-Gemma.Search.app = function( ) {
-	return {
-		init : function() {
-
-			this.form = new Gemma.SearchForm({
-						renderTo : 'general-search-form'
-					});
-
-			this.resultGrid = new Gemma.SearchGrid({
-						renderTo : 'search-results-grid',
-						form : this.form
-					});
-
-			viewPort.add(this.form);
-			viewPort.add(this.resultGrid);
-			this.form.on("search", this.search.createDelegate(this));
-
-			/*
-			 * Search from url if we have to.
-			 */
-			if (this.form.restoreState()) {
-				this.search();
-			}
-
-		},
-
-		/**
-		 * 
-		 */
-		search : search = function(t, event) {
-			if (!this.form.getForm().findField('query').isValid()) {
-				return;
-			}
-			var query = Ext.getCmp('search-text-field').getValue();
-			var searchProbes = Ext.getCmp('search-prbs-chkbx').getValue();
-			var searchGenes = Ext.getCmp('search-genes-chkbx').getValue();
-			var searchExperiments = Ext.getCmp('search-exps-chkbx').getValue();
-			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
-			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
-			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
-			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
-
-			var searchDatabase = true;
-			var searchIndices = true;
-			var searchCharacteristics = true;
-			if (Ext.get('hasAdmin').getValue()) {
-				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
-				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
-				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
-			}
-
-			var scopes = "&scope=";
-			if (searchProbes) {
-				scopes = scopes + "P";
-			}
-			if (searchGenes) {
-				scopes = scopes + "G";
-			}
-			if (searchExperiments) {
-				scopes = scopes + "E";
-			}
-			if (searchArrays) {
-				scopes = scopes + "A";
-			}
-			// removed until sequences have a page
-			// see bug 2233
-			/*if (searchSequences) {
-				scopes = scopes + "S";
-			}*/
-			if (searchGeneSets) {
-				scopes = scopes + "M";
-			}
-			if (searchEESets) {
-				scopes = scopes + "N";
-			}
-
-			this.resultGrid.getStore().load({
-						params : [{
-									query : query,
-									searchProbes : searchProbes,
-									searchBioSequences : searchSequences,
-									searchArrays : searchArrays,
-									searchExperiments : searchExperiments,
-									searchGenes : searchGenes,
-									searchGeneSets : searchGeneSets,
-									searchExperimentSets : searchEESets,
-									useDatabase : searchDatabase,
-									useIndices : searchIndices,
-									useCharacteristics : searchCharacteristics
-								}]
-					});
-
-			if (typeof pageTracker !== 'undefined') {
-				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
-			}
-
-			Ext.DomHelper.overwrite('messages', "");
-			this.form.findById('submit-button').setDisabled(true);
-			Ext.DomHelper.overwrite('search-bookmark', {
-						tag : 'a',
-						href : "/Gemma/searcher.html?query=" + escape(query) + scopes,
-						html : 'Bookmarkable link'
-					});
-		}
-	};
-}();
-
 Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 	layout:'vbox',
 	layoutConfig:{
@@ -126,11 +19,20 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			this.form = new Gemma.SearchForm({
 				flex:0
 			});
-
+			
+			var autoLoadParams = false;
+			if (this.form.restoreState()) {
+				var settings = this.getSearchSettings();
+				autoLoadParams = {
+					params : settings.params
+				};
+			}
+			
 			this.resultGrid = new Gemma.SearchGrid({
 						form : this.form,
 						flex:1,
-						region:'center'
+						region:'center',
+						autoLoadStore: autoLoadParams
 					});
 					
 			this.messagePanel = new Ext.Panel({
@@ -163,16 +65,6 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			this.add(this.resultGrid);
 			this.form.on("search", this.search.createDelegate(this));
 			
-
-			/*
-			 * Search from url if we have to.
-			 */
-			this.on("afterlayout",function(){
-				if (this.form.restoreState()) {
-					this.search();
-				}
-			}, this);
-			
 			
 			this.resultGrid.on("loadError", function(message){
 				this.messagePanel.update({msg:message});
@@ -200,10 +92,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			},this);
 		},
 
-		/**
-		 * 
-		 */
-		search : search = function(t, event) {
+		getSearchSettings : function() {
 			if (!this.form.getForm().findField('query').isValid()) {
 				return;
 			}
@@ -215,14 +104,19 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
 			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
 			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
+			var searchPapers = Ext.getCmp('search-papers-chkbx').getValue();
 
 			var searchDatabase = true;
 			var searchIndices = true;
 			var searchCharacteristics = true;
+			var searchGO = false;
+			var searchPhenotypes = false;
 			if (Ext.get('hasAdmin').getValue()) {
 				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
 				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
 				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
+				searchGO = Ext.getCmp('search-go-chkbx').getValue();
+				searchPhenotypes = Ext.getCmp('search-phenotype-chkbx').getValue();
 			}
 
 			var scopes = "&scope=";
@@ -249,21 +143,43 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			if (searchEESets) {
 				scopes = scopes + "N";
 			}
+			if (searchPapers) {
+				scopes = scopes + "B";
+			}
 
+			var params = [{
+				query : query,
+				searchProbes : searchProbes,
+				searchBioSequences : searchSequences,
+				searchArrays : searchArrays,
+				searchExperiments : searchExperiments,
+				searchGenes : searchGenes,
+				searchGeneSets : searchGeneSets,
+				searchExperimentSets : searchEESets,
+				useDatabase : searchDatabase,
+				useIndices : searchIndices,
+				useCharacteristics : searchCharacteristics,
+				searchGenesByGO : searchGO,
+				searchGenesByPhenotype : searchPhenotypes,
+				searchBibrefs: searchPapers
+			}];
+			return {
+				params: params,
+				scopes: scopes,
+				query: query
+			};
+		},
+		/**
+		 * 
+		 */
+		search : search = function(t, event) {
+			var settings = this.getSearchSettings();
+			var params = settings.params;
+			var query = settings.query;
+			var scopes = settings.scopes;
+			
 			this.resultGrid.getStore().load({
-						params : [{
-									query : query,
-									searchProbes : searchProbes,
-									searchBioSequences : searchSequences,
-									searchArrays : searchArrays,
-									searchExperiments : searchExperiments,
-									searchGenes : searchGenes,
-									searchGeneSets : searchGeneSets,
-									searchExperimentSets : searchEESets,
-									useDatabase : searchDatabase,
-									useIndices : searchIndices,
-									useCharacteristics : searchCharacteristics
-								}]
+						params : params
 					});
 
 			if (typeof pageTracker !== 'undefined') {
@@ -346,6 +262,11 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 						} else {
 							Ext.getCmp('search-eesets-chkbx').setValue(false);
 						}
+						if (params.scope.indexOf('B') > -1) {
+							Ext.getCmp('search-papers-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-papers-chkbx').setValue(false);
+						}
 					}
 				} else {
 					return false;
@@ -362,10 +283,11 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 							items : [{
 										xtype : 'panel',
 										layout : 'column',
-										width:400,
+										width: 450,
 										items : [new Ext.form.TextField({
 															id : 'search-text-field',
 															fieldLabel : 'Search term(s)',
+															name : 'query',
 															name : 'query',
 															columnWidth : 0.75,
 															allowBlank : false,
@@ -404,14 +326,14 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 										layout: 'table',
 										ref: 'searchForSelects',
 										layoutConfig:{
-											columns:3
+											columns:4
 										},
 										collapsible : true,
 										collapsed : false,
 										autoHeight : true,
 										defaultType : 'checkbox',
 										title : 'Items to search for',
-										width : 400,
+										width : 450,
 										items : [{
 													id : 'search-genes-chkbx',
 													name : "searchGenes",
@@ -448,6 +370,23 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													id : 'search-ars-chkbx',
 													name : "searchArrays",
 													boxLabel : "Arrays",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												},{
+													id : 'search-papers-chkbx',
+													name : "searchPapers",
+													boxLabel : "Annotated Papers",
+													hidden: true,
+													disabled: true,
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -557,6 +496,19 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 											boxLabel: "Search characteristics",
 											hideLabel: true,
 											checked: true
+										}, {
+											id: 'search-go-chkbx',
+											name: "searchGO",
+											boxLabel: "Search GO groups (genes)",
+											hideLabel: true,
+											checked: false
+										}, {
+											id: 'search-phenotype-chkbx',
+											name: "searchPhenotypes",
+											boxLabel: "IN PROGRESS Search Phenotype Associations (genes)",
+											hideLabel: true,
+											checked: false,
+											disabled: true
 										}]
 									}]
 						});			
@@ -665,6 +617,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	initComponent : function() {
 		var proxy = new Ext.data.DWRProxy(SearchService.search);
+		var autoLoadStore = (this.autoLoadStore != undefined && this.autoLoadStore != null )? this.autoLoadStore: false;
 
 		proxy.on("loadexception", this.handleLoadError.createDelegate(this));
 
@@ -740,6 +693,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 							}],
 					store : new Ext.data.GroupingStore({
 								proxy : proxy,
+								autoLoad: autoLoadStore,
 								reader : new Ext.data.JsonReader({
 											id : "id",
 											root : "records",
@@ -783,7 +737,6 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (expand) {
 			this.getView().expandAllGroups();
 		}
-
 	},
 
 	handleLoadError : function(scope, b, message, exception) {
@@ -818,6 +771,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Gene group";
 		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject" ) {
 			return "Experiment group";
+		} else if (clazz === "BibliographicReferenceValueObject" ) {
+			return "Annotated Paper";
 		} else {
 			return clazz;
 		}
@@ -831,6 +786,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return record.name;
 		} else if (clazz === "ArrayDesignValueObject") {
 			return record.shortName;
+		} else if (clazz === "BibliographicReferenceValueObject") {
+			return record.citation;
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return record.name;
 		} else if (clazz === "GeneValueObject" || clazz === 'GeneSetValueObject' || clazz === "DatabaseBackedGeneSetValueObject" 
@@ -845,7 +802,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
 		if (clazz === "ExpressionExperimentValueObject") {
-			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
+			return "<a href=\"" + Gemma.LinkRoots.expressionExperimentPage +
 			(data.sourceExperiment ? data.sourceExperiment : data.id) +
 			"\">" +
 			data.shortName +
@@ -866,22 +823,24 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			" " +
 			(data.description ? data.description : "");
 		} else if (clazz === "GeneValueObject" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + 
+			return "<a href=\""+ Gemma.LinkRoots.genePage + data.id + "\">" + data.officialSymbol + 
 			"</a><span style='color:grey'> " +
 			data.taxonCommonName +
 			"</span> " +
 			((data.officialName && data.officialName !== null)?data.officialName:'');
-		} else if (clazz === "Bibliographicreference") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
-			"]";
+		} else if ( clazz === "BibliographicReferenceValueObject" ) {
+			return data.citation.citation +
+					(new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
+				    	pubmedURL: data.pubAccession
+				    });
 		} else if (clazz === "ExpressionExperimentSetValueObject" || clazz === "DatabaseBackedExpressionExperimentSetValueObject") {
-			return "<a href=\"/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
+			return "<a href=\""+ Gemma.LinkRoots.expressionExperimentSetPage + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
 			data.taxonName +
 			"</span> (" +
 			data.numExperiments +
 			")";
 		} else if (clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject") {
-			return "<a href=\"/Gemma/geneSet/showGeneSet.html?id=" + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
+			return "<a href=\"" + Gemma.LinkRoots.geneSetPage + data.id + "\">" + data.name + "</a><span style='color:grey'> " +
 			data.taxonName +
 			"</span> (" +
 			data.size +

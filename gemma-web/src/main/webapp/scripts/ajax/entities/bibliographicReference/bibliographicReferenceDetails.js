@@ -14,14 +14,21 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 		hidden: true,
 		labelWidth: 120
 	},
+	// allows you to specify a bib ref to load
+	loadFromId : function(id){
+		BibliographicReferenceController.load( id, function(data){
+			var rec = new Gemma.BibliographicReference.Record(data);
+			this.updateFields(rec);
+		}.createDelegate(this));
+	},
 	initComponent: function() {
 		var currentBibliographicPhenotypes = null;
 		var currentEvidenceId = null;
 
-		var getPudmedAnchor = function(pudmedUrl) {
-		    return '<a target="_blank" href="' +
-		        pudmedUrl +
-		        '"><img ext:qtip="Go to PubMed (in new window)"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+		var getPudmedAnchor = function(pubmedUrl) {
+		    return (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
+		    	pubmedURL: pubmedUrl
+		    });
 		}; 
 		
 		var getGenePhenotypeRow = function(bibliographicPhenotype) {
@@ -226,5 +233,6 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 		});
 		
 		this.add(this.citation, this.detailsFieldset, this.annotationsFieldset);
+		this.doLayout();
 	} // initComponent
 });

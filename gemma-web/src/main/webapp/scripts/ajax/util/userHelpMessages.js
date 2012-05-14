@@ -1,11 +1,5 @@
 
-Ext.namespace('Gemma.HelpText','Gemma.StatusText','Gemma.Widget','Gemma.LinkRoots');
-
-Gemma.LinkRoots = {
-	expressionExperimentPage : "/Gemma/expressionExperiment/showExpressionExperiment.html?id=",
-	expressionExperimentSetPage : "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=",
-	geneSetPage : "/Gemma/geneSet/showGeneSet.html?id="
-};
+Ext.namespace('Gemma.HelpText','Gemma.StatusText');
 
 // TT = tooltip
 Gemma.EvidenceCodes = {
@@ -476,15 +470,3 @@ Gemma.HelpText.WidgetDefaults = {
 			ValidatedExperimentalDesign: 'Experimental design validated'
 		}
 	},*/
-
-Gemma.Widget.tpl = {
-	ArrayDesignsNonPagingGrid: {
-		rowDetails: '<p>Probes: <b>{designElementCount}</b></p>' +
-			'<p>With sequences: <b>{numProbeSequences}</b> <span style="color:grey">(Number of probes with sequences)</span></p>' +
-			'<p>With align: <b>{numProbeAlignments}</b> <span style="color:grey">(Number of probes with at least one genome alignment)</span></p>' +
-			'<p>Mapped to genes: <b>{numProbesToKnownGenes}</b> <span style="color:grey">(Number of probes mapped to known genes '+
-					'(including predicted and anonymous locations))</span></p>' +
-			'<p>Unique genes: <b>{numGenes}</b> <span style="color:grey">(Number of unique genes represented on the array)</span></p>' +
-			'<p> (as of {dateCached})</p>'
-	}
-};

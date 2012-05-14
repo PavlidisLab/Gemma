@@ -50,11 +50,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 		}.createDelegate(this);
    		
-		var convertToPudmedAnchor = function(pudmedUrl) {
-		    return '<a target="_blank" href="' +
-		        pudmedUrl +
-		        '"><img ext:qtip="Go to PubMed (in new window)" ' + 
-		        'src="/Gemma/images/pubmed.gif" width="47" height="15" alt="PubMed" /></a>';
+		var convertToPudmedAnchor = function(pubmedUrl) {
+		    return (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
+		    	pubmedURL: pubmedUrl
+		    });
 		};
 		
 		var convertToExternalDatabaseAnchor = function(databaseName, url, useDatabaseIcon) {

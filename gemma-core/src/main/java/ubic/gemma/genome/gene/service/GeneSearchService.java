@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResultDisplayObject;
 
@@ -65,5 +67,9 @@ public interface GeneSearchService {
      * @throws IOException
      */
     public Map<String, Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId ) throws IOException;
+
+    public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon );
+
+    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
     
 }

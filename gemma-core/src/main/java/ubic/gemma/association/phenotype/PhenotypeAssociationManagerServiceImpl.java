@@ -217,7 +217,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotypes( phenotypesValuesUri );
+        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();
 
@@ -976,7 +976,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Map query phenotypes given to the set of possible children phenotypes in the database */
-    private HashMap<String, Set<String>> findChildrenForEachPhenotypes( Set<String> phenotypesValuesUri ) {
+    private HashMap<String, Set<String>> findChildrenForEachPhenotype( Set<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
@@ -987,6 +987,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // determine all children terms for each other phenotypes
         for ( String phenoRoot : phenotypesValuesUri ) {
 
+            if(phenoRoot.isEmpty()){
+                continue;
+            }
+            
             OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
@@ -1051,7 +1055,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void flagEvidence( Collection<EvidenceValueObject> evidencesVO, Set<String> phenotypesValuesUri ) {
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotypes( phenotypesValuesUri );
+        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();
 

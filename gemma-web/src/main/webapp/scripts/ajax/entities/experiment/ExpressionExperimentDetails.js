@@ -355,15 +355,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			fieldLabel:'Publication',
 			baseCls: 'x-plain-panel',
 			style:'padding-top:5px',
-			tpl: new Ext.XTemplate(
-					'<tpl if="pubAvailable==\'true\'">' +
-						'{primaryCitationStr}' +
-						'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
-						' href="{pubmedURL}"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' +
-					'</tpl>'+
-					'<tpl if="pubAvailable==\'false\'">' +
-						'Not Available'+
-					'</tpl>'),
+			tpl: new Ext.XTemplate( Gemma.Common.tpl.pubmedLink.complex ),
 			data:{
 				pubAvailable: (currentPrimaryCitation)? 'true':'false',
 				primaryCitationStr: (currentPrimaryCitation)? currentPrimaryCitation.citation : '',

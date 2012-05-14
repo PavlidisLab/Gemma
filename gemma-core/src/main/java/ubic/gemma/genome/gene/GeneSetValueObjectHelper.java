@@ -54,10 +54,15 @@ public interface GeneSetValueObjectHelper {
      */
     public abstract List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
             boolean includeOnesWithoutGenes );
-
+    
     /**
      * Method to create a GO group object from an ad hoc entity
      */
     public abstract GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
+
+    /**
+     * Method to create a phenotype group object from an ad hoc entity
+     */
+    public abstract PhenotypeGroupValueObject convertToPhenotypeValueObject( GeneSet gs, String searchTerm );
 
 }

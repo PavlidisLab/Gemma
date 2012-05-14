@@ -41,6 +41,11 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotype
  */
 public class BibliographicReferenceValueObject {
     
+    /**
+     * does not set related experiments field
+     * @param refs
+     * @return
+     */
     public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
 
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
@@ -89,6 +94,10 @@ public class BibliographicReferenceValueObject {
         super();
     }
 
+    /**
+     * does not set related experiments field
+     * @param ref
+     */
     public BibliographicReferenceValueObject( BibliographicReference ref ) {
 
         this.id = ref.getId();

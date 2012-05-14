@@ -101,6 +101,10 @@ public class PhenotypeAssoOntologyHelper {
     /** For a valueUri return the OntologyTerm found */
     public OntologyTerm findOntologyTermByUri( String valueUri ) {
 
+        if(valueUri.isEmpty()){
+            throw new IllegalArgumentException("URI to load was blank.");
+        }
+        
         OntologyTerm ontologyTerm = this.diseaseOntologyService.getTerm( valueUri );
 
         if ( ontologyTerm == null ) {

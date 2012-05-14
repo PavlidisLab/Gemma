@@ -14,13 +14,22 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
+//import ubic.gemma.search.SearchService;
+//import ubic.gemma.search.SearchSettings;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -34,6 +43,11 @@ public class BibliographicReferenceServiceImpl extends
         ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
+    
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
+    //@Autowired
+    //private SearchService searchService;
 
     /*
      * (non-Javadoc)
@@ -129,8 +143,60 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getBibliographicReferenceDao().load( ids );
+    }
+
+    @Override
+    protected Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( Collection<Long> ids ) throws Exception {
+        Collection<BibliographicReference> bibRefs = this.getBibliographicReferenceDao().load( ids );
+        if(bibRefs.isEmpty()){
+            return new ArrayList<BibliographicReferenceValueObject>();
+        }
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO =  new HashMap<Long, BibliographicReferenceValueObject>();
+        
+        for(BibliographicReference bibref : bibRefs){
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
+            idTobibRefVO.put( bibref.getId(), vo );
+        }
+        
+        populateRelatedExperiments( bibRefs, idTobibRefVO );
+        populateBibliographicPhenotypes( idTobibRefVO );
+        
+        return idTobibRefVO.values();
+    }
+
+    /**
+     * @param bibRefs
+     * @param idTobibRefVO
+     */
+    private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
+            Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
+        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this
+                .getRelatedExperiments( bibRefs );
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = idTobibRefVO.get( bibref.getId() );
+            if ( relatedExperiments.containsKey( bibref ) ) {
+                vo.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments
+                        .get( bibref ) ) );
+            }
+        }
+    }
+
+    /**
+     * @param bibRefs
+     * @param idTobibRefVO
+     */
+    private void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
+
+        for(BibliographicReferenceValueObject vo : idTobibRefVO.values()){
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
+                    .findPhenotypesForBibliographicReference( vo.getPubAccession() );
+
+            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
+            vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
+        }
     }
 
     @Override
@@ -222,5 +288,13 @@ public class BibliographicReferenceServiceImpl extends
         return this.getBibliographicReferenceDao().getRelatedExperiments( records );
 
     }
+    
+    /*@Override 
+    public List<BibliographicReferenceValueObject> search(String query){
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
+        List<BibliographicReferenceValueObject> results = BibliographicReferenceValueObject.convert2ValueObjects( resultEntities );
+        return results;
+        
+    }*/
 
 }

@@ -84,13 +84,31 @@ public abstract class BibliographicReferenceServiceBase implements
                             + th, th );
         }
     }
-
+    
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id ) {
         try {
             return this.handleFindByExternalId( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#findVOByExternalId(java.lang.String)
+     */
+    public BibliographicReferenceValueObject findVOByExternalId( final java.lang.String id ) {
+        try {
+            BibliographicReference bibref = this.handleFindByExternalId( id );
+            if (bibref == null){
+                throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException( "Could not locate reference with external id=" + id
+                        + " in Gemma" );
+            }
+            return new BibliographicReferenceValueObject( bibref );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException(
                     "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
@@ -166,13 +184,26 @@ public abstract class BibliographicReferenceServiceBase implements
                             + th, th );
         }
     }
-
+    
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
     public java.util.Collection<BibliographicReference> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#loadMultiple(java.util.Collection)
+     */
+    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleLoadMultipleValueObjects( ids );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException(
                     "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> "
@@ -309,11 +340,17 @@ public abstract class BibliographicReferenceServiceBase implements
      */
     protected abstract ubic.gemma.model.common.description.BibliographicReference handleLoad( java.lang.Long id )
             throws java.lang.Exception;
-
+    
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
     protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadMultipleValueObjects(java.util.Collection)}
+     */
+    protected abstract java.util.Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**

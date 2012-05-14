@@ -21,6 +21,7 @@ package ubic.gemma.search;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -29,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.service.GeneSetService;
@@ -38,8 +40,12 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author paul
@@ -64,6 +70,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
+
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     
     /* (non-Javadoc)
      * @see ubic.gemma.search.GeneSetSearch#findByGene(ubic.gemma.model.genome.Gene)
@@ -153,6 +162,27 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return results;
 
     }
+    
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon, java.lang.Integer)
+     */
+    @Override
+    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) {
+        
+        Collection<CharacteristicValueObject> phenotypes =  phenotypeAssociationManagerService.searchOntologyForPhenotypes( StringUtils
+                .strip( phenotypeQuery ), null );
+
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        
+        for ( CharacteristicValueObject cvo : phenotypes) {
+            GeneSetValueObject converted = phenotypeAssociationToGeneSet( cvo, taxon );
+            if ( converted != null ) results.add( converted );
+        }
+
+        return results;
+
+    }
 
     /* (non-Javadoc)
      * @see ubic.gemma.search.GeneSetSearch#findByName(java.lang.String)
@@ -209,6 +239,30 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             transientGeneSet.getMembers().add( gmember );
         }
         return transientGeneSet;
+    }
+
+    /**
+     * Convert a phenotype association to a 'GeneSet', including genes from all child phenotypes.
+     */
+    private GeneSetValueObject phenotypeAssociationToGeneSet( CharacteristicValueObject term, Taxon taxon ) {
+        if ( term == null ) return null;
+        // for each phenotype, get all genes
+        Set<String> URIs = new HashSet<String>();
+        URIs.add( term.getValueUri() );
+        Collection<GeneValueObject> gvos = phenotypeAssociationManagerService.findCandidateGenes( URIs, taxon.getCommonName() );
+        Collection<Long> geneIds = EntityUtils.getIds( gvos );
+        
+        GeneSetValueObject transientGeneSet = new GeneSetValueObject();
+        
+        transientGeneSet.setName( uri2phenoID( term ) );
+        transientGeneSet.setDescription( term.getValue() );
+        transientGeneSet.setGeneIds( geneIds );
+
+        return transientGeneSet;
+    }
+    
+    private String uri2phenoID( CharacteristicValueObject t ) {
+        return t.getValueUri().replaceFirst( ".*#", "" );
     }
 
     private String uri2goid( OntologyResource t ) {

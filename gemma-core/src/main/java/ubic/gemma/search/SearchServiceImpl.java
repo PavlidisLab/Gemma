@@ -81,18 +81,20 @@ import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -131,7 +133,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @author keshav
  * @version $Id$
  */
-@Component
+@Service
 public class SearchServiceImpl implements SearchService {
 
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
@@ -249,6 +251,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
+    
+    @Autowired
+    private GeneSearchService geneSearchService;
 
     @Autowired
     private GeneProductService geneProductService;
@@ -397,6 +402,24 @@ public class SearchServiceImpl implements SearchService {
         }
 
         return searchResults;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
+     */
+    @Override
+    public List<?> search( SearchSettings settings, Class<?> resultClass ) {
+        Map<Class<?>, List<SearchResult>> searchResults = this.search( settings );
+        List<Object> resultObjects = new ArrayList<Object>();
+        
+        List<SearchResult> searchResultObjects = searchResults.get( resultClass );
+        for(SearchResult sr : searchResultObjects){
+            resultObjects.add( sr.getResultObject() );
+        }
+        
+        return resultObjects;
     }
 
     /*
@@ -955,7 +978,7 @@ public class SearchServiceImpl implements SearchService {
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
             // bioSequenceService.thaw( bs );
-            results.addAll( dbHitsToSearchResult( bs, genes.get( gene ) ) );
+            results.addAll( dbHitsToSearchResult( bs, genes.get( gene ), null ) );
         }
 
         return results;
@@ -1375,7 +1398,7 @@ public class SearchServiceImpl implements SearchService {
         filterByTaxon( settings, results, true );
         return results;
     }
-
+    
     /**
      * Convert hits from database searches into SearchResults.
      * 
@@ -1383,7 +1406,17 @@ public class SearchServiceImpl implements SearchService {
      * @return
      */
     private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities ) {
-        return this.dbHitsToSearchResult( entities, null );
+        return this.dbHitsToSearchResult( entities, null, null );
+    }
+
+    /**
+     * Convert hits from database searches into SearchResults.
+     * 
+     * @param entities
+     * @return
+     */
+    private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities, String matchText ) {
+        return this.dbHitsToSearchResult( entities, null, matchText );
     }
 
     /**
@@ -1393,17 +1426,18 @@ public class SearchServiceImpl implements SearchService {
      * @param compassHitDerivedFrom SearchResult that these entities were derived from. For example, if you
      *        compass-searched for genes, and then used the genes to get sequences from the database, the gene is
      *        compassHitsDerivedFrom. If null, we treat this as a direct hit.
+     * @param matchText TODO
      * @return
      */
     private List<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities,
-            SearchResult compassHitDerivedFrom ) {
+            SearchResult compassHitDerivedFrom, String matchText ) {
         List<SearchResult> results = new ArrayList<SearchResult>();
         for ( Object e : entities ) {
             if ( e == null ) {
                 log.warn( "Null search result object" );
                 continue;
             }
-            SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e );
+            SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e, matchText );
             results.add( esr );
         }
         return results;
@@ -2181,9 +2215,16 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( settings.isSearchGenesByGO() ) {
-            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( gene2GOAssociationService.findByGOTerm(
-                    searchString, settings.getTaxon() ) );
+            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( geneSearchService.getGOGroupGenes( 
+                    searchString, settings.getTaxon() ), "From GO group" );
             accreteResults( rawResults, ontologyGenes );
+        }
+
+        if ( settings.isSearchGenesByPhenotype() ) {
+            
+            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult( geneSearchService.getPhenotypeAssociatedGenes(
+                    searchString, settings.getTaxon() ), "From phenotype association" );
+            accreteResults( rawResults, phenotypeGenes );
         }
 
         if ( settings.isSearchBibrefs() ) {
@@ -2192,7 +2233,6 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( settings.isSearchGeneSets() ) {
-            // todo
             Collection<SearchResult> geneSets = geneSetSearch( settings );
             accreteResults( rawResults, geneSets );
         }
@@ -2243,4 +2283,12 @@ public class SearchServiceImpl implements SearchService {
         return getSearchResults( hits );
     }
 
+    
+    @Override 
+    public List<BibliographicReferenceValueObject> searchBibliographicRecords(String query){
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
+        List<BibliographicReferenceValueObject> results = BibliographicReferenceValueObject.convert2ValueObjects( resultEntities );
+        return results;
+        
+    }
 }

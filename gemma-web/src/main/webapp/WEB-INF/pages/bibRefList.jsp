@@ -7,7 +7,7 @@ Ext.namespace('Gemma');
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	new Gemma.GemmaViewPort({
-		 	centerPanelConfig: new Gemma.BibliographicReference.Page()
+		 	centerPanelConfig: new Gemma.BibliographicReference.Browser()
 		 });
 });
 </script>

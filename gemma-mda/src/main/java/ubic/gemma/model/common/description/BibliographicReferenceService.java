@@ -65,13 +65,20 @@ public interface BibliographicReferenceService {
      * @return
      */
     public BibliographicReference findByExternalId( DatabaseEntry accession );
-
+    
     /**
      * <p>
      * Get a reference by the unqualified external id.
      * </p>
      */
     public BibliographicReference findByExternalId( java.lang.String id );
+
+    /**
+     * <p>
+     * Get a reference by the unqualified external id. Searches for pubmed by default
+     * </p>
+     */
+    public BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
@@ -108,6 +115,13 @@ public interface BibliographicReferenceService {
     public java.util.Collection<BibliographicReference> loadMultiple( java.util.Collection<Long> ids );
 
     /**
+     * adds related experiments and phenotype associations
+     * @param ids
+     * @return
+     */
+    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( java.util.Collection<Long> ids );
+
+    /**
      * 
      */
     @Secured({ "GROUP_ADMIN" })
@@ -128,5 +142,7 @@ public interface BibliographicReferenceService {
      */
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
+
+    //public List<BibliographicReferenceValueObject> search( String query );
 
 }

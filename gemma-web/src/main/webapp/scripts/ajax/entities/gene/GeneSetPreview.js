@@ -94,6 +94,8 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 				
 			} else if (this.selectedSetValueObject instanceof GOGroupValueObject) {
 				name = this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
+			} else if (this.selectedSetValueObject instanceof PhenotypeGroupValueObject) {
+				name = this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
 			} else {
 				name = this.selectedSetValueObject.name;
 			}

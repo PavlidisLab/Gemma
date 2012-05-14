@@ -75,7 +75,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	enableKeyEvents : true,
-	loadingText : 'Searching...',
+	loadingText : 'Still searching...',
 
 	emptyText : "Search genes by keyword",
 	listEmptyText : 'No results found',
@@ -162,6 +162,8 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>');
 		var goGroupTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ' +
 							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var phenotypeGroupTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ' +
+							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		var freeTxtTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ' +
 							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		var modifiedSessionTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ' +
@@ -189,6 +191,8 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						}
 					}else if (values.resultValueObject instanceof GOGroupValueObject) {
 							return goGroupTpl.apply(values);
+					}else if (values.resultValueObject instanceof PhenotypeGroupValueObject) {
+							return phenotypeGroupTpl.apply(values);
 					}else if (values.resultValueObject instanceof FreeTextGeneResultsValueObject) {
 						return freeTxtTpl.apply(values);
 					}else if (values.resultValueObject instanceof SessionBoundGeneSetValueObject) {

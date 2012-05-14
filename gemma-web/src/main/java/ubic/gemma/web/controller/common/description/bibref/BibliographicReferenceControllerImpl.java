@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -42,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.Persister;
+import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -70,6 +72,8 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired
+    private SearchService searchService;
 
     /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
@@ -104,10 +108,23 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     }
 
     /* (non-Javadoc)
+     * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#search(ubic.gemma.web.remote.ListBatchCommand)
+     */
+    @Override
+    public JsonReaderResponse<BibliographicReferenceValueObject> search( String query ) {
+        List<BibliographicReferenceValueObject> vos = searchService.searchBibliographicRecords( query );
+        
+        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
+                vos, vos.size());
+        return returnVal;
+    }
+    
+    /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#browse(ubic.gemma.web.remote.ListBatchCommand)
      */
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
+        
         Integer count = this.bibliographicReferenceService.count();
         List<BibliographicReference> records = getBatch( batch );
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
@@ -140,6 +157,43 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 valueObjects, count.intValue() );
         return returnVal;
     }
+
+    
+    @Override
+    public BibliographicReferenceValueObject load( Long id ) {
+        
+        Collection<Long> ids = new ArrayList<Long>();
+        ids.add( id );
+        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = this.loadMultiple( ids );
+        if( returnVal.getRecords() != null && !returnVal.getRecords().isEmpty() ){
+            return returnVal.getRecords().iterator().next();
+        }else{
+            throw new InvalidParameterException( "Error retrieving bibliographic reference for id = "+id );
+        }
+        
+    }
+
+    @Override
+    public BibliographicReferenceValueObject loadFromPubmedID( String pubMedID ){
+        return bibliographicReferenceService.findVOByExternalId( pubMedID );
+    }
+    
+    @Override
+    public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
+        
+        Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService.loadMultipleValueObjects( ids );
+
+        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
+                new ArrayList<BibliographicReferenceValueObject>(bibRefs), bibRefs.size() );
+        return returnVal;
+    }
+    
+   /* public JsonReaderResponse<BibliographicReferenceValueObject> browseSearchResults( ListBatchCommand batch, String query){
+
+        Collection<SearchResult> searchResults = (searchService.search( SearchSettings.bibliographicReferenceSearch( query ), false)).get( BibliographicReference.class );
+        Collection<BibliographicReference>
+        
+    }*/ 
 
     /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#delete(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
@@ -182,13 +236,18 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @RequestMapping("/bibRefView.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
+        String gemmaId = request.getParameter( "id" );
 
         // FIXME: allow use of the primary key as well.
 
-        if ( StringUtils.isBlank( pubMedId ) ) {
-            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+        if ( StringUtils.isBlank( pubMedId ) && StringUtils.isBlank( gemmaId ) ) {
+            throw new EntityNotFoundException( "Must provide a gamma database id or a PubMed id" );
         }
 
+        if( !StringUtils.isBlank( gemmaId ) ){
+            return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", gemmaId );
+        }
+        
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
@@ -198,12 +257,14 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             }
         }
 
-        bibRef = bibliographicReferenceService.thaw( bibRef );
+        //bibRef = bibliographicReferenceService.thaw( bibRef );
+        //BibliographicReferenceValueObject bibRefVO = new BibliographicReferenceValueObject( bibRef );
 
         boolean isIncomplete = bibRef.getPublicationDate() == null;
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef )
-                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete );
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", bibRef.getId() )
+                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete )
+                .addObject( "byAccession", Boolean.TRUE ).addObject( "accession", pubMedId);
     }
 
     /* (non-Javadoc)

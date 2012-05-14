@@ -49,6 +49,7 @@ public class SearchSettings {
     private boolean searchArrays = true;
     private boolean searchBibrefs = false;
     private boolean searchGenesByGO = false;
+    private boolean searchGenesByPhenotype = false;
     private boolean searchGeneSets = true;
     private boolean searchExperimentSets = true;
 
@@ -123,6 +124,20 @@ public class SearchSettings {
         s.noSearches();
         s.setSearchGenes( true );
         s.setTaxon( taxon );
+        return s;
+    }
+
+    /**
+     * Convenience method to get pre-configured settings.
+     * 
+     * @param query
+     * @return
+     */
+    public static SearchSettings bibliographicReferenceSearch( String query ) {
+        SearchSettings s = new SearchSettings( query );
+        s.setGeneralSearch( false );
+        s.noSearches();
+        s.setSearchBibrefs( true );
         return s;
     }
 
@@ -276,6 +291,7 @@ public class SearchSettings {
         this.searchBioSequences = false;
         this.searchGenes = false;
         this.searchGenesByGO = false;
+        this.searchGenesByPhenotype = false;
         this.searchExperiments = false;
         this.searchProbes = false;
         this.searchGeneSets = false;
@@ -320,6 +336,14 @@ public class SearchSettings {
 
     public String getTermUri() {
         return termUri;
+    }
+
+    public boolean isSearchGenesByPhenotype() {
+        return searchGenesByPhenotype;
+    }
+
+    public void setSearchGenesByPhenotype( boolean searchGenesByPhenotype ) {
+        this.searchGenesByPhenotype = searchGenesByPhenotype;
     }
 
 }
