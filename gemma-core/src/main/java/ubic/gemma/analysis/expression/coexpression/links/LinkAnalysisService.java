@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -48,5 +49,12 @@ public interface LinkAnalysisService {
      */
     public abstract LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
+        
+    public ExpressionExperiment loadDataForAnalysis (Long eeId, LinkAnalysisConfig linkAnalysisConfig);
+    
+    public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig);
+    
+    public void saveResults (ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig, FilterConfig filterConfig);
+
 
 }

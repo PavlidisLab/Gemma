@@ -41,8 +41,10 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
@@ -142,18 +144,21 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Autowired
     private ExpressionExperimentService eeService;
     @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService = null;
+    private ExpressionDataMatrixService expressionDataMatrixService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
     private Persister persisterHelper;
     @Autowired
-    private Probe2ProbeCoexpressionService ppService = null;
+    private Probe2ProbeCoexpressionService ppService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
+    
+    @Autowired
+    private SessionFactory sessionFactory;
+    
     /*
      * (non-Javadoc)
      * 
@@ -215,7 +220,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                     + " rows" );
         }
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
+        
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+        
         setUpForAnalysis( t, la, dataVectors, datamatrix );
 
         la.analyze();
@@ -228,6 +235,135 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         return la;
 
     }
+    
+    
+    /**
+     * Get data that will be used by analysis. We have to fetch/thaw all parts of EE that will be used later since
+     * analysis part doesn't have an open hibernate session.
+     * 
+     * @param eeId
+     * @param linkAnalysisConfig
+     * @return
+     */
+    @Transactional(readOnly=true)
+    public ExpressionExperiment loadDataForAnalysis (Long eeId, LinkAnalysisConfig linkAnalysisConfig) {
+        ExpressionExperiment ee = eeService.load( eeId );
+        
+        log.info( "Fetching expression data ... " + ee );
+
+        try {
+            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+            processedExpressionDataVectorService.thaw( dataVectors );
+            return ee;            
+        } catch ( Exception e ) {
+
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
+            }
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Perform the analysis. No hibernate session is used. This step is purely computational.
+     * 
+     * @param ee
+     * @param linkAnalysisConfig
+     * @param filterConfig
+     * @return
+     */
+    public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig) {
+        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
+        la.clear();
+
+        try {
+            
+            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+            
+            ExpressionDataDoubleMatrix dataMatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                    dataVectors );
+
+            if ( dataMatrix.rows() == 0 ) {
+                log.info( "No rows left after filtering" );
+                throw new InsufficientProbesException( "No rows left after filtering" );
+            } else if ( dataMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientProbesException( "To few rows (" + dataMatrix.rows()
+                        + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                        + " rows" );
+            }
+
+            dataMatrix = this.normalize( dataMatrix, linkAnalysisConfig );
+
+            /*
+             * Link analysis section.
+             */
+            log.info( "Starting link analysis... " + ee );
+            setUpForAnalysis( ee, la, dataVectors, dataMatrix );
+            addAnalysisObj( ee, dataMatrix, filterConfig, linkAnalysisConfig, la );
+            la.analyze();
+
+            if ( Thread.currentThread().isInterrupted() ) {
+                log.info( "Cancelled." );
+                return null;
+            }
+
+            
+        } catch ( Exception e ) {
+
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
+            }
+            throw new RuntimeException( e );
+        }
+        
+        return la;        
+    }
+    
+    /**
+     * Save the analysis data.
+     * 
+     * @param ee
+     * @param la
+     * @param linkAnalysisConfig
+     * @param filterConfig
+     */
+    public void saveResults (ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig, FilterConfig filterConfig) {
+        try {            
+            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();            
+            Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
+
+            if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+
+                saveLinks( p2v, la );
+                
+                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+
+            } else if ( linkAnalysisConfig.isTextOut() ) {
+                try {
+                    PrintWriter w = new PrintWriter( System.out );
+                    if ( linkAnalysisConfig.getOutputFile() != null ) {
+                        w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
+                    }
+
+                    writeLinks( la, filterConfig, w );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+
+            log.info( "Done with processing of " + ee );
+            
+        } catch ( Exception e ) {
+
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
+            }
+            throw new RuntimeException( e );
+        }        
+        
+    }
+    
 
     /**
      * @param ee
@@ -525,7 +661,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             return;
         }
 
-        // output
+        // Output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
 
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
