@@ -50,7 +50,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 1000 );
                 log.info( "Waiting for Ontology to load" );
-                if ( ++c > 30 ) {
+                if ( ++c > 100 ) {
                     fail( "Ontology load timeout" );
                 }
             }
@@ -72,7 +72,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 1000 );
                 log.info( "Waiting for DiseaseOntology to load" );
-                if ( ++c > 30 ) {
+                if ( ++c > 100 ) {
                     fail( "Ontology load timeout" );
                 }
             }
