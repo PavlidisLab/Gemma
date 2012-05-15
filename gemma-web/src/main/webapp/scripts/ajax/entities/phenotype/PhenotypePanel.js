@@ -25,7 +25,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			var currentPhenotypes = null;
 			var currentGene = null;
 
-			var phenotypeGrid = new Gemma.PhenotypeGridPanel({
+			var phenotypeTabPanel = new Gemma.PhenotypeTabPanel({			
 				region: "west",
 				phenotypeStoreProxy: this.phenotypeStoreProxy,
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,					
@@ -36,10 +36,13 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
         			}
 				}
 			});
-			this.relayEvents(phenotypeGrid, ['phenotypeAssociationChanged']);			
+
+			this.relayEvents(phenotypeTabPanel, ['phenotypeAssociationChanged']);			
 
 	    	var geneGrid = new Gemma.PhenotypeGeneGridPanel({
-				region: "center",
+				region: "north",
+				height: 300,
+				split: true,
 				geneStoreProxy: this.geneStoreProxy,
 				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,
 				listeners: {
@@ -66,26 +69,63 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
 
-			var selectRecordsOnLoad = function(gridPanel, recordIds) {
+			// This method needs to be called whenever phenotype selections change in code.
+			// Because grid panels in phenotypeTabPanel allow more than one selections, 
+			// selectionchange events will not be handled in them due to many events  
+			// being fired e.g. when users select 1 phenotype only and more than one
+			// phenotypes have been previously selected. Thus, selection event should
+			// be fired manually.
+			var fireEventOnPhenotypeSelectionChange = function(phenotypeGrid) {
+				var selectedPhenotypes;
+				var selectionModel = phenotypeGrid.getSelectionModel();
+				if (selectionModel.hasSelection()) {
+					selectedPhenotypes = [];
+					
+					var selections = selectionModel.getSelections();
+				    for (var i = 0; i < selections.length; i++) {
+						selectedPhenotypes.push(Ext.apply({}, selections[i].data));
+					}
+				} else {
+					selectedPhenotypes = null;
+				}
+				phenotypeGrid.fireEvent('phenotypeSelectionChange', selectedPhenotypes);
+			}
+
+			var selectRecordsOnLoad = function(gridPanel, recordIds, callback) {
 				gridPanel.getStore().on('load', 
 					function(store, records, options) {
 						if (recordIds.length > 0) {				
-							var selModel = gridPanel.getSelectionModel();				
+							var selModel = gridPanel.getSelectionModel();
 			            	selModel.clearSelections();
 		
-							var firstRowIndex = store.indexOfId(recordIds[0]);
-			            	selModel.selectRow(firstRowIndex, false); // false to not keep existing selections
-					        for (var i = 1; i < recordIds.length; i++) {
-					            selModel.selectRow(store.indexOfId(recordIds[i]), true); // true to keep existing selections
+							var firstRowIndex;
+			            	
+					        for (var i = 0; i < recordIds.length; i++) {
+					        	var currRowIndex = store.indexOfId(recordIds[i]);
+					        	if (i === 0) {
+					        		firstRowIndex = currRowIndex; 
+					        	}
+					        	// Note that we may not be able to find the record after load.
+					        	if (currRowIndex >= 0) {
+					            	selModel.selectRow(currRowIndex, true); // true to keep existing selections
+									gridPanel.getView().focusRow(currRowIndex);
+					        	}
 			        		}
-			        		gridPanel.getView().focusRow(firstRowIndex); // Make sure the first selected record is viewable.
+							if (firstRowIndex >= 0) {
+			        			gridPanel.getView().focusRow(firstRowIndex); // Make sure the first selected record is viewable.
+							}
+			            	
+							if (callback) {
+								callback.call(this);
+							}
 						}				
 					},
 					this, // scope
 					{
 						single: true,
 						delay: 500  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
-					})};		
+					})
+			};		
 			
 			var reloadWholePanel = function() {
 				if (currentPhenotypes != null && currentPhenotypes.length > 0) {
@@ -93,16 +133,20 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < currentPhenotypes.length; i++) {
 						currentPhenotypeUrlIds.push(currentPhenotypes[i].urlId);				
 					}
-					selectRecordsOnLoad(phenotypeGrid, currentPhenotypeUrlIds);
-		
+					var phenotypeActiveTabGrid = phenotypeTabPanel.getActiveTab();
+
+					selectRecordsOnLoad(phenotypeActiveTabGrid, currentPhenotypeUrlIds,
+						function() {
+							fireEventOnPhenotypeSelectionChange(phenotypeActiveTabGrid);
+						});
+
 					if (currentGene != null) {
 						// geneGrid's store will be loaded after phenotypeGrid's original rows are selected later on.
 						selectRecordsOnLoad(geneGrid, [ currentGene.id ]);
 					}
 				}
 		
-				var phenotypeGridStore = phenotypeGrid.getStore();
-				phenotypeGridStore.reload(phenotypeGridStore.lastOptions);
+				phenotypeTabPanel.reloadActiveTab();				
 			};
 
 			if (!this.createPhenotypeAssociationHandler) {
@@ -112,6 +156,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 
 			Ext.apply(this, {
 	        	items: [
+			    	phenotypeTabPanel,
 		        	{
 						xtype: 'panel',
 					    height: 200,
@@ -120,13 +165,12 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					        forceFit: true
 					    },
 					    items: [
-					    	phenotypeGrid,
-					        geneGrid
+					        geneGrid,
+			            	evidenceGrid
 					    ],
-						region: 'north',
+						region: 'center',					    
 						split: true
-		        	},
-		            evidenceGrid
+		        	}
 		        ],
 				listeners: {
 					'phenotypeAssociationChanged': reloadWholePanel,
@@ -135,8 +179,13 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			});
 			
 			if (Ext.get("phenotypeUrlId") != null && Ext.get("phenotypeUrlId").getValue() != "") {
-				selectRecordsOnLoad(phenotypeGrid, [ Ext.get("phenotypeUrlId").getValue() ]);
+				var phenotypeActiveTabGrid = phenotypeTabPanel.getActiveTab();
 				
+				selectRecordsOnLoad(phenotypeActiveTabGrid, [ Ext.get("phenotypeUrlId").getValue() ],
+					function() {
+						fireEventOnPhenotypeSelectionChange(phenotypeActiveTabGrid);
+					});
+
 				if (Ext.get("geneId") != null && Ext.get("geneId").getValue() != "") {
 					selectRecordsOnLoad(geneGrid, [ parseInt(Ext.get("geneId").getValue()) ]);
 				}

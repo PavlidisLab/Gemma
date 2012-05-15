@@ -33,7 +33,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-line.gif) repeat-x;
+	background: url(../images/default/tree/elbow-line.gif) repeat-x;
 }
 
 .ux-maximgb-tg-elbow
@@ -42,7 +42,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow.gif) no-repeat;
+	background: url(../images/default/tree/elbow.gif) no-repeat;
 }
 
 .ux-maximgb-tg-elbow-end
@@ -51,7 +51,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-end.gif) no-repeat;
+	background: url(../images/default/tree/elbow-end.gif) no-repeat;
 }
 
 .ux-maximgb-tg-elbow-active
@@ -65,7 +65,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-minus.gif) no-repeat;
+	background: url(../images/default/tree/elbow-minus.gif) no-repeat;
 }
 
 .ux-maximgb-tg-elbow-end-minus
@@ -74,7 +74,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-end-minus.gif) no-repeat;
+	background: url(../images/default/tree/elbow-end-minus.gif) no-repeat;
 }
 
 .ux-maximgb-tg-nl-minus
@@ -83,7 +83,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px;
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-minus-nl.gif) no-repeat;
+	background: url(../images/default/tree/elbow-minus-nl.gif) no-repeat;
 }
 
 .ux-maximgb-tg-elbow-plus
@@ -92,7 +92,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px; 
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-plus.gif) no-repeat;
+	background: url(../images/default/tree/elbow-plus.gif) no-repeat;
 }
 
 .ux-maximgb-tg-elbow-end-plus
@@ -101,7 +101,7 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px;
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-end-plus.gif) no-repeat;
+	background: url(../images/default/tree/elbow-end-plus.gif) no-repeat;
 }
 
 .ux-maximgb-tg-nl-plus
@@ -110,5 +110,5 @@ div.ux-maximgb-tg-mastercell-wrap
 	height: 18px;
 	width: 16px;
 	overflow: hidden;
-	background: url(../images/elbow-plus-nl.gif) no-repeat;
+	background: url(../images/default/tree/elbow-plus-nl.gif) no-repeat;
 }

@@ -639,14 +639,19 @@ Ext.ux.maximgb.tg.AbstractTreeStore = Ext.extend(Ext.data.Store,
             }
             // If node isn't loaded yet then expanding after load.
             else {
+            	
                 params = {};
                 params[this.paramNames.active_node] = rc.id;
-                this.load({
-                    add : true,
-                    params : params,
-                    callback : this.expandNodeCallback,
-                    scope : this
-                });
+
+// Modified the following code by Frances on 2012-05-09 because it loads the store again and
+// therefore causes many calls to the server to retrieve data.
+//                this.load({
+//                    add : true,
+//                    params : params,
+//                    callback : this.expandNodeCallback,
+//                    scope : this
+//                });
+				this.expandNodeCallback.call(this, null, { params: params }, true);                
             }
         }
     },

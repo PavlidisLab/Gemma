@@ -7,19 +7,15 @@
 Ext.namespace('Gemma');
 
 Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
-	title: "Phenotypes",
+	storeAutoLoad: false,
+	title: "Phenotypes List",
     autoScroll: true,
     stripeRows: true,
-	width: 350,
-	height: 300,			
-	split: true,
 	loadMask: true,
     viewConfig: {
         forceFit: true
     },
     initComponent: function() {
-		var currentSelections = [];		
-    
 		var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
 			dataIndex: 'isChecked',
 			singleSelect: false,
@@ -69,83 +65,24 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 
-		var generateGeneCountHTML = function(width, geneCountText) {
-			return '<span style="float: left; text-align: right; width: ' + width + 'px;">' + geneCountText + '</span>'; 
-		}
-		
+		var commonConfig = new Gemma.PhenotypeGridPanelCommonConfig();
+
 		Ext.apply(this, {
 			store: new Ext.data.Store({
-				proxy: this.phenotypeStoreProxy == null ?
-					new Ext.data.DWRProxy(PhenotypeController.loadAllPhenotypes) :
-					this.phenotypeStoreProxy,
-				reader: new Ext.data.JsonReader({
-					root: 'records', // required.
-					successProperty: 'success', // same as default.
-					messageProperty: 'message', // optional
-					totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
-					idProperty: "urlId",
-					fields: [
-						'urlId',
-						'value',
-						'valueUri',
-						'publicGeneCount',
-						'privateGeneCount',
-						{ name: 'isChecked', sortDir: 'DESC' }
-					]
-				}),
-				sortInfo: {	field: 'value', direction: 'ASC' },
-				autoLoad: true
+				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
+				reader: commonConfig.getStoreReader(),					
+				autoLoad: this.storeAutoLoad,
+				sortInfo: {	field: 'value', direction: 'ASC' }
 			}),
 			columns:[
 				checkboxSelectionModel,
-				{
-					header: "Phenotype",
-					dataIndex: 'value',
-					width: 285,
-					renderToolTip: true,
-					sortable: true
-				},{
-					header: "Gene Count",
-					dataIndex: 'publicGeneCount',
-					align: "right",
-					width: 135,
-		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						return generateGeneCountHTML(50, record.data.publicGeneCount) + ' ' +
-							   generateGeneCountHTML(26, (record.data.privateGeneCount > 0 ? '(' + record.data.privateGeneCount + ')' : '&nbsp;'));
-		            },
-					sortable: true
-			    }
+				commonConfig.getPhenotypeValueColumn({ sortable: true }),
+				commonConfig.getGeneCountColumn({ sortable: true })
 			],
 		    sm: checkboxSelectionModel,
 		    listeners: {
-		    	// cellclick instead of selection model's selectionchange event handler is implemented 
-		    	// for letting listeners know that phenotype selections have been changed
-		    	// because selectionchange events are fired even when rows are deselected in code. 
-				cellclick: function(thisGrid, rowIndex, columnIndex, event) {
-					var newSelections = this.getSelectionModel().getSelections();
-						
-					var hasSameSelections = (currentSelections.length === newSelections.length);
-						
-					if (hasSameSelections) {
-						for (var i = 0; hasSameSelections && i < currentSelections.length; i++) {
-							hasSameSelections = (currentSelections[i].get('urlId') === newSelections[i].get('urlId'));
-						}
-					}
-						
-					if (!hasSameSelections) {
-						var selectedPhenotypes = [];
-						
-						currentSelections = newSelections;
-					    for (var i = 0; i < currentSelections.length; i++) {
-					        selectedPhenotypes.push({
-								urlId: currentSelections[i].get('urlId'),
-					        	value: currentSelections[i].get('value'),
-					        	valueUri: currentSelections[i].get('valueUri')
-					        });
-						}
-						this.fireEvent('phenotypeSelectionChange', selectedPhenotypes);						
-					}
-				},
+				hide: commonConfig.getHideHandler,
+				cellclick: commonConfig.getCellClickHandler,
 		    	headerclick: function(gridPanel, columnIndex, event) {
 		    		if (columnIndex == 0) {
 		    			this.getStore().sort('isChecked');
@@ -153,35 +90,32 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    	}
 		    },
 			tbar: [
-				phenotypeSearchField,		
-				{
-					handler: this.createPhenotypeAssociationHandler ?
-						this.createPhenotypeAssociationHandler :
-						function() {
-							var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-
-							this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-							phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
-								{
-									gene: this.currentGene,
-									phenotypes: this.currentPhenotypes
-								});
-						}
-					,
-					scope: this,
-					icon: "/Gemma/images/icons/add.png",
-					tooltip: "Add new phenotype association"
-				}
+				phenotypeSearchField,
+				commonConfig.getAddNewPhenotypeAssociationButton(this)
 			]
 		});
 
 		this.superclass().initComponent.call(this);
 		
-		this.getStore().on('load', 
+		this.getStore().on('load',
 			function(store, records, options) {
+				commonConfig.resetSelectionConfig();	
+
 				if (phenotypeSearchField.getValue() !== '') {
 					phenotypeSearchField.applyCurrentFilter();
 				}
+				
+				var recordsToBeRemoved = [];
+				for (var i = 0; i < records.length; i++) {
+					if (!records[i].data.dbPhenotype) {					
+						// Don't clone records to be removed. Otherwise, they will not be removed.	
+						recordsToBeRemoved.push(records[i]);
+					}
+				}
+				store.suspendEvents();
+				store.remove(recordsToBeRemoved);
+				store.resumeEvents();
+				store.fireEvent('datachanged', store);
 			},
 			this // scope
 		);
