@@ -27,6 +27,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
@@ -44,7 +45,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      * Classes examined when getting the "parents" of characteristics.
      */
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
-            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class };
+            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class, PhenotypeAssociationImpl.class };
 
     @Override
     protected Characteristic handleCreate( Characteristic c ) throws Exception {

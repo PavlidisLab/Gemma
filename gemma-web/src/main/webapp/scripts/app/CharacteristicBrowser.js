@@ -68,9 +68,10 @@ Ext.onReady(function() {
 		var searchEEs = eeCheckBox.getValue();
 		var searchBMs = bmCheckBox.getValue();
 		var searchFVs = fvCheckBox.getValue();
+		var searchPAs = paCheckBox.getValue();
 		var searchNos = noCheckBox.getValue();
 		var searchFactorsValueValues = fvvCheckBox.getValue();
-		browsergrid.refresh([query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues]);
+		browsergrid.refresh([query, searchNos, searchEEs, searchBMs, searchFVs, searchPAs, searchFactorsValueValues]);
 	};
 
 	var searchButton = new Ext.Toolbar.Button({
@@ -297,6 +298,13 @@ Ext.onReady(function() {
 				name : 'searchFVs',
 				width : 'auto'
 			});
+	
+	var paCheckBox = new Ext.form.Checkbox({
+		boxLabel : 'Phenotype Associations',
+		checked : true,
+		name : 'searchPAs',
+		width : 'auto'
+	});
 
 	var fvvCheckBox = new Ext.form.Checkbox({
 				boxLabel : 'Uncharacterized factor Values',
@@ -324,6 +332,8 @@ Ext.onReady(function() {
 	secondToolbar.addField(bmCheckBox);
 	secondToolbar.addSpacer();
 	secondToolbar.addField(fvCheckBox);
+	secondToolbar.addSpacer();
+	secondToolbar.addField(paCheckBox);
 	secondToolbar.addSpacer();
 	secondToolbar.addField(noCheckBox);
 	secondToolbar.addSpacer();

@@ -34,6 +34,7 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -86,7 +87,7 @@ public class CharacteristicBrowserController extends AbstractTaskService {
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
-        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true );
+        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true );
     }
 
     /**
@@ -99,7 +100,7 @@ public class CharacteristicBrowserController extends AbstractTaskService {
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String valuePrefix, boolean searchNos,
-            boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs ) {
+            boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs ) {
 
         List<AnnotationValueObject> results = new ArrayList<AnnotationValueObject>();
         if ( StringUtils.isBlank( valuePrefix ) ) {
@@ -113,7 +114,8 @@ public class CharacteristicBrowserController extends AbstractTaskService {
             if ( ( searchEEs && parent instanceof ExpressionExperiment )
                     || ( searchBMs && parent instanceof BioMaterial )
                     || ( searchFVs && ( parent instanceof FactorValue || parent instanceof ExperimentalFactor ) )
-                    || ( searchNos && parent == null ) ) {
+                    || ( searchNos && parent == null ) 
+                    || ( searchPAs && parent instanceof PhenotypeAssociation)) {
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
@@ -313,6 +315,11 @@ public class CharacteristicBrowserController extends AbstractTaskService {
             avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
             avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
                     .getParentOfParentName() ) );
+        } else if (parent instanceof PhenotypeAssociation){
+            PhenotypeAssociation pa = (PhenotypeAssociation) parent;
+            avo.setParentLink("PhenotypeAssociation");
+            avo.setParentDescription( pa.getId().toString() );
+            
         }
     }
 

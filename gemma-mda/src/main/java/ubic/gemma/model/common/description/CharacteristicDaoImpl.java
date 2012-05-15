@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 
 /**
@@ -169,6 +170,9 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
         else if ( parentClass == Gene2GOAssociationImpl.class ) field = "ontologyEntry";
+        else if ( parentClass == PhenotypeAssociationImpl.class){
+            field = "phenotypes";            
+        }
 
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
                 + "inner join parent." + field + " as char " + "where char in (:chars)";

@@ -163,9 +163,9 @@ CharacteristicBrowserController.findCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
 			'findCharacteristics', p0, callback);
 }
-CharacteristicBrowserController.findCharacteristicsCustom = function(p0, p1, p2, p3, p4, p5, callback) {
+CharacteristicBrowserController.findCharacteristicsCustom = function(p0, p1, p2, p3, p4, p5, p6, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
-			'findCharacteristicsCustom', p0, p1, p2, p3, p4, p5, callback);
+			'findCharacteristicsCustom', p0, p1, p2, p3, p4, p5, p6, callback);
 }
 CharacteristicBrowserController.removeCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
