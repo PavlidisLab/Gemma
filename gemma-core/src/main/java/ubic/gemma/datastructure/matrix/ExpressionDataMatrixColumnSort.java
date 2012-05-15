@@ -67,10 +67,16 @@ public class ExpressionDataMatrixColumnSort {
         controlGroupTerms.add( "control_group" );
         controlGroupTerms.add( "wild_type" );
         controlGroupTerms.add( "wild type" );
+        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
+                                                                                             // saline.
         controlGroupTerms.add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
-
         controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
-                .toLowerCase() );
+                .toLowerCase() ); // control_group, old.
+        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201"
+                .toLowerCase() ); // control_group,
+        // new
+        // version.
+
     }
 
     /**
