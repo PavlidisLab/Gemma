@@ -378,16 +378,16 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
         StopWatch timer = new StopWatch();
         timer.start();
+        LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
         for ( ExpressionExperiment ee : layouts.keySet() ) {
 
             final LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
-            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
-
+            
             if ( layout == null || layout.size() == 0 ) {
                 log.warn( "Null or empty layout for ee: " + ee ); // does this happen?
                 continue;
             }
-
+            sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
             ee = expressionExperimentService.thawLiter( ee );
 
             // don't sort by "batch" factor // FIXME we might want to make this an option.
@@ -395,7 +395,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
                 if ( !ExperimentalDesignUtils.isBatch( ef ) ) filteredFactors.add( ef );
             }
-            if ( filteredFactors.isEmpty() ) continue; // batch was the only factor.
+            if ( filteredFactors.isEmpty() ){
+                if(sortedLayouts.containsKey( ee )){
+                    log.warn( "sortedLayouts already contained ee with ID = "+ee.getId()+". Value was map with # keys = "+sortedLayouts.get( ee ).keySet().size() );
+                }
+                sortedLayouts.put( ee, sortedLayout );
+                continue; // batch was the only factor.
+            } 
 
             List<BioMaterial> bmList = new ArrayList<BioMaterial>();
             Map<BioMaterial, BioAssay> BMtoBA = new HashMap<BioMaterial, BioAssay>();
@@ -471,13 +477,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     /**
      * Does a lot of thawing.
      * 
-     * @param dedvs
+     * @param dvvos
      */
-    private void prepare( Collection<DoubleVectorValueObject> dedvs ) {
+    private void prepare( Collection<DoubleVectorValueObject> dvvos ) {
 
-        if ( dedvs == null ) return;
+        if ( dvvos == null ) return;
 
-        for ( DoubleVectorValueObject vec : dedvs ) {
+        for ( DoubleVectorValueObject vec : dvvos ) {
             if ( vec == null ) {
                 log.debug( "DoubleVectorValueObject is null" );
                 continue;
