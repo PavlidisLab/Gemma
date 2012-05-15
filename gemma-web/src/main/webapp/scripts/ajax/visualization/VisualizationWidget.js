@@ -238,59 +238,62 @@ Gemma.prepareProfiles = function(data) {
  */
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
-			graphConfig : {
-				lines : {
-					lineWidth : 1
-				},
-				bars : {
-					fill : false
-				},
-				xaxis : {
-					noTicks : 0
-				},
-				yaxis : {
-					noTicks : 0
-				},
-				grid : {
-					color : "white"
-				},
-				shadowSize : 0,
-				legend : {
-					show : false
-				},
-				forceFit : true
-			},
+	cmpID: '123', // should be overwritten upon instantiation!
+	graphConfig : {
+		lines : {
+			lineWidth : 1
+		},
+		bars : {
+			fill : false
+		},
+		xaxis : {
+			noTicks : 0
+		},
+		yaxis : {
+			noTicks : 0
+		},
+		grid : {
+			color : "white"
+		},
+		shadowSize : 0,
+		legend : {
+			show : false
+		},
+		forceFit : true
+	},
 
-			overwrite : function(el, values, ret) {
+	overwrite : function(el, values, ret) {
 
-				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
+		Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
 
-				for (var i = 0; i < values.length; i++) {
-					var record = values[i];
-					var shortName = record.eevo.shortName;
-					Ext.DomHelper.append(shortName + '_vizwrap', {
-								tag : 'div',
-								id : shortName + "_vis",
-								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
-										+ 'px;'
-							});
+		for (var i = 0; i < values.length; i++) {
+			var randomnumber=Math.floor(Math.random()*101);
+			var record = values[i];
+			var shortName = record.eevo.shortName;
+			Ext.DomHelper.append(shortName + '_vizwrap_'+this.cmpID, {
+				tag : 'div',
+				id : shortName + "_vis"+randomnumber,
+				style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
+				+ 'px;'
+			});
 
-					/*
-					 * Note: passing in 'newDiv' works in FF but not in IE.
-					 * (flotr, anyway)
-					 */
-					LinePlot.draw($(shortName + "_vis"), record.profiles, this.graphConfig, null, record.factorValuesToNames); // no
-																								// sample
-																								// names
-				}
-			}
-		});
+			/*
+			 * Note: passing in 'newDiv' works in FF but not in IE.
+			 * (flotr, anyway)
+			 */
+			LinePlot.draw($(shortName + "_vis"+randomnumber), record.profiles, this.graphConfig, null, record.factorValuesToNames); // no
+			// sample
+			// names
+		}
+	}
+});
 
 /**
  * Used for thumbnails.
  */
 Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
+			cmpID: '123', // should be overwritten upon instantiation!
 			graphConfig : {
 				label : false, // shows labels at end of row, no for thumbnails
 				forceFit : true,
@@ -303,18 +306,19 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 				Gemma.HeatmapTemplate.superclass.overwrite.call(this, el, values, ret);
 
 				for (var i = 0; i < values.length; i++) {
+					var randomnumber=Math.floor(Math.random()*101);
 					var record = values[i];
 					var shortName = record.eevo.shortName;
-					Ext.DomHelper.append(shortName + '_vizwrap', {
+					Ext.DomHelper.append(shortName + '_vizwrap_'+this.cmpID, {
 								tag : 'div',
-								id : shortName + "_vis",
+								id : shortName + "_vis_"+randomnumber,
 								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
 										+ 'px;'
 							});
 					/*
 					 * Note: 'newDiv' works in FF but not in IE.
 					 */
-					Heatmap.draw($(shortName + "_vis"), record.profiles, this.graphConfig, null, record.factorValuesToNames, null); // no
+					Heatmap.draw($(shortName + "_vis_"+randomnumber), record.profiles, this.graphConfig, null, record.factorValuesToNames, null); // no
 																							// sample
 																							// names
 				}
@@ -330,7 +334,10 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
  *            havePvalues
  * @return {}
  */
-Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
+Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth, cmpID) {
+	if(cmpID == undefined || cmpID == null){
+		cmpID = '';
+	}
 	var pvalueString = "";
 	if (havePvalues) {
 		// yes, minPvalue, from EEVO pValue. The best pvalue of any of the
@@ -339,17 +346,21 @@ Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
 	}
 
 	if (heatmap) {
-		return new Gemma.HeatmapTemplate(
+		var tmpl = new Gemma.HeatmapTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap_'+cmpID+'" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
 						+ pvalueString + '</i></div>', '</tpl></tpl>');
+		tmpl.cmpID = cmpID;
+		return tmpl; 
 	} else {
-		return new Gemma.ProfileTemplate(
+		var tmpl = new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap_'+cmpID+'" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
 						+ pvalueString + '</i></div>', '</tpl></tpl>', {
 					smooth : smooth
 				});
+		tmpl.cmpID = cmpID;
+		return tmpl; 
 	}
 
 };
@@ -749,7 +760,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 
 		// force a refresh of the thumbnails.
 		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-				false);
+				false, Ext.id());
 		this.dv.setTemplate(template);
 
 		// force a refresh of the zoom.
@@ -774,7 +785,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 
 		// force a refresh of the thumbnails.
 		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-				false);
+				false,  Ext.id());
 		this.dv.setTemplate(template);
 
 		// force a refresh of the zoom.
@@ -829,7 +840,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 
 	updateTemplate : function() {
 		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
-				false);
+				false, this.id);
 		this.dv.setTemplate(template); // causes update of thumbnails.
 	},
 
@@ -901,7 +912,8 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 
 		// update default config with other configs
 		// I would remove tpl from default configs altogether, but it seems required 
-		this.tpl = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues);
+
+		this.tpl = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, false, this.id);
 
 		this.zoomLegendId = 'zoomLegend-' + Ext.id();
 
