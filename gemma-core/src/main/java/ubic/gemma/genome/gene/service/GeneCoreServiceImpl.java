@@ -80,9 +80,11 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         }
         details.setAliases( aliasStrs );
 
-        details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
-        details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
-
+        if( gene.getMultifunctionality() != null ){
+            details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
+            details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
+        }
+        
         Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
