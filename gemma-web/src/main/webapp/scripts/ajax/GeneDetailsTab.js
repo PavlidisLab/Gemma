@@ -8,7 +8,6 @@ Ext.namespace('Gemma');
  */
 Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 
-	height: 800,
 	padding:10,
 	defaults:{
 		border:false,
