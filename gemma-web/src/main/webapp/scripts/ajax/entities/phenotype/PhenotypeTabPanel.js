@@ -10,7 +10,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 	phenotypeStoreProxy: null,
 	createPhenotypeAssociationHandler: null,
 	activeTab: 0,
-	width: 300,
+	width: 330,
 	split: true,
     initComponent: function() {
     	var syncDestinationStoresOnSourceStoreLoad = function(sourceStore, destinationStores) {

@@ -94,7 +94,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 				return Ext.apply({
 					header: "Phenotype",
 					dataIndex: 'value',
-					width: 185,
+					width: 215,
 				    renderer : function(value, metaData, record, rowIndex, colIndex, store){
 					    metaData.attr = 'ext:qtip="' + value + '<br />' + record.data.valueUri + '"';
 				        return value;
