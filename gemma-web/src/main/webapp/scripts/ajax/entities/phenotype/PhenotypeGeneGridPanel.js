@@ -157,7 +157,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							if (haveSameParams) {
 								currentStoreData = [];
 								for (var i = 0; i < records.length; i++) {
-									currentStoreData.push(Object.clone(records[i].data));
+									currentStoreData.push(Ext.apply({}, records[i].data));
 								}
 							} else {
 								store.loadData(currentStoreData);
@@ -237,7 +237,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						selectedPhenotypeTooltip += currPhenotypeValue;
 						
 						if (i < currentPhenotypes.length - 1) {
-							selectedPhenotypeHeader += '" + "';
+							selectedPhenotypeHeader += '" AND "';
 							selectedPhenotypeTooltip += '<br />&nbsp;&nbsp;&nbsp;';
 						} else {
 							selectedPhenotypeHeader += '"';
