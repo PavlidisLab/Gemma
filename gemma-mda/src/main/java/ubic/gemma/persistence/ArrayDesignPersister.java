@@ -120,7 +120,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         arrayDesign.getCompositeSequences().add( persistedDE );
 
         /*
-         * FIXME This is VERY slow if we have to add a lot of designelements to the array.
+         * FIXME This is VERY slow if we have to add a lot of DesignElements to the array.
          */
         this.arrayDesignDao.update( arrayDesign );
 
@@ -160,7 +160,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     designElementSequenceCache.put( seq.getName(), element );
                 }
             }
-            if ( ++count % 20000 == 0 ) {
+            if ( ++count % 1000 == 0 ) {
                 log.info( "Cached " + count + " probes (" + timer.getTime() + "ms)" );
             }
             if ( count % 100 == 0 ) {
