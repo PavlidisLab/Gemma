@@ -124,7 +124,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 			 */
 			// TODO this is a hacky tmp check for whether this page is an error page; fix it!!
 			var myReloadPageOnLogin = Ext.getDom('reloadOnLogin');
-			if(myReloadPageOnLogin && myReloadPageOnLogin.value){
+			if(myReloadPageOnLogin && myReloadPageOnLogin.value === "true"){
 				this.reloadPageOnLogin = true;
 			}
 			if(this.reloadPageOnLogin){
