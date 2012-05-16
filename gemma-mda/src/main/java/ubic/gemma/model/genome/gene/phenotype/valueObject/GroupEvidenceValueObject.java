@@ -26,6 +26,7 @@ public class GroupEvidenceValueObject extends EvidenceValueObject {
         this.literatureEvidences = literatureEvidences;
         LiteratureEvidenceValueObject litEvidenceValueObject = literatureEvidences.iterator().next();
 
+        this.setId( litEvidenceValueObject.getId() );
         this.setClassName( this.getClass().getSimpleName() );
         this.setDescription( litEvidenceValueObject.getDescription() );
         this.setEvidenceCode( litEvidenceValueObject.getEvidenceCode() );
@@ -37,7 +38,7 @@ public class GroupEvidenceValueObject extends EvidenceValueObject {
         this.setRelevance( litEvidenceValueObject.getRelevance() );
     }
 
-	public Collection<LiteratureEvidenceValueObject> getLiteratureEvidences() {
-		return literatureEvidences;
-	}
+    public Collection<LiteratureEvidenceValueObject> getLiteratureEvidences() {
+        return this.literatureEvidences;
+    }
 }
