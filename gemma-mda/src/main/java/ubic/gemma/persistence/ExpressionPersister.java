@@ -346,10 +346,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             if ( timer.getTime() > 5000 ) {
-                log.info( "Filled in " + ( ++count ) + " DesignElementDataVectors" );
+                log.info( "Filled in " + ( count ) + " DesignElementDataVectors (" + timer.getTime()
+                        + "ms since last check)" );
                 timer.reset();
                 timer.start();
             }
+
+            ++count;
 
             if ( Thread.interrupted() ) {
                 log.info( "Cancelled" );
