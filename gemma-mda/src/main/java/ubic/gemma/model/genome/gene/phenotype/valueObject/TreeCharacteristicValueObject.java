@@ -117,15 +117,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return output;
     }
 
-    @Override
-    public int compareTo( CharacteristicValueObject c ) {
-
-        if ( c instanceof TreeCharacteristicValueObject ) {
-            return this.getValue().compareToIgnoreCase( c.getValue() );
-        }
-        return super.compareTo( c );
-    }
-
     /** return all valueUri of children */
     public Collection<String> getAllChildrenUri() {
 
