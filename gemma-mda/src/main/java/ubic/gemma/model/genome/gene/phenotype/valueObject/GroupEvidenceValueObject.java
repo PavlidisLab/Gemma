@@ -20,14 +20,13 @@ import java.util.HashSet;
 public class GroupEvidenceValueObject extends EvidenceValueObject {
 
     Collection<LiteratureEvidenceValueObject> literatureEvidences = new HashSet<LiteratureEvidenceValueObject>();
-    Collection<String> pubmedIds = new HashSet<String>();
 
     public GroupEvidenceValueObject( Collection<LiteratureEvidenceValueObject> literatureEvidences ) {
         super();
         this.literatureEvidences = literatureEvidences;
         LiteratureEvidenceValueObject litEvidenceValueObject = literatureEvidences.iterator().next();
 
-        this.setClassName( this.getClass().toString() );
+        this.setClassName( this.getClass().getSimpleName() );
         this.setDescription( litEvidenceValueObject.getDescription() );
         this.setEvidenceCode( litEvidenceValueObject.getEvidenceCode() );
         this.setEvidenceSecurityValueObject( litEvidenceValueObject.getEvidenceSecurityValueObject() );
@@ -36,10 +35,9 @@ public class GroupEvidenceValueObject extends EvidenceValueObject {
         this.setIsNegativeEvidence( litEvidenceValueObject.getIsNegativeEvidence() );
         this.setPhenotypes( litEvidenceValueObject.getPhenotypes() );
         this.setRelevance( litEvidenceValueObject.getRelevance() );
-
-        for ( LiteratureEvidenceValueObject evidence : literatureEvidences ) {
-            this.pubmedIds.add( evidence.getCitationValueObject().getPubmedAccession() );
-        }
     }
 
+	public Collection<LiteratureEvidenceValueObject> getLiteratureEvidences() {
+		return literatureEvidences;
+	}
 }
