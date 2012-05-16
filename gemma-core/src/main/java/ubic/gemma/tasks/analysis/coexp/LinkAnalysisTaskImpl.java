@@ -21,9 +21,11 @@ package ubic.gemma.tasks.analysis.coexp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysis;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author keshav
@@ -38,7 +40,10 @@ public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
     @TaskMethod
     public TaskResult execute( LinkAnalysisTaskCommand command ) {
         
-        linkAnalysisService.process( command.getExpressionExperiment().getId(), command.getFilterConfig(), command.getLinkAnalysisConfig() );
+        ExpressionExperiment ee = linkAnalysisService.loadDataForAnalysis( command.getExpressionExperiment().getId() );
+        LinkAnalysis la = linkAnalysisService.doAnalysis( ee, command.getLinkAnalysisConfig(), command.getFilterConfig() );
+        linkAnalysisService.saveResults( ee, la, command.getLinkAnalysisConfig(), command.getFilterConfig() );
+        
         TaskResult result = new TaskResult( command, null );
         return result;
 

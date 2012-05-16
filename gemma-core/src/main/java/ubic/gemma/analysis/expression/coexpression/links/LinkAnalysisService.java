@@ -50,7 +50,7 @@ public interface LinkAnalysisService {
     public abstract LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
         
-    public ExpressionExperiment loadDataForAnalysis (Long eeId, LinkAnalysisConfig linkAnalysisConfig);
+    public ExpressionExperiment loadDataForAnalysis (Long eeId);
     
     public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig);
     

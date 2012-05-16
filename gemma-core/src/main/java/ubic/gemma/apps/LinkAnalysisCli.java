@@ -32,6 +32,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysis;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
@@ -492,7 +493,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        ee = eeService.thawLite( ee );
+        ee = eeService.thaw( ee );
 
         /*
          * If we're not using the database, always run it.
@@ -512,7 +513,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         .setOutputFile( new File( ee.getShortName().replaceAll( "\\s", "_" ) + "-links.txt" ) );
             }
 
-            linkAnalysisService.process( ee.getId(), filterConfig, linkAnalysisConfig );
+            LinkAnalysis la = linkAnalysisService.doAnalysis( ee, linkAnalysisConfig, filterConfig );
+            linkAnalysisService.saveResults( ee, la, linkAnalysisConfig, filterConfig );
+            
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );

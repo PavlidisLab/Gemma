@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -246,23 +245,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @return
      */
     @Transactional(readOnly=true)
-    public ExpressionExperiment loadDataForAnalysis (Long eeId, LinkAnalysisConfig linkAnalysisConfig) {
+    public ExpressionExperiment loadDataForAnalysis (Long eeId) {
         ExpressionExperiment ee = eeService.load( eeId );
-        
+
         log.info( "Fetching expression data ... " + ee );
 
-        try {
-            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-            processedExpressionDataVectorService.thaw( dataVectors );
-            return ee;            
-        } catch ( Exception e ) {
-
-            if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
-            }
-            throw new RuntimeException( e );
-        }
-
+        Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+        processedExpressionDataVectorService.thaw( dataVectors );
+        return ee;            
     }
 
     /**

@@ -78,7 +78,29 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             assertNotNull( cp.getNodeDegreeRank() );
             assertNotNull( cp.getProbe() );
         }
-
     }
+    
+    @Test
+    public void testLoadAnalyzeSave() {
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        linkAnalysisConfig.setCdfCut( 0.1 );
+        linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
+        linkAnalysisConfig.setProbeDegreeThreshold( 25 );
+        
+        ExpressionExperiment eeTemp = linkAnalysisService.loadDataForAnalysis( ee.getId() );
+        LinkAnalysis la = linkAnalysisService.doAnalysis( eeTemp, linkAnalysisConfig, filterConfig );
+        linkAnalysisService.saveResults( eeTemp, la, linkAnalysisConfig, filterConfig );
+        
+        Collection<CoexpressionProbe> probesUsed = la.getAnalysisObj().getProbesUsed();
+        assertEquals( 132, probesUsed.size() );
+        
+        for ( CoexpressionProbe cp : probesUsed ) {
+            assertNotNull( cp.getNodeDegree() );
+            assertNotNull( cp.getNodeDegreeRank() );
+            assertNotNull( cp.getProbe() );
+        }
+    }
+    
 
 }
