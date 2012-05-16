@@ -27,8 +27,10 @@ import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see BioMaterial
+ * @version $Id$
  */
 public interface BioMaterialDao extends BaseDao<BioMaterial> {
+
     /**
      * 
      */
@@ -37,7 +39,7 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     /**
      * 
@@ -88,6 +90,10 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      */
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
+    /**
+     * @param experiment
+     * @return
+     */
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
 }

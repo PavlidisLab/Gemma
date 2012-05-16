@@ -100,8 +100,10 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             if ( log.isDebugEnabled() ) log.debug( "Found existing bioMaterial: " + newBioMaterial );
             return newBioMaterial;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new bioMaterial: " + bioMaterial.getName() );
-        return create( bioMaterial );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new bioMaterial: " + bioMaterial );
+        newBioMaterial = create( bioMaterial );
+        log.info( "Done with 'create'" );
+        return newBioMaterial;
     }
 
     /*

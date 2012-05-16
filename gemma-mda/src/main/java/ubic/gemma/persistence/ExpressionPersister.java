@@ -231,7 +231,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
 
         arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign );
-        log.info( "array design done" );
+        log.debug( "array design done" );
         assert arrayDesign.getId() != null;
         bioAssay.setArrayDesignUsed( arrayDesign );
         assert bioAssay.getArrayDesignUsed().getId() != null;
@@ -246,30 +246,30 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-        if ( hadFactors ) log.info( "factor values done" );
+        if ( hadFactors ) log.debug( "factor values done" );
 
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
         if ( bioAssay.getAccession() != null ) {
             bioAssay.getAccession().setExternalDatabase(
                     persistExternalDatabase( bioAssay.getAccession().getExternalDatabase() ) );
-            log.info( "external database done" );
+            log.debug( "external database done" );
         }
 
         // BioMaterials
         persistCollectionElements( bioAssay.getSamplesUsed() );
 
-        log.info( "biomaterials done" );
+        log.debug( "biomaterials done" );
 
         if ( bioAssay.getRawDataFile() != null ) {
             bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile() ) );
-            log.info( "raw data file done" );
+            log.debug( "raw data file done" );
         }
 
         for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
             file = persistLocalFile( file );
         }
 
-        log.info( "Done with " + bioAssay );
+        log.debug( "Done with " + bioAssay );
 
     }
 
@@ -411,7 +411,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( assay ) ) {
             return assay;
         }
-        log.info( "Persisting " + assay );
+        log.debug( "Persisting " + assay );
         fillInBioAssayAssociations( assay );
 
         /*
@@ -429,7 +429,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
-        log.info( "Persisting bioAssayDimension" );
+        log.debug( "Persisting bioAssayDimension" );
         List<BioAssay> persistedBioAssays = new ArrayList<BioAssay>();
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             persistedBioAssays.add( persistBioAssay( bioAssay ) );
@@ -437,7 +437,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 log.info( "Persisted: " + persistedBioAssays.size() + " bioassays" );
             }
         }
-        log.info( "Doine persisting " + persistedBioAssays.size() + " bioassays" );
+        log.debug( "Done persisting " + persistedBioAssays.size() + " bioassays" );
         assert persistedBioAssays.size() > 0;
         bioAssayDimension.setBioAssays( persistedBioAssays );
         return bioAssayDimensionDao.findOrCreate( bioAssayDimension );

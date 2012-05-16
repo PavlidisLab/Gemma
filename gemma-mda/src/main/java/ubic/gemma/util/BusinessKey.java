@@ -119,6 +119,10 @@ public class BusinessKey {
 
     }
 
+    /**
+     * @param queryObject
+     * @param bioAssay
+     */
     public static void addRestrictions( Criteria queryObject, BioAssay bioAssay ) {
         if ( bioAssay.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", bioAssay.getId() ) );
@@ -128,6 +132,10 @@ public class BusinessKey {
         queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
     }
 
+    /**
+     * @param queryObject
+     * @param bioMaterial
+     */
     public static void addRestrictions( Criteria queryObject, BioMaterial bioMaterial ) {
 
         if ( bioMaterial.getName() != null ) {
