@@ -146,9 +146,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         final Collection<CompositeSequence> compositeSequences = arrayDesignDao.thaw( arrayDesign )
                 .getCompositeSequences();
 
-        // final Collection<CompositeSequence> compositeSequences = arrayDesignDao.loadCompositeSequences( arrayDesign
-        // .getId() );
-
         String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
         int count = 0;
         for ( CompositeSequence element : compositeSequences ) {
@@ -160,7 +157,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     designElementSequenceCache.put( seq.getName(), element );
                 }
             }
-            if ( ++count % 1000 == 0 ) {
+            if ( ++count % 5000 == 0 ) {
                 log.info( "Cached " + count + " probes (" + timer.getTime() + "ms)" );
             }
             if ( count % 100 == 0 ) {

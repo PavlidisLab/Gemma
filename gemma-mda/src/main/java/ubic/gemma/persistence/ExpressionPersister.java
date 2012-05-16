@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -228,7 +229,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void fillInBioAssayAssociations( BioAssay bioAssay ) {
 
         ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
-        assert arrayDesign != null;
 
         arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign );
         assert arrayDesign.getId() != null;
@@ -338,14 +338,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         log.info( "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         int count = 0;
         for ( DesignElementDataVector dataVector : ee.getRawExpressionDataVectors() ) {
             BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector );
             bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
-            if ( ++count % 10000 == 0 ) {
-                log.info( "Filled in " + count + " DesignElementDataVectors" );
+            if ( timer.getTime() > 5000 ) {
+                log.info( "Filled in " + ( ++count ) + " DesignElementDataVectors" );
+                timer.reset();
+                timer.start();
             }
 
             if ( Thread.interrupted() ) {
@@ -414,11 +417,15 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
-
+        log.info( "Persisting bioAssayDimension" );
         List<BioAssay> persistedBioAssays = new ArrayList<BioAssay>();
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             persistedBioAssays.add( persistBioAssay( bioAssay ) );
+            if ( persistedBioAssays.size() % 10 == 0 ) {
+                log.info( "Persisted: " + persistedBioAssays.size() + " bioassays" );
+            }
         }
+        log.info( "Doine persisting " + persistedBioAssays.size() + " bioassays" );
         assert persistedBioAssays.size() > 0;
         bioAssayDimension.setBioAssays( persistedBioAssays );
         return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
@@ -577,11 +584,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
+            log.info( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 fillInBioAssayAssociations( bioAssay );
                 alreadyFilled.add( bioAssay );
             }
         } else {
+            log.info( "Filling in bioassays via data vectors" ); // usual case.
             alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment );
             expressionExperiment.setBioAssays( alreadyFilled );
         }
