@@ -453,8 +453,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         assert entity.getSourceTaxon() != null;
 
+        log.info( "Persisting " + entity );
         fillInDatabaseEntry( entity.getExternalAccession() );
+
+        log.info( "dbentry done" );
         entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
+
+        log.info( "taxon done" );
 
         for ( Treatment treatment : entity.getTreatments() ) {
 
@@ -463,7 +468,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
                 fillInProtocolApplication( protocolApplication );
+                log.info( "protocol done" );
             }
+            log.info( "treatment done" );
         }
         return bioMaterialDao.findOrCreate( entity );
     }

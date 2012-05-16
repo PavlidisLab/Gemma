@@ -162,13 +162,15 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
                 if ( persistedObj == null ) continue;
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
+
+                c++;
+
                 if ( t.getTime() > 5000 ) {
                     log.info( "Persist " + c + " elements: " + t.getTime() + "ms (last class="
                             + object.getClass().getSimpleName() + ")" );
                     t.reset();
                     t.start();
                 }
-                c++;
             }
         } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
