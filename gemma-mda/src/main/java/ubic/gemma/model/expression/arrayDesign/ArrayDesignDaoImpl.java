@@ -212,7 +212,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public ArrayDesign find( ArrayDesign arrayDesign ) {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         BusinessKey.checkValidKey( arrayDesign );
         Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
         BusinessKey.addRestrictions( queryObject, arrayDesign );
@@ -228,6 +229,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
             }
+        }
+
+        if ( timer.getTime() > 200 ) {
+            log.warn( "Slow find: " + timer.getTime() + "ms" );
         }
         return ( ArrayDesign ) result;
 

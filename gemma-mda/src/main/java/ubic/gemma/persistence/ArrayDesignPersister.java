@@ -237,10 +237,15 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @return the persistent array design.
      */
     protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign ) {
+
         assert arrayDesign != null;
         ArrayDesign cachedAd = arrayDesign;
         if ( !arrayDesignCache.containsKey( cachedAd.getName() )
                 && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
+
+            StopWatch timer = new StopWatch();
+            timer.start();
+
             cachedAd = findOrPersistArrayDesign( arrayDesign );
             // cachedAd = arrayDesignDao.thaw( cachedAd );
             assert !isTransient( cachedAd );
@@ -249,6 +254,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( cachedAd.getShortName() != null ) {
                 arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
             }
+
+            if ( timer.getTime() > 20000 ) {
+                log.info( "Load/persist array design: " + timer.getTime() + "ms" );
+            }
+
         }
         if ( arrayDesignCache.containsKey( cachedAd.getName() ) ) {
             return arrayDesignCache.get( cachedAd.getName() );

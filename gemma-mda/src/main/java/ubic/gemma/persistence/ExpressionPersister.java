@@ -231,35 +231,45 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
 
         arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign );
+        log.info( "array design done" );
         assert arrayDesign.getId() != null;
         bioAssay.setArrayDesignUsed( arrayDesign );
         assert bioAssay.getArrayDesignUsed().getId() != null;
 
+        boolean hadFactors = false;
         for ( BioMaterial material : bioAssay.getSamplesUsed() ) {
             for ( FactorValue factorValue : material.getFactorValues() ) {
                 // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
                 fillInFactorValueAssociations( factorValue );
                 factorValue = persistFactorValue( factorValue );
+                hadFactors = true;
             }
         }
+
+        if ( hadFactors ) log.info( "factor values done" );
+
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
         if ( bioAssay.getAccession() != null ) {
             bioAssay.getAccession().setExternalDatabase(
                     persistExternalDatabase( bioAssay.getAccession().getExternalDatabase() ) );
+            log.info( "external database done" );
         }
-
-        if ( log.isDebugEnabled() ) log.debug( bioAssay.getSamplesUsed().size() + " bioMaterials for " + bioAssay );
 
         // BioMaterials
         persistCollectionElements( bioAssay.getSamplesUsed() );
 
+        log.info( "biomaterials done" );
+
         if ( bioAssay.getRawDataFile() != null ) {
             bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile() ) );
+            log.info( "raw data file done" );
         }
 
         for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
             file = persistLocalFile( file );
         }
+
+        log.info( "Done with " + bioAssay );
 
     }
 
@@ -401,9 +411,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( assay ) ) {
             return assay;
         }
-
+        log.info( "Persisting " + assay );
         fillInBioAssayAssociations( assay );
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
 
         /*
          * PP changed this to use 'create', as we don't want BioAssays associated with two ExpressionExperiments.
