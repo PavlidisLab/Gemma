@@ -224,29 +224,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( String key : phenotypesWithChildren.keySet() ) {
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
-        Collection<Gene> genesAfterAcl = null;
 
-        // find all Genes containing the first phenotypeValueUri
-        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon );
-        if ( SecurityServiceImpl.isUserAdmin() ) {
-            genesAfterAcl = genes;
-        } else {
-            // dont keep genes with evidence that the user doesnt have the permissions to see
-            genesAfterAcl = filterGeneAfterAcl( genes );
-        }
+        Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
+                .findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon, this.userManager.getCurrentUsername(),
+                        SecurityServiceImpl.isUserAdmin() );
 
-        Collection<GeneValueObject> genesVO = null;
-
-        if ( phenotypesValuesUri.size() == 1 ) {
-            genesVO = GeneValueObject.convert2ValueObjects( genesAfterAcl );
-        }
-        // we received a set of Gene with the first phenotype, we need to filter this set and keep only genes that have
-        // all root phenotypes or their children
-        else {
-            genesVO = filterGenesWithPhenotypes( genesAfterAcl, phenotypesWithChildren );
-        }
-
-        return genesVO;
+        return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
 
     /**
@@ -987,10 +970,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // determine all children terms for each other phenotypes
         for ( String phenoRoot : phenotypesValuesUri ) {
 
-            if(phenoRoot.isEmpty()){
+            if ( phenoRoot.isEmpty() ) {
                 continue;
             }
-            
+
             OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
@@ -1009,15 +992,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Filter a set of genes if who have the root phenotype or a children of a root phenotype */
-    private Collection<GeneValueObject> filterGenesWithPhenotypes( Collection<Gene> genes,
+    private Collection<GeneValueObject> filterGenesWithPhenotypes(
+            Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             HashMap<String, Set<String>> phenotypesWithChildren ) {
 
         Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
 
-        for ( Gene gene : genes ) {
+        for ( GeneEvidenceValueObject geneEvidenceValueObject : geneEvidenceValueObjects ) {
 
             // all phenotypeUri for a gene
-            Set<String> allPhenotypesOnGene = findAllPhenotpyesOnGene( gene );
+            Set<String> allPhenotypesOnGene = geneEvidenceValueObject.getPhenotypesValueUri();
 
             // if the Gene has all the phenotypes
             boolean keepGene = true;
@@ -1043,8 +1027,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
             }
             if ( keepGene ) {
-                GeneValueObject geneValueObject = new GeneValueObject( gene );
-                genesVO.add( geneValueObject );
+                genesVO.add( geneEvidenceValueObject );
             }
         }
 
@@ -1186,42 +1169,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
         phenotypeAssociation.getPhenotypes().clear();
         phenotypeAssociation.getPhenotypes().addAll( finalPhenotypes );
-    }
-
-    /** Return a collection of Gene that the user is allowed to see */
-    private Collection<Gene> filterGeneAfterAcl( Collection<Gene> genes ) {
-
-        Collection<Gene> genesAfterAcl = new HashSet<Gene>();
-
-        for ( Gene gene : genes ) {
-            for ( PhenotypeAssociation phenotypeAssociation : gene.getPhenotypeAssociations() ) {
-
-                if ( this.securityService.isPublic( phenotypeAssociation ) ) {
-                    genesAfterAcl.add( gene );
-                    break;
-                } else if ( this.securityService.isShared( phenotypeAssociation ) ) {
-                    genesAfterAcl.add( gene );
-                    break;
-                } else if ( this.securityService.isOwnedByCurrentUser( phenotypeAssociation ) ) {
-                    genesAfterAcl.add( gene );
-                    break;
-                }
-            }
-        }
-        return genesAfterAcl;
-    }
-
-    /** Get a Set of all phenotypes present on a gene */
-    private Set<String> findAllPhenotpyesOnGene( Gene gene ) {
-
-        Set<String> allPhenotypesOnGene = new HashSet<String>();
-
-        for ( PhenotypeAssociation p : gene.getPhenotypeAssociations() ) {
-            for ( Characteristic cha : p.getPhenotypes() ) {
-                allPhenotypesOnGene.add( ( ( VocabCharacteristic ) ( cha ) ).getValueUri() );
-            }
-        }
-        return allPhenotypesOnGene;
     }
 
     /** Populates the ValidateEvidenceValueObject with the correct flags if necessary */

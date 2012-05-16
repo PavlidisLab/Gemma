@@ -28,10 +28,10 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.AbstractDao;
+import java.math.BigInteger;
 
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -42,26 +42,66 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /** find Genes link to a phenotype */
-    @SuppressWarnings("unchecked")
+    /** find Genes link to a phenotype taking into account private and public evidence direct sql query to make it fast */
     @Override
-    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon ) {
+    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon,
+            String userName, boolean isAdmin ) {
 
-        for(String url : phenotypesValueUri){
-            if(url.isEmpty()) phenotypesValueUri.remove( url );
+        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
+        String sqlQuery = "SELECT distinct CHROMOSOME_FEATURE.ID,CHROMOSOME_FEATURE.OFFICIAL_NAME,CHROMOSOME_FEATURE.OFFICIAL_SYMBOL,TAXON.COMMON_NAME,CHARACTERISTIC.VALUE_URI FROM PHENOTYPE_ASSOCIATION join CHARACTERISTIC on PHENOTYPE_ASSOCIATION.ID=CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.ID=CHROMOSOME_FEATURE.TAXON_FK ";
+
+        if ( phenotypesValueUri.isEmpty() ) {
+            return genesWithPhenotypes.values();
         }
-        if(phenotypesValueUri.isEmpty()) return new ArrayList<Gene>();
-        
-        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class );
+        // not checking security
+        if ( isAdmin ) {
+            sqlQuery += "where CHARACTERISTIC.VALUE_URI in (";
 
-        geneQueryCriteria.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
-                .createCriteria( "phenotypeAssociations" ).createCriteria( "phenotypes" )
-                .add( Restrictions.in( "valueUri", phenotypesValueUri ) );
-
-        if ( taxon != null && !taxon.equalsIgnoreCase( "" ) ) {
-            geneQueryCriteria.createCriteria( "taxon" ).add( Restrictions.like( "commonName", taxon ) );
         }
-        return geneQueryCriteria.list();
+        // check the private evidences the user can see + public
+        else {
+            sqlQuery += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where ((acl_entry.sid=4 and mask=1) or acl_sid.sid='"
+                    + userName
+                    + "') and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and CHARACTERISTIC.VALUE_URI in (";
+        }
+
+        // add the condition for valuesUri
+        for ( String phenotype : phenotypesValueUri ) {
+            sqlQuery += "'" + phenotype + "',";
+        }
+
+        sqlQuery = sqlQuery.substring( 0, sqlQuery.length() - 1 ) + ")";
+
+        if ( taxon != null && !taxon.equals( "" ) ) {
+            sqlQuery += " and TAXON.COMMON_NAME='" + taxon + "'";
+        }
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+
+            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+            String officialName = ( String ) results.get( 1 );
+            String officialSymbol = ( String ) results.get( 2 );
+            String taxonCommonName = ( String ) results.get( 3 );
+            String valueUri = ( String ) results.get( 4 );
+
+            if ( genesWithPhenotypes.get( geneId ) != null ) {
+                genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
+            } else {
+                GeneEvidenceValueObject g = new GeneEvidenceValueObject();
+                g.setId( geneId );
+                g.setOfficialName( officialName );
+                g.setOfficialSymbol( officialSymbol );
+                g.setTaxonCommonName( taxonCommonName );
+                g.getPhenotypesValueUri().add( valueUri );
+                genesWithPhenotypes.put( geneId, g );
+            }
+        }
+        results.close();
+
+        return genesWithPhenotypes.values();
     }
 
     /** load all valueURI of Phenotype in the database */

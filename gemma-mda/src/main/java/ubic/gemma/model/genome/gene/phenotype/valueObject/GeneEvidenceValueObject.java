@@ -35,7 +35,13 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     private static final long serialVersionUID = -3484291071757959936L;
 
     /** Added field for the Candidate Gene Management System */
-    private Collection<EvidenceValueObject> evidence;
+    private Collection<EvidenceValueObject> evidence = new HashSet<EvidenceValueObject>();
+
+    private Set<String> phenotypesValueUri = new HashSet<String>();
+
+    public GeneEvidenceValueObject() {
+        super();
+    }
 
     public GeneEvidenceValueObject( Gene gene ) {
         super( gene );
@@ -91,6 +97,14 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         }
 
         return converted;
+    }
+
+    public Set<String> getPhenotypesValueUri() {
+        return this.phenotypesValueUri;
+    }
+
+    public void setPhenotypesValueUri( Set<String> phenotypesValueUri ) {
+        this.phenotypesValueUri = phenotypesValueUri;
     }
 
 }
