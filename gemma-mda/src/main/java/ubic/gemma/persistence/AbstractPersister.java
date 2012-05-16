@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -152,12 +153,22 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         if ( collection.size() == 0 ) return;
 
         try {
+            StopWatch t = new StopWatch();
+            t.start();
+            int c = 0;
             for ( Object object : collection ) {
                 if ( !isTransient( object ) ) continue;
                 Object persistedObj = persist( object );
                 if ( persistedObj == null ) continue;
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
+                if ( t.getTime() > 5000 ) {
+                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms (last class="
+                            + object.getClass().getSimpleName() + ")" );
+                    t.reset();
+                    t.start();
+                }
+                c++;
             }
         } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
