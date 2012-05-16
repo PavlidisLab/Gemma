@@ -61,27 +61,26 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      */
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
+        log.info( "Start find" );
+        Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
 
-            BusinessKey.addRestrictions( queryObject, bioMaterial );
+        BusinessKey.addRestrictions( queryObject, bioMaterial );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BioMaterial.class.getName()
-                                    + "' was found when executing query" );
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + BioMaterial.class.getName()
+                                + "' was found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( BioMaterial ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        log.info( "Done with find" );
+        return ( BioMaterial ) result;
+
     }
 
     /*

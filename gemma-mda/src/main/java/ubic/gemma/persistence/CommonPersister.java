@@ -248,7 +248,6 @@ abstract public class CommonPersister extends AbstractPersister {
         databaseEntry.setExternalDatabase( null );
         ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
         databaseEntry.setExternalDatabase( persistedDb );
-
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
