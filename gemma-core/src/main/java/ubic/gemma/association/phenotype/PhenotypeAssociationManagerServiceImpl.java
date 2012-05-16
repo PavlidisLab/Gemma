@@ -210,7 +210,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, String taxon ) {
+    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -713,7 +713,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return phenotypes;
-
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */

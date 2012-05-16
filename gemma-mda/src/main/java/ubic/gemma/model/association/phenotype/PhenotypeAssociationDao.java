@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.BaseDao;
@@ -30,7 +31,7 @@ import ubic.gemma.persistence.BaseDao;
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon,
+    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, boolean isAdmin );
 
     /** load all valueURI of Phenotype in the database */

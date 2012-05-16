@@ -32,6 +32,7 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 
@@ -67,7 +68,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find Genes link to a phenotype */
     @Override
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon,
+    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, boolean isAdmin ) {
         return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon, userName, isAdmin );
     }

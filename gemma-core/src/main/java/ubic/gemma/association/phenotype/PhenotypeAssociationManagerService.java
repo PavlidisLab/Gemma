@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -74,7 +75,7 @@ public interface PhenotypeAssociationManagerService {
      * @param taxon the name of the taxon (optinal)
      * @return A collection of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, String taxon );
+    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype

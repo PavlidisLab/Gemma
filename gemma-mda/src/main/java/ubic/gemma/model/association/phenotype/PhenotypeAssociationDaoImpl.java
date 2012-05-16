@@ -28,6 +28,8 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.AbstractDao;
@@ -44,7 +46,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find Genes link to a phenotype taking into account private and public evidence direct sql query to make it fast */
     @Override
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, String taxon,
+    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, boolean isAdmin ) {
 
         HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
@@ -72,8 +74,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery = sqlQuery.substring( 0, sqlQuery.length() - 1 ) + ")";
 
-        if ( taxon != null && !taxon.equals( "" ) ) {
-            sqlQuery += " and TAXON.COMMON_NAME='" + taxon + "'";
+        if ( taxon != null && taxon.getId() != null ) {
+            sqlQuery += " and TAXON.ID=" + taxon.getId();
         }
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );

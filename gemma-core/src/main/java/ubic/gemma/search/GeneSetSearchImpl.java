@@ -55,7 +55,7 @@ import ubic.gemma.util.EntityUtils;
 public class GeneSetSearchImpl implements GeneSetSearch {
 
     private static Log log = LogFactory.getLog( GeneSetSearchImpl.class );
-    
+
     @Autowired
     private Gene2GOAssociationService gene2GoService;
 
@@ -67,14 +67,16 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
     @Autowired
     private TaxonService taxonService;
-    
+
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -82,38 +84,41 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return geneSetService.findByGene( gene );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findGeneSetValueObjectByGoId(java.lang.String, java.lang.Long)
      */
     @Override
     public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
 
-
         // shouldn't need to set the taxon here, should be taken care of when creating the value object
         Taxon taxon = null;
-        
+
         if ( taxonId != null ) {
-           taxon = taxonService.load( taxonId );
+            taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
                 log.warn( "No such taxon with id=" + taxonId );
             } else {
-                GeneSet result = findByGoId( goId, taxonService.load(taxonId) );
+                GeneSet result = findByGoId( goId, taxonService.load( taxonId ) );
                 if ( result == null ) {
                     log.warn( "No matching gene set found for: " + goId );
                     return null;
                 }
                 GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( result, goId, goId );
-                
+
                 ggvo.setTaxonId( taxon.getId() );
                 ggvo.setTaxonName( taxon.getCommonName() );
-            
+
                 return ggvo;
-            } 
+            }
         }
         return null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findByGoId(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -127,7 +132,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return goTermToGeneSet( goTerm, taxon );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -135,8 +142,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return findByGoTermName( goTermName, taxon, null );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon, java.lang.Integer)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon,
+     * java.lang.Integer)
      */
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed ) {
@@ -162,20 +172,22 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return results;
 
     }
-    
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon, java.lang.Integer)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.search.GeneSetSearch#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon,
+     * java.lang.Integer)
      */
     @Override
     public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) {
-        
-        Collection<CharacteristicValueObject> phenotypes =  phenotypeAssociationManagerService.searchOntologyForPhenotypes( StringUtils
-                .strip( phenotypeQuery ), null );
+
+        Collection<CharacteristicValueObject> phenotypes = phenotypeAssociationManagerService
+                .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-        
-        for ( CharacteristicValueObject cvo : phenotypes) {
+
+        for ( CharacteristicValueObject cvo : phenotypes ) {
             GeneSetValueObject converted = phenotypeAssociationToGeneSet( cvo, taxon );
             if ( converted != null ) results.add( converted );
         }
@@ -184,7 +196,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findByName(java.lang.String)
      */
     @Override
@@ -192,7 +206,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return geneSetService.findByName( StringUtils.strip( name ) );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -249,18 +265,18 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         // for each phenotype, get all genes
         Set<String> URIs = new HashSet<String>();
         URIs.add( term.getValueUri() );
-        Collection<GeneValueObject> gvos = phenotypeAssociationManagerService.findCandidateGenes( URIs, taxon.getCommonName() );
+        Collection<GeneValueObject> gvos = phenotypeAssociationManagerService.findCandidateGenes( URIs, taxon );
         Collection<Long> geneIds = EntityUtils.getIds( gvos );
-        
+
         GeneSetValueObject transientGeneSet = new GeneSetValueObject();
-        
+
         transientGeneSet.setName( uri2phenoID( term ) );
         transientGeneSet.setDescription( term.getValue() );
         transientGeneSet.setGeneIds( geneIds );
 
         return transientGeneSet;
     }
-    
+
     private String uri2phenoID( CharacteristicValueObject t ) {
         return t.getValueUri().replaceFirst( ".*#", "" );
     }
@@ -268,9 +284,10 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     private String uri2goid( OntologyResource t ) {
         return t.getUri().replaceFirst( ".*/GO#", "" );
     }
-    
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.GeneSetSearch#findGeneSetsByName(java.lang.String, java.lang.Long)
      */
     @Override
