@@ -16,6 +16,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Date;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,8 @@ import ubic.gemma.model.common.Auditable;
  */
 @Component
 public class AuditHelperImpl implements AuditHelper {
+
+    private static Log log = LogFactory.getLog( AuditHelperImpl.class );
 
     @Autowired
     private AuditTrailDao auditTrailDao;
@@ -41,10 +45,11 @@ public class AuditHelperImpl implements AuditHelper {
      * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
      */
     public AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user ) {
-
+        log.debug( "start adding create audit event" );
         this.addAuditTrailIfNeeded( auditable );
+        log.debug( "added audit trail, maybe" );
         this.addStatusIfNeeded( auditable );
-
+        log.debug( "added status, maybe" );
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
 
@@ -53,9 +58,14 @@ public class AuditHelperImpl implements AuditHelper {
             auditEvent.setDate( new Date() );
             auditEvent.setAction( AuditAction.CREATE );
             auditEvent.setNote( note );
+            log.debug( "calling 'update' on status" );
             this.statusDao.update( auditable, null );
+            log.debug( "updated status" );
 
-            return this.auditTrailDao.addEvent( auditable, auditEvent );
+            AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
+            log.debug( "added audit event" );
+            return a;
+
         } catch ( Throwable th ) {
             throw new AuditTrailServiceException(
                     "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> " + th,
