@@ -45,11 +45,8 @@ public class AuditHelperImpl implements AuditHelper {
      * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
      */
     public AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user ) {
-        log.debug( "start adding create audit event" );
         this.addAuditTrailIfNeeded( auditable );
-        log.debug( "added audit trail, maybe" );
         this.addStatusIfNeeded( auditable );
-        log.debug( "added status, maybe" );
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
 
@@ -59,12 +56,8 @@ public class AuditHelperImpl implements AuditHelper {
             auditEvent.setAction( AuditAction.CREATE );
             auditEvent.setNote( note );
             auditEvent.setPerformer( user );
-            log.debug( "calling 'update' on status" );
             this.statusDao.update( auditable, null );
-            log.debug( "updated status" );
-
             AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
-            log.debug( "added audit event" );
             return a;
 
         } catch ( Throwable th ) {
@@ -75,34 +68,12 @@ public class AuditHelperImpl implements AuditHelper {
 
     }
 
-    private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
-        if ( auditable.getAuditTrail() == null ) {
-
-            try {
-
-                AuditTrail auditTrail = AuditTrail.Factory.newInstance();
-                auditable.setAuditTrail( auditTrailDao.create( auditTrail ) );
-
-            } catch ( Exception e ) {
-
-                /*
-                 * This can happen if we hit an auditable during a read-only event: programming error.
-                 */
-                throw new IllegalStateException( "Invalid attempt to create an audit trail on: " + auditable, e );
-            }
-
-        }
-
-        return auditable.getAuditTrail();
-    }
-
-    private void addStatusIfNeeded( Auditable auditable ) {
-        if ( auditable.getStatus() == null ) {
-            statusDao.initializeStatus( auditable );
-            assert auditable.getStatus() != null && auditable.getStatus().getId() != null;
-        }
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditHelper#addUpdateAuditEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
+     */
     @Override
     public AuditEvent addUpdateAuditEvent( Auditable auditable, String note, User user ) {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
@@ -112,6 +83,31 @@ public class AuditHelperImpl implements AuditHelper {
         auditEvent.setPerformer( user );
         this.statusDao.update( auditable, null );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
+    }
+
+    /**
+     * @param auditable
+     * @return
+     */
+    private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
+
+        if ( auditable.getAuditTrail() != null ) return auditable.getAuditTrail();
+
+        // no need to persist it here
+        AuditTrail auditTrail = AuditTrail.Factory.newInstance();
+        auditable.setAuditTrail( auditTrail );
+
+        return auditable.getAuditTrail();
+    }
+
+    /**
+     * @param auditable
+     */
+    private void addStatusIfNeeded( Auditable auditable ) {
+        if ( auditable.getStatus() == null ) {
+            statusDao.initializeStatus( auditable );
+            assert auditable.getStatus() != null && auditable.getStatus().getId() != null;
+        }
     }
 
 }
