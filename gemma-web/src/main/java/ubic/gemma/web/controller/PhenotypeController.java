@@ -34,10 +34,9 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
  * Controller for phenotype
@@ -81,18 +80,8 @@ public class PhenotypeController extends BaseController {
         return mav;
     }
 
-    public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
       return phenotypeAssociationManagerService.loadAllPhenotypesByTree();
-    }
-
-    /**
-     * Returns all phenotypes in the system.
-     * 
-     * @return all phenotypes in the system
-     */
-    public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
-        return new JsonReaderResponse<CharacteristicValueObject>(new ArrayList<CharacteristicValueObject>(
-                phenotypeAssociationManagerService.loadAllPhenotypes()));
     }
 
     /**

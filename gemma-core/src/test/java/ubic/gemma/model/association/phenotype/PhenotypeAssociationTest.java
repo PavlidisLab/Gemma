@@ -133,20 +133,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testLoadAllPhenotypes() {
-
-        Collection<CharacteristicValueObject> phenotypes = this.phenotypeAssociationManagerService.loadAllPhenotypes();
-
-        assertTrue( phenotypes != null && phenotypes.size() == 1 );
-
-        @SuppressWarnings("null")
-        CharacteristicValueObject phenotype = phenotypes.iterator().next();
-
-        assertTrue( phenotype.equals( this.litEvidence.getPhenotypes().iterator().next() ) );
-
-    }
-
-    @Test
     public void testFindBibliographicReference() {
 
         assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );

@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 
 /**
@@ -76,13 +76,6 @@ public interface PhenotypeAssociationManagerService {
      * @return A collection of the genes found
      */
     public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon );
-
-    /**
-     * Get all phenotypes linked to genes and count how many genes are link to each phenotype
-     * 
-     * @return A collection of the phenotypes with the gene occurence
-     */
-    public abstract Collection<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
      * Removes an evidence
@@ -174,7 +167,7 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
-    public abstract Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree();
+    public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree();
 
     /**
      * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,

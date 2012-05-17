@@ -50,7 +50,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             String userName, boolean isAdmin ) {
 
         HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
-        String sqlQuery = "SELECT distinct CHROMOSOME_FEATURE.ID,CHROMOSOME_FEATURE.OFFICIAL_NAME,CHROMOSOME_FEATURE.OFFICIAL_SYMBOL,TAXON.COMMON_NAME,CHARACTERISTIC.VALUE_URI FROM PHENOTYPE_ASSOCIATION join CHARACTERISTIC on PHENOTYPE_ASSOCIATION.ID=CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.ID=CHROMOSOME_FEATURE.TAXON_FK ";
+        String sqlQuery = "SELECT distinct CHROMOSOME_FEATURE.ID,CHROMOSOME_FEATURE.NCBI_GENE_ID,CHROMOSOME_FEATURE.OFFICIAL_NAME,CHROMOSOME_FEATURE.OFFICIAL_SYMBOL,TAXON.COMMON_NAME,CHARACTERISTIC.VALUE_URI FROM PHENOTYPE_ASSOCIATION join CHARACTERISTIC on PHENOTYPE_ASSOCIATION.ID=CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.ID=CHROMOSOME_FEATURE.TAXON_FK ";
 
         if ( phenotypesValueUri.isEmpty() ) {
             return genesWithPhenotypes.values();
@@ -84,16 +84,18 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         while ( results.next() ) {
 
             Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            String officialName = ( String ) results.get( 1 );
-            String officialSymbol = ( String ) results.get( 2 );
-            String taxonCommonName = ( String ) results.get( 3 );
-            String valueUri = ( String ) results.get( 4 );
+            Integer nbciGeneId = ( Integer ) results.get( 1 );
+            String officialName = ( String ) results.get( 2 );
+            String officialSymbol = ( String ) results.get( 3 );
+            String taxonCommonName = ( String ) results.get( 4 );
+            String valueUri = ( String ) results.get( 5 );
 
             if ( genesWithPhenotypes.get( geneId ) != null ) {
                 genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
             } else {
                 GeneEvidenceValueObject g = new GeneEvidenceValueObject();
                 g.setId( geneId );
+                g.setNcbiId( nbciGeneId );
                 g.setOfficialName( officialName );
                 g.setOfficialSymbol( officialSymbol );
                 g.setTaxonCommonName( taxonCommonName );

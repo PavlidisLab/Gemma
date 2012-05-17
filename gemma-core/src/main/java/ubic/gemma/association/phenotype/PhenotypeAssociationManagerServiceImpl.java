@@ -59,6 +59,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
@@ -230,45 +231,24 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * This method loads all phenotypes in the database and counts their occurrence using the database
-     * 
-     * @return A collection of the phenotypes with the gene occurence
-     */
-    @Override
-    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
-
-        Collection<CharacteristicValueObject> characteristcsVO = new TreeSet<CharacteristicValueObject>();
-
-        // load the tree
-        Collection<TreeCharacteristicValueObject> treeCharacteristicValueObject = findAllPhenotypesByTree( false );
-
-        // undo the tree in a simple structure
-        for ( TreeCharacteristicValueObject t : treeCharacteristicValueObject ) {
-            addChildren( characteristcsVO, t );
-        }
-
-        return characteristcsVO;
-    }
-
-    /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
      * using parents of terms, and will return 3 trees representing Disease, HP and MP
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
     @Override
-    public Collection<TreeCharacteristicValueObject> loadAllPhenotypesByTree() {
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
 
-        Collection<TreeCharacteristicValueObject> flatTree = new TreeSet<TreeCharacteristicValueObject>();
+        Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
         Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true ) );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
-            flatenTrees( flatTree, t );
+            convertToFlatTree( simpleTreeValueObjects, t );
         }
 
-        return flatTree;
+        return simpleTreeValueObjects;
     }
 
     /**
@@ -898,23 +878,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypes;
     }
 
-    /** This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future */
-    private void addChildren( Collection<CharacteristicValueObject> characteristcsVO, TreeCharacteristicValueObject t ) {
-
-        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getCategory(),
-                t.getValueUri(), t.getCategoryUri() );
-
-        cha.setPublicGeneCount( t.getPublicGeneCount() );
-        cha.setPrivateGeneCount( t.getPrivateGeneCount() );
-        cha.setTaxon( t.getTaxon() );
-
-        characteristcsVO.add( cha );
-
-        for ( TreeCharacteristicValueObject tree : t.getChildren() ) {
-            addChildren( characteristcsVO, tree );
-        }
-    }
-
     /** Build the full trees of the Ontology with the given branches */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
@@ -1384,13 +1347,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return key;
     }
 
-    private void flatenTrees( Collection<TreeCharacteristicValueObject> flatTree,
+    private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject ) {
 
-        flatTree.add( treeCharacteristicValueObject );
+        SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject );
+
+        simpleTreeValueObjects.add( simpleTreeValueObject );
 
         for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-            flatenTrees( flatTree, tree );
+            convertToFlatTree( simpleTreeValueObjects, tree );
         }
     }
 

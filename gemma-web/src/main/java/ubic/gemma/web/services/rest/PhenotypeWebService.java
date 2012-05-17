@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 
 /**
  * RESTful web services for phenotypes
@@ -49,7 +49,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/load-all-phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<TreeCharacteristicValueObject> loadAllPhenotypes() {
+    public Collection<SimpleTreeValueObject> loadAllPhenotypes() {
     	return phenotypeAssociationManagerService.loadAllPhenotypesByTree();
     }
 
