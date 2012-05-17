@@ -70,14 +70,14 @@ public class AuditAdvice {
 
     @Autowired
     UserManager userManager;
-       
+
     @Autowired
     AuditHelper auditHelper;
-    
+
     private boolean AUDIT_CREATE = true;
     private boolean AUDIT_DELETE = true;
     private boolean AUDIT_UPDATE = true;
-    
+
     @PostConstruct
     protected void init() {
 
@@ -87,7 +87,7 @@ public class AuditAdvice {
             AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" ) || AUDIT_UPDATE;
         } catch ( NoSuchElementException e ) {
             log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
-        }        
+        }
     }
 
     /**
@@ -97,7 +97,6 @@ public class AuditAdvice {
      * @return
      * @throws Throwable
      */
-    @SuppressWarnings("unchecked")
     public void doAuditAdvice( JoinPoint pjp, Object retValue ) throws Throwable {
 
         final Signature signature = pjp.getSignature();
@@ -131,23 +130,27 @@ public class AuditAdvice {
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
-        if (auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
+        if ( auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
             // This can happen when we persist objects and then let this interceptor look at them again
-            // while persisting parent objects.            
-            log.warn("Call to addCreateAuditEvent but the auditTrail already has events! AuditTrail id: "+auditTrail.getId());
+            // while persisting parent objects.
+            log.warn( "Call to addCreateAuditEvent but the auditTrail already has events! AuditTrail id: "
+                    + auditTrail.getId() );
             return;
         }
 
         String details = "Create " + auditable.getClass().getSimpleName() + " " + auditable.getId() + note;
-        
+
         try {
+            log.debug( "start" );
             User user = userManager.getCurrentUser();
+            log.debug( "got user" );
             auditHelper.addCreateAuditEvent( auditable, details, user );
+            log.debug( "done create" );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":" + auditable.getId() + " by "
-                        + user.getUserName() );
+                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
+                        + auditable.getId() + " by " + user.getUserName() );
             }
-        
+
         } catch ( UsernameNotFoundException e ) {
             log.warn( "No user, cannot add 'create' event" );
         }
@@ -180,7 +183,7 @@ public class AuditAdvice {
         assert auditable != null;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
-        
+
         if ( auditTrail == null || auditTrail.getEvents().isEmpty() ) {
             /*
              * Note: This can happen for ExperimentalFactors when loading from GEO etc. because of the bidirectional
@@ -191,10 +194,10 @@ public class AuditAdvice {
         } else {
             User user = userManager.getCurrentUser();
             String note = "Updated " + auditable.getClass().getSimpleName() + " " + auditable.getId();
-            auditHelper.addUpdateAuditEvent( auditable, note, user );            
+            auditHelper.addUpdateAuditEvent( auditable, note, user );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":" + auditable.getId() + " by "
-                        + user.getUserName() );
+                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
+                        + auditable.getId() + " by " + user.getUserName() );
             }
         }
     }
@@ -229,7 +232,7 @@ public class AuditAdvice {
         if ( !Hibernate.isInitialized( auditable ) ) {
             return;
         }
-        
+
         if ( auditable.getAuditTrail() == null || auditable.getAuditTrail().getEvents().isEmpty() ) {
             addCreateAuditEvent( auditable, " - created by cascade from " + object );
         }
@@ -255,15 +258,14 @@ public class AuditAdvice {
             addUpdateAuditEvent( a );
 
             /*
-             * Do not process associations during an update except to add creates to new objects. Otherwise this
-             * would result in update events getting added to all child objects, which is silly; and in any case
-             * they might be proxies.
+             * Do not process associations during an update except to add creates to new objects. Otherwise this would
+             * result in update events getting added to all child objects, which is silly; and in any case they might be
+             * proxies.
              */
             processAssociations( methodName, a );
         } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
             addDeleteAuditEvent( a );
         }
-
 
         if ( log.isTraceEnabled() ) log.trace( "============  End Audit ==============" );
     }
@@ -313,7 +315,7 @@ public class AuditAdvice {
                     Auditable auditable = ( Auditable ) associatedObject;
                     try {
 
-                        maybeAddCascadeCreateEvent( object, auditable);
+                        maybeAddCascadeCreateEvent( object, auditable );
 
                         processAssociations( methodName, auditable );
                     } catch ( HibernateException e ) {

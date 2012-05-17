@@ -63,34 +63,29 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
-     */ 
+     */
     public User find( User user ) {
-        try {
 
-            BusinessKey.checkKey( user );
+        BusinessKey.checkKey( user );
 
-            Criteria queryObject = super.getSession().createCriteria( User.class );
+        Criteria queryObject = super.getSession().createCriteria( User.class );
 
-            queryObject.add( Restrictions.eq( "userName", user.getUserName() ) );
+        queryObject.add( Restrictions.eq( "userName", user.getUserName() ) );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.auditAndSecurity.User.class.getName()
-                                    + "' was found when executing query" );
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + ubic.gemma.model.common.auditAndSecurity.User.class.getName()
+                                + "' was found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( User ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-
         }
+        return ( User ) result;
+
     }
 
     /*
@@ -99,14 +94,14 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserDao#loadGroupAuthorities(ubic.gemma.model.common.auditAndSecurity
      * .User)
-     */ 
+     */
     public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
 
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", u );
 
     }
- 
+
     public Collection<UserGroup> loadGroups( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );

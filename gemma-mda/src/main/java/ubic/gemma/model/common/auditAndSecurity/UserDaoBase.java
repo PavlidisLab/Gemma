@@ -24,9 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -73,49 +70,6 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
      */
     public User findByEmail( final java.lang.String email ) {
         return this.findByEmail( "from UserImpl c where c.email = :email", email );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(int, java.lang.String,
-     *      java.lang.String)
-     */
-    public Collection<User> findByFirstAndLastName( final String name, final String secondName ) {
-        return this.findByFirstAndLastName(
-                "from UserImpl as user where user.name = :name and user.secondName = :secondName", name, secondName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(int, java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
-
-    public Collection<User> findByFirstAndLastName( final String queryString, final String name, final String secondName ) {
-        List<String> argNames = new java.util.ArrayList<String>();
-        List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        args.add( secondName );
-        argNames.add( "secondName" );
-        List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFullName(int, java.lang.String, java.lang.String)
-     */
-
-    public Collection<User> findByFullName( final String name, final String secondName ) {
-        return this.findByFullName(
-                "from PersonImpl p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
-                name, secondName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(int, java.lang.String)
-     */
-    public Collection<User> findByLastName( final String lastName ) {
-        return this.findByLastName( "from  UserImpl as user where user.lastName = :lastName", lastName );
     }
 
     /**
@@ -218,48 +172,16 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
         List<Object> args = new ArrayList<Object>();
         args.add( email );
         argNames.add( "email" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+        Set<User> results = new LinkedHashSet<User>( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
+        User result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                     "More than one instance of 'Contact" + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }
-        return ( User ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFullName(int, java.lang.String, java.lang.String,
-     *      java.lang.String)
-     */
-
-    private Collection findByFullName( final String queryString, final String name, final String secondName ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        args.add( secondName );
-        argNames.add( "secondName" );
-        List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(int, java.lang.String, java.lang.String)
-     */
-
-    private Collection<User> findByLastName( final String queryString, final java.lang.String lastName ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( lastName );
-        argNames.add( "lastName" );
-        List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
+        return result;
     }
 
 }

@@ -159,9 +159,6 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             for ( Object object : collection ) {
                 if ( !isTransient( object ) ) continue;
                 Object persistedObj = persist( object );
-                if ( persistedObj == null ) continue;
-                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
-                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
 
                 c++;
 
@@ -171,6 +168,11 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
                     t.reset();
                     t.start();
                 }
+
+                if ( persistedObj == null ) continue;
+                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
+                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
+
             }
         } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
