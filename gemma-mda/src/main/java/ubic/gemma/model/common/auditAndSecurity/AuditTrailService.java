@@ -59,19 +59,35 @@ public interface AuditTrailService {
     public AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     /**
-     * 
+     * @param auditable
+     * @param auditEventType
+     * @param note
+     * @return
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
-    
-    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, boolean detachedAuditable );
 
     /**
-     * 
+     * @param auditable
+     * @param auditEventType
+     * @param note
+     * @param detachedAuditable
+     * @return
      */
     @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
+            boolean detachedAuditable );
+
+    /**
+     * @param auditable
+     * @param type
+     * @param note
+     * @param detail
+     * @return
+     */
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
+            String detail );
 
     /**
      * 
@@ -106,5 +122,5 @@ public interface AuditTrailService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
-    
+
 }

@@ -47,7 +47,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl
 public class AuditTrailServiceImpl implements AuditTrailService {
 
     private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
-   
+
     @Autowired
     private AuditTrailDao auditTrailDao;
 
@@ -56,7 +56,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired
     private StatusDao statusDao;
-    
+
     @Autowired
     private SessionFactory sessionFactory;
 
@@ -66,10 +66,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
      * java.lang.Class, java.lang.String, java.lang.String)
      */
-    public AuditEvent addUpdateEvent( Auditable auditable,
-                                      Class<? extends AuditEventType> type,
-                                      String note,
-                                      String detail ) {
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
+            String detail ) {
 
         AuditEventType auditEventType = null;
 
@@ -87,14 +85,12 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     public List<AuditEvent> getEvents( Auditable ad ) {
         return this.auditEventDao.getEvents( ad );
     }
-    
+
     /**
      * @see AuditTrailService#addComment(Auditable, String, String)
      */
-    public void addComment( final Auditable auditable,
-                            final String comment,
-                            final String detail ) {
-        try {           
+    public void addComment( final Auditable auditable, final String comment, final String detail ) {
+        try {
             AuditEventType type = new CommentedEventImpl();
             this.addUpdateEvent( auditable, type, comment, detail );
         } catch ( Throwable th ) {
@@ -107,9 +103,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addOkFlag(Auditable, String, String)
      */
-    public void addOkFlag( final Auditable auditable,
-                           final String comment,
-                           final String detail ) {
+    public void addOkFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
             // should only be used to reverse "trouble".
@@ -125,9 +119,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addTroubleFlag(Auditable, String, String)
      */
-    public void addTroubleFlag( final Auditable auditable, 
-                                final String comment,
-                                final String detail ) {
+    public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             AuditEventType type = new TroubleStatusFlagEventImpl();
             this.addUpdateEvent( auditable, type, comment, detail );
@@ -141,8 +133,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, String)
      */
-    public AuditEvent addUpdateEvent ( final Auditable auditable,
-                                       final String note ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
             auditEvent.setDate( new Date() );
@@ -152,18 +143,16 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Throwable th ) {
             throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> "
-                            + th, th );
+                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> " + th,
+                    th );
         }
     }
-    
+
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
-    public AuditEvent addUpdateEvent( final Auditable auditable,
-                                      final AuditEventType auditEventType,
-                                      final String note,
-                                      boolean detachedAuditable ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
+            final String note, boolean detachedAuditable ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
             auditEvent.setDate( new Date() );
@@ -171,13 +160,13 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             auditEvent.setEventType( auditEventType );
             auditEvent.setNote( note );
 
-            // FIXME: Temporary solution.  
-            if ( ! this.sessionFactory.getCurrentSession().contains( auditable ) ) {                
+            // FIXME: Temporary solution.
+            if ( !this.sessionFactory.getCurrentSession().contains( auditable ) ) {
                 // Re-attach if it is not already in current session
                 this.sessionFactory.getCurrentSession().update( auditable );
             }
-                        
-            //TODO: Use AuditHelper?
+
+            // TODO: Use AuditHelper?
             this.statusDao.update( auditable, auditEventType );
             return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Throwable th ) {
@@ -190,9 +179,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
-    public AuditEvent addUpdateEvent( final Auditable auditable,
-                                      final AuditEventType auditEventType,
-                                      final String note ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
             auditEvent.setDate( new Date() );
@@ -212,19 +199,17 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override
-    public AuditEvent addUpdateEvent( final Auditable auditable,
-                                      final AuditEventType auditEventType,
-                                      final String note,
-                                      final String detail ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
+            final String note, final String detail ) {
         try {
-                AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-                auditEvent.setDate( new Date() );
-                auditEvent.setAction( AuditAction.UPDATE );
-                auditEvent.setEventType( auditEventType );
-                auditEvent.setNote( note );
-                auditEvent.setDetail( detail );
-                this.statusDao.update( auditable, auditEventType );
-                return this.auditTrailDao.addEvent( auditable, auditEvent );            
+            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+            auditEvent.setDate( new Date() );
+            auditEvent.setAction( AuditAction.UPDATE );
+            auditEvent.setEventType( auditEventType );
+            auditEvent.setNote( note );
+            auditEvent.setDetail( detail );
+            this.statusDao.update( auditable, auditEventType );
+            return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Throwable th ) {
             throw new AuditTrailServiceException(
                     "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note, String detail)' --> "
@@ -236,9 +221,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
      *      java.lang.String, java.lang.String)
      */
-    public void addValidatedFlag( final Auditable auditable,
-                                  final String comment,
-                                  final String detail ) {
+    public void addValidatedFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             AuditEventType type = new ValidatedFlagEventImpl();
             this.addUpdateEvent( auditable, type, comment, detail );
@@ -248,7 +231,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
                             + th, th );
         }
     }
-
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
@@ -279,8 +261,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             return troubleEvent;
         } catch ( Throwable th ) {
             throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.getLastTroubleEvent(Auditable auditable)' --> "
-                            + th, th );
+                    "Error performing 'AuditTrailService.getLastTroubleEvent(Auditable auditable)' --> " + th, th );
         }
     }
 
@@ -292,8 +273,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
             return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
         } catch ( Throwable th ) {
             throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.getLastValidationEvent(Auditable auditable)' --> "
-                            + th, th );
+                    "Error performing 'AuditTrailService.getLastValidationEvent(Auditable auditable)' --> " + th, th );
         }
     }
 }

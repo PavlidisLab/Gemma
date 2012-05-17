@@ -27,7 +27,12 @@ import ubic.gemma.persistence.BaseDao;
 public interface AuditTrailDao extends BaseDao<AuditTrail> {
 
     /**
-     * Add the given event to the audit trail of the given Auditable entity
+     * Add the given event to the audit trail of the given Auditable entity. For efficiency, it is best to set the audit
+     * event performer before passing in.
+     * 
+     * @param auditable
+     * @param auditEvent
+     * @return
      */
     public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 

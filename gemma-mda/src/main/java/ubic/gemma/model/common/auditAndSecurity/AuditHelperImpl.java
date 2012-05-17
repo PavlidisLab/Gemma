@@ -58,6 +58,7 @@ public class AuditHelperImpl implements AuditHelper {
             auditEvent.setDate( new Date() );
             auditEvent.setAction( AuditAction.CREATE );
             auditEvent.setNote( note );
+            auditEvent.setPerformer( user );
             log.debug( "calling 'update' on status" );
             this.statusDao.update( auditable, null );
             log.debug( "updated status" );
@@ -108,6 +109,7 @@ public class AuditHelperImpl implements AuditHelper {
         auditEvent.setDate( new Date() );
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setNote( note );
+        auditEvent.setPerformer( user );
         this.statusDao.update( auditable, null );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }

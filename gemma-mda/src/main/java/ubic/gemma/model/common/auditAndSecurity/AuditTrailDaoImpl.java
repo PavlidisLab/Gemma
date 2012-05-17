@@ -23,9 +23,6 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -73,8 +70,8 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         }
 
         /*
-         * Note: this step should be done by the AuditAdvice when the entity was first created, so this is
-         * just defensive.
+         * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
+         * defensive.
          */
         if ( auditable.getAuditTrail() == null ) {
             auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
@@ -82,6 +79,7 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
 
         auditable.getAuditTrail().addEvent( auditEvent );
 
+        // Is this necessary?
         this.getHibernateTemplate().saveOrUpdate( auditable );
 
         return auditEvent;
@@ -118,8 +116,8 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
             return null;
         }
 
-        String queryString = "from ContactImpl where userName=:userName";
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString, "userName", name );
+        String queryString = "from UserImpl where userName=:userName";
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, "userName", name );
 
         assert results.size() == 1;
         Object result = results.iterator().next();
