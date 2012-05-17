@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,11 +93,8 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
      */
     public User findByUserName( final String userName ) {
-        List<?> r = this.getSession().createQuery( "from UserImpl u where u.userName=:userName" ).setCacheable( true )
-                .setCacheRegion( "usersByUserName" ).setParameter( "userName", userName ).list();
-        //
-        // List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
-        // "userName", userName );
+        List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
+                "userName", userName );
         if ( r.isEmpty() ) {
             return null;
         } else if ( r.size() > 1 ) {
