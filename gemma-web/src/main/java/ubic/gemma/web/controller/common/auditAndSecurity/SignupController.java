@@ -221,7 +221,7 @@ public class SignupController extends BaseController {
             String templateName = "accountCreated.vm";
             sendEmail( u.getUsername(), u.getEmail(), "Successful registration for Gemma", templateName, model );
 
-            //See if this comes from AjaxRegister.js, if it does don't save confirmation message
+            // See if this comes from AjaxRegister.js, if it does don't save confirmation message
             String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
 
             if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
@@ -260,43 +260,43 @@ public class SignupController extends BaseController {
 
         String jsonText = "{success:false}";
         String userName = null;
-        
+
         try {
 
             if ( userManager.loggedIn() ) {
-                userName = userManager.getCurrentUser().getUserName();
-                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:"+SecurityServiceImpl.isUserAdmin()+"}";
+                userName = userManager.getCurrentUsername();
+                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityServiceImpl.isUserAdmin() + "}";
             } else {
                 jsonText = "{success:false}";
             }
         } catch ( Exception e ) {
-           
+
             log.error( e, e );
             jsonText = jsonUtil.getJSONErrorMessage( e );
             log.info( jsonText );
         } finally {
             jsonUtil.writeToResponse( jsonText );
-        }       
-        
+        }
+
     }
-    
+
     /**
      * AJAX DWR
      * 
      * @return loginDetails
-     */    
-    public LoginDetailsValueObject loginCheck(){
+     */
+    public LoginDetailsValueObject loginCheck() {
 
-        LoginDetailsValueObject ldvo= new LoginDetailsValueObject();
-        
-            if ( userManager.loggedIn() ) {
-                ldvo.setUserName( userManager.getCurrentUser().getUserName() );
-                ldvo.setLoggedIn( true );
-            } else {
-                ldvo.setLoggedIn( false );
-            }
-            
-            return ldvo;        
-        
+        LoginDetailsValueObject ldvo = new LoginDetailsValueObject();
+
+        if ( userManager.loggedIn() ) {
+            ldvo.setUserName( userManager.getCurrentUsername() );
+            ldvo.setLoggedIn( true );
+        } else {
+            ldvo.setLoggedIn( false );
+        }
+
+        return ldvo;
+
     }
 }
