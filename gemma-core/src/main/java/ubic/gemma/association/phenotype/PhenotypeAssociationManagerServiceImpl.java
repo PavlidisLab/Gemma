@@ -179,10 +179,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
         // for all similar literature evidences combine them into 1 evidence without loosing information
-        /** code ready waiting for client implementation */
-        // return groupCommonEvidences( evidenceValueObjects );
-
-        return evidenceValueObjects;
+        return groupCommonEvidences( evidenceValueObjects );
     }
 
     /**
@@ -1328,7 +1325,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Literature Evidence that are very similar are grouped together into a new type called GroupEvidenceValueObject */
-    @SuppressWarnings("unused")
     private Collection<EvidenceValueObject> groupCommonEvidences( Collection<EvidenceValueObject> evidenceValueObjects ) {
 
         Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new HashSet<EvidenceValueObject>();

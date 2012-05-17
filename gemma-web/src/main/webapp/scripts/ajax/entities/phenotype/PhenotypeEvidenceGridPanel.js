@@ -50,8 +50,15 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 		}.createDelegate(this);
    		
-		var convertToPudmedAnchor = function(pubmedUrl) {
-		    return (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
+		var generatePublicationLinks = function(pudmedId, pubmedUrl) {
+			var anchor = '';
+			if (pudmedId != null) {
+				anchor += '<a target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html?pubmedID=' +
+		        	pudmedId +
+		        	'"><img ext:qtip="Go to Bibliographic Reference (in new window)" ' + 
+		        	'src="/Gemma/images/icons/magnifier.png" width="10" height="10" alt="Bibliographic Reference" /></a>';
+			}
+		    return anchor + (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
 		    	pubmedURL: pubmedUrl
 		    });
 		};
@@ -134,6 +141,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			        // for EvidenceValueObject
 					'id', 'className', 'description', 'evidenceCode', 'evidenceSecurityValueObject',
 		        	'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes', 'relevance',
+		        	// for GroupEvidenceValueObject
+		        	'literatureEvidences',
 		        	// for ExperimentalEvidenceValueObject
 		 			'experimentCharacteristics', 'primaryPublicationCitationValueObject',
 		 			'relevantPublicationsCitationValueObjects',
@@ -154,7 +163,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						        	if (record.primaryPublicationCitationValueObject != null) {
 						        		descriptionHtml += '<p><b>Primary Publication</b>: ' +
 						        			record.primaryPublicationCitationValueObject.citation + ' ' +
-						        			convertToPudmedAnchor(record.primaryPublicationCitationValueObject.pubmedURL) + '</p>';
+						        			generatePublicationLinks(record.primaryPublicationCitationValueObject.pubmedAccession,
+						        				record.primaryPublicationCitationValueObject.pubmedURL) + '</p>';
 						        	}
 						
 									var relPub = record.relevantPublicationsCitationValueObjects;
@@ -162,7 +172,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						        		descriptionHtml += '<p><b>Relevant Publication</b>: ';
 						        		
 										for (var i = 0; i < relPub.length; i++) {
-											descriptionHtml += relPub[i].citation + ' ' + convertToPudmedAnchor(relPub[i].pubmedURL);
+											descriptionHtml += relPub[i].citation + ' ' +
+												generatePublicationLinks(relPub[i].pubmedAccession, relPub[i].pubmedURL);
 											
 											if (i < relPub.length - 1) {
 												descriptionHtml += " | ";
@@ -195,11 +206,27 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								case 'GenericEvidenceValueObject' : 
 									break;
 						
+								case 'GroupEvidenceValueObject' : 
+									descriptionHtml += '<p>';
+									
+									for (var i = 0; i < record.literatureEvidences.length; i++) {
+										descriptionHtml += '<b>Publication ' + (i + 1) + '</b>: ' +
+											record.literatureEvidences[i].citationValueObject.citation + ' ' +
+											generatePublicationLinks(
+												record.literatureEvidences[i].citationValueObject.pubmedAccession,
+												record.literatureEvidences[i].citationValueObject.pubmedURL) + '<br />';
+									}
+									
+									descriptionHtml += '</p>';
+									break;
+						
 								case 'LiteratureEvidenceValueObject' : 
 						        	if (record.citationValueObject != null) {
 						        		descriptionHtml += '<p><b>Publication</b>: ' +
 						        			record.citationValueObject.citation + ' ' +
-						        			convertToPudmedAnchor(record.citationValueObject.pubmedURL) + '</p>';
+						        			generatePublicationLinks(
+						        				record.citationValueObject.pubmedAccession,
+						        				record.citationValueObject.pubmedURL) + '</p>';
 						        	}
 									break;
 						
@@ -296,6 +323,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								}
 								break;
 					
+							case 'GroupEvidenceValueObject' : 
+								typeColumnHtml = '<b>' + record.data.literatureEvidences.length + 'x</b> Literature';
+								break;
+
 							case 'LiteratureEvidenceValueObject' : 
 								typeColumnHtml = 'Literature';
 								break;
@@ -342,16 +373,28 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							
 							case 'ExperimentalEvidenceValueObject' :
 					        	if (record.data.primaryPublicationCitationValueObject != null) {
-									linkOutHtml += convertToPudmedAnchor(record.data.primaryPublicationCitationValueObject.pubmedURL);
+									linkOutHtml += generatePublicationLinks(
+										record.data.primaryPublicationCitationValueObject.pubmedAccession,
+										record.data.primaryPublicationCitationValueObject.pubmedURL);
 								}
 								break;
 					
 							case 'GenericEvidenceValueObject' : 
 								break;
 					
+							case 'GroupEvidenceValueObject' :
+								var pubmedURL = record.data.literatureEvidences[0].citationValueObject.pubmedURL;
+								for (var i = 1; i < record.data.literatureEvidences.length; i++) {
+									pubmedURL += ',' + record.data.literatureEvidences[i].citationValueObject.pubmedAccession;
+								}
+								
+								linkOutHtml += generatePublicationLinks(null, pubmedURL);
+								break;
+					
 							case 'LiteratureEvidenceValueObject' : 
 					        	if (record.data.citationValueObject != null) {
-					        		linkOutHtml += convertToPudmedAnchor(record.data.citationValueObject.pubmedURL);
+					        		linkOutHtml += generatePublicationLinks(record.data.citationValueObject.pubmedAccession,
+					        			record.data.citationValueObject.pubmedURL);
 					        	}
 								break;
 					
@@ -377,7 +420,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-						if (!this.hidden) {
+						if (!this.hidden) {		            	
 							adminLinks += Gemma.SecurityManager.getSecurityLink(
 								'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
 								record.data.id,
@@ -390,7 +433,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 							if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
 							 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
-		            		    (record.data.evidenceSecurityValueObject.currentUserHasWritePermission)) {
+		            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
+								record.data.evidenceSource == null) {
 			            		adminLinks += ' ' +
 			            					  generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
 											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png');
