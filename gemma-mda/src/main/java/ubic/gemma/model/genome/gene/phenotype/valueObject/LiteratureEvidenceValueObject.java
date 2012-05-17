@@ -25,7 +25,8 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 
-public class LiteratureEvidenceValueObject extends EvidenceValueObject {
+public class LiteratureEvidenceValueObject extends EvidenceValueObject implements
+        Comparable<LiteratureEvidenceValueObject> {
 
     private CitationValueObject citationValueObject = null;
 
@@ -83,6 +84,19 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
             if ( other.citationValueObject != null ) return false;
         } else if ( !this.citationValueObject.equals( other.citationValueObject ) ) return false;
         return true;
+    }
+
+    // order by highess pubmed
+    @Override
+    public int compareTo( LiteratureEvidenceValueObject o ) {
+        if ( this.citationValueObject != null && o.getCitationValueObject() != null
+                && this.citationValueObject.getPubmedAccession() != null
+                && o.getCitationValueObject().getPubmedAccession() != null ) {
+            Long pubmed1 = new Long( this.citationValueObject.getPubmedAccession() );
+            Long pubmed2 = new Long( o.getCitationValueObject().getPubmedAccession() );
+            return pubmed2.compareTo( pubmed1 );
+        }
+        return -1;
     }
 
 }

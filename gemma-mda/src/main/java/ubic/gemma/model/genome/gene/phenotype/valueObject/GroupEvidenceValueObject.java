@@ -15,15 +15,18 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
 
 public class GroupEvidenceValueObject extends EvidenceValueObject {
 
-    Collection<LiteratureEvidenceValueObject> literatureEvidences = new HashSet<LiteratureEvidenceValueObject>();
+    Collection<LiteratureEvidenceValueObject> literatureEvidences = new TreeSet<LiteratureEvidenceValueObject>();
 
     public GroupEvidenceValueObject( Collection<LiteratureEvidenceValueObject> literatureEvidences ) {
         super();
-        this.literatureEvidences = literatureEvidences;
+        for ( LiteratureEvidenceValueObject lit : literatureEvidences ) {
+            this.literatureEvidences.add( lit );
+        }
+
         LiteratureEvidenceValueObject litEvidenceValueObject = literatureEvidences.iterator().next();
 
         this.setId( litEvidenceValueObject.getId() );
