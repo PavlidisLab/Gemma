@@ -25,9 +25,10 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     protected long publicGeneCount = 0L;
     protected long privateGeneCount = 0L;
     private String urlId = "";
+    private boolean dbPhenotype = false;
 
     public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject ) {
-        
+
         this.urlId = treeCharacteristicValueObject.getUrlId();
         this._id = treeCharacteristicValueObject.get_id();
         this._parent = treeCharacteristicValueObject.get_parent();
@@ -36,6 +37,7 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         this.valueUri = treeCharacteristicValueObject.getValueUri();
         this.publicGeneCount = treeCharacteristicValueObject.getPublicGeneCount();
         this.privateGeneCount = treeCharacteristicValueObject.getPrivateGeneCount();
+        this.dbPhenotype = treeCharacteristicValueObject.isDbPhenotype();
     }
 
     public String get_id() {
@@ -100,6 +102,14 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
 
     public void setUrlId( String urlId ) {
         this.urlId = urlId;
+    }
+
+    public boolean isDbPhenotype() {
+        return this.dbPhenotype;
+    }
+
+    public void setDbPhenotype( boolean dbPhenotype ) {
+        this.dbPhenotype = dbPhenotype;
     }
 
     @Override
