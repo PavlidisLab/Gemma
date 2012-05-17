@@ -227,8 +227,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private void setValues( ExpressionExperimentValueObject expressionExperiment ) {
         this.isGroup = false;
         this.size = 1;
-        this.taxonId = null;
-        this.taxonName = null;
+        this.taxonId = expressionExperiment.getTaxonId();
+        this.taxonName = expressionExperiment.getTaxon();
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
         this.memberIds.add(expressionExperiment.getId());

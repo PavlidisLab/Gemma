@@ -182,7 +182,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         }
         Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
 
-        List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
+        List<SearchResult> eesSR = new ArrayList<SearchResult>();
+        if( results.get( ExpressionExperimentSet.class ) != null ){
+            eesSR.addAll( results.get( ExpressionExperimentSet.class ) );
+        }
         Map<Long, Boolean> isSetOwnedByUser = new HashMap<Long, Boolean>();
 
         // store userOwned info
