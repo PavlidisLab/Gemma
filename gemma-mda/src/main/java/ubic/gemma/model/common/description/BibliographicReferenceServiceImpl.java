@@ -43,9 +43,6 @@ public class BibliographicReferenceServiceImpl extends
         ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
-    
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
     //@Autowired
     //private SearchService searchService;
 
@@ -160,44 +157,12 @@ public class BibliographicReferenceServiceImpl extends
             idTobibRefVO.put( bibref.getId(), vo );
         }
         
-        populateRelatedExperiments( bibRefs, idTobibRefVO );
-        populateBibliographicPhenotypes( idTobibRefVO );
+        this.populateRelatedExperiments( bibRefs, idTobibRefVO );
+        this.populateBibliographicPhenotypes( idTobibRefVO );
         
         return idTobibRefVO.values();
     }
 
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
-            Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
-        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this
-                .getRelatedExperiments( bibRefs );
-        for ( BibliographicReference bibref : bibRefs ) {
-            BibliographicReferenceValueObject vo = idTobibRefVO.get( bibref.getId() );
-            if ( relatedExperiments.containsKey( bibref ) ) {
-                vo.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments
-                        .get( bibref ) ) );
-            }
-        }
-    }
-
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    private void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
-
-        for(BibliographicReferenceValueObject vo : idTobibRefVO.values()){
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
-                    .findPhenotypesForBibliographicReference( vo.getPubAccession() );
-
-            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-            vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
-        }
-    }
 
     @Override
     protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
@@ -288,7 +253,24 @@ public class BibliographicReferenceServiceImpl extends
         return this.getBibliographicReferenceDao().getRelatedExperiments( records );
 
     }
-    
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     */
+    @Override
+    public Collection<ExpressionExperiment> getRelatedExperiments(
+            BibliographicReference bibRef ) {
+        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
+        records.add( bibRef );
+        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao().getRelatedExperiments( records );
+        if(map.containsKey( bibRef )){
+            return map.get( bibRef );
+        }
+        return new ArrayList<ExpressionExperiment>();
+    }
     /*@Override 
     public List<BibliographicReferenceValueObject> search(String query){
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
