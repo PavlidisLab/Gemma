@@ -37,6 +37,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
@@ -66,13 +67,13 @@ public class AuditAdvice {
     private static Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
     @Autowired
-    CrudUtils crudUtils;
+    private CrudUtils crudUtils;
 
     @Autowired
-    UserManager userManager;
+    private UserManager userManager;
 
     @Autowired
-    AuditHelper auditHelper;
+    private AuditHelper auditHelper;
 
     private boolean AUDIT_CREATE = true;
     private boolean AUDIT_DELETE = true;
@@ -97,6 +98,7 @@ public class AuditAdvice {
      * @return
      * @throws Throwable
      */
+    @Transactional
     public void doAuditAdvice( JoinPoint pjp, Object retValue ) throws Throwable {
 
         final Signature signature = pjp.getSignature();
@@ -106,15 +108,15 @@ public class AuditAdvice {
         Object object = getPersistentObject( retValue, methodName, args );
 
         if ( object == null ) return;
-
+        User user = userManager.getCurrentUser();
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
                 if ( Auditable.class.isAssignableFrom( o.getClass() ) ) {
-                    process( methodName, ( Auditable ) o );
+                    process( methodName, ( Auditable ) o, user );
                 }
             }
         } else if ( ( Auditable.class.isAssignableFrom( object.getClass() ) ) ) {
-            process( methodName, ( Auditable ) object );
+            process( methodName, ( Auditable ) object, user );
         }
     }
 
@@ -124,7 +126,7 @@ public class AuditAdvice {
      * @param auditable
      * @param note Additional text to add to the automatically generated note.
      */
-    private void addCreateAuditEvent( final Auditable auditable, final String note ) {
+    private void addCreateAuditEvent( final Auditable auditable, User user, final String note ) {
 
         if ( isNullOrTransient( auditable ) ) return;
 
@@ -132,20 +134,17 @@ public class AuditAdvice {
 
         if ( auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
             // This can happen when we persist objects and then let this interceptor look at them again
-            // while persisting parent objects.
-            log.warn( "Call to addCreateAuditEvent but the auditTrail already has events! AuditTrail id: "
-                    + auditTrail.getId() );
+            // while persisting parent objects. That's okay.
+            if ( log.isDebugEnabled() )
+                log.debug( "Call to addCreateAuditEvent but the auditTrail already has events. AuditTrail id: "
+                        + auditTrail.getId() );
             return;
         }
 
         String details = "Create " + auditable.getClass().getSimpleName() + " " + auditable.getId() + note;
 
         try {
-            log.debug( "start" );
-            User user = userManager.getCurrentUser();
-            log.debug( "got user" );
             auditHelper.addCreateAuditEvent( auditable, details, user );
-            log.debug( "done create" );
             if ( log.isDebugEnabled() ) {
                 log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
                         + auditable.getId() + " by " + user.getUserName() );
@@ -163,10 +162,9 @@ public class AuditAdvice {
     /**
      * @param d
      */
-    private void addDeleteAuditEvent( Auditable d ) {
+    private void addDeleteAuditEvent( Auditable d, User user ) {
         assert d != null;
         // what else could we do? But need to keep this record in a good place. See log4j.properties.
-        User user = userManager.getCurrentUser();
         if ( log.isInfoEnabled() ) {
             String un = "";
             if ( user != null ) {
@@ -179,7 +177,7 @@ public class AuditAdvice {
     /**
      * @param auditable
      */
-    private void addUpdateAuditEvent( final Auditable auditable ) {
+    private void addUpdateAuditEvent( final Auditable auditable, User user ) {
         assert auditable != null;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
@@ -190,9 +188,8 @@ public class AuditAdvice {
              * association and the way we persist them. See ExpressionPersister. (actually this seems to be fixed...)
              */
             log.error( "No create event for update method call on " + auditable + ", performing 'create' instead" );
-            addCreateAuditEvent( auditable, " - Event added on update of existing object." );
+            addCreateAuditEvent( auditable, user, " - Event added on update of existing object." );
         } else {
-            User user = userManager.getCurrentUser();
             String note = "Updated " + auditable.getClass().getSimpleName() + " " + auditable.getId();
             auditHelper.addUpdateAuditEvent( auditable, note, user );
             if ( log.isDebugEnabled() ) {
@@ -226,7 +223,7 @@ public class AuditAdvice {
      * @param auditable
      * @param auditTrail
      */
-    private void maybeAddCascadeCreateEvent( Object object, Auditable auditable ) {
+    private void maybeAddCascadeCreateEvent( Object object, Auditable auditable, User user ) {
 
         // TODO: I don't think we need this.
         if ( !Hibernate.isInitialized( auditable ) ) {
@@ -234,7 +231,7 @@ public class AuditAdvice {
         }
 
         if ( auditable.getAuditTrail() == null || auditable.getAuditTrail().getEvents().isEmpty() ) {
-            addCreateAuditEvent( auditable, " - created by cascade from " + object );
+            addCreateAuditEvent( auditable, user, " - created by cascade from " + object );
         }
     }
 
@@ -244,7 +241,7 @@ public class AuditAdvice {
      * @param methodName
      * @param object
      */
-    private void process( final String methodName, final Auditable a ) {
+    private void process( final String methodName, final Auditable a, User user ) {
         if ( log.isTraceEnabled() ) {
             log.trace( "***********  Start Audit of " + methodName + " on " + a + " *************" );
         }
@@ -252,19 +249,19 @@ public class AuditAdvice {
         assert a.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + a + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
-            addCreateAuditEvent( a, "" );
-            processAssociations( methodName, a );
+            addCreateAuditEvent( a, user, "" );
+            processAssociations( methodName, a, user );
         } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
-            addUpdateAuditEvent( a );
+            addUpdateAuditEvent( a, user );
 
             /*
              * Do not process associations during an update except to add creates to new objects. Otherwise this would
              * result in update events getting added to all child objects, which is silly; and in any case they might be
              * proxies.
              */
-            processAssociations( methodName, a );
+            processAssociations( methodName, a, user );
         } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
-            addDeleteAuditEvent( a );
+            addDeleteAuditEvent( a, user );
         }
 
         if ( log.isTraceEnabled() ) log.trace( "============  End Audit ==============" );
@@ -281,7 +278,7 @@ public class AuditAdvice {
      * @param object
      * @see AclAdvice for similar code for ACLs
      */
-    private void processAssociations( String methodName, Object object ) {
+    private void processAssociations( String methodName, Object object, User user ) {
 
         if ( object instanceof AuditTrail ) return; // don't audit audit trails.
 
@@ -315,9 +312,9 @@ public class AuditAdvice {
                     Auditable auditable = ( Auditable ) associatedObject;
                     try {
 
-                        maybeAddCascadeCreateEvent( object, auditable );
+                        maybeAddCascadeCreateEvent( object, auditable, user );
 
-                        processAssociations( methodName, auditable );
+                        processAssociations( methodName, auditable, user );
                     } catch ( HibernateException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
@@ -334,8 +331,8 @@ public class AuditAdvice {
                                 Auditable auditable = ( Auditable ) collectionMember;
                                 try {
                                     Hibernate.initialize( auditable );
-                                    maybeAddCascadeCreateEvent( object, auditable );
-                                    processAssociations( methodName, collectionMember );
+                                    maybeAddCascadeCreateEvent( object, auditable, user );
+                                    processAssociations( methodName, collectionMember, user );
                                 } catch ( HibernateException e ) {
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
