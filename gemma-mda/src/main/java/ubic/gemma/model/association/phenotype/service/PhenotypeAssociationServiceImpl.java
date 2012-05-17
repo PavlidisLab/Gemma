@@ -165,20 +165,20 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find all public phenotypes associated with genes */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations() {
-        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations();
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations(String taxonCommonName) {
+        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations(taxonCommonName);
     }
 
     /** find all phenotypes associated with genes for a user */
     @Override
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName ) {
-        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( userName );
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,String taxonCommonName ) {
+        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( userName,taxonCommonName );
     }
 
     /** find all phenotypes associated with genes */
     @Override
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations() {
-        return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations();
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations(String taxonCommonName) {
+        return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations(taxonCommonName);
     }
 
     @Override

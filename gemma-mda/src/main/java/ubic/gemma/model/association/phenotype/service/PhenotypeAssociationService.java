@@ -124,13 +124,14 @@ public interface PhenotypeAssociationService {
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
 
     /** find all public phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations();
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName );
 
     /** find all phenotypes associated with genes for a user */
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName );
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
+            String taxonCommonName );
 
     /** find all phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations();
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName );
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri );

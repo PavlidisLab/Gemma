@@ -78,6 +78,15 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon );
 
     /**
+     * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
+     * 
+     * @param phenotypesValuesUri the roots phenotype of the query
+     * @param taxon the name of the taxon (optinal)
+     * @return A collection of the genes found
+     */
+    public abstract Collection<GeneValueObject> findCandidateGenes( String taxon, Set<String> phenotypesValuesUri );
+
+    /**
      * Removes an evidence
      * 
      * @param id The Evidence database id
@@ -160,6 +169,15 @@ public interface PhenotypeAssociationManagerService {
      * @param externalDatabaseName
      */
     public abstract void removeEvidencesWithExternalDatabaseName( String externalDatabaseName );
+
+    /**
+     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
+     * using parents of terms, and will return 3 trees representing Disease, HP and MP
+     * 
+     * @param taxonCommonName specify a taxon (optional)
+     * @return A collection of the phenotypes with the gene occurence
+     */
+    public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName );
 
     /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree

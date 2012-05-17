@@ -222,11 +222,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all public phenotypes associated with genes */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations() {
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl')";
+        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl')";
+
+        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
+            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
+        }
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
@@ -251,13 +255,18 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all phenotypes associated with genes for a user */
     @Override
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName ) {
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
+            String taxonCommonName ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where mask=1 and acl_sid.sid='"
+        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where mask=1 and acl_sid.sid='"
                 + userName
                 + "'and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl')";
+
+        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
+            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
+        }
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
@@ -282,11 +291,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all phenotypes associated with genes */
     @Override
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations() {
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK";
+        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK";
+
+        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
+            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
+        }
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
@@ -311,12 +324,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri ) {
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName,
+            Set<String> valuesUri ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
         String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and TAXON.COMMON_name='"
-                + taxon + "'";
+                + taxonCommonName + "'";
 
         String queryStringValuesUri = "";
 

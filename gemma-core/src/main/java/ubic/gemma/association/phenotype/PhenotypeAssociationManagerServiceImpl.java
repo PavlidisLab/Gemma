@@ -208,6 +208,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
+    public Collection<GeneValueObject> findCandidateGenes( String taxonCommonName, Set<String> phenotypesValuesUri ) {
+        return findCandidateGenes( phenotypesValuesUri, this.taxonService.findByCommonName( taxonCommonName ) );
+    }
+
+    /**
+     * Given a set of phenotypes returns the genes that have all those phenotypes or children phenotypes
+     * 
+     * @param phenotypesValuesUri the roots phenotype of the query
+     * @param taxon the name of the taxon (optinal)
+     * @return A collection of the genes found
+     */
+    @Override
     public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
@@ -234,6 +246,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
      * using parents of terms, and will return 3 trees representing Disease, HP and MP
      * 
+     * @param taxonCommonName specify a taxon (optional)
+     * @return A collection of the phenotypes with the gene occurence
+     */
+    @Override
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName ) {
+
+        Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
+
+        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
+                taxonCommonName ) );
+
+        // undo the tree in a simple structure
+        for ( TreeCharacteristicValueObject t : ontologyTrees ) {
+            convertToFlatTree( simpleTreeValueObjects, t );
+        }
+
+        return simpleTreeValueObjects;
+    }
+
+    /**
+     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
+     * using parents of terms, and will return 3 trees representing Disease, HP and MP
+     * 
      * @return A collection of the phenotypes with the gene occurence
      */
     @Override
@@ -241,7 +276,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
-        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true ) );
+        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
+                null ) );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
@@ -735,13 +771,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      * 
      * @param withParentTerms if we want to include the parents terms from the Ontology
+     * @param taxonCommonName if we only want a certain taxon
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
-    private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms ) {
+    private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms,
+            String taxonCommonName ) {
 
         // all Public phenotypes in Gemma linked to all the genes containing them
         HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
-                .findPublicPhenotypesGenesAssociations();
+                .findPublicPhenotypesGenesAssociations( taxonCommonName );
 
         // all phenotypes in Gemma that is owned by the user, they might be public or private
         HashMap<String, HashSet<Integer>> userOwnedPhenotypesGenesAssociations = null;
@@ -757,7 +795,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( SecurityServiceImpl.isUserAdmin() ) {
             // admin can see all private data
-            userOwnedPhenotypesGenesAssociations = this.associationService.findAllPhenotypesGenesAssociations();
+            userOwnedPhenotypesGenesAssociations = this.associationService
+                    .findAllPhenotypesGenesAssociations( taxonCommonName );
         } else {
 
             String userName = "";
@@ -767,8 +806,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 userName = this.userManager.getCurrentUsername();
                 // TODO find also groups
             }
-            userOwnedPhenotypesGenesAssociations = this.associationService
-                    .findPrivatePhenotypesGenesAssociations( userName );
+            userOwnedPhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
+                    userName, taxonCommonName );
         }
 
         // make the private set of Phenotype Gene assossiation
