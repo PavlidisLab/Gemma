@@ -73,20 +73,6 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
-     */
-    public User findByUserName( final String userName ) {
-        List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
-                "userName", userName );
-        if ( r.isEmpty() ) {
-            return null;
-        } else if ( r.size() > 1 ) {
-            throw new IllegalStateException( "Multiple users with name=" + userName );
-        }
-        return ( User ) r.iterator().next();
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#load(int, java.lang.Long)
      */
     public User load( final java.lang.Long id ) {

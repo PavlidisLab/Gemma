@@ -95,7 +95,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      */
     public User findByUserName( final String userName ) {
         List<?> r = this.getSession().createQuery( "from UserImpl u where u.userName=:userName" ).setCacheable( true )
-                .setParameter( "userName", userName ).list();
+                .setCacheRegion( "usersByUserName" ).setParameter( "userName", userName ).list();
         //
         // List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
         // "userName", userName );

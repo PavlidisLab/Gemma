@@ -98,7 +98,6 @@ public class AuditAdvice {
      * @return
      * @throws Throwable
      */
-    @Transactional
     public void doAuditAdvice( JoinPoint pjp, Object retValue ) throws Throwable {
 
         final Signature signature = pjp.getSignature();
@@ -108,6 +107,7 @@ public class AuditAdvice {
         Object object = getPersistentObject( retValue, methodName, args );
 
         if ( object == null ) return;
+        
         User user = userManager.getCurrentUser();
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
