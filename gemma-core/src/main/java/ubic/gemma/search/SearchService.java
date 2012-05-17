@@ -77,11 +77,5 @@ public interface SearchService {
      */
     public abstract List<?> search( SearchSettings settings, Class<?> resultClass );
 
-    /**
-     * TO BE MOVED TO BibliographicReferenceService AFTER THIS COMMIT
-     * @param query
-     * @return
-     */
-    public List<BibliographicReferenceValueObject> searchBibliographicRecords( String query );
 
 }

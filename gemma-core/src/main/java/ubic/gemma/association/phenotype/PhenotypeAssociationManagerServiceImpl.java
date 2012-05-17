@@ -34,13 +34,13 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;

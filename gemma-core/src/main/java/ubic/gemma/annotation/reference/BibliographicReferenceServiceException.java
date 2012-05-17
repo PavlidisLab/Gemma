@@ -16,13 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.description;
+package ubic.gemma.annotation.reference;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
  * The default exception thrown for unexpected errors occurring within
- * {@link ubic.gemma.model.common.description.BibliographicReferenceService}.
+ * {@link ubic.gemma.annotation.reference.BibliographicReferenceService}.
  */
 public class BibliographicReferenceServiceException extends java.lang.RuntimeException {
     /**

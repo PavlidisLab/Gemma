@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.description;
+package ubic.gemma.annotation.reference;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -24,7 +24,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.BibliographicReference.Factory;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.common.description;
+package ubic.gemma.annotation.reference;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,28 +23,28 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
-//import ubic.gemma.search.SearchService;
-//import ubic.gemma.search.SearchSettings;
+import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 
 /**
  * Implementation of BibliographicReferenceService.
  * 
  * @author keshav
  * @version $Id$
- * @see ubic.gemma.model.common.description.BibliographicReferenceService
+ * @see ubic.gemma.annotation.reference.BibliographicReferenceService
  */
 @Service
 public class BibliographicReferenceServiceImpl extends
-        ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
+        ubic.gemma.annotation.reference.BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
-    //@Autowired
-    //private SearchService searchService;
+    @Autowired
+    private SearchService searchService;
 
     /*
      * (non-Javadoc)
@@ -60,7 +60,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
     protected BibliographicReference handleCreate(
@@ -72,7 +72,7 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * Check to see if the reference already exists
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#alreadyExists(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#alreadyExists(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
     protected BibliographicReference handleFind(
@@ -83,7 +83,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByExternalId(java.lang.String)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
     @Override
     protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
@@ -94,7 +94,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByExternalId(java.lang.String,
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String,
      *      java.lang.String)
      */
     @Override
@@ -119,7 +119,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
         return this.getBibliographicReferenceDao().getRelatedExperiments( bibliographicReference );
     }
 
@@ -170,7 +170,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
     protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
@@ -271,12 +271,20 @@ public class BibliographicReferenceServiceImpl extends
         }
         return new ArrayList<ExpressionExperiment>();
     }
-    /*@Override 
+    
+    @Override 
     public List<BibliographicReferenceValueObject> search(String query){
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = BibliographicReferenceValueObject.convert2ValueObjects( resultEntities );
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        for(BibliographicReference entity : resultEntities){
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
+            this.populateBibliographicPhenotypes( vo );
+            this.populateRelatedExperiments( entity, vo );
+            results.add( vo );
+        }
+        
         return results;
         
-    }*/
+    }
 
 }

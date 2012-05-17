@@ -16,12 +16,19 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.description;
+package ubic.gemma.annotation.reference;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import ubic.gemma.annotation.reference.BibliographicReferenceServiceImpl;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceDao;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.description.ExternalDatabase.Factory;
 import junit.framework.TestCase;
 
 /**

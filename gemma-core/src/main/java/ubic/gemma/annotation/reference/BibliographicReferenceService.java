@@ -16,13 +16,18 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.description;
+package ubic.gemma.annotation.reference;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -143,6 +148,6 @@ public interface BibliographicReferenceService {
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
 
-    //public List<BibliographicReferenceValueObject> search( String query );
+    public List<BibliographicReferenceValueObject> search( String query );
 
 }

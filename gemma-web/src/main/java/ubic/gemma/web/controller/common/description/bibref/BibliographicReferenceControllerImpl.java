@@ -33,17 +33,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -72,9 +71,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
-    @Autowired
-    private SearchService searchService;
-
     /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -112,7 +108,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      */
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> search( String query ) {
-        List<BibliographicReferenceValueObject> vos = searchService.searchBibliographicRecords( query );
+        List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( query );
         
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
                 vos, vos.size());
@@ -167,9 +163,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = this.loadMultiple( ids );
         if( returnVal.getRecords() != null && !returnVal.getRecords().isEmpty() ){
             return returnVal.getRecords().iterator().next();
-        }else{
-            throw new InvalidParameterException( "Error retrieving bibliographic reference for id = "+id );
         }
+        throw new InvalidParameterException( "Error retrieving bibliographic reference for id = "+id );
+        
         
     }
 

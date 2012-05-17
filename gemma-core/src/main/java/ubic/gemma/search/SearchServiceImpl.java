@@ -85,6 +85,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneSearchService;
@@ -93,7 +94,6 @@ import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -2283,12 +2283,4 @@ public class SearchServiceImpl implements SearchService {
         return getSearchResults( hits );
     }
 
-    
-    @Override 
-    public List<BibliographicReferenceValueObject> searchBibliographicRecords(String query){
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = BibliographicReferenceValueObject.convert2ValueObjects( resultEntities );
-        return results;
-        
-    }
 }

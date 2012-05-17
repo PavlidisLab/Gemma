@@ -30,9 +30,9 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController;
 
