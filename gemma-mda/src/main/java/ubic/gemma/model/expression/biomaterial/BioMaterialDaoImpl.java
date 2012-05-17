@@ -61,7 +61,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      */
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        log.info( "Start find" );
+        log.debug( "Start find" );
         Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
@@ -78,7 +78,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                 result = results.iterator().next();
             }
         }
-        log.info( "Done with find" );
+        log.debug( "Done with find" );
         return ( BioMaterial ) result;
 
     }
@@ -102,7 +102,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new bioMaterial: " + bioMaterial );
         newBioMaterial = create( bioMaterial );
-        log.info( "Done with 'create'" );
+        log.debug( "Done with 'create'" );
         return newBioMaterial;
     }
 
