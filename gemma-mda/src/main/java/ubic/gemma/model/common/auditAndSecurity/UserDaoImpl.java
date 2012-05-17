@@ -15,8 +15,10 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,11 +83,28 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
                                 + "' was found when executing query" );
 
             } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
+                result = results.get( 0 );
             }
         }
         return ( User ) result;
 
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
+     */
+    public User findByUserName( final String userName ) {
+        List<?> r = this.getSession().createQuery( "from UserImpl u where u.userName=:userName" ).setCacheable( true )
+                .setParameter( "userName", userName ).list();
+        //
+        // List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
+        // "userName", userName );
+        if ( r.isEmpty() ) {
+            return null;
+        } else if ( r.size() > 1 ) {
+            throw new IllegalStateException( "Multiple users with name=" + userName );
+        }
+        return ( User ) r.get( 0 );
     }
 
     /*
