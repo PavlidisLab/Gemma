@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.genome.Taxon;
@@ -53,7 +53,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     protected static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
 
     @Autowired
-    protected ArrayDesignDao arrayDesignDao;
+    protected ArrayDesignService arrayDesignService;
 
     @Autowired
     protected CompositeSequenceDao compositeSequenceDao;
@@ -122,7 +122,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         /*
          * FIXME This is VERY slow if we have to add a lot of DesignElements to the array.
          */
-        this.arrayDesignDao.update( arrayDesign );
+        this.arrayDesignService.update( arrayDesign );
 
         return persistedDE;
 
@@ -143,7 +143,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         log.info( "Loading sequence elements for " + arrayDesign );
 
-        final Collection<CompositeSequence> compositeSequences = arrayDesignDao.thaw( arrayDesign )
+        final Collection<CompositeSequence> compositeSequences = arrayDesignService.thaw( arrayDesign )
                 .getCompositeSequences();
 
         String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
@@ -193,14 +193,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         /*
          * Note we don't do a full find here.
          */
-        ArrayDesign existing = arrayDesignDao.find( arrayDesign );
+        ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
         if ( existing == null ) {
 
             /*
              * Try less stringent search.
              */
-            existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
+            existing = arrayDesignService.findByShortName( arrayDesign.getShortName() );
 
             if ( existing == null ) {
                 log.info( arrayDesign + " is new, processing..." );
@@ -303,14 +303,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
-        arrayDesign = arrayDesignDao.create( arrayDesign );
+        arrayDesign = arrayDesignService.create( arrayDesign );
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
             /*
              * FIXME this shouldn't be necessary as this method now runs in a transaction.
              */
-            arrayDesignDao.remove( arrayDesign );
+            arrayDesignService.remove( arrayDesign );
             throw new CancellationException(
                     "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
         }
