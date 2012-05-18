@@ -601,38 +601,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return retrieveValueObjects( ids );
     }
 
-    public void setAuditEventService( AuditEventService auditEventService ) {
-        this.auditEventService = auditEventService;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
-     */
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
-
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
     /**
      * Read information about troubled events for the set of given EEs. These are read from the audit trail.
      * 
@@ -856,10 +824,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-
-        // Should already have this.
-        // eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
-        // eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
 
         saveValueObject( eeVo );
 
