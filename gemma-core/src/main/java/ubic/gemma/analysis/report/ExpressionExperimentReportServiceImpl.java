@@ -849,19 +849,22 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
         eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
-
         eeVo.setDifferentialExpressionAnalyses( getDiffExpressedProbes( tempEe, CUT_OFF ) );
-
         Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
-        log.debug( numLinks + " links." );
+
         eeVo.setCoexpressionLinkCount( numLinks );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-        eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
-        eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
+
+        // Should already have this.
+        // eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
+        // eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
 
         saveValueObject( eeVo );
+
+        assert eeVo.getDateCreated() != null;
+        assert eeVo.getDateLastUpdated() != null;
 
         log.debug( "Generated report for " + eeVo.getShortName() );
 
