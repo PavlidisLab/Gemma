@@ -105,7 +105,7 @@ public class GeoServiceImpl extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+    public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform, boolean allowSuperSeriesImport,
             boolean allowSubSeriesImport ) {
 
@@ -696,15 +696,14 @@ public class GeoServiceImpl extends AbstractGeoService {
     /**
      * @param entities
      */
-    private void updateReports( Collection entities ) {
+    private void updateReports( Collection<?> entities ) {
         Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
+                expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
 
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
-
-                expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
