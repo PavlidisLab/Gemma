@@ -1110,7 +1110,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Boolean isShared = this.securityService.isShared( p );
         Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
 
-        if ( currentUserIsOwner || isPublic || isShared ) {
+        if ( currentUserIsOwner || isPublic || isShared || SecurityServiceImpl.isUserAdmin() ) {
 
             currentUserHasWritePermission = this.securityService.isEditable( p );
             owner = ( ( PrincipalSid ) this.securityService.getOwner( p ) ).getPrincipal();
