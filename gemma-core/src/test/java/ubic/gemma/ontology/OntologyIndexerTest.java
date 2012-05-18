@@ -51,7 +51,7 @@ public class OntologyIndexerTest {
     public final void testCellListings() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
         OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
-        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model, true );
 
         Collection<OntologyTerm> names = OntologySearch.matchClasses( model, index, "cell*" );
         for ( OntologyTerm ot : names ) {
@@ -65,11 +65,46 @@ public class OntologyIndexerTest {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
         OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
 
-        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model, true );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Bedding" );
 
         assertEquals( 1, name.size() );
+        index.close();
+    }
+
+    /**
+     * See bug 2920
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testOmitBadPredicates() throws Exception {
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/niforgantest.owl.xml" );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "NIFTEST", OntModelSpec.OWL_MEM_TRANS_INF );
+        is.close();
+
+        IndexLARQ index = OntologyIndexer.indexOntology( "NIFTEST", model, true );
+
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Organ" );
+        for ( OntologyTerm ontologyTerm : name ) {
+            log.info( ontologyTerm );
+        }
+        assertEquals( 4, name.size() );
+
+        name = OntologySearch.matchClasses( model, index, "Anatomical entity" );
+        for ( OntologyTerm ontologyTerm : name ) {
+            log.info( ontologyTerm );
+        }
+        assertEquals( 1, name.size() );
+
+        name = OntologySearch.matchClasses( model, index, "liver" ); // this is an "example" that we want to avoid.
+        for ( OntologyTerm ontologyTerm : name ) {
+            log.info( ontologyTerm );
+        }
+        assertEquals( 0, name.size() );
+
         index.close();
     }
 
@@ -78,14 +113,14 @@ public class OntologyIndexerTest {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
         OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
 
-        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model, true );
         index.close();
 
         // now load it off disk
         index = OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "beddin*" );
-        log.info( name.toString() );
+
         assertEquals( 1, name.size() );
         index.close();
     }
