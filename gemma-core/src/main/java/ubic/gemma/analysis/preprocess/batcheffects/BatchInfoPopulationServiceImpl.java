@@ -139,16 +139,24 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     @Autowired
     DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
      */
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee ) {
         return this.fillBatchInformation( ee, false );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.expression.experiment.ExpressionExperiment, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment, boolean)
      */
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
@@ -340,7 +348,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         // apply sanity limit on number of batches. Completely arbitrary but guards against possible errors in getting
         // the dates in the first place.
         if ( lDates.size() > 99 ) {
-            throw new IllegalStateException( "There are too many batches: " + lDates.size() );
+            log.warn( "There are too many batches: " + lDates.size() );
+            return null;
         }
 
         boolean mergedAnySingletons = false;
@@ -478,8 +487,10 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         Map<Date, FactorValue> d2fv = new HashMap<Date, FactorValue>();
         ExperimentalFactor ef = null;
-        if ( datesToBatch.size() < 2 ) {
-            log.info( "There is only one batch" );
+        if ( datesToBatch == null || datesToBatch.size() < 2 ) {
+            if ( datesToBatch != null ) {
+                log.info( "There is only one 'batch'" );
+            }
             // we still put the processing dates in, below.
         } else {
             ef = makeFactorForBatch( ee );
