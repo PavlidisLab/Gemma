@@ -38,6 +38,16 @@ Gemma.CytoscapeSettings = {
     zoomLevelBiggerFont: 0.7,    
     zoomLevelBiggestFont: 0.4,
     
+    maxGeneIdsPerCoexVisQuery:200,
+    
+    //e.g. dark is >0.2 and <0.4, darkest is <=0.2
+    //darkest : most specificity, lightest: least specificity
+    nodeDegreeValue:{
+    	lightest:0.6,
+    	light:0.4,
+    	dark:0.2
+    },
+    
     nodeDegreeColor: {
     	lightest:{
     		name: "Lowest",

@@ -3,8 +3,8 @@ Ext.namespace("Gemma");
 
 Gemma.CoexValueObjectUtil = {
 		
-		//takes an array of CoexpressionValueObjectExts (knowngenes) and trims away results based on stringency
-		trimKnownGeneResults: function (knowngenes, currentQueryGeneIds, filterStringency) {
+		//takes an array of CoexpressionValueObjectExts (knowngenes) and trims away results based on stringency and currentQueryGeneIds
+		trimKnownGeneResultsWithQueryGenes: function (knowngenes, currentQueryGeneIds, filterStringency) {
 	       
 	        //helper array to prevent duplicate nodes from being entered
 	        var graphNodeIds = [];
@@ -24,7 +24,6 @@ Gemma.CoexValueObjectUtil = {
 	                if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) === -1) {
 	                    graphNodeIds.push(knowngenes[i].foundGene.id);
 	                }
-
 
 	                if (graphNodeIds.indexOf(knowngenes[i].queryGene.id) === -1) {
 	                    graphNodeIds.push(knowngenes[i].queryGene.id);
@@ -57,6 +56,24 @@ Gemma.CoexValueObjectUtil = {
 
 	    },
 	    
+	    trimKnownGeneResults: function (knowngenes, filterStringency) {
+	        var trimmedGeneResults = [];
+	       
+	        var kglength = knowngenes.length;
+	        for (i = 0; i < kglength; i++) {
+
+	            // go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+	            if ((knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency))
+	            {  
+	                trimmedGeneResults.push(knowngenes[i]);
+	            } //end if
+	        } // end for (<kglength)
+	        
+	        
+	        return trimmedGeneResults;
+
+	    },
+	    
 	    getCurrentQueryGeneIds: function (queryGenes){
 	    	var currentQueryGeneIds = [];
 	        var qlength = queryGenes.length;
@@ -84,7 +101,7 @@ Gemma.CoexValueObjectUtil = {
 		        var i;
 		        for (i = 0; i < kglength; i++) {
 
-		            // go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+		            // go in only if the query or known gene is contained in the original query geneids 
 		            if (geneIds.indexOf(knowngenes[i].foundGene.id) !== -1 || geneIds.indexOf(knowngenes[i].queryGene.id) !== -1)
 
 		            {		                
@@ -95,6 +112,64 @@ Gemma.CoexValueObjectUtil = {
 		        } // end for (<kglength)
 	    	
 		        return trimmedGeneResults;
-	    }		
+	    },
+	    
+	    filterGeneResultsByGeneIdsMyGenesOnly: function(geneIds, knowngenes){
+	    	
+    		var trimmedGeneResults = [];	        
+	       
+	        var kglength = knowngenes.length;
+	        var i;
+	        for (i = 0; i < kglength; i++) {
+	            
+	            if (geneIds.indexOf(knowngenes[i].foundGene.id) !== -1 && geneIds.indexOf(knowngenes[i].queryGene.id) !== -1)
+
+	            {		                
+	                
+	                trimmedGeneResults.push(knowngenes[i]);
+
+	            } //end if
+	        } // end for (<kglength)
+    	
+	        return trimmedGeneResults;
+        },
+        
+        combineKnownGeneResultsAndQueryGeneOnlyResults: function(kgResults, qgoResults){
+        	
+        	//only one query gene will result in no qgoResults
+        	if (!qgoResults){
+        		return kgResults;
+        	}
+        	
+        	var coexEdgeSet = [];
+        	
+        	var combinedResults = [];
+        	
+        	var kglength = kgResults.length;
+        	var i;
+            
+            for (i = 0; i < kglength; i++) {
+            	
+            	if (coexEdgeSet.indexOf(kgResults[i].foundGene.officialSymbol + "to" + kgResults[i].queryGene.officialSymbol) == -1 && coexEdgeSet.indexOf(kgResults[i].queryGene.officialSymbol + "to" + kgResults[i].foundGene.officialSymbol) == -1) {
+            		
+            		combinedResults.push(kgResults[i]);
+            		coexEdgeSet.push(kgResults[i].foundGene.officialSymbol + "to" + kgResults[i].queryGene.officialSymbol);
+            		coexEdgeSet.push(kgResults[i].queryGene.officialSymbol + "to" + kgResults[i].foundGene.officialSymbol);
+                
+            	}
+            }
+            
+            var qgolength = qgoResults.length;
+            for (i = 0; i < qgolength; i++) {
+            	if (coexEdgeSet.indexOf(qgoResults[i].foundGene.officialSymbol + "to" + qgoResults[i].queryGene.officialSymbol) == -1 && coexEdgeSet.indexOf(qgoResults[i].queryGene.officialSymbol + "to" + qgoResults[i].foundGene.officialSymbol) == -1) {
+            	combinedResults.push(qgoResults[i]);	
+            	coexEdgeSet.push(qgoResults[i].foundGene.officialSymbol + "to" + qgoResults[i].queryGene.officialSymbol);
+                coexEdgeSet.push(qgoResults[i].queryGene.officialSymbol + "to" + qgoResults[i].foundGene.officialSymbol);
+            	}
+            }
+            
+            return combinedResults;
+            
+        }
 		
 }

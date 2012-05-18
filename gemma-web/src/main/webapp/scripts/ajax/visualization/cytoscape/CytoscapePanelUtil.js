@@ -49,11 +49,11 @@ Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
 	 }	
 
 	 
-	 if (nodeDegree > 0.6) {
+	 if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
 	     return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
-	 } else if (nodeDegree > 0.4) {
+	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
 		 return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
-	 } else if (nodeDegree > 0.2) {
+	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
 		 return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
 	 } else  {
 		 return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
@@ -71,3 +71,69 @@ Gemma.CytoscapePanelUtil.restrictResultsStringency = function (displayStringency
 	
 	
 };
+
+Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function (csc){
+	
+	var newCsc = {};
+	
+	Ext.apply(newCsc, {
+				geneIds : csc.geneIds,
+				eeIds: csc.eeIds,				
+				stringency : Gemma.CytoscapePanelUtil.restrictResultsStringency(csc.displayStringency),
+				displayStringency : csc.displayStringency,
+				forceProbeLevelSearch : csc.forceProbeLevelSearch,
+				useMyDatasets : csc.useMyDatasets,
+				queryGenesOnly : csc.queryGenesOnly,
+				taxonId : csc.taxonId
+			});
+	
+	return newCsc;
+	
+	
+};
+
+
+Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (coexpressionSearchData){
+	
+	coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
+	
+    var qlength = coexpressionSearchData.coexGridResults.queryGenes.length;
+    
+    var queryGeneCountHash = {};
+    
+    var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
+    
+    var i;
+    for (i = 0; i < qlength; i++) {
+        coexpressionSearchData.cytoscapeCoexCommand.geneIds.push(coexpressionSearchData.coexGridResults.queryGenes[i].id);
+        
+        queryGeneCountHash[coexpressionSearchData.coexGridResults.queryGenes[i].id] = 0;
+        
+    }
+
+    var kglength = coexpressionSearchData.coexGridResults.knownGeneResults.length;
+//only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
+    for (i = 0; i < kglength; i++) {
+        if (coexpressionSearchData.cytoscapeCoexCommand.geneIds.indexOf(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id) === -1 
+        		&& queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id]< resultsPerQueryGene)  {
+            coexpressionSearchData.cytoscapeCoexCommand.geneIds.push(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id);
+            queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] = queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] + 1;
+        }
+    }
+	
+};
+
+
+Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects = function (selectedNodes){
+	
+	var selectedNodesGeneIdArray = [];
+    var sNodesLength = selectedNodes.length;
+    var i;
+    for (i = 0; i < sNodesLength; i++) {
+        selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+    }
+    
+    return selectedNodesGeneIdArray;
+	
+};
+

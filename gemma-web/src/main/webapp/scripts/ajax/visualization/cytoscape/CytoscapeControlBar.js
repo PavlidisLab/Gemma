@@ -104,6 +104,16 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 xtype: 'label',
                 html: '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT + '" src="/Gemma/images/icons/question_blue.png"/>',
                 height: 15
+            },' ',' ',
+            {
+                xtype: 'checkbox',								                
+                itemId: 'queryGenesOnly',
+                boxLabel: 'Query Genes Only',
+                handler: function (){
+                	this.display.filterQueryGenesOnly();
+                },
+                checked: false,								                
+                scope: this
             }, '->', '-',
             {
                 xtype: 'button',

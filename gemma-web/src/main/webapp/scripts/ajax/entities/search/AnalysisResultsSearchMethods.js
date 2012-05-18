@@ -525,50 +525,18 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 		var numDatasets = csc.eeIds.length;
 		
 		var displayStringency = 2;
-		var resultsStringency = 2;
 		
 		if (numDatasets > k){
-		
 			displayStringency = 2 + Math.round(numDatasets/k);
-		
 		}
 		
 		if (displayStringency > 20){
 			displayStringency = 20;
 		}
 		
-		if (displayStringency > 5){
-			resultsStringency = displayStringency - Math.round(displayStringency/4);
-		}
+		csc.displayStringency = displayStringency;
+		csc.stringency = Gemma.MIN_STRINGENCY;
 		
-		
-		/*
-		if (displayStringency > 2){
-			csc.stringency = displayStringency -1;
-		}
-		*/
-		csc.displayStringency = displayStringency;	
-		
-		csc.stringency = resultsStringency;
-		
-		
-		
-		/*
-		if (csc.geneIds.length>10){
-			//make it 'my genes only'
-			csc.queryGenesOnly = true;
-		}
-		
-		if (!csc.queryGenesOnly && csc.eeIds.length>50){
-		
-			if (csc.eeIds.length>80){
-				csc.stringency = 4;	
-			}else if (csc.eeIds.length>50){
-				csc.stringency = 3;
-			}
-		
-		}
-		*/
 		
 	},
 	/**

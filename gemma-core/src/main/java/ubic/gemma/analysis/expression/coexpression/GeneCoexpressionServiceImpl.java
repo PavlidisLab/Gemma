@@ -129,10 +129,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             return new HashSet<CoexpressionValueObjectExt>();
         }
 
-        if ( maxResults > 200 ) {
-            maxResults = 200;
-        }
-
         /*
          * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
          */

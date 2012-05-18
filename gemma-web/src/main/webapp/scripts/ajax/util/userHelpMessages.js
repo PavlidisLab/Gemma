@@ -224,6 +224,7 @@ Gemma.HelpText.WidgetDefaults = {
 		searchStatusTooMany: 'Too Many Genes Selected. Max number of selected genes is {0}',
 		searchStatusTooManyReduce: 'Too many Query Genes. A max of {0} query genes allowed. Click Yes to continue search with reduced query genes',
 		searchStatusTooFew: 'No Genes Selected',
+		searchStatusNoExtraSelectedForExtend: 'You must select a non-query gene to extend',
 		searchStatusNoMoreResults: 'No more results found for this gene',
 		compressGraphTT: 'Compress the graph so that the nodes are closer together',
 		compressGraphText: 'Compress Graph',
@@ -231,7 +232,9 @@ Gemma.HelpText.WidgetDefaults = {
 		nodeLabelsTT: 'Turn node labels on/off',
 		nodeLabelsText: 'Node Labels On',
 		noNodeLabelsText: 'Node Labels Off',
-		invalidStringencyWarning: 'You cannot lower the stringency below 2. Please select a different stringency'
+		invalidStringencyWarning: 'You cannot lower the stringency below 2. Please select a different stringency',
+		newSearchOrReturnToCurrentStringencyOption: 'You are viewing the data on the table at a lower stringency than the current graph data stringency.'+
+			'Would you like use the current lowest graph stringency of {0} or search for new graph data at stringency {1}?'
 		
 	},
 	DatasetGroupEditor:{

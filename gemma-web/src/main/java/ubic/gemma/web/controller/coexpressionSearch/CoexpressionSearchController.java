@@ -56,11 +56,17 @@ public class CoexpressionSearchController {
 
     private static final int DEFAULT_STRINGENCY = 2;
 
-    private static final int MAX_GENES_PER_QUERY = 20;
+    private static final int DEFAULT_MAX_GENES_PER_QUERY = 20;
+    
+    private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;
+    
+    private static final int MAX_GENES_PER_QUERY = ConfigUtils.getInt( "gemma.coexpressionSearch.maxGenesPerQuery", DEFAULT_MAX_GENES_PER_QUERY );
+    
+    private static final int MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = ConfigUtils.getInt( "gemma.coexpressionSearch.maxGenesPerCoexVisQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY );
 
-    private static final int MAX_RESULTS = 200;
-
-    private static final int COEX_VIS_RESULTS = 20;
+    private static final int DEFAULT_MAX_RESULTS = 200;
+    
+    private static final int MAX_RESULTS = ConfigUtils.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene", DEFAULT_MAX_RESULTS );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -118,7 +124,7 @@ public class CoexpressionSearchController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
-                genes, 2, COEX_VIS_RESULTS, false, false );
+                genes, 2, MAX_RESULTS, false, false );
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -144,9 +150,13 @@ public class CoexpressionSearchController {
      */
     public CoexpressionMetaValueObject doSearchQuick2( CoexpressionSearchCommand searchOptions,
             Collection<Long> queryGeneIds ) {
+        //queryGeneIds should only be sent in on the 'my genes only' search for a cytoscape graph vis call
+        //queryGeneIds is used to trim the graph appropriately when it gets too big so that not too much data is sent back to the browser
 
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
-
+        
+        restrictSearchOptionsQueryGenes(searchOptions, queryGeneIds);
+        
         Collection<Gene> genes = geneService.loadThawed( searchOptions.getGeneIds() );
 
         if ( genes == null || genes.isEmpty() ) {
@@ -156,38 +166,48 @@ public class CoexpressionSearchController {
         }
 
         log.info( "Coexpression search: " + searchOptions );
+        if (queryGeneIds!=null){
+            log.info( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
+        }
 
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
-
+        
+        //maxResults set to zero indicates no limit.  maxResults is ignored in 'my genes only' query
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick(
-                searchOptions.getEeIds(), genes, searchOptions.getStringency(), COEX_VIS_RESULTS,
+                searchOptions.getEeIds(), genes, searchOptions.getStringency(), MAX_RESULTS,
                 searchOptions.getQueryGenesOnly(), true );        
         
-        result.setKnownGeneResults( geneResults );        
+        log.info( "Returned from coexpression search: " + searchOptions );
+        
+        result.setKnownGeneResults( geneResults );
+        
+        //if this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do this if there is more than one query gene)
+        if (queryGeneIds == null && searchOptions.getGeneIds().size() > 1){
+            log.info( "Coexpression search step 2: getting 'query genes only' results for genes: " + genes );
+            Collection<CoexpressionValueObjectExt> queryGenesOnlyResults = geneCoexpressionService.coexpressionSearchQuick(
+                    searchOptions.getEeIds(), genes, 2, MAX_RESULTS,
+                    true, true );
+            
+            queryGenesOnlyResults = eliminateDuplicates(queryGenesOnlyResults);
+            
+            result.setQueryGenesOnlyResults(queryGenesOnlyResults);
+            
+        }
 
         int stringencyTrimLimit = searchOptions.getEeIds().size();
 
         // make sure the limit isn't too big
-        if ( stringencyTrimLimit > 1400 ) {
-            stringencyTrimLimit = 1400;
+        if ( stringencyTrimLimit > 2000 ) {
+            stringencyTrimLimit = 2000;
         }
                
         int resultsLimit = ConfigUtils.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
         
-        // strip down results for front end if data is too large
-        if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {
-            
-            trimGraphForFrontEndDisplay(result, stringencyTrimLimit, resultsLimit, searchOptions, queryGeneIds);
-                        
+        // strip down results for front end if data is too large (only happens when queryGeneIds is sent in as a parameter, i.e. cytoscape coex vis query
+        if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {            
+            trimGraphForFrontEndDisplay(result, stringencyTrimLimit, resultsLimit, searchOptions, queryGeneIds);                        
         }
-
-        if ( queryGeneIds != null ) {
-            //fix for bug 2737, bug 2453
-            geneResults = eliminateDuplicatesAndSetQueryGenesFirstColumn( geneResults, queryGeneIds );
-
-        }
-
-
+        
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
             log.info( "No search results for query: " + searchOptions );
@@ -584,13 +604,12 @@ public class CoexpressionSearchController {
         
     }
     
-
-    private Collection<CoexpressionValueObjectExt> eliminateDuplicatesAndSetQueryGenesFirstColumn(
-            Collection<CoexpressionValueObjectExt> geneResults, Collection<Long> queryGeneIds ) {
+    private Collection<CoexpressionValueObjectExt> eliminateDuplicates(
+            Collection<CoexpressionValueObjectExt> geneResults) {
 
         HashSet<String> coexLinkMap = new HashSet<String>();
 
-        List<CoexpressionValueObjectExt> resultsNoDuplicatesQueryGenesFirstColumn = new ArrayList<CoexpressionValueObjectExt>();
+        List<CoexpressionValueObjectExt> resultsNoDuplicates = new ArrayList<CoexpressionValueObjectExt>();
 
         for ( CoexpressionValueObjectExt cvoe : geneResults ) {
 
@@ -602,36 +621,43 @@ public class CoexpressionSearchController {
 
                 coexLinkMap.add( queryGeneId.toString() + "to" + foundGeneId.toString() );
                 coexLinkMap.add( foundGeneId.toString() + "to" + queryGeneId.toString() );
-
-                if ( !queryGeneIds.contains( queryGeneId ) && queryGeneIds.contains( foundGeneId ) ) {
-                    
-                    // swap querygene and foundgene
-                    GeneValueObject queryGVO = cvoe.getQueryGene();
-
-                    GeneValueObject foundGVO = cvoe.getFoundGene();
-
-                    Double queryNodeDegree = cvoe.getQueryGeneNodeDegree();
-                    Double foundNodeDegree = cvoe.getFoundGeneNodeDegree();
-
-                    Boolean foundRegulatesQuery = cvoe.getFoundRegulatesQuery();
-                    Boolean queryRegulatesFound = cvoe.getQueryRegulatesFound();
-
-                    cvoe.setQueryGene( foundGVO );
-                    cvoe.setQueryGeneNodeDegree( foundNodeDegree );
-                    cvoe.setQueryRegulatesFound( foundRegulatesQuery );// ask about swapping this
-
-                    cvoe.setFoundGene( queryGVO );
-                    cvoe.setFoundGeneNodeDegree( queryNodeDegree );
-                    cvoe.setFoundRegulatesQuery( queryRegulatesFound );// ask about swapping this
-
-                }
-                resultsNoDuplicatesQueryGenesFirstColumn.add( cvoe );
+                
+                resultsNoDuplicates.add( cvoe );
 
             } 
 
         }
 
-        return resultsNoDuplicatesQueryGenesFirstColumn;
+        return resultsNoDuplicates;
+    }
+    
+    private void restrictSearchOptionsQueryGenes(CoexpressionSearchCommand searchOptions,
+            Collection<Long> queryGeneIds){
+        
+        if (queryGeneIds==null && searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY){ 
+            
+            searchOptions.setGeneIds( trimGeneIds(searchOptions.getGeneIds(), MAX_GENES_PER_QUERY) );
+            
+        }else if(searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY){
+            //this will be a 'my genes only' vis query since queryGeneIds !=null
+            searchOptions.setGeneIds( trimGeneIds(searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY) );
+            
+        }
+        
+    }
+    
+    private Collection<Long> trimGeneIds(Collection<Long> geneIds, int limit){
+        
+        Collection<Long> trimmedGeneIds = new ArrayList<Long>();
+        
+        for (Long l:geneIds){                
+            trimmedGeneIds.add( l );                
+            if (trimmedGeneIds.size()>= limit){
+                break;
+            }                
+        }            
+        
+        return trimmedGeneIds;
     }
 
 }

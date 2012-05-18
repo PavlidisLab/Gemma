@@ -152,22 +152,33 @@ Ext.onReady(function() {
 		if (!knownGeneGrid) {
 		
 			//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
-			var displayedResults = result.knownGeneResults;
+						
+			//add in the 'my genes only' results
+			 var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(result.knownGeneResults, result.queryGenesOnlyResults);
 			
 			if (searchPanel.getLastCoexpressionSearchCommand().displayStringency > searchPanel.getLastCoexpressionSearchCommand().stringency) {
 			
-				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes), searchPanel.getLastCoexpressionSearchCommand().displayStringency);
+				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, searchPanel.getLastCoexpressionSearchCommand().displayStringency);
 				
-				if (trimmed.trimmedKnownGeneResults.length != 0) {
-					displayedResults = trimmed.trimmedKnownGeneResults;
+				if (trimmed.length != 0) {
+					displayedResults = trimmed;
 					initialDisplayStringency = searchPanel.getLastCoexpressionSearchCommand().displayStringency;
 					
 				} else {
-					//empty trimmed results at initial Display stringency so reset coexCommand.displayStringency
+					//there are no results after trimming at initial Display stringency so reset coexCommand.displayStringency
 					searchPanel.getLastCoexpressionSearchCommand().displayStringency = searchPanel.getLastCoexpressionSearchCommand().stringency;
 					
 				}
-			}
+			}			
+			
+			
+			var coexpressionSearchData = new Gemma.CoexpressionSearchData({
+				
+				coexGridCoexCommand: searchPanel.getLastCoexpressionSearchCommand(),
+				cytoscapeCoexCommand: Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand(searchPanel.getLastCoexpressionSearchCommand()),
+				coexGridResults: result
+				
+			});
 						
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width: 900,
@@ -180,27 +191,24 @@ Ext.onReady(function() {
 				tabPanelViewFlag: true,
 				layoutOnTabChange: true,
 				hideMode: 'offsets',
-				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
-				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency,
-				coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
-				currentDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency
+				
+				coexpressionSearchData: coexpressionSearchData
 			
 			});
 			
 			
-		}
+		}		
+		
 		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 					id : "cytoscaperesults",
 					ref: 'coexCytoscapeResults',
-					title : "Visualization",
-					queryGenes : result.queryGenes,
-					knownGeneResults : result.knownGeneResults,
-					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),					
+					title : "Visualization",									
 					width:850,
 					taxonId: searchPanel.getTaxonId(),
 					taxonName: searchPanel.getTaxonName(),
-					hideMode:'visibility'
+					hideMode:'visibility',
+					coexpressionSearchData: coexpressionSearchData
 					
 				});
 		
@@ -212,8 +220,10 @@ Ext.onReady(function() {
 		
 		resultsPanel.add(knownGeneGrid);
 		resultsPanel.add(cytoscapePanel);	
-	        
-	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'coexWarningAlreadyDisplayed']);	    
+	    
+		cytoscapePanel.relayEvents(knownGeneGrid, ['stringencyUpdateFromCoexGrid','queryGenesOnlyUpdateFromCoexGrid']);
+	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryGenesOnlyUpdateFromCoexpressionViz']);
+	    knownGeneGrid.relayEvents(coexpressionSearchData, ['searchForCoexGridDataComplete']);	    
 	    searchPanel.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz', 'beforesearch']);
 	    
 		// won't fire the render event if it's already rendered
@@ -221,9 +231,9 @@ Ext.onReady(function() {
 		
 		resultsPanel.show();
 		resultsPanel.doLayout();
-		knownGeneGrid.cytoscapeRef=cytoscapePanel;
+		
 		knownGeneGrid.loadData(result.isCannedAnalysis, 2, displayedResults,
-				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
+				result.knownGeneDatasets);
 		
 		knownGeneGrid.show();
 

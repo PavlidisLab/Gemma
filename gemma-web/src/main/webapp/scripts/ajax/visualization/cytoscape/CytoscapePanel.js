@@ -5,15 +5,11 @@ Ext.Panel, {
 
     title: 'Cytoscape',
     layout: 'fit',    
-    currentResultsStringency: 2,    
-    initialDisplayStringency: 2,
-
-    currentNodeGeneIds: [],
-    stopRender: false,
     
-    //The query genes that will be coloured red, and show up in search form( different from the 'complete the graph-my genes only'(this.queryGenes) query genes).
-    //currentQueryGeneIds is a subset of the 'complete the graph-my genes only' query gene ids.
-    currentQueryGeneIds: [],    
+    //this is for a bug in ExtJS tabPanel that causes an unactivated Panel in a TabPanel to be rendered when the Panel is removed from the tabPanel
+    stopRender: false,    
+    
+    coexpressionSearchData: {},
 
     initComponent: function () {
         var controlBar = new Gemma.CytoscapeControlBar();
@@ -64,45 +60,193 @@ Ext.Panel, {
         Gemma.CytoscapePanel.superclass.initComponent.apply(
         this, arguments);
 
-        this.on('doneDrawingCytoscape', function () {
+        this.on('activate', function() {
+        	
+        	//check to see if coexGrid display stringency is below cytoscape results stringency, if so, give the user the option of reloading graph
+        	//at new stringency or returning display to current cytoscape stringency
+        	if (this.display.ready&&this.coexpressionSearchData.coexGridCoexCommand.displayStringency < this.coexpressionSearchData.cytoscapeCoexCommand.stringency) {
+        		
+        		Ext.Msg.show({
+                    title: 'New Search Required to View Graph at Current Stringency',
+                    msg: String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.newSearchOrReturnToCurrentStringencyOption,
+                    		this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency, this.coexpressionSearchData.coexGridCoexCommand.stringency),
+                    buttons: {
+                        ok: 'Search for new graph data',
+                        cancel: 'Return to current graph stringency'
+                    },
+                    fn: function (btn) {
+                        if (btn == 'ok') {
+                        	
+                        	var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
 
-            //do initial filtering of graph if necessary
-            if (this.initialDisplayStringency > this.currentResultsStringency) {
-                var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.initialDisplayStringency);
-                this.display.filter(this.initialDisplayStringency, trimmed.trimmedNodeIds, true);
+                    		Ext.apply(
+                    				this.coexpressionSearchData.cytoscapeCoexCommand, {
+                    					stringency: resultsStringency,
+                    					displayStringency: this.coexpressionSearchData.coexGridCoexCommand.displayStringency
+                    				});
+                    		                    		
+                        	this.searchForCytoscapeData();                        	
+                            
+                        } else {
+                        	//cancel was pressed
+                        	this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+                                                        
+                        }
+                    }.createDelegate(this)
+                });   		
+        		
+        	} else if (this.display.ready){
+        		this.refreshGraphFromCoexpressionSearchData();
+        	}
+        	
+        }, this);
+        
+        this.on('doneDrawingCytoscape', function () {
+        	//check to see if it is query genes only
+            if (this.display.isQueryGenesOnly()){
+            	this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
+    					this.coexpressionSearchData.coexGridCoexCommand.geneIds,
+    					false);            	
+            }        	
+        	//do initial filtering of graph(the graph has already been drawn at results stringency, we need to filter this graph to the display stringency if necessary)
+            else if (this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency > this.coexpressionSearchData.cytoscapeCoexCommand.stringency) {
+                var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(this.coexpressionSearchData.cytoscapeResults.knownGeneResults, this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+                this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency, trimmed.trimmedNodeIds, true);
             }
 
         }, this);
+        
+      
+        this.on('searchForCytoscapeDataComplete', function() {
+        	
+        	if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length <2) {
+				
+				this.display.disableQueryGenesOnly(true);
+				this.display.setQueryGenesOnly(false);
+				
+			}else{
+				this.display.disableQueryGenesOnly(false);
+			}
+        	
+        	this.drawGraph();
+        	
+        	
+        }, this);        
+        
 
+        //maybe have this take the results as an argument for more detailed error message
+        this.on('searchErrorFromCoexpressionSearchData', function(result) {
+        	
+        	this.timeOutFromCoexSearchHandler();
+        	
+        }, this);
+        
+        this.on('stringencyUpdateFromCoexGrid', function() {
+        	
+        	if (this.display.ready){
+        		
+        		//if we already have viz results at current stringency
+        		if (this.coexpressionSearchData.coexGridCoexCommand.displayStringency >= this.coexpressionSearchData.cytoscapeCoexCommand.stringency) {        	
+        			
+        			this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency = this.coexpressionSearchData.coexGridCoexCommand.displayStringency;
+        	
+        		}else if (this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency != this.coexpressionSearchData.coexGridCoexCommand.displayStringency){
+        			//show results at lowest stringency available(if not already showing them at that stringency        			
+        			this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency = this.coexpressionSearchData.cytoscapeCoexCommand.stringency;
+        			
+        		}  	
+        	
+        	}else{
+        		//cytoscape hasn't loaded yet so update the command that will be used to grab the cytoscape results        		
+        		var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
+        		Ext.apply(
+        		        this.coexpressionSearchData.cytoscapeCoexCommand, {
+        		            stringency: resultsStringency,
+        		            displayStringency: this.coexpressionSearchData.coexGridCoexCommand.displayStringency
+        		        });
+        	}
+        	
+        }, this);
+        
+        this.on('queryGenesOnlyUpdateFromCoexGrid', function(checked) {
+        	
+        	this.display.setQueryGenesOnly(checked);        	
+        	
+        }, this);
 
         this.addEvents('stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryUpdateFromCoexpressionViz','coexWarningAlreadyDisplayed');
         this.relayEvents(this.display, ['doneDrawingCytoscape']);
+        this.relayEvents(this.coexpressionSearchData, ['searchForCoexGridDataComplete','searchForCytoscapeDataComplete','searchErrorFromCoexpressionSearchData']);
 
     },
+    
+    searchForCytoscapeData : function(){
+    	
+    	this.loadMask.show();
+		this.display.updateStringency(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
+    	this.coexpressionSearchData.searchForCytoscapeData();
+    	
+    },
+    
+    filterQueryGenesOnly : function(suppressEvent){
+    	
+    	if(!suppressEvent){
+    		this.fireEvent('queryGenesOnlyUpdateFromCoexpressionViz', this.display.isQueryGenesOnly())
+    	}
+    	
+		if (this.display.isQueryGenesOnly()){
+			
+			this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
+					this.coexpressionSearchData.coexGridCoexCommand.geneIds,
+					false);
+			
+		}else{
+			
+			var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(
+					this.coexpressionSearchData.cytoscapeResults.knownGeneResults,
+					this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+			this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
+					trimmed.trimmedNodeIds,
+					false);    			
+		}
+    	
+    },
 
+    //called from controlBar
     stringencyChange: function (stringencyValue) {
 
         if (stringencyValue < 2) {
             stringencyValue = 2;
         }
 
-        if (stringencyValue >= this.currentResultsStringency) {
-            this.stringencyChangeHandler(stringencyValue);
+        if (stringencyValue >= this.coexpressionSearchData.cytoscapeCoexCommand.stringency) {
+        	this.fireEvent('stringencyUpdateFromCoexpressionViz', stringencyValue);
+        	
+        	this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency = stringencyValue;
+        	
+            this.refreshGraphFromCoexpressionSearchData();
         } else {
             //new search            	
             this.newSearchForLowerStringencyHandler(stringencyValue);
         }
 
-    },
+    },    
+    
+    refreshGraphFromCoexpressionSearchData: function () {
 
-    stringencyChangeHandler: function (stringencyValue) {
-
-        this.display.updateStringency(stringencyValue);
-
-        var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, stringencyValue);
-
-        this.fireEvent('stringencyUpdateFromCoexpressionViz', trimmed.trimmedKnownGeneResults, stringencyValue);
-        this.display.filter(stringencyValue, trimmed.trimmedNodeIds)
+        this.display.updateStringency(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+        
+        if (!this.display.isQueryGenesOnly()){
+        
+        	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(this.coexpressionSearchData.cytoscapeResults.knownGeneResults,
+        			this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+        
+        	this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency, trimmed.trimmedNodeIds);
+        
+        }else{
+        	
+        	this.filterQueryGenesOnly(true);
+        }
     },
 
     newSearchForLowerStringencyHandler: function (stringencyValue) {
@@ -117,8 +261,7 @@ Ext.Panel, {
                 cancel: 'Cancel'
             },
             fn: function (btn) {
-                if (btn == 'ok') {
-                	this.fireEvent('coexWarningAlreadyDisplayed');
+                if (btn == 'ok') {                	
                 	this.warningAlreadyDisplayed = true;
                 	this.newSearchForLowerStringencyHandlerNoWarning(stringencyValue);
                     
@@ -143,131 +286,102 @@ Ext.Panel, {
         var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(stringencyValue);
 
         Ext.apply(
-        this.coexCommand, {
+        this.coexpressionSearchData.cytoscapeCoexCommand, {
             stringency: resultsStringency,
-            displayStringency: stringencyValue,
-            geneIds: this.currentQueryGeneIds,
-            queryGenesOnly: false
-        });
+            displayStringency: stringencyValue,            
+            queryGenesOnly: true
+        });        
         
-        this.display.updateStringency(stringencyValue);
-
-        this.loadMask.show();
-        ExtCoexpressionSearchController.doSearchQuick2(
-        this.coexCommand, {
-            callback: this.initialCoexSearchCallback.createDelegate(this)
-
-        });
-    	
+        this.searchForCytoscapeData();        
+   
     },
 
-    reRunSearchWithSelectedNodes: function (selectedNodes) {
+    searchWithSelectedNodes: function (selectedNodesGeneIdArray) {
 
         this.clearError();
 
-        if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+        if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             this.getBottomToolbar().setVisible(false);
             this.doLayout();
             this.currentbbarText = null;
 
-            var displayStringency = this.display.getStringency();
-            var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
-
-            var selectedNodesGeneIdArray = [];
-            var sNodesLength = selectedNodes.length;
-            var i;
-            for (i = 0; i < sNodesLength; i++) {
-                selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
-            }
-
-            this.currentQueryGeneIds = selectedNodesGeneIdArray;
+            //initialSearch for coex grid data will be at 2
+            var resultsStringency = 2;
+            
             this.updateSearchFormGenes(selectedNodesGeneIdArray);
 
-            Ext.apply(this.coexCommand, {
+            this.loadMask.show();            
+                      
+            Ext.apply(this.coexpressionSearchData.coexGridCoexCommand, {
                 stringency: resultsStringency,
-                displayStringency: displayStringency,
+                displayStringency: this.display.getStringency(),
                 geneIds: selectedNodesGeneIdArray,
                 queryGenesOnly: false
             });
+            
+            this.coexpressionSearchData.searchForCoexGridDataAndCytoscapeData();            
 
-            this.loadMask.show();
-            ExtCoexpressionSearchController.doSearchQuick2(
-            this.coexCommand, {
-                callback: this.initialCoexSearchCallback.createDelegate(this),
-                timeout: 420000,						
-				errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
-            });
-
-        } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+        } else if (selectedNodesGeneIdArray.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
-        } else if (selectedNodes.length == 0) {
+        } else if (selectedNodesGeneIdArray.length == 0) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
         }
 
     },
 
-    extendNodes: function (selectedNodes) {
+    extendNodes: function (selectedNodesGeneIdArray) {
 
         this.clearError();
 
-        if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+        if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-            if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-                this.extendNodesStepTwo(selectedNodes);
+            if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length + selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+            	
+            	var newQueryGeneSelected=false;
+                var i;
+                
+                for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {                    
+
+                    if (selectedNodesGeneIdArray.indexOf(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]) === -1) {
+                    	newQueryGeneSelected=true;
+                    	selectedNodesGeneIdArray.push(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]);
+                    }
+                }
+            	
+                if (newQueryGeneSelected){
+                	this.searchWithSelectedNodes(selectedNodesGeneIdArray);                	
+                }
+                else {
+                	Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoExtraSelectedForExtend);
+                }
+                
             } else {
                 Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY), function (btn) {
                     if (btn == 'yes') {
-                        // make room in currentQueryGeneIds for new genes
-                        this.currentQueryGeneIds = this.currentQueryGeneIds.splice(this.currentQueryGeneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodes.length));
-                        this.extendNodesStepTwo(selectedNodes);
+                    	
+                        //ensure that selectedNodes includes the current query genes plus the newly selected genes and that the number of querygeneids is less than the max
+                        this.coexpressionSearchData.coexGridCoexCommand.geneIds = this.coexpressionSearchData.coexGridCoexCommand.geneIds.splice(this.coexpressionSearchData.coexGridCoexCommand.geneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodesGeneIdArray.length));                        
+                        var i;                        
+                        for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {                    
+
+                            if (selectedNodesGeneIdArray.indexOf(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]) === -1) {                            	
+                            	selectedNodesGeneIdArray.push(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]);
+                            }
+                        }
+                        
+                        this.searchWithSelectedNodes(selectedNodesGeneIdArray);
                     }
                 }, this);
             }
 
-        } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+        } else if (selectedNodesGeneIdArray.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
         } else {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
         }
 
     },
-
-    extendNodesStepTwo: function (selectedNodes) {
-        
-        var extendedNodesGeneIdArray = [];
-        var sNodesLength = selectedNodes.length;
-        var i;
-        for (i = 0; i < sNodesLength; i++) {
-            extendedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
-
-            if (this.currentQueryGeneIds.indexOf(selectedNodes[i].data.geneid) === -1) {
-                this.currentQueryGeneIds.push(selectedNodes[i].data.geneid);
-            }
-        }
-
-        this.currentbbarText = null;
-        this.getBottomToolbar().setVisible(false);
-        this.doLayout();
-
-        this.updateSearchFormGenes(this.currentQueryGeneIds);
-
-        Ext.apply(this.coexCommand, {
-            stringency: Gemma.CytoscapePanelUtil.restrictResultsStringency(this.display.getStringency()),
-            displayStringency: this.display.getStringency(),
-            geneIds: extendedNodesGeneIdArray,
-            queryGenesOnly: false
-        });
-
-        this.loadMask.show();
-        ExtCoexpressionSearchController.doSearchQuick2(
-        this.coexCommand, {
-            callback: this.extendThisNodeInitialCoexSearchCallback.createDelegate(this),
-            timeout: 420000,						
-			errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
-        });
-
-    },
-
+ 
     //This is called the first time the cytoscape panel is rendered.  
     //It is a special case because it uses the partial results from the coexpression grid to do the complete search
     //and needs to set up values of the top and bottom toolbar
@@ -282,112 +396,15 @@ Ext.Panel, {
                 msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
             });
         }
-
-        this.loadMask.show();
-        this.currentNodeGeneIds = [];
-        this.currentQueryGeneIds = [];
-
-        var results = {};
-
-        results.queryGenes = this.queryGenes;
-        results.knownGeneResults = this.knownGeneResults;
-        this.display.updateStringency(this.coexCommand.displayStringency);
-
-        if (this.coexCommand.displayStringency > Gemma.MIN_STRINGENCY) {
-            var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
-            this.currentbbarText = "Display Stringency set to " + this.coexCommand.displayStringency + " based on number of experiments chosen.";
-            bbarText.setText(this.currentbbarText);
-        } else {
-            this.getBottomToolbar().hide();
-            this.doLayout();
-        }
-
-        this.initialCoexSearchCallback(results);
+        
+        this.searchForCytoscapeData();
         
     	}
     },
 
-    initialCoexSearchCallback: function (result) {
-        this.currentResultsStringency = this.coexCommand.stringency;
-        this.initialDisplayStringency = this.coexCommand.displayStringency;
-        this.currentNodeGeneIds = [];
-
-        var qlength = result.queryGenes.length;
-        // populate geneid array for complete graph
-        var i;
-        for (i = 0; i < qlength; i++) {
-            this.currentNodeGeneIds.push(result.queryGenes[i].id);
-
-            if (this.currentQueryGeneIds.indexOf(result.queryGenes[i].id) === -1) {
-                this.currentQueryGeneIds.push(result.queryGenes[i].id);
-            }
-        }
-
-        var kglength = result.knownGeneResults.length;
-
-        for (i = 0; i < kglength; i++) {
-            if (this.currentNodeGeneIds.indexOf(result.knownGeneResults[i].foundGene.id) === -1) {
-                this.currentNodeGeneIds.push(result.knownGeneResults[i].foundGene.id);
-            }
-        }
-
-        if (!this.coexCommand.queryGenesOnly && kglength > 0) {
-
-            Ext.apply(this.coexCommand, {
-                geneIds: this.currentNodeGeneIds,
-                queryGenesOnly: true
-            });
-
-            ExtCoexpressionSearchController.doSearchQuick2Complete(
-            this.coexCommand, this.currentQueryGeneIds, {
-                callback: this.completeCoexSearchCallback.createDelegate(this)
-            });
-        } else {
-            this.completeCoexSearchCallback(result);
-        }
-
-    },
-
-    extendThisNodeInitialCoexSearchCallback: function (result) {
-        this.currentResultsStringency = this.coexCommand.stringency;
-        this.initialDisplayStringency = this.coexCommand.displayStringency;
-
-        var kglength = result.knownGeneResults.length;
-        var completeSearchFlag = false;
-        var i;
-        for (i = 0; i < kglength; i++) {
-            if (this.currentNodeGeneIds.indexOf(result.knownGeneResults[i].foundGene.id) === -1) {
-                completeSearchFlag = true;
-                this.currentNodeGeneIds.push(result.knownGeneResults[i].foundGene.id);
-            }
-        }
-
-        if (!completeSearchFlag) {
-            Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoMoreResults);
-
-            this.loadMask.hide();
-        } else {
-            Ext.apply(this.coexCommand, {
-                geneIds: this.currentNodeGeneIds,
-                queryGenesOnly: true
-            });
-
-            ExtCoexpressionSearchController.doSearchQuick2Complete(
-            this.coexCommand, this.currentQueryGeneIds, {
-                callback: this.completeCoexSearchCallback.createDelegate(this)
-
-            });
-
-        }
-    },
-
-    completeCoexSearchCallback: function (result) {
-        this.queryGenes = result.queryGenes;
-        this.knownGeneResults = result.knownGeneResults;
-        this.fireEvent('dataUpdateFromCoexpressionViz', this.knownGeneResults, this.currentQueryGeneIds, this.currentResultsStringency, this.initialDisplayStringency);       
-        
-        this.display.drawGraph(this.currentQueryGeneIds, this.queryGenes, this.knownGeneResults);
-        this.showUserMessageBar(result.displayInfo);
+    drawGraph: function () {
+        this.display.drawGraph(this.coexpressionSearchData);
+        this.showUserMessageBar(this.coexpressionSearchData.cytoscapeResults.displayInfo);
         this.loadMask.hide();
     },
 
@@ -436,7 +453,7 @@ Ext.Panel, {
         //because the search form usually queries the backend for this information
         var genesToPreview = [];
         var genesToPreviewIds = [];
-        var knowngenes = this.knownGeneResults;
+        var knowngenes = this.coexpressionSearchData.cytoscapeResults.knownGeneResults;
         var kglength = knowngenes.length;
         var i;
         for (i = 0; i < kglength; i++) {
@@ -449,7 +466,9 @@ Ext.Panel, {
                 genesToPreviewIds.push(knowngenes[i].queryGene.id);
             }
         } // end for (<kglength)
-        var querygenes = this.queryGenes;
+        
+        //have to search through query genes in case none showed up
+        var querygenes = this.coexpressionSearchData.coexGridResults.queryGenes;
         var qglength = querygenes.length;
         for (i = 0; i < qglength; i++) {
             if (genesToPreviewIds.indexOf(querygenes[i].id) === -1 && geneIds.indexOf(querygenes[i].id) !== -1) {
@@ -461,14 +480,8 @@ Ext.Panel, {
         this.fireEvent('queryUpdateFromCoexpressionViz', genesToPreview, genesToPreviewIds, this.taxonId, this.taxonName);
 
     },
-
-    //Coex grid calls this function to update
-    stringencyUpdate: function (stringency, trimmed) {
-        this.display.updateStringency(stringency);
-        this.display.filter(stringency, trimmed.trimmedNodeIds);
-    },
     
-    timeoutFromCoexSearch : function(result) {
+    timeOutFromCoexSearchHandler : function() {
     	Ext.Msg.alert(Gemma.HelpText.CommonWarnings.Timeout.title, Gemma.HelpText.CommonWarnings.Timeout.text);
     	this.loadMask.hide();
     	this.fireEvent('beforesearch');

@@ -36,6 +36,7 @@ public class CoexpressionMetaValueObject {
     private String displayInfo;
     private Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
     private Collection<CoexpressionValueObjectExt> knownGeneResults;
+    private Collection<CoexpressionValueObjectExt> queryGenesOnlyResults;
 
     private boolean knownGenesOnly;
 
@@ -151,6 +152,14 @@ public class CoexpressionMetaValueObject {
 
     public String getDisplayInfo() {
         return displayInfo;
+    }
+
+    public void setQueryGenesOnlyResults( Collection<CoexpressionValueObjectExt> queryGenesOnlyResults ) {
+        this.queryGenesOnlyResults = queryGenesOnlyResults;
+    }
+
+    public Collection<CoexpressionValueObjectExt> getQueryGenesOnlyResults() {
+        return queryGenesOnlyResults;
     }
 
 }

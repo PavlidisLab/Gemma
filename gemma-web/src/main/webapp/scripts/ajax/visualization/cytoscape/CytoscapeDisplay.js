@@ -122,11 +122,11 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
     },
 
-    drawGraph: function (currentQueryGeneIds, queryGenes, knownGeneResults) {
+    drawGraph: function (coexpressionSearchData) {
     	    	
         var dataMsg = {
             dataSchema: this.dataSchemaJSON,
-            data: this.constructDataJSON(currentQueryGeneIds, queryGenes, knownGeneResults)
+            data: this.constructDataJSON(coexpressionSearchData.coexGridCoexCommand.geneIds, coexpressionSearchData.coexGridResults.queryGenes, coexpressionSearchData.cytoscapeResults.knownGeneResults)
         };
         this.initialZoomLevel = null;        
         // init and draw
@@ -313,7 +313,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
          * 
          * isQueryGene = false; } }
          */
-        //this.currentNodeGeneIds = graphNodeIds;
+       
 
         return data;
     },
@@ -376,13 +376,13 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
     extendSelectedNodesHandler: function () {
         if (this.ready) {
-            this.controller.extendNodes(this.visualization.selected("nodes"));
+            this.controller.extendNodes(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")));
         }
     },
 
     reRunSearchWithSelectedNodesHandler: function () {
-        if (this.ready) {
-            this.controller.reRunSearchWithSelectedNodes(this.visualization.selected("nodes"));
+        if (this.ready) {        	
+            this.controller.searchWithSelectedNodes(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")) );
         }
     },    
 
@@ -439,6 +439,12 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
         win.displayXML(xmlString);
     },
+    
+    filterQueryGenesOnly: function(){
+    	if (this.ready){    		
+    		this.controller.filterQueryGenesOnly();    		
+    	}
+    },
 
     nodeDegreeEmphasis: function (isNodeDegreeEmphasis) {
         if (this.ready) {
@@ -491,6 +497,18 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         if (this.ready) {
             this.controller.stringencyChange(stringency);
         }
+    },
+    
+    isQueryGenesOnly : function (){
+    	return this.controlBar.getComponent('queryGenesOnly').getValue();
+    },
+    
+    setQueryGenesOnly : function (checked){
+    	this.controlBar.getComponent('queryGenesOnly').setValue(checked);
+    },
+    
+    disableQueryGenesOnly : function (disabled){
+    	this.controlBar.getComponent('queryGenesOnly').setDisabled(disabled);
     }
 
 });
