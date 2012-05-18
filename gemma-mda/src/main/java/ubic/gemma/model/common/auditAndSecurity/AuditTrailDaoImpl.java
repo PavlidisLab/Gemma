@@ -20,9 +20,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
 import java.util.Collection;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,8 +35,6 @@ import ubic.gemma.model.common.Auditable;
  */
 @Repository
 public class AuditTrailDaoImpl extends AuditTrailDaoBase {
-
-    private static Log log = LogFactory.getLog( AuditTrailDaoImpl.class.getName() );
 
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
@@ -79,8 +74,7 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
 
         auditable.getAuditTrail().addEvent( auditEvent );
 
-        // Is this necessary?
-        this.getHibernateTemplate().saveOrUpdate( auditable );
+        this.getHibernateTemplate().saveOrUpdate( auditable.getAuditTrail() );
 
         return auditEvent;
     }
