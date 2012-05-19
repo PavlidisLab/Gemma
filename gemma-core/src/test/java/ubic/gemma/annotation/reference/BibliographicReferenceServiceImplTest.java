@@ -28,7 +28,6 @@ import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
-import ubic.gemma.model.common.description.ExternalDatabase.Factory;
 import junit.framework.TestCase;
 
 /**

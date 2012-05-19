@@ -115,7 +115,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *        changed for them.
      */
-    @SuppressWarnings("unchecked")
     public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
@@ -210,15 +209,15 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                             + " vectors that couldn't be matched to the new design for: " + type );
                 }
 
-//                log.info( "Updating " + count + " vectors for " + type );
-//                if ( vectorClass != null ) {
-//                    if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
-//                        designElementDataVectorService.update( vectorsForQt );
-//                    } else {
-//                        processedExpressionDataVectorService
-//                                .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
-//                    }
-//                }
+                // log.info( "Updating " + count + " vectors for " + type );
+                // if ( vectorClass != null ) {
+                // if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+                // designElementDataVectorService.update( vectorsForQt );
+                // } else {
+                // processedExpressionDataVectorService
+                // .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
+                // }
+                // }
             }
         }
 

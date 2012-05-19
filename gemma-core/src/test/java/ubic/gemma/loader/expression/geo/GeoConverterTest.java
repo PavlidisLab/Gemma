@@ -623,7 +623,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner( false );
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
-        Set result = ( Set ) this.gc.convert( series );
+        Set<?> result = ( Set<?> ) this.gc.convert( series );
         ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
         assertEquals( 66, e.getRawExpressionDataVectors().size() );
     }
@@ -638,7 +638,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner( false );
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
-        Set result = ( Set ) this.gc.convert( series );
+        Set<?> result = ( Set<?> ) this.gc.convert( series );
         ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
         assertEquals( 100, e.getRawExpressionDataVectors().size() );
         assertEquals( 1, e.getQuantitationTypes().size() ); // this is normal, before any processing.

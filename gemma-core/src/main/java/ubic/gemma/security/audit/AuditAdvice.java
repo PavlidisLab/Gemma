@@ -37,7 +37,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
@@ -107,7 +106,7 @@ public class AuditAdvice {
         Object object = getPersistentObject( retValue, methodName, args );
 
         if ( object == null ) return;
-        
+
         User user = userManager.getCurrentUser();
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {

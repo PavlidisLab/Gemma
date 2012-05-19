@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
-import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
@@ -144,7 +143,6 @@ public class AclAdvice {
         this.crudUtils = crudUtils;
     }
 
-
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -154,7 +152,7 @@ public class AclAdvice {
     private AuditableAcl addOrUpdateAcl( Securable object, Acl parentAcl ) {
 
         if ( object.getId() == null ) {
-            log.warn( "ACLs cannot be added or updated on non-persistent object" );
+            log.warn( "ACLs cannot be added or updated on non-persistent object: " + object );
             return null;
         }
 
@@ -181,7 +179,7 @@ public class AclAdvice {
             } catch ( NotFoundException nfe ) {
                 log.error( nfe, nfe );
             }
-       }
+        }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -583,7 +581,7 @@ public class AclAdvice {
             }
 
             boolean clearedACEs = maybeClearACEsOnChild( object, childAcl, parentAcl );
-                         
+
             if ( changedParentAcl || clearedACEs ) {
                 aclService.updateAcl( childAcl );
             }
