@@ -983,7 +983,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * )
      */
     @Override
-    protected Map handleGetAuditEvents( Collection<Long> ids ) throws Exception {
+    protected Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids ) throws Exception {
         final String queryString = "select ee.id, auditEvent from ExpressionExperimentImpl ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                 + " where ee.id in (:ids) ";
 
@@ -1405,17 +1405,26 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSamplingOfVectors(ubic.gemma.model
      * .common.quantitationtype.QuantitationType, java.lang.Integer)
      */
-    @SuppressWarnings("unchecked")
     @Override
+    @Deprecated
     protected Collection<DesignElementDataVector> handleGetSamplingOfVectors( QuantitationType quantitationType,
             Integer limit ) throws Exception {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev "
                 + "inner join dev.quantitationType as qt where qt.id = :qtid";
-        int oldmax = getHibernateTemplate().getMaxResults();
-        getHibernateTemplate().setMaxResults( limit );
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "qtid", quantitationType.getId() );
-        getHibernateTemplate().setMaxResults( oldmax );
-        return ( Collection<DesignElementDataVector> ) list;
+
+        HibernateTemplate tmpl = new HibernateTemplate( getHibernateTemplate().getSessionFactory() );
+        tmpl.setMaxResults( limit * 20 );
+        List<?> list = tmpl.findByNamedParam( queryString, "qtid", quantitationType.getId() );
+
+        Collection<DesignElementDataVector> result = new ArrayList<DesignElementDataVector>();
+
+        Collections.shuffle( list );
+
+        for ( int i = 0; i < list.size(); i++ ) {
+            result.add( ( DesignElementDataVector ) list.get( i ) );
+        }
+
+        return result;
     }
 
     /*

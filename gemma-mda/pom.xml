@@ -20,6 +20,11 @@
 			<artifactId>gemma-util</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.retry</groupId>
+			<artifactId>spring-retry</artifactId>
+			<version>1.0.1.RELEASE</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>
