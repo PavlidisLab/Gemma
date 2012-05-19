@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rdf:RDF[
+	<!ENTITY rdf 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
+	<!ENTITY rdfs 'http://www.w3.org/2000/01/rdf-schema#'>
+	<!ENTITY owl 'http://www.w3.org/2002/07/owl#'>
+	<!ENTITY swivt 'http://semantic-mediawiki.org/swivt/1.0#'>
+	<!ENTITY wiki 'http://neurolex.org/wiki/Special:URIResolver/'>
+	<!ENTITY property 'http://neurolex.org/wiki/Special:URIResolver/Property-3A'>
+	<!ENTITY wikiurl 'http://neurolex.org/wiki/'>
+]>
+<rdf:RDF
+	xmlns:rdf="&rdf;"
+	xmlns:rdfs="&rdfs;"
+	xmlns:owl ="&owl;"
+	xmlns:swivt="&swivt;"
+	xmlns:wiki="&wiki;"
+	xmlns:property="&property;">
+	<!-- Ontology header -->
+	<owl:Ontology rdf:about="">
+		<swivt:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-05-18T08:19:30-07:00</swivt:creationDate>
+		<owl:imports rdf:resource="http://semantic-mediawiki.org/swivt/1.0" />
+	</owl:Ontology>
+	<!-- exported page data -->
+	<owl:Class rdf:about="&wiki;Category-3AOrgan">
+		<rdfs:label>Organ</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Organ"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Organ"/>
+		<property:Created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2006-09-07T00:00:00</property:Created>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ovary</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">vertebrate femur</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heart</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">tracheobronchial tree</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liver</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bicep skeletal muscle</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Manduca sexta prothoracic gland</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">skin</property:Example>
+		<property:Example rdf:datatype="http://www.w3.org/2001/XMLSchema#string">coral snake venom sac</property:Example>
+		<property:Id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">birnlex_4</property:Id>
+		<property:Label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Organ</property:Label>
+		<property:ModifiedDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-04-03T00:00:00</property:ModifiedDate>
+		<rdfs:subClassOf rdf:resource="&wiki;Category-3AAnatomical_entity"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AThe_U.S._Pig_Genome_Project">
+		<rdfs:label>Resource:The U.S. Pig Genome Project</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:The_U.S._Pig_Genome_Project"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:The_U.S._Pig_Genome_Project"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AHuman_Tissue_and_Organ_Resource_for_Research">
+		<rdfs:label>Resource:Human Tissue and Organ Resource for Research</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Human_Tissue_and_Organ_Resource_for_Research"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Human_Tissue_and_Organ_Resource_for_Research"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AComparative_Saccharinae_Genomics_Resource">
+		<rdfs:label>Resource:Comparative Saccharinae Genomics Resource</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Comparative_Saccharinae_Genomics_Resource"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Comparative_Saccharinae_Genomics_Resource"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AInternational_Union_of_Physiological_Sciences-3A_Physiome_Project">
+		<rdfs:label>Resource:International Union of Physiological Sciences: Physiome Project</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:International_Union_of_Physiological_Sciences:_Physiome_Project"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:International_Union_of_Physiological_Sciences:_Physiome_Project"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AIUBMB-2DNicholson_Minimaps">
+		<rdfs:label>Resource:IUBMB-Nicholson Minimaps</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:IUBMB-Nicholson_Minimaps"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:IUBMB-Nicholson_Minimaps"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ANational_Resource_Center_for_Cephalopods">
+		<rdfs:label>Resource:National Resource Center for Cephalopods</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:National_Resource_Center_for_Cephalopods"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:National_Resource_Center_for_Cephalopods"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ANew_England_National_Primate_Research_Center">
+		<rdfs:label>Resource:New England National Primate Research Center</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:New_England_National_Primate_Research_Center"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:New_England_National_Primate_Research_Center"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AVisages_Research_Equipment_Software">
+		<rdfs:label>Resource:Visages Research Equipment Software</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Visages_Research_Equipment_Software"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Visages_Research_Equipment_Software"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AThe_Section_for_Biomedical_Image_Analysis">
+		<rdfs:label>Resource:The Section for Biomedical Image Analysis</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:The_Section_for_Biomedical_Image_Analysis"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:The_Section_for_Biomedical_Image_Analysis"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AZebrafish_Atlas">
+		<rdfs:label>Resource:Zebrafish Atlas</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Zebrafish_Atlas"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Zebrafish_Atlas"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AUniversity_of_Leeds,_Computational_Biology_Group">
+		<rdfs:label>Resource:University of Leeds, Computational Biology Group</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:University_of_Leeds,_Computational_Biology_Group"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:University_of_Leeds,_Computational_Biology_Group"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AArthur_Prochazka_Laboratory,_University_of_Alberta">
+		<rdfs:label>Resource:Arthur Prochazka Laboratory, University of Alberta</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Arthur_Prochazka_Laboratory,_University_of_Alberta"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Arthur_Prochazka_Laboratory,_University_of_Alberta"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3APhenoGO">
+		<rdfs:label>Resource:PhenoGO</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:PhenoGO"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:PhenoGO"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ALifeBanc">
+		<rdfs:label>Resource:LifeBanc</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:LifeBanc"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:LifeBanc"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ASwiss_Biobank">
+		<rdfs:label>Resource:Swiss Biobank</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Swiss_Biobank"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Swiss_Biobank"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AUniversity_of_Miami_Brain_and_Tissue_Bank_for_Developmental_Disorders">
+		<rdfs:label>Resource:University of Miami Brain and Tissue Bank for Developmental Disorders</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:University_of_Miami_Brain_and_Tissue_Bank_for_Developmental_Disorders"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:University_of_Miami_Brain_and_Tissue_Bank_for_Developmental_Disorders"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ACentral_New_York_Eye_and_Tissue_Bank">
+		<rdfs:label>Resource:Central New York Eye and Tissue Bank</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Central_New_York_Eye_and_Tissue_Bank"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Central_New_York_Eye_and_Tissue_Bank"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AManhattan_HIV_Brain_Bank">
+		<rdfs:label>Resource:Manhattan HIV Brain Bank</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Manhattan_HIV_Brain_Bank"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Manhattan_HIV_Brain_Bank"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ANational_Disease_Research_Interchange">
+		<rdfs:label>Resource:National Disease Research Interchange</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:National_Disease_Research_Interchange"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:National_Disease_Research_Interchange"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AUNOS_-2D_United_Network_for_Organ_Sharing">
+		<rdfs:label>Resource:UNOS - United Network for Organ Sharing</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:UNOS_-_United_Network_for_Organ_Sharing"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:UNOS_-_United_Network_for_Organ_Sharing"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AUpstate_New_York_Transplant_Services">
+		<rdfs:label>Resource:Upstate New York Transplant Services</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Upstate_New_York_Transplant_Services"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Upstate_New_York_Transplant_Services"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3AOrgan_Procurement_and_Transplantation_Network">
+		<rdfs:label>Resource:Organ Procurement and Transplantation Network</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Organ_Procurement_and_Transplantation_Network"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Organ_Procurement_and_Transplantation_Network"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<owl:Class rdf:about="&wiki;Category-3AResource-3ALiving_Bank">
+		<rdfs:label>Resource:Living Bank</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Resource:Living_Bank"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Resource:Living_Bank"/>
+		<property:Keywords rdf:resource="&wiki;Category-3AOrgan"/>
+	</owl:Class>
+	<!-- auxilliary definitions -->
+	<owl:ObjectProperty rdf:about="&property;Keywords">
+		<rdfs:label>Keywords</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:Keywords"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:Keywords"/>
+	</owl:ObjectProperty>
+	<owl:Class rdf:about="&wiki;Category-3AAnatomical_entity">
+		<rdfs:label>Anatomical entity</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Category:Anatomical_entity"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Category:Anatomical_entity"/>
+	</owl:Class>
+	<owl:DatatypeProperty rdf:about="&property;ModifiedDate">
+		<rdfs:label>ModifiedDate</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:ModifiedDate"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:ModifiedDate"/>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="&property;Label">
+		<rdfs:label>Label</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:Label"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:Label"/>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="&property;Id">
+		<rdfs:label>Id</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:Id"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:Id"/>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="&property;Example">
+		<rdfs:label>Example</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:Example"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:Example"/>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="&property;Created">
+		<rdfs:label>Created</rdfs:label>
+		<swivt:page rdf:resource="&wikiurl;Property:Created"/>
+		<rdfs:isDefinedBy rdf:resource="&wikiurl;Special:ExportRDF/Property:Created"/>
+	</owl:DatatypeProperty>
+	<!-- References to the SWiVT Ontology, see http://semantic-mediawiki.org/swivt/ -->
+	<owl:AnnotationProperty rdf:about="&swivt;page">
+		<rdfs:isDefinedBy rdf:resource="http://semantic-mediawiki.org/swivt/1.0"/>
+	</owl:AnnotationProperty>
+	<owl:AnnotationProperty rdf:about="&swivt;creationDate">
+		<rdfs:isDefinedBy rdf:resource="http://semantic-mediawiki.org/swivt/1.0"/>
+	</owl:AnnotationProperty>
+	<owl:Class rdf:about="&swivt;Subject">
+		<rdfs:isDefinedBy rdf:resource="http://semantic-mediawiki.org/swivt/1.0"/>
+	</owl:Class>
+	<!-- Created by Semantic MediaWiki, http://semantic-mediawiki.org -->
+</rdf:RDF>

@@ -89,19 +89,20 @@ public class OntologyIndexerTest {
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Organ" );
         for ( OntologyTerm ontologyTerm : name ) {
-            log.info( ontologyTerm );
+            log.debug( ontologyTerm );
         }
         assertEquals( 4, name.size() );
 
         name = OntologySearch.matchClasses( model, index, "Anatomical entity" );
         for ( OntologyTerm ontologyTerm : name ) {
-            log.info( ontologyTerm );
+            log.debug( ontologyTerm );
         }
         assertEquals( 1, name.size() );
 
-        name = OntologySearch.matchClasses( model, index, "liver" ); // this is an "example" that we want to avoid.
+        name = OntologySearch.matchClasses( model, index, "liver" ); // this is an "example" that we want to avoid
+                                                                     // leading to "Organ".
         for ( OntologyTerm ontologyTerm : name ) {
-            log.info( ontologyTerm );
+            log.debug( ontologyTerm );
         }
         assertEquals( 0, name.size() );
 
