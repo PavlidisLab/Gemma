@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -433,13 +435,26 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return this.getProcessedVectors( ee );
         }
 
-        int oldmax = getHibernateTemplate().getMaxResults();
-        getHibernateTemplate().setMaxResults( limit );
-        Collection<ProcessedExpressionDataVector> result = this.getHibernateTemplate().findByNamedParam( queryString,
-                "ee", ee );
+        // get a "random" sampling.
+        HibernateTemplate tmpl = new HibernateTemplate( this.getSessionFactory() );
 
-        getHibernateTemplate().setMaxResults( oldmax );
-        this.thaw( result );
+        /*
+         * TODO set a random offset instead of this. Problem: we have to know how many vectors there are.
+         */
+        tmpl.setMaxResults( limit * 20 );
+
+        List<ProcessedExpressionDataVector> list = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+
+        List<ProcessedExpressionDataVector> result = new ArrayList<ProcessedExpressionDataVector>();
+        if ( list.size() > limit ) {
+            Collections.shuffle( list );
+            for ( int i = 0; i < limit; i++ ) {
+                result.add( list.get( i ) );
+            }
+        } else {
+            result.addAll( list );
+        }
+        this.thaw( result ); // needed?
         return result;
     }
 
