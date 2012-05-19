@@ -66,27 +66,8 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
      */
     public User find( User user ) {
-
         BusinessKey.checkKey( user );
-
-        Criteria queryObject = super.getSession().createCriteria( User.class );
-
-        queryObject.add( Restrictions.eq( "userName", user.getUserName() ) );
-
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ubic.gemma.model.common.auditAndSecurity.User.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.get( 0 );
-            }
-        }
-        return ( User ) result;
-
+        return this.findByUserName( user.getUserName() );
     }
 
     /**
