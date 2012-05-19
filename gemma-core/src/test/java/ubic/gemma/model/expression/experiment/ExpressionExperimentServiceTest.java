@@ -106,7 +106,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
-        Taxon checkTaxon = eeService.getTaxon( list.iterator().next()  );
+        Taxon checkTaxon = eeService.getTaxon( list.iterator().next() );
         assertEquals( taxon, checkTaxon );
 
     }
@@ -167,16 +167,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors(
                 designElements, quantitationType );
-
-        assertEquals( 2, vectors.size() );
-
-    }
-
-    @Test
-    public final void testGetSamplingOfVectors() throws Exception {
-        QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
-        Collection<DesignElementDataVector> vectors = expressionExperimentService.getSamplingOfVectors(
-                quantitationType, 2 );
 
         assertEquals( 2, vectors.size() );
 

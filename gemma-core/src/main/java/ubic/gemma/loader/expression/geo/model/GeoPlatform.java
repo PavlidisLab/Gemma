@@ -25,9 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
 
 /**
@@ -90,44 +92,6 @@ public class GeoPlatform extends GeoData {
     private Collection<String> designElements = new HashSet<String>();
 
     /**
-     * @param s
-     */
-    public void addToDescription( String s ) {
-        this.description = this.description + " " + s;
-    }
-
-    /**
-     * @param org
-     */
-    public void addToOrganisms( String org ) {
-        this.organisms.add( org );
-    }
-
-    /**
-     * @param designElement
-     * @return
-     */
-    public List<String> getColumnData( String columnName ) {
-        assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
-        // assert platformInformation.containsKey( columnName ) : this + " has no platformInformation for '" +
-        // columnName
-        // + "'";
-        return platformInformation.get( columnName );
-    }
-
-    /**
-     * @param columnNames
-     * @return List of Lists of Strings
-     */
-    public List<List<String>> getColumnData( Collection<String> columnNames ) {
-        List<List<String>> results = new ArrayList<List<String>>();
-        for ( String columnName : columnNames ) {
-            results.add( this.getColumnData( columnName ) );
-        }
-        return results;
-    }
-
-    /**
      * Add a value to a column. A special case is when the column is of the probe ids (design element name).
      * 
      * @param columnName
@@ -156,27 +120,25 @@ public class GeoPlatform extends GeoData {
             designElements.add( value );
         }
 
-        getColumnData( columnName ).add( value );
+        List<String> columnData = getColumnData( columnName );
+        if ( columnData == null ) {
+            return;
+        }
+        columnData.add( value );
     }
 
     /**
-     * Get the name of the column that has the 'ids' for the design elements on this platform. Usually this is "ID".
-     * 
-     * @param platform
-     * @return
+     * @param s
      */
-    public String getIdColumnName() {
-        Collection<String> columnNames = this.getColumnNames();
-        int index = 0;
-        for ( String string : columnNames ) {
-            if ( GeoConstants.likelyId( string ) ) {
-                log.debug( string + " appears to indicate the array element identifier in column " + index
-                        + " for platform " + this );
-                return string;
-            }
-            index++;
-        }
-        return null;
+    public void addToDescription( String s ) {
+        this.description = this.description + " " + s;
+    }
+
+    /**
+     * @param org
+     */
+    public void addToOrganisms( String org ) {
+        this.organisms.add( org );
     }
 
     /**
@@ -191,6 +153,36 @@ public class GeoPlatform extends GeoData {
      */
     public String getCoating() {
         return this.coating;
+    }
+
+    /**
+     * @param columnNames
+     * @return List of Lists of Strings
+     */
+    public List<List<String>> getColumnData( Collection<String> columnNames ) {
+        List<List<String>> results = new ArrayList<List<String>>();
+        for ( String columnName : columnNames ) {
+            List<String> columnData = this.getColumnData( columnName );
+            if ( columnData == null ) continue;
+            results.add( columnData );
+        }
+        return results;
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    public List<String> getColumnData( String columnName ) {
+        if ( !platformInformation.containsKey( columnName ) ) {
+            log.warn( "No platform information" );
+            return null;
+        }
+        // assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
+        // assert platformInformation.containsKey( columnName ) : this + " has no platformInformation for '" +
+        // columnName
+        // + "'";
+        return platformInformation.get( columnName );
     }
 
     /**
@@ -222,6 +214,33 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * Get the name of the column that has the 'ids' for the design elements on this platform. Usually this is "ID".
+     * 
+     * @param platform
+     * @return
+     */
+    public String getIdColumnName() {
+        Collection<String> columnNames = this.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyId( string ) ) {
+                log.debug( string + " appears to indicate the array element identifier in column " + index
+                        + " for platform " + this );
+                return string;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /**
+     * @return String
+     */
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    /**
      * @return Returns the manufactureProtocol.
      */
     public String getManufactureProtocol() {
@@ -249,11 +268,29 @@ public class GeoPlatform extends GeoData {
         return this.platformData;
     }
 
+    public Map<String, String> getProbeNamesInGemma() {
+        return probeNamesInGemma;
+    }
+
     /**
      * @return Returns the pubMedIds.
      */
     public Collection<Integer> getPubMedIds() {
         return this.pubMedIds;
+    }
+
+    /**
+     * @return String
+     */
+    public String getSample() {
+        return sample;
+    }
+
+    /**
+     * @return String
+     */
+    public String getSupplementaryFile() {
+        return supplementaryFile;
     }
 
     /**
@@ -313,6 +350,13 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * @param lastUpdateDate
+     */
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
+    /**
      * @param manufactureProtocol The manufactureProtocol to set.
      */
     public void setManufactureProtocol( String manufactureProtocol ) {
@@ -348,6 +392,20 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * @param sample
+     */
+    public void setSample( String sample ) {
+        this.sample = sample;
+    }
+
+    /**
+     * @param supplementaryFile
+     */
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
+    }
+
+    /**
      * @param support The support to set.
      */
     public void setSupport( String support ) {
@@ -369,48 +427,30 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @return String
+     * @return true if the data uses a platform that, generally, we can use the data from. Will be false for MPSS, SAGE
+     *         and Exon array data.
      */
-    public String getSample() {
-        return sample;
-    }
+    public boolean useDataFromGeo() {
 
-    /**
-     * @param sample
-     */
-    public void setSample( String sample ) {
-        this.sample = sample;
-    }
+        if ( technology == null ) {
+            throw new IllegalStateException( "Don't call until the technology type is filled in" );
+        }
 
-    /**
-     * @return String
-     */
-    public String getLastUpdateDate() {
-        return lastUpdateDate;
-    }
+        if ( technology.equals( PlatformType.MPSS ) || technology.equals( PlatformType.SAGE )
+                || technology.equals( PlatformType.SAGENlaIII ) || technology.equals( PlatformType.SAGERsaI )
+                || technology.equals( PlatformType.SAGESau3A ) ) {
+            return false;
+        }
 
-    /**
-     * @param lastUpdateDate
-     */
-    public void setLastUpdateDate( String lastUpdateDate ) {
-        this.lastUpdateDate = lastUpdateDate;
-    }
+        if ( StringUtils.isBlank( getTitle() ) ) {
+            throw new IllegalStateException( "Can't figure out suitability of data until platform title is filled in." );
+        }
 
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
-    }
+        if ( technology.equals( PlatformType.inSituOligonucleotide ) && ( getTitle().contains( "Exon" ) ) ) {
+            // This is not expected to be very robust, but there's not much else to go on, apparently.
+            return false;
+        }
 
-    /**
-     * @param supplementaryFile
-     */
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
-    }
-
-    public Map<String, String> getProbeNamesInGemma() {
-        return probeNamesInGemma;
+        return true;
     }
 }

@@ -64,7 +64,23 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     private boolean isGenePix = false;
 
-    private Collection<GeoPlatform> platforms;
+    private Collection<GeoPlatform> platforms = null;
+
+    /**
+     * @return true if the data uses a platform that, generally, we can use the data from. Will be false for MPSS, SAGE
+     *         and Exon array data.
+     */
+    public boolean hasUsableData() {
+        if ( platforms == null || platforms.isEmpty() ) {
+            throw new IllegalStateException( "Don't call until platforms has been set" );
+        }
+        for ( GeoPlatform p : platforms ) {
+            if ( !p.useDataFromGeo() ) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private Collection<GeoReplication> replicates;
     private Collection<GeoVariable> variables;
@@ -328,6 +344,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Comparable#compareTo(T)
      */
     public int compareTo( GeoData o ) {

@@ -25,111 +25,15 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
     /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.experiment.ExperimentalDesign)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(int, ubic.gemma.model.expression.experiment.ExperimentalDesign
-     * experimentalDesign)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString,
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object find( int transform, ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign find( String queryString,
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
      * 
      */
     public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
             ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByName( int transform, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(int, java.lang.String name)}.
-     * </p>
-     */
-    public Object findByName( int transform, String queryString, java.lang.String name );
-
-    /**
      * 
      */
     public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( String queryString,
-            java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.expression.experiment.ExperimentalDesign)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int,
-     * ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform,
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate( String queryString,
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * 

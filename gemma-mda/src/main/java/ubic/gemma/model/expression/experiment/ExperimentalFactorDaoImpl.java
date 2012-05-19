@@ -96,28 +96,25 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
      */
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
-        try {
 
-            BusinessKey.checkValidKey( experimentalFactor );
-            Criteria queryObject = super.getSession().createCriteria( ExperimentalFactor.class );
-            BusinessKey.addRestrictions( queryObject, experimentalFactor );
+        BusinessKey.checkValidKey( experimentalFactor );
+        Criteria queryObject = super.getSession().createCriteria( ExperimentalFactor.class );
+        BusinessKey.addRestrictions( queryObject, experimentalFactor );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
 
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
-                            + ExperimentalFactor.class.getName() + "s were found when executing query" );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
+                        + ExperimentalFactor.class.getName() + "s were found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( ExperimentalFactor ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( ExperimentalFactor ) result;
+
     }
 
     /*

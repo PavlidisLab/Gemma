@@ -251,104 +251,6 @@ public class GeoConverterImpl implements GeoConverter {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.expression.geo.GeoConverter#convertData(java.util.List,
-     * ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
-
-        if ( vector == null || vector.size() == 0 ) return null;
-
-        boolean containsAtLeastOneNonNull = false;
-        for ( Object string : vector ) {
-            if ( string != null ) {
-                containsAtLeastOneNonNull = true;
-                break;
-            }
-        }
-
-        if ( !containsAtLeastOneNonNull ) {
-            if ( log.isDebugEnabled() ) {
-                log.debug( "No data for " + qt + " in vector of length " + vector.size() );
-            }
-            return null;
-        }
-
-        List<Object> toConvert = new ArrayList<Object>();
-        PrimitiveType pt = qt.getRepresentation();
-        int numMissing = 0;
-        for ( Object rawValue : vector ) {
-            if ( rawValue == null ) {
-                numMissing++;
-                handleMissing( toConvert, pt );
-            } else if ( rawValue instanceof String ) { // needs to be coverted.
-                String valueString = ( String ) rawValue;
-                if ( StringUtils.isBlank( valueString ) ) {
-                    numMissing++;
-                    handleMissing( toConvert, pt );
-                    continue;
-                }
-                try {
-                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                        toConvert.add( Double.parseDouble( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( rawValue );
-                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        if ( valueString.length() != 1 ) {
-                            throw new IllegalStateException( "Attempt to cast a string of length "
-                                    + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
-                        }
-                        toConvert.add( valueString.toCharArray()[0] );
-                    } else if ( pt.equals( PrimitiveType.INT ) ) {
-                        toConvert.add( Integer.parseInt( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                        toConvert.add( Boolean.parseBoolean( valueString ) );
-                    } else {
-                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-                    }
-                } catch ( NumberFormatException e ) {
-                    numMissing++;
-                    handleMissing( toConvert, pt );
-                }
-            } else { // use as is.
-                toConvert.add( rawValue );
-            }
-        }
-
-        if ( numMissing == vector.size() ) {
-            return null;
-        }
-
-        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
-
-        /*
-         * Debugging - absolutely make sure we can convert the data back.
-         */
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
-            if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length
-                        + " doubles" );
-            }
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
-            if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length
-                        + " ints" );
-            }
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
-            if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length
-                        + " booleans" );
-            }
-        }
-
-        return bytes;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.geo.GeoConverter#convertSubsetToExperimentalFactor(ubic.gemma.model.expression.
      * experiment.ExpressionExperiment, ubic.gemma.loader.expression.geo.model.GeoSubset)
      */
@@ -556,6 +458,108 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return buf.toString();
+    }
+
+    /**
+     * Convert a vector of strings into a byte[] for saving in the database. . Blanks(missing values) are treated as NAN
+     * (double), 0 (integer), false (booleans) or just empty strings (strings). Other invalid values are treated the
+     * same way as missing data (to keep the parser from failing when dealing with strange GEO files that have values
+     * like "Error" for an expression value).
+     * 
+     * @param vector of Strings to be converted to primitive values (double, int etc)
+     * @param qt The quantitation type for the values to be converted.
+     * @return
+     */
+    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
+
+        if ( vector == null || vector.size() == 0 ) return null;
+
+        boolean containsAtLeastOneNonNull = false;
+        for ( Object string : vector ) {
+            if ( string != null ) {
+                containsAtLeastOneNonNull = true;
+                break;
+            }
+        }
+
+        if ( !containsAtLeastOneNonNull ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( "No data for " + qt + " in vector of length " + vector.size() );
+            }
+            return null;
+        }
+
+        List<Object> toConvert = new ArrayList<Object>();
+        PrimitiveType pt = qt.getRepresentation();
+        int numMissing = 0;
+        for ( Object rawValue : vector ) {
+            if ( rawValue == null ) {
+                numMissing++;
+                handleMissing( toConvert, pt );
+            } else if ( rawValue instanceof String ) { // needs to be coverted.
+                String valueString = ( String ) rawValue;
+                if ( StringUtils.isBlank( valueString ) ) {
+                    numMissing++;
+                    handleMissing( toConvert, pt );
+                    continue;
+                }
+                try {
+                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                        toConvert.add( Double.parseDouble( valueString ) );
+                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                        toConvert.add( rawValue );
+                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
+                        if ( valueString.length() != 1 ) {
+                            throw new IllegalStateException( "Attempt to cast a string of length "
+                                    + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
+                        }
+                        toConvert.add( valueString.toCharArray()[0] );
+                    } else if ( pt.equals( PrimitiveType.INT ) ) {
+                        toConvert.add( Integer.parseInt( valueString ) );
+                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                        toConvert.add( Boolean.parseBoolean( valueString ) );
+                    } else {
+                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+                    }
+                } catch ( NumberFormatException e ) {
+                    numMissing++;
+                    handleMissing( toConvert, pt );
+                }
+            } else { // use as is.
+                toConvert.add( rawValue );
+            }
+        }
+
+        if ( numMissing == vector.size() ) {
+            return null;
+        }
+
+        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+
+        /*
+         * Debugging - absolutely make sure we can convert the data back.
+         */
+        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
+            if ( byteArrayToDoubles.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length
+                        + " doubles" );
+            }
+        } else if ( pt.equals( PrimitiveType.INT ) ) {
+            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
+            if ( byteArrayToInts.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length
+                        + " ints" );
+            }
+        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
+            if ( byteArrayToBooleans.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length
+                        + " booleans" );
+            }
+        }
+
+        return bytes;
     }
 
     /**
@@ -1124,10 +1128,6 @@ public class GeoConverterImpl implements GeoConverter {
             return ( seenPlatforms.get( platform.getGeoAccession() ) );
         }
 
-        if ( isSage( platform ) ) {
-            throw new UnsupportedOperationException( "This data set uses SAGE, it cannot be handled yet" );
-        }
-
         ArrayDesign arrayDesign = createMinimalArrayDesign( platform );
 
         log.info( "Converting platform: " + platform.getGeoAccession() );
@@ -1135,7 +1135,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         // convert the design element information.
         String identifier = platform.getIdColumnName();
-        if ( identifier == null ) {
+        if ( identifier == null && !platform.getColumnNames().isEmpty() ) {
             throw new IllegalStateException( "Cannot determine the platform design element id column for " + platform
                     + "; " + platform.getColumnNames().size() + " column names available." );
         }
@@ -1146,7 +1146,6 @@ public class GeoConverterImpl implements GeoConverter {
         String probeOrganismColumn = determinePlatformProbeOrganismColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
-        List<String> identifiers = platform.getColumnData( identifier );
         List<String> descriptions = platform.getColumnData( descriptionColumn );
 
         List<String> sequences = null;
@@ -1175,10 +1174,19 @@ public class GeoConverterImpl implements GeoConverter {
 
         arrayDesign.setPrimaryTaxon( primaryTaxon );
 
+        if ( identifier == null ) {
+            // we don't get any probe information; e.g., MPSS, SAGE, Exon arrays.
+            return arrayDesign;
+        }
+
         /*
          * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
          */
         List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
+        List<String> identifiers = platform.getColumnData( identifier );
+
+        assert identifiers != null;
+
         assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 
         List<List<String>> externalRefs = null;
@@ -2203,6 +2211,11 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( technology == null ) {
             log.warn( "No technology type available for " + platform + ", provisionally setting to 'dual mode'" );
             arrayDesign.setTechnologyType( TechnologyType.DUALMODE );
+        } else if ( technology.equals( PlatformType.MPSS ) ) {
+            arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT );
+        } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII )
+                || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
+            arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT );
         } else {
             throw new IllegalArgumentException( "Don't know how to interpret technology type " + technology );
         }
@@ -2647,18 +2660,6 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * Is this a SAGE (Serial Analysis of Gene Expression) platform? (A non-array method)
-     * 
-     * @param platform
-     * @return
-     */
-    private boolean isSage( GeoPlatform platform ) {
-        return platform.getTechnology() == PlatformType.SAGE || platform.getTechnology() == PlatformType.SAGENlaIII
-                || platform.getTechnology() == PlatformType.SAGERsaI
-                || platform.getTechnology() == PlatformType.SAGESau3A;
-    }
-
-    /**
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      * 
      * @param datasetSamples The samples we want to get data for. These should all have been run on the same platform.
@@ -2666,7 +2667,6 @@ public class GeoConverterImpl implements GeoConverter {
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
-    @SuppressWarnings("unchecked")
     private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,
             Integer quantitationTypeIndex ) {
         Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
@@ -2682,6 +2682,11 @@ public class GeoConverterImpl implements GeoConverter {
 
         String identifier = platform.getIdColumnName();
         List<String> designElements = platform.getColumnData( identifier );
+
+        if ( designElements == null ) {
+            return dataVectors;
+        }
+
         for ( String designElementName : designElements ) {
             /*
              * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
@@ -2787,9 +2792,19 @@ public class GeoConverterImpl implements GeoConverter {
         List<String> reference = new ArrayList<String>();
 
         // Choose a reference that is populated ...
+        boolean expectingData = true;
         for ( GeoSample sample : datasetSamples ) {
-            reference = sample.getColumnNames();
-            if ( !reference.isEmpty() ) break;
+            if ( sample.hasUsableData() ) {
+                reference = sample.getColumnNames();
+                if ( !reference.isEmpty() ) break;
+            } else {
+                expectingData = false;
+            }
+        }
+
+        if ( !expectingData ) {
+            log.warn( "Not expecting any data, so quantitation type checking is skipped." );
+            return;
         }
 
         if ( reference.isEmpty() ) {

@@ -91,7 +91,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddTroubleEvent() {
         AuditEventType eventType = TroubleStatusFlagEvent.Factory.newInstance();
-        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
@@ -107,7 +107,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddOKEvent() {
         AuditEventType eventType = OKStatusFlagEvent.Factory.newInstance();
-        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
@@ -122,7 +122,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddValidatedEvent() {
         AuditEventType eventType = ValidatedFlagEvent.Factory.newInstance();
-        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType , "nothing special, just testing" );
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
@@ -133,6 +133,10 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( ValidatedFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
                 .getEventType().getClass() );
+
+        for ( AuditEvent e : auditTrail.getEvents() ) {
+            assertNotNull( e.getId() );
+        }
     }
 
     @Test

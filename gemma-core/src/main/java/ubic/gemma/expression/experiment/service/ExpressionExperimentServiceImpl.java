@@ -57,9 +57,11 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -123,6 +125,36 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+        return this.expressionExperimentDao.browse( start, limit );
+    }
+
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        return this.expressionExperimentDao.browse( start, limit, orderField, descending );
+    }
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
+        return this.expressionExperimentDao.browseSpecificIds( start, limit, ids );
+    }
+
+    @Override
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids ) {
+        return this.expressionExperimentDao.browseSpecificIds( start, limit, orderField, descending, ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#count()
+     */
+    @Override
+    public Integer count() {
+        return this.expressionExperimentDao.count();
+    }
+
     /**
      * @see ExpressionExperimentService#countAll()
      */
@@ -185,6 +217,31 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
+     * returns ids of search results
+     * 
+     * @param searchString
+     * @return collection of ids or an empty collection
+     */
+    @Override
+    public Collection<Long> filter( String searchString ) {
+
+        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
+                .expressionExperimentSearch( searchString ) );
+
+        assert searchResultsMap != null;
+
+        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+
+        Collection<Long> ids = new ArrayList<Long>( searchResults.size() );
+
+        for ( SearchResult s : searchResults ) {
+            ids.add( s.getId() );
+        }
+
+        return ids;
+    }
+
+    /**
      * @see ExpressionExperimentService#find(ExpressionExperiment)
      */
     public ExpressionExperiment find( final ExpressionExperiment expressionExperiment ) {
@@ -195,6 +252,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     "Error performing 'ExpressionExperimentService.find(ExpressionExperiment expressionExperiment)' --> "
                             + th, th );
         }
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
+        return this.expressionExperimentDao.findByAccession( accession );
     }
 
     /**
@@ -341,6 +403,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
+        return this.expressionExperimentDao.findByQuantitationType( type );
+    }
+
     /**
      * @see ExpressionExperimentService#findByShortName(java.lang.String)
      */
@@ -354,6 +420,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    @Override
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+        return this.expressionExperimentDao.findByTaxon( taxon, limit );
+    }
+
     /**
      * @see ExpressionExperimentService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
@@ -365,6 +436,21 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     "Error performing 'ExpressionExperimentService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
+     * java.lang.Integer)
+     */
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+        return this.expressionExperimentDao.findByUpdatedLimit( ids, limit );
+    }
+
+    @Override
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+        return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
     /**
@@ -393,6 +479,35 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
+     * Get the terms associated this expression experiment.
+     */
+    public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
+        ExpressionExperiment expressionExperiment = load( eeId );
+        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
+        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setId( c.getId() );
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                annotationValue.setClassUri( vc.getCategoryUri() );
+                String className = getLabelFromUri( vc.getCategoryUri() );
+                if ( className != null ) annotationValue.setClassName( className );
+                annotationValue.setTermUri( vc.getValueUri() );
+                String termName = getLabelFromUri( vc.getValueUri() );
+                if ( termName != null ) annotationValue.setTermName( termName );
+                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+            } else {
+                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
+            }
+            annotations.add( annotationValue );
+        }
+        return annotations;
+    }
+
+    /**
      * @see ExpressionExperimentService#getArrayDesignsUsed(ExpressionExperiment)
      */
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
@@ -410,6 +525,17 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     public AuditEventDao getAuditEventDao() {
         return auditEventDao;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.getBioAssayDimensions( expressionExperiment );
     }
 
     /**
@@ -600,7 +726,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
      */
-    public Map getPopulatedFactorCounts( final Collection<Long> ids ) {
+    public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
         try {
             return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
         } catch ( Throwable th ) {
@@ -613,7 +739,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCountsExcludeBatch(Collection)
      */
-    public Map getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         try {
             return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
         } catch ( Throwable th ) {
@@ -626,7 +752,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPreferredQuantitationType(ExpressionExperiment)
      */
-    public Collection getPreferredQuantitationType( final ExpressionExperiment ee ) {
+    public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
         try {
             Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
 
@@ -645,6 +771,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
+        return principalComponentAnalysisDao;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getProcessedDataVectors( ee );
+    }
+
     /**
      * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
@@ -656,14 +796,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     "Error performing 'ExpressionExperimentService.getPreferredDesignElementDataVectorCount(ExpressionExperiment expressionExperiment)' --> "
                             + th, th );
         }
-    }
-
-    public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
-        return sampleCoexpressionAnalysisDao;
-    }
-
-    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
-        return principalComponentAnalysisDao;
     }
 
     /**
@@ -707,10 +839,15 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
+        return sampleCoexpressionAnalysisDao;
+    }
+
     /**
      * @see ExpressionExperimentService#getSampleRemovalEvents(Collection)
      */
-    public Map getSampleRemovalEvents( final Collection expressionExperiments ) {
+    public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
+            final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
             return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
         } catch ( Throwable th ) {
@@ -724,7 +861,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
-    public Collection getSamplingOfVectors( final QuantitationType quantitationType, final Integer limit ) {
+    @Deprecated
+    public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
+            final Integer limit ) {
         try {
             return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
         } catch ( Throwable th ) {
@@ -760,6 +899,26 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    @Override
+    public Collection<Long> getUntroubled( Collection<Long> ids ) {
+        Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
+
+        /*
+         * Now check the array designs.
+         */
+        Map<ArrayDesign, Collection<Long>> ads = this.expressionExperimentDao.getArrayDesignsUsed( firstPass );
+        Collection<Long> troubled = new HashSet<Long>();
+        for ( ArrayDesign a : ads.keySet() ) {
+            if ( a.getStatus().getTroubled() ) {
+                troubled.addAll( ads.get( a ) );
+            }
+        }
+
+        firstPass.removeAll( troubled );
+
+        return firstPass;
+    }
+
     /**
      * @see ExpressionExperimentService#load(java.lang.Long)
      */
@@ -784,6 +943,21 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    @Override
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
+        return this.expressionExperimentDao.loadAllOrdered( orderField, descending );
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
+        return this.expressionExperimentDao.loadAllTaxon( taxon );
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+        return this.expressionExperimentDao.loadAllTaxonOrdered( orderField, descending, taxon );
+    }
+
     /**
      * @see ExpressionExperimentService#loadAllValueObjects()
      */
@@ -796,6 +970,16 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    @Override
+    public Collection<ExpressionExperiment> loadLackingFactors() {
+        return this.expressionExperimentDao.loadLackingFactors();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> loadLackingTags() {
+        return this.expressionExperimentDao.loadLackingTags();
+    }
+
     /**
      * @see ExpressionExperimentService#loadMultiple(Collection)
      */
@@ -806,6 +990,45 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.loadMultiple(Collection ids)' --> " + th, th );
         }
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
+    }
+
+    /*
+     * Note: implemented via SpringSecurity.
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
+     */
+    public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
+        return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMySharedExpressionExperiments()
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
+        return loadAll();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> loadTroubled() {
+        Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
+        return this.loadMultiple( lastTroubleEvents.keySet() );
+    }
+
+    /*
+     * Note: implemented via SpringSecurity.
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadUserOwnedExpressionExperiments()
+     */
+    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
+        return loadAll();
     }
 
     /**
@@ -824,6 +1047,49 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.loadValueObjects(Collection ids)' --> " + th, th );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#replaceVectors(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.util.Collection)
+     */
+    @Override
+    public void replaceVectors( ExpressionExperiment ee, ArrayDesign ad, Collection<RawExpressionDataVector> vectors ) {
+
+        if ( vectors == null || vectors.isEmpty() ) {
+            throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
+        }
+
+        ee.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>() );
+        ee.setRawExpressionDataVectors( vectors );
+        ArrayDesign vectorAd = vectors.iterator().next().getDesignElement().getArrayDesign();
+
+        if ( ad == null ) {
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
+                    throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
+                }
+            }
+        } else if ( !vectorAd.equals( ad ) ) {
+            throw new IllegalArgumentException( "Vectors must use the array design indicated" );
+        }
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.setArrayDesignUsed( ad );
+        }
+
+        ee.getProcessedExpressionDataVectors().clear();
+
+        this.update( ee );
+    }
+
+    @Override
+    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors ) {
+        this.replaceVectors( ee, null, vectors );
     }
 
     /**
@@ -917,177 +1183,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     "Error performing 'ExpressionExperimentService.update(ExpressionExperiment expressionExperiment)' --> "
                             + th, th );
         }
-    }
-
-    @Override
-    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
-        return this.expressionExperimentDao.browse( start, limit );
-    }
-
-    @Override
-    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        return this.expressionExperimentDao.browse( start, limit, orderField, descending );
-    }
-
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        return this.expressionExperimentDao.browseSpecificIds( start, limit, ids );
-    }
-
-    @Override
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
-            boolean descending, Collection<Long> ids ) {
-        return this.expressionExperimentDao.browseSpecificIds( start, limit, orderField, descending, ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Intege,
-     * java.lang.Integer, java.lang.String, boolean)
-     */
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
-     */
-    @Override
-    public Integer count() {
-        return this.expressionExperimentDao.count();
-    }
-
-    @Override
-    public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
-    }
-
-    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.expressionExperimentDao.findByQuantitationType( type );
-    }
-
-    @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
-        return this.expressionExperimentDao.findByTaxon( taxon, limit );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
-     * java.lang.Integer)
-     */
-    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
-        return this.expressionExperimentDao.findByUpdatedLimit( ids, limit );
-    }
-
-    @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
-        return this.expressionExperimentDao.findByUpdatedLimit( limit );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getBioAssayDimensions( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getProcessedDataVectors( ee );
-    }
-
-    @Override
-    public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
-
-        /*
-         * Now check the array designs.
-         */
-        Map<ArrayDesign, Collection<Long>> ads = this.expressionExperimentDao.getArrayDesignsUsed( firstPass );
-        Collection<Long> troubled = new HashSet<Long>();
-        for ( ArrayDesign a : ads.keySet() ) {
-            if ( a.getStatus().getTroubled() ) {
-                troubled.addAll( ads.get( a ) );
-            }
-        }
-
-        firstPass.removeAll( troubled );
-
-        return firstPass;
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
-        return this.expressionExperimentDao.loadAllOrdered( orderField, descending );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllTaxonOrdered( orderField, descending, taxon );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllTaxon( taxon );
-    }
-
-    @Override
-    public Collection<ExpressionExperiment> loadLackingFactors() {
-        return this.expressionExperimentDao.loadLackingFactors();
-    }
-
-    @Override
-    public Collection<ExpressionExperiment> loadLackingTags() {
-        return this.expressionExperimentDao.loadLackingTags();
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
-    }
-
-    /*
-     * Note: implemented via SpringSecurity.
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
-     */
-    public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
-        return loadAll();
-    }
-
-    /*
-     * Note: implemented via SpringSecurity.
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadUserOwnedExpressionExperiments()
-     */
-    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
-        return loadAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMySharedExpressionExperiments()
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    public Collection<ExpressionExperiment> loadTroubled() {
-        Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
-        return this.loadMultiple( lastTroubleEvents.keySet() );
     }
 
     /*
@@ -1186,6 +1281,17 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
+     * @param uri
+     * @return
+     */
+    private String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null ) return resource.getLabel();
+
+        return null;
+    }
+
+    /**
      * @param ids
      * @param type
      * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
@@ -1219,71 +1325,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         return troubleMap;
-    }
-
-    /**
-     * returns ids of search results
-     * 
-     * @param searchString
-     * @return collection of ids or an empty collection
-     */
-    @Override
-    public Collection<Long> filter( String searchString ) {
-
-        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
-                .expressionExperimentSearch( searchString ) );
-
-        assert searchResultsMap != null;
-
-        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
-
-        Collection<Long> ids = new ArrayList<Long>( searchResults.size() );
-
-        for ( SearchResult s : searchResults ) {
-            ids.add( s.getId() );
-        }
-
-        return ids;
-    }
-
-    /**
-     * Get the terms associated this expression experiment.
-     */
-    public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
-        ExpressionExperiment expressionExperiment = load( eeId );
-        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
-        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null ) annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null ) annotationValue.setTermName( termName );
-                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-            } else {
-                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
-            }
-            annotations.add( annotationValue );
-        }
-        return annotations;
-    }
-
-    /**
-     * @param uri
-     * @return
-     */
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null ) return resource.getLabel();
-
-        return null;
     }
 
 }

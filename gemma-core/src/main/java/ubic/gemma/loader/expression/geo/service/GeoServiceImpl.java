@@ -133,7 +133,7 @@ public class GeoServiceImpl extends AbstractGeoService {
                 log.warn( "Got no results" );
                 return null;
             }
-            Collection<Object> arrayDesigns = ( Collection<Object> ) geoConverter.convert( platforms );
+            Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
 
@@ -175,6 +175,9 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         confirmPlatformUniqueness( series, doSampleMatching && !splitByPlatform );
 
+        /*
+         * FIXME - don't do this if the platform has no data.
+         */
         matchToExistingPlatforms( geoConverter, series );
 
         checkSamplesAreNew( series );
@@ -206,35 +209,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         return persistedResult;
     }
 
-    /**
-     * @param arrayDesignReportService the arrayDesignReportService to set
-     */
-    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
-        this.arrayDesignReportService = arrayDesignReportService;
-    }
-
-    /**
-     * @param bioAssayService
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    /**
-     * @param expressionExperimentReportService the expressionExperimentReportService to set
-     */
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
     private void check( Collection<ExpressionExperiment> result ) {
         for ( ExpressionExperiment expressionExperiment : result ) {
             check( expressionExperiment );
@@ -248,7 +222,10 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         if ( ee.getRawExpressionDataVectors().size() == 0 ) {
-            throw new IllegalStateException( "Experiment has no data vectors " + ee );
+            /*
+             * This is okay if the platform is MPSS or Exon arrays for which we load data later.
+             */
+            log.warn( "Experiment has no data vectors: " + ee );
         }
 
     }
@@ -404,6 +381,11 @@ public class GeoServiceImpl extends AbstractGeoService {
      */
     private void fillExistingProbeNameMap( GeoPlatform pl, String columnWithGemmaNames, String columnWithGeoNames ) {
         List<String> gemmaNames = pl.getColumnData( columnWithGemmaNames );
+        if ( gemmaNames == null ) {
+            // only if we are not loading the data here.
+            log.warn( "Not associating data from GEO for this platform." );
+            return;
+        }
         List<String> geoNames = pl.getColumnData( columnWithGeoNames );
         assert gemmaNames.size() == geoNames.size();
         log.debug( "Matching up " + geoNames.size() + " probe names" );
@@ -443,7 +425,12 @@ public class GeoServiceImpl extends AbstractGeoService {
             // search the other columns
             int numColsMatching = 0;
             for ( String colName : rawGEOPlatform.getColumnNames() ) {
-                if ( rawGEOPlatform.getColumnData( colName ).contains( gemmaProbeName ) ) {
+                List<String> columnData = rawGEOPlatform.getColumnData( colName );
+                if ( columnData == null ) {
+                    log.warn( "No column data for " + colName ); // ok
+                    continue;
+                }
+                if ( columnData.contains( gemmaProbeName ) ) {
 
                     /*
                      * Note: Spurious matches can happen if the ID is an integer and if there are other columns that
@@ -494,7 +481,8 @@ public class GeoServiceImpl extends AbstractGeoService {
             String geoProbeName = cs.getName();
             geoProbeNames.add( geoProbeName );
             for ( String colName : rawGEOPlatform.getColumnNames() ) {
-                if ( rawGEOPlatform.getColumnData( colName ).contains( geoProbeName ) ) {
+                List<String> columnData = rawGEOPlatform.getColumnData( colName );
+                if ( columnData != null && columnData.contains( geoProbeName ) ) {
                     columnWithGeoNames = colName;
                     log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
                     return columnWithGeoNames;
@@ -624,6 +612,14 @@ public class GeoServiceImpl extends AbstractGeoService {
         // do a partial conversion. We will throw this away;
         ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
 
+        if ( geoArrayDesign == null ) {
+            if ( !rawGEOPlatform.useDataFromGeo() ) {
+                // MPSS, exon arrays
+                return;
+            }
+            throw new IllegalStateException( "Platform is missing" );
+        }
+
         // find in our system. Note we only use the short name. The full name can change in GEO, causing trouble.
         ArrayDesign existing = arrayDesignService.findByShortName( geoArrayDesign.getShortName() );
 
@@ -702,7 +698,6 @@ public class GeoServiceImpl extends AbstractGeoService {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
                 expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
-
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {

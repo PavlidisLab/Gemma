@@ -16,19 +16,18 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.persistence;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Test;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -40,24 +39,24 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
     /**
-     * This test will fail with a deadlock on ACL table.
+     * This test can fail with a deadlock on ACL table. Note that this behaviour is dependent on configuration, in
+     * complex ways, so don't worry about trying to get it to fail. The fact that it works is good ;)
      * 
      * @throws Exception
      */
-    // @Test
+    @Test
     public void testConcurrentLoading() throws Exception {
         /*
          * Initialize things, so we're not using a completely fresh db.
          */
         getTestPersistentCompleteExpressionExperiment( false );
 
-        // I was playing around with larger values, but this has worked every time (exposing bug)
-        int numThreads = 2;
+        int numThreads = 5;
         final int numExperimentsPerThread = 1;
 
         final AtomicInteger c = new AtomicInteger( 0 );
 
-        final ConcurrentHashMap<ExpressionExperiment, Integer> results = new ConcurrentHashMap<ExpressionExperiment, Integer>();
+        final ConcurrentHashMap<Describable, Integer> results = new ConcurrentHashMap<Describable, Integer>();
 
         final AtomicBoolean failed = new AtomicBoolean( false );
 
@@ -69,11 +68,12 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                     for ( int j = 0; j < numExperimentsPerThread; j++ ) {
                         log.info( "Thread " + t + " experiment " + j );
                         try {
-                            ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
-                            results.put( ee, 1 );
+                            results.put( getTestPersistentCompleteExpressionExperiment( false ), 1 );
                         } catch ( Exception e ) {
-                            log.error( "Failure in: Thread " + t + " experiment " + j, e );
+                            log.error( "Failure in: Thread " + t + " experiment " + j + ": " + e.getMessage() + " "
+                                    + ExceptionUtils.getStackTrace( e ) );
                             failed.set( true );
+
                         } finally {
                             c.incrementAndGet();
                         }

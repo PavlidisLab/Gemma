@@ -472,9 +472,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
             log.debug( "treatment done" );
         }
-        log.info( "start save" );
+        log.debug( "start save" );
         BioMaterial bm = bioMaterialDao.findOrCreate( entity );
-        log.info( "save biomaterial done" );
+        log.debug( "save biomaterial done" );
 
         return bm;
     }
@@ -500,7 +500,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( experimentalFactor ) || experimentalFactor == null ) return experimentalFactor;
         assert experimentalFactor.getType() != null;
         fillInExperimentalFactorAssociations( experimentalFactor );
-        assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
+        // assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
         return experimentalFactorDao.create( experimentalFactor );
     }
 
@@ -628,13 +628,21 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         // Withhold to avoid premature cascade.
         Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
+        if ( factors == null ) {
+            factors = new HashSet<ExperimentalFactor>();
+        }
         experimentalDesign.setExperimentalFactors( null );
 
         // Note we use create because this is specific to the instance. (we're overriding a cascade)
+        experimentalDesign.setAuditTrail( persistAuditTrail( experimentalDesign.getAuditTrail() ) );
         experimentalDesign = experimentalDesignDao.create( experimentalDesign );
 
         // Put back.
         experimentalDesign.setExperimentalFactors( factors );
+
+        assert experimentalDesign != null;
+        assert !isTransient( experimentalDesign );
+        assert experimentalDesign.getExperimentalFactors() != null;
 
         for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
 

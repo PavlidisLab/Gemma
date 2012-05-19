@@ -276,7 +276,7 @@ public class GeoFamilyParser implements Parser<Object> {
             sample.setType( "mixed" );
         } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
             sample.setType( "SAGE" );
-        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
+        } else if ( string.equalsIgnoreCase( "MPSS" ) || string.equalsIgnoreCase( "SRA" ) ) {
             sample.setType( "MPSS" );
         } else if ( string.equalsIgnoreCase( "SARST" ) ) {
             sample.setType( "protein" );
@@ -309,6 +309,14 @@ public class GeoFamilyParser implements Parser<Object> {
      * @param currentSample
      */
     private void addMissingData( GeoSample currentSample ) {
+
+        /*
+         * Skip if we're not going to use the data.
+         */
+        if ( !currentSample.hasUsableData() ) {
+            log.info( "Sample is not expected to have any data" );
+            return;
+        }
 
         if ( currentSample.getPlatforms().size() > 1 ) {
             log.warn( "Multi-platform sample: " + currentSample );
@@ -708,6 +716,7 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( geoSeries == null ) {
             throw new IllegalStateException( "No series is being parsed" );
         }
+
         GeoValues values = geoSeries.getValues();
         Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
         Collection<String> seenColumnNames = new HashSet<String>();
@@ -1307,6 +1316,10 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( inPlatformTable ) {
                 parsePlatformLine( line );
             } else if ( inSampleTable ) {
+                /*
+                 * FIXME: skip this step if it's not a supported platform type (RNA-seq, exon arrays: we put the data in
+                 * later)
+                 */
                 parseSampleDataLine( line );
             } else if ( inSeriesTable ) {
                 // we ignore this and use the sample data instead.
@@ -1536,7 +1549,7 @@ public class GeoFamilyParser implements Parser<Object> {
                  */
                 log.warn( "No data for sample " + currentSampleAccession );
                 initializeQuantitationTypes();
-                checkDataCompleteness(); // because we don't get the dable_end.
+                checkDataCompleteness(); // because we don't get the table_end.
             }
         } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
             sampleTypeSet( currentSampleAccession, value );
@@ -1546,6 +1559,14 @@ public class GeoFamilyParser implements Parser<Object> {
             // noop.
         } else if ( startsWithIgnoreCase( line, "!Sample_relation" ) ) {
             // noop, for now. Example is "!Sample_relation = Reanalyzed by: GSE26971" in GSE12093
+        } else if ( startsWithIgnoreCase( line, "!Sample_instrument_model" ) ) {
+            // e.g. Illumina HiSeq 2000
+        } else if ( startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
+            // e.g. 'cDNA'
+        } else if ( startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
+            // e.g. 'transcriptomic'
+        } else if ( startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
+            // e.g. 'RNA-seq'
         } else {
             log.error( "Unknown flag in sample: " + line );
         }

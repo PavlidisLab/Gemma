@@ -63,7 +63,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
         if ( experimentalFactor == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.create - 'experimentalFactor' can not be null" );
         }
-        this.getHibernateTemplate().save( experimentalFactor );
+        this.getHibernateTemplate().saveOrUpdate( experimentalFactor );
         return experimentalFactor;
     }
 

@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -402,8 +403,10 @@ public interface ExpressionExperimentService {
      * @param quantitationType
      * @param limit
      * @return
+     * @deprecated Use ProcessedExpressionDataVectorService.getProcessedVectors instead.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Deprecated
     public Collection<DesignElementDataVector> getSamplingOfVectors(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
 
@@ -537,4 +540,25 @@ public interface ExpressionExperimentService {
      * @return collection of ids or an empty collection
      */
     public Collection<Long> filter( String searchString );
+
+    /**
+     * Used when we are converting an experiment from one platform to another. Examples would be exon array or MPSS data
+     * sets. Does not take care of computing the processed data vectors, but it does clear them out.
+     * 
+     * @param ee
+     * @param ad
+     * @param vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void replaceVectors( ExpressionExperiment ee, ArrayDesign ad, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Used when we want to replace the vectors. Does not take care of computing the processed data vectors, but it does
+     * clear them out.
+     * 
+     * @param ee
+     * @param vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 }

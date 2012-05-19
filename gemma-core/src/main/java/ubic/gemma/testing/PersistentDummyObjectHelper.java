@@ -99,8 +99,6 @@ public class PersistentDummyObjectHelper {
 
     private ExternalDatabase pubmed;
 
-    private Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
-
     protected Log log = LogFactory.getLog( getClass() );
 
     /**
@@ -109,7 +107,7 @@ public class PersistentDummyObjectHelper {
     Taxon testTaxon;
     Collection<Taxon> testTaxa = null;
 
-    private Collection<BioMaterial> getBioMaterials() {
+    private Collection<BioMaterial> getBioMaterials( Collection<FactorValue> allFactorValues ) {
 
         if ( allFactorValues.isEmpty() )
             throw new RuntimeException(
@@ -207,19 +205,24 @@ public class PersistentDummyObjectHelper {
      * 
      * @return
      */
-    public ExperimentalDesign getExperimentalDesign() {
+    public ExperimentalDesign getExperimentalDesign( Collection<FactorValue> allFactorValues ) {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
         ed.setDescription( RandomStringUtils.randomNumeric( 10 ) + ": A test experimental design." );
         log.debug( "experimental design => experimental factors" );
-        ed.setExperimentalFactors( getExperimentalFactors( ed ) ); // set test experimental factors
+        ed.setExperimentalFactors( getExperimentalFactors( ed, allFactorValues ) ); // set test experimental factors
         return ed;
+    }
+
+    public Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed ) {
+        return this.getExperimentalFactors( ed, new HashSet<FactorValue>() );
     }
 
     /**
      * @return
      */
-    public Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed ) {
+    protected Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
+            Collection<FactorValue> allFactorValues ) {
         Collection<ExperimentalFactor> efCol = new HashSet<ExperimentalFactor>();
         for ( int i = 0; i < NUM_EXPERIMENTAL_FACTORS; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -232,16 +235,20 @@ public class PersistentDummyObjectHelper {
             c.setName( "OrganismPart" );
             ef.setCategory( c );
             log.debug( "experimental factor => factor values" );
-            ef.setFactorValues( getFactorValues( ef ) );
+            ef.setFactorValues( getFactorValues( ef, allFactorValues ) );
             efCol.add( ef );
         }
         return efCol;
     }
 
+    public Collection<FactorValue> getFactorValues( ExperimentalFactor ef ) {
+        return this.getFactorValues( ef, new HashSet<FactorValue>() );
+    }
+
     /**
      * @return Collection
      */
-    public Collection<FactorValue> getFactorValues( ExperimentalFactor ef ) {
+    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef, Collection<FactorValue> allFactorValues ) {
 
         Collection<FactorValue> fvCol = new HashSet<FactorValue>();
         for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
@@ -278,12 +285,13 @@ public class PersistentDummyObjectHelper {
         ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
         ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
 
-        ExperimentalDesign ed = getExperimentalDesign();
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-        Collection<BioMaterial> bioMaterials = getBioMaterials();
+        Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
         Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
         Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
         bioAssays.addAll( bioAssaysA );
@@ -314,8 +322,6 @@ public class PersistentDummyObjectHelper {
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean dosequence ) {
 
-        this.allFactorValues.clear();
-
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
@@ -334,13 +340,14 @@ public class PersistentDummyObjectHelper {
 
         ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
         ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
 
-        ExperimentalDesign ed = getExperimentalDesign();
+        ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-        Collection<BioMaterial> bioMaterials = getBioMaterials();
+        Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
         Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
         Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
         bioAssays.addAll( bioAssaysA );

@@ -101,6 +101,24 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
+    @Test
+    public void testFetchAndLoadGSE37646RNASEQ() throws Exception {
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
+        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = eeService.thawLite( ee );
+    }
+
+    @Test
+    public void testFetchAndLoadGSE12135EXON() throws Exception {
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
+        ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = eeService.thawLite( ee );
+    }
+
     /**
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
      * have descriptions.

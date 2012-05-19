@@ -32,6 +32,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
+
 /**
  * Class to store the expression data prior to conversion. The data are read from series files sample by sample, and
  * within each sample designElement by designElement, and within each designElement, quantitationType by
@@ -88,7 +90,7 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "TOT_SPIX" );
         skippableQuantitationTypes.add( "TOT_BPIX" );
 
-        //  
+        //
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
         // skippableQuantitationTypes.add( "CH2D_MEAN" );
@@ -229,18 +231,26 @@ public class GeoValues implements Serializable {
     public void addSample( GeoSample sample ) {
         GeoPlatform platform = sample.getPlatforms().iterator().next();
 
-        /*
-         * Problem: if this is the first sample, we don't know how many quantitation types to expect.
-         */
-        if ( !sampleDimensions.containsKey( platform ) ) {
+        if ( platform.getTechnology().equals( PlatformType.MPSS )
+                || platform.getTechnology().equals( PlatformType.SAGE ) ) {
+            /*
+             * We're not going to add data for this. ALSO: exon arrays.
+             */
+            return;
+
+        } else if ( !sampleDimensions.containsKey( platform ) ) {
+            /*
+             * Problem: if this is the first sample, we don't know how many quantitation types to expect.
+             */
             throw new UnsupportedOperationException(
                     "Can't deal with empty samples when that sample is the first one on its platform." );
-        }
+        } else {
 
-        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-        for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
-            LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
-            sampleQtMap.add( sample );
+            Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+            for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
+                LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+                sampleQtMap.add( sample );
+            }
         }
 
     }
@@ -359,6 +369,11 @@ public class GeoValues implements Serializable {
      * @return
      */
     public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, Integer quantitationType ) {
+
+        if ( !platform.useDataFromGeo() ) {
+            return null;
+        }
+
         assert sampleDimensions.get( platform ) != null;
         if ( sampleDimensions.get( platform ).get( quantitationType ) == null ) {
             return null; // filtered out?
@@ -435,10 +450,8 @@ public class GeoValues implements Serializable {
                 Object value = rawvals.get( i );
                 if ( value == null ) {
                     if ( log.isDebugEnabled() )
-                        log
-                                .debug( "No data for index " + i + " (" + designElement + " on " + platform
-                                        + " quant.type # " + quantitationType + ") - vector has " + rawvals.size()
-                                        + " values." );
+                        log.debug( "No data for index " + i + " (" + designElement + " on " + platform
+                                + " quant.type # " + quantitationType + ") - vector has " + rawvals.size() + " values." );
                 }
                 result.add( value );
             }

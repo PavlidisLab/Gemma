@@ -331,7 +331,7 @@ public class GeoDataset extends GeoData {
             return PlatformType.dualChannelGenomic;
         } else if ( string.equals( "SAGE" ) ) {
             return PlatformType.SAGE;
-        } else if ( string.equals( "MPSS" ) ) {
+        } else if ( string.equals( "MPSS" ) || string.equals( "high-throughput sequencing" ) ) {
             return PlatformType.MPSS;
         } else if ( string.equals( "spotted DNA/cDNA" ) ) {
             return PlatformType.spottedDNAOrcDNA;
@@ -462,7 +462,6 @@ public class GeoDataset extends GeoData {
 
     public enum PlatformType {
         dualChannel, dualChannelGenomic, SAGE, singleChannel, singleChannelGenomic, spottedDNAOrcDNA, spottedOligonucleotide, inSituOligonucleotide, oligonucleotideBeads, SAGENlaIII, SAGESau3A, SAGERsaI, SARST, RTPCR, MPSS, antibody, MS, other
-
     }
 
     public enum ValueType {

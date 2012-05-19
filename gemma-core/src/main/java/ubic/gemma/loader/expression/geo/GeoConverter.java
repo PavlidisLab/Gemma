@@ -17,11 +17,9 @@ package ubic.gemma.loader.expression.geo;
 import java.util.Collection;
 import java.util.List;
 
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.util.converter.Converter;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,6 +30,8 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 public interface GeoConverter extends Converter<GeoData, Object> {
+
+    byte[] convertData( List<Object> vector, QuantitationType qt );
 
     /**
      * Remove old results. Call this prior to starting conversion of a full dataset.
@@ -46,18 +46,6 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      * @return LocalFile
      */
     public abstract LocalFile convertSupplementaryFileToLocalFile( Object object );
-
-    /**
-     * Convert a vector of strings into a byte[] for saving in the database. . Blanks(missing values) are treated as NAN
-     * (double), 0 (integer), false (booleans) or just empty strings (strings). Other invalid values are treated the
-     * same way as missing data (to keep the parser from failing when dealing with strange GEO files that have values
-     * like "Error" for an expression value).
-     * 
-     * @param vector of Strings to be converted to primitive values (double, int etc)
-     * @param qt The quantitation type for the values to be converted.
-     * @return
-     */
-    public abstract byte[] convertData( List<Object> vector, QuantitationType qt );
 
     /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an

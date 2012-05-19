@@ -1084,8 +1084,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             return this.handleCompositeSequenceWithoutBioSequences( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBioSequences"
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -1098,8 +1098,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             return this.handleCompositeSequenceWithoutBlatResults( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBlatResults"
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -1112,8 +1112,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             return this.handleCompositeSequenceWithoutGenes( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutGenes"
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -1160,7 +1160,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "ArrayDesign.create - 'arrayDesign' can not be null" );
         }
-        this.getHibernateTemplate().save( arrayDesign );
+        this.getHibernateTemplate().saveOrUpdate( arrayDesign );
         return arrayDesign;
     }
 
@@ -1172,8 +1172,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             this.handleDeleteAlignmentData( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteAlignmentData"
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -1185,8 +1185,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             this.handleDeleteGeneProductAssociations( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.deleteGeneProductAssociations"
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 

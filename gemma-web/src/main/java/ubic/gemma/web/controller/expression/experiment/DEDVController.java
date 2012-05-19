@@ -854,7 +854,7 @@ public class DEDVController {
         ees.add( analyzedSet );
 
         List<ProbeAnalysisResult> ee2probeResults = differentialExpressionResultService.findInResultSet( ar, threshold,
-                ( Integer ) MAX_RESULTS_TO_RETURN, minNumberOfResults );
+                MAX_RESULTS_TO_RETURN, minNumberOfResults );
 
         if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return new ArrayList<DoubleVectorValueObject>();
 
@@ -1358,8 +1358,9 @@ public class DEDVController {
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
-            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( vvoMap.get( ee2P.getEEId() ) )) {
-                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( vvoMap.get( ee2P.getEEId() ) );
+            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( vvoMap.get( ee2P.getEEId() ) ) ) {
+                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( vvoMap
+                        .get( ee2P.getEEId() ) );
                 getFactorValues( vvo, layout );
             }
 

@@ -34,6 +34,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
+ * @version $Id$
  */
 @Repository
 public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements ExperimentalDesignDao {
@@ -47,6 +48,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
@@ -57,7 +59,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
 
             queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
 
-            List results = queryObject.list();
+            List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -77,12 +79,12 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
      */
     public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign ) {
-        // FIXME move to checkKey; key is not complete!!!
         if ( experimentalDesign.getName() == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign must have name or external accession." );
         }
@@ -96,6 +98,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#handleGetExpressionExperiment(ubic.gemma.model
      * .expression.experiment.ExperimentalDesign)
@@ -105,7 +108,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
         if ( ed == null ) return null;
 
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed ";
-        List results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
 
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has experimental design id = " + ed.getId() );
@@ -114,19 +117,18 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
         return ( ExpressionExperiment ) results.iterator().next();
 
     }
-    
-    
+
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<? extends ExperimentalDesign> create( final int transform,
+    public java.util.Collection<? extends ExperimentalDesign> create(
             final java.util.Collection<? extends ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.create - 'entities' can not be null" );
         }
-        
+
         for ( ExperimentalDesign entity : entities ) {
-            create( transform, entity );
+            create( entity );
         }
 
         return entities;
@@ -136,29 +138,12 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int transform,
      *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
-    public Object create( final int transform, final ExperimentalDesign experimentalDesign ) {
+    public ExperimentalDesign create( final ExperimentalDesign experimentalDesign ) {
         if ( experimentalDesign == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.create - 'experimentalDesign' can not be null" );
         }
-        this.getHibernateTemplate().save( experimentalDesign );
-        return this.transformEntity( transform, experimentalDesign );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(java.util.Collection)
-     */
-
-    public java.util.Collection<? extends ExperimentalDesign> create(
-            final java.util.Collection<? extends ExperimentalDesign> entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    public ExperimentalDesign create( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        return ( ubic.gemma.model.expression.experiment.ExperimentalDesign ) this.create( TRANSFORM_NONE,
-                experimentalDesign );
+        this.getHibernateTemplate().saveOrUpdate( experimentalDesign );
+        return experimentalDesign;
     }
 
     /**
@@ -166,14 +151,13 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
 
-    public Object find( final int transform, final String queryString,
-            final ExperimentalDesign experimentalDesign ) {
+    public ExperimentalDesign find( final String queryString, final ExperimentalDesign experimentalDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( experimentalDesign );
         argNames.add( "experimentalDesign" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -184,43 +168,16 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
             result = results.iterator().next();
         }
 
-        result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalDesign ) result );
-        return result;
+        return ( ExperimentalDesign ) result;
     }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#find(int,
-     *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-
-    public Object find( final int transform,
-            final ExperimentalDesign experimentalDesign ) {
-        return this
-                .find( transform,
-                        "from ubic.gemma.model.expression.experiment.ExperimentalDesign as experimentalDesign where experimentalDesign.experimentalDesign = :experimentalDesign",
-                        experimentalDesign );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#find(java.lang.String,
-     *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-
-    public ExperimentalDesign find( final java.lang.String queryString,
-            final ExperimentalDesign experimentalDesign ) {
-        return ( ExperimentalDesign ) this.find( TRANSFORM_NONE, queryString,
-                experimentalDesign );
-    }
-
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findByName(int, java.lang.String)
      */
 
-    public Object findByName( final int transform, final java.lang.String name ) {
+    public ExperimentalDesign findByName( final java.lang.String name ) {
         return this
                 .findByName(
-                        transform,
                         "from ubic.gemma.model.expression.experiment.ExperimentalDesign as experimentalDesign where experimentalDesign.name = :name",
                         name );
     }
@@ -230,13 +187,13 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      *      java.lang.String)
      */
 
-    public Object findByName( final int transform, final java.lang.String queryString, final java.lang.String name ) {
+    public ExperimentalDesign findByName( final java.lang.String queryString, final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -247,25 +204,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
             result = results.iterator().next();
         }
 
-        result = transformEntity( transform, ( ExperimentalDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findByName(java.lang.String)
-     */
-    public ExperimentalDesign findByName( java.lang.String name ) {
-        return ( ExperimentalDesign ) this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findByName(java.lang.String, java.lang.String)
-     */
-
-    public ExperimentalDesign findByName( final java.lang.String queryString,
-            final java.lang.String name ) {
-        return ( ExperimentalDesign ) this.findByName( TRANSFORM_NONE,
-                queryString, name );
+        return ( ExperimentalDesign ) result;
     }
 
     /**
@@ -273,14 +212,14 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
 
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    public ExperimentalDesign findOrCreate( final java.lang.String queryString,
             final ExperimentalDesign experimentalDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( experimentalDesign );
         argNames.add( "experimentalDesign" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -291,40 +230,13 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
             result = results.iterator().next();
         }
 
-        result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findOrCreate(int,
-     *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-
-    public Object findOrCreate( final int transform,
-            final ExperimentalDesign experimentalDesign ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExperimentalDesign as experimentalDesign where experimentalDesign.experimentalDesign = :experimentalDesign",
-                        experimentalDesign );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-
-    public ExperimentalDesign findOrCreate( final java.lang.String queryString,
-            final ExperimentalDesign experimentalDesign ) {
-        return ( ExperimentalDesign ) this.findOrCreate( TRANSFORM_NONE,
-                queryString, experimentalDesign );
+        return ( ExperimentalDesign ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
-    public ExpressionExperiment getExpressionExperiment(
-            final ExperimentalDesign experimentalDesign ) {
+    public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
         try {
             return this.handleGetExpressionExperiment( experimentalDesign );
         } catch ( Throwable th ) {
@@ -343,39 +255,20 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public ExperimentalDesign load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ExperimentalDesignImpl.class, id );
-        return transformEntity( transform, ( ExperimentalDesign ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#load(java.lang.Long)
-     */
-
-    public ExperimentalDesign load( java.lang.Long id ) {
-        return ( ExperimentalDesign ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#loadAll()
-     */
-
-    public Collection<ExperimentalDesign> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( ExperimentalDesign ) entity;
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#loadAll(int)
      */
 
-    public Collection<ExperimentalDesign> loadAll( final int transform ) {
-        final Collection results = this.getHibernateTemplate().loadAll(
-                                                        ExperimentalDesignImpl.class );
-        this.transformEntities( transform, results );
-        return results;
+    public Collection<? extends ExperimentalDesign> loadAll() {
+        return this.getHibernateTemplate().loadAll( ExperimentalDesignImpl.class );
     }
 
     /**
@@ -422,7 +315,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
             throw new IllegalArgumentException( "ExperimentalDesign.update - 'entities' can not be null" );
         }
 
-        for ( ExperimentalDesign entity : entities) {
+        for ( ExperimentalDesign entity : entities ) {
             update( entity );
         }
     }
@@ -436,54 +329,5 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
         }
         this.getHibernateTemplate().update( experimentalDesign );
     }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.expression.experiment.ExperimentalDesign)} method. This method does
-     * not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.expression.experiment.ExperimentalDesignDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.expression.experiment.ExperimentalDesignDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in
-     *        {@link ubic.gemma.model.expression.experiment.ExperimentalDesignDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform,
-            final ubic.gemma.model.expression.experiment.ExperimentalDesign entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
-
 
 }
