@@ -148,87 +148,10 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param auditTrailDao The auditTrailDao to set.
-     */
-    public void setAuditTrailDao( AuditTrailDao auditTrailDao ) {
-        this.auditTrailDao = auditTrailDao;
-    }
-
-    /**
-     * @param bibliographicReferenceDao the bibliographicReferenceDao to set
-     */
-    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
-        this.bibliographicReferenceDao = bibliographicReferenceDao;
-    }
-
-    /**
-     * @param contactDao The contactDao to set.
-     */
-    public void setContactDao( ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @param databaseEntryDao The databaseEntryDao to set.
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
-    /**
      * @param defaultOwner The defaultOwner to set.
      */
     public void setDefaultOwner( Person defaultOwner ) {
         this.defaultOwner = defaultOwner;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * @param localFileDao The localFileDao to set.
-     */
-    public void setLocalFileDao( LocalFileDao localFileDao ) {
-        this.localFileDao = localFileDao;
-    }
-
-    /**
-     * @param measurementDao The measurementDao to set.
-     */
-    public void setMeasurementDao( MeasurementDao measurementDao ) {
-        this.measurementDao = measurementDao;
-    }
-
-    /**
-     * @param personDao The personDao to set.
-     */
-    public void setPersonDao( PersonDao personDao ) {
-        this.personDao = personDao;
-    }
-
-    /**
-     * @param protocolDao The protocolDao to set.
-     */
-    public void setProtocolDao( ProtocolDao protocolDao ) {
-        this.protocolDao = protocolDao;
-    }
-
-    /**
-     * @param quantitationTypeDao The quantitationTypeDao to set.
-     */
-    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    /**
-     * @param unitDao the unitDao to set
-     */
-    public void setUnitDao( UnitDao unitDao ) {
-        this.unitDao = unitDao;
     }
 
     /**
