@@ -356,7 +356,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx1200M -ea -Djava.awt.headless=true
+					<argLine>-Xmx1700M -ea -Djava.awt.headless=true
 						-XX:MaxPermSize=256m</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
@@ -742,5 +742,7 @@
 			<url>scp://krusty.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
-
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 </project>
