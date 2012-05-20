@@ -14,11 +14,11 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -43,36 +43,33 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
      */
     @Override
     public LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
 
-            Criteria queryObject = super.getSession().createCriteria( LocalFile.class );
+        BusinessKey.checkValidKey( localFile );
 
-            BusinessKey.checkValidKey( localFile );
-
-            if ( localFile.getLocalURL() != null ) {
-                queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
-            }
-
-            if ( localFile.getRemoteURL() != null ) {
-                queryObject.add( Restrictions.eq( "remoteURL", localFile.getRemoteURL() ) );
-            }
-
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + LocalFile.class.getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( LocalFile ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        List<?> results;
+        if ( localFile.getRemoteURL() == null ) {
+            results = getHibernateTemplate().findByNamedParam(
+                    "from LocalFileImpl where localURL=:u  and remoteURL is null ", "u", localFile.getLocalURL() );
+        } else if ( localFile.getLocalURL() == null ) {
+            results = getHibernateTemplate().findByNamedParam(
+                    "from LocalFileImpl where localURL is null and remoteURL=:r", "r", localFile.getRemoteURL() );
+        } else {
+            results = getHibernateTemplate().findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL=:r",
+                    new String[] { "u", "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
         }
+
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + LocalFile.class.getName() + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.get( 0 );
+            }
+        }
+        return ( LocalFile ) result;
+
     }
 
     /**

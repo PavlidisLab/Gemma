@@ -712,4 +712,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().getBioSequences( arrayDesign );
     }
 
+    @Override
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
+        this.getArrayDesignDao().addProbes( arrayDesign, newprobes );
+    }
+
 }

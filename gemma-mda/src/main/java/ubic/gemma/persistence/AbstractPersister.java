@@ -163,8 +163,9 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
                 c++;
 
                 if ( t.getTime() > 5000 ) {
-                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms (last class="
+                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class="
                             + object.getClass().getSimpleName() + ")" );
+                    c = 0;
                     t.reset();
                     t.start();
                 }

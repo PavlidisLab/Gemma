@@ -54,7 +54,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
 
         BusinessKey.addRestrictions( queryObject, contact );
 
-        java.util.List results = queryObject.list();
+        java.util.List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {

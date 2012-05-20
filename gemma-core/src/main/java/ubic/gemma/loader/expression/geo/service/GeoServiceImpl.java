@@ -183,7 +183,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         /*
          * FIXME - don't do this if the platform has no data.
          */
-        matchToExistingPlatforms( geoConverter, series );
+        ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
+        matchToExistingPlatforms( geoConverter, series, c );
 
         checkSamplesAreNew( series );
 
@@ -203,7 +204,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<ExpressionExperiment>();
         for ( ExpressionExperiment ee : result ) {
-            ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+            c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = persisterHelper.persist( ee, c );
             securityService.makePrivate( ee ); // TODO make this optional?
             persistedResult.add( ee );
@@ -420,11 +421,8 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @param existing
      * @param columnWithGeoNames
      */
-    private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, final ArrayDesign existing,
+    private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, Map<CompositeSequence, BioSequence> m,
             String columnWithGeoNames ) {
-
-        // a bit wasteful, because we generally end up doing this again.
-        Map<CompositeSequence, BioSequence> m = arrayDesignService.getBioSequences( existing );
 
         /*
          * This can happen if there is a corrupt version of the array design in the system -- can occur in tests for
@@ -519,7 +517,10 @@ public class GeoServiceImpl extends AbstractGeoService {
                 List<String> columnData = rawGEOPlatform.getColumnData( colName );
                 if ( columnData != null && columnData.contains( geoProbeName ) ) {
                     columnWithGeoNames = colName;
-                    log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
+                    if ( !columnWithGeoNames.equals( "ID" ) ) {
+                        // this would be unusual
+                        log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
+                    }
                     return columnWithGeoNames;
                 }
             }
@@ -639,8 +640,10 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     /**
      * @param rawGEOPlatform
+     * @param c
      */
-    private void matchToExistingPlatform( GeoConverter geoConverter, GeoPlatform rawGEOPlatform ) {
+    private void matchToExistingPlatform( GeoConverter geoConverter, GeoPlatform rawGEOPlatform,
+            ArrayDesignsForExperimentCache c ) {
         // we have to populate this.
         Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
 
@@ -673,7 +676,12 @@ public class GeoServiceImpl extends AbstractGeoService {
 
             String columnWithGeoNames = null;
             columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
-            getGemmaIDColumnNameInGEO( rawGEOPlatform, existing, columnWithGeoNames );
+
+            log.info( "Loading probes ..." );
+            Map<CompositeSequence, BioSequence> m = arrayDesignService.getBioSequences( existing );
+            c.add( existing, m );
+
+            getGemmaIDColumnNameInGEO( rawGEOPlatform, m, columnWithGeoNames );
 
         }
     }
@@ -683,13 +691,15 @@ public class GeoServiceImpl extends AbstractGeoService {
      * to figure out the correct mapping. This is necessary because we sometimes rename probes to match other data
      * sources. Often GEO platforms just have integer ids.
      * 
+     * @param converter
      * @param series
+     * @param
      */
-    private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series ) {
+    private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series, ArrayDesignsForExperimentCache c ) {
         Set<GeoPlatform> platforms = getPlatforms( series );
         if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
-            matchToExistingPlatform( geoConverter, pl );
+            matchToExistingPlatform( geoConverter, pl, c );
         }
     }
 

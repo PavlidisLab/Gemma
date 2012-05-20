@@ -423,4 +423,7 @@ public interface ArrayDesignService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ArrayDesign> findByManufacturer( String searchString );
 
+    @Secured({ "GROUP_ADMIN" })
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
+
 }

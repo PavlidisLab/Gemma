@@ -103,7 +103,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
         StopWatch timer = new StopWatch();
         timer.start();
-        // have to include ad in the select to be able to use fetch join ... is this the best way to do this?
+        // have to include ad in the select to be able to use fetch join
         List<?> r = getHibernateTemplate().findByNamedParam(
                 "select ad from ArrayDesignImpl ad inner join fetch ad.compositeSequences cs "
                         + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad", "ad", arrayDesign );
@@ -124,7 +124,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @param arrayDesign
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     private ArrayDesign doThaw( ArrayDesign arrayDesign ) throws Exception {
 
         if ( arrayDesign.getId() == null ) {
@@ -226,7 +225,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
         }
-        ArrayDesign result = ( ArrayDesign ) res.iterator().next();
+        ArrayDesign result = ( ArrayDesign ) res.get( 0 );
 
         return result;
     }
@@ -1258,17 +1257,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return ( ArrayDesign ) result;
     }
 
-    // /**
-    // * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int,
-    // * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-    // */
-    // public ArrayDesign find( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-    // return this
-    // .find(
-    // "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
-    // arrayDesign );
-    // }
-
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByAlternateName(java.lang.String)
      */
@@ -1871,6 +1859,22 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer, ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee)' --> "
                             + th, th );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#addProbes(ubic.gemma.model.expression.arrayDesign.ArrayDesign
+     * , java.util.Collection)
+     */
+    @Override
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
+        for ( CompositeSequence compositeSequence : newprobes ) {
+            compositeSequence.setArrayDesign( arrayDesign );
+            this.getSession().update( compositeSequence );
+        }
+        this.update( arrayDesign );
     }
 
 }

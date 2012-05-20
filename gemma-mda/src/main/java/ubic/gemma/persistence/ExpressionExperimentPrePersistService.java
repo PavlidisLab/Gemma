@@ -31,4 +31,11 @@ public interface ExpressionExperimentPrePersistService {
      */
     public abstract ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee );
 
+    /**
+     * @param ee
+     * @param c A cache that is already possibly partly populated.
+     * @return
+     */
+    public abstract ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
+
 }

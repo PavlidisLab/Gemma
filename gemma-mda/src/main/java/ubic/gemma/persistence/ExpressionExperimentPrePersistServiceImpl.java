@@ -64,7 +64,17 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
      */
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
-        ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
+        return prepare( ee, new ArrayDesignsForExperimentCache() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.ExpressionExperimentPrePersistService#prepare(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
+     */
+    @Override
+    public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
 
         Map<ArrayDesign, Collection<CompositeSequence>> newprobes = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
         Collection<DesignElementDataVector> dataVectorsThatNeedNewProbes = new HashSet<DesignElementDataVector>();
@@ -81,9 +91,9 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             ArrayDesign arrayDesign = probe.getArrayDesign();
             assert arrayDesign != null : probe + " does not have an array design";
 
-            arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, c );
+            arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
 
-            CompositeSequence cachedProbe = c.getFromCache( probe );
+            CompositeSequence cachedProbe = cache.getFromCache( probe );
 
             if ( cachedProbe == null ) {
                 if ( !newprobes.containsKey( arrayDesign ) ) {
@@ -102,74 +112,40 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          */
         if ( !dataVectorsThatNeedNewProbes.isEmpty() ) {
 
+            log.info( dataVectorsThatNeedNewProbes.size() + " vectors don't have probes, may add to the platform." );
+
             newprobes = addNewDesignElementToPersistentArrayDesigns( newprobes );
 
-            for ( ArrayDesign ad : newprobes.keySet() ) {
-                for ( CompositeSequence cs : newprobes.get( ad ) ) {
-                    c.addToCache( cs );
+            if ( newprobes.isEmpty() ) {
+                log.info( "No probes were added" );
+                // this is okay if there were none to add, but a problem otherwise.
+            } else {
+
+                // don't forget to cache them.
+                for ( ArrayDesign ad : newprobes.keySet() ) {
+                    for ( CompositeSequence cs : newprobes.get( ad ) ) {
+                        cache.addToCache( cs );
+                    }
+                }
+
+                // associate with vectors. This repeats code from above, needs refactoring...
+                for ( DesignElementDataVector v : dataVectorsThatNeedNewProbes ) {
+                    CompositeSequence probe = v.getDesignElement();
+
+                    probe = cache.getFromCache( probe );
+
+                    if ( probe == null || PersisterHelper.isTransient( probe ) ) {
+                        throw new IllegalStateException( "All probes should be persistent by now" );
+                    }
+
+                    v.setDesignElement( probe );
+
                 }
             }
 
-            // associate with vectors. This repeats code from above, needs refactoring...
-            for ( DesignElementDataVector v : dataVectorsThatNeedNewProbes ) {
-                CompositeSequence probe = v.getDesignElement();
-
-                probe = c.getFromCache( probe );
-
-                if ( probe == null || PersisterHelper.isTransient( probe ) ) {
-                    throw new IllegalStateException( "All probes should be persistent by now" );
-                }
-
-                v.setDesignElement( probe );
-
-            }
-
         }
 
-        return c;
-    }
-
-    /**
-     * Put an array design in the cache. This is needed when loading designelementdatavectors, for example, to avoid
-     * repeated (and one-at-a-time) fetching of designelement.
-     * 
-     * @param arrayDesignCache
-     * @param cacheIsSetUp
-     * @param designElementCache
-     * @param arrayDesign
-     * @return the persistent array design.
-     */
-    protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign,
-            ArrayDesignsForExperimentCache c ) {
-
-        assert arrayDesign != null;
-
-        if ( StringUtils.isBlank( arrayDesign.getShortName() ) ) {
-            throw new IllegalArgumentException( "Array design must have a 'short name'" );
-        }
-
-        if ( c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
-            return c.getArrayDesignCache().get( arrayDesign.getShortName() );
-        }
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        // transaction, but fast if the design already exists.
-        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
-
-        // transaction (read-only)
-        arrayDesign = arrayDesignService.thaw( arrayDesign ); // horrible.
-
-        addToDesignElementCache( arrayDesign, c );
-
-        c.getArrayDesignCache().put( arrayDesign.getShortName(), arrayDesign );
-
-        if ( timer.getTime() > 20000 ) {
-            log.info( "Load/persist & thaw array design: " + timer.getTime() + "ms" );
-        }
-
-        return arrayDesign;
+        return cache;
     }
 
     /**
@@ -187,8 +163,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          * very useful.
          */
         BioSequence biologicalCharacteristic = designElement.getBiologicalCharacteristic();
-        log.warn( "Adding new probe to existing array design " + arrayDesign.getShortName() + ": " + designElement
-                + " bioseq=" + biologicalCharacteristic );
+
         assert arrayDesign.getId() != null;
 
         designElement.setArrayDesign( arrayDesign );
@@ -208,35 +183,42 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     }
 
     /**
-     * @param toAdd
-     * @return
+     * @param toAdd (might turn out to be empty ,in which case this is a no-op.
+     * @return added probes, keys are the affect array designs (might be none)
      */
     private Map<ArrayDesign, Collection<CompositeSequence>> addNewDesignElementToPersistentArrayDesigns(
             Map<ArrayDesign, Collection<CompositeSequence>> toAdd ) {
 
-        // We might not want to allow this, as it could indicate an error.
-        if ( !ConfigUtils.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
-            throw new UnsupportedOperationException(
-                    "The system is not configured to allow new elements to be added to an existing platform." );
-        }
-
         Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
 
         for ( ArrayDesign ad : toAdd.keySet() ) {
+
+            // We might not want to allow this, as it could indicate an error.
+            if ( !ConfigUtils.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
+                throw new UnsupportedOperationException(
+                        "The system is not configured to allow new elements to be added to an existing platform." );
+            }
+
             assert ad.getId() != null;
             result.put( ad, new HashSet<CompositeSequence>() );
             Collection<CompositeSequence> newprobes = new HashSet<CompositeSequence>();
-            for ( CompositeSequence cs : toAdd.get( ad ) ) {
-                newprobes.add( addNewDesignElementToPersistentArrayDesign( ad, cs ) );
+
+            Collection<CompositeSequence> probesToAdd = toAdd.get( ad );
+
+            log.info( "Adding " + probesToAdd.size() + " new probes to " + ad );
+
+            for ( CompositeSequence cs : probesToAdd ) {
+                CompositeSequence np = addNewDesignElementToPersistentArrayDesign( ad, cs );
+                newprobes.add( np );
+
+                log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + cs + " bioseq="
+                        + cs.getBiologicalCharacteristic() );
+
             }
             result.get( ad ).addAll( newprobes );
 
-            ad.getCompositeSequences().addAll( newprobes );
-
-            log.info( "Updating " + ad );
-            // transaction.
-            this.arrayDesignService.update( ad );
-            log.info( "Created " + newprobes + " new probes" );
+            arrayDesignService.addProbes( ad, newprobes );
+            log.info( "Created " + newprobes.size() + " new probes" );
 
         }
 
@@ -245,16 +227,44 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     }
 
     /**
-     * Cache array design design elements (used for associating with ExpressionExperiments)
-     * <p>
-     * Note that reporters are ignored, as we are not persisting them.
+     * Put an array design in the cache (if it already isn't there). This is needed when loading
+     * designelementdatavectors, for example, to avoid repeated (and one-at-a-time) fetching of designelement.
      * 
-     * @param arrayDesign To add to the cache, must be thawed already.
-     * @param c cache
+     * @param arrayDesignCache
+     * @param cacheIsSetUp
+     * @param designElementCache
+     * @param arrayDesign
+     * @return the persistent array design.
      */
-    private void addToDesignElementCache( final ArrayDesign arrayDesign, ArrayDesignsForExperimentCache c ) {
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            c.addToCache( cs );
+    private ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign,
+            ArrayDesignsForExperimentCache cache ) {
+
+        assert arrayDesign != null;
+
+        if ( StringUtils.isBlank( arrayDesign.getShortName() ) ) {
+            throw new IllegalArgumentException( "Array design must have a 'short name'" );
         }
+
+        if ( cache.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
+            // already done.
+            return cache.getArrayDesignCache().get( arrayDesign.getShortName() );
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        // transaction, but fast if the design already exists.
+        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+
+        // transaction (read-only). Wasteful, if this is an exsiting design.
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
+
+        cache.add( arrayDesign );
+
+        if ( timer.getTime() > 20000 ) {
+            log.info( "Load/persist & thaw array design: " + timer.getTime() + "ms" );
+        }
+
+        return arrayDesign;
     }
 }

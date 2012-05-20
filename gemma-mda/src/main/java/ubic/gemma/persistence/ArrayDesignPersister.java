@@ -20,6 +20,7 @@ package ubic.gemma.persistence;
 
 import java.util.concurrent.CancellationException;
 
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -131,39 +132,46 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         log.info( "Persisting new array design " + arrayDesign.getName() );
 
-        if ( arrayDesign.getDesignProvider() != null )
-            arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
+        try {
+            this.getSession().setFlushMode( FlushMode.COMMIT );
 
-        if ( arrayDesign.getLocalFiles() != null ) {
-            for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-                file = persistLocalFile( file );
+            if ( arrayDesign.getDesignProvider() != null )
+                arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
+
+            if ( arrayDesign.getLocalFiles() != null ) {
+                for ( LocalFile file : arrayDesign.getLocalFiles() ) {
+                    file = persistLocalFile( file );
+                }
             }
-        }
 
-        if ( arrayDesign.getPrimaryTaxon() == null ) {
-            throw new IllegalArgumentException( "Primary taxon cannot be null" );
-        }
+            if ( arrayDesign.getPrimaryTaxon() == null ) {
+                throw new IllegalArgumentException( "Primary taxon cannot be null" );
+            }
 
-        arrayDesign.setPrimaryTaxon( ( Taxon ) persist( arrayDesign.getPrimaryTaxon() ) );
+            arrayDesign.setPrimaryTaxon( ( Taxon ) persist( arrayDesign.getPrimaryTaxon() ) );
 
-        for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
-            externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );
-        }
+            for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
+                externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );
+            }
 
-        log.info( "Persisting " + arrayDesign );
+            log.info( "Persisting " + arrayDesign );
 
-        arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
+            arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
-        arrayDesign = arrayDesignService.create( arrayDesign );
+            arrayDesign = arrayDesignService.create( arrayDesign );
 
-        if ( Thread.currentThread().isInterrupted() ) {
-            log.info( "Cancelled" );
-            /*
-             * FIXME this shouldn't be necessary as this method now runs in a transaction.
-             */
-            arrayDesignService.remove( arrayDesign );
-            throw new CancellationException(
-                    "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
+            if ( Thread.currentThread().isInterrupted() ) {
+                log.info( "Cancelled" );
+                /*
+                 * FIXME this shouldn't be necessary as this method now runs in a transaction.
+                 */
+                arrayDesignService.remove( arrayDesign );
+                throw new CancellationException(
+                        "Thread was terminated during the final stage of persisting the arraydesign. "
+                                + this.getClass() );
+            }
+        } finally {
+            this.getSession().setFlushMode( FlushMode.AUTO );
         }
 
         return arrayDesign;

@@ -175,7 +175,7 @@ public class GeoPlatform extends GeoData {
      */
     public List<String> getColumnData( String columnName ) {
         if ( !platformInformation.containsKey( columnName ) ) {
-            log.warn( "No platform information" );
+            log.warn( "No platform information for column=" + columnName );
             return null;
         }
         // assert platformInformation.size() != 0 : this + " has no platformInformation at all!";

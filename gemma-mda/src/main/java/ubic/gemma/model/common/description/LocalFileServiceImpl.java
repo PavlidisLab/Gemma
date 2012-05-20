@@ -93,6 +93,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.LocalFileServiceBase#handleFind(ubic.gemma.model.common.description.LocalFile
      * )
@@ -104,6 +105,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleFindByPath(java.lang.String)
      */
     @Override
@@ -116,6 +118,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.LocalFileServiceBase#handleFindOrCreate(ubic.gemma.model.common.description
      * .LocalFile)
@@ -127,6 +130,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.LocalFileServiceBase#handleSave(ubic.gemma.model.common.description.LocalFile
      * )
@@ -138,6 +142,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.LocalFile
      * )

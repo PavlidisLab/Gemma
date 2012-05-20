@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -112,43 +113,51 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             return existingEE;
         }
 
-        ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
+        try {
 
-        if ( ee.getOwner() == null ) {
-            ee.setOwner( defaultOwner );
+            this.getSession().setFlushMode( FlushMode.COMMIT );
+
+            ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
+
+            if ( ee.getOwner() == null ) {
+                ee.setOwner( defaultOwner );
+            }
+            ee.setOwner( ( Contact ) persist( ee.getOwner() ) );
+
+            persistCollectionElements( ee.getQuantitationTypes() );
+            persistCollectionElements( ee.getOtherRelevantPublications() );
+            persistCollectionElements( ee.getInvestigators() );
+
+            if ( ee.getAccession() != null ) {
+                fillInDatabaseEntry( ee.getAccession() );
+            }
+
+            // This has to come first and be persisted, so our FactorValues get persisted before we process the
+            // BioAssays.
+            if ( ee.getExperimentalDesign() != null ) {
+                ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
+                processExperimentalDesign( experimentalDesign );
+                assert experimentalDesign.getId() != null;
+                ee.setExperimentalDesign( experimentalDesign );
+            }
+
+            checkExperimentalDesign( ee );
+
+            // This does most of the preparatory work.
+            processBioAssays( ee, c );
+
+            ee = expressionExperimentDao.create( ee );
+
+            if ( Thread.currentThread().isInterrupted() ) {
+                log.info( "Cancelled" );
+                expressionExperimentDao.remove( ee );
+                throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
+                        + this.getClass() );
+            }
+            clearCache();
+        } finally {
+            this.getSession().setFlushMode( FlushMode.AUTO );
         }
-        ee.setOwner( ( Contact ) persist( ee.getOwner() ) );
-
-        persistCollectionElements( ee.getQuantitationTypes() );
-        persistCollectionElements( ee.getOtherRelevantPublications() );
-        persistCollectionElements( ee.getInvestigators() );
-
-        if ( ee.getAccession() != null ) {
-            fillInDatabaseEntry( ee.getAccession() );
-        }
-
-        // This has to come first and be persisted, so our FactorValues get persisted before we process the BioAssays.
-        if ( ee.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-            processExperimentalDesign( experimentalDesign );
-            assert experimentalDesign.getId() != null;
-            ee.setExperimentalDesign( experimentalDesign );
-        }
-
-        checkExperimentalDesign( ee );
-
-        // This does most of the preparatory work.
-        processBioAssays( ee, c );
-
-        ee = expressionExperimentDao.create( ee );
-
-        if ( Thread.currentThread().isInterrupted() ) {
-            log.info( "Cancelled" );
-            expressionExperimentDao.remove( ee );
-            throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
-                    + this.getClass() );
-        }
-        clearCache();
         return ee;
     }
 

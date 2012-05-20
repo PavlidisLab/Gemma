@@ -28,3 +28,5 @@ alter table TAXON ADD INDEX taxonncbiid (NCBI_ID);
 alter table TAXON ADD INDEX taxonsecondncbiid (SECONDARY_NCBI_ID);
 alter table TAXON ADD INDEX taxoncommonname (COMMON_NAME);
 alter table TAXON ADD INDEX taxonscientificname (SCIENTIFIC_NAME)
+alter table LOCAL_FILE ADD KEY REMOTE_URL (REMOTE_U_R_L);
+alter table CONTACT add INDEX fullname (NAME, LAST_NAME);

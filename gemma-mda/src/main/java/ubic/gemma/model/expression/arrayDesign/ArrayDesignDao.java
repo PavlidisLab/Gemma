@@ -337,4 +337,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
+
 }

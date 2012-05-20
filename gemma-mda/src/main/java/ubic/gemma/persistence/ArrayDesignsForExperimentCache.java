@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Used to hold information for matching to a new experiment, during persisting.
@@ -29,7 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @version $Id$
  */
 public class ArrayDesignsForExperimentCache {
-    public static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
+    private static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
 
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
@@ -37,8 +38,22 @@ public class ArrayDesignsForExperimentCache {
 
     private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
 
-    public Map<String, ArrayDesign> getArrayDesignCache() {
-        return arrayDesignCache;
+    public void add( ArrayDesign arrayDesign ) {
+        addToDesignElementCache( arrayDesign );
+
+        this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
+
+    }
+
+    /**
+     * @param arrayDesign
+     * @param sequences
+     */
+    public void add( ArrayDesign arrayDesign, Map<CompositeSequence, BioSequence> sequences ) {
+        for ( CompositeSequence cs : sequences.keySet() ) {
+            addToCache( cs );
+        }
+        this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
     }
 
     /**
@@ -46,20 +61,23 @@ public class ArrayDesignsForExperimentCache {
      */
     public void addToCache( CompositeSequence cs ) {
 
-        ArrayDesign arrayDesign = cs.getArrayDesign();
-        assert arrayDesign != null : cs + " does not have an array design";
-        String key = cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
-        String seqName = null;
+        String key = makeKey( cs );
 
+        designElementCache.put( key, cs );
+
+        String seqName = null;
         if ( cs.getBiologicalCharacteristic() != null ) {
             seqName = cs.getBiologicalCharacteristic().getName();
         }
 
-        designElementCache.put( key, cs );
         if ( StringUtils.isNotBlank( seqName ) ) {
             designElementSequenceCache.put( seqName, cs );
 
         }
+    }
+
+    public Map<String, ArrayDesign> getArrayDesignCache() {
+        return arrayDesignCache;
     }
 
     /**
@@ -67,25 +85,47 @@ public class ArrayDesignsForExperimentCache {
      * @return
      */
     public CompositeSequence getFromCache( CompositeSequence cs ) {
-        ArrayDesign arrayDesign = cs.getArrayDesign();
-        assert arrayDesign != null : cs + " does not have an array design";
-        String key = cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
+
+        String key = makeKey( cs );
+
+        if ( designElementCache.containsKey( key ) ) {
+            return designElementCache.get( key );
+        }
 
         String seqName = null;
-
         if ( cs.getBiologicalCharacteristic() != null ) {
             seqName = cs.getBiologicalCharacteristic().getName();
         }
 
-        if ( designElementCache.containsKey( key ) ) {
-            return designElementCache.get( key );
-        } else if ( StringUtils.isNotBlank( seqName ) && designElementSequenceCache.containsKey( seqName ) ) {
-            /*
-             * Because the names of design elements can change, we should try to go by the _sequence_.
-             */
+        if ( StringUtils.isNotBlank( seqName ) && designElementSequenceCache.containsKey( seqName ) ) {
             return designElementSequenceCache.get( seqName );
         }
+
         return null;
     }
 
+    /**
+     * Cache array design design elements (used for associating with ExpressionExperiments)
+     * <p>
+     * Note that reporters are ignored, as we are not persisting them.
+     * 
+     * @param arrayDesign To add to the cache, must be thawed already.
+     * @param c cache
+     */
+    private void addToDesignElementCache( final ArrayDesign arrayDesign ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            addToCache( cs );
+        }
+    }
+
+    /**
+     * @param cs
+     * @return
+     */
+    private String makeKey( CompositeSequence cs ) {
+        ArrayDesign arrayDesign = cs.getArrayDesign();
+        assert arrayDesign != null : cs + " does not have an array design";
+        assert StringUtils.isNotBlank( arrayDesign.getShortName() );
+        return cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getShortName();
+    }
 }
