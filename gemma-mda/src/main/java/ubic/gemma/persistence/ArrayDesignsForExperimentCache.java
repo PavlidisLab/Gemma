@@ -17,6 +17,8 @@ package ubic.gemma.persistence;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -39,11 +41,51 @@ public class ArrayDesignsForExperimentCache {
         return arrayDesignCache;
     }
 
-    public Map<String, CompositeSequence> getDesignElementCache() {
-        return designElementCache;
+    /**
+     * @param cs
+     */
+    public void addToCache( CompositeSequence cs ) {
+
+        ArrayDesign arrayDesign = cs.getArrayDesign();
+        assert arrayDesign != null : cs + " does not have an array design";
+        String key = cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
+        String seqName = null;
+
+        if ( cs.getBiologicalCharacteristic() != null ) {
+            seqName = cs.getBiologicalCharacteristic().getName();
+        }
+
+        designElementCache.put( key, cs );
+        if ( StringUtils.isNotBlank( seqName ) ) {
+            designElementSequenceCache.put( seqName, cs );
+
+        }
     }
 
-    public Map<String, CompositeSequence> getDesignElementSequenceCache() {
-        return designElementSequenceCache;
+    /**
+     * @param cs
+     * @return
+     */
+    public CompositeSequence getFromCache( CompositeSequence cs ) {
+        ArrayDesign arrayDesign = cs.getArrayDesign();
+        assert arrayDesign != null : cs + " does not have an array design";
+        String key = cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
+
+        String seqName = null;
+
+        if ( cs.getBiologicalCharacteristic() != null ) {
+            seqName = cs.getBiologicalCharacteristic().getName();
+        }
+
+        if ( designElementCache.containsKey( key ) ) {
+            return designElementCache.get( key );
+        } else if ( StringUtils.isNotBlank( seqName ) && designElementSequenceCache.containsKey( seqName ) ) {
+            /*
+             * Because the names of design elements can change, we should try to go by the _sequence_.
+             */
+            return designElementSequenceCache.get( seqName );
+        }
+        return null;
     }
+
 }

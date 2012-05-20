@@ -44,7 +44,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.biomaterial.CompoundDao;
 import ubic.gemma.model.expression.biomaterial.Treatment;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignDao;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -330,31 +329,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector dataVector,
             ArrayDesignsForExperimentCache c ) {
-        CompositeSequence probe = dataVector.getDesignElement();
-
-        assert probe != null;
-
-        ArrayDesign arrayDesign = probe.getArrayDesign();
-        assert arrayDesign != null : probe + " does not have an array design";
-
-        arrayDesign = c.getArrayDesignCache().get( arrayDesign.getShortName() );
-
-        assert arrayDesign != null;
-
-        String key = probe.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR
-                + arrayDesign.getName();
-
-        if ( log.isDebugEnabled() ) log.debug( "Seeking design element matching key=" + key );
-        if ( c.getDesignElementCache().containsKey( key ) ) {
-            probe = c.getDesignElementCache().get( key );
-            if ( log.isDebugEnabled() ) log.debug( "Found " + probe + " with key=" + key );
-        } else {
-            throw new IllegalStateException( "No platform for the EE has a probe matching: " + probe
-                    + ": was it set up correctly?" );
-        }
-
-        assert probe != null && probe.getId() != null;
-        dataVector.setDesignElement( probe ); // use the persistent one.
+        // we should have done this already.
+        assert dataVector.getDesignElement() != null && !isTransient( dataVector.getDesignElement() );
 
         BioAssayDimension bioAssayDimension = getBioAssayDimensionFromCacheOrCreate( dataVector, c );
 

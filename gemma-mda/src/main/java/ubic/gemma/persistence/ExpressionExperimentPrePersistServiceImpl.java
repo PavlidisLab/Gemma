@@ -14,6 +14,11 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -59,7 +65,14 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
         ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
 
-        for ( DesignElementDataVector dataVector : ee.getRawExpressionDataVectors() ) {
+        Map<ArrayDesign, Collection<CompositeSequence>> newprobes = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
+        Collection<DesignElementDataVector> dataVectorsThatNeedNewProbes = new HashSet<DesignElementDataVector>();
+
+        /*
+         * First time through.
+         */
+        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
+        for ( DesignElementDataVector dataVector : vectors ) {
             CompositeSequence probe = dataVector.getDesignElement();
 
             assert probe != null;
@@ -69,37 +82,49 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
             arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, c );
 
-            String key = probe.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR
-                    + arrayDesign.getName();
-            String seqName = null;
+            CompositeSequence cachedProbe = c.getFromCache( probe );
 
-            if ( probe.getBiologicalCharacteristic() != null ) {
-                seqName = probe.getBiologicalCharacteristic().getName();
+            if ( cachedProbe == null ) {
+                if ( !newprobes.containsKey( arrayDesign ) ) {
+                    newprobes.put( arrayDesign, new HashSet<CompositeSequence>() );
+                }
+                newprobes.get( arrayDesign ).add( probe );
+                dataVectorsThatNeedNewProbes.add( dataVector );
+            } else {
+                dataVector.setDesignElement( cachedProbe );
             }
 
-            if ( log.isDebugEnabled() ) log.debug( "Seeking design element matching key=" + key );
-            if ( c.getDesignElementCache().containsKey( key ) ) {
-                probe = c.getDesignElementCache().get( key );
-                if ( log.isDebugEnabled() ) log.debug( "Found " + probe + " with key=" + key );
-            } else {
-                /*
-                 * Because the names of design elements can change, we should try to go by the _sequence_.
-                 */
-                if ( StringUtils.isNotBlank( seqName ) && c.getDesignElementSequenceCache().containsKey( seqName ) ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Using sequence name " + seqName + " to identify sequence" );
-                    probe = c.getDesignElementSequenceCache().get( seqName );
-                    if ( log.isDebugEnabled() ) log.debug( "Found " + probe + " with sequence key=" + seqName );
-                } else {
+        }
 
-                    probe = addNewDesignElementToPersistentArrayDesign( arrayDesign, probe );
+        /*
+         * Second pass - to fill in vectors that needed probes after the first pass.
+         */
+        if ( !dataVectorsThatNeedNewProbes.isEmpty() ) {
+
+            newprobes = addNewDesignElementToPersistentArrayDesigns( newprobes );
+
+            for ( ArrayDesign ad : newprobes.keySet() ) {
+                for ( CompositeSequence cs : newprobes.get( ad ) ) {
+                    c.addToCache( cs );
                 }
             }
 
-            assert probe != null && probe.getId() != null;
-            dataVector.setDesignElement( probe );
+            // associate with vectors. This repeats code from above, needs refactoring...
+            for ( DesignElementDataVector v : dataVectorsThatNeedNewProbes ) {
+                CompositeSequence probe = v.getDesignElement();
+
+                probe = c.getFromCache( probe );
+
+                if ( probe == null || PersisterHelper.isTransient( probe ) ) {
+                    throw new IllegalStateException( "All probes should be persistent by now" );
+                }
+
+                v.setDesignElement( probe );
+
+            }
 
         }
+
         return c;
     }
 
@@ -118,7 +143,9 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         assert arrayDesign != null;
 
-        assert StringUtils.isNotBlank( arrayDesign.getShortName() );
+        if ( StringUtils.isBlank( arrayDesign.getShortName() ) ) {
+            throw new IllegalArgumentException( "Array design must have a 'short name'" );
+        }
 
         if ( c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
             return c.getArrayDesignCache().get( arrayDesign.getShortName() );
@@ -145,8 +172,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     }
 
     /**
-     * FIXME This is VERY slow if we have to add a lot of DesignElements to the array.
-     * 
      * @param designElement
      * @return
      */
@@ -180,17 +205,38 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         // transaction.
         CompositeSequence persistedDE = compositeSequenceService.create( designElement );
 
-        log.info( "Created probe" );
-        arrayDesign.getCompositeSequences().add( persistedDE );
-
-        log.info( "Added it to the array" );
-
-        // transaction.
-        this.arrayDesignService.update( arrayDesign );
-
-        log.info( "Updated the array" );
-
         return persistedDE;
+
+    }
+
+    /**
+     * @param toAdd
+     * @return
+     */
+    private Map<ArrayDesign, Collection<CompositeSequence>> addNewDesignElementToPersistentArrayDesigns(
+            Map<ArrayDesign, Collection<CompositeSequence>> toAdd ) {
+
+        Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
+
+        for ( ArrayDesign ad : toAdd.keySet() ) {
+            assert ad.getId() != null;
+            result.put( ad, new HashSet<CompositeSequence>() );
+            Collection<CompositeSequence> newprobes = new HashSet<CompositeSequence>();
+            for ( CompositeSequence cs : toAdd.get( ad ) ) {
+                newprobes.add( addNewDesignElementToPersistentArrayDesign( ad, cs ) );
+            }
+            result.get( ad ).addAll( newprobes );
+
+            ad.getCompositeSequences().addAll( newprobes );
+
+            log.info( "Updating " + ad );
+            // transaction.
+            this.arrayDesignService.update( ad );
+            log.info( "Created " + newprobes + " probes" );
+
+        }
+
+        return result;
 
     }
 
@@ -203,20 +249,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
      * @param c cache
      */
     private void addToDesignElementCache( final ArrayDesign arrayDesign, ArrayDesignsForExperimentCache c ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        String adName = ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            assert cs.getId() != null;
-            c.getDesignElementCache().put( cs.getName() + adName, cs );
-            BioSequence seq = cs.getBiologicalCharacteristic();
-            if ( seq != null ) {
-                if ( StringUtils.isNotBlank( seq.getName() ) ) {
-                    c.getDesignElementSequenceCache().put( seq.getName(), cs );
-                }
-            }
+            c.addToCache( cs );
         }
-
     }
 }
