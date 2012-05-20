@@ -123,7 +123,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     /**
-     * Three platforms, one sample was not run on GPL81.
+     * Three platforms, one sample was not run on GPL81. It's 'Norm-1a', but the name we use for the sample is random.
      */
     @Test
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
@@ -154,19 +154,34 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         boolean found = false;
         for ( int i = 0; i < mat.rows(); i++ ) {
             Double[] row = mat.getRow( i );
+
+            // debugging
+            if ( i == 0 ) {
+                for ( int j = 0; j < row.length; j++ ) {
+                    BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                    System.err.println( ba.getName() );
+                }
+            }
+            System.err.print( mat.getRowElement( i ).getDesignElement().getName() + "\t" );
+            for ( double d : row ) {
+                System.err.print( String.format( "%4.2f\t", d ) );
+            }
+            System.err.print( "\n" );
+
             CompositeSequence el = mat.getDesignElementForRow( i );
             for ( int j = 0; j < row.length; j++ ) {
                 BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
-                if ( ba.getName().equals( "PGA-MurLungHyper-Norm-1aCv2-s2" )
+                if ( ba.getName().matches( "PGA-MurLungHyper-Norm-1a[ABC]v2-s2" )
                         && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
                                 || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
                                 || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
-                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100011_at" )
-                                || el.getName().equals( "100009_r_at" ) || el.getName().equals( "100010_at" ) ) ) {
+                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100009_r_at" )
+                                || el.getName().equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
                     assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
                 } else {
-                    assertTrue( !Double.isNaN( row[j] ) );
+                    assertTrue( "Got unexpected NA value for " + ba.getName() + " for " + el.getName(),
+                            !Double.isNaN( row[j] ) );
                 }
             }
         }
@@ -178,13 +193,24 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         Collection<DoubleVectorValueObject> da = this.processedExpressionDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 30, da.size() );
         found = false;
+        boolean first = true;
         for ( DoubleVectorValueObject v : da ) {
             CompositeSequence el = v.getDesignElement();
             double[] row = v.getData();
-            // System.err.print( el.getName() + "\t" );
-            // for ( double d : row ) {
-            // System.err.print( String.format( "%4.2f\t", d ) );
-            // }
+
+            // debugging
+            if ( first ) {
+                for ( int j = 0; j < row.length; j++ ) {
+                    BioAssay ba = ( ( List<BioAssay> ) v.getBioAssayDimension().getBioAssays() ).get( j );
+                    System.err.println( ba.getName() );
+                }
+                first = false;
+            }
+            System.err.print( el.getName() + "\t" );
+            for ( double d : row ) {
+                System.err.print( String.format( "%4.2f\t", d ) );
+            }
+            System.err.print( "\n" );
 
             assertEquals( 10, row.length );
             for ( int j = 0; j < row.length; j++ ) {
@@ -193,15 +219,15 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                         && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
                                 || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
                                 || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
-                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100011_at" )
-                                || el.getName().equals( "100009_r_at" ) || el.getName().equals( "100010_at" ) ) ) {
+                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100009_r_at" )
+                                || el.getName().equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
                     assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
                 } else {
-                    assertTrue( !Double.isNaN( row[j] ) );
+                    assertTrue( "Got unexpected NA value for " + ba.getName() + " for " + el.getName(),
+                            !Double.isNaN( row[j] ) );
                 }
             }
-            // System.err.print( "\n" );
         }
         assertTrue( found );
     }

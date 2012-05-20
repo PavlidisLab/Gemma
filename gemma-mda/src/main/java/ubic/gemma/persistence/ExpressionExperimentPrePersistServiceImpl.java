@@ -34,9 +34,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ConfigUtils;
 
 /**
- * Sets up the array designs.
+ * Sets up the array designs, put the designelements in the data vectors.
  * 
  * @author paul
  * @version $Id$
@@ -188,7 +189,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         BioSequence biologicalCharacteristic = designElement.getBiologicalCharacteristic();
         log.warn( "Adding new probe to existing array design " + arrayDesign.getShortName() + ": " + designElement
                 + " bioseq=" + biologicalCharacteristic );
-
         assert arrayDesign.getId() != null;
 
         designElement.setArrayDesign( arrayDesign );
@@ -197,8 +197,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             // transaction.
             designElement.setBiologicalCharacteristic( ( BioSequence ) persisterHelper
                     .persist( biologicalCharacteristic ) );
-
-            log.info( "Got new sequence for probe" );
 
         }
 
@@ -216,6 +214,12 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     private Map<ArrayDesign, Collection<CompositeSequence>> addNewDesignElementToPersistentArrayDesigns(
             Map<ArrayDesign, Collection<CompositeSequence>> toAdd ) {
 
+        // We might not want to allow this, as it could indicate an error.
+        if ( !ConfigUtils.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
+            throw new UnsupportedOperationException(
+                    "The system is not configured to allow new elements to be added to an existing platform." );
+        }
+
         Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
 
         for ( ArrayDesign ad : toAdd.keySet() ) {
@@ -232,7 +236,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             log.info( "Updating " + ad );
             // transaction.
             this.arrayDesignService.update( ad );
-            log.info( "Created " + newprobes + " probes" );
+            log.info( "Created " + newprobes + " new probes" );
 
         }
 
