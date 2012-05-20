@@ -25,8 +25,6 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 
 /**
- * TODO Document Me
- * 
  * @author paul
  * @version $Id$
  */

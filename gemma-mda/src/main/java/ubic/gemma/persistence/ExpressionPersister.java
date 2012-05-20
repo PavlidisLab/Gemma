@@ -147,11 +147,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             processBioAssays( ee, c );
 
             ee = expressionExperimentDao.create( ee );
-
             clearCache();
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
         }
+
         return ee;
     }
 
@@ -369,14 +369,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         int count = 0;
         for ( DesignElementDataVector dataVector : ee.getRawExpressionDataVectors() ) {
             BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, c );
-            bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             if ( timer.getTime() > 5000 ) {
-                log.info( "Filled in " + ( count ) + " DesignElementDataVectors (" + timer.getTime()
-                        + "ms since last check)" );
+                if ( count == 0 ) {
+                    log.info( "Setup: " + timer.getTime() );
+                } else {
+                    log.info( "Filled in " + ( count ) + " DesignElementDataVectors (" + timer.getTime()
+                            + "ms since last check)" );
+                }
                 timer.reset();
                 timer.start();
             }
+
+            bioAssays.addAll( bioAssayDimension.getBioAssays() );
 
             ++count;
 

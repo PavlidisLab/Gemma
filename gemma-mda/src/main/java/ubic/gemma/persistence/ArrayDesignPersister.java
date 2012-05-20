@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.concurrent.CancellationException;
-
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -159,21 +157,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
             arrayDesign = arrayDesignService.create( arrayDesign );
-
-            if ( Thread.currentThread().isInterrupted() ) {
-                log.info( "Cancelled" );
-                /*
-                 * FIXME this shouldn't be necessary as this method now runs in a transaction.
-                 */
-                arrayDesignService.remove( arrayDesign );
-                throw new CancellationException(
-                        "Thread was terminated during the final stage of persisting the arraydesign. "
-                                + this.getClass() );
-            }
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
         }
-
         return arrayDesign;
     }
 

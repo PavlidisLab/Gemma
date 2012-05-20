@@ -124,6 +124,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @param arrayDesign
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     private ArrayDesign doThaw( ArrayDesign arrayDesign ) throws Exception {
 
         if ( arrayDesign.getId() == null ) {
