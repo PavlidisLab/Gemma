@@ -70,6 +70,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
@@ -104,6 +105,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
