@@ -100,8 +100,12 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Autowired
     TaxonService taxonService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#convert(ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData, ubic.basecode.dataStructure.matrix.DoubleMatrix)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#convert(ubic.gemma.loader.expression.simple
+     * .model.SimpleExpressionExperimentMetaData, ubic.basecode.dataStructure.matrix.DoubleMatrix)
      */
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
@@ -172,8 +176,12 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return experiment;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#getSubMatrixForArrayDesign(ubic.basecode.dataStructure.matrix.DoubleMatrix, java.util.Collection, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#getSubMatrixForArrayDesign(ubic.basecode
+     * .dataStructure.matrix.DoubleMatrix, java.util.Collection, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
@@ -224,8 +232,12 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return subMatrix;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#create(ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData, java.io.InputStream)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#create(ubic.gemma.loader.expression.simple
+     * .model.SimpleExpressionExperimentMetaData, java.io.InputStream)
      */
     @Override
     public ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data )
@@ -236,7 +248,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return create( metaData, matrix );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#parse(java.io.InputStream)
      */
     @Override
@@ -258,7 +272,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         validate( experiment );
 
-        experiment = ( ExpressionExperiment ) persisterHelper.persist( experiment );
+        experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
 
         preprocessorService.createProcessedVectors( experiment );
 

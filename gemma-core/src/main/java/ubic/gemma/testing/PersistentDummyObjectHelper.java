@@ -68,6 +68,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.Persister;
 
 /**
@@ -375,7 +376,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
+        ee = persisterHelper.persist( ee, c );
 
         return ee;
     }

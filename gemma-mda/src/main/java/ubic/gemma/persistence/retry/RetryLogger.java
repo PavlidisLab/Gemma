@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.persistence;
+package ubic.gemma.persistence.retry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

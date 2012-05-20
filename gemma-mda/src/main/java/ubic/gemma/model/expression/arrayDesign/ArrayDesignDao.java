@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -333,5 +334,7 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * @return
      */
     public Collection<ArrayDesign> findByTaxon( Taxon taxon );
+
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
 }

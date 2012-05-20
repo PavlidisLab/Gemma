@@ -64,43 +64,38 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
         BusinessKey.checkValidKey( bioSequence );
 
-        try {
+        Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
 
-            Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
+        /*
+         * this initially matches on name and taxon only.
+         */
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                debug( bioSequence, results );
 
-            /*
-             * this initially matches on name and taxon only.
-             */
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    debug( bioSequence, results );
-
-                    // Try to find the best match. See BusinessKey for more
-                    // explanation of why this is needed.
-                    BioSequence match = null;
-                    for ( BioSequence res : ( Collection<BioSequence> ) results ) {
-                        if ( res.equals( bioSequence ) ) {
-                            if ( match != null ) {
-                                log.warn( "More than one sequence in the database matches " + bioSequence
-                                        + ", returning arbitrary match: " + match );
-                                break;
-                            }
-                            match = res;
+                // Try to find the best match. See BusinessKey for more
+                // explanation of why this is needed.
+                BioSequence match = null;
+                for ( BioSequence res : ( Collection<BioSequence> ) results ) {
+                    if ( res.equals( bioSequence ) ) {
+                        if ( match != null ) {
+                            log.warn( "More than one sequence in the database matches " + bioSequence
+                                    + ", returning arbitrary match: " + match );
+                            break;
                         }
+                        match = res;
                     }
-
-                    return match;
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
                 }
+
+                return match;
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( BioSequence ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( BioSequence ) result;
     }
 
     /*

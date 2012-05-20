@@ -81,7 +81,9 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
     @Autowired
     private Persister persisterHelper;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.lang.String)
      */
     @Override
@@ -89,16 +91,22 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
         return this.load( accession, null, false, true );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.lang.String, java.lang.String, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.lang.String, java.lang.String,
+     * boolean)
      */
     @Override
     public ExpressionExperiment load( String accession, String adAccession, boolean allowArrayExpressDesign ) {
         return this.load( accession, adAccession, allowArrayExpressDesign, true );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.lang.String, java.lang.String, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.lang.String, java.lang.String,
+     * boolean, boolean)
      */
     @Override
     public ExpressionExperiment load( String accession, String adAccession, boolean allowArrayExpressDesign,
@@ -116,15 +124,19 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
                 mageMlConvertedObjects, pdParser );
 
         if ( useDb ) {
-            ExpressionExperiment persistedEE = ( ExpressionExperiment ) persisterHelper.persist( ee );
+
+            ExpressionExperiment persistedEE = persisterHelper.persist( ee, persisterHelper.prepare( ee ) );
             updateReports( persistedEE );
             return persistedEE;
         }
         return ee;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.io.InputStream, java.io.InputStream, java.lang.String, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService#load(java.io.InputStream,
+     * java.io.InputStream, java.lang.String, java.lang.String)
      */
     @Override
     public ExpressionExperiment load( InputStream mageMlStream, InputStream processedDataStream, String accession,

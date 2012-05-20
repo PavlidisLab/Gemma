@@ -87,6 +87,39 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getBioSequences(ubic.gemma.model.expression.arrayDesign
+     * .ArrayDesign)
+     */
+    @Override
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
+
+        if ( arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot fetch sequences for a non-persistent array design" );
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        // have to include ad in the select to be able to use fetch join ... is this the best way to do this?
+        List<?> r = getHibernateTemplate().findByNamedParam(
+                "select ad from ArrayDesignImpl ad inner join fetch ad.compositeSequences cs "
+                        + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad", "ad", arrayDesign );
+        Map<CompositeSequence, BioSequence> result = new HashMap<CompositeSequence, BioSequence>();
+
+        for ( CompositeSequence cs : ( ( ArrayDesign ) r.get( 0 ) ).getCompositeSequences() ) {
+            result.put( cs, cs.getBiologicalCharacteristic() );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetch sequences: " + timer.getTime() + "ms" );
+        }
+
+        return result;
+    }
+
     /**
      * @param arrayDesign
      * @throws Exception
@@ -117,6 +150,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         /*
          * Thaw the composite sequences.
          */
+        log.info( "Start initialize composite sequences" );
 
         Hibernate.initialize( result.getCompositeSequences() );
 
@@ -132,23 +166,23 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
          */
         Collection<CompositeSequence> thawed = new HashSet<CompositeSequence>();
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-        long lastTime = 0;
+        long lastTime = timer.getTime();
         for ( CompositeSequence cs : result.getCompositeSequences() ) {
             batch.add( cs );
             if ( batch.size() == 1000 ) {
-                lastTime = timer.getTime();
-                if ( timer.getTime() > 10000 && timer.getTime() - lastTime > 10000 ) {
-                    log.info( "Batch : " + timer.getTime() );
+                long t = timer.getTime();
+                if ( t > 10000 && t - lastTime > 1000 ) {
+                    log.info( "Thaw Batch : " + t );
                 }
                 List<?> bb = thawBatchOfProbes( batch );
                 thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
-
+                lastTime = timer.getTime();
                 batch.clear();
             }
+            this.getSession().evict( cs );
         }
 
-        if ( !batch.isEmpty() ) {
-
+        if ( !batch.isEmpty() ) { // tail end
             List<?> bb = thawBatchOfProbes( batch );
             thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
         }
@@ -169,6 +203,13 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign
+     * )
+     */
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "array design cannot be null" );
@@ -190,6 +231,11 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thawLite(java.util.Collection)
+     */
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() ) return arrayDesigns;
         return this
@@ -390,7 +436,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         // final String queryString = "select distinct cs id from CompositeSequenceImpl cs, BlatAssociationImpl bs2gp
         // inner join bs2gp.blatResult";
 
-        return NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
+        return ( Collection<CompositeSequence> ) NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(),
+                nativeQueryString, "id", id );
     }
 
     /*
@@ -412,7 +459,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 + "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
                 + "left join CHROMOSOME_FEATURE gene on geneProduct.GENE_FK=gene.ID  "
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
-        return NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
+        return ( Collection<CompositeSequence> ) NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(),
+                nativeQueryString, "id", id );
     }
 
     /*
@@ -735,7 +783,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     protected long handleNumAllCompositeSequenceWithBioSequences() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where " + "cs.biologicalCharacteristic.sequence is not null";
+                + " where cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
@@ -749,7 +797,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
-        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
     /*

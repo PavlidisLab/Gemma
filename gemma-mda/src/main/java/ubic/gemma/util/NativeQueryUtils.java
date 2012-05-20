@@ -43,7 +43,7 @@ public class NativeQueryUtils {
      * @param queryString with no parameters
      * @return a single object
      */
-    public static List find( HibernateTemplate hibernateTemplate, final String queryString ) {
+    public static List<?> find( HibernateTemplate hibernateTemplate, final String queryString ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
             public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -63,7 +63,7 @@ public class NativeQueryUtils {
      * @param param
      * @return
      */
-    public static List findByNamedParam( HibernateTemplate hibernateTemplate, final String queryString,
+    public static List<?> findByNamedParam( HibernateTemplate hibernateTemplate, final String queryString,
             final String paramName, final Object param ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
             public List<?> doInHibernate( Session session ) throws HibernateException {
@@ -84,7 +84,7 @@ public class NativeQueryUtils {
      * @param params
      * @return
      */
-    public static List findByNamedParams( HibernateTemplate hibernateTemplate, final String queryString,
+    public static List<?> findByNamedParams( HibernateTemplate hibernateTemplate, final String queryString,
             final String[] paramNames, final Object[] params ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
             public List<?> doInHibernate( Session session ) throws HibernateException {

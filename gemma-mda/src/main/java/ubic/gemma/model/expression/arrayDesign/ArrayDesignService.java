@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @version $Id$
@@ -51,6 +52,16 @@ public interface ArrayDesignService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
+
+    /**
+     * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
+     * sequences are also returned, so this can be used to do a thaw, in effect.
+     * 
+     * @param arrayDesign
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
     /**
      * @return global count of compositeSequences in the system.

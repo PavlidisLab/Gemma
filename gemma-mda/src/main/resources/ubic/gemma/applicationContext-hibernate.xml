@@ -31,12 +31,16 @@
 	<bean id="retryAdvice" class="org.springframework.retry.interceptor.RetryOperationsInterceptor">
 		<property name="retryOperations">
 			<bean id="retryTemplate" class="org.springframework.retry.support.RetryTemplate">
+				<property name="backOffPolicy">
+					<bean id="backOffPolicy" class="org.springframework.retry.backoff.ExponentialBackOffPolicy" />
+				</property>
 				<property name="retryPolicy">
-					<bean id="retryPolicy" class="org.springframework.retry.policy.SimpleRetryPolicy">
-						<constructor-arg name="maxAttempts" value="3" />
+					<bean id="retryPolicy" class="ubic.gemma.persistence.retry.RetryPolicy">
+						<constructor-arg name="maxAttempts" value="6" />
 						<constructor-arg name="retryableExceptions">
 							<map>
-								<entry key="org.springframework.dao.DataAccessException" value="true" />
+								<entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
+								<entry key="java.sql.BatchUpdateException" value="true" />
 							</map>
 						</constructor-arg>
 					</bean>

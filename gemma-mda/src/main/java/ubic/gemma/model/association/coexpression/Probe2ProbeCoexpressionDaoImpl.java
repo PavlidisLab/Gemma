@@ -485,6 +485,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment, boolean)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
 
@@ -499,10 +500,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBE_FK WHERE"
                 + " a.class='ProbeCoexpressionAnalysisImpl' AND a.EXPERIMENT_ANALYZED_FK = :eeid ";
 
-        List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
+        List<?> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
                 ee.getId() );
         List<Long> results = new ArrayList<Long>();
-        for ( BigInteger i : r ) {
+        for ( BigInteger i : ( Collection<BigInteger> ) r ) {
             results.add( i.longValue() );
         }
         return results;

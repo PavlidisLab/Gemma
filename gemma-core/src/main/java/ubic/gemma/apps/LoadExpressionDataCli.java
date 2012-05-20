@@ -49,8 +49,6 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
  * file.
- * <p>
- * CAUTION: redundant with GeoLoaderCli. // this doesn't exist any more.
  * 
  * @author pavlidis
  * @version $Id$

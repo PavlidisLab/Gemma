@@ -51,6 +51,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.ArrayDesignsForExperimentCache;
+import ubic.gemma.persistence.ExpressionExperimentPrePersistService;
 import ubic.gemma.security.SecurityService;
 
 /**
@@ -79,6 +82,9 @@ public class GeoServiceImpl extends AbstractGeoService {
     @Autowired
     private SecurityService securityService;
 
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
     /*
      * (non-Javadoc)
      * 
@@ -103,7 +109,6 @@ public class GeoServiceImpl extends AbstractGeoService {
      * 
      * @param geoDataSetAccession
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform, boolean allowSuperSeriesImport,
@@ -191,19 +196,20 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         check( result );
 
-        series = null; // hopefully free memory...
-        parseResult = null;
-
         getPubMedInfo( result );
 
         log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
-        @SuppressWarnings("rawtypes")
-        Collection persistedResult = persisterHelper.persist( result );
-        log.debug( "Persisted " + seriesAccession );
 
-        securityService.makePrivate( persistedResult ); // TODO make this optional?
+        Collection<ExpressionExperiment> persistedResult = new HashSet<ExpressionExperiment>();
+        for ( ExpressionExperiment ee : result ) {
+            ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+            ee = persisterHelper.persist( ee, c );
+            securityService.makePrivate( ee ); // TODO make this optional?
+            persistedResult.add( ee );
+            log.debug( "Persisted " + seriesAccession );
 
+        }
         updateReports( persistedResult );
 
         return persistedResult;
@@ -407,20 +413,23 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @param existing
      * @param columnWithGeoNames
      */
-    private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, ArrayDesign existing, String columnWithGeoNames ) {
+    private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, final ArrayDesign existing,
+            String columnWithGeoNames ) {
 
         String columnWithGemmaNames = null;
+
+        Map<CompositeSequence, BioSequence> m = arrayDesignService.getBioSequences( existing ); // a bit wasteful
 
         /*
          * This can happen if there is a corrupt version of the array design in the system -- can occur in tests for
          * example.
          */
-        if ( existing.getCompositeSequences().isEmpty() ) {
+        if ( m.isEmpty() ) {
             fillExistingProbeNameMap( rawGEOPlatform, columnWithGeoNames, columnWithGeoNames );
             return;
         }
 
-        for ( CompositeSequence cs : existing.getCompositeSequences() ) {
+        for ( CompositeSequence cs : m.keySet() ) {
             String gemmaProbeName = cs.getName();
             // search the other columns
             int numColsMatching = 0;
@@ -462,8 +471,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         throw new IllegalStateException( "Could not figure out which column the Gemma probe names came (e.g.: "
-                + existing.getCompositeSequences().iterator().next().getName() + ") from for platform="
-                + rawGEOPlatform );
+                + m.keySet().iterator().next().getName() + ") from for platform=" + rawGEOPlatform );
 
     }
 
@@ -634,7 +642,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         } else {
             log.info( "Platform " + rawGEOPlatform
                     + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
-            existing = arrayDesignService.thaw( existing );
 
             String columnWithGeoNames = null;
             columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );

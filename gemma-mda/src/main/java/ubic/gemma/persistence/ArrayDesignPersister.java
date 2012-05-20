@@ -18,14 +18,10 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CancellationException;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,7 +29,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
@@ -50,22 +45,11 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 abstract public class ArrayDesignPersister extends GenomePersister {
 
-    protected static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
-
     @Autowired
     protected ArrayDesignService arrayDesignService;
 
     @Autowired
     protected CompositeSequenceDao compositeSequenceDao;
-
-    // FIXME not thread safe.
-    private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
-
-    // FIXME not thread safe.
-    private Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
-
-    // FIXME not thread safe.
-    private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
 
     /*
      * (non-Javadoc)
@@ -78,7 +62,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( entity instanceof ArrayDesign ) {
             result = findOrPersistArrayDesign( ( ArrayDesign ) entity );
-            clearArrayDesignCache();
             return result;
         }
 
@@ -95,89 +78,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );
-    }
-
-    /**
-     * @param designElement
-     * @return
-     */
-    protected CompositeSequence addNewDesignElementToPersistentArrayDesign( ArrayDesign arrayDesign,
-            CompositeSequence designElement ) {
-        if ( designElement == null ) return null;
-
-        if ( !isTransient( designElement ) ) return designElement;
-
-        assert arrayDesign.getId() != null;
-
-        designElement.setArrayDesign( arrayDesign );
-
-        if ( isTransient( designElement.getBiologicalCharacteristic() ) ) {
-            designElement
-                    .setBiologicalCharacteristic( persistBioSequence( designElement.getBiologicalCharacteristic() ) );
-        }
-        CompositeSequence persistedDE = compositeSequenceDao.create( designElement );
-
-        arrayDesign.getCompositeSequences().add( persistedDE );
-
-        /*
-         * FIXME This is VERY slow if we have to add a lot of DesignElements to the array.
-         */
-        this.arrayDesignService.update( arrayDesign );
-
-        return persistedDE;
-
-    }
-
-    /**
-     * Cache array design design elements (used for associating with ExpressionExperiments)
-     * <p>
-     * Note that reporters are ignored, as we are not persisting them.
-     * 
-     * @param arrayDesign To add to the cache.
-     * @see ExpressionPersister.fillInDesignElementDataVectorAssociations
-     */
-    protected void addToDesignElementCache( final ArrayDesign arrayDesign ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        assert !isTransient( arrayDesign );
-
-        log.info( "Loading sequence elements for " + arrayDesign );
-
-        final Collection<CompositeSequence> compositeSequences = arrayDesignService.thaw( arrayDesign )
-                .getCompositeSequences();
-
-        String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
-        int count = 0;
-        for ( CompositeSequence element : compositeSequences ) {
-            assert element.getId() != null;
-            designElementCache.put( element.getName() + adName, element );
-            BioSequence seq = element.getBiologicalCharacteristic();
-            if ( seq != null ) {
-                if ( StringUtils.isNotBlank( seq.getName() ) ) {
-                    designElementSequenceCache.put( seq.getName(), element );
-                }
-            }
-            if ( ++count % 5000 == 0 ) {
-                log.info( "Cached " + count + " probes (" + timer.getTime() + "ms)" );
-            }
-            if ( count % 100 == 0 ) {
-                // session.clear();
-            }
-        }
-
-        log.info( timer.getTime() + "ms elapsed" );
-
-    }
-
-    /**
-     * 
-     *
-     */
-    protected void clearArrayDesignCache() {
-        log.debug( "Clearing cache" );
-        this.arrayDesignCache.clear();
-        this.designElementCache.clear();
-        this.designElementSequenceCache.clear();
     }
 
     /**
@@ -215,55 +115,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         return existing;
-
-    }
-
-    protected Map<String, CompositeSequence> getDesignElementCache() {
-        return designElementCache;
-    }
-
-    protected Map<String, CompositeSequence> getDesignElementSequenceCache() {
-        return designElementSequenceCache;
-    }
-
-    /**
-     * Put an array design in the cache. This is needed when loading designelementdatavectors, for example, to avoid
-     * repeated (and one-at-a-time) fetching of designelement.
-     * 
-     * @param arrayDesignCache
-     * @param cacheIsSetUp
-     * @param designElementCache
-     * @param arrayDesign
-     * @return the persistent array design.
-     */
-    protected ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign ) {
-
-        assert arrayDesign != null;
-        ArrayDesign cachedAd = arrayDesign;
-        if ( !arrayDesignCache.containsKey( cachedAd.getName() )
-                && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
-
-            StopWatch timer = new StopWatch();
-            timer.start();
-
-            cachedAd = findOrPersistArrayDesign( arrayDesign );
-            // cachedAd = arrayDesignDao.thaw( cachedAd );
-            assert !isTransient( cachedAd );
-            addToDesignElementCache( cachedAd );
-            arrayDesignCache.put( arrayDesign.getName(), cachedAd );
-            if ( cachedAd.getShortName() != null ) {
-                arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
-            }
-
-            if ( timer.getTime() > 20000 ) {
-                log.info( "Load/persist array design: " + timer.getTime() + "ms" );
-            }
-
-        }
-        if ( arrayDesignCache.containsKey( cachedAd.getName() ) ) {
-            return arrayDesignCache.get( cachedAd.getName() );
-        }
-        return arrayDesignCache.get( cachedAd.getShortName() );
 
     }
 

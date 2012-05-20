@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author klc
@@ -704,6 +705,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             }
 
         }
+    }
+
+    @Override
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
+        return this.getArrayDesignDao().getBioSequences( arrayDesign );
     }
 
 }

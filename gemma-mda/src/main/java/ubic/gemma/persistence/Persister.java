@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
  * should expect:
@@ -59,6 +61,16 @@ public interface Persister {
     public Object persist( Object obj );
 
     /**
+     * Special case for experiments.
+     * 
+     * @param ee
+     * @param c
+     * @return
+     */
+    @Secured({ "GROUP_USER" })
+    public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
+
+    /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
      * supplied instance. This means that any existing data may be lost. Otherwise a new persistent instance will be
      * created from the supplied instance. Non-nullable dependencies will be replaced with existing persistent ones or
@@ -72,5 +84,12 @@ public interface Persister {
      */
     @Secured({ "GROUP_USER" })
     public Object persistOrUpdate( Object obj );
+
+    /**
+     * @param entity
+     * @return
+     */
+    @Secured({ "GROUP_USER" })
+    public ArrayDesignsForExperimentCache prepare( ExpressionExperiment entity );
 
 }

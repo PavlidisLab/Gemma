@@ -229,7 +229,7 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected AuditTrail persistAuditTrail( AuditTrail entity ) {
         if ( entity == null ) return null;
-        if ( !this.isTransient( entity ) ) return entity;
+        if ( !isTransient( entity ) ) return entity;
 
         for ( AuditEvent event : entity.getEvents() ) {
             if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed

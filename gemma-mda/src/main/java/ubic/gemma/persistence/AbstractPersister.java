@@ -104,7 +104,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      * @return If the entity is null, return true. If the entity is non-null and has a null "id" property, return true;
      *         Otherwise return false.
      */
-    protected boolean isTransient( Object entity ) {
+    public static boolean isTransient( Object entity ) {
         if ( entity == null ) return true;
         try {
             return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;

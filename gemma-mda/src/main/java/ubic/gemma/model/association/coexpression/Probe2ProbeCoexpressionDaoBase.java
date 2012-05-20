@@ -97,9 +97,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      Collection, Collection, boolean)
      */
-    public Map getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene geneA,
-            final Collection<Long> genesB, final Collection<BioAssaySet> expressionExperiments,
-            final boolean filterNonSpecific ) {
+    public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
+            final ubic.gemma.model.genome.Gene geneA, final Collection<Long> genesB,
+            final Collection<BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsLinkTestedIn( geneA, genesB, expressionExperiments,
                     filterNonSpecific );
@@ -263,8 +263,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * Performs the core logic for {@link #deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract void handleDeleteLinks( BioAssaySet bioAssaySet )
-            throws Exception;
+    protected abstract void handleDeleteLinks( BioAssaySet bioAssaySet ) throws Exception;
 
     /**
      * Performs the core logic for

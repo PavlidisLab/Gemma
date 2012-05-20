@@ -54,10 +54,9 @@ public class ArrayDesignServiceImplTest extends TestCase {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testGetAllArrayDesigns() throws Exception {
         // to implement this test, the mock dao has to save several objects.
-        Collection<ArrayDesign> m = new HashSet();
+        Collection<ArrayDesign> m = new HashSet<ArrayDesign>();
 
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign tad = ArrayDesign.Factory.newInstance();
