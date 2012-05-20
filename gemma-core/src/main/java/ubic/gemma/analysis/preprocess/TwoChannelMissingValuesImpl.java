@@ -28,16 +28,14 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -73,25 +71,25 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * The missing values are computed with the following considerations with respect to available data
  * </p>
  * <ol>
- * <li>This only works if there are signal values for both channels
+ * <li>If the preferred quantitation type data is a missing value, then the data are considered missing (for
+ * consistency).</li>
+ * <li>We then do additional checks if there is 'signal' data available.
  * <li>If there are background values, they are used to compute signal-to-noise ratios</li>
  * <li>If the signal values already contain missing data, these are still considered missing.</li>
- * <li>If there are no background values, all values will be considered 'present' unless the signal values are both zero
- * or missing.
- * <li>If the preferred quantitation type data is a missing value, then the data are considered missing (for
- * consistency).
+ * <li>If there are no background values, we try to compute a threshold based on a quantile of the signal</li>
+ * <li>Otherwise, values will be considered 'present' unless the signal values are zero or missing.</li>
  * </ol>
  * 
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
+
+    private static final int QUANTILE_OF_SIGNAL_TO_USE_IF_NO_BKG_AVAILABLE = 1;
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValuesImpl.class.getName() );
 
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
@@ -102,16 +100,27 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    @Autowired
+    private TwoChannelMissingValueHelperService twoChannelMissingValueHelperService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
      */
     @Override
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp ) {
         return this.computeMissingValues( expExp, DEFAULT_SIGNAL_TO_NOISE_THRESHOLD, null );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment.ExpressionExperiment, double, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, double, java.util.Collection)
      */
     @Override
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
@@ -196,10 +205,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         finalResults.addAll( dimRes );
 
-        AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( expExp, type, "Computed missing value data for data run on array designs: "
-                + ads );
-
         return finalResults;
     }
 
@@ -237,13 +242,16 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         ByteArrayConverter converter = new ByteArrayConverter();
 
-        QuantitationType present = getMissingDataQuantitationType( signalToNoiseThreshold );
-        source.getQuantitationTypes().add( present );
-
         int count = 0;
 
         ExpressionDataDoubleMatrix baseChannel = signalChannelA == null ? signalChannelB : signalChannelA;
 
+        Double signalThreshold = Double.NaN;
+        if ( bkgChannelA == null && bkgChannelB == null ) {
+            signalThreshold = computeSignalThreshold( preferred, signalChannelA, signalChannelB, baseChannel );
+        }
+        QuantitationType present = getMissingDataQuantitationType( signalToNoiseThreshold, signalThreshold );
+        source.getQuantitationTypes().add( present );
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
 
             CompositeSequence designElement = element.getDesignElement();
@@ -276,7 +284,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
             if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
-            // columsn only for this designelement!
+            // columns only for this designelement!
             boolean gaps = false; // we use this to track
             for ( int col = 0; col < numCols; col++ ) {
 
@@ -300,7 +308,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
                 /*
                  * Missing values here wreak havoc. Sometimes in multiarray studies data are missing.
                  */
-                Boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
+                Boolean call = computeCall( signalToNoiseThreshold, signalThreshold, sigAV, sigBV, bkgAV, bkgBV );
 
                 if ( call == null ) gaps = true;
 
@@ -322,11 +330,90 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         }
         log.info( "Finished: " + count + " vectors examined for missing values" );
 
-        log.info( "Persisting " + results.size() + " vectors ... " );
-        results = ( Collection<RawExpressionDataVector> ) designElementDataVectorService.create( results );
-        expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
+        results = twoChannelMissingValueHelperService.persist( source, results );
 
         return results;
+    }
+
+
+    /**
+     * Determine a threshold based on the data.
+     * 
+     * @param preferred
+     * @param signalChannelA
+     * @param signalChannelB
+     * @param baseChannel
+     */
+    private Double computeSignalThreshold( ExpressionDataDoubleMatrix preferred,
+            ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
+            ExpressionDataDoubleMatrix baseChannel ) {
+
+        Double min = Double.MAX_VALUE;
+        Double max = Double.MIN_VALUE;
+
+        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
+            CompositeSequence designElement = element.getDesignElement();
+
+            int numCols = preferred.columns( designElement );
+            for ( int col = 0; col < numCols; col++ ) {
+
+                Double[] signalA = null;
+                if ( signalChannelA != null ) {
+                    signalA = signalChannelA.getRow( designElement );
+                }
+
+                Double[] signalB = null;
+                if ( signalChannelB != null ) {
+                    signalB = signalChannelB.getRow( designElement );
+                }
+
+                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
+                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+
+                if ( !sigAV.isNaN() && sigAV < min ) {
+                    min = sigAV;
+                } else if ( !sigBV.isNaN() && sigBV < min ) {
+                    min = sigBV;
+                } else if ( !sigAV.isNaN() && sigAV > max ) {
+                    max = sigAV;
+                } else if ( !sigBV.isNaN() && sigBV > max ) {
+                    max = sigBV;
+                }
+
+            }
+        }
+
+        Histogram h = new Histogram( "range", 100, min, max );
+        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
+            CompositeSequence designElement = element.getDesignElement();
+
+            int numCols = preferred.columns( designElement );
+            for ( int col = 0; col < numCols; col++ ) {
+
+                Double[] signalA = null;
+                if ( signalChannelA != null ) {
+                    signalA = signalChannelA.getRow( designElement );
+                }
+
+                Double[] signalB = null;
+                if ( signalChannelB != null ) {
+                    signalB = signalChannelB.getRow( designElement );
+                }
+
+                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
+                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+
+                if ( !sigAV.isNaN() ) h.fill( sigAV );
+                if ( !sigBV.isNaN() ) h.fill( sigBV );
+
+            }
+        }
+
+        Double thresh = h.getApproximateQuantile( QUANTILE_OF_SIGNAL_TO_USE_IF_NO_BKG_AVAILABLE );
+
+        log.info( "Threshold based on signal=" + thresh );
+
+        return thresh;
     }
 
     /**
@@ -360,37 +447,57 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * Decide if the data point is 'present': it has to be above the threshold in one of the channels.
      * 
      * @param signalToNoiseThreshold
+     * @param signalThreshold might be used if we don't have background measurements.
      * @param sigAV
      * @param sigBV
-     * @param bkgAV
-     * @param bkgBV
-     * @return null if no decision could be made due to NaN in the values given.
+     * @param bkgAV can be null
+     * @param bkgBV can be null
+     * @return call, or null if no decision could be made due to NaN in the values given.
      */
-    private Boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
+    private Boolean computeCall( double signalToNoiseThreshold, Double signalThreshold, Double sigAV, Double sigBV,
+            Double bkgAV, Double bkgBV ) {
 
         if ( !sigAV.isNaN() && !bkgAV.isNaN() && sigAV > bkgAV * signalToNoiseThreshold ) return true;
 
         if ( !sigBV.isNaN() && !bkgBV.isNaN() && sigBV > bkgBV * signalToNoiseThreshold ) return true;
 
+        // if no background valeues, use the signal threshold, if we have one; both values must meet.
+        if ( !Double.isNaN( signalThreshold ) && bkgAV.isNaN() && bkgBV.isNaN() ) {
+            return ( sigAV > signalThreshold || sigBV > signalThreshold );
+        }
+
+        // if both signals are unusable, false.
+        if ( ( sigAV.isNaN() || sigAV == 0 ) && ( sigBV.isNaN() || sigBV == 0 ) ) {
+            return false;
+        }
+
         /*
-         * We couldn't decide because neither of the above calculations could be done.
+         * We couldn't decide because none of the above calculations could be done.
          */
         if ( ( sigAV.isNaN() || bkgAV.isNaN() ) && ( sigBV.isNaN() || bkgBV.isNaN() ) ) return null;
 
-        return false;
+        // default: keep.
+        return true;
     }
 
     /**
      * Construct the quantitation type that will be used for the generated DesignElementDataVEctors.
      * 
      * @param signalToNoiseThreshold
+     * @param signalThreshold
      * @return
      */
-    private QuantitationType getMissingDataQuantitationType( double signalToNoiseThreshold ) {
+    private QuantitationType getMissingDataQuantitationType( double signalToNoiseThreshold, Double signalThreshold ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( "Detection call" );
-        present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
-                + " (Computed by " + Constants.APP_NAME + ")" );
+
+        if ( !signalThreshold.isNaN() ) {
+            present.setDescription( "Detection call based on signal threshold of " + signalThreshold + " (Computed by "
+                    + Constants.APP_NAME + ")" );
+        } else {
+            present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
+                    + " (Computed by " + Constants.APP_NAME + ")" );
+        }
         present.setGeneralType( GeneralType.CATEGORICAL );
         present.setIsBackground( false );
         present.setRepresentation( PrimitiveType.BOOLEAN );

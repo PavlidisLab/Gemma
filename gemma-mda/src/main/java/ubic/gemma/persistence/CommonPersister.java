@@ -19,8 +19,8 @@
 package ubic.gemma.persistence;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -82,10 +82,9 @@ abstract public class CommonPersister extends AbstractPersister {
 
     @Autowired
     protected MeasurementDao measurementDao;
+
     @Autowired
     protected PersonDao personDao;
-
-    // protected OntologyEntryDao ontologyEntryDao;
 
     @Autowired
     protected ProtocolDao protocolDao;
@@ -93,14 +92,13 @@ abstract public class CommonPersister extends AbstractPersister {
     @Autowired
     protected QuantitationTypeDao quantitationTypeDao;
 
-    protected Map<Object, ExternalDatabase> seenDatabases = new HashMap<Object, ExternalDatabase>();
+    protected Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<Object, ExternalDatabase>();
 
     @Autowired
     protected UnitDao unitDao;
 
-    Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
-
-    // protected TermRelationshipDao termRelationshipDao;
+    // FIXME not thread safe.
+    Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<Object, QuantitationType>();
 
     /*
      * (non-Javadoc)
@@ -292,8 +290,13 @@ abstract public class CommonPersister extends AbstractPersister {
      * @param file
      */
     protected LocalFile persistLocalFile( LocalFile file ) {
+        return persistLocalFile( file, false );
+    }
+
+    protected LocalFile persistLocalFile( LocalFile file, boolean forceNew ) {
         if ( file == null ) return null;
         if ( !isTransient( file ) ) return file;
+        if ( forceNew ) return localFileDao.create( file );
         return localFileDao.findOrCreate( file );
     }
 

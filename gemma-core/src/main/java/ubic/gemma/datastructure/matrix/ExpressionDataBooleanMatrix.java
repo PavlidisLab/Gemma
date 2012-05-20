@@ -195,8 +195,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
-        return this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
-                .getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
+        return this.matrix.get( matrix.getRowIndexByName( designElement ),
+                matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
     }
 
     /*
@@ -241,7 +241,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
-    public Boolean[][] getColumns( List bioAssays ) {
+    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
         // TODO Implement me
         throw new UnsupportedOperationException();
     }
@@ -252,8 +252,15 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Boolean[][] getRawMatrix() {
-        // TODO Implement me
-        throw new UnsupportedOperationException();
+        Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            Object[] rawRow = matrix.getRow( i );
+            for ( int j = 0; j < rawRow.length; j++ ) {
+                dMatrix[i][j] = ( Boolean ) rawRow[i];
+            }
+        }
+
+        return dMatrix;
     }
 
     /*
@@ -280,15 +287,14 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
-    @SuppressWarnings("unchecked")
-    public Boolean[][] getRows( List designElements ) {
+    public Boolean[][] getRows( List<CompositeSequence> designElements ) {
         if ( designElements == null ) {
             return null;
         }
 
         Boolean[][] result = new Boolean[designElements.size()][];
         int i = 0;
-        for ( CompositeSequence element : ( List<CompositeSequence> ) designElements ) {
+        for ( CompositeSequence element : designElements ) {
             Boolean[] rowResult = getRow( element );
             result[i] = rowResult;
             i++;

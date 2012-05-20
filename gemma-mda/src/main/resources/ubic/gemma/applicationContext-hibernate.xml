@@ -51,7 +51,7 @@
 					</list>
 				</property>
 			</bean>
-		</property>
+		</property> 
 	</bean>
 
 	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">

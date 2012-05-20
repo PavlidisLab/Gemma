@@ -20,10 +20,10 @@ package ubic.gemma.persistence;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.FlushMode;
@@ -92,7 +92,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    private Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
+    // FIXME not very thread safe.
+    private Map<String, BioAssayDimension> bioAssayDimensionCache = new ConcurrentHashMap<String, BioAssayDimension>();
 
     /**
      * @param ee
@@ -147,10 +148,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             processBioAssays( ee, c );
 
             ee = expressionExperimentDao.create( ee );
-            clearCache();
+
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
         }
+
+        clearCache();
 
         return ee;
     }
@@ -315,7 +318,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         log.debug( "biomaterials done" );
 
         if ( bioAssay.getRawDataFile() != null ) {
-            bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile() ) );
+            // must be unique.
+            bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile(), true ) );
             log.debug( "raw data file done" );
         }
 

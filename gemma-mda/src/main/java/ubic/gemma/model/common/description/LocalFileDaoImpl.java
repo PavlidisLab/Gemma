@@ -49,7 +49,7 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
         List<?> results;
         if ( localFile.getRemoteURL() == null ) {
             results = getHibernateTemplate().findByNamedParam(
-                    "from LocalFileImpl where localURL=:u  and remoteURL is null ", "u", localFile.getLocalURL() );
+                    "from LocalFileImpl where localURL=:u and remoteURL is null ", "u", localFile.getLocalURL() );
         } else if ( localFile.getLocalURL() == null ) {
             results = getHibernateTemplate().findByNamedParam(
                     "from LocalFileImpl where localURL is null and remoteURL=:r", "r", localFile.getRemoteURL() );
