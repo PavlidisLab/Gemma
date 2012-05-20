@@ -148,12 +148,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             ee = expressionExperimentDao.create( ee );
 
-            if ( Thread.currentThread().isInterrupted() ) {
-                log.info( "Cancelled" );
-                expressionExperimentDao.remove( ee );
-                throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
-                        + this.getClass() );
-            }
             clearCache();
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
