@@ -20,6 +20,7 @@ import java.util.Set;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -81,10 +82,11 @@ public interface PhenotypeAssociationManagerService {
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
-     * @param taxon the name of the taxon (optinal)
+     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
      * @return A collection of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( String taxon, Set<String> phenotypesValuesUri );
+    public abstract Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+            Set<String> phenotypesValuesUri );
 
     /**
      * Removes an evidence
@@ -177,7 +179,7 @@ public interface PhenotypeAssociationManagerService {
      * @param taxonCommonName specify a taxon (optional)
      * @return A collection of the phenotypes with the gene occurence
      */
-    public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName );
+    public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree

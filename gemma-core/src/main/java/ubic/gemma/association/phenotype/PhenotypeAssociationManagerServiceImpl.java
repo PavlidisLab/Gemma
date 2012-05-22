@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject;
@@ -204,12 +205,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Given a set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
-     * @param taxon the name of the taxon (optinal)
+     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
      * @return A collection of the genes found
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( String taxonCommonName, Set<String> phenotypesValuesUri ) {
-        return findCandidateGenes( phenotypesValuesUri, this.taxonService.findByCommonName( taxonCommonName ) );
+    public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+            Set<String> phenotypesValuesUri ) {
+
+        if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
+            throw new IllegalArgumentException( "No phenotypes values uri provided" );
+        }
+
+        // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
+        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
+
+        Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
+
+        Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
+                .findGeneWithPhenotypes( possibleChildrenPhenotypes,
+                        this.taxonService.findByCommonName( evidenceFilter.getTaxonCommonName() ),
+                        this.userManager.getCurrentUsername(), SecurityServiceImpl.isUserAdmin(),
+                        evidenceFilter.isShowPublicEvidence() );
+
+        return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
 
     /**
@@ -229,15 +247,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
         HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
-        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
-
-        for ( String key : phenotypesWithChildren.keySet() ) {
-            possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
-        }
+        Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
 
         Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
                 .findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon, this.userManager.getCurrentUsername(),
-                        SecurityServiceImpl.isUserAdmin() );
+                        SecurityServiceImpl.isUserAdmin(), true );
 
         return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
@@ -250,12 +264,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the phenotypes with the gene occurence
      */
     @Override
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName ) {
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) {
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
         Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
-                taxonCommonName ) );
+                SecurityServiceImpl.isUserAdmin(), evidenceFilter ) );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
@@ -274,10 +288,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
 
+        EvidenceFilter evidenceFilter = new EvidenceFilter( null, true );
+
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
         Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
-                null ) );
+                SecurityServiceImpl.isUserAdmin(), evidenceFilter ) );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
@@ -775,11 +791,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms,
-            String taxonCommonName ) {
+            boolean isAdmin, EvidenceFilter evidenceFilter ) {
 
-        // all Public phenotypes in Gemma linked to all the genes containing them
-        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
-                .findPublicPhenotypesGenesAssociations( taxonCommonName );
+        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+
+        if ( evidenceFilter.isShowPublicEvidence() || isAdmin ) {
+            // all Public phenotypes in Gemma linked to all the genes containing them
+            publicPhenotypesGenesAssociations = this.associationService
+                    .findPublicPhenotypesGenesAssociations( evidenceFilter.getTaxonCommonName() );
+        }
 
         // all phenotypes in Gemma that is owned by the user, they might be public or private
         HashMap<String, HashSet<Integer>> userOwnedPhenotypesGenesAssociations = null;
@@ -793,10 +813,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
         HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( isAdmin ) {
             // admin can see all private data
             userOwnedPhenotypesGenesAssociations = this.associationService
-                    .findAllPhenotypesGenesAssociations( taxonCommonName );
+                    .findAllPhenotypesGenesAssociations( evidenceFilter.getTaxonCommonName() );
         } else {
 
             String userName = "";
@@ -807,7 +827,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // TODO find also groups
             }
             userOwnedPhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
-                    userName, taxonCommonName );
+                    userName, evidenceFilter.getTaxonCommonName() );
         }
 
         // make the private set of Phenotype Gene assossiation
@@ -1183,7 +1203,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             validateEvidenceValueObject.setPubmedIdInvalid( true );
         } else {
 
-            // rule to determine if its an Update
+            // rule to determine if its an update
             if ( evidence.getId() != null ) {
 
                 PhenotypeAssociation phenotypeAssociation = this.associationService.load( evidence.getId() );
@@ -1386,16 +1406,30 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return key;
     }
 
+    /** take the trees made and put them in the exact way the client wants them */
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject ) {
 
-        SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject );
+        if ( treeCharacteristicValueObject != null ) {
+            SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject );
 
-        simpleTreeValueObjects.add( simpleTreeValueObject );
+            simpleTreeValueObjects.add( simpleTreeValueObject );
 
-        for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-            convertToFlatTree( simpleTreeValueObjects, tree );
+            for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
+                convertToFlatTree( simpleTreeValueObjects, tree );
+            }
         }
+    }
+
+    /** add all the keySet together and return a set representing all children for all valueUri given */
+    private Set<String> findAllPossibleChildren( HashMap<String, Set<String>> phenotypesWithChildren ) {
+
+        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
+
+        for ( String key : phenotypesWithChildren.keySet() ) {
+            possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
+        }
+        return possibleChildrenPhenotypes;
     }
 
 }

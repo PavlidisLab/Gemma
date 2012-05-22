@@ -47,7 +47,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find Genes link to a phenotype taking into account private and public evidence direct sql query to make it fast */
     @Override
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin ) {
+            String userName, boolean isAdmin, boolean showPublicEvidence ) {
 
         HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
         String sqlQuery = "SELECT distinct CHROMOSOME_FEATURE.ID,CHROMOSOME_FEATURE.NCBI_GENE_ID,CHROMOSOME_FEATURE.OFFICIAL_NAME,CHROMOSOME_FEATURE.OFFICIAL_SYMBOL,TAXON.COMMON_NAME,CHARACTERISTIC.VALUE_URI FROM PHENOTYPE_ASSOCIATION join CHARACTERISTIC on PHENOTYPE_ASSOCIATION.ID=CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.ID=CHROMOSOME_FEATURE.TAXON_FK ";
@@ -62,9 +62,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
         // check the private evidences the user can see + public
         else {
-            sqlQuery += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where ((acl_entry.sid=4 and mask=1) or acl_sid.sid='"
-                    + userName
-                    + "') and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and CHARACTERISTIC.VALUE_URI in (";
+            sqlQuery += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where ";
+
+            if ( showPublicEvidence ) {
+                sqlQuery += "((acl_entry.sid=4 and mask=1) or acl_sid.sid='" + userName + "') ";
+            } else {
+                sqlQuery += "acl_sid.sid='" + userName + "' ";
+            }
+
+            sqlQuery += "and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and CHARACTERISTIC.VALUE_URI in (";
         }
 
         // add the condition for valuesUri
