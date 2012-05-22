@@ -86,13 +86,13 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -112,6 +112,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
@@ -247,9 +248,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
     
     @Autowired
     private GeneSearchService geneSearchService;
@@ -265,6 +263,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private OntologyService ontologyService;
+
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @Autowired
     private TaxonDao taxonDao;
@@ -1590,6 +1591,14 @@ public class SearchServiceImpl implements SearchService {
      * @param settings
      * @return
      */
+    private Collection<SearchResult> phenotypeSearch( SearchSettings settings ) {
+        Collection<SearchResult> results = this.dbHitsToSearchResult( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
+        return results;
+    }
+    /**
+     * @param settings
+     * @return
+     */
     private Collection<SearchResult> experimentSetSearch( SearchSettings settings ) {
         Collection<SearchResult> results = this.dbHitsToSearchResult( this.experimentSetService.findByName( settings
                 .getQuery() ) );
@@ -1712,6 +1721,10 @@ public class SearchServiceImpl implements SearchService {
                 } else if ( o instanceof GeneSet ) {
                     GeneSet geneSet = ( GeneSet ) o;
                     currentTaxon = geneSetService.getTaxonForGeneSet( geneSet );
+
+                } else if ( o instanceof CharacteristicValueObject) {
+                    CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
+                    currentTaxon = taxonDao.findByCommonName( charVO.getTaxon() );
 
                 } else {
                     Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
@@ -1920,6 +1933,8 @@ public class SearchServiceImpl implements SearchService {
         results.put( Gene.class, new ArrayList<SearchResult>() );
         results.put( GeneSet.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperimentSet.class, new ArrayList<SearchResult>() );
+        results.put( Characteristic.class, new ArrayList<SearchResult>() );
+        results.put( CharacteristicValueObject.class, new ArrayList<SearchResult>() );
 
         /*
          * Get the top N results, overall (NOT within each class - experimental.)
@@ -2112,6 +2127,23 @@ public class SearchServiceImpl implements SearchService {
             return geneSetService.load( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             return experimentSetService.load( ids );
+        } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
+            Collection<Characteristic> chars = new ArrayList<Characteristic>();
+            for(Long id : ids){
+                chars.add( characteristicService.load( id ) );
+            }
+            return chars;
+        } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
+            // TEMP HACK this whole method should not be needed in many cases
+            Collection<CharacteristicValueObject> chars = new ArrayList<CharacteristicValueObject>();
+            for(SearchResult result : results){
+                if(result.getResultClass().isAssignableFrom( CharacteristicValueObject.class )){
+                    chars.add( (CharacteristicValueObject) result.getResultObject() );
+                }
+            }
+            return chars;
+        } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
+            return experimentSetService.load( ids );
         } else {
             throw new UnsupportedOperationException( "Don't know how to retrieve objects for class=" + entityClass );
         }
@@ -2219,7 +2251,7 @@ public class SearchServiceImpl implements SearchService {
             accreteResults( rawResults, ontologyGenes );
         }
 
-        if ( settings.isSearchGenesByPhenotype() ) {
+        if ( settings.isSearchUsingPhenotypes() ) {
             
             Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult( geneSearchService.getPhenotypeAssociatedGenes(
                     searchString, settings.getTaxon() ), "From phenotype association" );
@@ -2241,6 +2273,10 @@ public class SearchServiceImpl implements SearchService {
             accreteResults( rawResults, experimentSets );
         }
 
+        if ( settings.isSearchForPhenotypes() ) {
+            Collection<SearchResult> phenotypes = phenotypeSearch( settings );
+            accreteResults( rawResults, phenotypes );
+        }
         Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
                 fillObjects );
 

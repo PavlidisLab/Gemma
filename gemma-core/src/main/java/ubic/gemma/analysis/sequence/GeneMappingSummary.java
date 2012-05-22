@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.model.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject; 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;

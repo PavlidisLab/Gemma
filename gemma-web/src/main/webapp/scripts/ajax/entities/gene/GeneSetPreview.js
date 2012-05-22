@@ -86,11 +86,19 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 			
 			if (this.selectedSetValueObject instanceof DatabaseBackedGeneSetValueObject) {
 			
-				name = '<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id=' +
+				name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.geneSetPage +
 				this.selectedSetValueObject.id +
 				'">' +
 				this.selectedSetValueObject.name +
-				'</a>'
+				'</a>';
+				
+			} else if (this.selectedSetValueObject instanceof PhenotypeGroupValueObject) {
+			
+				name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.phenotypePage +
+				this.selectedSetValueObject.phenotypeName +
+				'">' +
+				 this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
+				'</a>';
 				
 			} else if (this.selectedSetValueObject instanceof GOGroupValueObject) {
 				name = this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;

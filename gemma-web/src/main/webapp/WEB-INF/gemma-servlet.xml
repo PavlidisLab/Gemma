@@ -903,10 +903,12 @@
 			<dwr:include method="property" />
 		</dwr:convert>
 
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.biosequence.BioSequence">
 			<dwr:exclude method="sequence" />
 		</dwr:convert>
 
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequence">
 			<dwr:include method="id" />
 			<dwr:include method="name" />

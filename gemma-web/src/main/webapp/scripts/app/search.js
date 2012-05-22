@@ -103,6 +103,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
 			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
+			var searchForPhenotypes = Ext.getCmp('search-forPhenotypes-chkbx').getValue();
 			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
 			var searchPapers = Ext.getCmp('search-papers-chkbx').getValue();
 
@@ -110,13 +111,13 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchIndices = true;
 			var searchCharacteristics = true;
 			var searchGO = false;
-			var searchPhenotypes = false;
+			var searchUsingPhenotypes = false;
 			if (Ext.get('hasAdmin').getValue()) {
 				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
 				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
 				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
 				searchGO = Ext.getCmp('search-go-chkbx').getValue();
-				searchPhenotypes = Ext.getCmp('search-phenotype-chkbx').getValue();
+				searchUsingPhenotypes = Ext.getCmp('search-usingPhenotypes-chkbx').getValue();
 			}
 
 			var scopes = "&scope=";
@@ -140,6 +141,9 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			if (searchGeneSets) {
 				scopes = scopes + "M";
 			}
+			if (searchForPhenotypes) {
+				scopes = scopes + "H";
+			}
 			if (searchEESets) {
 				scopes = scopes + "N";
 			}
@@ -160,8 +164,9 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 				useIndices : searchIndices,
 				useCharacteristics : searchCharacteristics,
 				searchGenesByGO : searchGO,
-				searchGenesByPhenotype : searchPhenotypes,
-				searchBibrefs: searchPapers
+				searchBibrefs: searchPapers,
+				searchUsingPhenotypes : searchUsingPhenotypes,
+				searchForPhenotypes: searchForPhenotypes
 			}];
 			return {
 				params: params,
@@ -381,12 +386,10 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 														this.setValue(state.value);
 													},
 													hideLabel : true
-												},{
-													id : 'search-papers-chkbx',
-													name : "searchPapers",
-													boxLabel : "Annotated Papers",
-													hidden: true,
-													disabled: true,
+												}, {
+													id : 'search-forPhenotypes-chkbx',
+													name : "searchForPhenotypes",
+													boxLabel : "Phenotypes",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -463,6 +466,23 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													checked:false,
 													hidden:true,
 													disabled:true
+												}, {
+													id : 'search-papers-chkbx',
+													name : "searchPapers",
+													boxLabel : "Annotated Papers",
+													hidden: true,
+													disabled: true,
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
 												}]
 									},{
 										hidden: !showAdvancedOptions,
@@ -503,8 +523,8 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 											hideLabel: true,
 											checked: false
 										}, {
-											id: 'search-phenotype-chkbx',
-											name: "searchPhenotypes",
+											id: 'search-usingPhenotypes-chkbx',
+											name: "searchUsingPhenotypes",
 											boxLabel: "IN PROGRESS Search Phenotype Associations (genes)",
 											hideLabel: true,
 											checked: false,
@@ -759,7 +779,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var clazz = record.get("resultClass");
 		if (clazz === "ExpressionExperimentValueObject") {
 			return "Expression dataset";
-		} else if (clazz === "CompositeSequence") {
+		} else if (clazz === "CompositeSequence"  || clazz === "CompositeSequenceValueObject") {
 			return "Probe";
 		} else if (clazz === "ArrayDesignValueObject") {
 			return "Array";
@@ -773,6 +793,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Experiment group";
 		} else if (clazz === "BibliographicReferenceValueObject" ) {
 			return "Annotated Paper";
+		} else if (clazz === "CharacteristicValueObject" ) {
+			return "Phenotype";
 		} else {
 			return clazz;
 		}
@@ -782,7 +804,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var clazz = record.resultsClass;
 		if (clazz === "ExpressionExperimentValueObject") {
 			return record.shortName;
-		} else if (clazz === "CompositeSequence") {
+		} else if (clazz === "CompositeSequence"  || clazz === "CompositeSequenceValueObject") {
 			return record.name;
 		} else if (clazz === "ArrayDesignValueObject") {
 			return record.shortName;
@@ -808,11 +830,10 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			data.shortName +
 			"</a> - " +
 			data.name;
-		} else if (clazz === "CompositeSequence") {
+		} else if (clazz === "CompositeSequence" || clazz === "CompositeSequenceValueObject") {
 			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - " +
 			(data.description ? data.description : "") +
-			"; Array: " +
-			data.arrayDesign.shortName;
+			(data.arrayDesign ? "; Array: " + data.arrayDesign.shortName : '');
 		} else if (clazz === "ArrayDesignValueObject") {
 			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " +
 			data.name;
@@ -845,6 +866,9 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			"</span> (" +
 			data.size +
 			")";
+		}  else if ( clazz === "CharacteristicValueObject" ) {
+			return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value + "</a><span style='color:grey'> " +
+			data.valueUri +'</span>';
 		} else {
 			return data[0];
 		}

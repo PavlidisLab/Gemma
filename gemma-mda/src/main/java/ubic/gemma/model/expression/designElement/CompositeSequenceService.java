@@ -193,4 +193,6 @@ public interface CompositeSequenceService {
     @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
+    public CompositeSequenceValueObject convertToValueObject( CompositeSequence compositeSequence );
+
 }

@@ -49,37 +49,10 @@ public class SearchSettings {
     private boolean searchArrays = true;
     private boolean searchBibrefs = false;
     private boolean searchGenesByGO = false;
-    private boolean searchGenesByPhenotype = false;
+    private boolean searchUsingPhenotypes = false;
     private boolean searchGeneSets = true;
     private boolean searchExperimentSets = true;
-
-    /**
-     * @return the searchGeneSets
-     */
-    public boolean isSearchGeneSets() {
-        return searchGeneSets;
-    }
-
-    /**
-     * @param searchGeneSets the searchGeneSets to set
-     */
-    public void setSearchGeneSets( boolean searchGeneSets ) {
-        this.searchGeneSets = searchGeneSets;
-    }
-
-    /**
-     * @return the searchExperimentSets
-     */
-    public boolean isSearchExperimentSets() {
-        return searchExperimentSets;
-    }
-
-    /**
-     * @param searchExperimentSets the searchExperimentSets to set
-     */
-    public void setSearchExperimentSets( boolean searchExperimentSets ) {
-        this.searchExperimentSets = searchExperimentSets;
-    }
+    private boolean searchForPhenotypes = true;
 
     private boolean useIndices = true;
     private boolean useDatabase = true;
@@ -186,6 +159,33 @@ public class SearchSettings {
     }
 
     /**
+     * @return the searchGeneSets
+     */
+    public boolean isSearchGeneSets() {
+        return searchGeneSets;
+    }
+
+    /**
+     * @param searchGeneSets the searchGeneSets to set
+     */
+    public void setSearchGeneSets( boolean searchGeneSets ) {
+        this.searchGeneSets = searchGeneSets;
+    }
+
+    /**
+     * @return the searchExperimentSets
+     */
+    public boolean isSearchExperimentSets() {
+        return searchExperimentSets;
+    }
+
+    /**
+     * @param searchExperimentSets the searchExperimentSets to set
+     */
+    public void setSearchExperimentSets( boolean searchExperimentSets ) {
+        this.searchExperimentSets = searchExperimentSets;
+    }
+    /**
      * NOTE the query is trim()'ed, no need to do that later.
      * 
      * @param query
@@ -291,11 +291,12 @@ public class SearchSettings {
         this.searchBioSequences = false;
         this.searchGenes = false;
         this.searchGenesByGO = false;
-        this.searchGenesByPhenotype = false;
+        this.setSearchUsingPhenotypes( false );
         this.searchExperiments = false;
         this.searchProbes = false;
         this.searchGeneSets = false;
         this.searchExperimentSets = false;
+        this.setSearchUsingPhenotypes( false );
     }
 
     public ArrayDesign getArrayDesign() {
@@ -338,12 +339,22 @@ public class SearchSettings {
         return termUri;
     }
 
-    public boolean isSearchGenesByPhenotype() {
-        return searchGenesByPhenotype;
+    public boolean isSearchUsingPhenotypes() {
+        return searchUsingPhenotypes;
     }
 
-    public void setSearchGenesByPhenotype( boolean searchGenesByPhenotype ) {
-        this.searchGenesByPhenotype = searchGenesByPhenotype;
+    public void setSearchUsingPhenotypes( boolean searchUsingPhenotypes ) {
+        this.searchUsingPhenotypes = searchUsingPhenotypes;
     }
+
+    public boolean isSearchForPhenotypes() {
+        return searchForPhenotypes;
+    }
+
+    public void setSearchForPhenotypes( boolean searchForPhenotypes ) {
+        this.searchForPhenotypes = searchForPhenotypes;
+    }
+
+
 
 }

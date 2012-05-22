@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -36,6 +41,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class ArrayDesignServiceBase implements ubic.gemma.model.expression.arrayDesign.ArrayDesignService {
 
+    Log log = LogFactory.getLog( this.getClass() ); 
+    
     @Autowired
     private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
 
@@ -487,6 +494,30 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
         }
     }
 
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
+     */
+    public ArrayDesignValueObject loadValueObject( final Long id ) {
+        try {
+            Collection<Long> ids = new ArrayList<Long>();
+            ids.add( id );
+            Collection<ArrayDesignValueObject> advos = this.handleLoadValueObjects( ids );
+            if(advos == null || advos.size() < 1)
+                throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                        "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadValueObject(Long id)' --> "
+                                + "no entities found for id = " +  id);
+            if( advos.size() > 1){
+                // this should never happen
+                log.error( "Found more than one ArrayDesign for id = "+id );
+            }
+            return advos.iterator().next();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadValueObject(Long id)' --> "
+                            + th, th );
+        }
+    }
+    
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
      */

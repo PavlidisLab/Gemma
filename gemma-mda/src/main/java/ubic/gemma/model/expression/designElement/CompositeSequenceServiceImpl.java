@@ -23,10 +23,13 @@ import java.util.Vector;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -42,6 +45,10 @@ public class CompositeSequenceServiceImpl extends
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    @Autowired
+    private ArrayDesignService arrayDesignService;    
+    
+    
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getCompositeSequenceDao().countAll();
@@ -291,6 +298,14 @@ public class CompositeSequenceServiceImpl extends
     @Override
     public CompositeSequence thaw( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().thaw( compositeSequence );
+    }
+    
+    @Override
+    public CompositeSequenceValueObject convertToValueObject( CompositeSequence compositeSequence ){
+        ArrayDesign ad = compositeSequence.getArrayDesign();
+        ArrayDesignValueObject advo = arrayDesignService.loadValueObject( ad.getId() );
+        
+        return new CompositeSequenceValueObject( compositeSequence, advo );
     }
 
 }

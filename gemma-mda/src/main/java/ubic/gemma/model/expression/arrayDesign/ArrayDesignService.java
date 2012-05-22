@@ -274,6 +274,12 @@ public interface ArrayDesignService {
      * loads the Value Objects for the Array Designs specified by the input ids.
      * </p>
      */
+    public ArrayDesignValueObject loadValueObject( Long id );
+    /**
+     * <p>
+     * loads the Value Objects for the Array Designs specified by the input ids.
+     * </p>
+     */
     public Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**

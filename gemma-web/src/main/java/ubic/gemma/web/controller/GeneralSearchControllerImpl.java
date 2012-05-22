@@ -43,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.j_spaces.obf.s;
+
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -58,12 +60,15 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -113,6 +118,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Autowired
     private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     /*
      * (non-Javadoc)
@@ -321,6 +329,79 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      *         same order as the entities.
      */
     @SuppressWarnings("unchecked")
+    private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettings settings ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection vos = null;
+        for( Class<?> entityClass : results.keySet()){
+            List<SearchResult> classSearchResults = results.get( entityClass );
+            
+            if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
+                vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( classSearchResults ), false ),
+                        settings );
+                
+                if ( !SecurityServiceImpl.isUserAdmin() ) {
+                    auditableUtil.removeTroubledEes( vos );
+                }
+                
+            } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
+                vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( classSearchResults ) ), settings );
+                
+                if ( !SecurityServiceImpl.isUserAdmin() ) {
+                    auditableUtil.removeTroubledArrayDesigns( vos );
+                }
+            } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
+                return;
+            } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
+                vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( classSearchResults ) );
+            } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
+                vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( classSearchResults ) ) );
+            } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
+                Collection<Characteristic> characs = new ArrayList<Characteristic>();
+                for(SearchResult sr : classSearchResults){
+                    // extra check
+                    if( Characteristic.class.isAssignableFrom(sr.getResultClass()) ){
+                        Characteristic ch = (Characteristic) sr.getResultObject();
+                        characs.add( ch );
+                    }
+                }
+                vos = CharacteristicValueObject.characteristic2CharacteristicVO( characs );
+                return;
+            } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
+                return;
+            } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
+                vos = geneSetService.getValueObjects( EntityUtils.getIds( classSearchResults ) );
+            } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
+                Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
+                        .load( EntityUtils.getIds( classSearchResults ) ) );
+                vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
+            } else {
+                throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
+            }
+                    // retained objects...
+        Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
+        
+        for ( Iterator<SearchResult> it = classSearchResults.iterator(); it.hasNext(); ) {
+            SearchResult sr = it.next();
+            if ( !idMap.containsKey( sr.getId() ) ) {
+                it.remove();
+                continue;
+            }
+            sr.setResultObject( idMap.get( sr.getId() ) );
+        }
+        }
+        
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
+        }
+    }
+    /**
+     * @param entityClass
+     * @param results
+     * @return ValueObjects for the entities (in some cases, this is just the entities again). They are returned in the
+     *         same order as the entities.
+     */
+    @SuppressWarnings("unchecked")
     private void fillValueObjects( Class entityClass, List<SearchResult> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -341,13 +422,30 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 auditableUtil.removeTroubledArrayDesigns( vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            return;
+            Collection<CompositeSequenceValueObject> css = new ArrayList<CompositeSequenceValueObject>();
+            for(SearchResult sr : results){
+                CompositeSequenceValueObject csvo = compositeSequenceService.convertToValueObject( (CompositeSequence) sr.getResultObject() );
+                css.add(csvo);
+            }
+            vos = css;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
             vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( results ) );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
-            return;
+            Collection<CharacteristicValueObject> cvos = new ArrayList<CharacteristicValueObject>();
+            for(SearchResult sr : results){
+                Characteristic ch = (Characteristic) sr.getResultObject();
+                cvos.add(new CharacteristicValueObject( ch ));
+            }
+            vos = cvos;
+        } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
+            Collection<CharacteristicValueObject> cvos = new ArrayList<CharacteristicValueObject>();
+            for(SearchResult sr : results){
+                CharacteristicValueObject ch = (CharacteristicValueObject) sr.getResultObject();
+                cvos.add( ch );
+            }
+            vos = cvos;
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
