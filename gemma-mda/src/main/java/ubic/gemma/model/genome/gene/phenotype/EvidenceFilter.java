@@ -18,16 +18,16 @@ package ubic.gemma.model.genome.gene.phenotype;
 public class EvidenceFilter {
 
     private String taxonCommonName = "";
-    private boolean showPublicEvidence = true;
+    private boolean showOnlyEditable = false;
 
     public EvidenceFilter() {
         super();
     }
 
-    public EvidenceFilter( String taxonCommonName, boolean showPublicEvidence ) {
+    public EvidenceFilter( String taxonCommonName, boolean showOnlyEditable ) {
         super();
         this.taxonCommonName = taxonCommonName;
-        this.showPublicEvidence = showPublicEvidence;
+        this.showOnlyEditable = showOnlyEditable;
     }
 
     public String getTaxonCommonName() {
@@ -38,12 +38,11 @@ public class EvidenceFilter {
         this.taxonCommonName = taxonCommonName;
     }
 
-    public boolean isShowPublicEvidence() {
-        return this.showPublicEvidence;
+    public boolean isShowOnlyEditable() {
+        return this.showOnlyEditable;
     }
 
-    public void setShowPublicEvidence( boolean showPublicEvidence ) {
-        this.showPublicEvidence = showPublicEvidence;
+    public void setShowOnlyEditable( boolean showOnlyEditable ) {
+        this.showOnlyEditable = showOnlyEditable;
     }
-
 }

@@ -52,7 +52,7 @@ public interface PhenotypeAssociationService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showPublicEvidence );
+            String userName, boolean isAdmin, boolean showOnlyEditable );
 
     /**
      * create a GenericExperiment

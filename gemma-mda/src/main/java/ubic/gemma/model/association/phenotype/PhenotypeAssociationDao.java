@@ -32,7 +32,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showPublicEvidence );
+            String userName, boolean isAdmin, boolean showOnlyEditable );
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();

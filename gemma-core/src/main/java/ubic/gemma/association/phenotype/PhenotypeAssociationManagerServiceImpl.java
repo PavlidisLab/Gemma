@@ -225,7 +225,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .findGeneWithPhenotypes( possibleChildrenPhenotypes,
                         this.taxonService.findByCommonName( evidenceFilter.getTaxonCommonName() ),
                         this.userManager.getCurrentUsername(), SecurityServiceImpl.isUserAdmin(),
-                        evidenceFilter.isShowPublicEvidence() );
+                        evidenceFilter.isShowOnlyEditable() );
 
         return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
@@ -251,7 +251,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
                 .findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon, this.userManager.getCurrentUsername(),
-                        SecurityServiceImpl.isUserAdmin(), true );
+                        SecurityServiceImpl.isUserAdmin(), false );
 
         return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
@@ -795,7 +795,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        if ( evidenceFilter.isShowPublicEvidence() || isAdmin ) {
+        if ( !evidenceFilter.isShowOnlyEditable() || isAdmin ) {
             // all Public phenotypes in Gemma linked to all the genes containing them
             publicPhenotypesGenesAssociations = this.associationService
                     .findPublicPhenotypesGenesAssociations( evidenceFilter.getTaxonCommonName() );
