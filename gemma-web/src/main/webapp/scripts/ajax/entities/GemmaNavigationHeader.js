@@ -75,6 +75,10 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					href: "/Gemma/expressionExperiment/showAllExpressionExperiments.html",
 					tooltip: "View the list of Gemma's expression data sets"
 				}, {
+					text: 'Browse Phenotype Associations',
+					href: "/Gemma/phenotypes.html",
+					tooltip: "View the list of Gemma's phenotype-gene associations"
+				}, {
 					text: 'Browse Array Designs',
 					href: "/Gemma/arrays/showAllArrayDesigns.html",
 					tooltip: "View the list of Gemma's expression platforms"
