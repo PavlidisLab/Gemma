@@ -56,7 +56,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				anchor += '<a target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html?pubmedID=' +
 		        	pudmedId +
 		        	'"><img ext:qtip="Go to Bibliographic Reference (in new window)" ' + 
-		        	'src="/Gemma/images/icons/magnifier.png" width="10" height="10" alt="Bibliographic Reference" /></a>';
+		        	'src="/Gemma/images/icons/magnifier.png" width="12" height="12" alt="Bibliographic Reference" /></a>';
 			}
 		    return anchor + (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
 		    	pubmedURL: pubmedUrl
@@ -373,8 +373,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							
 							case 'ExperimentalEvidenceValueObject' :
 					        	if (record.data.primaryPublicationCitationValueObject != null) {
-									linkOutHtml += generatePublicationLinks(
-										record.data.primaryPublicationCitationValueObject.pubmedAccession,
+									linkOutHtml += generatePublicationLinks(null,
 										record.data.primaryPublicationCitationValueObject.pubmedURL);
 								}
 								break;
@@ -393,7 +392,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					
 							case 'LiteratureEvidenceValueObject' : 
 					        	if (record.data.citationValueObject != null) {
-					        		linkOutHtml += generatePublicationLinks(record.data.citationValueObject.pubmedAccession,
+					        		linkOutHtml += generatePublicationLinks(null,
 					        			record.data.citationValueObject.pubmedURL);
 					        	}
 								break;
