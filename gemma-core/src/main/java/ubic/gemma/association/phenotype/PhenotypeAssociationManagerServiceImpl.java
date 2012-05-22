@@ -288,7 +288,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
 
-        EvidenceFilter evidenceFilter = new EvidenceFilter( null, true );
+        EvidenceFilter evidenceFilter = new EvidenceFilter( null, false );
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
