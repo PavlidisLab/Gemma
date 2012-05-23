@@ -103,25 +103,34 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
 		dataIndex: 'bibliographicPhenotypes',
 		width: 80,
 		renderer: function(value){
+			var maxPhenotypesToDisplay = 3;
 			var result = "";
-			for (var i = 0; i < value.length; i++) {
+			var phenotypeStrings = {};
+			for (var i = 0; i < value.length && i < maxPhenotypesToDisplay ; i++) {
 				var phenotypesValues = value[i].phenotypesValues;
-				for (var i = 0; i < phenotypesValues.length; i++) {
+				for (var j = 0; j < phenotypesValues.length && j < maxPhenotypesToDisplay ; j++) {
+					if( phenotypeStrings[phenotypesValues[j].value] == true ){
+						//already made link for this phenotype
+						continue;
+					}
+					if(result.length != 0){
+						result += ",";
+					}
 					result = result +
 					'&nbsp<a target="_blank" ext:qtip="View all associations for &quot;' +
-					phenotypesValues[i].value +
+					phenotypesValues[j].value +
 					'&quot; (' +
-					phenotypesValues[i].urlId +
+					phenotypesValues[j].urlId +
 					')" href="' + Gemma.LinkRoots.phenotypePage +
-					phenotypesValues[i].urlId +
+					phenotypesValues[j].urlId +
 					'">' +
-					phenotypesValues[i].value +
+					phenotypesValues[j].value +
 					'</a>';
+					phenotypeStrings[phenotypesValues[j].value] = true;
 				}
 			}
 			return result;
 		}
-
 	}, {
 		header: "PubMed",
 		dataIndex: 'citation',
