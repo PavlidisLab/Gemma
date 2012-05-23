@@ -83,9 +83,9 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					href: "/Gemma/arrays/showAllArrayDesigns.html",
 					tooltip: "View the list of Gemma's expression platforms"
 				}, {
-					text: 'Browse Annotated Papers',
+					text: 'Search Annotated Papers',
 					href: "/Gemma/bibRef/showAllEeBibRefs.html",
-					tooltip: "View the list of papers Gemma curators have annotated"
+					tooltip: "Search for papers the Gemma curators have annotated"
 				}],
 				listeners: {
 					mouseover: function(){

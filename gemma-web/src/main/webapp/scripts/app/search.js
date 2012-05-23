@@ -525,10 +525,10 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 										}, {
 											id: 'search-usingPhenotypes-chkbx',
 											name: "searchUsingPhenotypes",
-											boxLabel: "IN PROGRESS Search Phenotype Associations (genes)",
+											boxLabel: "Search phenotype Associations (genes)",
 											hideLabel: true,
 											checked: false,
-											disabled: true
+											disabled: false
 										}]
 									}]
 						});			

@@ -118,12 +118,12 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend( Ext.grid.GridPanel, 
 	loadMask: true,
 	autoScroll: true,
 	layout:'fit',
-	viewConfig:{
-		emptyText: 'Use search box above to find papers.',
-		deferEmptyText: false,
+	view: new Ext.ux.InitialTextGridView({
+		initialText: 'Use search boxes above to find papers.',
+		emptyText: 'No results found.',
+		deferEmptyText: true,
 		forceFit:true
-	},
-
+	}),
 	colModel: Gemma.BibliographicReference.ColumnModel,
 	store: new Gemma.BibliographicReference.SearchStore({
 		autoLoad:false
@@ -135,22 +135,24 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend( Ext.grid.GridPanel, 
 			});
 		}
 	},
-	runPubmedSearch: function( query ){
+	runPubmedSearch : function(query) {
 		if (query.length > 0) {
-			BibliographicReferenceController.loadFromPubmedID( query, 
-					{
-				callback:function(data){
-					var newRecord = new Gemma.BibliographicReference.Record(data);
-					this.getStore().removeAll();
-					this.getStore().add( newRecord );
-					this.updateTitle(1, "pubmed ID = "+query);
-					this.getSelectionModel().selectFirstRow();
-					this.enableFiltering();
-				}.createDelegate(this),
-				errorHandler:function(message) {
-					alert("No record found with pubmed ID = "+query); }
-				}
-			);
+			BibliographicReferenceController.loadFromPubmedID( query, {
+				callback : function(data) {
+					if(data !== null){
+						var newRecord = new Gemma.BibliographicReference.Record(data);
+						this.getStore().removeAll();
+						this.getStore().add(newRecord);
+						this.updateTitle(1, "pubmed ID = " + query);
+						this.getSelectionModel().selectFirstRow();
+						this.enableFiltering();
+					}else{
+						this.getStore().removeAll();
+						this.updateTitle(0, "pubmed ID = " + query);
+					}
+					
+				}.createDelegate(this)
+			});
 		}
 	},	
 	updateTitle: function(recordCount, query){

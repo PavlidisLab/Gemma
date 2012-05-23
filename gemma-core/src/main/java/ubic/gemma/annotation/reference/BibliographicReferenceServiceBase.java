@@ -121,8 +121,7 @@ public abstract class BibliographicReferenceServiceBase implements
         try {
             BibliographicReference bibref = this.handleFindByExternalId( id );
             if (bibref == null){
-                throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException( "Could not locate reference with external id=" + id
-                        + " in Gemma" );
+                return null;
             }
             BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
             this.populateBibliographicPhenotypes( bibrefVO );
