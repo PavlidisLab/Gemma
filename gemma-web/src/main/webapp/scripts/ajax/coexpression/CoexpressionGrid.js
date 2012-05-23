@@ -338,10 +338,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 									xtype : 'button',
 									icon: "/Gemma/images/icons/cross.png",
 									itemId: 'bbarClearButton',
-									handler : function(){					
-										this.currentbbarText="";
-										this.getBottomToolbar().hide();
-										this.doLayout();										
+									handler : function(){
+										this.hideBottomToolbar();																				
 									},									
 									scope : this
 								}
@@ -376,8 +374,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                                                         
                 }
                 else{                	
-                	this.getBottomToolbar().hide();
-					this.doLayout();
+                	this.hideBottomToolbar();
                 }
 				
 			}
@@ -418,8 +415,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 						
 			this.coexStringencyUpdate(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
-			this.getBottomToolbar().hide();
-    		this.doLayout();
+			this.hideBottomToolbar();
 			
 		}, this);	
 		
@@ -466,7 +462,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	
 	},
 	
-	stringencyChangeHandler: function(stringencyValue){				
+	stringencyChangeHandler: function(stringencyValue){
+		this.hideBottomToolbar();
 		this.coexpressionSearchData.coexGridCoexCommand.displayStringency = stringencyValue;		
 		this.refreshGridFromCoexpressionSearchData();		
 	},
@@ -491,6 +488,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			this.loadData(false, 2, displayData, null);
 		}
 		
+	},
+	
+	hideBottomToolbar: function(){
+		if (!this.getBottomToolbar.hidden){
+			this.currentbbarText="";
+			this.getBottomToolbar().hide();
+			this.doLayout();
+		}
 	},
 
 	getSupportingDatasetRecords : function(record, grid) {

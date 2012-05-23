@@ -42,9 +42,7 @@ Ext.Panel, {
                 icon: "/Gemma/images/icons/cross.png",
                 itemId: 'bbarClearButton',
                 handler: function () {
-                    this.currentbbarText = null;
-                    this.getBottomToolbar().hide();
-                    this.doLayout();
+                	this.hideBottomToolbar();
                 },
                 scope: this
             }],
@@ -279,9 +277,7 @@ Ext.Panel, {
     
     newSearchForLowerStringencyHandlerNoWarning: function (stringencyValue){
     	
-    	this.currentbbarText = null;
-        this.getBottomToolbar().hide();
-        this.doLayout();
+    	this.hideBottomToolbar();
 
         var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(stringencyValue);
 
@@ -301,9 +297,8 @@ Ext.Panel, {
         this.clearError();
 
         if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-            this.getBottomToolbar().setVisible(false);
-            this.doLayout();
-            this.currentbbarText = null;
+            
+        	this.hideBottomToolbar();
 
             //initialSearch for coex grid data will be at 2
             var resultsStringency = 2;
@@ -397,6 +392,15 @@ Ext.Panel, {
             });
         }
         
+        if (this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency > Gemma.MIN_STRINGENCY) {
+            var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
+            this.currentbbarText = "Display Stringency set to " + this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency + " based on number of experiments chosen.";
+            bbarText.setText(this.currentbbarText);
+        } else {
+            this.hideBottomToolbar();
+        }
+
+        
         this.searchForCytoscapeData();
         
     	}
@@ -413,6 +417,14 @@ Ext.Panel, {
             Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
         }
     },
+    
+    hideBottomToolbar: function(){
+		if (!this.getBottomToolbar.hidden){
+			this.currentbbarText="";
+			this.getBottomToolbar().hide();
+			this.doLayout();
+		}
+	},
 
     showUserMessageBar: function (displayInfo) {
         var bbarText = this.getBottomToolbar().getComponent('bbarStatus');

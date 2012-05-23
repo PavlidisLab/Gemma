@@ -15,7 +15,7 @@ Gemma.CoexpressionSearchData =  Ext.extend(Ext.util.Observable, {
 		initComponent: function(){
 			Gemma.CoexpressionSearchData.superclass.initComponent.call(this);
 			
-			this.addEvents('searchForCoexGridDataComplete', 'searchForCytoscapeDataComplete');
+			this.addEvents('searchForCoexGridDataComplete', 'searchForCytoscapeDataComplete','searchErrorFromCoexpressionSearchData');
 		},
 		
 		constructor: function(configs){
