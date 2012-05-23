@@ -62,7 +62,7 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
 	columns: [{
 		header: "Authors",
 		dataIndex: 'authorList',
-		width: 215
+		width: 175
 	}, {
 		header: "Title",
 		dataIndex: 'title',
@@ -94,6 +94,30 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
 				'">' +
 				value[i].shortName +
 				'</a>';
+			}
+			return result;
+		}
+
+	}, {
+		header: "Phenotypes",
+		dataIndex: 'bibliographicPhenotypes',
+		width: 80,
+		renderer: function(value){
+			var result = "";
+			for (var i = 0; i < value.length; i++) {
+				var phenotypesValues = value[i].phenotypesValues;
+				for (var i = 0; i < phenotypesValues.length; i++) {
+					result = result +
+					'&nbsp<a target="_blank" ext:qtip="View all associations for &quot;' +
+					phenotypesValues[i].value +
+					'&quot; (' +
+					phenotypesValues[i].urlId +
+					')" href="' + Gemma.LinkRoots.phenotypePage +
+					phenotypesValues[i].urlId +
+					'">' +
+					phenotypesValues[i].value +
+					'</a>';
+				}
 			}
 			return result;
 		}
