@@ -579,7 +579,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
-            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", "accession" );
+            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", accession );
             if ( genes.size() == 0 ) {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );

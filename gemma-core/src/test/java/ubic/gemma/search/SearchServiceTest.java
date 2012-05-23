@@ -28,15 +28,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -46,6 +49,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/20655";
+    private static final String GENE_NCBI = "20655";
 
     private static final String SPINAL_CORD = "http://purl.org/obo/owl/FMA#FMA_7647";
 
@@ -59,12 +63,16 @@ public class SearchServiceTest extends BaseSpringContextTest {
     ExpressionExperimentService eeService;
 
     @Autowired
+    GeneService geneService;
+
+    @Autowired
     SearchService searchService;
 
     @Autowired
     OntologyService ontologyService;
 
     private ExpressionExperiment ee;
+    private Gene gene;
     private VocabCharacteristic eeCharSpinalCord;
     private VocabCharacteristic eeCharGeneURI;
     private VocabCharacteristic eeCharCortexURI;
@@ -116,12 +124,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( GENE_URI );
-        settings.setSearchExperiments( true );
+        settings.setSearchGenes( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
+        for ( SearchResult sr : found.get( Gene.class ) ) {
+            if ( sr.getResultObject().equals( gene ) ) {
                 return;
             }
         }
@@ -205,7 +213,17 @@ public class SearchServiceTest extends BaseSpringContextTest {
         chars.add( eeCharCortexURI );
         ee.setCharacteristics( chars );
         eeService.update( ee );
+        
+        gene = this.getTestPeristentGene();
+        gene.setNcbiId( GENE_NCBI );
+        gene.setNcbiGeneId( new Integer( GENE_NCBI ) );
+        geneService.update( gene );
 
     }
 
+    @After
+    public void tearDown() throws Exception {
+        geneService.remove( gene );
+        eeService.delete( ee );
+    }
 }
