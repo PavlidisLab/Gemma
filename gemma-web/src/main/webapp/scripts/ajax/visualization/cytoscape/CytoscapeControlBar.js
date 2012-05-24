@@ -98,7 +98,21 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 fieldLabel: 'Stringency ',
                 value: 2,
                 width: 60,
-                enableKeyEvents: true
+                enableKeyEvents: true,
+                listeners : {
+					"keyup" : {
+						fn : function(){
+							
+							var spinnerValue = this.getComponent('stringencySpinner').getValue();
+							
+							if (Ext.isNumber(spinnerValue) && spinnerValue>1){							
+								this.display.stringencyChange(spinnerValue);
+							}
+						},
+						scope : this,																											
+						delay : 500													
+					}
+				}
 
             }, {
                 xtype: 'label',

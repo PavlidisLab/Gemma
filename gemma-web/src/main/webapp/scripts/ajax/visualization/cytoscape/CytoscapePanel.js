@@ -309,10 +309,16 @@ Ext.Panel, {
                       
             Ext.apply(this.coexpressionSearchData.coexGridCoexCommand, {
                 stringency: resultsStringency,
-                displayStringency: this.display.getStringency(),
+                displayStringency: this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
                 geneIds: selectedNodesGeneIdArray,
                 queryGenesOnly: false
             });
+            
+            Ext.apply(
+                    this.coexpressionSearchData.cytoscapeCoexCommand, {
+                        stringency: Gemma.CytoscapePanelUtil.restrictResultsStringency(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency),                                  
+                        queryGenesOnly: true
+                    });  
             
             this.coexpressionSearchData.searchForCoexGridDataAndCytoscapeData();            
 
@@ -399,7 +405,9 @@ Ext.Panel, {
         } else {
             this.hideBottomToolbar();
         }
-
+        
+        //in case a user typed an invalid string into the spinner box
+        this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
         
         this.searchForCytoscapeData();
         

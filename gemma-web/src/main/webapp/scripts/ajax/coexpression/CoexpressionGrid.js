@@ -249,7 +249,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	fieldLabel: 'Stringency ',
 						                	value: this.coexpressionSearchData.coexGridCoexCommand.displayStringency,
 						                	width: 60,
-						                	enableKeyEvents : true
+						                	enableKeyEvents : true,
+						                	listeners : {
+												"keyup" : {
+													fn : this.stringencyChange.createDelegate(this),
+													scope : this,																											
+													delay : 500													
+												}
+											}
 
 						            		},
 						                    {
@@ -442,13 +449,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	//called from CoexpressionGrid toolbar
 	stringencyChange: function(){
 		
-		this.stringencyChangeHandler(this.getTopToolbar().getComponent('stringencySpinner').getValue());
+		var spinnerValue = this.getTopToolbar().getComponent('stringencySpinner').getValue()
+		
+		if (Ext.isNumber(spinnerValue) && spinnerValue>1){
+		
+		this.stringencyChangeHandler(spinnerValue);
 		
         if (this.tabPanelViewFlag){
         	
         	this.fireEvent('stringencyUpdateFromCoexGrid');
         	
         }
+        
+		}
 	},
 	
 	//called when 'stringencyUpdateFromCoexpressionViz' or 'searchForCoexGridDataComplete' events occur

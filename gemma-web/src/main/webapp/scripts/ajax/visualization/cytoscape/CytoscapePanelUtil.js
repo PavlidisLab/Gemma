@@ -112,10 +112,14 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (coexpre
     }
 
     var kglength = coexpressionSearchData.coexGridResults.knownGeneResults.length;
+    
+    //this needs to take in account the stringency of the forthcoming cytoscape query so that nodes that are connected at lower stringency to the query gene are not included
 //only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
     for (i = 0; i < kglength; i++) {
         if (coexpressionSearchData.cytoscapeCoexCommand.geneIds.indexOf(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id) === -1 
-        		&& queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id]< resultsPerQueryGene)  {
+        		&& queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id]< resultsPerQueryGene
+        		&& (coexpressionSearchData.coexGridResults.knownGeneResults[i].posSupp >= coexpressionSearchData.cytoscapeCoexCommand.stringency 
+        				|| coexpressionSearchData.coexGridResults.knownGeneResults[i].negSupp >= coexpressionSearchData.cytoscapeCoexCommand.stringency))  {
             coexpressionSearchData.cytoscapeCoexCommand.geneIds.push(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id);
             queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] = queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] + 1;
         }
