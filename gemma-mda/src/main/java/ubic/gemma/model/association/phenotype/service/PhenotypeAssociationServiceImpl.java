@@ -69,9 +69,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find Genes link to a phenotype */
     @Override
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showOnlyEditable ) {
-        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon, userName, isAdmin,
-                showOnlyEditable );
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable ) {
+        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon, userName, groups,
+                isAdmin, showOnlyEditable );
     }
 
     /** find all phenotypes */
@@ -164,28 +164,23 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
     }
 
-    /** find all public phenotypes associated with genes */
-    @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName ) {
-        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxonCommonName );
-    }
-
     /** find all phenotypes associated with genes for a user */
     @Override
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
-            String taxonCommonName ) {
-        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( userName, taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
+            boolean showOnlyEditable, String userName, Collection<String> groups ) {
+        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, showOnlyEditable, userName,
+                groups );
     }
 
     /** find all phenotypes associated with genes */
     @Override
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName ) {
-        return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations( taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( Taxon taxon ) {
+        return this.phenotypeAssociationDao.findAllPhenotypesGenesAssociations( taxon );
     }
 
     @Override
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri ) {
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri ) {
         return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri );
     }
 }

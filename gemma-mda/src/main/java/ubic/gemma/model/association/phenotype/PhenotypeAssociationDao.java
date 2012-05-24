@@ -32,7 +32,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable );
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
@@ -52,17 +52,14 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all evidences from a specific external database */
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
 
-    /** find all public phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName );
-
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri );
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri );
 
     /** find all phenotypes associated with genes for a user */
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
-            String taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
+            boolean showOnlyEditable, String userName, Collection<String> groups );
 
     /** find all phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( Taxon taxon );
 
 }

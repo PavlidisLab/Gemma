@@ -50,9 +50,8 @@ public interface PhenotypeAssociationService {
      * 
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable );
 
     /**
      * create a GenericExperiment
@@ -101,7 +100,6 @@ public interface PhenotypeAssociationService {
     public void update( PhenotypeAssociation evidence );
 
     /** load all valueURI of Phenotype in the database */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Set<String> loadAllPhenotypesUri();
 
     /** find PhenotypeAssociations associated with a BibliographicReference */
@@ -123,17 +121,14 @@ public interface PhenotypeAssociationService {
     @Secured({ "GROUP_ADMIN" })
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
 
-    /** find all public phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName );
-
     /** find all phenotypes associated with genes for a user */
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
-            String taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
+            boolean showOnlyEditable, String userName, Collection<String> groups );
 
     /** find all phenotypes associated with genes */
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName );
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( Taxon taxon );
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxon, Set<String> valuesUri );
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri );
 
 }

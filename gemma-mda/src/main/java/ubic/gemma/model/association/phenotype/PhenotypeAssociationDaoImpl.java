@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,10 +34,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.AbstractDao;
-import java.math.BigInteger;
 
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
+
+    private final static String TYPE_OF_EVIDENCE_SQL = "and acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
@@ -44,91 +46,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /** find Genes link to a phenotype taking into account private and public evidence direct sql query to make it fast */
-    @Override
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, boolean isAdmin, boolean showOnlyEditable ) {
-
-        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
-        String sqlQuery = "SELECT distinct CHROMOSOME_FEATURE.ID,CHROMOSOME_FEATURE.NCBI_GENE_ID,CHROMOSOME_FEATURE.OFFICIAL_NAME,CHROMOSOME_FEATURE.OFFICIAL_SYMBOL,TAXON.COMMON_NAME,CHARACTERISTIC.VALUE_URI FROM PHENOTYPE_ASSOCIATION join CHARACTERISTIC on PHENOTYPE_ASSOCIATION.ID=CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.ID=CHROMOSOME_FEATURE.TAXON_FK ";
-
-        if ( phenotypesValueUri.isEmpty() ) {
-            return genesWithPhenotypes.values();
-        }
-        // not checking security
-        if ( isAdmin ) {
-            sqlQuery += "where CHARACTERISTIC.VALUE_URI in (";
-
-        }
-        // check the private evidences the user can see + public
-        else {
-            sqlQuery += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where ";
-
-            if ( showOnlyEditable ) {
-                sqlQuery += "acl_sid.sid='" + userName + "' ";
-            } else {
-                sqlQuery += "((acl_entry.sid=4 and mask=1) or acl_sid.sid='" + userName + "') ";
-            }
-
-            sqlQuery += "and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and CHARACTERISTIC.VALUE_URI in (";
-        }
-
-        // add the condition for valuesUri
-        for ( String phenotype : phenotypesValueUri ) {
-            sqlQuery += "'" + phenotype + "',";
-        }
-
-        sqlQuery = sqlQuery.substring( 0, sqlQuery.length() - 1 ) + ")";
-
-        if ( taxon != null && taxon.getId() != null ) {
-            sqlQuery += " and TAXON.ID=" + taxon.getId();
-        }
-
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            Integer nbciGeneId = ( Integer ) results.get( 1 );
-            String officialName = ( String ) results.get( 2 );
-            String officialSymbol = ( String ) results.get( 3 );
-            String taxonCommonName = ( String ) results.get( 4 );
-            String valueUri = ( String ) results.get( 5 );
-
-            if ( genesWithPhenotypes.get( geneId ) != null ) {
-                genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
-            } else {
-                GeneEvidenceValueObject g = new GeneEvidenceValueObject();
-                g.setId( geneId );
-                g.setNcbiId( nbciGeneId );
-                g.setOfficialName( officialName );
-                g.setOfficialSymbol( officialSymbol );
-                g.setTaxonCommonName( taxonCommonName );
-                g.getPhenotypesValueUri().add( valueUri );
-                genesWithPhenotypes.put( geneId, g );
-            }
-        }
-        results.close();
-
-        return genesWithPhenotypes.values();
-    }
-
     /** load all valueURI of Phenotype in the database */
     @Override
     public Set<String> loadAllPhenotypesUri() {
         Set<String> phenotypesURI = new HashSet<String>();
 
-        // TODO make hsql query
         String queryString = "select value_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
-
-            String valueUri = ( String ) results.get( 0 );
-
-            phenotypesURI.add( valueUri );
+            phenotypesURI.add( ( String ) results.get( 0 ) );
         }
         results.close();
 
@@ -226,132 +154,185 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
     }
 
-    /** find all public phenotypes associated with genes */
+    /** find all phenotypes associated with genes, doesnt take into account security */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName ) {
+    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( Taxon taxon ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl')";
+        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
 
-        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
-            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
-        }
+        sqlQuery += addTaxonToQuery( "where", taxon );
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            Integer geneNcbiId = ( Integer ) results.get( 0 );
-            String valueUri = ( String ) results.get( 1 );
-
-            if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
-                phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
-            } else {
-                HashSet<Integer> genesNCBI = new HashSet<Integer>();
-                genesNCBI.add( geneNcbiId );
-                phenotypesGenesAssociations.put( valueUri, genesNCBI );
-            }
-        }
-        results.close();
-
-        return phenotypesGenesAssociations;
-    }
-
-    /** find all phenotypes associated with genes for a user */
-    @Override
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( String userName,
-            String taxonCommonName ) {
-
-        HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
-
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join acl_sid on acl_sid.id=acl_object_identity.owner_sid where mask=1 and acl_sid.sid='"
-                + userName
-                + "'and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl')";
-
-        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
-            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
-        }
-
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            Integer geneNcbiId = ( Integer ) results.get( 0 );
-            String valueUri = ( String ) results.get( 1 );
-
-            if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
-                phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
-            } else {
-                HashSet<Integer> genesNCBI = new HashSet<Integer>();
-                genesNCBI.add( geneNcbiId );
-                phenotypesGenesAssociations.put( valueUri, genesNCBI );
-            }
-        }
-        results.close();
-
-        return phenotypesGenesAssociations;
-    }
-
-    /** find all phenotypes associated with genes */
-    @Override
-    public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( String taxonCommonName ) {
-
-        HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
-
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID,CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK";
-
-        if ( taxonCommonName != null && !taxonCommonName.equals( "" ) ) {
-            queryString += " AND TAXON.COMMON_NAME='" + taxonCommonName + "'";
-        }
-
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            Integer geneNcbiId = ( Integer ) results.get( 0 );
-            String valueUri = ( String ) results.get( 1 );
-
-            if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
-                phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
-            } else {
-                HashSet<Integer> genesNCBI = new HashSet<Integer>();
-                genesNCBI.add( geneNcbiId );
-                phenotypesGenesAssociations.put( valueUri, genesNCBI );
-            }
-        }
-        results.close();
+        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;
     }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( String taxonCommonName,
-            Set<String> valuesUri ) {
+    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        String queryString = "SELECT CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI FROM CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK=PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id=PHENOTYPE_ASSOCIATION.GENE_FK  join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id=acl_object_identity.object_id_class join TAXON on TAXON.id=CHROMOSOME_FEATURE.TAXON_FK where sid=4 and mask=1 and acl_class.class in ('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and TAXON.COMMON_name='"
-                + taxonCommonName + "'";
+        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
 
-        String queryStringValuesUri = "";
+        // rule to find public
+        sqlQuery += "where acl_entry.mask = 1 and acl_entry.sid = 4 ";
+        sqlQuery += TYPE_OF_EVIDENCE_SQL;
+        sqlQuery += addTaxonToQuery( "and", taxon );
+        sqlQuery += addValuesUriToQuery( "and", valuesUri );
 
-        if ( !valuesUri.isEmpty() ) {
+        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
-            queryStringValuesUri = " AND CHARACTERISTIC.VALUE_URI in('";
+        return phenotypesGenesAssociations;
+    }
 
-            for ( String value : valuesUri ) {
-                queryStringValuesUri = queryStringValuesUri + value + "','";
-            }
+    /** find all phenotypes associated with genes for a user */
+    @Override
+    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
+            boolean showOnlyEditable, String userName, Collection<String> groups ) {
 
-            queryStringValuesUri = queryStringValuesUri.substring( 0, queryStringValuesUri.length() - 2 ) + ")";
+        HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+
+        findPhenotypesGenesAssociationsOwnedByUser( userName, taxon, phenotypesGenesAssociations );
+
+        if ( groups != null && !groups.isEmpty() ) {
+            findPhenotypesGenesAssociationsSharedToUser( groups, taxon, showOnlyEditable, phenotypesGenesAssociations );
+        }
+        return phenotypesGenesAssociations;
+    }
+
+    /**
+     * find Genes link to a phenotype taking into account private and public evidence Here on the case : 1- Admin 2-
+     * user not logged in 3- user logged in only showing what he has read acces 4- user logged in only showing what he
+     * has write acces
+     */
+    @Override
+    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable ) {
+
+        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
+
+        if ( phenotypesValueUri.isEmpty() ) {
+            return genesWithPhenotypes.values();
         }
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString + queryStringValuesUri );
+        String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, TAXON.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
+
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery();
+
+        sqlQuery += addValuesUriToQuery( "where", phenotypesValueUri );
+
+        // admin can see all there is no specific condition on security
+
+        // not log on
+        if ( userName == null || userName.equals( "" ) ) {
+            // show public only
+            sqlQuery += "and acl_entry.sid = 4 and mask = 1 ";
+        }
+        // logging user
+        else if ( !isAdmin ) {
+
+            if ( showOnlyEditable ) {
+                // only show what is owned by the user + group shared write permission
+                sqlQuery += "and acl_sid.sid = '" + userName + "' ";
+            } else {
+                // show public + owned
+                sqlQuery += " and ((acl_entry.sid = 4 and mask = 1) or acl_sid.sid='" + userName + "') ";
+            }
+
+            if ( groups != null && !groups.isEmpty() ) {
+                // find the evidence the user has group permission, genesWithPhenotypes will be populate
+                findPhenotypesGenesAssociationsSharedToUser( sqlSelectQuery, groups, taxon, showOnlyEditable,
+                        genesWithPhenotypes );
+            }
+        }
+
+        sqlQuery += addTaxonToQuery( "and", taxon );
+        sqlQuery += TYPE_OF_EVIDENCE_SQL;
+
+        populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
+
+        return genesWithPhenotypes.values();
+    }
+
+    private void findPhenotypesGenesAssociationsOwnedByUser( String userName, Taxon taxon,
+            HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+
+        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += "where acl_sid.sid = '" + userName + "' ";
+        sqlQuery += TYPE_OF_EVIDENCE_SQL;
+        sqlQuery += addTaxonToQuery( "and", taxon );
+
+        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
+    }
+
+    private void findPhenotypesGenesAssociationsSharedToUser( Collection<String> groups, Taxon taxon,
+            boolean showOnlyEditable, HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+
+        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
+        sqlQuery += buildQueryPhenotypesAssoSharedToUser( showOnlyEditable, taxon, groups );
+
+        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
+    }
+
+    private void findPhenotypesGenesAssociationsSharedToUser( String sqlSelectQuery, Collection<String> groups,
+            Taxon taxon, boolean showOnlyEditable, HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
+
+        String sqlQuery = sqlSelectQuery;
+        sqlQuery += buildQueryPhenotypesAssoSharedToUser( showOnlyEditable, taxon, groups );
+
+        populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
+    }
+
+    private String buildQueryPhenotypesAssoSharedToUser( boolean showOnlyEditable, Taxon taxon,
+            Collection<String> groups ) {
+
+        String sqlQuery = getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += "join GROUP_AUTHORITY on acl_sid.sid = CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
+        sqlQuery += "join USER_GROUP on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
+
+        if ( showOnlyEditable ) {
+            // write acces
+            sqlQuery += "where acl_entry.mask = 2 ";
+        } else {
+            // read acces
+            sqlQuery += "where acl_entry.mask = 1 ";
+        }
+
+        sqlQuery += TYPE_OF_EVIDENCE_SQL;
+
+        sqlQuery += addTaxonToQuery( "and", taxon );
+
+        sqlQuery += addGroupsToQuery( "and", groups );
+
+        return sqlQuery;
+    }
+
+    private String getPhenotypesGenesAssociationsBeginQuery() {
+        String queryString = "";
+
+        queryString += "from CHARACTERISTIC ";
+        queryString += "join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID ";
+        queryString += "join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK ";
+        queryString += "join TAXON on TAXON.id = CHROMOSOME_FEATURE.TAXON_FK ";
+        queryString += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity ";
+        queryString += "join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id ";
+        queryString += "join acl_class on acl_class.id = acl_object_identity.object_id_class ";
+        queryString += "join acl_sid on acl_sid.id = acl_entry.sid ";
+
+        return queryString;
+    }
+
+    /** execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes */
+    private void populateGenesAssociations( String sqlQuery,
+            HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -368,7 +349,76 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
         }
         results.close();
+    }
 
-        return phenotypesGenesAssociations;
+    private String addTaxonToQuery( String keyWord, Taxon taxon ) {
+        String taxonSqlQuery = "";
+
+        if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0 ) ) {
+            taxonSqlQuery = keyWord + " TAXON.id = " + taxon.getId() + " ";
+        }
+        return taxonSqlQuery;
+    }
+
+    private String addValuesUriToQuery( String keyWord, Set<String> valuesUri ) {
+
+        String query = "";
+
+        if ( valuesUri != null && !valuesUri.isEmpty() ) {
+            query = keyWord + " CHARACTERISTIC.VALUE_URI in(";
+
+            for ( String value : valuesUri ) {
+                query += "'" + value + "',";
+            }
+            query = query.substring( 0, query.length() - 1 ) + ") ";
+        }
+        return query;
+    }
+
+    private String addGroupsToQuery( String keyWord, Collection<String> groups ) {
+
+        String query = "";
+
+        if ( groups != null && !groups.isEmpty() ) {
+            query = keyWord + " USER_GROUP.name in (";
+
+            for ( String group : groups ) {
+                query += "'" + group + "',";
+            }
+            query = query.substring( 0, query.length() - 1 ) + ") ";
+        }
+        return query;
+    }
+
+    /** execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes */
+    private void populateGenesWithPhenotypes( String sqlQuery,
+            HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+
+            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+            Integer nbciGeneId = ( Integer ) results.get( 1 );
+            String officialName = ( String ) results.get( 2 );
+            String officialSymbol = ( String ) results.get( 3 );
+            String taxonCommonName = ( String ) results.get( 4 );
+            String valueUri = ( String ) results.get( 5 );
+
+            if ( genesWithPhenotypes.get( geneId ) != null ) {
+                genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
+            } else {
+                GeneEvidenceValueObject g = new GeneEvidenceValueObject();
+                g.setId( geneId );
+                g.setNcbiId( nbciGeneId );
+                g.setOfficialName( officialName );
+                g.setOfficialSymbol( officialSymbol );
+                g.setTaxonCommonName( taxonCommonName );
+                g.getPhenotypesValueUri().add( valueUri );
+                genesWithPhenotypes.put( geneId, g );
+            }
+        }
+        results.close();
     }
 }
