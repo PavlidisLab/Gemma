@@ -272,6 +272,11 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 						} else {
 							Ext.getCmp('search-papers-chkbx').setValue(false);
 						}
+						if (params.scope.indexOf('H') > -1) {
+							Ext.getCmp('search-forPhenotypes-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-forPhenotypes-chkbx').setValue(false);
+						}
 					}
 				} else {
 					return false;

@@ -318,8 +318,9 @@ h2.helpstep,h3.helpstep {
 
 /* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
 .x-panel-collapsed-text {
+	/* see .front-page-header-text
 	color: #15428B;
-	font: bold 11px tahoma, arial, verdana, sans-serif;
+	font: bold 11px tahoma, arial, verdana, sans-serif;*/
 	padding: 5px 3px 4px 5px;
 	float: right;
 	line-height: 13px;
@@ -327,6 +328,11 @@ h2.helpstep,h3.helpstep {
 
 .blue-text-not-link{
 	color:#15428B;
+}
+
+.front-page-header-text{
+	color:#15428B;
+	font: 18px tahoma,arial,verdana,sans-serif;
 }
 
 /* reduced font size elements */

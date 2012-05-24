@@ -13,7 +13,7 @@ Ext.ux.CollapsedPanelTitlePlugin = function() {
 										if (ct.layout[r].collapsedEl) {
 											p.collapsedTitleEl = ct.layout[r].collapsedEl.createChild({
 														tag : 'span',
-														cls : 'x-panel-collapsed-text',
+														cls : 'x-panel-collapsed-text front-page-header-text',
 														html : p.collapsedTitle
 													});
 										}
@@ -24,7 +24,7 @@ Ext.ux.CollapsedPanelTitlePlugin = function() {
 										if (ct.layout[r].collapsedEl && !p.collapsedTitleEl) {
 											p.collapsedTitleEl = ct.layout[r].collapsedEl.createChild({
 														tag : 'span',
-														cls : 'x-panel-collapsed-text',
+														cls : 'x-panel-collapsed-text front-page-header-text',
 														html : p.collapsedTitle
 													});
 										}

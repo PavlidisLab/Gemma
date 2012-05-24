@@ -20,6 +20,7 @@
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
+	<jwr:script src='/scripts/app/generalSearchSimple.js' />
 </head>
 
 
@@ -46,7 +47,10 @@ Ext.onReady(function() {
 			dismissDelay : 0,
 			hideDelay : 0
 		});*/
-	});
+
+	var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
+	generalSearchPanel.render("generalSearchSimple-div");
+});
 </script>
 
 
@@ -56,6 +60,7 @@ Ext.onReady(function() {
 <div style="padding-left:0px">
 <div align="center">
 
+	<div style="width: 900px; padding-bottom:20px" id="generalSearchSimple-div"></div>
 	
 	<div style="width: 900px">
 		<div align="center">
@@ -71,7 +76,7 @@ Ext.onReady(function() {
 
 	<div id="meta-heatmap-div" align="left"></div>
 
-	<div style="width: 900px">
+	<!-- div style="width: 900px">
 		<br>
 
 		<table id="frontPageContent" align="left" style="text-align: left">
@@ -86,13 +91,13 @@ Ext.onReady(function() {
 								@GemmaSoftware</a>
 							<script src="http://platform.twitter.com/widgets.js"
 								type="text/javascript">
-</script>
+							</script>
 
 						</p>
 					</div>
 			</tr>
 		</table>
-	</div>
+	</div-->
 </div>
 <div id="footer" class="clearfix">
 	<jsp:include page="/common/footerLight.jsp" />
