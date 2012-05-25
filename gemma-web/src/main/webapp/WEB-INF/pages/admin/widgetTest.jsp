@@ -13,19 +13,17 @@
 
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
-		 /*
-		var k = new Gemma.ExpressionExperimentPage( {
+
+		
+		var k = new Gemma.DatasetGroupCombo( {
+			renderTo : 'eesetcombo'
+		});
+		
+		 
+		/*var k = new Gemma.ExpressionExperimentPage( {
 			renderTo : 'eepage',
 			eeId: '2763'
 		});*/
-		var k = new Gemma.GenePage( {
-			renderTo : 'eepage',
-			geneId: '57347' // for testing
-		});
-		/*
-		k = new Gemma.DatasetGroupCombo( {
-			renderTo : 'eesetcombo'
-		});
 
 		k = new Gemma.DatasetGroupComboPanel( {
 			renderTo : 'eesetpanel'
