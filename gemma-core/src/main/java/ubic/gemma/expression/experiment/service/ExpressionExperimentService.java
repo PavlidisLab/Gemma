@@ -193,7 +193,7 @@ public interface ExpressionExperimentService {
      * @param shortName
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ExpressionExperiment findByShortName( java.lang.String shortName );
 
     /**
