@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeServiceBase {
 
+    @Override
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         return this.getChromosomeDao().find( name, taxon );
     }
@@ -37,8 +38,7 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
      * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
      */
     @Override
-    protected ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon )
-            throws java.lang.Exception {
+    protected ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon ) {
         return this.getChromosomeDao().findOrCreate( name, taxon );
 
     }

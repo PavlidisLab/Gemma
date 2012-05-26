@@ -124,6 +124,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         return create( bioAssayDimension );
     }
 
+    @Override
     public Collection<? extends BioAssayDimension> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids",
                 ids );
@@ -135,11 +136,13 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#thaw(ubic.gemma.model.expression.bioAssayData.
      * BioAssayDimension)
      */
+    @Override
     public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension );
@@ -162,11 +165,13 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         return bioAssayDimension;
     }
     
+    @Override
     public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension );

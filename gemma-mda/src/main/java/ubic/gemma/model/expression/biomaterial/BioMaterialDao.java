@@ -47,6 +47,12 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
     public BioMaterial find( BioMaterial bioMaterial );
 
     /**
+     * @param experiment
+     * @return
+     */
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    /**
      * @param fv
      * @return
      */
@@ -69,6 +75,7 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      * @param ids
      * @return
      */
+    @Override
     public Collection<BioMaterial> load( Collection<Long> ids );
 
     /**
@@ -89,11 +96,5 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      * @return
      */
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
-
-    /**
-     * @param experiment
-     * @return
-     */
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
 }

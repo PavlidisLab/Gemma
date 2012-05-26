@@ -36,6 +36,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
@@ -50,6 +51,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -63,6 +65,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#create(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.BioMaterial create(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
@@ -77,6 +80,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.BioMaterial findOrCreate(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
@@ -91,6 +95,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.BioMaterial load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -104,6 +109,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
+    @Override
     public java.util.Collection<BioMaterial> loadAll() {
         try {
             return this.handleLoadAll();
@@ -117,6 +123,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadMultiple(java.util.Collection)
      */
+    @Override
     public java.util.Collection<BioMaterial> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -130,6 +137,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public void remove( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
             this.handleRemove( bioMaterial );
@@ -150,6 +158,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#update(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public void update( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
             this.handleUpdate( bioMaterial );

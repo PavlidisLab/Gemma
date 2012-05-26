@@ -34,12 +34,14 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#create(int, Collection)
      */
+    @Override
     public Collection<? extends Chromosome> create( final Collection<? extends Chromosome> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Chromosome.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Chromosome> entityIterator = entities.iterator(); entityIterator
@@ -55,6 +57,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#create(int transform, ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     public Chromosome create( final ubic.gemma.model.genome.Chromosome chromosome ) {
         if ( chromosome == null ) {
             throw new IllegalArgumentException( "Chromosome.create - 'chromosome' can not be null" );
@@ -66,6 +69,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#load(int, java.lang.Long)
      */
+    @Override
     public Chromosome load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Chromosome.load - 'id' can not be null" );
@@ -77,10 +81,12 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#loadAll(int)
      */
+    @Override
     public Collection<? extends Chromosome> loadAll() {
         return this.getHibernateTemplate().loadAll( ubic.gemma.model.genome.ChromosomeImpl.class );
     }
 
+    @Override
     public Collection<Chromosome> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ChromosomeImpl where id in (:ids)", "ids", ids );
     }
@@ -88,6 +94,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Chromosome.remove - 'id' can not be null" );
@@ -101,6 +108,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#remove(Collection)
      */
+    @Override
     public void remove( Collection<? extends Chromosome> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Chromosome.remove - 'entities' can not be null" );
@@ -111,6 +119,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#remove(ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.Chromosome chromosome ) {
         if ( chromosome == null ) {
             throw new IllegalArgumentException( "Chromosome.remove - 'chromosome' can not be null" );
@@ -121,12 +130,14 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#update(Collection)
      */
+    @Override
     public void update( final Collection<? extends Chromosome> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Chromosome.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Chromosome> entityIterator = entities.iterator(); entityIterator
@@ -141,6 +152,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#update(ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     public void update( ubic.gemma.model.genome.Chromosome chromosome ) {
         if ( chromosome == null ) {
             throw new IllegalArgumentException( "Chromosome.update - 'chromosome' can not be null" );

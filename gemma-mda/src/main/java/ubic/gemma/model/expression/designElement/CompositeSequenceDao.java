@@ -63,26 +63,6 @@ public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
     public java.util.Collection<CompositeSequence> findByName( java.lang.String name );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<CompositeSequence> findByName( String queryString, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String)}.
-     * </p>
-     */
-    public CompositeSequence findByName( String queryString,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.String name );
-
-    /**
      * 
      */
     public CompositeSequence findByName( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,

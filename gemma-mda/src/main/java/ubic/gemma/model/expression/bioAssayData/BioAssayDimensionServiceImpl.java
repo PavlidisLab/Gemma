@@ -35,10 +35,12 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#thaw(ubic.gemma.model.expression.bioAssayData
      * .BioAssayDimension)
      */
+    @Override
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
     }
     
+    @Override
     public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thawLite( bioAssayDimension );
     }

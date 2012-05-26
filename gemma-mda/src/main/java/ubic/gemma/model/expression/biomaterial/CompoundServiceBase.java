@@ -36,6 +36,7 @@ public abstract class CompoundServiceBase implements ubic.gemma.model.expression
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.Compound find(
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         try {
@@ -50,6 +51,7 @@ public abstract class CompoundServiceBase implements ubic.gemma.model.expression
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#findOrCreate(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         try {
@@ -64,6 +66,7 @@ public abstract class CompoundServiceBase implements ubic.gemma.model.expression
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#remove(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     public void remove( final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         try {
             this.handleRemove( compound );
@@ -84,6 +87,7 @@ public abstract class CompoundServiceBase implements ubic.gemma.model.expression
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
      */
+    @Override
     public void update( final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         try {
             this.handleUpdate( compound );

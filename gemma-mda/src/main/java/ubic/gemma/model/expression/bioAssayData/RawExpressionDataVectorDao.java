@@ -21,6 +21,12 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
     /**
+     * @param bioAssayDimension
+     * @return
+     */
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
+
+    /**
      * 
      */
     public java.util.Collection<RawExpressionDataVector> find( java.util.Collection<QuantitationType> quantitationTypes );
@@ -59,10 +65,4 @@ public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<R
      */
     public void removeDataForQuantitationType(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * @param bioAssayDimension
-     * @return
-     */
-    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
 }

@@ -39,6 +39,7 @@ public class PhysicalLocationServiceImpl implements PhysicalLocationService {
         this.physicalLocationDao = physicalLocationDao;
     }
 
+    @Override
     public void thaw( PhysicalLocation physicalLocation ) {
         this.getPhysicalLocationDao().thaw( physicalLocation );
 

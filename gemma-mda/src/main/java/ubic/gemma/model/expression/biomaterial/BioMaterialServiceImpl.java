@@ -37,8 +37,14 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
      * )
      */
+    @Override
     public boolean exists( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().find( bioMaterial ) != null;
+    }
+
+    @Override
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
+        return this.getBioMaterialDao().findByExperiment( experiment );
     }
 
     @Override
@@ -46,6 +52,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return this.getBioMaterialDao().findByFactorValue( fv );
     }
 
+    @Override
     public ExpressionExperiment getExpressionExperiment( Long id ) {
         return this.getBioMaterialDao().getExpressionExperiment( id );
     }
@@ -57,6 +64,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial
      * )
      */
+    @Override
     public void thaw( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().thaw( bioMaterial );
     }
@@ -159,10 +167,5 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
-    }
-
-    @Override
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
-        return this.getBioMaterialDao().findByExperiment( experiment );
     }
 }

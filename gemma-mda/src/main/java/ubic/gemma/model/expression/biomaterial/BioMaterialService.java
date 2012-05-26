@@ -49,17 +49,23 @@ public interface BioMaterialService {
     public BioMaterial create( BioMaterial bioMaterial );
 
     /**
-     * 
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public BioMaterial findOrCreate( BioMaterial bioMaterial );
-
-    /**
      * @param bioMaterial
      * @return true if a matching biomaterial exists in the system.
      */
     @Secured("GROUP_USER")
     public boolean exists( BioMaterial bioMaterial );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
+
+    /**
+     * 
+     */
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment getExpressionExperiment( Long id );
@@ -89,14 +95,6 @@ public interface BioMaterialService {
     public void remove( BioMaterial bioMaterial );
 
     /**
-     * <p>
-     * Updates the given biomaterial to the database.
-     * </p>
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( BioMaterial bioMaterial );
-
-    /**
      * @param bioMaterial
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
@@ -105,10 +103,12 @@ public interface BioMaterialService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+    /**
+     * <p>
+     * Updates the given biomaterial to the database.
+     * </p>
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( BioMaterial bioMaterial );
 
 }

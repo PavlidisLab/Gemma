@@ -29,7 +29,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -52,6 +51,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * 
      * @see ubic.gemma.model.genome.TaxonDao#find(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Taxon find( Taxon taxon ) {
 
         BusinessKey.checkValidKey( taxon );
@@ -81,6 +81,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         }
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( taxon );
                 Hibernate.initialize( taxon.getParentTaxon() );
@@ -96,6 +97,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * 
      * @see ubic.gemma.model.genome.TaxonDaoBase#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Taxon findOrCreate( Taxon taxon ) {
         Taxon existingTaxon = find( taxon );
         if ( existingTaxon != null ) {
@@ -132,6 +134,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
 
     }
 
+    @Override
     public Collection<? extends Taxon> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from TaxonImpl t where t.id in (:ids)", "ids", ids );
     }
@@ -143,11 +146,13 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends Taxon> create( final java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
@@ -164,6 +169,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
+    @Override
     public Taxon create( final ubic.gemma.model.genome.Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Taxon.create - 'taxon' can not be null" );
@@ -182,6 +188,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * 
      * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(java.lang.String)
      */
+    @Override
     public Taxon findByAbbreviation( final java.lang.String abbreviation ) {
         try {
             return this.handleFindByAbbreviation( abbreviation );
@@ -197,6 +204,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * 
      * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String)
      */
+    @Override
     public Taxon findByCommonName( final java.lang.String commonName ) {
         return this.findByCommonName( "from TaxonImpl t where t.commonName=:commonName", commonName );
     }
@@ -229,6 +237,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String)
      */
+    @Override
     public Taxon findByScientificName( final java.lang.String scientificName ) {
         return this.findByScientificName( "from TaxonImpl t where t.scientificName=:scientificName ", scientificName );
     }
@@ -260,6 +269,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * @see ubic.gemma.model.genome.TaxonDao#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
      */
 
+    @Override
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
         String queryString = "from ubic.gemma.model.genome.TaxonImpl as taxon where taxon.parentTaxon = :parentTaxon";
         Collection<Taxon> childTaxa = this.getHibernateTemplate().findByNamedParam( queryString, "parentTaxon",
@@ -270,6 +280,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#load(int, java.lang.Long)
      */
+    @Override
     public Taxon load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Taxon.load - 'id' can not be null" );
@@ -282,6 +293,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      * @see ubic.gemma.model.genome.TaxonDao#loadAll(int)
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public java.util.Collection<Taxon> loadAll() {
         final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
@@ -293,6 +305,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Taxon.remove - 'id' can not be null" );
@@ -306,6 +319,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.remove - 'entities' can not be null" );
@@ -316,6 +330,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#remove(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Taxon.remove - 'taxon' can not be null" );
@@ -326,6 +341,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao.thaw#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
+    @Override
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.handleThaw( taxon );
@@ -339,11 +355,13 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
@@ -357,6 +375,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     /**
      * @see ubic.gemma.model.genome.TaxonDao#update(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public void update( ubic.gemma.model.genome.Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Taxon.update - 'taxon' can not be null" );

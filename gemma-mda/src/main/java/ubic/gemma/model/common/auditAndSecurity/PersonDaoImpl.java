@@ -39,12 +39,13 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public Person find( Person person ) {
         Criteria queryObject = super.getSession().createCriteria( Person.class );
 
         BusinessKey.addRestrictions( queryObject, person );
 
-        java.util.List results = queryObject.list();
+        java.util.List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -66,6 +67,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
      * @see
      * ubic.gemma.model.common.auditAndSecurity.PersonDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public Person findOrCreate( Person person ) {
         if ( person == null
                 || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null

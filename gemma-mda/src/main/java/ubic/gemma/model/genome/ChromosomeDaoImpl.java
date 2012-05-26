@@ -43,6 +43,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
      * 
      * @see ubic.gemma.model.genome.ChromosomeDao#find(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Name cannot be blank" );
@@ -70,6 +71,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
      * 
      * @see ubic.gemma.model.genome.ChromosomeDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Chromosome findOrCreate( String name, Taxon taxon ) {
         Collection<Chromosome> hits = this.find( name, taxon );
 

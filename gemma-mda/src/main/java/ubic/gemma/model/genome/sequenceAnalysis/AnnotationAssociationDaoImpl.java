@@ -50,6 +50,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#create(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
      */
+    @Override
     public AnnotationAssociation create( AnnotationAssociation annotationAssociation ) {
         if ( annotationAssociation == null ) {
             throw new IllegalArgumentException(
@@ -64,6 +65,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#create(java.util.Collection)
      */
+    @Override
     public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> anCollection ) {
 
         if ( anCollection == null ) {
@@ -71,6 +73,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<AnnotationAssociation> entityIterator = anCollection.iterator(); entityIterator
@@ -90,6 +93,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * @seeubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#find(ubic.gemma.model.genome.biosequence.
      * BioSequence)
      */
+    @Override
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
@@ -105,6 +109,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#find(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Collection<AnnotationAssociation> find( Gene gene ) {
         if ( gene.getProducts().size() == 0 ) {
             throw new IllegalArgumentException( "Gene has no products" );
@@ -138,6 +143,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#load(java.util.Collection)
      */
+    @Override
     public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
             return new HashSet<AnnotationAssociation>();
@@ -168,6 +174,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#load(java.lang.Long)
      */
+    @Override
     public AnnotationAssociation load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AnnotationAssociation.load - 'id' can not be null" );
@@ -184,6 +191,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#remove(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
      */
+    @Override
     public void remove( AnnotationAssociation annotationAssociation ) {
         if ( annotationAssociation == null ) {
             throw new IllegalArgumentException(
@@ -197,6 +205,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null ) {
             throw new IllegalArgumentException( "AnnotationAssociation.remove - 'anCollection' can not be null" );
@@ -212,11 +221,13 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#thaw(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
      */
+    @Override
     public void thaw( final AnnotationAssociation annotationAssociation ) {
         if ( annotationAssociation == null ) return;
         if ( annotationAssociation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 thawAssociation( session, annotationAssociation );
                 return null;
@@ -230,10 +241,12 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#thaw(java.util.Collection)
      */
+    @Override
     public void thaw( final Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : anCollection ) {
                     AnnotationAssociation blatAssociation = ( AnnotationAssociation ) object;
@@ -255,6 +268,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#update(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
      */
+    @Override
     public void update( AnnotationAssociation annotationAssociation ) {
         if ( annotationAssociation == null ) {
             throw new IllegalArgumentException(
@@ -269,12 +283,14 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#update(java.util.Collection)
      */
+    @Override
     public void update( final Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null ) {
             throw new IllegalArgumentException( "AnnotationAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<AnnotationAssociation> entityIterator = anCollection.iterator(); entityIterator

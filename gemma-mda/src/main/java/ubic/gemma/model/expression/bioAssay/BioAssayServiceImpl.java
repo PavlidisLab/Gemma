@@ -44,6 +44,7 @@ public class BioAssayServiceImpl implements BioAssayService {
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#addBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay,
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public void addBioMaterialAssociation( final BioAssay bioAssay,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
@@ -58,6 +59,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -66,9 +68,20 @@ public class BioAssayServiceImpl implements BioAssayService {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    @Override
+    public BioAssay create( BioAssay bioAssay ) {
+        return this.getBioAssayDao().create( bioAssay );
+    }
+
     /**
      * @see BioAssayService#findBioAssayDimensions(BioAssay)
      */
+    @Override
     public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
         try {
             return this.handleFindBioAssayDimensions( bioAssay );
@@ -78,9 +91,15 @@ public class BioAssayServiceImpl implements BioAssayService {
         }
     }
 
+    @Override
+    public Collection<BioAssay> findByAccession( String accession ) {
+        return this.getBioAssayDao().findByAccession( accession );
+    }
+
     /**
      * @see BioAssayService#findOrCreate(BioAssay)
      */
+    @Override
     public BioAssay findOrCreate( final BioAssay bioAssay ) {
         try {
             return this.handleFindOrCreate( bioAssay );
@@ -93,6 +112,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#load(java.lang.Long)
      */
+    @Override
     public BioAssay load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -105,6 +125,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#loadAll()
      */
+    @Override
     public java.util.Collection<BioAssay> loadAll() {
         try {
             return this.handleLoadAll();
@@ -116,6 +137,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#remove(BioAssay)
      */
+    @Override
     public void remove( final BioAssay bioAssay ) {
         try {
             this.handleRemove( bioAssay );
@@ -128,6 +150,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#removeBioMaterialAssociation(BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public void removeBioMaterialAssociation( final BioAssay bioAssay, final BioMaterial bioMaterial ) {
         try {
             this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
@@ -155,6 +178,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see BioAssayService#thaw(BioAssay)
      */
+    @Override
     public void thaw( final BioAssay bioAssay ) {
         try {
             this.handleThaw( bioAssay );
@@ -164,9 +188,22 @@ public class BioAssayServiceImpl implements BioAssayService {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
+        return this.getBioAssayDao().thaw( bioAssays );
+    }
+
+    
+    
     /**
      * @see BioAssayService#update(BioAssay)
      */
+    @Override
     public void update( final BioAssay bioAssay ) {
         try {
             this.handleUpdate( bioAssay );
@@ -188,17 +225,6 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     protected ubic.gemma.model.expression.biomaterial.BioMaterialDao getBioMaterialDao() {
         return this.bioMaterialDao;
-    }
-
-    
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public BioAssay create( BioAssay bioAssay ) {
-        return this.getBioAssayDao().create( bioAssay );
     }
 
     /*
@@ -322,19 +348,6 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     protected void handleUpdate( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().update( bioAssay );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#thaw(java.util.Collection)
-     */
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
-        return this.getBioAssayDao().thaw( bioAssays );
-    }
-
-    public Collection<BioAssay> findByAccession( String accession ) {
-        return this.getBioAssayDao().findByAccession( accession );
     }
 
 }

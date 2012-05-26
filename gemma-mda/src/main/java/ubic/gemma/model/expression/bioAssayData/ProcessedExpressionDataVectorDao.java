@@ -39,6 +39,8 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
         mean, max
     }
 
+    public void clearCache();
+
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed. If the values already exist, they will be re-written.
@@ -48,22 +50,12 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    /**
-     * @param expressionExperiments
-     * @param genes
-     * @return
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
+    public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
+            QuantitationType quantitationType );
 
-    /**
-     * @param bioassaySets
-     * @param genes
-     * @param fullMap
-     * @return
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
-            Collection<Gene> genes, boolean fullMap );
+    public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationType );
+
+    public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType );
 
     /**
      * @param expressionExperiment
@@ -88,6 +80,23 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, int limit, boolean fullMap );
 
     /**
+     * @param bioassaySets
+     * @param genes
+     * @param fullMap
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+            Collection<Gene> genes, boolean fullMap );
+
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
+
+    /**
      * @param expressionExperiments
      * @param probes
      * @param fullMap
@@ -105,10 +114,6 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment,
             Integer limit );
-
-    public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType );
-
-    public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationType );
 
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
@@ -129,10 +134,5 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-
-    public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
-            QuantitationType quantitationType );
-
-    public void clearCache();
 
 }

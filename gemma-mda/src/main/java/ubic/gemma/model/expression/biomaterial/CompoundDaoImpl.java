@@ -43,35 +43,34 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.CompoundDaoBase#find(ubic.gemma.model.expression.biomaterial.Compound)
      */
     @Override
     public Compound find( Compound compound ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( Compound.class );
-            queryObject.add( Restrictions.eq( "name", compound.getName() ) );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + Compound.class.getName()
-                                    + "' was found when executing query" );
+        Criteria queryObject = super.getSession().createCriteria( Compound.class );
+        queryObject.add( Restrictions.eq( "name", compound.getName() ) );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + Compound.class.getName() + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( Compound ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( Compound ) result;
+
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.CompoundDaoBase#findOrCreate(ubic.gemma.model.expression.biomaterial.
      * Compound)

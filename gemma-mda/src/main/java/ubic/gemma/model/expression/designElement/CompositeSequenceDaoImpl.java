@@ -605,6 +605,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 int i = 0;
                 int numToDo = compositeSequences.size();

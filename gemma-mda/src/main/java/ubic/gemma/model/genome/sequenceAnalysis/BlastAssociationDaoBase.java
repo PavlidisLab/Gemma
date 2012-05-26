@@ -34,6 +34,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends BlastAssociation> create(
             final java.util.Collection<? extends BlastAssociation> entities ) {
         if ( entities == null ) {
@@ -41,6 +42,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends BlastAssociation> entityIterator = entities.iterator(); entityIterator
@@ -57,6 +59,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int transform,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
      */
+    @Override
     public BlastAssociation create( final ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
         if ( blastAssociation == null ) {
             throw new IllegalArgumentException( "BlastAssociation.create - 'blastAssociation' can not be null" );
@@ -65,6 +68,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
         return blastAssociation;
     }
 
+    @Override
     public Collection<? extends BlastAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate()
                 .findByNamedParam( "from BlastAssociationImpl where id in (:ids)", "ids", ids );
@@ -73,6 +77,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#load(int, java.lang.Long)
      */
+    @Override
     public BlastAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlastAssociation.load - 'id' can not be null" );
@@ -86,6 +91,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#loadAll(int)
      */
 
+    @Override
     public java.util.Collection<? extends BlastAssociation> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationImpl.class );
@@ -95,6 +101,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlastAssociation.remove - 'id' can not be null" );
@@ -108,6 +115,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends BlastAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastAssociation.remove - 'entities' can not be null" );
@@ -118,6 +126,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
         if ( blastAssociation == null ) {
             throw new IllegalArgumentException( "BlastAssociation.remove - 'blastAssociation' can not be null" );
@@ -128,12 +137,14 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -147,6 +158,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
      */
+    @Override
     public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
         if ( blastAssociation == null ) {
             throw new IllegalArgumentException( "BlastAssociation.update - 'blastAssociation' can not be null" );

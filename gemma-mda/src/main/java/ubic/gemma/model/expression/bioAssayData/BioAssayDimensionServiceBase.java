@@ -37,6 +37,7 @@ public abstract class BioAssayDimensionServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
+    @Override
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         try {
@@ -51,6 +52,7 @@ public abstract class BioAssayDimensionServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
+    @Override
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         try {
@@ -78,6 +80,7 @@ public abstract class BioAssayDimensionServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
+    @Override
     public void remove( final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         try {
             this.handleRemove( bioAssayDimension );

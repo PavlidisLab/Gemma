@@ -151,13 +151,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * <p>
-     * Given a list of AD ids (longs) returns a collection of ArrayDesign Objects
-     * </p>
-     */
-    public Collection<ArrayDesign> load( Collection<Long> ids );
-
-    /**
-     * <p>
      * loads all Array designs as value objects.
      * </p>
      */

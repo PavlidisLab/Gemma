@@ -36,6 +36,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult create(
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         try {
@@ -51,6 +52,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @Override
     public java.util.Collection findByBioSequence( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
             return this.handleFindByBioSequence( bioSequence );
@@ -65,6 +67,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.util.Collection)
      */
+    @Override
     public java.util.Collection load( final java.util.Collection ids ) {
         try {
             return this.handleLoad( ids );
@@ -78,6 +81,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         try {
             this.handleRemove( blatResult );
@@ -98,6 +102,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#update(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
+    @Override
     public void update( final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         try {
             this.handleUpdate( blatResult );

@@ -66,11 +66,12 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache()
+     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#addToCache(java.lang.Long,
+     * ubic.gemma.model.genome.Gene, java.util.Collection)
      */
     @Override
-    public void clearCache() {
-        cache.removeAll();
+    public void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection ) {
+        cache.put( new Element( new CacheKey( eeid, g.getId() ), collection ) );
     }
 
     @Override
@@ -132,6 +133,31 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache()
+     */
+    @Override
+    public void clearCache() {
+        cache.removeAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache(java.lang.Long)
+     */
+    @Override
+    public void clearCache( Long eeid ) {
+        for ( Object o : cache.getKeys() ) {
+            CacheKey k = ( CacheKey ) o;
+            if ( k.eeid.equals( eeid ) ) {
+                cache.remove( k );
+            }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#get(ubic.gemma.model.expression.experiment.
      * BioAssaySet, ubic.gemma.model.genome.Gene)
@@ -150,32 +176,6 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
         }
         return result;
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#addToCache(java.lang.Long,
-     * ubic.gemma.model.genome.Gene, java.util.Collection)
-     */
-    @Override
-    public void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection ) {
-        cache.put( new Element( new CacheKey( eeid, g.getId() ), collection ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache#clearCache(java.lang.Long)
-     */
-    @Override
-    public void clearCache( Long eeid ) {
-        for ( Object o : cache.getKeys() ) {
-            CacheKey k = ( CacheKey ) o;
-            if ( k.eeid.equals( eeid ) ) {
-                cache.remove( k );
-            }
-        }
-    }
 }
 
 class CacheKey {
@@ -186,15 +186,6 @@ class CacheKey {
     CacheKey( Long eeid, Long geneId ) {
         this.eeid = eeid;
         this.geneId = geneId;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
-        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
-        return result;
     }
 
     @Override
@@ -210,6 +201,15 @@ class CacheKey {
             if ( other.geneId != null ) return false;
         } else if ( !geneId.equals( other.geneId ) ) return false;
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
     }
 
 }

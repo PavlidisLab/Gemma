@@ -37,24 +37,6 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getRawExpressionDataVectorDao().find( bioAssayDimension );
     }
 
-    /**
-     * @param vectors
-     * @return
-     */
-    private Class<? extends DesignElementDataVector> getVectorClass(
-            Collection<? extends DesignElementDataVector> vectors ) {
-        Class<? extends DesignElementDataVector> vectorClass = null;
-        for ( DesignElementDataVector designElementDataVector : vectors ) {
-            if ( vectorClass == null ) {
-                vectorClass = designElementDataVector.getClass();
-            }
-            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
-                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
-            }
-        }
-        return vectorClass;
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getRawExpressionDataVectorDao().countAll();
@@ -213,6 +195,24 @@ public class DesignElementDataVectorServiceImpl extends
         } else {
             throw new UnsupportedOperationException( "Don't know how to process a " + dedv.getClass().getName() );
         }
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
+    private Class<? extends DesignElementDataVector> getVectorClass(
+            Collection<? extends DesignElementDataVector> vectors ) {
+        Class<? extends DesignElementDataVector> vectorClass = null;
+        for ( DesignElementDataVector designElementDataVector : vectors ) {
+            if ( vectorClass == null ) {
+                vectorClass = designElementDataVector.getClass();
+            }
+            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
+                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
+            }
+        }
+        return vectorClass;
     }
 
 }

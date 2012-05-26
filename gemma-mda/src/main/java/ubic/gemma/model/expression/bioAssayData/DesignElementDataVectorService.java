@@ -42,20 +42,6 @@ public interface DesignElementDataVectorService {
             java.util.Collection<? extends DesignElementDataVector> vectors );
 
     /**
-     * 
-     */
-    @Secured( { "GROUP_ADMIN" })
-    public java.util.Collection<? extends DesignElementDataVector> find(
-            java.util.Collection<QuantitationType> quantitationTypes );
-
-    /**
-     * Load all vectors meeting the criteria
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    public java.util.Collection<? extends DesignElementDataVector> find(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
      * Load all vectors meeting the criteria
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
@@ -68,6 +54,20 @@ public interface DesignElementDataVectorService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public java.util.Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
+
+    /**
+     * 
+     */
+    @Secured( { "GROUP_ADMIN" })
+    public java.util.Collection<? extends DesignElementDataVector> find(
+            java.util.Collection<QuantitationType> quantitationTypes );
+
+    /**
+     * Load all vectors meeting the criteria
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public java.util.Collection<? extends DesignElementDataVector> find(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
@@ -107,11 +107,6 @@ public interface DesignElementDataVectorService {
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * 
-     */
-    public void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
-
-    /**
      * <p>
      * Thaws associations of the given DesignElementDataVector
      * </p>
@@ -119,12 +114,9 @@ public interface DesignElementDataVectorService {
     public void thaw( DesignElementDataVector designElementDataVector );
 
     /**
-     * <p>
-     * updates a collection of designElementDataVectors
-     * </p>
+     * 
      */
-    @Secured( { "GROUP_USER" })
-    public void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
+    public void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * <p>
@@ -133,5 +125,13 @@ public interface DesignElementDataVectorService {
      */
     @Secured( { "GROUP_USER" })
     public void update( DesignElementDataVector dedv );
+
+    /**
+     * <p>
+     * updates a collection of designElementDataVectors
+     * </p>
+     */
+    @Secured( { "GROUP_USER" })
+    public void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
 
 }

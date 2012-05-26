@@ -161,6 +161,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(int, ubic.gemma.model.genome.gene.GeneProduct)
      */
 
+    @Override
     public GeneProduct findOrCreate( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this
                 .findOrCreate(
@@ -243,6 +244,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#loadAll(int)
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public java.util.Collection<? extends GeneProduct> loadAll() {
         final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(

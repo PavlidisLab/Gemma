@@ -32,12 +32,14 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -52,6 +54,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#create(int transform, ubic.gemma.model.genome.PhysicalLocation)
      */
+    @Override
     public PhysicalLocation create( final ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.create - 'physicalLocation' can not be null" );
@@ -63,6 +66,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#load(int, java.lang.Long)
      */
+    @Override
     public PhysicalLocation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.load - 'id' can not be null" );
@@ -74,6 +78,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#loadAll(int)
      */
+    @Override
     public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.PhysicalLocationImpl.class );
@@ -108,6 +113,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#remove(ubic.gemma.model.genome.PhysicalLocation)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.remove - 'physicalLocation' can not be null" );
@@ -125,6 +131,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -138,6 +145,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#update(ubic.gemma.model.genome.PhysicalLocation)
      */
+    @Override
     public void update( ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.update - 'physicalLocation' can not be null" );

@@ -42,11 +42,13 @@ public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLoc
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public void thaw( final PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) return;
         if ( physicalLocation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( physicalLocation, LockMode.NONE );
                 Hibernate.initialize( physicalLocation );

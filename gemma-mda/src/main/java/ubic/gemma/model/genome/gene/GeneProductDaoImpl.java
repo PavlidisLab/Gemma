@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -58,7 +59,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( GeneProduct.class )
-                    .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
+                    .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
             BusinessKey.checkValidKey( geneProduct );
 

@@ -17,9 +17,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -42,6 +40,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#addAuthority(ubic.gemma.model.common.auditAndSecurity.User,
      * java.lang.String)
      */
+    @Override
     public void addAuthority( User user, String roleName ) {
         throw new UnsupportedOperationException( "User group-based authority instead" );
 
@@ -54,6 +53,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * ubic.gemma.model.common.auditAndSecurity.UserDao#changePassword(ubic.gemma.model.common.auditAndSecurity.User,
      * java.lang.String)
      */
+    @Override
     public void changePassword( User user, String password ) {
         user.setPassword( password );
         this.getHibernateTemplate().update( user );
@@ -65,6 +65,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
      */
+    @Override
     public User find( User user ) {
         BusinessKey.checkKey( user );
         return this.findByUserName( user.getUserName() );
@@ -73,6 +74,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
      */
+    @Override
     public User findByUserName( final String userName ) {
         List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
                 "userName", userName );
@@ -91,6 +93,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * ubic.gemma.model.common.auditAndSecurity.UserDao#loadGroupAuthorities(ubic.gemma.model.common.auditAndSecurity
      * .User)
      */
+    @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
 
         return this.getHibernateTemplate().findByNamedParam(
@@ -98,6 +101,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
     }
 
+    @Override
     public Collection<UserGroup> loadGroups( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );

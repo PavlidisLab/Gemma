@@ -90,7 +90,6 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
 
     private int computeHashCode() {
         int hashCode = 0;
-
         if ( this.getNcbiId() != null ) {
             hashCode += this.getNcbiId().hashCode();
         } else if ( this.getScientificName() != null ) {

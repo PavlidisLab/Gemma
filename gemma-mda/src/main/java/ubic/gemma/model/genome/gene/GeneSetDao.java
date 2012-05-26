@@ -41,6 +41,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * @param sets
      * @return
      */
+    @Override
     @Secured( { "GROUP_USER" })
     Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities );
 

@@ -36,6 +36,7 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult create(
             final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         try {
@@ -50,6 +51,7 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         try {
             this.handleRemove( blastResult );

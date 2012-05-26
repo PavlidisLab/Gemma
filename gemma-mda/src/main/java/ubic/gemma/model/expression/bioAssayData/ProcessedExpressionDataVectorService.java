@@ -35,6 +35,9 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface ProcessedExpressionDataVectorService {
 
+    @Secured({ "GROUP_ADMIN" })
+    public void clearCache();
+
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.
@@ -46,15 +49,6 @@ public interface ProcessedExpressionDataVectorService {
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
-     * @param expressionExperiments
-     * @param genes
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
-
-    /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
      * @param genes
      * @param fullMapping if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs),
@@ -63,6 +57,15 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
             Collection<Gene> genes, Boolean fullMapping );
+
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     /**
      * @param expressionExperiment
@@ -162,8 +165,5 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured({ "GROUP_USER" })
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
-
-    @Secured({ "GROUP_ADMIN" })
-    public void clearCache();
 
 }

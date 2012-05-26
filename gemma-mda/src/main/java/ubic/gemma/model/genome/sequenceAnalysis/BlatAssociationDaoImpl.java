@@ -109,6 +109,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
         if ( blatAssociation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 thawBlatAssociation( session, blatAssociation );
                 return null;
@@ -121,6 +122,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
         if ( blatAssociations == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : blatAssociations ) {
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;

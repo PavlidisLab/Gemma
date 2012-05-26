@@ -43,6 +43,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -55,12 +56,14 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends Gene> create( final java.util.Collection<? extends Gene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator
@@ -76,6 +79,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(int transform, ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Gene create( final ubic.gemma.model.genome.Gene gene ) {
         if ( gene == null ) {
             throw new IllegalArgumentException( "Gene.create - 'gene' can not be null" );
@@ -85,38 +89,10 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
-     */
-
-    public Gene find( final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( gene );
-        argNames.add( "gene" );
-        java.util.Set<?> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.genome.Gene"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        return ( Gene ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#find(int, ubic.gemma.model.genome.Gene)
-     */
-    public Gene find( final ubic.gemma.model.genome.Gene gene ) {
-        return this.find( "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#findByAccession(java.lang.String,
      *      ubic.gemma.model.common.description.ExternalDatabase)
      */
+    @Override
     public ubic.gemma.model.genome.Gene findByAccession( final java.lang.String accession,
             final ubic.gemma.model.common.description.ExternalDatabase source ) {
         try {
@@ -131,6 +107,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByAlias(java.lang.String)
      */
+    @Override
     public java.util.Collection<Gene> findByAlias( final java.lang.String search ) {
         try {
             return this.handleFindByAlias( search );
@@ -144,6 +121,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
+    @Override
     public Gene findByNcbiId( Integer ncbiId ) {
 
         java.util.List<?> results = this.getHibernateTemplate().findByNamedParam(
@@ -158,6 +136,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(int, java.lang.String)
      */
+    @Override
     public java.util.Collection<Gene> findByOfficalSymbol( final java.lang.String officialSymbol ) {
         return this.findByOfficalSymbol(
                 "from GeneImpl g where g.officialSymbol=:officialSymbol order by g.officialName", officialSymbol );
@@ -204,6 +183,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(java.lang.String)
      */
+    @Override
     public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName ) {
         return this.findByOfficialName( TRANSFORM_NONE, officialName );
     }
@@ -219,6 +199,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbol(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public ubic.gemma.model.genome.Gene findByOfficialSymbol( final java.lang.String symbol,
             final ubic.gemma.model.genome.Taxon taxon ) {
         try {
@@ -233,6 +214,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
      */
+    @Override
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         return this
                 .findByOfficialSymbolInexact(
@@ -281,38 +263,10 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#findOrCreate(int, java.lang.String, ubic.gemma.model.genome.Gene)
-     */
-
-    public Object findOrCreate( final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( gene );
-        argNames.add( "gene" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.genome.Gene"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findOrCreate(int, ubic.gemma.model.genome.Gene)
-     */
-    public Gene findOrCreate( final ubic.gemma.model.genome.Gene gene ) {
-        return ( Gene ) this.findOrCreate( "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
      *      java.lang.Integer, boolean)
      */
+    @Override
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
             final Collection<ubic.gemma.model.genome.Gene> genes,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
@@ -330,6 +284,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
      *      java.lang.Integer, boolean)
      */
+    @Override
     public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency ) {
         try {
@@ -344,6 +299,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#getCompositeSequenceCountById(long)
      */
+    @Override
     public long getCompositeSequenceCountById( final long id ) {
         try {
             return this.handleGetCompositeSequenceCountById( id );
@@ -358,6 +314,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.genome.GeneDao#getCompositeSequences(ubic.gemma.model.genome.Gene,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     public java.util.Collection<CompositeSequence> getCompositeSequences( final ubic.gemma.model.genome.Gene gene,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
@@ -372,6 +329,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#getCompositeSequencesById(long)
      */
+    @Override
     public java.util.Collection<CompositeSequence> getCompositeSequencesById( final long id ) {
         try {
             return this.handleGetCompositeSequencesById( id );
@@ -385,6 +343,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#getGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> getGenesByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleGetGenesByTaxon( taxon );
@@ -398,6 +357,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#getMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> getMicroRnaByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleGetMicroRnaByTaxon( taxon );
@@ -419,6 +379,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.genome.GeneDao#load(int, java.lang.Long)
      */
 
+    @Override
     public Gene load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.load - 'id' can not be null" );
@@ -430,6 +391,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#load(java.util.Collection)
      */
+    @Override
     public java.util.Collection<Gene> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -444,6 +406,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.genome.GeneDao#loadAll(int)
      */
 
+    @Override
     public java.util.Collection<Gene> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.GeneImpl.class );
@@ -453,6 +416,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#loadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> loadKnownGenes( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleLoadKnownGenes( taxon );
@@ -494,6 +458,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.genome.GeneDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'id' can not be null" );
@@ -508,6 +473,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
@@ -518,6 +484,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#remove(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.Gene gene ) {
         if ( gene == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
@@ -535,6 +502,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#thaw(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Gene thaw( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleThaw( gene );
@@ -564,6 +532,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#thawLite(java.util.Collection)
      */
+    @Override
     public Collection<Gene> thawLite( final java.util.Collection<Gene> genes ) {
         try {
             return this.handleThawLite( genes );
@@ -578,12 +547,14 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -597,6 +568,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#update(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public void update( ubic.gemma.model.genome.Gene gene ) {
         if ( gene == null ) {
             throw new IllegalArgumentException( "Gene.update - 'gene' can not be null" );

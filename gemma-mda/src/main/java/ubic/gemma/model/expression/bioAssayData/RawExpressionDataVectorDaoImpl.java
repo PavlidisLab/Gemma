@@ -51,6 +51,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
@@ -83,6 +84,21 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
+    @Override
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
+        Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+
+        results.addAll( this.getHibernateTemplate().findByNamedParam(
+                "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
+                bioAssayDimension ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam(
+                "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
+                bioAssayDimension ) );
+        return results;
+
+    }
+
+    @Override
     public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
@@ -95,6 +111,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
+    @Override
     public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType = :quantitationType ";
@@ -114,6 +131,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.bioAssayData
      * .DesignElementDataVector)
      */
+    @Override
     public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
 
         BusinessKey.checkKey( designElementDataVector );
@@ -131,7 +149,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         crit.createCriteria( "expressionExperiment" ).add(
                 Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
 
-        List results = this.getHibernateTemplate().findByCriteria( crit );
+        List<?> results = this.getHibernateTemplate().findByCriteria( crit );
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -151,6 +169,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
      */
 
+    @Override
     public RawExpressionDataVector load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "RawExpressionDataVector.load - 'id' can not be null" );
@@ -162,6 +181,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
      */
+    @Override
     public java.util.Collection<? extends RawExpressionDataVector> loadAll() {
         return this.getHibernateTemplate().loadAll( RawExpressionDataVectorImpl.class );
     }
@@ -178,6 +198,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
      * ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         // rarely used.
         String[] probeCoexpTypes = new String[] { "Mouse", "Human", "Rat", "Other" };
@@ -199,6 +220,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     }
 
+    @Override
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
         final String dedvRemovalQuery = "delete from RawExpressionDataVectorImpl as dedv where dedv.quantitationType = ?";
         int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
@@ -239,19 +261,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-    }
-
-    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
-        Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
-
-        results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
-                bioAssayDimension ) );
-        results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
-                bioAssayDimension ) );
-        return results;
-
     }
 
 }

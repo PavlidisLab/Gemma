@@ -52,18 +52,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     private Double pvalue;
     private Double rank;
 
-    public Double getRank() {
-        return rank;
-    }
-
-    public void setRank( Double rank ) {
-        this.rank = rank;
-    }
-
     private Double rankByMax;
 
     private Double rankByMean;
-    
+
     private Long sourceVectorId = null;
 
     /**
@@ -72,7 +64,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     public DoubleVectorValueObject( DesignElementDataVector dedv ) {
         this( dedv, null );
     }
-
+    
     /**
      * @param dedv
      * @param genes
@@ -154,6 +146,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return pvalue;
     }
 
+    public Double getRank() {
+        return rank;
+    }
+
     /**
      * If this returns non-null, it means the vector is a slice of another vector identified by the return value.
      * 
@@ -181,6 +177,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     public void setPvalue( Double pvalue ) {
         this.pvalue = pvalue;
+    }
+
+    public void setRank( Double rank ) {
+        this.rank = rank;
     }
 
     public void setReorganized( boolean reorganized ) {

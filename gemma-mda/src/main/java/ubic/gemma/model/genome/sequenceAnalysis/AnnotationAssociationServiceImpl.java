@@ -17,18 +17,22 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
     @Autowired
     AnnotationAssociationDao annotationAssociationDao;
 
+    @Override
     public AnnotationAssociation create( AnnotationAssociation annotationAssociation ) {
         return this.getAnnotationAssociationDao().create( annotationAssociation );
     }
 
+    @Override
     public Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection ) {
         return this.getAnnotationAssociationDao().create( anCollection );
     }
 
+    @Override
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         return this.getAnnotationAssociationDao().find( bioSequence );
     }
 
+    @Override
     public Collection<AnnotationAssociation> find( Gene gene ) {
         return this.getAnnotationAssociationDao().find( gene );
     }
@@ -40,19 +44,23 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
         return annotationAssociationDao;
     }
 
+    @Override
     public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
         return this.getAnnotationAssociationDao().load( ids );
     }
 
+    @Override
     public AnnotationAssociation load( Long id ) {
         return this.getAnnotationAssociationDao().load( id );
     }
 
+    @Override
     public void remove( AnnotationAssociation annotationAssociation ) {
         this.getAnnotationAssociationDao().remove( annotationAssociation );
 
     }
 
+    @Override
     public void remove( Collection<AnnotationAssociation> anCollection ) {
         this.getAnnotationAssociationDao().remove( anCollection );
 
@@ -65,21 +73,25 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
         this.annotationAssociationDao = annotationAssociationDao;
     }
 
+    @Override
     public void thaw( AnnotationAssociation annotationAssociation ) {
         this.getAnnotationAssociationDao().thaw( annotationAssociation );
 
     }
 
+    @Override
     public void thaw( Collection<AnnotationAssociation> anCollection ) {
         this.getAnnotationAssociationDao().thaw( anCollection );
 
     }
 
+    @Override
     public void update( AnnotationAssociation annotationAssociation ) {
         this.getAnnotationAssociationDao().update( annotationAssociation );
 
     }
 
+    @Override
     public void update( Collection<AnnotationAssociation> anCollection ) {
         this.getAnnotationAssociationDao().update( anCollection );
 

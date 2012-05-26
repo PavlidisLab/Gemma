@@ -43,6 +43,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -56,6 +57,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#create(java.util.Collection)
      */
+    @Override
     public java.util.Collection<CompositeSequence> create(
             final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
@@ -70,6 +72,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#create(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public ubic.gemma.model.expression.designElement.CompositeSequence create(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
@@ -84,6 +87,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#find(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public ubic.gemma.model.expression.designElement.CompositeSequence find(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
@@ -98,6 +102,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByBioSequence(
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
@@ -112,6 +117,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByBioSequenceName(java.lang.String)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByBioSequenceName( final java.lang.String name ) {
         try {
             return this.handleFindByBioSequenceName( name );
@@ -125,6 +131,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
@@ -139,6 +146,7 @@ public abstract class CompositeSequenceServiceBase implements
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByGene(ubic.gemma.model.genome.Gene,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByGene( final ubic.gemma.model.genome.Gene gene,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
@@ -153,6 +161,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByName(java.lang.String)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
@@ -167,6 +176,7 @@ public abstract class CompositeSequenceServiceBase implements
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
      *      java.lang.String)
      */
+    @Override
     public ubic.gemma.model.expression.designElement.CompositeSequence findByName(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, final java.lang.String name ) {
         try {
@@ -182,6 +192,7 @@ public abstract class CompositeSequenceServiceBase implements
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findByNamesInArrayDesigns(java.util.Collection,
      *      java.util.Collection)
      */
+    @Override
     public java.util.Collection<CompositeSequence> findByNamesInArrayDesigns(
             final java.util.Collection<String> compositeSequenceNames,
             final java.util.Collection<ArrayDesign> arrayDesigns ) {
@@ -197,6 +208,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#findOrCreate(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public ubic.gemma.model.expression.designElement.CompositeSequence findOrCreate(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
@@ -211,6 +223,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getGenes(java.util.Collection)
      */
+    @Override
     public java.util.Map<CompositeSequence, Collection<Gene>> getGenes(
             final java.util.Collection<CompositeSequence> sequences ) {
         try {
@@ -225,6 +238,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getGenes(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public java.util.Collection<Gene> getGenes(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
@@ -239,6 +253,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getGenesWithSpecificity(java.util.Collection)
      */
+    @Override
     public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
@@ -254,6 +269,7 @@ public abstract class CompositeSequenceServiceBase implements
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getRawSummary(java.util.Collection,
      *      java.lang.Integer)
      */
+    @Override
     public java.util.Collection<Object[]> getRawSummary(
             final java.util.Collection<CompositeSequence> compositeSequences, final java.lang.Integer numResults ) {
         try {
@@ -269,6 +285,7 @@ public abstract class CompositeSequenceServiceBase implements
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
      *      java.lang.Integer)
      */
+    @Override
     public java.util.Collection<Object[]> getRawSummary(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, final java.lang.Integer numResults ) {
         try {
@@ -285,6 +302,7 @@ public abstract class CompositeSequenceServiceBase implements
      *      java.lang.Integer)
      * @Deprecated is this used anywhere?
      */
+    @Override
     @Deprecated
     public java.util.Collection<Object[]> getRawSummary(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence,
@@ -301,6 +319,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.expression.designElement.CompositeSequence load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -314,6 +333,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#loadMultiple(java.util.Collection)
      */
+    @Override
     public java.util.Collection<CompositeSequence> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -327,6 +347,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#remove(java.util.Collection)
      */
+    @Override
     public void remove( final java.util.Collection<CompositeSequence> sequencesToDelete ) {
         try {
             this.handleRemove( sequencesToDelete );
@@ -340,6 +361,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#remove(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public void remove( final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
             this.handleRemove( compositeSequence );
@@ -361,6 +383,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#thaw(java.util.Collection)
      */
+    @Override
     public void thaw( final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
             this.handleThaw( compositeSequences );
@@ -374,6 +397,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#update(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
+    @Override
     public void update( final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         try {
             this.handleUpdate( compositeSequence );

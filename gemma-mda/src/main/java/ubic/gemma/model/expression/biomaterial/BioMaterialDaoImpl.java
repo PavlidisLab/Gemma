@@ -83,6 +83,21 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     }
 
+    @Override
+    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct bm from ExpressionExperimentImpl e join e.bioAssays b join b.samplesUsed bm where e = :ee",
+                        "ee", experiment );
+    }
+
+    @Override
+    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct b from BioMaterialImpl b join b.factorValues fv where fv = :f", "f", fv );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -111,6 +126,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#getExpressionExperiment(java.lang.Long)
      */
+    @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         List<?> result = getHibernateTemplate()
                 .findByNamedParam(
@@ -131,6 +147,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#removeFactor(java.util.Collection,
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public void removeFactor( Collection<BioMaterial> bioMaterials, ExperimentalFactor experimentalFactor ) {
         for ( BioMaterial bm : bioMaterials ) {
             boolean removed = false;
@@ -150,6 +167,49 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    public void thaw( final BioMaterial bioMaterial ) {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+
+            @Override
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
+                Hibernate.initialize( bioMaterial );
+                Hibernate.initialize( bioMaterial.getSourceTaxon() );
+                Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
+                Hibernate.initialize( bioMaterial.getTreatments() );
+                Hibernate.initialize( bioMaterial.getFactorValues() );
+                return null;
+
+            }
+        } );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() ) return bioMaterials;
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct b from BioMaterialImpl b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                                + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
+                                + "left join fetch at.events where b.id in (:ids)", "ids",
+                        EntityUtils.getIds( bioMaterials ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleCopy(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
      */
@@ -159,6 +219,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         return ( BioMaterial ) this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         session.evict( bioMaterial );
@@ -209,62 +270,5 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             throw super.convertHibernateAccessException( ex );
         }
         return bs;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public void thaw( final BioMaterial bioMaterial ) {
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
-                session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
-                Hibernate.initialize( bioMaterial );
-                Hibernate.initialize( bioMaterial.getSourceTaxon() );
-                Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
-                Hibernate.initialize( bioMaterial.getTreatments() );
-                Hibernate.initialize( bioMaterial.getFactorValues() );
-                return null;
-
-            }
-        } );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(java.util.Collection)
-     */
-    @Override
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        if ( bioMaterials.isEmpty() ) return bioMaterials;
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct b from BioMaterialImpl b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                                + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
-                                + "left join fetch at.events where b.id in (:ids)", "ids",
-                        EntityUtils.getIds( bioMaterials ) );
-    }
-
-    @Override
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select distinct b from BioMaterialImpl b join b.factorValues fv where fv = :f", "f", fv );
-    }
-
-    @Override
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct bm from ExpressionExperimentImpl e join e.bioAssays b join b.samplesUsed bm where e = :ee",
-                        "ee", experiment );
     }
 }

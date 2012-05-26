@@ -46,9 +46,8 @@ public class CompositeSequenceServiceImpl extends
     Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
-    private ArrayDesignService arrayDesignService;    
-    
-    
+    private ArrayDesignService arrayDesignService;
+
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getCompositeSequenceDao().countAll();
@@ -299,12 +298,12 @@ public class CompositeSequenceServiceImpl extends
     public CompositeSequence thaw( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().thaw( compositeSequence );
     }
-    
+
     @Override
-    public CompositeSequenceValueObject convertToValueObject( CompositeSequence compositeSequence ){
+    public CompositeSequenceValueObject convertToValueObject( CompositeSequence compositeSequence ) {
         ArrayDesign ad = compositeSequence.getArrayDesign();
         ArrayDesignValueObject advo = arrayDesignService.loadValueObject( ad.getId() );
-        
+
         return new CompositeSequenceValueObject( compositeSequence, advo );
     }
 

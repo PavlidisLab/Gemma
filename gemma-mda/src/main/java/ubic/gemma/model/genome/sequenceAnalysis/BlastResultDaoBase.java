@@ -34,12 +34,14 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastResult.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -55,6 +57,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int transform,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     public BlastResult create( final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         if ( blastResult == null ) {
             throw new IllegalArgumentException( "BlastResult.create - 'blastResult' can not be null" );
@@ -69,6 +72,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
 
+    @Override
     public Collection<? extends BlastResult> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from BlastResultImpl where id in (:ids)", "ids", ids );
     }
@@ -76,6 +80,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#load(int, java.lang.Long)
      */
+    @Override
     public BlastResult load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlastResult.load - 'id' can not be null" );
@@ -88,6 +93,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#loadAll(int)
      */
+    @Override
     public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlastResultImpl.class );
@@ -98,6 +104,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlastResult.remove - 'id' can not be null" );
@@ -111,6 +118,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastResult.remove - 'entities' can not be null" );
@@ -121,6 +129,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         if ( blastResult == null ) {
             throw new IllegalArgumentException( "BlastResult.remove - 'blastResult' can not be null" );
@@ -131,12 +140,14 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastResult.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -150,6 +161,7 @@ public abstract class BlastResultDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         if ( blastResult == null ) {
             throw new IllegalArgumentException( "BlastResult.update - 'blastResult' can not be null" );

@@ -37,6 +37,7 @@ public abstract class BlastAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
      */
+    @Override
     public ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation create(
             final ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
         try {

@@ -36,14 +36,11 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     /**
      * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
      */
+    @Override
     public ubic.gemma.model.genome.Chromosome findOrCreate( final String name, final Taxon taxon ) {
-        try {
-            return this.handleFindOrCreate( name, taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.ChromosomeServiceException(
-                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.findOrCreate(ubic.gemma.model.genome.Chromosome chromosome)' --> "
-                            + th, th );
-        }
+
+        return this.handleFindOrCreate( name, taxon );
+
     }
 
     /**
@@ -63,7 +60,6 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Chromosome)}
      */
-    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon );
 
 }

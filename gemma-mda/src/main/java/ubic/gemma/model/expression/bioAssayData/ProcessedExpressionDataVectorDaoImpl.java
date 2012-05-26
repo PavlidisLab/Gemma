@@ -82,6 +82,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
@@ -209,6 +210,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
     }
 
+    @Override
     public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
@@ -216,6 +218,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    @Override
     public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType = :quantitationType ";
@@ -230,6 +233,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(ubic.gemma.model
      * .expression.experiment.BioAssaySet)
      */
+    @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment ) {
         return getProcessedDataArrays( expressionExperiment, -1, false );
     }
@@ -241,6 +245,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment, java.util.Collection)
      */
+    @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
             Collection<Gene> genes ) {
         Collection<BioAssaySet> expressionExperiments = new HashSet<BioAssaySet>();
@@ -255,6 +260,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(ubic.gemma.model
      * .expression.experiment.BioAssaySet, int, boolean)
      */
+    @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet ee, int limit, boolean fullMap ) {
 
         Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( getExperiment( ee ), limit );
@@ -300,6 +306,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(java.util.Collection
      * , java.util.Collection, boolean)
      */
+    @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<Gene> genes, boolean fullMap ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
@@ -312,6 +319,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(java.util.Collection
      * , java.util.Collection)
      */
+    @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
@@ -324,6 +332,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArraysByProbe(java.
      * util.Collection, java.util.Collection, boolean)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<? extends BioAssaySet> ees,
             Collection<CompositeSequence> probes, boolean fullMap ) {
@@ -418,6 +427,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedVectors(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
+    @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
@@ -428,6 +438,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param limit
      * @return
      */
+    @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
 
@@ -464,6 +475,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(java.util.Collection,
      * java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
+    @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -523,6 +535,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * .experiment.ExpressionExperiment, java.util.Collection,
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
+    @Override
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -576,6 +589,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * .experiment.ExpressionExperiment,
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
+    @Override
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
@@ -600,6 +614,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    @Override
     public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -653,6 +668,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
      */
 
+    @Override
     public ProcessedExpressionDataVector load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
@@ -664,6 +680,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
      */
+    @Override
     public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
         return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
     }
@@ -681,6 +698,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#removeProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
+    @Override
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
         assert expressionExperiment != null;
         this.getHibernateTemplate().bulkUpdate(
