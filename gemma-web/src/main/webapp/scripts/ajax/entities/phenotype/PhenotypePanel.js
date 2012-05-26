@@ -12,26 +12,38 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 	geneStoreProxy: null,
 	evidenceStoreProxy: null,
 	geneColumnRenderer: null, 
-	createPhenotypeAssociationHandler: null,
 	// Configs that should be set if used outside of Gemma (END)
 	height: 600,
 	width: 760,
 	layout: 'border',        
     initComponent: function() {
-    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.evidenceStoreProxy && this.geneColumnRenderer && this.createPhenotypeAssociationHandler) ||
-    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.evidenceStoreProxy && !this.geneColumnRenderer && !this.createPhenotypeAssociationHandler))) {
+    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.evidenceStoreProxy && this.geneColumnRenderer) ||
+    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.evidenceStoreProxy && !this.geneColumnRenderer))) {
     		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	} else {
 			var currentPhenotypes = null;
 			var currentGene = null;
+			
+			var currentFilters = {
+				taxonCommonName: '',
+				showOnlyEditable: false
+			};			
+
+			var phenotypePanelToolbar = new Gemma.PhenotypePanelToolbar({
+				listeners: {
+					filterApplied: function(filters) {
+						currentFilters = filters;
+						reloadWholePanel();	
+					}
+				}
+			});
 
 			var phenotypeTabPanel = new Gemma.PhenotypeTabPanel({			
 				region: "west",
 				phenotypeStoreProxy: this.phenotypeStoreProxy,
-				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,					
 				listeners: {
 					phenotypeSelectionChange: function(selectedPhenotypes) {
-			            geneGrid.setCurrentPhenotypes(selectedPhenotypes);
+						geneGrid.setCurrentPhenotypes(currentFilters, selectedPhenotypes);						
 						currentPhenotypes = selectedPhenotypes;
         			}
 				}
@@ -44,7 +56,6 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				height: 300,
 				split: true,
 				geneStoreProxy: this.geneStoreProxy,
-				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler,
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
 						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene);
@@ -64,8 +75,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
 	    		region: 'center',
-				evidenceStoreProxy: this.evidenceStoreProxy,	    		
-				createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler
+				evidenceStoreProxy: this.evidenceStoreProxy	    		
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
 
@@ -146,15 +156,20 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					}
 				}
 		
-				phenotypeTabPanel.reloadActiveTab();				
+				phenotypeTabPanel.reloadActiveTab(currentFilters);
 			};
 
-			if (!this.createPhenotypeAssociationHandler) {
-				Gemma.Application.currentUser.on("logIn", reloadWholePanel,	this);
-				Gemma.Application.currentUser.on("logOut", reloadWholePanel, this);
+			if (!Gemma.isRunningOutsideOfGemma()) {
+				Gemma.Application.currentUser.on("logIn", reloadWholePanel);
+				Gemma.Application.currentUser.on("logOut", function() {
+					currentFilters.showOnlyEditable = false;
+					phenotypePanelToolbar.setShowOnlyEditableCheckbox(currentFilters.showOnlyEditable);
+					reloadWholePanel();
+				});
 			}
 
 			Ext.apply(this, {
+				tbar: phenotypePanelToolbar,
 	        	items: [
 			    	phenotypeTabPanel,
 		        	{

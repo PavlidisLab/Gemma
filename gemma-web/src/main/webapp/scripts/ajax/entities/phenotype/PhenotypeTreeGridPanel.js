@@ -116,6 +116,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.ux.maximgb.tg.AdjacencyListStore({
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
+baseParams: commonConfig.getBaseParams(), 
 				reader: commonConfig.getStoreReader(),					
 				autoLoad: this.storeAutoLoad}),
 			columns:[

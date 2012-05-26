@@ -1,5 +1,11 @@
 Ext.namespace('Gemma');
 
+Gemma.isRunningOutsideOfGemma = function() {
+	var hostname = window.location.hostname;
+
+	return hostname.indexOf('chibi.ubc.ca') < 0 && hostname.indexOf('localhost') < 0;
+}
+
 // It returns display and tooltip text for the evidence the given evidence code represents.
 Gemma.decodeEvidenceCode = function(evidenceCode) {
 	var EVIDENCE_TEXT = {

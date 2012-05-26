@@ -32,6 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
@@ -80,8 +81,9 @@ public class PhenotypeController extends BaseController {
         return mav;
     }
 
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
-      return phenotypeAssociationManagerService.loadAllPhenotypesByTree();
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree(String taxonCommonName, boolean showOnlyEditable) {
+    	return phenotypeAssociationManagerService.loadAllPhenotypesByTree(
+    			new EvidenceFilter(taxonCommonName, showOnlyEditable));
     }
 
     /**
@@ -90,8 +92,10 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public Collection<GeneValueObject> findCandidateGenes(String[] phenotypes) {
-        return phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(Arrays.asList(phenotypes)),null);
+    public Collection<GeneValueObject> findCandidateGenes(String taxonCommonName, boolean showOnlyEditable, String[] phenotypes) {
+        return phenotypeAssociationManagerService.findCandidateGenes(
+        		new EvidenceFilter(taxonCommonName, showOnlyEditable),
+        		new HashSet<String>(Arrays.asList(phenotypes)));
     }
 
     /**

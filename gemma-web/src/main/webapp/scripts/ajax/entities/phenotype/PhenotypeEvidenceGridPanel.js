@@ -21,10 +21,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     currentPhenotypes: null,
     currentGene: null,
 	deferLoadToRender: false,
+	showDialogViewBibliographicReferenceOutsideOfGemma: function() {
+		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.viewBibliographicReferenceOutsideOfGemmaTitle,
+			Gemma.HelpText.WidgetDefaults.PhenotypePanel.viewBibliographicReferenceOutsideOfGemmaText);
+	},
     initComponent: function() {
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
 
-		if (!this.createPhenotypeAssociationHandler) {		
+		if (!Gemma.isRunningOutsideOfGemma()) {   		
 	   		// Show Admin column after user logs in. 
 			Gemma.Application.currentUser.on("logIn", 
 				function(userName, isAdmin) {	
@@ -44,24 +48,35 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				this);
 		}
 		
-		var generateLink = function(methodWithArguments, imageSrc) {
-			return '<span class="link" onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments
-						+ '"><img src="' + imageSrc + '" alt="" ext:qtip=""/></span>';
+		var generateLink = function(methodWithArguments, imageSrc, description, width, height) {
+			return '<span class="link" onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments +
+						'"><img src="' + imageSrc + '" alt="' + description + '" ext:qtip="' + description + '" ' +
+						((width && height) ?
+							'width="' + width + '" height="' + height + '" ' :
+							'') +
+						'/></span>';
 			
 		}.createDelegate(this);
    		
 		var generatePublicationLinks = function(pudmedId, pubmedUrl) {
 			var anchor = '';
 			if (pudmedId != null) {
-				anchor += '<a target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html?pubmedID=' +
-		        	pudmedId +
-		        	'"><img ext:qtip="Go to Bibliographic Reference (in new window)" ' + 
-		        	'src="/Gemma/images/icons/magnifier.png" width="12" height="12" alt="Bibliographic Reference" /></a>';
+				var imageSrc = '/Gemma/images/icons/magnifier.png';
+				var size = 12;
+				
+				if (Gemma.isRunningOutsideOfGemma()) {
+					anchor += generateLink('showDialogViewBibliographicReferenceOutsideOfGemma();', imageSrc, 'View Bibliographic Reference', size, size);
+				} else {
+					var description = 'Go to Bibliographic Reference (in new window)';
+					anchor += '<a target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html?pubmedID=' +
+			        	pudmedId +
+			        	'"><img src="' + imageSrc + '" alt="' + description + '" ext:qtip="' + description + '" width="' + size + '" height="' + size + '" /></a>';
+				}		        	
 			}
 		    return anchor + (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply({
 		    	pubmedURL: pubmedUrl
 		    });
-		};
+		}.createDelegate(this);
 		
 		var convertToExternalDatabaseAnchor = function(databaseName, url, useDatabaseIcon) {
 			var html = '<a target="_blank" href="' + url + '">';
@@ -79,8 +94,11 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: (this.currentGene == null),
-			handler: this.createPhenotypeAssociationHandler ?
-				this.createPhenotypeAssociationHandler :
+			handler: Gemma.isRunningOutsideOfGemma() ?
+				function() {
+					Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaTitle,
+						Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
+				} :
 				function() {
 					var createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
 					
@@ -435,8 +453,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
 								record.data.evidenceSource == null) {
 			            		adminLinks += ' ' +
-			            					  generateLink('showEditWindow(' + record.data.id + ')', '/Gemma/images/icons/pencil.png') + ' ' +
-											  generateLink('removeEvidence(' + record.data.id + ')', '/Gemma/images/icons/cross.png');
+	            					  generateLink('showEditWindow(' + record.data.id + ');', '/Gemma/images/icons/pencil.png', 'Edit evidence') + ' ' +
+									  generateLink('removeEvidence(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove evidence');
 		            		}
 		            	}
 		            	

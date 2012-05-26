@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 
@@ -49,16 +50,23 @@ public class PhenotypeWebService {
     @GET
     @Path("/load-all-phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<SimpleTreeValueObject> loadAllPhenotypes() {
-    	return phenotypeAssociationManagerService.loadAllPhenotypesByTree();
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree(
+    		@QueryParam("taxonCommonName") String taxonCommonName,
+    		@QueryParam("showOnlyEditable") boolean showOnlyEditable) {
+    	return phenotypeAssociationManagerService.loadAllPhenotypesByTree(
+      		  new EvidenceFilter(taxonCommonName, showOnlyEditable));
     }
 
     @GET
     @Path("/find-candidate-genes")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<GeneValueObject> findCandidateGenes(
-            @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findCandidateGenes(new HashSet<String>(phenotypeValueUris), null);
+    		@QueryParam("taxonCommonName") String taxonCommonName,
+    		@QueryParam("showOnlyEditable") boolean showOnlyEditable,
+    		@QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
+        return phenotypeAssociationManagerService.findCandidateGenes(
+        		new EvidenceFilter(taxonCommonName, showOnlyEditable),
+        		new HashSet<String>(phenotypeValueUris));
     }
 
     @GET

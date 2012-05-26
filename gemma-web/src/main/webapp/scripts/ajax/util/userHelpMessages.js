@@ -411,11 +411,15 @@ Gemma.HelpText.WidgetDefaults = {
 	PhenotypePanel:{
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
 		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>, <b>geneStoreProxy</b>, <br />' +
-    			'<b>evidenceStoreProxy</b>, <b>geneColumnRenderer</b> and <b>createPhenotypeAssociationHandler</b><br />' +
+    			'<b>evidenceStoreProxy</b> and <b>geneColumnRenderer</b><br />' +
     			' should not be set in config. Otherwise, all of them should be set.<br />' +
     			'',
     	modifyPhenotypeAssociationOutsideOfGemmaTitle: "Add new phenotype association", 
-		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>."
+		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>.",
+    	viewBibliographicReferenceOutsideOfGemmaTitle: "View bibliographic reference", 
+		viewBibliographicReferenceOutsideOfGemmaText: "To view bibliographic reference, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>.",
+    	filterMyAnnotationsOutsideOfGemmaTitle: "Filter by my annotations", 
+		filterMyAnnotationsOutsideOfGemmaText: "To filter by my annotations, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>."
 	},
 	PhenotypeAssociationForm: {
 		ErrorMessage: {

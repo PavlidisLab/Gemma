@@ -88,18 +88,21 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: true,
-			handler: this.createPhenotypeAssociationHandler ?
-				this.createPhenotypeAssociationHandler :
-					function() {
-						var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-						
-						this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-						phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
-							{
-								gene: null,
-								phenotypes: this.currentPhenotypes
-							});
-					},
+			handler: Gemma.isRunningOutsideOfGemma() ?
+				function() {
+					Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaTitle,
+						Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
+				} :
+				function() {
+					var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					
+					this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+					phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+						{
+							gene: null,
+							phenotypes: this.currentPhenotypes
+						});
+				},
 			scope: this,
 			icon: "/Gemma/images/icons/add.png",
 			tooltip: "Add new phenotype association"
@@ -117,7 +120,11 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					    	        read: {
 					        	        dwrFunction: PhenotypeController.findCandidateGenes,
 					            	    getDwrArgsFunction: function(request){
-					            	    	return [request.params["phenotypeValueUris"]];
+				            	    	return [ request.params['taxonCommonName'],
+				            	    			 request.params['showOnlyEditable'],
+				            	    			 request.params["phenotypeValueUris"] 
+				            	    		   ];
+					            	    	
 						                }
 					    	        }
 						        }
@@ -212,7 +219,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				createPhenotypeAssociationButton,				
 				downloadButton
 			],
-			setCurrentPhenotypes: function(currentPhenotypes) {
+			setCurrentPhenotypes: function(currentFilters, currentPhenotypes) {
 				this.currentPhenotypes = currentPhenotypes;
 
 				var hasCurrentPhenotypes = (currentPhenotypes != null && currentPhenotypes.length > 0);
@@ -246,7 +253,9 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 					this.getStore().reload({
 			    		params: {
-			    			'phenotypeValueUris': currentPhenotypeValueUris
+							taxonCommonName: currentFilters.taxonCommonName,
+							showOnlyEditable: currentFilters.showOnlyEditable,
+			    			phenotypeValueUris: currentPhenotypeValueUris
 			    		}
 			    	});
 					this.getSelectionModel().clearSelections(false);				    

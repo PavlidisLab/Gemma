@@ -70,6 +70,7 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.data.Store({
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
+				baseParams: commonConfig.getBaseParams(),				
 				reader: commonConfig.getStoreReader(),					
 				autoLoad: this.storeAutoLoad,
 				sortInfo: {	field: 'value', direction: 'ASC' }

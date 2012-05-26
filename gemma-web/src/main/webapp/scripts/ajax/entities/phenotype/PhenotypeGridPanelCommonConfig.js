@@ -20,14 +20,27 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 
 		Ext.apply(this, {
 			resetSelectionConfig: function() {
-				clickedSelections = [];
+				// It is set to null instead of [] to indicate that there may
+				// be selections, but we don't know what they are. Maybe, there
+				// is a better way to implement this situation.
+				clickedSelections = null;
 			},
 			getStoreProxy: function(defaultProxy) {
 				var proxyToBeReturned;
 
 				if (defaultProxy == null) {
 					if (phenotypeStoreProxy == null) {
-						phenotypeStoreProxy = new Ext.data.DWRProxy(PhenotypeController.loadAllPhenotypesByTree);
+						phenotypeStoreProxy = new Ext.data.DWRProxy({
+					        apiActionToHandlerMap: {
+				    	        read: {
+				        	        dwrFunction: PhenotypeController.loadAllPhenotypesByTree,
+				            	    getDwrArgsFunction: function(request) {
+				            	    	return [ request.params['taxonCommonName'],
+				            	    			 request.params['showOnlyEditable'] ];
+					                }.createDelegate(this)
+				    	        }
+					        }
+				    	});
 					}
 					proxyToBeReturned = phenotypeStoreProxy; 
 				} else {
@@ -35,6 +48,12 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 				}
 				
 				return proxyToBeReturned;
+			},
+			getBaseParams: function() {
+				return {
+			    	taxonCommonName: '',
+			    	showOnlyEditable: false
+				};
 			},
 			getStoreReader: function() {
 				if (phenotypeStoreReader == null) {
@@ -68,7 +87,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			getCellClickHandler: function(gridPanel, rowIndex, columnIndex, event) {
 				var newSelections = gridPanel.getSelectionModel().getSelections();
 					
-				var hasSameSelections = (clickedSelections.length === newSelections.length);
+				var hasSameSelections = (clickedSelections != null && clickedSelections.length === newSelections.length);
 					
 				if (hasSameSelections) {
 					for (var i = 0; hasSameSelections && i < clickedSelections.length; i++) {
@@ -122,8 +141,11 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			},
 			getAddNewPhenotypeAssociationButton: function(gridPanel, defaultButtonHandler) {
 				return {
-					handler: gridPanel.createPhenotypeAssociationHandler ?
-						gridPanel.createPhenotypeAssociationHandler :
+					handler: Gemma.isRunningOutsideOfGemma() ?
+						function() {
+							Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaTitle,
+								Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
+						} :
 						function() {
 							var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
 

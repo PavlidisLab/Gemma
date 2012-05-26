@@ -8,7 +8,6 @@ Ext.namespace('Gemma');
 
 Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 	phenotypeStoreProxy: null,
-	createPhenotypeAssociationHandler: null,
 	activeTab: 0,
 	width: 330,
 	split: true,
@@ -36,13 +35,11 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
     	// Only the first tab's grid panel should have storeAutoLoad set to true.
     	var phenotypeTreeGridPanel = new Gemma.PhenotypeTreeGridPanel({
 			storeAutoLoad: true,
-			phenotypeStoreProxy: this.phenotypeStoreProxy,
-			createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler					
+			phenotypeStoreProxy: this.phenotypeStoreProxy
 		});
 		var phenotypeGrid = new Gemma.PhenotypeGridPanel({
 			storeAutoLoad: false,
-			phenotypeStoreProxy: this.phenotypeStoreProxy,
-			createPhenotypeAssociationHandler: this.createPhenotypeAssociationHandler
+			phenotypeStoreProxy: this.phenotypeStoreProxy
 		});
 		
     	this.relayEvents(phenotypeTreeGridPanel,
@@ -51,13 +48,33 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
     		['phenotypeAssociationChanged', 'phenotypeSelectionChange']);
 
 		Ext.apply(this, {
-			reloadActiveTab: function() {
+			reloadActiveTab: function(filters) {
+				// Note: I must have it. Otherwise, the tree gridpanel's store still keeps the node even  
+				// if the node should not be in the store after reload. 
+				this.getActiveTab().getSelectionModel().clearSelections();
+	
 				var activeTabStore = this.getActiveTab().getStore();
 			
 				// this.items.items are all the components in this tab panel.
 				syncDestinationStoresOnSourceStoreLoad(activeTabStore, this.items.items);	
 				
-				activeTabStore.reload(activeTabStore.lastOptions);
+				
+				var taxonCommonName;
+				var showOnlyEditable; 
+				
+				if (filters == null) {
+					taxonCommonName = '';
+					showOnlyEditable = false; 
+				} else {
+					taxonCommonName = filters.taxonCommonName;
+					showOnlyEditable = filters.showOnlyEditable;
+				}
+				activeTabStore.reload({
+					params: {
+						taxonCommonName: taxonCommonName,
+						showOnlyEditable: showOnlyEditable
+					}
+				});
 			},
 			items: [
 				phenotypeTreeGridPanel,

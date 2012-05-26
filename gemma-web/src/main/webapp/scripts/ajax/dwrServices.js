@@ -996,8 +996,8 @@ LinkOutController.getAllenBrainAtlasLink = function(p0, callback) {
 if (PhenotypeController == null)
 	var PhenotypeController = {};
 PhenotypeController._path = '/Gemma/dwr';
-PhenotypeController.findCandidateGenes = function(p0, callback) {
-	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, callback);
+PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2, callback);
 }
 PhenotypeController.findExperimentMgedCategory = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentMgedCategory', callback);
@@ -1005,11 +1005,8 @@ PhenotypeController.findExperimentMgedCategory = function(callback) {
 PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentOntologyValue', p0, p1, p2, callback);
 }
-PhenotypeController.loadAllPhenotypes = function(callback) {
-	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypes', callback);
-}
-PhenotypeController.loadAllPhenotypesByTree = function(callback) {
-	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', callback);
+PhenotypeController.loadAllPhenotypesByTree = function(p0, p1, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', p0, p1, callback);
 }
 PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'searchOntologyForPhenotypes', p0, p1, callback);
