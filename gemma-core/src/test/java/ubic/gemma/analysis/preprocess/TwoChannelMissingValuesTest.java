@@ -284,7 +284,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
 
-        gc = ( GeoConverter ) this.getBean( "geoConverter" );
+        gc = this.getBean( GeoConverter.class );
 
         Object result = this.gc.convert( series );
 

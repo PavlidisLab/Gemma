@@ -52,7 +52,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          */
         getTestPersistentCompleteExpressionExperiment( false );
 
-        int numThreads = 5;
+        int numThreads = 3;
         final int numExperimentsPerThread = 1;
 
         final AtomicInteger c = new AtomicInteger( 0 );

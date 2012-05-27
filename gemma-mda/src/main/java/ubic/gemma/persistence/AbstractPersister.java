@@ -29,6 +29,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.classic.Session;
+import org.hibernate.engine.ForeignKeys;
+import org.hibernate.engine.SessionImplementor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.util.ConfigUtils;
@@ -82,7 +84,8 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             return false;
         }
 
-        if ( this.getSession().contains( entity ) ) {
+        org.hibernate.Session session = this.getSession();
+        if ( session.contains( entity ) ) {
             if ( log.isDebugEnabled() )
                 log.debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );
             return false;
@@ -102,11 +105,15 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             }
         }
 
+        String bestGuessEntityName = ( ( SessionImplementor ) session ).bestGuessEntityName( entity );
+        if ( ForeignKeys.isNotTransient( bestGuessEntityName, entity, null, ( SessionImplementor ) session ) ) {
+            log.info( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
+            return false;
+        }
+
         /*
-         * Tricky case. It is basically impossible to figure out whether the entity might have some persistent
-         * representation when we are inside a transaction. The ID is filled in, but it probably is a survivor of a
-         * rolled-back transaction. It doesn't matter what we return, it's not guaranteed to be right ... so we let the
-         * caller decide if they should set the ID to null manually.
+         * The ID is filled in, but it probably is a survivor of a rolled-back transaction. It doesn't matter what we
+         * return, it's not guaranteed to be right.
          */
         log.info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
                 + id );
