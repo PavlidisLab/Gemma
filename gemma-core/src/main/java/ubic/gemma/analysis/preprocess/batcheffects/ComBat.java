@@ -76,7 +76,7 @@ public class ComBat<R, C> {
 
     private static Log log = LogFactory.getLog( ComBat.class );
 
-    private final ObjectMatrix<C, String, Object> sampleInfo;
+    private final ObjectMatrix<C, String, ?> sampleInfo;
     private final DoubleMatrix<R, C> data;
     private Algebra solver;
 
@@ -121,7 +121,7 @@ public class ComBat<R, C> {
 
     private DoubleArrayList gammaBar = null;
 
-    public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, Object> sampleInfo ) {
+    public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, ?> sampleInfo ) {
 
         if ( data.columns() < 4 ) {
             throw new IllegalArgumentException( "Cannot run ComBat with fewer than 4 samples" );
@@ -333,8 +333,8 @@ public class ComBat<R, C> {
 
             DoubleMatrix1D[] batchResults;
 
-            batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ), gammaBar
-                    .get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior.get( batchIndex ) );
+            batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
+                    gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior.get( batchIndex ) );
 
             for ( int j = 0; j < batchResults[0].size(); j++ ) {
                 gammastar.set( batchIndex, j, batchResults[0].get( j ) );
@@ -381,8 +381,8 @@ public class ComBat<R, C> {
                     for ( int k = firstBatch; k < lastBatch; k++ ) {
                         String batchId = batchIds[k];
                         DoubleMatrix2D batchData = getBatchData( sdata, batchId );
-                        DoubleMatrix1D[] batchResults = nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat
-                                .viewRow( k ) );
+                        DoubleMatrix1D[] batchResults = nonParametricFit( batchData, gammaHat.viewRow( k ),
+                                deltaHat.viewRow( k ) );
                         results.put( batchId, batchResults );
                     }
                 }
@@ -660,11 +660,11 @@ public class ComBat<R, C> {
             DoubleMatrix1D sum2 = stepSum( matrix, gnew );
             DoubleMatrix1D dnew = postVar( sum2, n, a, b );
 
-            DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs ).assign( gold,
-                    Functions.div );
+            DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs )
+                    .assign( gold, Functions.div );
 
-            DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs ).assign( dold,
-                    Functions.div );
+            DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs )
+                    .assign( dold, Functions.div );
             double gnewmax = 0.0;
             double dnewmax = 0.0;
             if ( hasMissing ) {
@@ -774,8 +774,8 @@ public class ComBat<R, C> {
             double t2b ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( ghat.size() );
         for ( int i = 0; i < ghat.size(); i++ ) {
-            result.set( i, ( t2b * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar )
-                    / ( t2b * n.get( i ) + dstar.get( i ) ) );
+            result.set( i,
+                    ( t2b * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar ) / ( t2b * n.get( i ) + dstar.get( i ) ) );
         }
         return result;
     }
@@ -890,8 +890,8 @@ public class ComBat<R, C> {
          * subtract column gnew from each column of data; square; then sum over each row.
          */
 
-        DoubleMatrix2D deltas = matrix.copy().assign( ( s.mult( s.transpose( g ), a ) ), Functions.minus ).assign(
-                Functions.square );
+        DoubleMatrix2D deltas = matrix.copy().assign( ( s.mult( s.transpose( g ), a ) ), Functions.minus )
+                .assign( Functions.square );
         DoubleMatrix1D sumsq = new DenseDoubleMatrix1D( deltas.rows() );
         sumsq.assign( 0.0 );
 
@@ -957,8 +957,8 @@ public class ComBat<R, C> {
             }
             varpooled = var;
         } else {
-            varpooled = y.copy().assign( solver.transpose( solver.mult( X, beta ) ), Functions.minus ).assign(
-                    Functions.pow( 2 ) );
+            varpooled = y.copy().assign( solver.transpose( solver.mult( X, beta ) ), Functions.minus )
+                    .assign( Functions.pow( 2 ) );
             DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
             scale.assign( 1.0 / numSamples );
             varpooled = solver.mult( varpooled, scale );

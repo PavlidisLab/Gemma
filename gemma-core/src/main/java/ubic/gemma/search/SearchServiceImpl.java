@@ -81,7 +81,7 @@ import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -133,25 +133,25 @@ import ubic.gemma.util.ReflectionUtil;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class SearchServiceImpl implements SearchService {
 
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
-
-    /**
-     * Defines the properties we look at for 'highlighting'.
-     */
-    static final String[] propertiesToSearch = new String[] { "all", "name", "description",
-            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
-            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
-            "expressionExperiment.experimentalDesign.experimentalFactors.name",
-            "expressionExperiment.experimentalDesign.experimentalFactors.description",
-            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
-            "expressionExperiment.primaryPublication.authorList",
-            "expressionExperiment.otherRelevantPublications.abstractText",
-            "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
-            "expressionExperiment.experimentalDesign.experimentalFactors.name",
-            "expressionExperiment.experimentalDesign.factorValues.value" };
+//
+//    /**
+//     * Defines the properties we look at for 'highlighting'.
+//     */
+//    private static final String[] propertiesToSearch = new String[] { "all", "name", "description",
+//            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
+//            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
+//            "expressionExperiment.experimentalDesign.experimentalFactors.name",
+//            "expressionExperiment.experimentalDesign.experimentalFactors.description",
+//            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
+//            "expressionExperiment.primaryPublication.authorList",
+//            "expressionExperiment.otherRelevantPublications.abstractText",
+//            "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
+//            "expressionExperiment.experimentalDesign.experimentalFactors.name",
+//            "expressionExperiment.experimentalDesign.factorValues.value" };
 
     /**
      * Penalty applied to all 'index' hits
@@ -248,7 +248,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    
+
     @Autowired
     private GeneSearchService geneSearchService;
 
@@ -294,7 +294,8 @@ public class SearchServiceImpl implements SearchService {
 
             if ( terracottaEnabled ) {
 
-                CacheConfiguration config = new CacheConfiguration( ONTOLOGY_CHILDREN_CACHE_NAME, ONTOLOGY_INFO_CACHE_SIZE );
+                CacheConfiguration config = new CacheConfiguration( ONTOLOGY_CHILDREN_CACHE_NAME,
+                        ONTOLOGY_INFO_CACHE_SIZE );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
                 config.setOverflowToDisk( false );
@@ -413,12 +414,12 @@ public class SearchServiceImpl implements SearchService {
     public List<?> search( SearchSettings settings, Class<?> resultClass ) {
         Map<Class<?>, List<SearchResult>> searchResults = this.search( settings );
         List<Object> resultObjects = new ArrayList<Object>();
-        
+
         List<SearchResult> searchResultObjects = searchResults.get( resultClass );
-        for(SearchResult sr : searchResultObjects){
+        for ( SearchResult sr : searchResultObjects ) {
             resultObjects.add( sr.getResultObject() );
         }
-        
+
         return resultObjects;
     }
 
@@ -1399,7 +1400,7 @@ public class SearchServiceImpl implements SearchService {
         filterByTaxon( settings, results, true );
         return results;
     }
-    
+
     /**
      * Convert hits from database searches into SearchResults.
      * 
@@ -1593,9 +1594,11 @@ public class SearchServiceImpl implements SearchService {
      * @return
      */
     private Collection<SearchResult> phenotypeSearch( SearchSettings settings ) {
-        Collection<SearchResult> results = this.dbHitsToSearchResult( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
+        Collection<SearchResult> results = this.dbHitsToSearchResult( this.phenotypeAssociationManagerService
+                .searchInDatabaseForPhenotype( settings.getQuery() ) );
         return results;
     }
+
     /**
      * @param settings
      * @return
@@ -1723,7 +1726,7 @@ public class SearchServiceImpl implements SearchService {
                     GeneSet geneSet = ( GeneSet ) o;
                     currentTaxon = geneSetService.getTaxonForGeneSet( geneSet );
 
-                } else if ( o instanceof CharacteristicValueObject) {
+                } else if ( o instanceof CharacteristicValueObject ) {
                     CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
                     currentTaxon = taxonDao.findByCommonName( charVO.getTaxon() );
 
@@ -2130,16 +2133,16 @@ public class SearchServiceImpl implements SearchService {
             return experimentSetService.load( ids );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             Collection<Characteristic> chars = new ArrayList<Characteristic>();
-            for(Long id : ids){
+            for ( Long id : ids ) {
                 chars.add( characteristicService.load( id ) );
             }
             return chars;
         } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
             // TEMP HACK this whole method should not be needed in many cases
             Collection<CharacteristicValueObject> chars = new ArrayList<CharacteristicValueObject>();
-            for(SearchResult result : results){
-                if(result.getResultClass().isAssignableFrom( CharacteristicValueObject.class )){
-                    chars.add( (CharacteristicValueObject) result.getResultObject() );
+            for ( SearchResult result : results ) {
+                if ( result.getResultClass().isAssignableFrom( CharacteristicValueObject.class ) ) {
+                    chars.add( ( CharacteristicValueObject ) result.getResultObject() );
                 }
             }
             return chars;
@@ -2247,15 +2250,16 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( settings.isSearchGenesByGO() ) {
-            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( geneSearchService.getGOGroupGenes( 
-                    searchString, settings.getTaxon() ), "From GO group" );
+            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult(
+                    geneSearchService.getGOGroupGenes( searchString, settings.getTaxon() ), "From GO group" );
             accreteResults( rawResults, ontologyGenes );
         }
 
         if ( settings.isSearchUsingPhenotypes() ) {
-            
-            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult( geneSearchService.getPhenotypeAssociatedGenes(
-                    searchString, settings.getTaxon() ), "From phenotype association" );
+
+            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
+                    geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
+                    "From phenotype association" );
             accreteResults( rawResults, phenotypeGenes );
         }
 
