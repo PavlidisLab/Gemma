@@ -112,34 +112,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return super.persistOrUpdate( entity );
     }
 
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
-        this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
-
-    /**
-     * @param gene2GoAssociationDao the gene2GoAssociationDao to set
-     */
-    public void setGene2GoAssociationDao( Gene2GOAssociationDao gene2GoAssociationDao ) {
-        this.gene2GoAssociationDao = gene2GoAssociationDao;
-    }
-
-    public void setGeneCoexpressionAnalysisDao( GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao ) {
-        this.geneCoexpressionAnalysisDao = geneCoexpressionAnalysisDao;
-    }
-
-    public void setProbeCoexpressionAnalysisDao( ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao ) {
-        this.probeCoexpressionAnalysisDao = probeCoexpressionAnalysisDao;
-    }
-
-    public void setGene2GeneProteinAssociationDao( Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao ) {
-        this.gene2GeneProteinAssociationDao = gene2GeneProteinAssociationDao;
-    }
-
     /**
      * @param entity
      * @return

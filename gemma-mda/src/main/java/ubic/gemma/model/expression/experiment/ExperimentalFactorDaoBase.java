@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
-
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**

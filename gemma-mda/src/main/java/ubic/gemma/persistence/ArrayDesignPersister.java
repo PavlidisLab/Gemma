@@ -18,15 +18,17 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -45,10 +47,7 @@ import ubic.gemma.model.genome.Taxon;
 abstract public class ArrayDesignPersister extends GenomePersister {
 
     @Autowired
-    protected ArrayDesignService arrayDesignService;
-
-    @Autowired
-    protected CompositeSequenceDao compositeSequenceDao;
+    private ArrayDesignDao arrayDesignDao;
 
     /*
      * (non-Javadoc)
@@ -92,14 +91,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         /*
          * Note we don't do a full find here.
          */
-        ArrayDesign existing = arrayDesignService.find( arrayDesign );
+        ArrayDesign existing = arrayDesignDao.find( arrayDesign );
 
         if ( existing == null ) {
 
             /*
              * Try less stringent search.
              */
-            existing = arrayDesignService.findByShortName( arrayDesign.getShortName() );
+            existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
 
             if ( existing == null ) {
                 log.info( arrayDesign + " is new, processing..." );
@@ -156,9 +155,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( arrayDesign.getAuditTrail() != null && isTransient( arrayDesign.getAuditTrail() ) )
                 arrayDesign.getAuditTrail().setId( null );
 
+            Collection<CompositeSequence> scs = new ArrayList<CompositeSequence>();
+            scs.addAll( arrayDesign.getCompositeSequences() );
+            arrayDesign.getCompositeSequences().clear();
+            arrayDesign = arrayDesignDao.create( arrayDesign );
+            arrayDesign.getCompositeSequences().addAll( scs );
             arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
+            arrayDesignDao.update( arrayDesign );
 
-            arrayDesign = arrayDesignService.create( arrayDesign );
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
         }
@@ -174,9 +178,13 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
-
         int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+
+            if ( compositeSequence.getId() != null ) {
+                log.warn( "s h n" );
+                compositeSequence.setId( null );
+            }
 
             compositeSequence.setArrayDesign( arrayDesign );
 

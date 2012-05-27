@@ -58,6 +58,7 @@ public class PersisterHelper extends RelationshipPersister {
         try {
 
             this.getSession().setFlushMode( FlushMode.COMMIT );
+
             if ( entity instanceof Auditable ) {
                 Auditable a = ( Auditable ) entity;
 

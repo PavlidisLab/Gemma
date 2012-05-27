@@ -355,6 +355,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( isTransient( bioAssay.getAuditTrail() ) && bioAssay.getAuditTrail() != null )
             bioAssay.getAuditTrail().setId( null ); // in case of retry;
+
         if ( isTransient( bioAssay.getStatus() ) && bioAssay.getStatus() != null ) bioAssay.getStatus().setId( null ); // in
                                                                                                                        // case
                                                                                                                        // of
@@ -391,11 +392,16 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( experimentalFactor == null ) return null;
         if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
 
-        for ( Characteristic c : experimentalFactor.getAnnotations() ) {
+        Collection<Characteristic> annotations = experimentalFactor.getAnnotations();
+        for ( Characteristic c : annotations ) {
+            // in case of retry.
             c.setId( null );
+            if ( c.getAuditTrail() != null && isTransient( c.getAuditTrail() ) ) {
+                c.getAuditTrail().setId( null );
+            }
         }
 
-        persistCollectionElements( experimentalFactor.getAnnotations() );
+        persistCollectionElements( annotations );
 
         return experimentalFactor;
     }
@@ -587,7 +593,16 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( experimentalFactor ) || experimentalFactor == null ) return experimentalFactor;
         assert experimentalFactor.getType() != null;
         fillInExperimentalFactorAssociations( experimentalFactor );
-        experimentalFactor.getCategory().setId( null ); // in case of retry
+
+        // in case of retry
+        Characteristic category = experimentalFactor.getCategory();
+        if ( isTransient( category ) ) {
+            category.setId( null );
+            if ( category.getAuditTrail() != null && isTransient( category.getAuditTrail() ) ) {
+                category.getAuditTrail().setId( null );
+            }
+        }
+
         assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
         return experimentalFactorDao.create( experimentalFactor );
     }
