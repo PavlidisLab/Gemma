@@ -52,7 +52,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          */
         getTestPersistentCompleteExpressionExperiment( false );
 
-        int numThreads = 3;
+        int numThreads = 5;
         final int numExperimentsPerThread = 1;
 
         final AtomicInteger c = new AtomicInteger( 0 );
@@ -73,14 +73,11 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                             log.info( "Thread " + t + " experiment " + j );
 
                             results.put( getTestPersistentCompleteExpressionExperiment( false ), 1 );
-                            // results.put( getTestPeristentGene(), 1 );
                             c.incrementAndGet();
                         } catch ( Exception e ) {
                             log.error( "Failure in: Thread " + t + " experiment " + j + ": " + e.getMessage() + " "
                                     + ExceptionUtils.getStackTrace( e ) );
                             failed.set( true );
-
-                        } finally {
                         }
                     }
                 }

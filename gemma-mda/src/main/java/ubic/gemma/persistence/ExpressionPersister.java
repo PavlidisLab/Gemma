@@ -340,10 +340,14 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         log.debug( "biomaterials done" );
 
-        if ( bioAssay.getRawDataFile() != null ) {
-            if ( isTransient( bioAssay.getRawDataFile() ) ) {
-                bioAssay.getRawDataFile().setId( null ); // in case of retry.
-                bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile(), false ) );
+        LocalFile rawDataFile = bioAssay.getRawDataFile();
+        if ( rawDataFile != null ) {
+            if ( isTransient( rawDataFile ) ) {
+                rawDataFile.setId( null ); // in case of retry.
+                bioAssay.setRawDataFile( persistLocalFile( rawDataFile, false ) );
+            } else {
+                // resynch.
+                this.localFileDao.update( rawDataFile );
             }
             log.debug( "raw data file done" );
         }

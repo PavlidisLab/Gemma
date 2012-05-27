@@ -105,6 +105,9 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             }
         }
 
+        /*
+         * Hibernate has a method that, pretty much, does what we've done so far ... but probably does it better.
+         */
         String bestGuessEntityName = ( ( SessionImplementor ) session ).bestGuessEntityName( entity );
         if ( ForeignKeys.isNotTransient( bestGuessEntityName, entity, null, ( SessionImplementor ) session ) ) {
             log.info( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
