@@ -124,7 +124,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @return
      */
     protected ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
-        assert isTransient( arrayDesign );
 
         if ( arrayDesign == null ) return null;
 
@@ -154,6 +153,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             log.info( "Persisting " + arrayDesign );
 
+            if ( arrayDesign.getAuditTrail() != null && isTransient( arrayDesign.getAuditTrail() ) )
+                arrayDesign.getAuditTrail().setId( null );
+
             arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
             arrayDesign = arrayDesignService.create( arrayDesign );
@@ -173,7 +175,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         int persistedBioSequences = 0;
 
-        assert arrayDesign.getId() == null;
         int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 

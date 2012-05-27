@@ -461,14 +461,6 @@ public class PersistentDummyObjectHelper {
             // Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
 
-            // if ( randomNames ) {
-            // reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
-            // } else {
-            // reporter.setName( i + "_probe_at" );
-            // }
-            //
-            // reporter.setCompositeSequence( compositeSequence );
-
             if ( randomNames ) {
                 compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcs" );
             } else {

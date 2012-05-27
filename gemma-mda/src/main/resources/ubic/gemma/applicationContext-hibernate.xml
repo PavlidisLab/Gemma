@@ -35,7 +35,7 @@
 				</property>
 				<property name="retryPolicy">
 					<bean id="retryPolicy" class="ubic.gemma.persistence.retry.RetryPolicy">
-						<constructor-arg name="maxAttempts" value="10" />
+						<constructor-arg name="maxAttempts" value="2" />
 						<constructor-arg name="retryableExceptions">
 							<map>
 								<!-- FIXME we probably don't need all of these. -->

@@ -116,7 +116,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         try {
-            this.getSession().flush();
+            // this.getSession().flush();
 
             log.info( ">>>>>>>>>> Persisting " + ee );
 
@@ -353,8 +353,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             file = persistLocalFile( file );
         }
 
-        if ( isTransient( bioAssay.getAuditTrail() ) ) bioAssay.getAuditTrail().setId( null ); // in case of retry;
-        if ( isTransient( bioAssay.getStatus() ) ) bioAssay.getStatus().setId( null ); // in case of retry;
+        if ( isTransient( bioAssay.getAuditTrail() ) && bioAssay.getAuditTrail() != null )
+            bioAssay.getAuditTrail().setId( null ); // in case of retry;
+        if ( isTransient( bioAssay.getStatus() ) && bioAssay.getStatus() != null ) bioAssay.getStatus().setId( null ); // in
+                                                                                                                       // case
+                                                                                                                       // of
+                                                                                                                       // retry;
 
         log.debug( "Done with " + bioAssay );
 

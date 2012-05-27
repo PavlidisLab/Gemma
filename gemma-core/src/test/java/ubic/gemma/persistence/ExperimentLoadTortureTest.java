@@ -40,8 +40,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
     /**
-     * This test can fail with a deadlock on ACL table. Note that this behaviour is dependent on configuration, in
-     * complex ways, so don't worry about trying to get it to fail. The fact that it works is good ;)
+     * This test can fail with a deadlock. Note that this behaviour is dependent on configuration, in complex ways, so
+     * don't worry about trying to get it to fail. The fact that it works is good ;)
      * 
      * @throws Exception
      */
