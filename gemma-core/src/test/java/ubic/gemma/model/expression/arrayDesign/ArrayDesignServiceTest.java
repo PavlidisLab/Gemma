@@ -33,7 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -64,6 +63,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Autowired
     BioSequenceService bioSequenceService;
+
+    @Autowired
+    CompositeSequenceService compositeSequenceService;
 
     /*
      * @see TestCase#setUp()
@@ -149,7 +151,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Transactional
     public void testDelete() {
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
@@ -166,7 +167,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         ad = null;
 
-        CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
         for ( Long id : seqIds ) {
             try {
                 CompositeSequence cs = compositeSequenceService.load( id );
@@ -179,7 +179,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Transactional
     public void testFindWithExternalReference() {
         ad = ArrayDesign.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
