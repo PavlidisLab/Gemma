@@ -509,7 +509,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
     private void logTimeInfo( StopWatch timer, Collection<DesignElementDataVector> items ) {
 
-        log.info( String.format( "Loaded in %.2fs. Thawing %d vectors", timer.getTime() / 1000, items.size() ) );
+        log.info( String.format( "Loaded in %.2fs. Thawing %d vectors", timer.getTime() / 1000.0, items.size() ) );
     }
 
     /**
