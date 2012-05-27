@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
@@ -57,7 +58,8 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         BusinessKey.checkValidKey( taxon );
 
         Criteria queryObject = super.getSession().createCriteria( Taxon.class ).setReadOnly( true );
-
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
 
         java.util.List<?> results = queryObject.list();
@@ -138,11 +140,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     public Collection<? extends Taxon> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from TaxonImpl t where t.id in (:ids)", "ids", ids );
     }
-    
-    
-    
-    
-    
+
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int, java.util.Collection)
      */
@@ -219,8 +217,8 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( commonName );
         argNames.add( "commonName" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -228,7 +226,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
                     "More than one instance of 'ubic.gemma.model.genome.Taxon"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
+            result = results.get( 0 );
         }
 
         return ( Taxon ) result;
@@ -251,8 +249,8 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( scientificName );
         argNames.add( "scientificName" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -382,5 +380,5 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         }
         this.getHibernateTemplate().update( taxon );
     }
-    
+
 }

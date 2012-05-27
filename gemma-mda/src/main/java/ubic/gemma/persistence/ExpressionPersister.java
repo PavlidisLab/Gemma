@@ -34,6 +34,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -383,7 +384,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         dataVector.setBioAssayDimension( bioAssayDimension );
 
         assert dataVector.getQuantitationType() != null;
-        dataVector.setQuantitationType( persistQuantitationType( dataVector.getQuantitationType() ) );
+        QuantitationType qt = persistQuantitationType( dataVector.getQuantitationType() );
+        qt = ( QuantitationType ) this.getSession().merge( qt );
+        dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;
     }
