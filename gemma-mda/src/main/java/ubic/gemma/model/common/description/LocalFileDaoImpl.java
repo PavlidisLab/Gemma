@@ -20,6 +20,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateAccessor;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.persistence.AbstractDao;
@@ -48,16 +50,18 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
 
         BusinessKey.checkValidKey( localFile );
 
+        HibernateTemplate t = new HibernateTemplate( this.getSessionFactory() );
+        t.setFlushMode( HibernateAccessor.FLUSH_COMMIT );
         List<?> results;
         if ( localFile.getRemoteURL() == null ) {
-            results = getHibernateTemplate().findByNamedParam(
-                    "from LocalFileImpl where localURL=:u and remoteURL is null ", "u", localFile.getLocalURL() );
+            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL is null ", "u",
+                    localFile.getLocalURL() );
         } else if ( localFile.getLocalURL() == null ) {
-            results = getHibernateTemplate().findByNamedParam(
-                    "from LocalFileImpl where localURL is null and remoteURL=:r", "r", localFile.getRemoteURL() );
+            results = t.findByNamedParam( "from LocalFileImpl where localURL is null and remoteURL=:r", "r",
+                    localFile.getRemoteURL() );
         } else {
-            results = getHibernateTemplate().findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL=:r",
-                    new String[] { "u", "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
+            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL=:r", new String[] { "u",
+                    "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
         }
 
         Object result = null;
@@ -80,21 +84,16 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
      */
     public LocalFile findByLocalURL( final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( url );
-        argNames.add( "url" );
-        args.add( size );
-        argNames.add( "size" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
+                new Object[] { url, size } );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                     "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
+            result = results.get( 0 );
         }
         return ( LocalFile ) result;
     }
@@ -117,21 +116,16 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
 
     public LocalFile findByRemoteURL( final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( url );
-        argNames.add( "url" );
-        args.add( size );
-        argNames.add( "size" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
+                new Object[] { url, size } );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                     "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
+            result = results.get( 0 );
         }
         return ( LocalFile ) result;
     }
@@ -141,18 +135,15 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
      */
     @Override
     public LocalFile findByRemoteURL( final java.net.URL url, final java.lang.Long size ) {
-        return this
-                .findByRemoteURL(
-                        "from ubic.gemma.model.common.description.LocalFile as localFile where localFile.url = :url and localFile.size = :size",
-                        url, size );
+        return this.findByRemoteURL( "from ubic.gemma.model.common.description.LocalFile as localFile "
+                + "where localFile.url = :url and localFile.size = :size", url, size );
     }
 
     /**
      * 
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile findOrCreate(
-            ubic.gemma.model.common.description.LocalFile localFile ) {
+    public LocalFile findOrCreate( ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null ) throw new IllegalArgumentException();
         LocalFile existingLocalFile = find( localFile );
         if ( existingLocalFile != null ) {

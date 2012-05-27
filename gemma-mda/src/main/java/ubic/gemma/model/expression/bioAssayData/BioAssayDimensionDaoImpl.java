@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
@@ -62,6 +63,8 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
         Criteria queryObject = super.getSession().createCriteria( BioAssayDimension.class );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
 
         if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
             queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );

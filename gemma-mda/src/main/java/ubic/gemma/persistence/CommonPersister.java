@@ -302,6 +302,7 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( file == null ) return null;
         if ( !isTransient( file ) ) return file;
         if ( forceNew ) return localFileDao.create( file );
+        file.setId( null ); // in case of retry.
         return localFileDao.findOrCreate( file );
     }
 
