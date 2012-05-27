@@ -47,8 +47,10 @@ public class RetryLogger extends RetryListenerSupport {
 
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-        log( context );
-        if ( throwable != null ) log.error( throwable, throwable );
+        synchronized ( context ) {
+            log( context );
+            if ( throwable != null ) log.error( throwable, throwable );
+        }
         super.onError( context, callback, throwable );
     }
 

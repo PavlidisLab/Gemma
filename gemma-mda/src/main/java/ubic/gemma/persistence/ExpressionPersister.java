@@ -101,7 +101,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @return
      */
     @Override
-    public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c ) {
+    public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache cachedArrays ) {
 
         if ( ee == null ) return null;
         if ( !isTransient( ee ) ) return ee;
@@ -116,7 +116,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         try {
+            this.getSession().flush();
+
             log.info( ">>>>>>>>>> Persisting " + ee );
+
             this.getSession().setFlushMode( FlushMode.COMMIT );
 
             ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
@@ -147,7 +150,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             checkExperimentalDesign( ee );
 
             // This does most of the preparatory work.
-            processBioAssays( ee, c );
+            processBioAssays( ee, cachedArrays );
 
             ee = expressionExperimentDao.create( ee );
 
@@ -171,6 +174,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity instanceof ExpressionExperiment ) {
             log.warn( "Consider doing the 'setup' step in a separate transaction" );
+            this.getSession().setFlushMode( FlushMode.AUTO );
             ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService
                     .prepare( ( ExpressionExperiment ) entity );
             return persist( ( ExpressionExperiment ) entity, c );
@@ -286,28 +290,30 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void fillInBioAssayAssociations( BioAssay bioAssay, ArrayDesignsForExperimentCache c ) {
 
         ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
-        arrayDesign = ( ArrayDesign ) this.getSession().get( ArrayDesignImpl.class, arrayDesign.getId() );
+        ArrayDesign arrayDesignUsed = null;
+        if ( !isTransient( arrayDesign ) ) {
+            arrayDesignUsed = arrayDesign;
+        } else if ( c == null || !c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
+            throw new UnsupportedOperationException( "You must provide the persistent array designs in a cache object" );
+        } else {
+            arrayDesignUsed = c.getArrayDesignCache().get( arrayDesign.getShortName() );
 
-        if ( arrayDesign == null ) {
-            throw new UnsupportedOperationException(
-                    "Bioassay cannot be persisted this way, unless array design is already in the system." );
-        }
+            if ( arrayDesignUsed == null || arrayDesignUsed.getId() == null ) {
+                throw new IllegalStateException( "You must provide the array design in the cache object" );
+            }
 
-        if ( isTransient( arrayDesign ) && c != null
-                && c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
-            ArrayDesign arrayDesignUsed = c.getArrayDesignCache().get( arrayDesign.getShortName() );
+            arrayDesignUsed = ( ArrayDesign ) this.getSession().load( ArrayDesignImpl.class, arrayDesignUsed.getId() );
 
-            c.getArrayDesignCache().put( arrayDesign.getShortName(), arrayDesignUsed );
+            if ( arrayDesignUsed == null ) {
+                throw new IllegalStateException( "No array design matching " + arrayDesign.getShortName() );
+            }
 
             log.debug( "Setting array design used for bioassay to " + arrayDesignUsed.getId() );
-            assert !isTransient( arrayDesignUsed );
-            bioAssay.setArrayDesignUsed( arrayDesignUsed );
         }
 
-        if ( isTransient( bioAssay.getArrayDesignUsed() ) ) {
-            throw new UnsupportedOperationException(
-                    "Bioassay cannot be persisted this way, unless array design is already in the system." );
-        }
+        assert !isTransient( arrayDesignUsed );
+
+        bioAssay.setArrayDesignUsed( arrayDesignUsed );
 
         boolean hadFactors = false;
         for ( BioMaterial material : bioAssay.getSamplesUsed() ) {
@@ -335,16 +341,20 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         log.debug( "biomaterials done" );
 
         if ( bioAssay.getRawDataFile() != null ) {
-            // must be unique.
-            bioAssay.getRawDataFile().setId( null ); // in case of retry.
-            bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile(), true ) );
+            if ( isTransient( bioAssay.getRawDataFile() ) ) {
+                bioAssay.getRawDataFile().setId( null ); // in case of retry.
+                bioAssay.setRawDataFile( persistLocalFile( bioAssay.getRawDataFile(), false ) );
+            }
             log.debug( "raw data file done" );
         }
 
         for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
-            file.setId( null );// in case of retry
-            file = persistLocalFile( file, true );
+            if ( isTransient( file ) ) file.setId( null ); // in case of retry
+            file = persistLocalFile( file );
         }
+
+        if ( isTransient( bioAssay.getAuditTrail() ) ) bioAssay.getAuditTrail().setId( null ); // in case of retry;
+        if ( isTransient( bioAssay.getStatus() ) ) bioAssay.getStatus().setId( null ); // in case of retry;
 
         log.debug( "Done with " + bioAssay );
 

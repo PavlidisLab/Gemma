@@ -22,6 +22,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.persistence.AbstractDao;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -29,12 +30,13 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  */
 @Repository
-public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalFileDaoBase {
+public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFileDao {
 
     private static Log log = LogFactory.getLog( LocalFileDaoImpl.class.getName() );
 
     @Autowired
     public LocalFileDaoImpl( SessionFactory sessionFactory ) {
+        super( LocalFileImpl.class );
         super.setSessionFactory( sessionFactory );
     }
 
@@ -70,6 +72,79 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
         }
         return ( LocalFile ) result;
 
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.lang.String, java.net.URL,
+     *      java.lang.Long)
+     */
+    public LocalFile findByLocalURL( final java.lang.String queryString, final java.net.URL url,
+            final java.lang.Long size ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( url );
+        argNames.add( "url" );
+        args.add( size );
+        argNames.add( "size" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+        return ( LocalFile ) result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.net.URL, java.lang.Long)
+     */
+    @Override
+    public LocalFile findByLocalURL( final java.net.URL url, final java.lang.Long size ) {
+        return this
+                .findByLocalURL(
+                        "from ubic.gemma.model.common.description.LocalFile as localFile where localFile.url = :url and localFile.size = :size",
+                        url, size );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.lang.String, java.net.URL,
+     *      java.lang.Long)
+     */
+
+    public LocalFile findByRemoteURL( final java.lang.String queryString, final java.net.URL url,
+            final java.lang.Long size ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( url );
+        argNames.add( "url" );
+        args.add( size );
+        argNames.add( "size" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+        return ( LocalFile ) result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.net.URL, java.lang.Long)
+     */
+    @Override
+    public LocalFile findByRemoteURL( final java.net.URL url, final java.lang.Long size ) {
+        return this
+                .findByRemoteURL(
+                        "from ubic.gemma.model.common.description.LocalFile as localFile where localFile.url = :url and localFile.size = :size",
+                        url, size );
     }
 
     /**

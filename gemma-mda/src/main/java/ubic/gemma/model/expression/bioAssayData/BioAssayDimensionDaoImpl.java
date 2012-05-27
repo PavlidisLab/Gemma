@@ -60,50 +60,47 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      */
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( BioAssayDimension.class );
 
-            if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
-                queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
-            }
+        Criteria queryObject = super.getSession().createCriteria( BioAssayDimension.class );
 
-            if ( StringUtils.isNotBlank( bioAssayDimension.getDescription() ) ) {
-                queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
-            }
-
-            queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
-
-            Collection<String> names = new HashSet<String>();
-            assert bioAssayDimension.getBioAssays().size() > 0;
-            for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
-                names.add( bioAssay.getName() );
-            }
-            queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-
-            BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
-
-            if ( candidate == null ) return null;
-
-            // Now check that the bioassays and order are exactly the same.
-            Collection<BioAssay> desiredBioAssays = bioAssayDimension.getBioAssays();
-            Collection<BioAssay> candidateBioAssays = candidate.getBioAssays();
-
-            assert desiredBioAssays.size() == candidateBioAssays.size();
-
-            Iterator<BioAssay> dit = desiredBioAssays.iterator();
-            Iterator<BioAssay> cit = candidateBioAssays.iterator();
-
-            while ( dit.hasNext() ) {
-                BioAssay d = dit.next();
-                BioAssay c = cit.next();
-                if ( !c.equals( d ) ) return null;
-            }
-
-            return candidate;
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
+            queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
         }
+
+        if ( StringUtils.isNotBlank( bioAssayDimension.getDescription() ) ) {
+            queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
+        }
+
+        queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
+
+        Collection<String> names = new HashSet<String>();
+        assert bioAssayDimension.getBioAssays().size() > 0;
+        for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
+            names.add( bioAssay.getName() );
+        }
+        queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
+
+        BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
+
+        if ( candidate == null ) return null;
+
+        // Now check that the bioassays and order are exactly the same.
+        Collection<BioAssay> desiredBioAssays = bioAssayDimension.getBioAssays();
+        Collection<BioAssay> candidateBioAssays = candidate.getBioAssays();
+
+        assert desiredBioAssays.size() == candidateBioAssays.size();
+
+        Iterator<BioAssay> dit = desiredBioAssays.iterator();
+        Iterator<BioAssay> cit = candidateBioAssays.iterator();
+
+        while ( dit.hasNext() ) {
+            BioAssay d = dit.next();
+            BioAssay c = cit.next();
+            if ( !c.equals( d ) ) return null;
+        }
+
+        return candidate;
+
     }
 
     /*
@@ -164,7 +161,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         } );
         return bioAssayDimension;
     }
-    
+
     @Override
     public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
@@ -176,7 +173,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension.getBioAssays() );
-                
+
                 return null;
             }
         } );

@@ -38,11 +38,10 @@
 						<constructor-arg name="maxAttempts" value="10" />
 						<constructor-arg name="retryableExceptions">
 							<map>
-								<!-- FIXME we don't need all of these. -->
+								<!-- FIXME we probably don't need all of these. -->
 								<entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
 								<entry key="java.sql.BatchUpdateException" value="true" />
 								<entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
-								<!-- <entry key="org.springframework.dao.DataIntegrityViolationException" value="true" /> -->
 								<entry key="org.springframework.transaction.UnexpectedRollbackException" value="true" />
 							</map>
 						</constructor-arg>

@@ -105,11 +105,12 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         /*
          * Tricky case. It is basically impossible to figure out whether the entity might have some persistent
          * representation when we are inside a transaction. The ID is filled in, but it probably is a survivor of a
-         * rolled-back transaction. It doesn't matter what we return, it's not guaranteed to be right...
+         * rolled-back transaction. It doesn't matter what we return, it's not guaranteed to be right ... so we let the
+         * caller decide if they should set the ID to null manually.
          */
         log.info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
                 + id );
-        return false;
+        return true;
 
     }
 
