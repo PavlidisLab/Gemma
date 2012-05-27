@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -64,8 +65,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
-
+        Criteria queryObject = BusinessKey.createQueryObject( getSession(), bioSequence );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
         /*
          * this initially matches on name and taxon only.
          */

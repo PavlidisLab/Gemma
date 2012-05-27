@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
@@ -181,15 +182,19 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            if ( compositeSequence.getId() != null ) {
-                log.warn( "s h n" );
-                compositeSequence.setId( null );
+            if ( !isTransient( compositeSequence ) ) {
+                // in case of retry (not used?)
+                continue;
             }
+            compositeSequence.setId( null );
 
             compositeSequence.setArrayDesign( arrayDesign );
 
-            compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
-                    .getBiologicalCharacteristic() ) );
+            BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
+
+            BioSequence persistedBs = persistBioSequence( biologicalCharacteristic );
+
+            compositeSequence.setBiologicalCharacteristic( persistedBs );
 
             if ( ++persistedBioSequences % numElementsPerUpdate == 0 && numElements > 1000 ) {
                 log.info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
