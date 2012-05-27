@@ -101,6 +101,7 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
      * 
      * @param localFile Collection of File details relating to string download
      */
+    @Override
     public File unPackFile( Collection<LocalFile> localFile ) {
         File stringfiledownloaded = null;
         for ( LocalFile file : localFile ) {

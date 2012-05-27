@@ -52,6 +52,7 @@ public class DateStringComparator implements Comparator<Object> {
      * (non-Javadoc)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( Object arg0, Object arg1 ) {
         String d1 = arg0.toString();
         String d2 = arg1.toString();

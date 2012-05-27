@@ -244,6 +244,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param linkAnalysisConfig
      * @return
      */
+    @Override
     @Transactional(readOnly=true)
     public ExpressionExperiment loadDataForAnalysis (Long eeId) {
         ExpressionExperiment ee = eeService.load( eeId );
@@ -263,6 +264,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param filterConfig
      * @return
      */
+    @Override
     public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig) {
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
@@ -318,6 +320,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param linkAnalysisConfig
      * @param filterConfig
      */
+    @Override
     public void saveResults (ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig, FilterConfig filterConfig) {
         try {            
             Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();            
@@ -729,6 +732,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
          * links in an ordering that the RDBMS can use efficiently.
          */
         links.mergeSortFromTo( 0, links.size() - 1, new Comparator<Link>() {
+            @Override
             public int compare( Link a, Link b ) {
                 if ( a == null || b == null ) return 1;
 
@@ -901,6 +905,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
 
         Transformer officialSymbolExtractor = new Transformer() {
+            @Override
             public Object transform( Object input ) {
                 Gene g = ( Gene ) input;
 

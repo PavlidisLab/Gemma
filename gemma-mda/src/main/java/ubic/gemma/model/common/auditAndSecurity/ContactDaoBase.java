@@ -36,12 +36,14 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends Contact> create( final java.util.Collection<? extends Contact> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Contact.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Contact> entityIterator = entities.iterator(); entityIterator
@@ -55,6 +57,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     }
 
     
+    @Override
     public Collection<? extends Contact> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ContactImpl where id in (:ids)", "ids", ids );
     }
@@ -63,6 +66,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public Contact create( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         if ( contact == null ) {
             throw new IllegalArgumentException( "Contact.create - 'contact' can not be null" );
@@ -74,6 +78,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#findByEmail(int, java.lang.String)
      */
+    @Override
     public Contact findByEmail( final java.lang.String email ) {
         return this.findByEmail( "from ContactImpl c where c.email = :email", email );
     }
@@ -105,6 +110,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#load(int, java.lang.Long)
      */
 
+    @Override
     public Contact load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Contact.load - 'id' can not be null" );
@@ -117,6 +123,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends Contact> loadAll() {
         final java.util.Collection<? extends Contact> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.ContactImpl.class );
@@ -127,6 +134,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Contact.remove - 'id' can not be null" );
@@ -141,6 +149,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends Contact> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Contact.remove - 'entities' can not be null" );
@@ -151,6 +160,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public void remove( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         if ( contact == null ) {
             throw new IllegalArgumentException( "Contact.remove - 'contact' can not be null" );
@@ -162,12 +172,14 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends Contact> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Contact.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Contact> entityIterator = entities.iterator(); entityIterator
@@ -182,6 +194,7 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#update(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public void update( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         if ( contact == null ) {
             throw new IllegalArgumentException( "Contact.update - 'contact' can not be null" );

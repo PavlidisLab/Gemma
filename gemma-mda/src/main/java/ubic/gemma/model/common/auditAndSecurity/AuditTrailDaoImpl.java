@@ -41,6 +41,7 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );
     }

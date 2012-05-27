@@ -21,10 +21,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
 
-import net.sf.ehcache.CacheManager;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;

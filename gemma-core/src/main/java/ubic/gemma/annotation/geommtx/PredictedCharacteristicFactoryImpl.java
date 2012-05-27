@@ -70,6 +70,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         // term for Biological macromolecule in FMA (FMAID=63887)
@@ -91,6 +92,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
     /**
      * Force initialization
      */
+    @Override
     public void init() {
 
         if ( initializing.get() ) {
@@ -99,6 +101,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
         }
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 initializing.set( true );
 

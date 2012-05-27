@@ -38,6 +38,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends User> create( final java.util.Collection<? extends User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.create - 'entities' can not be null" );
@@ -48,6 +49,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
         return entities;
     }
 
+    @Override
     public Collection<? extends User> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from UserImpl where id in (:ids)", "ids", ids );
     }
@@ -56,6 +58,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public User create( final User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.create - 'user' can not be null" );
@@ -68,6 +71,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByEmail(int, java.lang.String)
      */
+    @Override
     public User findByEmail( final java.lang.String email ) {
         return this.findByEmail( "from UserImpl c where c.email = :email", email );
     }
@@ -75,6 +79,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#load(int, java.lang.Long)
      */
+    @Override
     public User load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "User.load - 'id' can not be null" );
@@ -86,6 +91,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#loadAll(int)
      */
+    @Override
     public Collection<? extends User> loadAll() {
         final Collection<? extends User> results = this.getHibernateTemplate().loadAll( UserImpl.class );
         return results;
@@ -95,6 +101,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "User.remove - 'id' can not be null" );
@@ -109,6 +116,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( Collection<? extends User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
@@ -119,6 +127,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#remove(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public void remove( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.remove - 'user' can not be null" );
@@ -130,6 +139,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final Collection<? extends User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
@@ -142,6 +152,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#update(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public void update( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );

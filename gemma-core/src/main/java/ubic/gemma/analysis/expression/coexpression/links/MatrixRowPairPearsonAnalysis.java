@@ -91,6 +91,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * Calculate the linear correlation matrix of a matrix, allowing missing values. If there are no missing values,
      * this calls PearsonFast.
      */
+    @Override
     public void calculateMetrics() {
 
         if ( this.numMissing == 0 ) {
@@ -213,6 +214,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
+    @Override
     public QuantitationType getMetricType() {
         QuantitationType m = QuantitationType.Factory.newInstance();
         m.setIsBackground( false );
@@ -303,6 +305,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
+    @Override
     public double correctedPvalue( int i, int j, double correl, int numused ) {
 
         double p = CorrelationStats.pvalue( correl, numused );

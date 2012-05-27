@@ -37,6 +37,7 @@ public class DataStatementImpl extends AbstractStatement implements DataStatemen
         this.data = data;
     }
 
+    @Override
     public String getObject() {
         return data;
     }

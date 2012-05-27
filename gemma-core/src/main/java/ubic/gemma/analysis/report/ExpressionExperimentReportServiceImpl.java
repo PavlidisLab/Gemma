@@ -135,6 +135,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     private Cache statsCache;
 
+    @Override
     public void afterPropertiesSet() throws Exception {
         /*
          * Initialize the cache; if it already exists it will not be recreated.
@@ -185,6 +186,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @param vos
      */
+    @Override
     public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
@@ -499,6 +501,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
      */
+    @Override
     @Secured({ "GROUP_AGENT" })
     public void generateSummaryObjects() {
         initDirectories( false );
@@ -512,6 +515,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects(java.util.Collection)
      */
+    @Override
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
         initDirectories( false );
 
@@ -577,6 +581,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @param desvo
      * @deprecated since the counts are available in the ResultSet->HitListSize.
      */
+    @Deprecated
     private void populateHitListSizes( double threshold, ExpressionAnalysisResultSet par,
             DifferentialExpressionSummaryValueObject desvo ) {
 
@@ -597,6 +602,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects(java.util.Collection)
      */
+    @Override
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
         return retrieveValueObjects( ids );
     }

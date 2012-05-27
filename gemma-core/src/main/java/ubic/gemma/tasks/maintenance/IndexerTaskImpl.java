@@ -82,6 +82,7 @@ public class IndexerTaskImpl implements IndexerTask {
 
     private SingleCompassGps probeGps;
 
+    @Override
     @TaskMethod
     public IndexerResult execute( IndexerTaskCommand command ) {
         IndexerResult result = new IndexerResult( command );

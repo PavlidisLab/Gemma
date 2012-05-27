@@ -293,6 +293,11 @@ abstract public class CommonPersister extends AbstractPersister {
         return persistLocalFile( file, false );
     }
 
+    /**
+     * @param file
+     * @param forceNew
+     * @return
+     */
     protected LocalFile persistLocalFile( LocalFile file, boolean forceNew ) {
         if ( file == null ) return null;
         if ( !isTransient( file ) ) return file;

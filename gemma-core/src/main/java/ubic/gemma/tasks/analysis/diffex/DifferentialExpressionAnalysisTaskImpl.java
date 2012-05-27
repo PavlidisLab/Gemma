@@ -67,6 +67,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
      * @see ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid
      * .javaspaces.task .diff. SpacesDifferentialExpressionAnalysisCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command ) {
 

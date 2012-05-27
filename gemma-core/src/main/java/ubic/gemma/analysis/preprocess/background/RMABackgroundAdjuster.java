@@ -51,6 +51,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
      * @see ubic.gemma.analysis.preprocess.background.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      */
+    @Override
     public DoubleMatrix adjust( DoubleMatrix signal, DoubleMatrix background ) {
         log.debug( "Background correcting..." );
 

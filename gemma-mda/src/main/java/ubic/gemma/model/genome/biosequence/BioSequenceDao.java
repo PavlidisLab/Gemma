@@ -70,6 +70,7 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
      */
     public java.util.Collection<Gene> getGenesByName( java.lang.String search );
 
+    @Override
     public Collection<BioSequence> load( Collection<Long> ids );
 
     /**

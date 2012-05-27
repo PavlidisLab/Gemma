@@ -353,6 +353,7 @@ public class ExpressionDataSVD {
                 this.norm = norm;
             }
 
+            @Override
             public int compareTo( NormCmp o ) {
                 return this.norm.compareTo( o.norm );
             }

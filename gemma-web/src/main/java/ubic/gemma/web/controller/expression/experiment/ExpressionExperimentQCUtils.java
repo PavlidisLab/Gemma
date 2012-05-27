@@ -22,7 +22,6 @@ import java.io.File;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Helper functions for checking existence etc. of QC information.

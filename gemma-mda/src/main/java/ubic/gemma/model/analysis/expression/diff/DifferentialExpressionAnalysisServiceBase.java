@@ -42,6 +42,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
+    @Override
     public ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis ) {
         try {
@@ -57,6 +58,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#find(ubic.gemma.model.genome.Gene,
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
+    @Override
     public java.util.Collection find( final ubic.gemma.model.genome.Gene gene,
             final ExpressionAnalysisResultSet resultSet, final double threshold ) {
         try {
@@ -71,6 +73,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findByInvestigationIds(java.util.Collection)
      */
+    @Override
     public java.util.Map findByInvestigationIds( final java.util.Collection investigationIds ) {
         try {
             return this.handleFindByInvestigationIds( investigationIds );
@@ -84,6 +87,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindExperimentsWithAnalyses( gene );
@@ -119,6 +123,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#thaw(java.util.Collection)
      */
+    @Override
     public void thaw( final java.util.Collection expressionAnalyses ) {
         try {
             this.handleThaw( expressionAnalyses );
@@ -132,6 +137,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
+    @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         try {

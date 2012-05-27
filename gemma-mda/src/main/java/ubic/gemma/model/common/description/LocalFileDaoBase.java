@@ -32,12 +32,14 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection create( final int transform, final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LocalFile.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -53,6 +55,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#create(int transform,
      *      ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public Object create( final int transform, final ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null ) {
             throw new IllegalArgumentException( "LocalFile.create - 'localFile' can not be null" );
@@ -65,6 +68,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#create(java.util.Collection)
      */
     
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -72,6 +76,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#create(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile create( ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.create( TRANSFORM_NONE, localFile );
     }
@@ -81,6 +86,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      *      ubic.gemma.model.common.description.LocalFile)
      */
     
+    @Override
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -105,6 +111,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#find(int, ubic.gemma.model.common.description.LocalFile)
      */ 
+    @Override
     public Object find( final int transform, final ubic.gemma.model.common.description.LocalFile localFile ) {
         return this
                 .find(
@@ -117,6 +124,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#find(java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
      */ 
+    @Override
     public ubic.gemma.model.common.description.LocalFile find( final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.find( TRANSFORM_NONE, queryString, localFile );
@@ -125,6 +133,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#find(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.find( TRANSFORM_NONE, localFile );
     }
@@ -134,6 +143,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      *      java.lang.Long)
      */
     
+    @Override
     public Object findByLocalURL( final int transform, final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -159,6 +169,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.net.URL, java.lang.Long)
      */ 
+    @Override
     public Object findByLocalURL( final int transform, final java.net.URL url, final java.lang.Long size ) {
         return this
                 .findByLocalURL(
@@ -171,6 +182,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(java.lang.String, java.net.URL,
      *      java.lang.Long)
      */ 
+    @Override
     public ubic.gemma.model.common.description.LocalFile findByLocalURL( final java.lang.String queryString,
             final java.net.URL url, final java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByLocalURL( TRANSFORM_NONE, queryString, url,
@@ -180,6 +192,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(java.net.URL, java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile findByLocalURL( java.net.URL url, java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByLocalURL( TRANSFORM_NONE, url, size );
     }
@@ -189,6 +202,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      *      java.lang.Long)
      */
     
+    @Override
     public Object findByRemoteURL( final int transform, final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -214,6 +228,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.net.URL, java.lang.Long)
      */ 
+    @Override
     public Object findByRemoteURL( final int transform, final java.net.URL url, final java.lang.Long size ) {
         return this
                 .findByRemoteURL(
@@ -226,6 +241,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(java.lang.String, java.net.URL,
      *      java.lang.Long)
      */ 
+    @Override
     public ubic.gemma.model.common.description.LocalFile findByRemoteURL( final java.lang.String queryString,
             final java.net.URL url, final java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByRemoteURL( TRANSFORM_NONE, queryString,
@@ -235,6 +251,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(java.net.URL, java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile findByRemoteURL( java.net.URL url, java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByRemoteURL( TRANSFORM_NONE, url, size );
     }
@@ -244,6 +261,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      *      ubic.gemma.model.common.description.LocalFile)
      */
     
+    @Override
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -268,6 +286,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(int,
      *      ubic.gemma.model.common.description.LocalFile)
      */ 
+    @Override
     public Object findOrCreate( final int transform, final ubic.gemma.model.common.description.LocalFile localFile ) {
         return this
                 .findOrCreate(
@@ -280,6 +299,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
      */ 
+    @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -289,6 +309,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate(
             ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findOrCreate( TRANSFORM_NONE, localFile );
@@ -297,6 +318,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#load(int, java.lang.Long)
      */
+    @Override
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LocalFile.load - 'id' can not be null" );
@@ -309,6 +331,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile load( java.lang.Long id ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.load( TRANSFORM_NONE, id );
     }
@@ -317,6 +340,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#loadAll()
      */
     
+    @Override
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -324,6 +348,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#loadAll(int)
      */
+    @Override
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.LocalFileImpl.class );
@@ -334,6 +359,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LocalFile.remove - 'id' can not be null" );
@@ -347,6 +373,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LocalFile.remove - 'entities' can not be null" );
@@ -357,6 +384,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#remove(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public void remove( ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null ) {
             throw new IllegalArgumentException( "LocalFile.remove - 'localFile' can not be null" );
@@ -367,12 +395,14 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LocalFile.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -386,6 +416,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#update(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public void update( ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null ) {
             throw new IllegalArgumentException( "LocalFile.update - 'localFile' can not be null" );

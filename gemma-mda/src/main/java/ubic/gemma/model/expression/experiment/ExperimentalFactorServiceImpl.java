@@ -28,6 +28,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 @Service
 public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
 
+    @Override
     public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors ) {
         return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().create( factors );
     }

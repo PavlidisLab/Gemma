@@ -83,6 +83,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      */
     private EntityResolver mageDtdResolver() {
         return new EntityResolver() {
+            @Override
             public InputSource resolveEntity( String publicId, String systemId ) {
                 InputStream dtd = this.getClass()
                         .getResourceAsStream( "/ubic/gemma/loader/expression/mage/MAGE-ML.dtd" );
@@ -97,6 +98,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#iterator()
      */
+    @Override
     public Collection<Object> getResults() {
         return mageDomainObjects;
     }
@@ -106,6 +108,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
+    @Override
     public void parse( File f ) throws IOException {
         InputStream is = new FileInputStream( f );
         parse( is );
@@ -120,6 +123,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      * @throws SAXException
      * @throws IOException
      */
+    @Override
     public void parse( InputStream is ) throws IOException {
         try {
             parser.parse( new InputSource( is ) );
@@ -138,6 +142,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      * @param fileName
      * @throws IOException
      */
+    @Override
     public void parse( String fileName ) throws IOException {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
         try {

@@ -86,6 +86,14 @@ public interface Persister {
     public Object persistOrUpdate( Object obj );
 
     /**
+     * Determine if a entity is transient (not persistent).
+     * 
+     * @param entity
+     * @return true if the object is not (as far as we can tell) already persisted.
+     */
+    public boolean isTransient( Object entity );
+
+    /**
      * @param entity
      * @return
      */

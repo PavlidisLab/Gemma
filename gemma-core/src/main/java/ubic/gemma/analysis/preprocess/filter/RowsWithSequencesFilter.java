@@ -42,6 +42,7 @@ public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatri
      * 
      * @see ubic.gemma.analysis.preprocess.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
+    @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
 
         List<CompositeSequence> kept = new ArrayList<CompositeSequence>();

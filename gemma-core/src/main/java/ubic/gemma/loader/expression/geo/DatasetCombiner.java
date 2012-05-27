@@ -698,6 +698,7 @@ public class DatasetCombiner {
 
     private void sortDataSets( final List<String> sampleAccs, List<String> dataSets ) {
         Collections.sort( dataSets, new Comparator<String>() {
+            @Override
             public int compare( String arg0, String arg1 ) {
                 int numSamples0 = 0;
                 int numSamples1 = 0;
@@ -725,6 +726,7 @@ public class DatasetCombiner {
 
     private void sortPlatforms( final List<String> sampleAccs, List<String> platforms ) {
         Collections.sort( platforms, new Comparator<String>() {
+            @Override
             public int compare( String arg0, String arg1 ) {
                 int numSamples0 = 0;
                 int numSamples1 = 0;

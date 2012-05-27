@@ -43,6 +43,7 @@ public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.descript
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public Collection<? extends VocabCharacteristic> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from VocabCharacteristicImpl where id in (:ids)", "ids",
                 ids );

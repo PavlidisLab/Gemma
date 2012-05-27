@@ -38,6 +38,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends Gene2GOAssociation> create(
             final java.util.Collection<? extends Gene2GOAssociation> entities ) {
         if ( entities == null ) {
@@ -45,6 +46,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -56,6 +58,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         return entities;
     }
 
+    @Override
     public Collection<? extends Gene2GOAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from Gene2GOAssociationImpl where id in (:ids)", "ids",
                 ids );
@@ -65,6 +68,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int transform,
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public Gene2GOAssociation create( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         if ( gene2GOAssociation == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.create - 'gene2GOAssociation' can not be null" );
@@ -104,6 +108,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
 
+    @Override
     public Gene2GOAssociation find( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         return this
                 .find( "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
@@ -113,6 +118,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findAssociationByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection<Gene2GOAssociation> findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindAssociationByGene( gene );
@@ -126,6 +132,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection<VocabCharacteristic> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
@@ -140,6 +147,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGoTerm(java.lang.String,
      *      ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> findByGoTerm( final java.lang.String goId,
             final ubic.gemma.model.genome.Taxon taxon ) {
         try {
@@ -155,6 +163,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGOTerm(java.util.Collection,
      *      ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> findByGOTerm( final java.util.Collection goTerms,
             final ubic.gemma.model.genome.Taxon taxon ) {
         try {
@@ -197,6 +206,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
 
+    @Override
     public Gene2GOAssociation findOrCreate( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         return ( Gene2GOAssociation ) this
                 .findOrCreate(
@@ -208,6 +218,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#load(int, java.lang.Long)
      */
+    @Override
     public Gene2GOAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.load - 'id' can not be null" );
@@ -220,6 +231,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends Gene2GOAssociation> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.Gene2GOAssociationImpl.class );
@@ -230,6 +242,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'id' can not be null" );
@@ -243,6 +256,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends Gene2GOAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'entities' can not be null" );
@@ -253,6 +267,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public void remove( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         if ( gene2GOAssociation == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'gene2GOAssociation' can not be null" );
@@ -263,6 +278,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#removeAll()
      */
+    @Override
     public void removeAll() {
         try {
             this.handleRemoveAll();
@@ -275,12 +291,14 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -294,6 +312,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#update(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public void update( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         if ( gene2GOAssociation == null ) {
             throw new IllegalArgumentException( "Gene2GOAssociation.update - 'gene2GOAssociation' can not be null" );

@@ -60,6 +60,7 @@ public class ArrayFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#getFilteredObject()
      */
+    @Override
     public T[] getFilteredObject() {
         // Recreate an array of same type and filter the removed objects.
         int originalSize = list.length;
@@ -86,14 +87,17 @@ public class ArrayFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#iterator()
      */
+    @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
             private int index = 0;
 
+            @Override
             public boolean hasNext() {
                 return index < list.length;
             }
 
+            @Override
             public T next() {
                 if ( hasNext() == false ) {
                     throw new NoSuchElementException();
@@ -101,6 +105,7 @@ public class ArrayFilterer<T> implements Filterer<T> {
                 return list[index++];
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }
@@ -110,6 +115,7 @@ public class ArrayFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#remove(java.lang.Object)
      */
+    @Override
     public void remove( T object ) {
         removeList.add( object );
     }

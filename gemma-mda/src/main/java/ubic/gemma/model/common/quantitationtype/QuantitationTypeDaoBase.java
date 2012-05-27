@@ -43,6 +43,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends QuantitationType> entityIterator = entities.iterator(); entityIterator
@@ -56,6 +57,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     }
     
     
+    @Override
     public Collection<? extends QuantitationType > load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from QuantitationTypeImpl where id in (:ids)", "ids", ids );
     }
@@ -77,6 +79,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#create(java.util.Collection)
      */
     
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -84,6 +87,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public QuantitationType create( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this.create( TRANSFORM_NONE, quantitationType );
     }
@@ -139,6 +143,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public ubic.gemma.model.common.quantitationtype.QuantitationType find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this.find( TRANSFORM_NONE, quantitationType );
@@ -195,6 +200,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this.findOrCreate( TRANSFORM_NONE, quantitationType );
@@ -217,6 +223,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#load(java.lang.Long)
      */
 
+    @Override
     public QuantitationType load( java.lang.Long id ) {
         return ( ubic.gemma.model.common.quantitationtype.QuantitationType ) this.load( TRANSFORM_NONE, id );
     }
@@ -224,6 +231,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#loadAll()
      */
+    @Override
     public java.util.Collection<? extends QuantitationType> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -244,6 +252,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "QuantitationType.remove - 'id' can not be null" );
@@ -258,6 +267,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends QuantitationType> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "QuantitationType.remove - 'entities' can not be null" );
@@ -268,6 +278,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public void remove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         if ( quantitationType == null ) {
             throw new IllegalArgumentException( "QuantitationType.remove - 'quantitationType' can not be null" );
@@ -279,12 +290,14 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends QuantitationType> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "QuantitationType.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends QuantitationType> entityIterator = entities.iterator(); entityIterator
@@ -299,6 +312,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public void update( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         if ( quantitationType == null ) {
             throw new IllegalArgumentException( "QuantitationType.update - 'quantitationType' can not be null" );

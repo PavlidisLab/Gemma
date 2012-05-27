@@ -38,6 +38,7 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
      * (non-Javadoc)
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
+    @Override
     public boolean supports( Class clazz ) {
         return SimpleExpressionExperimentLoadCommand.class.isAssignableFrom( clazz );
     }
@@ -46,6 +47,7 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
      * (non-Javadoc)
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
+    @Override
     public void validate( Object obj, Errors errors ) {
         SimpleExpressionExperimentLoadCommand command = ( SimpleExpressionExperimentLoadCommand ) obj;
 

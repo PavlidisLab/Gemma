@@ -38,6 +38,20 @@ public class RetryLogger extends RetryListenerSupport {
 
     private static Log log = LogFactory.getLog( RetryLogger.class );
 
+    @Override
+    public <T> void close( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
+        log( context );
+        if ( throwable != null ) log.error( throwable, throwable );
+        super.close( context, callback, throwable );
+    }
+
+    @Override
+    public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
+        log( context );
+        if ( throwable != null ) log.error( throwable, throwable );
+        super.onError( context, callback, throwable );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -46,10 +60,14 @@ public class RetryLogger extends RetryListenerSupport {
      */
     @Override
     public <T> boolean open( RetryContext context, RetryCallback<T> callback ) {
+        log( context );
+        return super.open( context, callback );
+    }
+
+    private void log( RetryContext context ) {
         if ( context.getRetryCount() > 0 ) {
             log.warn( "Retry attempt: " + context.getRetryCount() + " [ Triggered by: "
                     + context.getLastThrowable().getMessage() + "]" );
         }
-        return super.open( context, callback );
     }
 }

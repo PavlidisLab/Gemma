@@ -45,6 +45,7 @@ public class WebContextLoader extends AbstractContextLoader {
         return "-context.xml";
     }
 
+    @Override
     public ApplicationContext loadContext( String... locations ) throws Exception {
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading WebApplicationContext for locations ["

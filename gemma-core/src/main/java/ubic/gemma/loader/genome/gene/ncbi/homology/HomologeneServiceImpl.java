@@ -205,6 +205,7 @@ public class HomologeneServiceImpl implements HomologeneService {
         // Load the homologene groups for searching
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
 
                 running.set( true );

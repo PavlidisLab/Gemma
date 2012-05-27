@@ -145,6 +145,7 @@ public class GeneOntologyServiceTest extends TestCase {
     }
 
     // note: no spring context.
+    @Override
     @BeforeClass
     protected void setUp() throws Exception {
         gos = new GeneOntologyServiceImpl();

@@ -32,12 +32,14 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends JobInfo> create( final java.util.Collection<? extends JobInfo> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "JobInfo.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -52,6 +54,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#create(int transform, JobInfo)
      */
+    @Override
     public JobInfo create( final JobInfo jobInfo ) {
         if ( jobInfo == null ) {
             throw new IllegalArgumentException( "JobInfo.create - 'jobInfo' can not be null" );
@@ -63,6 +66,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#load(int, java.lang.Long)
      */
+    @Override
     public JobInfo load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "JobInfo.load - 'id' can not be null" );
@@ -71,6 +75,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
         return ( JobInfo ) entity;
     }
 
+    @Override
     public Collection<JobInfo> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from JobInfoImpl where id in (:ids)", "ids", ids );
     }
@@ -78,6 +83,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends JobInfo> loadAll() {
         return this.getHibernateTemplate().loadAll( JobInfoImpl.class );
     }
@@ -85,6 +91,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "JobInfo.remove - 'id' can not be null" );
@@ -98,6 +105,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends JobInfo> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "JobInfo.remove - 'entities' can not be null" );
@@ -108,6 +116,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#remove(JobInfo)
      */
+    @Override
     public void remove( JobInfo jobInfo ) {
         if ( jobInfo == null ) {
             throw new IllegalArgumentException( "JobInfo.remove - 'jobInfo' can not be null" );
@@ -118,12 +127,14 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends JobInfo> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "JobInfo.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -137,6 +148,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see JobInfoDao#update(JobInfo)
      */
+    @Override
     public void update( JobInfo jobInfo ) {
         if ( jobInfo == null ) {
             throw new IllegalArgumentException( "JobInfo.update - 'jobInfo' can not be null" );

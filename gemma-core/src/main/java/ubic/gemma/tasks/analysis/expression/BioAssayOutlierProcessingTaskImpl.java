@@ -47,6 +47,7 @@ public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcess
      * 
      * @see ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask#execute(ubic.gemma.job.TaskCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( TaskCommand command ) {
         BioAssay bioAssay = bioAssayService.load( command.getEntityId() );

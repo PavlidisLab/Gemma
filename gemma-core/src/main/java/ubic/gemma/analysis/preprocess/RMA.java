@@ -59,6 +59,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
      * @return RMA-processed matrix.
      * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
+    @Override
     public DoubleMatrix<String, String> summarize( DoubleMatrix<String, String> dataMatrix ) {
         log.debug( "Summarizing..." );
 

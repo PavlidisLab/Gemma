@@ -47,6 +47,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
      * @see
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public Contact find( Contact contact ) {
 
         BusinessKey.checkKey( contact );
@@ -79,6 +80,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#findOrCreate(ubic.gemma.model.common.auditAndSecurity
      * .Contact)
      */
+    @Override
     public Contact findOrCreate( Contact contact ) {
 
         Contact existingContact = find( contact );
@@ -88,6 +90,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         return create( contact );
     }
 
+    @Override
     public Collection<Investigation> getInvestigations( Contact contact ) {
         /*
          * If there are other types of investigations they will have to be added to the results.

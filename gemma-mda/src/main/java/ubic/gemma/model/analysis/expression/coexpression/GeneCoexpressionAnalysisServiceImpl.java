@@ -42,6 +42,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisService#loadMyAnalyses()
      */
+    @Override
     public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
         return loadEnabled();
     }
@@ -51,6 +52,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisService#loadMySharedAnalyses()
      */
+    @Override
     public Collection<GeneCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadEnabled();
     }

@@ -71,10 +71,12 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
+    @Override
     public Collection<Object> convert( Collection<? extends Object> objects ) {
         Package[] allPackages = Package.getPackages();
 
         Arrays.sort( allPackages, new Comparator<Package>() {
+            @Override
             public int compare( Package o1, Package o2 ) {
                 return o1.getName().compareTo( o2.getName() );
             }
@@ -134,6 +136,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
+    @Override
     public Object convert( Object mageObject ) {
         if ( mageObject == null ) return null;
         return mageConverterHelper.convert( mageObject );

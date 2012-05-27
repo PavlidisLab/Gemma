@@ -68,6 +68,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     protected final Log logger = LogFactory.getLog( getClass() );
 
+    @Override
     public void cleanupMultipart( MultipartHttpServletRequest request ) {
 
         if ( request instanceof FailedMultipartHttpServletRequest ) return;
@@ -83,6 +84,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
         }
     }
 
+    @Override
     public boolean isMultipart( HttpServletRequest request ) {
         return ServletFileUpload.isMultipartContent( request );
     }
@@ -95,7 +97,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
      * 
      * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
      */
-    @SuppressWarnings("unchecked")
+    @Override 
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
         String enc = determineEncoding( request );
 
@@ -107,11 +109,11 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
         try {
             MultiValueMap<String, MultipartFile> multipartFiles = new LinkedMultiValueMap<String, MultipartFile>();
-            Map multipartParams = new HashMap();
+            Map<String, String[]> multipartParams = new HashMap<String, String[]>();
 
             // Extract multipart files and multipart parameters.
-            List fileItems = fileUpload.parseRequest( request );
-            for ( Iterator it = fileItems.iterator(); it.hasNext(); ) {
+            List<?> fileItems = fileUpload.parseRequest( request );
+            for ( Iterator<?> it = fileItems.iterator(); it.hasNext(); ) {
                 FileItem fileItem = ( FileItem ) it.next();
                 if ( fileItem.isFormField() ) {
                     String value = null;
@@ -125,7 +127,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                         value = fileItem.getString();
                     }
 
-                    String[] curParam = ( String[] ) multipartParams.get( fieldName );
+                    String[] curParam = multipartParams.get( fieldName );
                     if ( curParam == null ) {
                         // simple form field
                         multipartParams.put( fieldName, new String[] { value } );
@@ -168,6 +170,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
     /**
      * 
      */
+    @Override
     public void setServletContext( ServletContext servletContext ) {
         if ( this.uploadTempDir == null ) {
             this.uploadTempDir = WebUtils.getTempDir( servletContext );

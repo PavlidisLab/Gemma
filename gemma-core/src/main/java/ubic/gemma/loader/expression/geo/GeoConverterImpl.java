@@ -470,6 +470,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @param qt The quantitation type for the values to be converted.
      * @return
      */
+    @Override
     public byte[] convertData( List<Object> vector, QuantitationType qt ) {
 
         if ( vector == null || vector.size() == 0 ) return null;

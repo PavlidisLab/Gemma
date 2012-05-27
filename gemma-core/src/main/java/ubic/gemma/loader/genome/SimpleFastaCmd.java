@@ -55,6 +55,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
+    @Override
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database, String blastHome ) {
         try {
             return this.getMultiple( accessions, database, blastHome );
@@ -67,6 +68,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
+    @Override
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
             String blastHome ) {
         try {
@@ -81,6 +83,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
      */
+    @Override
     public BioSequence getByAccession( String accession, String database, String blastHome ) {
         try {
             return getSingle( accession, database, blastHome );
@@ -190,6 +193,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String)
      */
+    @Override
     public BioSequence getByIdentifier( int identifier, String database ) {
         try {
             return getSingle( identifier, database, blastDbHome );
@@ -202,6 +206,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String, java.lang.String)
      */
+    @Override
     public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
         try {
             return getSingle( identifier, database, blastHome );
@@ -214,6 +219,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
+    @Override
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
         return this.getBatchAccessions( accessions, database, blastDbHome );
     }
@@ -222,6 +228,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
+    @Override
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
         return this.getBatchIdentifiers( identifiers, database, blastDbHome );
     }
@@ -230,6 +237,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * (non-Javadoc)
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccession(java.lang.String, java.lang.String)
      */
+    @Override
     public BioSequence getByAccession( String accession, String database ) {
         return this.getByAccession( accession, database, blastDbHome );
     }

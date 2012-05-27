@@ -144,6 +144,7 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
      * 
      * @return
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
         CacheManager cacheManager = cacheManagerFactory.getObject();
         int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",

@@ -64,6 +64,7 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             BibliographicReference bibliographicReference );
 
+    @Override
     public Collection<BibliographicReference> load( Collection<Long> ids );
 
     /**

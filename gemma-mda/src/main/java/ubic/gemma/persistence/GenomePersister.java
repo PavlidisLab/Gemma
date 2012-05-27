@@ -879,13 +879,13 @@ abstract public class GenomePersister extends CommonPersister {
 
         // note that we can't use the native hashcode method because we need to ignore the ID.
         int key = chromosome.getName().hashCode();
-        if ( ct.getId() != null ) {
-            key += ct.hashCode();
-        } else if ( ct.getNcbiId() != null )
+        if ( ct.getNcbiId() != null ) {
             key += ct.getNcbiId().hashCode();
-        else if ( ct.getCommonName() != null )
+        } else if ( ct.getCommonName() != null ) {
             key += ct.getCommonName().hashCode();
-        else if ( ct.getScientificName() != null ) key += ct.getScientificName().hashCode();
+        } else if ( ct.getScientificName() != null ) {
+            key += ct.getScientificName().hashCode();
+        }
 
         if ( seenChromosomes.containsKey( key ) ) {
             return seenChromosomes.get( key );

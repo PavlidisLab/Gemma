@@ -215,6 +215,7 @@ public class CountryTag extends TagSupport {
          * @param o2 The second LabelValue to compare.
          * @return The value returned by comparing the localized labels.
          */
+        @Override
         public final int compare( LabelValue o1, LabelValue o2 ) {
             LabelValue lhs = o1;
             LabelValue rhs = o2;

@@ -222,10 +222,12 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().thawLite( genes );
     }
 
+    @Override
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
         return this.getGeneDao().loadThawed( ids );
     }
 
+    @Override
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
         return GeneValueObject.convert2ValueObjects( g );
@@ -386,6 +388,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#create(Collection)
      */
+    @Override
     public Collection<Gene> create( final Collection<Gene> genes ) {
         try {
             return ( Collection<Gene> ) this.getGeneDao().create( genes );
@@ -397,6 +400,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#create(Gene)
      */
+    @Override
     public Gene create( final Gene gene ) {
         try {
             return this.getGeneDao().create( gene );
@@ -408,6 +412,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#find(Gene)
      */
+    @Override
     public Gene find( final Gene gene ) {
         try {
             return this.getGeneDao().find( gene );
@@ -419,6 +424,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByAccession(String, ubic.gemma.model.common.description.ExternalDatabase)
      */
+    @Override
     public Gene findByAccession( final String accession, final ExternalDatabase source ) {
         try {
             return this.getGeneDao().findByAccession( accession, source );
@@ -432,6 +438,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByAlias(String)
      */
+    @Override
     public Collection<Gene> findByAlias( final String search ) {
         try {
             return this.getGeneDao().findByAlias( search );
@@ -443,6 +450,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByNCBIId(String)
      */
+    @Override
     public Gene findByNCBIId( Integer accession ) {
         try {
             return this.getGeneDao().findByNcbiId( accession );
@@ -455,6 +463,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByOfficialName(String)
      */
+    @Override
     public Collection<Gene> findByOfficialName( final String officialName ) {
         try {
             return this.getGeneDao().findByOfficialName( officialName );
@@ -467,6 +476,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbol(String)
      */
+    @Override
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
         try {
             return this.getGeneDao().findByOfficalSymbol( officialSymbol );
@@ -479,6 +489,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbol(String, Taxon)
      */
+    @Override
     public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
         try {
             return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
@@ -491,6 +502,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbolInexact(String)
      */
+    @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         try {
             return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
@@ -503,6 +515,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#findOrCreate(Gene)
      */
+    @Override
     public Gene findOrCreate( final Gene gene ) {
         try {
             return this.getGeneDao().findOrCreate( gene );
@@ -514,6 +527,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
+    @Override
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
             final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
         try {
@@ -528,6 +542,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
+    @Override
     public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
             final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
         try {
@@ -542,6 +557,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getCompositeSequenceCountById(Long)
      */
+    @Override
     public long getCompositeSequenceCountById( final Long id ) {
         try {
             return this.getGeneDao().getCompositeSequenceCountById( id );
@@ -554,6 +570,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getCompositeSequences(Gene, ArrayDesign)
      */
+    @Override
     public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
         try {
             return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
@@ -567,6 +584,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getCompositeSequencesById(Long)
      */
+    @Override
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
         try {
             return this.getGeneDao().getCompositeSequencesById( id );
@@ -579,6 +597,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#getGenesByTaxon(Taxon)
      */
+    @Override
     public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
         try {
             return this.getGeneDao().getGenesByTaxon( taxon );
@@ -590,6 +609,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadMicroRNAs(Taxon)
      */
+    @Override
     public Collection<Gene> loadMicroRNAs( final Taxon taxon ) {
         try {
             return this.getGeneDao().getMicroRnaByTaxon( taxon );
@@ -602,6 +622,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#load(long)
      */
+    @Override
     public Gene load( final long id ) {
         try {
             return this.getGeneDao().load( id );
@@ -613,6 +634,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadAll()
      */
+    @Override
     public Collection<Gene> loadAll() {
         try {
             return ( Collection<Gene> ) this.getGeneDao().loadAll();
@@ -624,6 +646,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadKnownGenes(Taxon)
      */
+    @Override
     public Collection<Gene> loadKnownGenes( final Taxon taxon ) {
         try {
             return this.getGeneDao().loadKnownGenes( taxon );
@@ -635,6 +658,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadMultiple(Collection)
      */
+    @Override
     public Collection<Gene> loadMultiple( final Collection<Long> ids ) {
         try {
             return ( Collection<Gene> ) this.getGeneDao().load( ids );
@@ -672,6 +696,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#remove(String)
      */
+    @Override
     public void remove( Gene gene ) {
         try {
             this.getGeneDao().remove( gene );
@@ -683,6 +708,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#remove(Collection)
      */
+    @Override
     public void remove( final Collection<Gene> genes ) {
         try {
             this.getGeneDao().remove( genes );
@@ -701,6 +727,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#thaw(Gene)
      */
+    @Override
     public Gene thaw( final Gene gene ) {
         try {
             return this.getGeneDao().thaw( gene );
@@ -712,6 +739,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#thawLite(Collection)
      */
+    @Override
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {
         try {
             return this.handleThawLite( genes );
@@ -725,6 +753,7 @@ public class GeneServiceImpl implements GeneService {
      * 
      * @param gene
      */
+    @Override
     public Gene thawAliases( Gene gene ) {
         try {
             return this.getGeneDao().thawAliases( gene );
@@ -736,6 +765,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#update(Gene)
      */
+    @Override
     public void update( final Gene gene ) {
         try {
             this.getGeneDao().update( gene );

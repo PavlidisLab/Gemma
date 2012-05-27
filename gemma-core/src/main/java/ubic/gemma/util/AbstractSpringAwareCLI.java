@@ -117,7 +117,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * 
      * @param name
      * @return
+     * @deprecated Use the getBean(Class) method instead
      */
+    @Deprecated
     protected Object getBean( String name ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( name );

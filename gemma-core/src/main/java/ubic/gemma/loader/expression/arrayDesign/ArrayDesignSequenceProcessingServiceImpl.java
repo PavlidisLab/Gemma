@@ -632,6 +632,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
+    @Override
     public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
             boolean force ) {
         BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId );

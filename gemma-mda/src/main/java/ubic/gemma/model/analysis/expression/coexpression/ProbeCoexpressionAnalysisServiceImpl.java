@@ -37,10 +37,12 @@ import ubic.gemma.model.genome.Taxon;
 public class ProbeCoexpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceBase {
 
+    @Override
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }
 
+    @Override
     public void update( ProbeCoexpressionAnalysis o ) {
         this.getProbeCoexpressionAnalysisDao().update( o );
     }
@@ -98,10 +100,12 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
  
+    @Override
     public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
         return loadAll();
     }
  
+    @Override
     public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadAll();
     }

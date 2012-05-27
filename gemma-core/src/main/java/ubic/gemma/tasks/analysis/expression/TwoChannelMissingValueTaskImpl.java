@@ -41,6 +41,7 @@ public class TwoChannelMissingValueTaskImpl implements TwoChannelMissingValueTas
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValues;
 
+    @Override
     @TaskMethod
     public TaskResult execute( TwoChannelMissingValueTaskCommand command ) {
 

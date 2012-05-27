@@ -234,6 +234,7 @@ public class ExpressionExperimentSetServiceImpl extends
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
     }
 
+    @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
@@ -255,6 +256,7 @@ public class ExpressionExperimentSetServiceImpl extends
         return results;
     }
 
+    @Override
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
@@ -413,6 +415,7 @@ public class ExpressionExperimentSetServiceImpl extends
      * ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#updateDatabaseEntityNameDesc(ubic.gemma
      * .expression.experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
+    @Override
     public DatabaseBackedExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
             DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
 

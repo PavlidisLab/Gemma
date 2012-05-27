@@ -158,6 +158,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
             this.factors = factors;
         }
 
+        @Override
         public int compare( FactorValueVector o1, FactorValueVector o2 ) {
             return compare( o1, o2, 0 );
         }
@@ -258,6 +259,7 @@ class DescribableComparator implements Comparator<Describable> {
         return _instance;
     }
 
+    @Override
     public int compare( Describable d1, Describable d2 ) {
         String s1 = d1.getName();
         String s2 = d2.getName();
@@ -280,6 +282,7 @@ class FactorValueComparator implements Comparator<FactorValue> {
         return _instance;
     }
 
+    @Override
     public int compare( FactorValue v1, FactorValue v2 ) {
         String s1 = v1.toString();
         String s2 = v2.toString();

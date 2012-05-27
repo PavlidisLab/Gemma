@@ -531,6 +531,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
 class FactorValueComparator implements Comparator<FactorValue> {
 
+    @Override
     public int compare( FactorValue arg0, FactorValue arg1 ) {
         if ( arg0.getMeasurement() != null && arg1.getMeasurement() != null ) {
             return ( new MeasurementComparator() ).compare( arg0.getMeasurement(), arg1.getMeasurement() );
@@ -548,6 +549,7 @@ class FactorValueComparator implements Comparator<FactorValue> {
 
 class MeasurementComparator implements Comparator<Measurement> {
 
+    @Override
     public int compare( Measurement o1, Measurement o2 ) {
         PrimitiveType ptype = o1.getRepresentation();
         if ( ptype.equals( PrimitiveType.STRING ) || ptype.equals( PrimitiveType.BOOLEAN ) ) {

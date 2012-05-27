@@ -54,6 +54,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public Collection<? extends Gene2GeneProteinAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneProteinAssociationImpl where id in (:ids)",
                 "ids", ids );
@@ -64,12 +65,14 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
+    @Override
     public Collection create( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -86,6 +89,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
+    @Override
     public Gene2GeneProteinAssociation create( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null ) {
             throw new IllegalArgumentException(
@@ -101,6 +105,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#createOrUpdate(java.lang.Object)
      */
+    @Override
     public Gene2GeneProteinAssociation createOrUpdate( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null ) {
             throw new IllegalArgumentException(
@@ -132,6 +137,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
+    @Override
     public Gene2GeneProteinAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.load - 'id' can not be null" );
@@ -145,6 +151,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
+    @Override
     public Collection loadAll() {
         final Collection results = this.getHibernateTemplate().loadAll( Gene2GeneProteinAssociationImpl.class );
         return results;
@@ -155,6 +162,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'id' can not be null" );
@@ -170,6 +178,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'entities' can not be null" );
@@ -182,6 +191,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
+    @Override
     public void remove( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
         if ( Gene2GeneProteinAssociation == null ) {
             throw new IllegalArgumentException(
@@ -195,12 +205,14 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
+    @Override
     public void update( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -216,6 +228,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
+    @Override
     public void update( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
         if ( Gene2GeneProteinAssociation == null ) {
             throw new IllegalArgumentException(
@@ -230,6 +243,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * @seeubic.gemma.model.association.Gene2GeneProteinAssociationDao#find(ubic.gemma.model.association.
      * Gene2GeneProteinAssociation)
      */
+    @Override
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
 
         try {
@@ -248,6 +262,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
                     log.error( "Multiple interactions  found for " + gene2GeneProteinAssociation + ":" );
 
                     Collections.sort( results, new Comparator<Gene2GeneProteinAssociation>() {
+                        @Override
                         public int compare( Gene2GeneProteinAssociation arg0, Gene2GeneProteinAssociation arg1 ) {
                             return arg0.getId().compareTo( arg1.getId() );
                         }
@@ -268,6 +283,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * @seeubic.gemma.model.association.Gene2GeneProteinAssociationDao#findProteinInteractionsForGene(ubic.gemma.model.
      * association.Gene2GeneProteinAssociation)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
 

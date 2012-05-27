@@ -34,6 +34,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#create(ubic.gemma.model.common.description.Characteristic)
      */
+    @Override
     public ubic.gemma.model.common.description.Characteristic create(
             final ubic.gemma.model.common.description.Characteristic c ) {
         try {
@@ -48,6 +49,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#delete(java.lang.Long)
      */
+    @Override
     public void delete( final java.lang.Long id ) {
         try {
             this.handleDelete( id );
@@ -61,6 +63,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#delete(ubic.gemma.model.common.description.Characteristic)
      */
+    @Override
     public void delete( final ubic.gemma.model.common.description.Characteristic c ) {
         try {
             this.handleDelete( c );
@@ -74,6 +77,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByParentClass(java.lang.Class)
      */
+    @Override
     public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
         try {
             return this.handleFindByParentClass( parentClass );
@@ -87,6 +91,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.lang.String)
      */
+    @Override
     public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
         try {
             return this.handleFindByUri( searchString );
@@ -100,6 +105,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.util.Collection)
      */
+    @Override
     public java.util.Collection<Characteristic> findByUri( final java.util.Collection uris ) {
         try {
             return this.handleFindByUri( uris );
@@ -113,6 +119,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
+    @Override
     public java.util.Collection findByValue( final java.lang.String search ) {
         try {
             return this.handleFindByValue( search );
@@ -126,6 +133,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#getParents(java.util.Collection)
      */
+    @Override
     public java.util.Map getParents( final java.util.Collection characteristics ) {
         try {
             return this.handleGetParents( characteristics );
@@ -139,6 +147,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.description.Characteristic load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -159,6 +168,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#update(ubic.gemma.model.common.description.Characteristic)
      */
+    @Override
     public void update( final ubic.gemma.model.common.description.Characteristic c ) {
         try {
             this.handleUpdate( c );

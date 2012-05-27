@@ -65,11 +65,13 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      */
     public abstract void setSplitByPlatform( boolean splitByPlatform );
 
+    @Override
     public abstract Collection<Object> convert( Collection<? extends GeoData> geoObjects );
 
     public abstract Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
             throws IllegalArgumentException;
 
+    @Override
     public abstract Object convert( GeoData geoObject );
 
 }

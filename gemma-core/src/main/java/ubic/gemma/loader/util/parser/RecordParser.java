@@ -29,6 +29,7 @@ public abstract class RecordParser<T> implements Parser<T> {
      * 
      * @see ubic.gemma.loader.util.parser.Parser#parse(java.io.InputStream)
      */
+    @Override
     public void parse( InputStream is ) throws IOException {
         int recordsParsed = 0;
         int nullRecords = 0;
@@ -88,6 +89,7 @@ public abstract class RecordParser<T> implements Parser<T> {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.File)
      */
+    @Override
     public void parse( File file ) throws IOException {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
@@ -102,6 +104,7 @@ public abstract class RecordParser<T> implements Parser<T> {
      * 
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
+    @Override
     public void parse( String filename ) throws IOException {
         File infile = new File( filename );
         parse( infile );
@@ -125,5 +128,6 @@ public abstract class RecordParser<T> implements Parser<T> {
      */
     public abstract Object parseOneRecord( String record );
 
+    @Override
     public abstract Collection<T> getResults();
 }

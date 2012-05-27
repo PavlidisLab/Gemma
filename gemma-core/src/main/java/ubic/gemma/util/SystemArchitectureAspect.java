@@ -51,12 +51,15 @@ public class SystemArchitectureAspect {
 
     /**
      * This pointcut is used to apply audit and acl advice at DAO boundary.
-     * 
      */
-   @Pointcut("@target(org.springframework.stereotype.Repository) && execution(public * ubic.gemma..*.*(..))")
-   public void daoMethod() {//      
-   }
-    
+    @Pointcut("@target(org.springframework.stereotype.Repository) && execution(public * ubic.gemma..*.*(..))")
+    public void daoMethod() {//
+    }
+
+    @Pointcut("@target(org.springframework.stereotype.Service) && (execution(public * ubic.gemma..*.*(*)) || execution(public * ubic.gemma..*.*(*,..)))")
+    public void serviceMethodWithArg() {//
+    }
+
     /**
      * A entity service method: a public method in a \@Service.
      */

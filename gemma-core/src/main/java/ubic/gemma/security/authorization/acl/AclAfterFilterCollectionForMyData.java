@@ -63,6 +63,7 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
      * @seeorg.springframework.security.afterinvocation.AfterInvocationProvider#decide(org.springframework.security.
      * Authentication, java.lang.Object, org.springframework.security.ConfigAttributeDefinition, java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public final Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,
             Object returnedObject ) throws AccessDeniedException {

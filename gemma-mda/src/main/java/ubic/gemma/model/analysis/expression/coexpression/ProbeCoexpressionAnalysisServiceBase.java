@@ -39,6 +39,7 @@ public abstract class ProbeCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
      */
+    @Override
     public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         try {

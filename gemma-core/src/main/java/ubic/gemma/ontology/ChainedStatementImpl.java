@@ -45,10 +45,12 @@ public class ChainedStatementImpl extends AbstractStatement implements ChainedSt
         this.object = chained;
     }
 
+    @Override
     public ChainedStatementObject getObject() {
         return object;
     }
 
+    @Override
     public void setObject( ChainedStatementObject object ) {
         this.object = object;
     }

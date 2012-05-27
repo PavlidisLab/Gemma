@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id$ -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:context="http://www.springframework.org/schema/context"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
@@ -10,8 +9,8 @@
             http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 
-	<!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository 
-		or @Controller). We exclude ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
+	<!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository or @Controller). We exclude ubic.gemma.web here, it is brought 
+		in by gemma-servlet.xml. -->
 	<context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.util.BeanNameGenerator">
 		<context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
 	</context:component-scan>
@@ -19,13 +18,13 @@
 	<!-- Make all "serviceMethod"s transactional. See http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
 	<aop:config>
 		<aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
-		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" order="2" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" order="3" />
 	</aop:config>
 
 	<!-- Automatically retry certain failed operations in transactions. -->
 	<aop:config>
-		<aop:pointcut id="retryable" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
-		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="-1" />
+		<aop:pointcut id="retryable" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethodWithArg()" />
+		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2" />
 	</aop:config>
 
 	<bean id="retryAdvice" class="org.springframework.retry.interceptor.RetryOperationsInterceptor">
@@ -36,11 +35,15 @@
 				</property>
 				<property name="retryPolicy">
 					<bean id="retryPolicy" class="ubic.gemma.persistence.retry.RetryPolicy">
-						<constructor-arg name="maxAttempts" value="6" />
+						<constructor-arg name="maxAttempts" value="10" />
 						<constructor-arg name="retryableExceptions">
 							<map>
+								<!-- FIXME we don't need all of these. -->
 								<entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
 								<entry key="java.sql.BatchUpdateException" value="true" />
+								<entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
+								<!-- <entry key="org.springframework.dao.DataIntegrityViolationException" value="true" /> -->
+								<entry key="org.springframework.transaction.UnexpectedRollbackException" value="true" />
 							</map>
 						</constructor-arg>
 					</bean>
@@ -51,7 +54,7 @@
 					</list>
 				</property>
 			</bean>
-		</property> 
+		</property>
 	</bean>
 
 	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
@@ -59,7 +62,7 @@
 	</bean>
 
 	<!-- Mostly we are using the pointcut, but this is useful for fine-tuning. -->
-	<tx:annotation-driven />
+	<tx:annotation-driven order="3" />
 
 	<tx:advice id="txAdvice">
 		<!-- Make some methods read-only -->

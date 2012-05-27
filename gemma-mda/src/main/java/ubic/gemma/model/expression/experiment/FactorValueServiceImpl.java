@@ -27,10 +27,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class FactorValueServiceImpl extends FactorValueServiceBase {
 
+    @Override
     public Collection<FactorValue> create( Collection<FactorValue> fvs ) {
         return ( Collection<FactorValue> ) this.getFactorValueDao().create( fvs );
     }
 
+    @Override
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.getFactorValueDao().findByValue( valuePrefix );
     }

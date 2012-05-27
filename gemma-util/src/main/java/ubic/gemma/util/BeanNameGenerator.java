@@ -45,6 +45,7 @@ public class BeanNameGenerator implements org.springframework.beans.factory.supp
      * @see org.springframework.beans.factory.support.BeanNameGenerator#generateBeanName(org.springframework.beans.factory
      *      .config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry).
      */
+    @Override
     public String generateBeanName( BeanDefinition definition, BeanDefinitionRegistry registry ) {
         String name = this.gen.generateBeanName( definition, registry ).replace( "Impl", "" ).replace( "#0", "" )
                 .replaceAll( ".+\\.", "" );

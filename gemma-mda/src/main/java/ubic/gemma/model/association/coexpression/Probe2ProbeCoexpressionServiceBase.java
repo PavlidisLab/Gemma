@@ -44,6 +44,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
+    @Override
     public java.lang.Integer countLinks(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         try {
@@ -58,6 +59,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#create(java.util.List)
      */
+    @Override
     public java.util.Collection<? extends Probe2ProbeCoexpression> create(
             final java.util.Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         try {
@@ -69,6 +71,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
         }
     }
 
+    @Override
     public void delete( final java.util.Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         try {
             this.handleRemove( p2pExpressions );
@@ -79,6 +82,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
         }
     }
 
+    @Override
     public void delete( Probe2ProbeCoexpression p2p ) {
         try {
             this.handleRemove( p2p );
@@ -92,6 +96,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
+    @Override
     public void deleteLinks( final ubic.gemma.model.expression.experiment.ExpressionExperiment ee ) {
         try {
             this.handleDeleteLinks( ee );
@@ -113,6 +118,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, boolean)
      */
+    @Override
     public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn(
             final ubic.gemma.model.genome.Gene gene,
             final java.util.Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
@@ -129,6 +135,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.util.Collection, boolean)
      */
+    @Override
     public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
             final ubic.gemma.model.genome.Gene geneA, final java.util.Collection<Long> genesB,
             final java.util.Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
@@ -146,6 +153,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsTestedIn(java.util.Collection,
      *      java.util.Collection, boolean)
      */
+    @Override
     public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
             final java.util.Collection<Long> geneIds, final java.util.Collection<? extends BioAssaySet> experiments,
             final boolean filterNonSpecific ) {
@@ -162,6 +170,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getGenesTestedBy(ubic.gemma.model.expression.experiment.BioAssaySet,
      *      boolean)
      */
+    @Override
     public java.util.Collection<Long> getGenesTestedBy(
             final ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment,
             final boolean filterNonSpecific ) {
@@ -178,6 +187,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      java.lang.String, boolean)
      */
+    @Override
     public java.util.Collection<ProbeLink> getProbeCoExpression(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             final java.lang.String taxon, final boolean useWorkingTable ) {
@@ -194,6 +204,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#prepareForShuffling(java.util.Collection,
      *      java.lang.String, boolean)
      */
+    @Override
     public void prepareForShuffling( final java.util.Collection<BioAssaySet> ees, final java.lang.String taxon,
             final boolean filterNonSpecific ) {
         try {

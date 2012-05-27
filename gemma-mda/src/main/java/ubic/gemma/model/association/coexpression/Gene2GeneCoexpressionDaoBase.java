@@ -46,10 +46,12 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
+    @Override
     public Collection<? extends Gene2GeneCoexpression> create(
             final Collection<? extends Gene2GeneCoexpression> entities ) {
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( Session session ) throws HibernateException {
                 int numDone = 0;
 
@@ -68,6 +70,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
         return entities;
     }
 
+    @Override
     public Collection<? extends Gene2GeneCoexpression> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneCoexpressionImpl where id in (:ids)",
                 "ids", ids );
@@ -78,6 +81,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
+    @Override
     public Gene2GeneCoexpression create( Gene2GeneCoexpression entity ) {
         this.getHibernateTemplate().save( entity );
         return entity;
@@ -87,6 +91,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(java.util.Collection,
      *      int, int)
      */
+    @Override
     public java.util.Map findCoexpressionRelationships( final java.util.Collection<Gene> genes, final int stringency,
             final int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
         try {
@@ -102,6 +107,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
      *      int, int)
      */
+    @Override
     public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
             final ubic.gemma.model.genome.Gene gene, final int stringency, final int maxResults,
             GeneCoexpressionAnalysis sourceAnalysis ) {
@@ -118,6 +124,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findInterCoexpressionRelationships(java.util.Collection,
      *      int)
      */
+    @Override
     public java.util.Map findInterCoexpressionRelationships( final java.util.Collection<Gene> genes,
             final int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
         try {
@@ -139,6 +146,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#load(int, java.lang.Long)
      */
+    @Override
     public Gene2GeneCoexpression load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GeneCoexpression.load - 'id' can not be null" );
@@ -151,6 +159,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends Gene2GeneCoexpression> loadAll() {
         return this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionImpl.class );
@@ -159,6 +168,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GeneCoexpression.remove - 'id' can not be null" );
@@ -172,6 +182,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends Gene2GeneCoexpression> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneCoexpression.remove - 'entities' can not be null" );
@@ -182,6 +193,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#remove(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
+    @Override
     public void remove( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2GeneCoexpression ) {
         if ( gene2GeneCoexpression == null ) {
             throw new IllegalArgumentException(
@@ -200,12 +212,14 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends Gene2GeneCoexpression> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneCoexpression.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Gene2GeneCoexpression> entityIterator = entities.iterator(); entityIterator
@@ -220,6 +234,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#update(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
+    @Override
     public void update( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2GeneCoexpression ) {
         if ( gene2GeneCoexpression == null ) {
             throw new IllegalArgumentException(

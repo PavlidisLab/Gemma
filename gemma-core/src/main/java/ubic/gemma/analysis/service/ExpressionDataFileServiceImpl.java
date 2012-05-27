@@ -343,6 +343,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFile(ubic.gemma.model.analysis
      * .expression.diff.DifferentialExpressionAnalysis, boolean)
      */
+    @Override
     public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) {
         DifferentialExpressionAnalysis analysis = this.differentialExpressionAnalysisService.load( analysisId );
         this.differentialExpressionAnalysisService.thaw( analysis );
@@ -624,6 +625,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#analysisResultSetsToString(java.util.Collection,
      * java.util.Map, java.lang.StringBuilder)
      */
+    @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();

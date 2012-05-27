@@ -33,7 +33,6 @@ import org.springframework.mail.SimpleMailMessage;
 
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.MailEngine;
-import ubic.gemma.util.MailEngineImpl;
 import ubic.gemma.web.util.MessageUtil;
 
 /**

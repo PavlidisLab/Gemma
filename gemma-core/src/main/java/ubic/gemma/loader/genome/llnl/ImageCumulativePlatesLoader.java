@@ -123,6 +123,7 @@ public class ImageCumulativePlatesLoader {
         final SecurityContext context = SecurityContextHolder.getContext();
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 log.info( "Starting loading" );
                 SecurityContextHolder.setContext( context );
@@ -133,6 +134,7 @@ public class ImageCumulativePlatesLoader {
         loadThread.start();
 
         Thread parseThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 try {
                     parser.parse( inputStream, queue );

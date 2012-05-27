@@ -38,15 +38,18 @@ import ubic.gemma.model.genome.Gene;
 public class Probe2ProbeCoexpressionServiceImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase {
 
+    @Override
     public java.util.Collection<ProbeLink> getProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon ) {
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
     }
 
+    @Override
     public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
         return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
     }
 
+    @Override
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon ) {
         return this.getProbe2ProbeCoexpressionDao()

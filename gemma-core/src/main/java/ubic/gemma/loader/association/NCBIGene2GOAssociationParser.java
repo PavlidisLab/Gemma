@@ -209,10 +209,12 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         return g2GOAss;
     }
 
+    @Override
     public Gene2GOAssociation parseOneLine( String line ) {
         return this.mapFromGene2GO( line );
     }
 
+    @Override
     public void parse( InputStream inputStream, BlockingQueue<Gene2GOAssociation> aqueue ) throws IOException {
         if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aqueue;

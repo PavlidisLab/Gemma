@@ -139,7 +139,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
                     "GSE432", false, true, false, false );
             newee = results.iterator().next();
 
-            TwoChannelMissingValues tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+            TwoChannelMissingValues tcmv = this.getBean( TwoChannelMissingValues.class );
             tcmv.computeMissingValues( newee, 1.5, null );
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {

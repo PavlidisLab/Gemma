@@ -194,6 +194,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#index(ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand)
      */
+    @Override
     public String index( IndexerTaskCommand command ) {
         return this.run( command );
     }
@@ -203,6 +204,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexAll()
      */
+    @Override
     public String indexAll() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setAll( true );
@@ -214,6 +216,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexArrayDesigns()
      */
+    @Override
     public String indexArrayDesigns() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexAD( true );
@@ -225,6 +228,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexBibligraphicReferences()
      */
+    @Override
     public String indexBibligraphicReferences() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexBibRef( true );
@@ -236,6 +240,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexBioSequences()
      */
+    @Override
     public String indexBioSequences() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexBioSequence( true );
@@ -247,6 +252,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexExpressionExperiments()
      */
+    @Override
     public String indexExpressionExperiments() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexEE( true );
@@ -258,6 +264,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexGenes()
      */
+    @Override
     public String indexGenes() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexGene( true );
@@ -269,6 +276,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      * 
      * @see ubic.gemma.search.IndexService#indexProbes()
      */
+    @Override
     public String indexProbes() {
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexProbe( true );

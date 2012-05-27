@@ -48,6 +48,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
 

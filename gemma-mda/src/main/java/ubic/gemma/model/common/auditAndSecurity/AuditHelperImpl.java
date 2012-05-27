@@ -44,6 +44,7 @@ public class AuditHelperImpl implements AuditHelper {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditHelper#addCreateAuditEvent(ubic.gemma.model.common.Auditable,
      * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user ) {
         this.addAuditTrailIfNeeded( auditable );
         this.addStatusIfNeeded( auditable );

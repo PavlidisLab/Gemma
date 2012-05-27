@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -134,7 +133,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
                     probe = cache.getFromCache( probe );
 
-                    if ( probe == null || PersisterHelper.isTransient( probe ) ) {
+                    if ( probe == null || persisterHelper.isTransient( probe ) ) {
                         throw new IllegalStateException( "All probes should be persistent by now" );
                     }
 
@@ -156,7 +155,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             CompositeSequence designElement ) {
         if ( designElement == null ) return null;
 
-        if ( !PersisterHelper.isTransient( designElement ) ) return designElement;
+        if ( !persisterHelper.isTransient( designElement ) ) return designElement;
 
         /*
          * No sequence, or the sequence name isn't provided. Of course, if there is no sequence it isn't going to be
@@ -168,7 +167,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         designElement.setArrayDesign( arrayDesign );
 
-        if ( PersisterHelper.isTransient( biologicalCharacteristic ) ) {
+        if ( persisterHelper.isTransient( biologicalCharacteristic ) ) {
             // transaction.
             designElement.setBiologicalCharacteristic( ( BioSequence ) persisterHelper
                     .persist( biologicalCharacteristic ) );
@@ -256,8 +255,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         // transaction, but fast if the design already exists.
         arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
 
-        // transaction (read-only). Wasteful, if this is an exsiting design.
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        // transaction (read-only). Wasteful, if this is an existing design.
+        // arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         cache.add( arrayDesign );
 

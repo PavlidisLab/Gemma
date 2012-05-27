@@ -111,6 +111,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
             ProbeAnalysisResult differentialExpressionAnalysisResult );
 
+    @Override
     public ProbeAnalysisResult load (Long id); 
     
     public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids );

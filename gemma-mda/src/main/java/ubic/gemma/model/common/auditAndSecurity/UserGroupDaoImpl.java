@@ -49,6 +49,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#addAuthority(ubic.gemma.model.common.auditAndSecurity.UserGroup
      * , java.lang.String)
      */
+    @Override
     public void addAuthority( UserGroup group, String authority ) {
 
         for ( GroupAuthority ga : group.getAuthorities() ) {
@@ -73,6 +74,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#addToGroup(ubic.gemma.model.common.auditAndSecurity.UserGroup
      * , ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public void addToGroup( UserGroup group, User user ) {
         group.getGroupMembers().add( user );
         this.getHibernateTemplate().update( group );
@@ -84,6 +86,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findGroupsForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
      */ 
+    @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user", "user", user );
@@ -95,6 +98,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#removeAuthority(ubic.gemma.model.common.auditAndSecurity
      * .UserGroup, java.lang.String)
      */
+    @Override
     public void removeAuthority( UserGroup group, String authority ) {
 
         for ( Iterator<GroupAuthority> iterator = group.getAuthorities().iterator(); iterator.hasNext(); ) {

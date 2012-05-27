@@ -48,6 +48,7 @@ public class DifferentialExpressionAnalysisResultComparator implements Comparato
      * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {
 
         if ( ear1 != null ) {

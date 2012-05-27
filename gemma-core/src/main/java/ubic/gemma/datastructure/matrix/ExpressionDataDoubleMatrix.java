@@ -242,6 +242,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     }
 
+    @Override
     public int columns() {
         return matrix.columns();
     }
@@ -253,6 +254,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
+    @Override
     public Double get( CompositeSequence designElement, BioAssay bioAssay ) {
         Integer i = this.rowElementMap.get( designElement );
         Integer j = this.columnAssayMap.get( bioAssay );
@@ -263,6 +265,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return this.matrix.get( i, j );
     }
 
+    @Override
     public Double get( int row, int column ) {
         return matrix.get( row, column );
     }
@@ -272,6 +275,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
+    @Override
     public Double[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
@@ -282,6 +286,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
+    @Override
     public Double[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
 
@@ -293,6 +298,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
+    @Override
     public Double[] getColumn( Integer index ) {
         double[] rawResult = this.matrix.getColumn( index );
         assert rawResult != null;
@@ -308,6 +314,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
+    @Override
     public Double[][] getColumns( List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
@@ -332,6 +339,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
+    @Override
     public Double[][] getRawMatrix() {
 
         Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
@@ -350,6 +358,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
+    @Override
     public Double[] getRow( CompositeSequence designElement ) {
         Integer row = this.rowElementMap.get( designElement );
         if ( row == null ) return null;
@@ -361,6 +370,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(java.lang.Integer)
      */
+    @Override
     public Double[] getRow( Integer index ) {
         double[] rawRow = matrix.getRow( index );
         return ArrayUtils.toObject( rawRow );
@@ -371,6 +381,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
+    @Override
     public Double[][] getRows( List<CompositeSequence> designElements ) {
         if ( designElements == null ) {
             return null;
@@ -392,6 +403,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
      */
+    @Override
     public int rows() {
         return matrix.rows();
     }
@@ -412,6 +424,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#set(int, int, java.lang.Object)
      */
+    @Override
     public void set( int row, int column, Double value ) {
         if ( value == null ) {
             matrix.set( row, column, Double.NaN );

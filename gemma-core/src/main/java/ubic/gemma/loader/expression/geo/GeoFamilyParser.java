@@ -162,6 +162,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
+    @Override
     public Collection<Object> getResults() {
         Collection<Object> r = new HashSet<Object>();
         r.add( this.results );
@@ -173,6 +174,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
+    @Override
     public void parse( File f ) throws IOException {
         InputStream a = new FileInputStream( f );
         this.parse( a );
@@ -184,6 +186,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
+    @Override
     public void parse( InputStream is ) throws IOException {
         if ( is == null ) {
             throw new IOException( "Inputstream was null" );
@@ -200,6 +203,7 @@ public class GeoFamilyParser implements Parser<Object> {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
 
         FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
+            @Override
             @SuppressWarnings("synthetic-access")
             public Exception call() throws Exception {
                 try {
@@ -252,6 +256,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.lang.String)
      */
+    @Override
     public void parse( String fileName ) throws IOException {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
         parse( is );

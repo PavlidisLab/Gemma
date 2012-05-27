@@ -158,6 +158,7 @@ public class SearchResult implements Comparable<SearchResult> {
     /**
      * Results with higher scores get put at the FRONT (Descending order!)
      */
+    @Override
     public int compareTo( SearchResult o ) {
         return -this.score.compareTo( o.getScore() );
     }

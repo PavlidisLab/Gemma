@@ -213,6 +213,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
      * 
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo( CompositeSequenceMapValueObject o ) {
         return this.compositeSequenceName.compareTo( o.getCompositeSequenceName() );
     }

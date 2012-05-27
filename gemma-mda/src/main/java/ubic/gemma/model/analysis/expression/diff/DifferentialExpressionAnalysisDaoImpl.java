@@ -44,7 +44,6 @@ import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.CommonQueries;
@@ -73,6 +72,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#countProbesMeetingThreshold(ubic.
      * gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
+    @Override
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
 
         // int up = this.countUpregulated( ears, threshold );
@@ -164,6 +164,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
                 Hibernate.initialize( differentialExpressionAnalysis );

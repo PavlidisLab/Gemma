@@ -36,12 +36,14 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     /**
      * @see ReferenceAssociationDao#create(int, Collection)
      */
+    @Override
     public Collection create( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -53,6 +55,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
         return entities;
     }
 
+    @Override
     public Collection<? extends ReferenceAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids",
                 ids );
@@ -61,6 +64,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     /**
      * @see ReferenceAssociationDao#create(int transform, ReferenceAssociation)
      */
+    @Override
     public ReferenceAssociation create( final ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'referenceAssociation' can not be null" );
@@ -73,6 +77,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see ReferenceAssociationDao#load(int, java.lang.Long)
      */
 
+    @Override
     public ReferenceAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.load - 'id' can not be null" );
@@ -85,6 +90,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see ReferenceAssociationDao#loadAll(int)
      */
 
+    @Override
     public Collection loadAll() {
         final Collection results = this.getHibernateTemplate().loadAll( ReferenceAssociationImpl.class );
 
@@ -95,6 +101,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see ReferenceAssociationDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'id' can not be null" );
@@ -109,6 +116,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see RelationshipDao#remove(Collection)
      */
 
+    @Override
     public void remove( Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
@@ -119,6 +127,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     /**
      * @see ReferenceAssociationDao#remove(ReferenceAssociation)
      */
+    @Override
     public void remove( ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'referenceAssociation' can not be null" );
@@ -130,12 +139,14 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see RelationshipDao#update(Collection)
      */
 
+    @Override
     public void update( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -149,6 +160,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     /**
      * @see ReferenceAssociationDao#update(ReferenceAssociation)
      */
+    @Override
     public void update( ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'referenceAssociation' can not be null" );

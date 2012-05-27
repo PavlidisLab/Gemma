@@ -62,6 +62,7 @@ public class ManualAuthenticationServiceImpl implements ApplicationContextAware,
     /**
      * We need to do this because normally the anonymous provider has
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider();

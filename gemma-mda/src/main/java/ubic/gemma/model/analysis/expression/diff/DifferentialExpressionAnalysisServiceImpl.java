@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.Taxon;
 public class DifferentialExpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase {
 
+    @Override
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
         return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold( ears, threshold );
 
@@ -50,26 +51,32 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
     }
 
+    @Override
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
     }
 
+    @Override
     public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
         return null;
     }
 
+    @Override
     public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
         return this.loadAll();
     }
 
+    @Override
     public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
         return this.loadAll();
     }
 
+    @Override
     public void update( DifferentialExpressionAnalysis o ) {
         this.getDifferentialExpressionAnalysisDao().update( o );
     }
 
+    @Override
     public void update( ExpressionAnalysisResultSet a ) {
         this.getExpressionAnalysisResultSetDao().update( a );
 

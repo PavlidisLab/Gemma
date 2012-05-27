@@ -27,9 +27,12 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
+import org.hibernate.classic.Session;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Base class for persisters.
@@ -57,8 +60,63 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
 
     /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.Persister#isTransient(java.lang.Object)
+     */
+    @Override
+    public boolean isTransient( Object entity ) {
+        if ( entity == null ) return true;
+        Long id = EntityUtils.getId( entity );
+
+        if ( id == null ) return true; // assume.
+
+        /*
+         * We normally won't get past this point; the case where it might is when the transaction has been rolled back
+         * and is being retried.
+         */
+
+        if ( EntityUtils.isProxy( entity ) ) {
+            if ( log.isDebugEnabled() )
+                log.debug( "Object is a proxy: " + entity.getClass().getSimpleName() + ":" + id );
+            return false;
+        }
+
+        if ( this.getSession().contains( entity ) ) {
+            if ( log.isDebugEnabled() )
+                log.debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );
+            return false;
+        }
+
+        // Getting desperate ...
+        synchronized ( entity ) {
+            Session sess = this.getSessionFactory().openSession();
+            sess.setFlushMode( FlushMode.MANUAL );
+            Object pe = sess.get( entity.getClass(), id );
+            sess.close();
+            if ( pe != null ) {
+                // Common case.
+                if ( log.isDebugEnabled() )
+                    log.debug( "Found object in store: " + entity.getClass().getSimpleName() + ":" + id );
+                return false;
+            }
+        }
+
+        /*
+         * Tricky case. It is basically impossible to figure out whether the entity might have some persistent
+         * representation when we are inside a transaction. The ID is filled in, but it probably is a survivor of a
+         * rolled-back transaction. It doesn't matter what we return, it's not guaranteed to be right...
+         */
+        log.info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
+                + id );
+        return false;
+
+    }
+
+    /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
+    @Override
     public Collection<?> persist( Collection<?> col ) {
         if ( col == null || col.size() == 0 ) return col;
 
@@ -95,26 +153,6 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     protected double elapsedMinutes( long startTime ) {
         return Double.parseDouble( NumberFormat.getNumberInstance().format(
                 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
-    }
-
-    /**
-     * Determine if a entity is transient (not persistent).
-     * 
-     * @param entity
-     * @return If the entity is null, return true. If the entity is non-null and has a null "id" property, return true;
-     *         Otherwise return false.
-     */
-    public static boolean isTransient( Object entity ) {
-        if ( entity == null ) return true;
-        try {
-            return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /**

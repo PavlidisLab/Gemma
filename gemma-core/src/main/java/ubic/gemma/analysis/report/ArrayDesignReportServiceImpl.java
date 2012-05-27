@@ -93,6 +93,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @param adVos
      */
+    @Override
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
 
         if ( adVos == null || adVos.size() == 0 ) return;
@@ -168,6 +169,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#fillInSubsumptionInfo(java.util.Collection)
      */
+    @Override
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : valueObjects ) {
@@ -202,6 +204,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @param adVos
      */
+    @Override
     public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos ) {
         for ( ArrayDesignValueObject origVo : adVos ) {
             ArrayDesignValueObject cachedVo = getSummaryObject( origVo.getId() );
@@ -224,6 +227,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateAllArrayDesignReport()
      */
+    @Override
     public void generateAllArrayDesignReport() {
         log.info( "Generating report summarizing all array designs ... " );
 
@@ -272,6 +276,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport()
      */
+    @Override
     @Secured({ "GROUP_AGENT" })
     public void generateArrayDesignReport() {
         initDirectories();
@@ -291,6 +296,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesignValueObject)
      */
+    @Override
     public void generateArrayDesignReport( ArrayDesignValueObject adVo ) {
 
         ArrayDesign ad = arrayDesignService.load( adVo.getId() );
@@ -352,6 +358,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(java.lang.Long)
      */
+    @Override
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
@@ -369,6 +376,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * @param id
      * @return
      */
+    @Override
     public String getLastGeneMappingEvent( Long id ) {
         return getLastEvent( id, ArrayDesignGeneMappingEvent.class );
 
@@ -378,6 +386,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * @param id
      * @return
      */
+    @Override
     public String getLastRepeatMaskEvent( Long id ) {
         return getLastEvent( id, ArrayDesignRepeatAnalysisEvent.class );
     }
@@ -386,6 +395,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * @param id
      * @return
      */
+    @Override
     public String getLastSequenceAnalysisEvent( Long id ) {
         return getLastEvent( id, ArrayDesignSequenceAnalysisEvent.class );
     }
@@ -394,6 +404,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * @param id
      * @return
      */
+    @Override
     public String getLastSequenceUpdateEvent( Long id ) {
         return getLastEvent( id, ArrayDesignSequenceUpdateEvent.class );
     }
@@ -403,6 +414,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
      */
+    @Override
     public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
         try {
@@ -445,6 +457,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * @param id
      * @return arrayDesignValueObject the specified summary object
      */
+    @Override
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
         try {

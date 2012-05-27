@@ -53,6 +53,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      * 
      * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer)
      */
+    @Override
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
         Query query = this.getSession().createQuery( "from BibliographicReferenceImpl" );
         query.setMaxResults( limit );
@@ -65,6 +66,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      * 
      * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
      */
+    @Override
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         Query query = this.getSession().createQuery(
                 "from BibliographicReferenceImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );

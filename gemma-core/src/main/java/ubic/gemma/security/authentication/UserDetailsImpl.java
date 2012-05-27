@@ -98,6 +98,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#getAuthorities()
      */
+    @Override
     public Collection<GrantedAuthority> getAuthorities() {
         return this.grantedAuthorities;
     }
@@ -113,6 +114,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#getPassword()
      */
+    @Override
     public String getPassword() {
         return password;
     }
@@ -135,6 +137,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#getUsername()
      */
+    @Override
     public String getUsername() {
         return userName;
     }
@@ -143,6 +146,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#isAccountNonExpired()
      */
+    @Override
     public boolean isAccountNonExpired() {
         return enabled;
     }
@@ -151,6 +155,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#isAccountNonLocked()
      */
+    @Override
     public boolean isAccountNonLocked() {
         return enabled;
     }
@@ -159,6 +164,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#isCredentialsNonExpired()
      */
+    @Override
     public boolean isCredentialsNonExpired() {
         return enabled;
     }
@@ -167,6 +173,7 @@ public class UserDetailsImpl implements UserDetails {
      * (non-Javadoc)
      * @see org.springframework.security.userdetails.UserDetails#isEnabled()
      */
+    @Override
     public boolean isEnabled() {
         return enabled;
     }

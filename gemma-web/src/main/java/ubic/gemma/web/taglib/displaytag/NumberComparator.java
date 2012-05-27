@@ -34,6 +34,7 @@ public class NumberComparator implements Comparator {
      * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( Object arg0, Object arg1 ) {
         String s1 = "0";
         String s2 = "0";

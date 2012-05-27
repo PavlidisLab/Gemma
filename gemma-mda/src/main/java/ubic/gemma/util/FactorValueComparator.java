@@ -18,6 +18,7 @@ public class FactorValueComparator implements Comparator<FactorValue> {
      * (non-Javadoc)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( FactorValue v1, FactorValue v2 ) {
         String s1 = v1.toString();
         String s2 = v2.toString();

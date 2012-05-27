@@ -128,6 +128,7 @@ public class StartupListener extends ContextLoaderListener {
      */
     private void clearOldJars( File targetLibdir ) {
         File[] oldJars = targetLibdir.listFiles( new FilenameFilter() {
+            @Override
             public boolean accept( File dir, String name ) {
                 if ( name.endsWith( ".jar" ) ) {
                     return true;

@@ -39,6 +39,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends AuditEvent> create( final java.util.Collection<? extends AuditEvent> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
@@ -50,6 +51,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return entities;
     }
 
+    @Override
     public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
     }
@@ -58,6 +60,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     public AuditEvent create( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
             throw new IllegalArgumentException( "AuditEvent.create - 'auditEvent' can not be null" );
@@ -71,6 +74,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getEvents(ubic.gemma.model.common.Auditable)
      */
+    @Override
     public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.handleGetEvents( auditable );
     }
@@ -81,6 +85,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(ubic.gemma.model.common.Auditable,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
+    @Override
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable, type );
     }
@@ -91,6 +96,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(java.util.Collection,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
+    @Override
     public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditables, type );
@@ -101,6 +107,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastTypedAuditEvents(java.util.Collection)
      */
+    @Override
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
             Collection<? extends Auditable> auditables ) {
         return this.handleGetLastTypedAuditEvents( auditables );
@@ -109,6 +116,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      */
+    @Override
     public java.util.Collection<Auditable> getNewSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
@@ -122,6 +130,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
      */
+    @Override
     public java.util.Collection<Auditable> getUpdatedSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
@@ -135,6 +144,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#load(int, java.lang.Long)
      */
+    @Override
     public AuditEvent load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditEvent.load - 'id' can not be null" );
@@ -146,6 +156,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#loadAll(int)
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public java.util.Collection<? extends AuditEvent> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
@@ -156,6 +167,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditEvent.remove - 'id' can not be null" );
@@ -169,6 +181,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends AuditEvent> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.remove - 'entities' can not be null" );
@@ -179,6 +192,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
             throw new IllegalArgumentException( "AuditEvent.remove - 'auditEvent' can not be null" );
@@ -189,6 +203,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         try {
             this.handleThaw( auditEvent );
@@ -202,6 +217,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends AuditEvent> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.update - 'entities' can not be null" );
@@ -214,6 +230,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
             throw new IllegalArgumentException( "AuditEvent.update - 'auditEvent' can not be null" );

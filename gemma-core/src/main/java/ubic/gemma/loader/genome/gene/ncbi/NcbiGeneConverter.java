@@ -77,6 +77,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
+    @Override
     public Collection<Object> convert( Collection<? extends Object> sourceDomainObjects ) {
         Collection<Object> results = new HashSet<Object>();
         for ( Object object : sourceDomainObjects ) {
@@ -156,6 +157,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object convert( Object sourceDomainObject ) {
         if ( sourceDomainObject instanceof Collection ) {
@@ -310,6 +312,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }
 
         Thread convertThread = new Thread( new Runnable() {
+            @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {

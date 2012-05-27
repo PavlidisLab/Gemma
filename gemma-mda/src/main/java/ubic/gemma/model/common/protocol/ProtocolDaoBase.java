@@ -43,6 +43,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<Protocol> entityIterator = entities.iterator(); entityIterator
@@ -56,6 +57,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     }
     
     
+    @Override
     public Collection<? extends Protocol > load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ProtocolImpl where id in (:ids)", "ids", ids );
     }
@@ -77,6 +79,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      */
 
     
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -84,6 +87,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolDao#create(ubic.gemma.model.common.protocol.Protocol)
      */
+    @Override
     public Protocol create( ubic.gemma.model.common.protocol.Protocol protocol ) {
         return ( ubic.gemma.model.common.protocol.Protocol ) this.create( TRANSFORM_NONE, protocol );
     }
@@ -135,6 +139,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolDao#find(ubic.gemma.model.common.protocol.Protocol)
      */
+    @Override
     public ubic.gemma.model.common.protocol.Protocol find( ubic.gemma.model.common.protocol.Protocol protocol ) {
         return this.find( TRANSFORM_NONE, protocol );
     }
@@ -187,6 +192,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolDao#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
      */
+    @Override
     public ubic.gemma.model.common.protocol.Protocol findOrCreate( ubic.gemma.model.common.protocol.Protocol protocol ) {
         return this.findOrCreate( TRANSFORM_NONE, protocol );
     }
@@ -207,6 +213,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ProtocolDao#load(java.lang.Long)
      */
 
+    @Override
     public Protocol load( java.lang.Long id ) {
         return ( ubic.gemma.model.common.protocol.Protocol ) this.load( TRANSFORM_NONE, id );
     }
@@ -216,6 +223,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      */
 
     
+    @Override
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -236,6 +244,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ProtocolDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Protocol.remove - 'id' can not be null" );
@@ -250,6 +259,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends Protocol> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Protocol.remove - 'entities' can not be null" );
@@ -260,6 +270,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolDao#remove(ubic.gemma.model.common.protocol.Protocol)
      */
+    @Override
     public void remove( ubic.gemma.model.common.protocol.Protocol protocol ) {
         if ( protocol == null ) {
             throw new IllegalArgumentException( "Protocol.remove - 'protocol' can not be null" );
@@ -271,12 +282,14 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends Protocol> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Protocol.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Protocol> entityIterator = entities.iterator(); entityIterator
@@ -291,6 +304,7 @@ public abstract class ProtocolDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolDao#update(ubic.gemma.model.common.protocol.Protocol)
      */
+    @Override
     public void update( ubic.gemma.model.common.protocol.Protocol protocol ) {
         if ( protocol == null ) {
             throw new IllegalArgumentException( "Protocol.update - 'protocol' can not be null" );

@@ -57,7 +57,7 @@ public class RetryExceptionCauseClassifier extends BinaryExceptionClassifier {
         }
 
         if ( super.classify( classifiable ) ) {
-            log.info( "Can retry after " + classifiable.getClass() );
+            log.info( "Can retry after " + classifiable.getClass().getName() );
             return true;
         }
 
@@ -65,7 +65,7 @@ public class RetryExceptionCauseClassifier extends BinaryExceptionClassifier {
 
         while ( c != null ) {
             if ( super.classify( c ) ) {
-                log.info( "Can retry after cause " + c.getClass() );
+                log.info( "Can retry after cause " + c.getClass().getName() );
                 return true; // we assume the default=false, so this is true.
             }
             c = c.getCause();

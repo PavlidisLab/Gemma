@@ -56,6 +56,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
      * ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma
      * .grid .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( ProcessedExpressionDataVectorCreateTaskCommand command ) {
 

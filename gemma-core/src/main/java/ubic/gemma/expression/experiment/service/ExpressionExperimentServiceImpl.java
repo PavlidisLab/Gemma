@@ -135,6 +135,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.browse( start, limit, orderField, descending );
     }
 
+    @Override
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
         return this.expressionExperimentDao.browseSpecificIds( start, limit, ids );
     }
@@ -158,6 +159,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.expressionExperimentDao.countAll();
@@ -170,6 +172,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#create(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.create( expressionExperiment );
@@ -183,6 +186,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#delete(ExpressionExperiment)
      */
+    @Override
     public void delete( final ExpressionExperiment expressionExperiment ) {
         try {
             this.thawLite( expressionExperiment ); // TODO: this is a hack to get it into session, needs to be
@@ -198,6 +202,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#delete(ExpressionExperiment)
      */
+    @Override
     public void delete( final Long id ) {
         try {
             final ExpressionExperiment ee = this.load( id );
@@ -244,6 +249,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#find(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment find( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.find( expressionExperiment );
@@ -262,6 +268,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public Collection<ExpressionExperiment> findByAccession(
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         try {
@@ -276,6 +283,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
         try {
             return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
@@ -289,6 +297,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
         try {
             return this.expressionExperimentDao.findByBioMaterial( bm );
@@ -302,6 +311,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByBioMaterials(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
         try {
             return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
@@ -315,6 +325,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByExpressedGene(ubic.gemma.model.genome.Gene, double)
      */
+    @Override
     public Collection<ExpressionExperiment> findByExpressedGene( final ubic.gemma.model.genome.Gene gene,
             final double rank ) {
         try {
@@ -329,6 +340,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByFactorValue(FactorValue)
      */
+    @Override
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
         try {
             return this.expressionExperimentDao.findByFactorValue( factorValue );
@@ -342,6 +354,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByFactorValues(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
         try {
             return this.expressionExperimentDao.findByFactorValues( factorValues );
@@ -355,6 +368,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Collection<ExpressionExperiment> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.expressionExperimentDao.findByGene( gene );
@@ -368,6 +382,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
         try {
             return this.expressionExperimentDao.findByInvestigator( investigator );
@@ -381,6 +396,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByName(java.lang.String)
      */
+    @Override
     public ExpressionExperiment findByName( final java.lang.String name ) {
         try {
             return this.expressionExperimentDao.findByName( name );
@@ -393,6 +409,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.expressionExperimentDao.findByParentTaxon( taxon );
@@ -403,6 +420,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
     }
 
+    @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.expressionExperimentDao.findByQuantitationType( type );
     }
@@ -410,6 +428,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByShortName(java.lang.String)
      */
+    @Override
     public ExpressionExperiment findByShortName( final java.lang.String shortName ) {
         try {
             return this.expressionExperimentDao.findByShortName( shortName );
@@ -428,6 +447,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.expressionExperimentDao.findByTaxon( taxon );
@@ -444,6 +464,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
      * java.lang.Integer)
      */
+    @Override
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( ids, limit );
     }
@@ -456,6 +477,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#findOrCreate(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.findOrCreate( expressionExperiment );
@@ -469,6 +491,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getAnnotationCounts(Collection)
      */
+    @Override
     public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         try {
             return this.expressionExperimentDao.getAnnotationCounts( ids );
@@ -481,6 +504,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * Get the terms associated this expression experiment.
      */
+    @Override
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = load( eeId );
         Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
@@ -510,6 +534,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getArrayDesignsUsed(ExpressionExperiment)
      */
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
@@ -534,6 +559,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
+    @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getBioAssayDimensions( expressionExperiment );
     }
@@ -541,6 +567,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getBioMaterialCount(ExpressionExperiment)
      */
+    @Override
     public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
@@ -554,6 +581,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getDesignElementDataVectorCountById(long)
      */
+    @Override
     public Integer getDesignElementDataVectorCountById( final long id ) {
         try {
             return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
@@ -568,6 +596,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getDesignElementDataVectors(Collection,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<CompositeSequence> designElements,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
@@ -583,6 +612,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getDesignElementDataVectors(Collection)
      */
+    @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<QuantitationType> quantitationTypes ) {
         try {
@@ -615,6 +645,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
      */
+    @Override
     public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
             return this.expressionExperimentDao.getLastArrayDesignUpdate( expressionExperiments );
@@ -628,6 +659,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)
      */
+    @Override
     public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
         try {
             return this.expressionExperimentDao.getLastArrayDesignUpdate( ee );
@@ -641,6 +673,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastLinkAnalysis(Collection)
      */
+    @Override
     public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
         try {
             return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
@@ -653,6 +686,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastMissingValueAnalysis(Collection)
      */
+    @Override
     public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
         try {
             return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
@@ -666,6 +700,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastProcessedDataUpdate(Collection)
      */
+    @Override
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
         try {
             return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
@@ -679,6 +714,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
      */
+    @Override
     public Map<Long, AuditEvent> getLastTroubleEvent( final Collection<Long> ids ) {
         try {
             Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
@@ -701,6 +737,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getLastValidationEvent(Collection)
      */
+    @Override
     public Map<Long, AuditEvent> getLastValidationEvent( final Collection<Long> ids ) {
         try {
             return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
@@ -714,6 +751,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPerTaxonCount()
      */
+    @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         try {
             return this.expressionExperimentDao.getPerTaxonCount();
@@ -726,6 +764,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
      */
+    @Override
     public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
         try {
             return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
@@ -739,6 +778,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCountsExcludeBatch(Collection)
      */
+    @Override
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         try {
             return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
@@ -752,6 +792,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPreferredQuantitationType(ExpressionExperiment)
      */
+    @Override
     public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
         try {
             Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
@@ -781,6 +822,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment)
      */
+    @Override
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getProcessedDataVectors( ee );
     }
@@ -788,6 +830,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
+    @Override
     public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
@@ -801,6 +844,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getQuantitationTypeCountById(java.lang.Long)
      */
+    @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final java.lang.Long Id ) {
         try {
             return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
@@ -814,6 +858,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment)
      */
+    @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
@@ -828,6 +873,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
@@ -846,6 +892,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getSampleRemovalEvents(Collection)
      */
+    @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
@@ -861,6 +908,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
+    @Override
     @Deprecated
     public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
             final Integer limit ) {
@@ -876,6 +924,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getSubSets(ExpressionExperiment)
      */
+    @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.getSubSets( expressionExperiment );
@@ -889,6 +938,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#getTaxon(java.lang.Long)
      */
+    @Override
     public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
         try {
             return this.expressionExperimentDao.getTaxon( bioAssaySet );
@@ -922,6 +972,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#load(java.lang.Long)
      */
+    @Override
     public ExpressionExperiment load( final java.lang.Long id ) {
         try {
             return this.expressionExperimentDao.load( id );
@@ -934,6 +985,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#loadAll()
      */
+    @Override
     public Collection<ExpressionExperiment> loadAll() {
         try {
             return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
@@ -983,6 +1035,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#loadMultiple(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {
         try {
             return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
@@ -1002,6 +1055,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
      */
+    @Override
     public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
         return loadAll();
     }
@@ -1027,6 +1081,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadUserOwnedExpressionExperiments()
      */
+    @Override
     public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
         return loadAll();
     }
@@ -1136,6 +1191,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#thaw(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.thaw( expressionExperiment );
@@ -1149,6 +1205,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
@@ -1162,6 +1219,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
@@ -1175,6 +1233,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#update(ExpressionExperiment)
      */
+    @Override
     public void update( final ExpressionExperiment expressionExperiment ) {
         try {
             this.expressionExperimentDao.update( expressionExperiment );

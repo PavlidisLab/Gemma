@@ -124,6 +124,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @return If processPlatformsOnly is true, a collection of GeoPlatforms. Otherwise a Collection of series (just
      *         one). If the accession is a GPL then processPlatformsOnly is set to true and any sample data is ignored.
      */
+    @Override
     public Collection<? extends GeoData> generate( String geoAccession ) {
         log.info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
         Collection<GeoData> result = new HashSet<GeoData>();

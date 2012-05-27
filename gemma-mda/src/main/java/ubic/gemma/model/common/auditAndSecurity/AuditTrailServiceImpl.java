@@ -66,6 +66,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
      * java.lang.Class, java.lang.String, java.lang.String)
      */
+    @Override
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
             String detail ) {
 
@@ -82,6 +83,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         return this.addUpdateEvent( auditable, auditEventType, note, detail );
     }
 
+    @Override
     public List<AuditEvent> getEvents( Auditable ad ) {
         return this.auditEventDao.getEvents( ad );
     }
@@ -89,6 +91,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addComment(Auditable, String, String)
      */
+    @Override
     public void addComment( final Auditable auditable, final String comment, final String detail ) {
         try {
             AuditEventType type = new CommentedEventImpl();
@@ -103,6 +106,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addOkFlag(Auditable, String, String)
      */
+    @Override
     public void addOkFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
@@ -119,6 +123,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addTroubleFlag(Auditable, String, String)
      */
+    @Override
     public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             AuditEventType type = new TroubleStatusFlagEventImpl();
@@ -133,6 +138,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, String)
      */
+    @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
@@ -151,6 +157,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
+    @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note, boolean detachedAuditable ) {
         try {
@@ -179,6 +186,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
+    @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
         try {
             AuditEvent auditEvent = AuditEvent.Factory.newInstance();
@@ -221,6 +229,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
      *      java.lang.String, java.lang.String)
      */
+    @Override
     public void addValidatedFlag( final Auditable auditable, final String comment, final String detail ) {
         try {
             AuditEventType type = new ValidatedFlagEventImpl();
@@ -235,6 +244,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
+    @Override
     public AuditTrail create( final AuditTrail auditTrail ) {
         try {
             return this.auditTrailDao.create( auditTrail );
@@ -248,6 +258,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
      */
+    @Override
     public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
         try {
             AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
@@ -268,6 +279,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(Auditable)
      */
+    @Override
     public AuditEvent getLastValidationEvent( final Auditable auditable ) {
         try {
             return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );

@@ -33,6 +33,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -45,6 +46,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends DatabaseEntry> create(
             final java.util.Collection<? extends DatabaseEntry> entities ) {
         if ( entities == null ) {
@@ -52,6 +54,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -67,6 +70,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#create(int transform,
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public DatabaseEntry create( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) {
             throw new IllegalArgumentException( "DatabaseEntry.create - 'databaseEntry' can not be null" );
@@ -105,6 +109,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
 
+    @Override
     public DatabaseEntry find( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         return this.find( "from ubic.gemma.model.common.description.DatabaseEntryImpl"
                 + " as databaseEntry where databaseEntry.databaseEntry = :databaseEntry", databaseEntry );
@@ -143,6 +148,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
      *      ubic.gemma.model.common.description.ExternalDatabase)
      */
 
+    @Override
     public DatabaseEntry findByAccession( final java.lang.String accession,
             final ubic.gemma.model.common.description.ExternalDatabase externalDb ) {
         return this.findByAccession(
@@ -153,6 +159,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#load(int, java.lang.Long)
      */
+    @Override
     public DatabaseEntry load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "DatabaseEntry.load - 'id' can not be null" );
@@ -164,6 +171,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends DatabaseEntry> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.DatabaseEntryImpl.class );
@@ -174,6 +182,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "DatabaseEntry.remove - 'id' can not be null" );
@@ -198,6 +207,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryDao#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) {
             throw new IllegalArgumentException( "DatabaseEntry.remove - 'databaseEntry' can not be null" );
@@ -215,6 +225,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

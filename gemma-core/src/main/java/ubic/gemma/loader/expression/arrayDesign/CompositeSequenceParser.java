@@ -54,6 +54,7 @@ public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> 
         return results;
     }
 
+    @Override
     public CompositeSequence parseOneLine( String line ) {
         String[] tokens = StringUtils.splitPreserveAllTokens( line, '\t' );
 

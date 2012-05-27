@@ -335,6 +335,7 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static void orderByName( List<BioMaterial> start ) {
         Collections.sort( start, new Comparator<BioMaterial>() {
+            @Override
             public int compare( BioMaterial o1, BioMaterial o2 ) {
 
                 if ( o1.getBioAssaysUsedIn().isEmpty() || o2.getBioAssaysUsedIn().isEmpty() )
@@ -718,6 +719,7 @@ public class ExpressionDataMatrixColumnSort {
         }
         log.debug( "Sorting measurements" );
         Collections.sort( factorValues, new Comparator<FactorValue>() {
+            @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
                 try {
                     assert o1.getMeasurement() != null;

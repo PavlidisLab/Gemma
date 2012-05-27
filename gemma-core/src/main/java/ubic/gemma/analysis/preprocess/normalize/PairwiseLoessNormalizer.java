@@ -41,6 +41,7 @@ public class PairwiseLoessNormalizer extends RCommander implements Normalizer<St
      * 
      * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
+    @Override
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = rc.assignMatrix( dataMatrix );

@@ -19,6 +19,8 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateAccessor;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
@@ -43,7 +45,6 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
     @Override
     public void addAuthority( User user, String roleName ) {
         throw new UnsupportedOperationException( "User group-based authority instead" );
-
     }
 
     /*
@@ -57,7 +58,6 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
     public void changePassword( User user, String password ) {
         user.setPassword( password );
         this.getHibernateTemplate().update( user );
-
     }
 
     /*
@@ -76,8 +76,13 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      */
     @Override
     public User findByUserName( final String userName ) {
-        List<?> r = this.getHibernateTemplate().findByNamedParam( "from UserImpl u where u.userName=:userName",
-                "userName", userName );
+
+        // we make this method safer to call in a transaction, as it really is a read-only method that should be
+        // accessing information that is already committed.
+        HibernateTemplate t = new HibernateTemplate( this.getSessionFactory() );
+        t.setAlwaysUseNewSession( true );
+        t.setFlushMode( HibernateAccessor.FLUSH_NEVER );
+        List<?> r = t.findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
         if ( r.isEmpty() ) {
             return null;
         } else if ( r.size() > 1 ) {
@@ -95,10 +100,8 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      */
     @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
-
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", u );
-
     }
 
     @Override

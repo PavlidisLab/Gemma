@@ -39,38 +39,38 @@ import ubic.gemma.security.authorization.acl.AclService;
  */
 @Service
 public class UserServiceImpl implements UserService {
-    
-    @Autowired
-    private UserDao userDao;
 
     @Autowired
-    private UserGroupDao userGroupDao;
-    
+    UserDao userDao;
+
+    @Autowired
+    UserGroupDao userGroupDao;
+
     @Autowired
     private AclService aclService;
 
     @Autowired
     private SecurityService securityService;
-    
+
     @Override
     public void addGroupAuthority( UserGroup group, String authority ) {
         this.userGroupDao.addAuthority( group, authority );
     }
 
     @Override
-    public void addUserToGroup( UserGroup group, User user) {
+    public void addUserToGroup( UserGroup group, User user ) {
         // add user to list of members
         group.getGroupMembers().add( user );
         this.userGroupDao.update( group );
-        
-        //FIXME: Maybe user registration should be a completely separate, isolated code path.
+
+        // FIXME: Maybe user registration should be a completely separate, isolated code path.
         // Or maybe call to makeReadableByGroup shouldn't be here in the first place.
-        //if (group.getName().equals( "Users" )) {
-            // USERS group is a special case                 
-//        } else {
-            // grant read permissions to newly added user
-//            this.securityService.makeReadableByGroup( group, group.getName() );
- //       }
+        // if (group.getName().equals( "Users" )) {
+        // USERS group is a special case
+        // } else {
+        // grant read permissions to newly added user
+        // this.securityService.makeReadableByGroup( group, group.getName() );
+        // }
     }
 
     @Override
@@ -80,9 +80,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete( User user ) {
-        for ( UserGroup group : this.userDao.loadGroups( user ) ) {                     
-            group.getGroupMembers().remove( user );            
-            this.userGroupDao.update( group );            
+        for ( UserGroup group : this.userDao.loadGroups( user ) ) {
+            group.getGroupMembers().remove( user );
+            this.userGroupDao.update( group );
         }
 
         this.userDao.remove( user );
@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
         if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) ) {
             throw new AccessDeniedException( "Only the owner of a group can delete it" );
         }
-        
+
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
 
         this.userGroupDao.remove( group );
@@ -115,9 +115,9 @@ public class UserServiceImpl implements UserService {
         /*
          * clean up acls that use this group...do that last!
          */
-        try{
+        try {
             aclService.deleteSid( new GrantedAuthoritySid( authority ) );
-        }catch(DataIntegrityViolationException div){
+        } catch ( DataIntegrityViolationException div ) {
             throw div;
         }
     }
@@ -131,7 +131,7 @@ public class UserServiceImpl implements UserService {
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.userGroupDao.findGroupsForUser( user );
     }
- 
+
     @Override
     public Collection<UserGroup> listAvailableGroups() {
         return ( Collection<UserGroup> ) this.userGroupDao.loadAll();
@@ -162,48 +162,38 @@ public class UserServiceImpl implements UserService {
         this.userGroupDao.update( group );
     }
 
-
     @Override
     public boolean groupExists( String name ) {
         return this.userGroupDao.findByUserGroupName( name ) != null;
     }
 
-    
     /**
      * @see ubic.gemma.security.authentication.UserService#create(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
     public User create( final User user ) throws UserExistsException {
-        try {
 
-            if ( user.getUserName() == null ) {
-                throw new IllegalArgumentException( "UserName cannot be null" );
-            }
-
-            if ( this.userDao.findByUserName( user.getUserName() ) != null ) {
-                throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-            }
-
-            if ( this.findByEmail( user.getEmail() ) != null ) {
-                throw new UserExistsException( "A user with email address '" + user.getEmail() + "' already exists." );
-            }
-
-            try {
-                return this.userDao.create( user );
-            } catch ( DataIntegrityViolationException e ) {
-                throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-            } catch ( InvalidDataAccessResourceUsageException e ) {
-                // shouldn't happen if we don't have duplicates in the first place...but just in case.
-                throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-            }
-            
-        } catch ( UserExistsException ex ) {
-            throw ex;
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.create(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
-                            + th, th );
+        if ( user.getUserName() == null ) {
+            throw new IllegalArgumentException( "UserName cannot be null" );
         }
+
+        if ( this.userDao.findByUserName( user.getUserName() ) != null ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        }
+
+        if ( this.findByEmail( user.getEmail() ) != null ) {
+            throw new UserExistsException( "A user with email address '" + user.getEmail() + "' already exists." );
+        }
+
+        try {
+            return this.userDao.create( user );
+        } catch ( DataIntegrityViolationException e ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        } catch ( InvalidDataAccessResourceUsageException e ) {
+            // shouldn't happen if we don't have duplicates in the first place...but just in case.
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        }
+
     }
 
     /**
@@ -211,15 +201,8 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findByEmail( final String email ) {
-        try {
-            
-            return this.userDao.findByEmail( email );
-            
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail(java.lang.String email)' --> "
-                            + th, th );
-        }
+        return this.userDao.findByEmail( email );
+
     }
 
     /**
@@ -227,32 +210,17 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User findByUserName( final String userName ) {
-        try {
-        
-            return this.userDao.findByUserName( userName );
+        return this.userDao.findByUserName( userName );
 
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName(java.lang.String userName)' --> "
-                            + th, th );
-        }
     }
-
 
     /**
      * @see ubic.gemma.security.authentication.UserService#load(java.lang.Long)
      */
     @Override
     public User load( final Long id ) {
-        try {
-        
-            return this.userDao.load( id );
-        
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.userDao.load( id );
+
     }
 
     /**
@@ -260,14 +228,8 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public java.util.Collection<User> loadAll() {
-        try {
-            
-            return ( Collection<User> ) this.userDao.loadAll();
-            
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.loadAll()' --> " + th, th );
-        }
+        return ( Collection<User> ) this.userDao.loadAll();
+
     }
 
     /**
@@ -275,42 +237,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void update( final User user ) {
-        try {
-            
-            this.userDao.update( user );
-            
-        } catch ( Throwable th ) {
-            throw new UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.update(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
-                            + th, th );
-        }
+
+        this.userDao.update( user );
+
     }
 
-//    /**
-//     * Gets the reference to <code>user</code>'s DAO.
-//     */
-//    protected UserDao getUserDao() {
-//        return this.userDao;
-//    }
-//  /**
-//  * @return the userGroupDao
-//  */
-// public UserGroupDao getUserGroupDao() {
-//     return userGroupDao;
-// }
-  /**
-  * Sets the reference to <code>user</code>'s DAO.
-  */
- public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
-     this.userDao = userDao;
- }
-
- /**
-  * @param userGroupDao the userGroupDao to set
-  */
- public void setUserGroupDao( UserGroupDao userGroupDao ) {
-     this.userGroupDao = userGroupDao;
- }
-
-    
 }

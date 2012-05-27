@@ -119,6 +119,7 @@ public class GoldenPathBioSequenceLoader {
         final SecurityContext context = SecurityContextHolder.getContext();
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 log.info( "Starting loading" );
                 SecurityContextHolder.setContext( context );
@@ -129,6 +130,7 @@ public class GoldenPathBioSequenceLoader {
         loadThread.start();
 
         Thread parseThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 try {
                     parser.parse( inputStream, queue );
@@ -163,6 +165,7 @@ public class GoldenPathBioSequenceLoader {
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
         Thread parseThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 dumper.dumpTranscriptBioSequences( limit, queue );
                 log.info( "Done dumping" );
@@ -173,6 +176,7 @@ public class GoldenPathBioSequenceLoader {
         parseThread.start();
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 log.info( "Starting loading" );

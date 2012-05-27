@@ -64,6 +64,7 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
      * 
      * @see TaskMethodAdvice
      */
+    @Override
     public TaskResult call() throws Exception {
         /*
          * Do any preprocessing here

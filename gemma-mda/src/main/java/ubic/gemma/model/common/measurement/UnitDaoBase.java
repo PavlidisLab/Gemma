@@ -41,6 +41,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Unit> entityIterator = entities.iterator(); entityIterator
@@ -54,6 +55,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     }
 
     
+    @Override
     public Collection<? extends Unit > load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from UnitImpl where id in (:ids)", "ids", ids );
     }
@@ -73,6 +75,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
      * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
      */
     
+    @Override
     public java.util.Collection<? extends Unit> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -80,6 +83,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(ubic.gemma.model.common.measurement.Unit)
      */
+    @Override
     public ubic.gemma.model.common.measurement.Unit create( ubic.gemma.model.common.measurement.Unit unit ) {
         return this.create( TRANSFORM_NONE, unit );
     }
@@ -98,6 +102,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.measurement.Unit load( java.lang.Long id ) {
         return this.load( TRANSFORM_NONE, id );
     }
@@ -105,6 +110,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
+    @Override
     public java.util.Collection<? extends Unit> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -122,6 +128,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Unit.remove - 'id' can not be null" );
@@ -135,6 +142,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.remove - 'entities' can not be null" );
@@ -145,6 +153,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(ubic.gemma.model.common.measurement.Unit)
      */
+    @Override
     public void remove( ubic.gemma.model.common.measurement.Unit unit ) {
         if ( unit == null ) {
             throw new IllegalArgumentException( "Unit.remove - 'unit' can not be null" );
@@ -155,12 +164,14 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Unit> entityIterator = entities.iterator(); entityIterator
@@ -175,6 +186,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#update(ubic.gemma.model.common.measurement.Unit)
      */
+    @Override
     public void update( ubic.gemma.model.common.measurement.Unit unit ) {
         if ( unit == null ) {
             throw new IllegalArgumentException( "Unit.update - 'unit' can not be null" );

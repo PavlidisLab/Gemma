@@ -1495,6 +1495,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
+            @Override
             public void run() {
                 Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
                         .keySet().toArray( new String[] {} ) );
@@ -1520,6 +1521,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
+            @Override
             public void run() {
                 /*
                  * This part should be straightforward

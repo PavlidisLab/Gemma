@@ -39,6 +39,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
@@ -53,6 +54,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public java.util.Collection getDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
@@ -67,6 +69,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public int getNumDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
@@ -89,6 +92,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         try {
@@ -103,6 +107,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#update(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public void update(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
         try {

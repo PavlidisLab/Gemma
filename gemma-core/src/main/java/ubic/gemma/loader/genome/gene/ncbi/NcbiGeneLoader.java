@@ -235,6 +235,7 @@ public class NcbiGeneLoader {
         assert context != null;
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 doLoad( geneQueue );

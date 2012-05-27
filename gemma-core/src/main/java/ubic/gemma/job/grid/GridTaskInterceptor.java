@@ -63,6 +63,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
      * 
      * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
      */
+    @Override
     public Object invoke( MethodInvocation invocation ) throws Throwable {
 
         final TaskCommand command = ( TaskCommand ) invocation.getArguments()[0];
@@ -98,6 +99,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
          */
         NotifyDelegator jobStartNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener(
                 new RemoteEventListener() {
+                    @Override
                     public void notify( RemoteEvent arg0 ) throws UnknownEventException, RemoteException {
                         log.debug( "got start" );
                         command.setStartTime();

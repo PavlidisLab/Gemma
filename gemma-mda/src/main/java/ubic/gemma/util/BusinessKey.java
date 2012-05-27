@@ -218,10 +218,15 @@ public class BusinessKey {
      * @param contact
      */
     public static void addRestrictions( Criteria queryObject, Contact contact ) {
-        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
-            // email is unique.
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+
+        if ( contact instanceof User ) {
+            queryObject.add( Restrictions.eq( "userName", ( ( User ) contact ).getUserName() ) );
             return;
+        }
+
+        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
+            // email is NOT unique.
+            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
         }
 
         if ( StringUtils.isNotBlank( contact.getName() ) )
@@ -322,10 +327,15 @@ public class BusinessKey {
      * @param contact
      */
     public static void addRestrictions( Criteria queryObject, Person contact ) {
-        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
-            // email is unique.
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+
+        if ( contact instanceof User ) {
+            queryObject.add( Restrictions.eq( "userName", ( ( User ) contact ).getUserName() ) );
             return;
+        }
+
+        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
+            // email is NOT unique.
+            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
         }
 
         if ( StringUtils.isNotBlank( contact.getName() ) )

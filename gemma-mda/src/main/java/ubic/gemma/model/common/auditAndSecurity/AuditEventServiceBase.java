@@ -40,6 +40,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     /**
      * @see AuditEventService#getNewSinceDate(Date)
      */
+    @Override
     public Collection<Auditable> getNewSinceDate( final Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
@@ -52,6 +53,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     /**
      * @see AuditEventService#getUpdatedSinceDate(Date)
      */
+    @Override
     public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
@@ -71,6 +73,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     /**
      * @see AuditEventService#thaw(AuditEvent)
      */
+    @Override
     public void thaw( final AuditEvent auditEvent ) {
         try {
             this.handleThaw( auditEvent );

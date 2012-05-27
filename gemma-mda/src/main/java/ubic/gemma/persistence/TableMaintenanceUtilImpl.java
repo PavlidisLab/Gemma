@@ -91,6 +91,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      * 
      * @see ubic.gemma.persistence.TableMaintenenceUtilI#updateGene2CsEntries()
      */
+    @Override
     public void updateGene2CsEntries() {
 
         log.debug( "Running Gene2CS status check" );

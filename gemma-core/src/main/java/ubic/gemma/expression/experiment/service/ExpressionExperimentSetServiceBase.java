@@ -18,7 +18,6 @@
  */
 package ubic.gemma.expression.experiment.service;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -26,8 +25,6 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Taxon;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,

@@ -88,6 +88,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
      * 
      * @see ubic.gemma.datastructure.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
+    @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
         int numRows = data.rows();
 

@@ -110,6 +110,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     private AuthenticationTestingUtil authenticationTestingUtil;
 
+    @Autowired
     protected PersistentDummyObjectHelper testHelper;
 
     private String sqlScriptEncoding;
@@ -125,24 +126,17 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * @throws Exception
      */
+    @Override
     final public void afterPropertiesSet() throws Exception {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
+        hibernateSupport.setSessionFactory( this.getBean( SessionFactory.class ) );
 
         CompassUtils.deleteCompassLocks();
 
         this.authenticationTestingUtil = new AuthenticationTestingUtil();
-        this.authenticationTestingUtil.setUserManager( ( UserManager ) this.getBean( "userManager" ) );
+        this.authenticationTestingUtil.setUserManager( this.getBean( UserManager.class ) );
 
         runAsAdmin();
-
-        this.testHelper = new PersistentDummyObjectHelper();
-        testHelper.setPersisterHelper( persisterHelper );
-        testHelper.setExternalDatabaseService( externalDatabaseService );
-
-        /*
-         * TODO: delete the log files.
-         */
 
     }
 
@@ -247,7 +241,9 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * 
      * @param name
      * @return
+     * @deprecated Use the newer getBean(Class) method.
      */
+    @Deprecated
     protected Object getBean( String name ) {
         try {
             return this.applicationContext.getBean( name );

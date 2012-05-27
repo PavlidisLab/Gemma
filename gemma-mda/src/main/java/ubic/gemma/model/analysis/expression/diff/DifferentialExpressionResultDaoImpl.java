@@ -128,6 +128,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#countNumberOfDifferentiallyExpressedProbes
      * (long, double)
      */
+    @Override
     public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
         DetachedCriteria criteria = DetachedCriteria.forClass( HitListSize.class );
 
@@ -159,6 +160,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene )
      */
+    @Override
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -196,6 +198,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene, java.util.Collection)
      */
+    @Override
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene, Collection<BioAssaySet> experimentsAnalyzed ) {
 
         Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
@@ -238,6 +241,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#find(java.util.Collection, double,
      * java.lang.Integer)
      */
+    @Override
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experiments,
             double qvalueThreshold, Integer limit ) {
@@ -291,6 +295,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, double, integer)
      */
+    @Override
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit ) {
 
@@ -346,6 +351,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, java.util.Collection, double, Integer)
      */
+    @Override
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed,
@@ -399,6 +405,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         return results;
     }
 
+    @Override
     public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit ) {
 
@@ -443,6 +450,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @param limit - max number of results to return.
      * @return
      */
+    @Override
     public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
 
@@ -514,6 +522,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         }
     }
     
+    @Override
     public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId, Collection<Long> geneIds,
             Collection<Long> adUsed ) {
 
@@ -666,10 +675,12 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoBase#load(java.lang.Long)
      */
+    @Override
     public ProbeAnalysisResult load( Long id ) {
         return this.getHibernateTemplate().get( ProbeAnalysisResultImpl.class, id );
     }
 
+    @Override
     public Collection<ProbeAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
@@ -679,11 +690,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#thaw(java.util.Collection)
      */
+    @Override
     public void thaw( final Collection<ProbeAnalysisResult> results ) {
         HibernateTemplate templ = this.getHibernateTemplate();
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( ProbeAnalysisResult result : results ) {
                     session.buildLockRequest( LockOptions.NONE ).lock( result );
@@ -705,11 +718,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#thaw(ubic.gemma.model.analysis.expression
      * .diff.ProbeAnalysisResult)
      */
+    @Override
     public void thaw( final ProbeAnalysisResult result ) {
         HibernateTemplate templ = this.getHibernateTemplate();
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( result );
                 Hibernate.initialize( result );
@@ -729,6 +744,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         } );
     }
 
+    @Override
     public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids ) {
         final String queryString = "select dea from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
 

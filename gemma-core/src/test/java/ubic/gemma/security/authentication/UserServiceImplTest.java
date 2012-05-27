@@ -51,10 +51,10 @@ public class UserServiceImplTest {
     @Before
     public void setUp() throws Exception {
         userDaoMock = createMock( UserDao.class );
-        userService.setUserDao( userDaoMock );
+        userService.userDao = userDaoMock;
 
         UserGroupDao userGroupDaoMock = createMock( UserGroupDao.class );
-        userService.setUserGroupDao( userGroupDaoMock );
+        userService.userGroupDao = userGroupDaoMock;
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );

@@ -115,6 +115,7 @@ public class RawDataParser implements FileCombiningParser {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
+    @Override
     public Collection<Object> getResults() {
         return results;
     }
@@ -148,6 +149,7 @@ public class RawDataParser implements FileCombiningParser {
      * 
      * @see ubic.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
      */
+    @Override
     public void parse( List<File> files ) throws IOException {
         int i = 1;
         for ( File file : files ) {
@@ -172,6 +174,7 @@ public class RawDataParser implements FileCombiningParser {
      * @param streams
      * @throws IOException
      */
+    @Override
     public void parseStreams( List<InputStream> streams ) throws IOException {
         int i = 0;
         for ( InputStream stream : streams ) {

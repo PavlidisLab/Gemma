@@ -51,6 +51,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#countAll()
      */
+    @Override
     public Integer countAll() {
         try {
             return this.handleCountAll();
@@ -62,11 +63,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#create(int, Collection)
      */
+    @Override
     public Collection<? extends ExpressionExperiment> create( final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNewSession( new HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
@@ -81,6 +84,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#create(int transform, ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'expressionExperiment' can not be null" );
@@ -109,6 +113,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByBibliographicReference(Long)
      */
+    @Override
     public Collection<ExpressionExperiment> findByBibliographicReference( final Long bibRefID ) {
         try {
             return this.handleFindByBibliographicReference( bibRefID );
@@ -122,6 +127,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
+    @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
         try {
             return this.handleFindByBioMaterial( bm );
@@ -135,6 +141,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByBioMaterials(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
         try {
             return this.handleFindByBioMaterials( bioMaterials );
@@ -148,6 +155,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByExpressedGene(ubic.gemma.model.genome.Gene, Double)
      */
+    @Override
     public Collection<ExpressionExperiment> findByExpressedGene( final ubic.gemma.model.genome.Gene gene,
             final Double rank ) {
         try {
@@ -162,6 +170,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByFactorValue(FactorValue)
      */
+    @Override
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
         try {
             return this.handleFindByFactorValue( factorValue );
@@ -175,6 +184,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByFactorValues(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
         try {
             return this.handleFindByFactorValues( factorValues );
@@ -188,6 +198,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Collection<ExpressionExperiment> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
@@ -218,6 +229,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#findByInvestigator(int, Contact)
      */
 
+    @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
         return this
                 .findByInvestigator(
@@ -228,6 +240,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByName(int, String)
      */
+    @Override
     public ExpressionExperiment findByName( final String name ) {
         return this.findByName( "from ExpressionExperimentImpl a where a.name=:name", name );
     }
@@ -259,6 +272,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByParentTaxon( taxon );
@@ -272,6 +286,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /*
      * 
      */
+    @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
         try {
             return this.handleFindByQuantitationType( quantitationType );
@@ -284,6 +299,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByShortName(int, String)
      */
+    @Override
     public ExpressionExperiment findByShortName( final String shortName ) {
         return this.findByShortName( "from ExpressionExperimentImpl a where a.shortName=:shortName", shortName );
     }
@@ -315,6 +331,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );
@@ -328,6 +345,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getAnnotationCounts(Collection)
      */
+    @Override
     public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         try {
             return this.handleGetAnnotationCounts( ids );
@@ -340,6 +358,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getArrayDesignAuditEvents(Collection)
      */
+    @Override
     @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( final Collection<Long> ids ) {
         try {
@@ -354,6 +373,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getAuditEvents(Collection)
      */
+    @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( final Collection<Long> ids ) {
         try {
             return this.handleGetAuditEvents( ids );
@@ -366,6 +386,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getBioAssayCountById(long)
      */
+    @Override
     public Integer getBioAssayCountById( final long id ) {
         try {
             return this.handleGetBioAssayCountById( id );
@@ -378,6 +399,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getBioMaterialCount(ExpressionExperiment)
      */
+    @Override
     public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetBioMaterialCount( expressionExperiment );
@@ -391,6 +413,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getDesignElementDataVectorCountById(long)
      */
+    @Override
     public Integer getDesignElementDataVectorCountById( final long id ) {
         try {
             return this.handleGetDesignElementDataVectorCountById( id );
@@ -405,6 +428,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#getDesignElementDataVectors(Collection,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<CompositeSequence> designElements,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
@@ -420,6 +444,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getDesignElementDataVectors(Collection)
      */
+    @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<QuantitationType> quantitationTypes ) {
         try {
@@ -434,6 +459,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getLastArrayDesignUpdate(Collection, Class)
      */
+    @Override
     public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
             return this.handleGetLastArrayDesignUpdate( expressionExperiments );
@@ -447,6 +473,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getLastArrayDesignUpdate(ExpressionExperiment, Class)
      */
+    @Override
     public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
         try {
             return this.handleGetLastArrayDesignUpdate( ee );
@@ -460,6 +487,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment)
      */
+    @Override
     public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
             final ExpressionExperiment expressionExperiment ) {
         try {
@@ -474,6 +502,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPerTaxonCount()
      */
+    @Override
     public Map<Taxon, Long> getPerTaxonCount() {
         try {
             return this.handleGetPerTaxonCount();
@@ -485,6 +514,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCounts(Collection)
      */
+    @Override
     public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
         try {
             return this.handleGetPopulatedFactorCounts( ids );
@@ -497,6 +527,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCountsExcludeBatch(Collection)
      */
+    @Override
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         try {
             return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
@@ -510,6 +541,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
+    @Override
     public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
@@ -523,6 +555,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getQuantitationTypeCountById(Long)
      */
+    @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
         try {
             return this.handleGetQuantitationTypeCountById( Id );
@@ -535,6 +568,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getQuantitationTypes(ExpressionExperiment)
      */
+    @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetQuantitationTypes( expressionExperiment );
@@ -549,6 +583,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#getQuantitationTypes(ExpressionExperiment,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
@@ -563,6 +598,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getSampleRemovalEvents(Collection)
      */
+    @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             final Collection<ExpressionExperiment> expressionExperiments ) {
 
@@ -579,6 +615,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      Integer)
      */
+    @Override
     public Collection<DesignElementDataVector> getSamplingOfVectors(
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, final Integer limit ) {
         try {
@@ -593,6 +630,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getSubSets(ExpressionExperiment)
      */
+    @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetSubSets( expressionExperiment );
@@ -606,6 +644,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getTaxon(Long)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon getTaxon( final BioAssaySet ee ) {
         try {
             return this.handleGetTaxon( ee );
@@ -619,6 +658,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#load(int, Long)
      */
 
+    @Override
     public ExpressionExperiment load( final Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.load - 'id' can not be null" );
@@ -630,6 +670,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#load(Collection)
      */
+    @Override
     public Collection<ExpressionExperiment> load( final Collection<Long> ids ) {
         try {
             return this.handleLoad( ids );
@@ -642,6 +683,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#loadAll(int)
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> loadAll() {
         final Collection<?> results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
@@ -651,6 +693,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#loadValueObjects(Collection, boolean)
      */
+    @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
         try {
@@ -665,6 +708,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#remove(Long)
      */
 
+    @Override
     public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.remove - 'id' can not be null" );
@@ -679,6 +723,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ubic.gemma.model.common.SecurableDao#remove(Collection)
      */
 
+    @Override
     public void remove( Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.remove - 'entities' can not be null" );
@@ -689,6 +734,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#remove(ExpressionExperiment)
      */
+    @Override
     public void remove( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.remove - 'expressionExperiment' can not be null" );
@@ -699,6 +745,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleThaw( expressionExperiment, true );
@@ -712,6 +759,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#thawBioAssays(ExpressionExperiment)
      */
+    @Override
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleThaw( expressionExperiment, false );
@@ -722,6 +770,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         }
     }
 
+    @Override
     public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleThawLiter( expressionExperiment, false );
@@ -757,11 +806,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(Collection)
      */
+    @Override
     public void update( final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNewSession( new HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
@@ -775,6 +826,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#update(ExpressionExperiment)
      */
+    @Override
     public void update( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.update - 'expressionExperiment' can not be null" );

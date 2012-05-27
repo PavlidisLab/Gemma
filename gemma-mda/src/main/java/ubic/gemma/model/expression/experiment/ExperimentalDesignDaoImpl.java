@@ -53,6 +53,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
      */
+    @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( ExperimentalDesign.class );
@@ -84,6 +85,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
      */
+    @Override
     public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign ) {
         if ( experimentalDesign.getName() == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign must have name or external accession." );
@@ -121,6 +123,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends ExperimentalDesign> create(
             final java.util.Collection<? extends ExperimentalDesign> entities ) {
         if ( entities == null ) {
@@ -138,6 +141,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int transform,
      *      ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ExperimentalDesign create( final ExperimentalDesign experimentalDesign ) {
         if ( experimentalDesign == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.create - 'experimentalDesign' can not be null" );
@@ -175,6 +179,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findByName(int, java.lang.String)
      */
 
+    @Override
     public ExperimentalDesign findByName( final java.lang.String name ) {
         return this
                 .findByName(
@@ -236,6 +241,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
         try {
             return this.handleGetExpressionExperiment( experimentalDesign );
@@ -246,6 +252,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
         }
     }
 
+    @Override
     public Collection<? extends ExperimentalDesign> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ExperimentalDesignImpl where id in (:ids)", "ids",
                 ids );
@@ -255,6 +262,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#load(int, java.lang.Long)
      */
 
+    @Override
     public ExperimentalDesign load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.load - 'id' can not be null" );
@@ -267,6 +275,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#loadAll(int)
      */
 
+    @Override
     public Collection<? extends ExperimentalDesign> loadAll() {
         return this.getHibernateTemplate().loadAll( ExperimentalDesignImpl.class );
     }
@@ -275,6 +284,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.remove - 'id' can not be null" );
@@ -289,6 +299,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( Collection<? extends ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.remove - 'entities' can not be null" );
@@ -299,6 +310,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#remove(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public void remove( ExperimentalDesign experimentalDesign ) {
         if ( experimentalDesign == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.remove - 'experimentalDesign' can not be null" );
@@ -310,6 +322,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final Collection<? extends ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.update - 'entities' can not be null" );
@@ -323,6 +336,7 @@ public class ExperimentalDesignDaoImpl extends HibernateDaoSupport implements Ex
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public void update( ExperimentalDesign experimentalDesign ) {
         if ( experimentalDesign == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.update - 'experimentalDesign' can not be null" );

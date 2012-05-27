@@ -35,34 +35,42 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Autowired
     UserQueryDao userQueryDao;
 
+    @Override
     public UserQuery create( UserQuery userQuery ) {
         return userQueryDao.create( userQuery );
     }
 
+    @Override
     public Collection<UserQuery> findByUser( User user ) {
         return userQueryDao.findByUser( user );
     }
 
+    @Override
     public UserQuery findMostRecentForUser( User user ) {
         return userQueryDao.findMostRecentForUser( user );
     }
 
+    @Override
     public UserQuery load( Long id ) {
         return userQueryDao.load( id );
     }
 
+    @Override
     public Collection<UserQuery> loadAll() {
         return ( Collection<UserQuery> ) userQueryDao.loadAll();
     }
 
+    @Override
     public void remove( UserQuery userQuery ) {
         userQueryDao.remove( userQuery );
     }
 
+    @Override
     public void removeAllForUser( User user ) {
         userQueryDao.removeAllForUser( user );
     }
 
+    @Override
     public void removeOldForUser( User user, Date staleDate ) {
         userQueryDao.removeOldForUser( user, staleDate );
     }

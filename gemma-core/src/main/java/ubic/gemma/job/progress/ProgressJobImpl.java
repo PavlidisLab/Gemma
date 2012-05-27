@@ -65,10 +65,12 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * @return Returns the pData, which can be cleaned out. (this isn't ideal..)
      */
+    @Override
     public Queue<ProgressData> getProgressData() {
         return pData;
     }
 
+    @Override
     public String getUser() {
         if ( jInfo.getUser() == null ) return null;
 
@@ -78,6 +80,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * Updates the percent completion of the job by 1 percent
      */
+    @Override
     public void nudgeProgress() {
         ProgressData d = new ProgressData( this.taskId, pData.peek().getPercent() + 1, "" );
         pData.add( d );
@@ -91,6 +94,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * 
      * @param pd
      */
+    @Override
     public void updateProgress( ProgressData pd ) {
         this.pData.add( pd );
         updateDescriptionHistory( pd.getDescription() );
@@ -103,6 +107,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * 
      * @param newPercent
      */
+    @Override
     public void updateProgress( int newPercent ) {
         ProgressData d = new ProgressData( this.taskId, newPercent, "" );
         pData.add( d );
@@ -115,6 +120,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * 
      * @see ubic.gemma.util.progress.ProgressJob#updateProgress(java.lang.String)
      */
+    @Override
     public void updateProgress( String newDescription ) {
         ProgressData d = new ProgressData( this.taskId, 0, newDescription, false );
         pData.add( d );
@@ -126,6 +132,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * Signal completion
      */
+    @Override
     public void done() {
         Calendar cal = new GregorianCalendar();
         jInfo.setEndTime( cal.getTime() );
@@ -134,6 +141,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         notifyObservers( pData );
     }
 
+    @Override
     public void failed( Throwable cause ) {
         Calendar cal = new GregorianCalendar();
         jInfo.setEndTime( cal.getTime() );
@@ -145,6 +153,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         notifyObservers( pData );
     }
 
+    @Override
     public JobInfo getJobInfo() {
         return this.jInfo;
     }
@@ -152,6 +161,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * @return the forwardingURL
      */
+    @Override
     public String getForwardingURL() {
         return forwardingURL;
     }
@@ -159,6 +169,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * @param forwardingURL the forwardingURL to set
      */
+    @Override
     public void setForwardingURL( String forwardingURL ) {
         this.forwardingURL = forwardingURL;
     }
@@ -170,14 +181,17 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
             this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 
+    @Override
     public String getTaskId() {
         return this.taskId;
     }
 
+    @Override
     public boolean forwardWhenDone() {
         return this.forwardWhenDone;
     }
 
+    @Override
     public void setForwardWhenDone( boolean value ) {
         this.forwardWhenDone = value;
     }

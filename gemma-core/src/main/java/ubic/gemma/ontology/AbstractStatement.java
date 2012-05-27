@@ -51,10 +51,12 @@ public abstract class AbstractStatement implements CharacteristicStatement {
         v.getProperties().add( p );
     }
 
+    @Override
     public OntologyProperty getProperty() {
         return property;
     }
 
+    @Override
     public OntologyTerm getSubject() {
         return term;
     }

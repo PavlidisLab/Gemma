@@ -42,6 +42,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable, java.lang.Object)
      */
+    @Override
     public Object assemble( Serializable cached, Object owner ) throws HibernateException {
         return this.deepCopy( cached );
     }
@@ -51,6 +52,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#deepCopy(java.lang.Object)
      */
+    @Override
     public Object deepCopy( Object value ) throws HibernateException {
         String ret = null;
         if ( value == null ) {
@@ -79,6 +81,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#disassemble(java.lang.Object)
      */
+    @Override
     public Serializable disassemble( Object value ) throws HibernateException {
         return ( java.io.Serializable ) value;
     }
@@ -88,6 +91,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#equals(java.lang.Object, java.lang.Object)
      */
+    @Override
     public boolean equals( Object x, Object y ) throws HibernateException {
         boolean equal = false;
         if ( x == null || y == null ) {
@@ -105,6 +109,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#hashCode(java.lang.Object)
      */
+    @Override
     public int hashCode( Object x ) throws HibernateException {
         return x.hashCode();
     }
@@ -114,6 +119,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#isMutable()
      */
+    @Override
     public boolean isMutable() {
         return false;
     }
@@ -123,6 +129,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
+    @Override
     public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
         String s = rs.getString( names[0] );
         if ( s == null || s.length() == 0 ) {
@@ -140,6 +147,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int)
      */
+    @Override
     public void nullSafeSet( PreparedStatement preparedStatement, Object data, int index ) throws HibernateException,
             SQLException {
         if ( data == null ) {
@@ -159,6 +167,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#replace(java.lang.Object, java.lang.Object, java.lang.Object)
      */
+    @Override
     public Object replace( Object original, Object target, Object owner ) throws HibernateException {
         return this.deepCopy( original );
     }
@@ -168,6 +177,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#returnedClass()
      */
+    @Override
     public Class returnedClass() {
         return java.net.URL.class;
     }
@@ -177,6 +187,7 @@ public class HibernateURLType implements UserType {
      * 
      * @see org.hibernate.usertype.UserType#sqlTypes()
      */
+    @Override
     public int[] sqlTypes() {
         return new int[] { Types.CLOB };
     }

@@ -120,6 +120,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         boolean activated = ConfigUtils.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
@@ -255,6 +256,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * force initialization of MMTx
      */
+    @Override
     public void init() {
 
         if ( initializing.get() ) {
@@ -265,6 +267,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
         charGen.init();
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
 
                 initializing.set( true );

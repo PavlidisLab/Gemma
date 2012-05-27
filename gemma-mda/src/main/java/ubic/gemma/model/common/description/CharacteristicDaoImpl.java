@@ -188,6 +188,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * 
      * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer)
      */
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
         Query query = this.getSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
         query.setMaxResults( limit );
@@ -201,6 +202,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer,
      * java.lang.String, boolean)
      */
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         Query query = this.getSession().createQuery(
                 "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " "
@@ -215,6 +217,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * 
      * @see ubic.gemma.model.common.description.CharacteristicDao#count()
      */
+    @Override
     public Integer count() {
         return ( ( Long ) getHibernateTemplate()
                 .find( "select count(*) from CharacteristicImpl where value not like 'GO_%'" ).iterator().next() )

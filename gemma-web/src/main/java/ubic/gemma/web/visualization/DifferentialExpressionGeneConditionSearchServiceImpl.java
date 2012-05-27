@@ -55,7 +55,6 @@ import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
@@ -70,7 +69,8 @@ import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueOb
  * @version $Id$
  */
 @Component
-public class DifferentialExpressionGeneConditionSearchServiceImpl implements DifferentialExpressionGeneConditionSearchService {
+public class DifferentialExpressionGeneConditionSearchServiceImpl implements
+        DifferentialExpressionGeneConditionSearchService {
     protected static Log log = LogFactory.getLog( DifferentialExpressionGeneConditionSearchServiceImpl.class.getName() );
 
     @Autowired
@@ -84,7 +84,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-    
+
     @Autowired
     private ExpressionExperimentService eeService;
 
@@ -116,7 +116,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
         this.diffExpSearchTasksCache = new Cache( "DifferentialExpressionVisSearchTasks", 300, false, false, 3600, 3600 );
         this.cacheManager.addCache( this.diffExpSearchTasksCache );
     }
-    
+
     private class DifferentialExpressionSearchTask implements
             Callable<DifferentialExpressionGenesConditionsValueObject> {
         // private Log log = LogFactory.getLog( DifferentialExpressionSearchTask.class.getName() );
@@ -151,6 +151,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
             this.taskProgressPercent = percent;
         }
 
+        @Override
         public DifferentialExpressionGenesConditionsValueObject call() {
             StopWatch watch = new StopWatch( "createGenesConditionsValueObject" );
             watch.start();
@@ -378,14 +379,13 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
             int resultSetBatchIndex = 0;
             List<ExpressionAnalysisResultSet> resultSetBatch = getResultSetBatch( resultSets, resultSetBatchIndex );
             while ( resultSetBatch != null ) {
-                
+
                 Collection<ArrayDesign> arrayDesignsUsed = new ArrayList<ArrayDesign>();
 
                 for ( ExpressionAnalysisResultSet rs : resultSetBatch ) {
-                    arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( ( BioAssaySet ) rs
-                            .getAnalysis().getExperimentAnalyzed() ) );
+                    arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( rs.getAnalysis().getExperimentAnalyzed() ) );
                 }
-                
+
                 int geneBatchIndex = 0;
                 List<Long> geneBatch = getGeneBatch( geneIds, geneBatchIndex );
                 while ( geneBatch != null ) {
@@ -404,11 +404,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
             }
         }
 
-        private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSetBatch, 
-                                              List<Long> geneIdBatch,
-                                              Collection<ArrayDesign> arrayDesignsUsed,
-                                              DifferentialExpressionGenesConditionsValueObject searchResult ) {
-            
+        private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSetBatch, List<Long> geneIdBatch,
+                Collection<ArrayDesign> arrayDesignsUsed, DifferentialExpressionGenesConditionsValueObject searchResult ) {
+
             ExpressionAnalysisResultSet resultSet = resultSetBatch.iterator().next();
 
             StopWatch watch = new StopWatch( "" );
@@ -526,8 +524,12 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#scheduleDiffExpSearchTask(java.util.List, java.util.List, java.util.List, java.util.List)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#scheduleDiffExpSearchTask(java.
+     * util.List, java.util.List, java.util.List, java.util.List)
      */
     @Override
     public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
@@ -542,8 +544,12 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
         return taskId;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchResult(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchResult(java.lang
+     * .String)
      */
     @Override
     public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
@@ -571,16 +577,21 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements Dif
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchTaskProgress(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchTaskProgress(java
+     * .lang.String)
      */
     @Override
     public TaskProgress getDiffExpSearchTaskProgress( String taskId ) {
-        if (this.diffExpSearchTasksCache.isKeyInCache( taskId )) {
-        DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
-                .get( taskId ).getObjectValue();
-        return diffExpSearchTask.getTaskProgress();
-        } else return new TaskProgress("Completed", 100.0);
+        if ( this.diffExpSearchTasksCache.isKeyInCache( taskId ) ) {
+            DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
+                    .get( taskId ).getObjectValue();
+            return diffExpSearchTask.getTaskProgress();
+        }
+        return new TaskProgress( "Completed", 100.0 );
     }
 
 }

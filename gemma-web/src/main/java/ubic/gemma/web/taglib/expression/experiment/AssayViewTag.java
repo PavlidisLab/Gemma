@@ -358,6 +358,7 @@ public class AssayViewTag extends TagSupport {
      */
     static class BioMaterialComparator implements Comparator<BioMaterial> {
 
+        @Override
         public int compare( BioMaterial arg0, BioMaterial arg1 ) {
             BioMaterial obj0 = arg0;
             BioMaterial obj1 = arg1;

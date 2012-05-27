@@ -43,8 +43,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.j_spaces.obf.s;
-
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -54,7 +52,6 @@ import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -521,6 +518,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             taxa.add( taxon );
         }
         Collections.sort( taxa, new Comparator<Taxon>() {
+            @Override
             public int compare( Taxon o1, Taxon o2 ) {
                 return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
             }

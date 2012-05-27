@@ -71,6 +71,7 @@ public abstract class ByAssociationFilteringProvider<T extends Securable, A> ext
      * @return Object
      * @throws AccessDeniedException
      */
+    @Override
     @SuppressWarnings("unchecked")
     public final Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,
             Object returnedObject ) throws AccessDeniedException {

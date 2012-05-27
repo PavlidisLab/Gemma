@@ -593,6 +593,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         List<BioAssayDimension> sortedOldDims = new ArrayList<BioAssayDimension>();
         sortedOldDims.addAll( oldBioAssayDims );
         Collections.sort( sortedOldDims, new Comparator<BioAssayDimension>() {
+            @Override
             public int compare( BioAssayDimension o1, BioAssayDimension o2 ) {
                 return o1.getId().compareTo( o2.getId() );
             }

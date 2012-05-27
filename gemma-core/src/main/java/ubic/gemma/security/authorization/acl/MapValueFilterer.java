@@ -65,6 +65,7 @@ public class MapValueFilterer<T> implements Filterer<T> {
     /**
      * @see org.acegisecurity.afterinvocation.Filterer#getFilteredObject()
      */
+    @Override
     public Object getFilteredObject() {
         // Now the Iterator has ended, remove Objects from Collection
         Iterator<T> removeIter = removeList.iterator();
@@ -86,6 +87,7 @@ public class MapValueFilterer<T> implements Filterer<T> {
     /**
      * @see org.acegisecurity.afterinvocation.Filterer#iterator()
      */
+    @Override
     public Iterator<T> iterator() {
         collectionIter = map.values().iterator();
 
@@ -95,6 +97,7 @@ public class MapValueFilterer<T> implements Filterer<T> {
     /**
      * @see org.acegisecurity.afterinvocation.Filterer#markAsMissing(java.lang.Object)
      */
+    @Override
     public void remove( T object ) {
         collectionIter.remove();
     }

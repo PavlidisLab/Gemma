@@ -36,6 +36,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -49,6 +50,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#find(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public ubic.gemma.model.common.description.DatabaseEntry find(
             final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         try {
@@ -63,6 +65,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         try {
             this.handleRemove( databaseEntry );
@@ -83,6 +86,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public void update( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         try {
             this.handleUpdate( databaseEntry );

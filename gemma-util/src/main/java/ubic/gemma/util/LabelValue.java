@@ -39,6 +39,7 @@ public class LabelValue implements Comparable, Serializable {
      * Comparator that can be used for a case insensitive sort of <code>LabelValue</code> objects.
      */
     public static final Comparator CASE_INSENSITIVE_ORDER = new Comparator() {
+        @Override
         public int compare( Object o1, Object o2 ) {
             String label1 = ( ( LabelValue ) o1 ).getLabel();
             String label2 = ( ( LabelValue ) o2 ).getLabel();
@@ -101,6 +102,7 @@ public class LabelValue implements Comparable, Serializable {
      * 
      * @see Comparable
      */
+    @Override
     public int compareTo( Object o ) {
         // Implicitly tests for the correct type, throwing
         // ClassCastException as required by interface

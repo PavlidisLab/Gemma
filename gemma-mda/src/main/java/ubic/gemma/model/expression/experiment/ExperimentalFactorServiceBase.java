@@ -43,6 +43,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#create(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public ExperimentalFactor create(
             final ExperimentalFactor experimentalFactor ) {
         try {
@@ -57,6 +58,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#delete(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public void delete( final ExperimentalFactor experimentalFactor ) {
         try {
             this.handleDelete( experimentalFactor );
@@ -70,6 +72,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#find(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public ExperimentalFactor find(
             final ExperimentalFactor experimentalFactor ) {
         try {
@@ -84,6 +87,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public ExperimentalFactor findOrCreate(
             final ExperimentalFactor experimentalFactor ) {
         try {
@@ -98,6 +102,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#load(java.lang.Long)
      */
+    @Override
     public ExperimentalFactor load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -111,6 +116,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#loadAll()
      */
+    @Override
     public Collection<ExperimentalFactor> loadAll() {
         try {
             return this.handleLoadAll();
@@ -124,6 +130,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#update(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public void update( final ExperimentalFactor experimentalFactor ) {
         try {
             this.handleUpdate( experimentalFactor );

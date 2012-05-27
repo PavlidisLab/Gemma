@@ -161,7 +161,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
+        ArrayDesignSequenceAlignmentService aligner = getBean( ArrayDesignSequenceAlignmentService.class );
 
         InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/genome/gpl140.blatresults.psl.gz" ) ); // TODO create the correct blat results file
@@ -171,8 +171,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         aligner.processArrayDesign( ad, taxon, results );
 
         // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
+        ArrayDesignProbeMapperService arrayDesignProbeMapperService = this
+                .getBean( ArrayDesignProbeMapperService.class );
         arrayDesignProbeMapperService.processArrayDesign( ad );
     }
 
@@ -216,7 +216,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     private void loadSequenceData() throws IOException {
         InputStream sequenceFile = this.getClass().getResourceAsStream(
                 "/data/loader/genome/gpl96_short.sequences.fasta" );
-        ArrayDesignSequenceProcessingService sequenceProcessingService = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        ArrayDesignSequenceProcessingService sequenceProcessingService = getBean( ArrayDesignSequenceProcessingService.class );
 
         sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 

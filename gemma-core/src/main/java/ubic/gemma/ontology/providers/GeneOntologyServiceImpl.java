@@ -908,6 +908,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private synchronized void initializeGeneOntology() {
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 running.set( true );
                 uri2Term = new HashMap<String, OntologyTerm>();

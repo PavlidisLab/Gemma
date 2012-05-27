@@ -62,6 +62,7 @@ public interface StatusDao extends BaseDao<Status> {
     /**
      * @param d
      */
+    @Override
     public Status load( Long id );
 
 

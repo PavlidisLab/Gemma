@@ -60,6 +60,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
+    @Override
     public Collection<? extends T> create( Collection<? extends T> entities ) {
         this.getHibernateTemplate().saveOrUpdateAll( entities );
         return entities;
@@ -70,6 +71,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
+    @Override
     public T create( T entity ) {
         this.getHibernateTemplate().save( entity );
         return entity;
@@ -80,6 +82,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<T> load( Collection<Long> ids ) {
         Collection<T> result = new HashSet<T>();
@@ -97,6 +100,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
+    @Override
     public T load( Long id ) {
         T entity = this.getHibernateTemplate().get( elementClass, id );
         return entity;
@@ -107,6 +111,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
+    @Override
     public Collection<T> loadAll() {
         return this.getHibernateTemplate().loadAll( elementClass );
     }
@@ -116,6 +121,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection<? extends T> entities ) {
         this.getHibernateTemplate().deleteAll( entities );
     }
@@ -125,6 +131,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( Long id ) {
         this.getHibernateTemplate().delete( this.load( id ) );
     }
@@ -134,6 +141,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
+    @Override
     public void remove( T entity ) {
         if ( entity == null ) return;
         this.getHibernateTemplate().delete( entity );
@@ -144,6 +152,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
+    @Override
     public void update( Collection<? extends T> entities ) {
         for ( T entity : entities ) {
             this.update( entity );
@@ -155,6 +164,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
+    @Override
     public void update( T entity ) {
         this.getHibernateTemplate().update( entity );
 

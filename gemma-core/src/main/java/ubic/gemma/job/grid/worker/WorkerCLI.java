@@ -147,6 +147,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
+    @Override
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
 
         try {
@@ -167,9 +168,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
                     if ( registrationId.equals( worker.getRegistrationId() )
                             && taskId.equals( worker.getCurrentTaskId() ) ) {
-                        log
-                                .info( "Stopping execution of task: " + taskId + " running in "
-                                        + worker.getRegistrationId() );
+                        log.info( "Stopping execution of task: " + taskId + " running in " + worker.getRegistrationId() );
                         cancelCurrentJob( worker );
                         return;
                     }
@@ -298,6 +297,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         ExecutorService service = Executors.newSingleThreadExecutor();
         FutureTask<Object> heartBeatTask = new FutureTask<Object>( new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
 
                 return workerCheckLoop( registrationEntry, worker, workerName );
@@ -333,12 +333,12 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         }
 
         this.ctx = spacesUtil.addGemmaSpacesToApplicationContext();
-        this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+        this.template = this.getBean( GigaSpacesTemplate.class );
 
         /*
          * Pick up the worker
          */
-
+        // TODO use Class.forName( workerName ) instead of raw name.
         CustomDelegatingWorker worker = ( CustomDelegatingWorker ) this.getBean( workerName );
 
         this.workers.add( worker );

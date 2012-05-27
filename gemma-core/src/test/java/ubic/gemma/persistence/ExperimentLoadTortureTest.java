@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
 
 import ubic.gemma.model.common.Describable;
@@ -66,16 +67,20 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                 @Override
                 public void run() {
                     for ( int j = 0; j < numExperimentsPerThread; j++ ) {
-                        log.info( "Thread " + t + " experiment " + j );
+
                         try {
+                            Thread.sleep( RandomUtils.nextInt( 1000 ) );
+                            log.info( "Thread " + t + " experiment " + j );
+
                             results.put( getTestPersistentCompleteExpressionExperiment( false ), 1 );
+                            // results.put( getTestPeristentGene(), 1 );
+                            c.incrementAndGet();
                         } catch ( Exception e ) {
                             log.error( "Failure in: Thread " + t + " experiment " + j + ": " + e.getMessage() + " "
                                     + ExceptionUtils.getStackTrace( e ) );
                             failed.set( true );
 
                         } finally {
-                            c.incrementAndGet();
                         }
                     }
                 }
@@ -83,9 +88,11 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
         }
 
         while ( c.get() < numThreads * numExperimentsPerThread && !failed.get() ) {
-            Thread.sleep( 2000 );
+            Thread.sleep( 5000 );
             log.info( "Waiting ..." );
         }
+
+        Thread.sleep( 1000 );
 
         assertEquals( "Multithreaded loading failure: check logs for deadlock", numThreads * numExperimentsPerThread,
                 results.size() );

@@ -52,6 +52,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
      * ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces
      * .analysis .sequence.SpacesArrayDesignRepeatScanCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( ArrayDesignRepeatScanTaskCommand command ) {
 

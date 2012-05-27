@@ -44,6 +44,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
@@ -57,6 +58,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     }
     
     
+    @Override
     public Collection<? extends Person > load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
     }
@@ -77,6 +79,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(java.util.Collection)
      */
 
+    @Override
     public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -84,6 +87,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public Person create( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         return this.create( TRANSFORM_NONE, person );
     }
@@ -92,6 +96,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(int, java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFirstAndLastName( final int transform, final java.lang.String name,
             final java.lang.String secondName ) {
         return this
@@ -106,6 +111,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      *      java.lang.String, java.lang.String)
      */
     
+    @Override
     public java.util.Collection<Person> findByFirstAndLastName( final int transform,
             final java.lang.String queryString, final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -124,6 +130,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFirstAndLastName( java.lang.String name, java.lang.String secondName ) {
         return this.findByFirstAndLastName( TRANSFORM_NONE, name, secondName );
     }
@@ -132,6 +139,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(java.lang.String,
      *      java.lang.String, java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFirstAndLastName( final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         return this.findByFirstAndLastName( TRANSFORM_NONE, queryString, name, secondName );
@@ -140,6 +148,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(int, java.lang.String, java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFullName( final int transform, final java.lang.String name,
             final java.lang.String secondName ) {
         return this.findByFullName( transform,
@@ -152,6 +161,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      *      java.lang.String)
      */
     
+    @Override
     public java.util.Collection<Person> findByFullName( final int transform, final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -169,6 +179,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(java.lang.String, java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String secondName ) {
         return this.findByFullName( TRANSFORM_NONE, name, secondName );
     }
@@ -177,6 +188,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(java.lang.String, java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByFullName( final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         return this.findByFullName( TRANSFORM_NONE, queryString, name, secondName );
@@ -185,6 +197,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(int, java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByLastName( final int transform, final java.lang.String lastName ) {
         return this.findByLastName( transform,
                 "from ubic.gemma.model.common.auditAndSecurity.Person as person where person.lastName = :lastName",
@@ -195,6 +208,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(int, java.lang.String, java.lang.String)
      */
     
+    @Override
     public java.util.Collection<Person> findByLastName( final int transform, final java.lang.String queryString,
             final java.lang.String lastName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -210,6 +224,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByLastName( java.lang.String lastName ) {
         return this.findByLastName( TRANSFORM_NONE, lastName );
     }
@@ -217,6 +232,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(java.lang.String, java.lang.String)
      */
+    @Override
     public java.util.Collection<Person> findByLastName( final java.lang.String queryString,
             final java.lang.String lastName ) {
         return this.findByLastName( TRANSFORM_NONE, queryString, lastName );
@@ -239,6 +255,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#load(java.lang.Long)
      */
 
+    @Override
     public Person load( java.lang.Long id ) {
         return this.load( TRANSFORM_NONE, id );
     }
@@ -246,6 +263,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#loadAll()
      */
+    @Override
     public java.util.Collection<? extends Person> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -266,6 +284,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Person.remove - 'id' can not be null" );
@@ -280,6 +299,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.remove - 'entities' can not be null" );
@@ -290,6 +310,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#remove(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public void remove( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.remove - 'person' can not be null" );
@@ -301,12 +322,14 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
@@ -321,6 +344,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#update(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public void update( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.update - 'person' can not be null" );

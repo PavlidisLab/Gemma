@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
  */
 public class ArrayDesignValueObjectComparator implements Comparator<ArrayDesignValueObject> {
 
+    @Override
     public int compare( ArrayDesignValueObject arg0, ArrayDesignValueObject arg1 ) {
 
         if ( arg0.getDateCreated() == null || arg1.getDateCreated() == null ) return 0;

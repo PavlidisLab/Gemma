@@ -39,6 +39,7 @@ public class AclAuditLogger implements AuditLogger {
 
     private static boolean needToLog = ConfigUtils.getBoolean( "gemma.acl.audit" );
 
+    @Override
     public void logIfNeeded( boolean granted, AccessControlEntry ace ) {
 
         if ( !needToLog ) return;

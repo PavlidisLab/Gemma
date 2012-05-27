@@ -66,6 +66,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
      * 
      * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
      */
+    @Override
     public Collection<LocalFile> fetch( String identifier ) {
 
         String seekFile = formRemoteFilePath( identifier );
@@ -103,6 +104,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
      */
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+            @Override
             public Boolean call() throws FileNotFoundException, IOException {
                 File existing = new File( outputFileName );
                 if ( existing.exists() && avoidDownload ) {

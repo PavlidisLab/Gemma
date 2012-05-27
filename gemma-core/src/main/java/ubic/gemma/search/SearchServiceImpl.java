@@ -1021,6 +1021,7 @@ public class SearchServiceImpl implements SearchService {
 
         CompassTemplate template = new CompassTemplate( bean );
         Collection<SearchResult> searchResults = template.execute( new CompassCallback<Collection<SearchResult>>() {
+            @Override
             public Collection<SearchResult> doInCompass( CompassSession session ) throws CompassException {
                 return performSearch( settings, session );
             }

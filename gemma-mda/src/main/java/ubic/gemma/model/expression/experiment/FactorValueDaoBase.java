@@ -32,6 +32,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends FactorValue> create(
             final java.util.Collection<? extends FactorValue> entities ) {
         if ( entities == null ) {
@@ -39,6 +40,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends FactorValue> entityIterator = entities.iterator(); entityIterator
@@ -55,6 +57,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#create(int transform,
      *      ubic.gemma.model.expression.experiment.FactorValue)
      */
+    @Override
     public FactorValue create( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
         if ( factorValue == null ) {
             throw new IllegalArgumentException( "FactorValue.create - 'factorValue' can not be null" );
@@ -66,6 +69,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#load(int, java.lang.Long)
      */
+    @Override
     public FactorValue load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "FactorValue.load - 'id' can not be null" );
@@ -78,6 +82,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends FactorValue> loadAll() {
         final java.util.Collection<? extends FactorValue> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.FactorValueImpl.class );
@@ -87,12 +92,14 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends FactorValue> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "FactorValue.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends FactorValue> entityIterator = entities.iterator(); entityIterator
@@ -107,6 +114,7 @@ public abstract class FactorValueDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueDao#update(ubic.gemma.model.expression.experiment.FactorValue)
      */
+    @Override
     public void update( ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
         if ( factorValue == null ) {
             throw new IllegalArgumentException( "FactorValue.update - 'factorValue' can not be null" );

@@ -82,6 +82,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastEvents(java.util.Collection,
      * java.util.Collection)
      */
+    @Override
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         StopWatch timer = new StopWatch();
@@ -147,6 +148,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvent(java.util.Collection)
      */
+    @Override
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
         return getLastOutstandingTroubleEventNoSort( events );
     }
@@ -156,6 +158,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvents(java.util.Collection)
      */
+    @Override
     public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
         Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
         types.add( TroubleStatusFlagEvent.class );

@@ -96,6 +96,7 @@ public class OntologyServiceImpl implements OntologyService {
             this.comparator = comparator;
         }
 
+        @Override
         public int compare( Characteristic o1, Characteristic o2 ) {
             String term1 = o1.getValue();
             String term2 = o2.getValue();
@@ -223,6 +224,7 @@ public class OntologyServiceImpl implements OntologyService {
 
     private ObiService obiService;
 
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         this.birnLexOntologyService = new BirnLexOntologyService();

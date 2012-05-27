@@ -46,9 +46,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
@@ -71,6 +73,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {

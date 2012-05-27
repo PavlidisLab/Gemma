@@ -33,12 +33,14 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int, java.util.Collection)
      */
 
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -54,6 +56,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int transform,
      *      ubic.gemma.model.common.description.VocabCharacteristic)
      */
+    @Override
     public VocabCharacteristic create( final ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
         if ( vocabCharacteristic == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.create - 'vocabCharacteristic' can not be null" );
@@ -65,6 +68,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByParentClass(java.lang.Class)
      */
+    @Override
     public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
         try {
             return this.handleFindByParentClass( parentClass );
@@ -78,6 +82,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.lang.String)
      */
+    @Override
     public java.util.Collection findByUri( final java.lang.String searchString ) {
         try {
             return this.handleFindByUri( searchString );
@@ -91,6 +96,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection)
      */
+    @Override
     public java.util.Collection findByUri( final java.util.Collection uris ) {
         try {
             return this.handleFindByUri( uris );
@@ -104,6 +110,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.lang.String)
      */
+    @Override
     public java.util.Collection findByValue( final java.lang.String search ) {
         try {
             return this.handleFindByValue( search );
@@ -117,6 +124,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#getParents(java.lang.Class, java.util.Collection)
      */
+    @Override
     public java.util.Map getParents( final java.lang.Class parentClass, final java.util.Collection characteristics ) {
         try {
             return this.handleGetParents( parentClass, characteristics );
@@ -131,6 +139,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(int, java.lang.Long)
      */
 
+    @Override
     public VocabCharacteristic load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.load - 'id' can not be null" );
@@ -144,6 +153,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll(int)
      */
 
+    @Override
     public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.VocabCharacteristicImpl.class );
@@ -154,6 +164,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.remove - 'id' can not be null" );
@@ -168,6 +179,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.remove - 'entities' can not be null" );
@@ -178,6 +190,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(ubic.gemma.model.common.description.VocabCharacteristic)
      */
+    @Override
     public void remove( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
         if ( vocabCharacteristic == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.remove - 'vocabCharacteristic' can not be null" );
@@ -189,12 +202,14 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -208,6 +223,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#update(ubic.gemma.model.common.description.VocabCharacteristic)
      */
+    @Override
     public void update( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
         if ( vocabCharacteristic == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.update - 'vocabCharacteristic' can not be null" );

@@ -161,7 +161,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     }
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         final String query = "select count(*) from BioSequenceImpl";
         return ( ( Long ) getHibernateTemplate().find( query ).iterator().next() ).intValue();
     }
@@ -172,7 +172,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @Override
-    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) throws Exception {
+    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) {
         if ( genes == null || genes.isEmpty() ) return new HashMap<Gene, Collection<BioSequence>>();
 
         Map<Gene, Collection<BioSequence>> results = new HashMap<Gene, Collection<BioSequence>>();
@@ -202,7 +202,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     }
 
     @Override
-    protected Collection<BioSequence> handleFindByName( String name ) throws Exception {
+    protected Collection<BioSequence> handleFindByName( String name ) {
         if ( name == null ) return null;
         final String query = "from BioSequenceImpl b where b.name = :name";
         return getHibernateTemplate().findByNamedParam( query, "name", name );
@@ -214,7 +214,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase# handleGetGenesByAccession(java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByAccession( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByAccession( String search ) {
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
                 + " inner join bs2gp.bioSequence bs "
                 + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
@@ -227,7 +227,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
@@ -248,7 +248,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java .util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleLoad( Collection<Long> ids ) throws Exception {
+    protected Collection<BioSequence> handleLoad( Collection<Long> ids ) {
         final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }
@@ -260,7 +260,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * .gemma.model.genome.biosequence.BioSequence )
      */
     @Override
-    protected BioSequence handleThaw( final BioSequence bioSequence ) throws Exception {
+    protected BioSequence handleThaw( final BioSequence bioSequence ) {
         if ( bioSequence == null ) return null;
         if ( bioSequence.getId() == null ) return bioSequence;
 
@@ -288,7 +288,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleThaw( final Collection<BioSequence> bioSequences ) throws Exception {
+    protected Collection<BioSequence> handleThaw( final Collection<BioSequence> bioSequences ) {
         return doThaw( bioSequences );
     }
 

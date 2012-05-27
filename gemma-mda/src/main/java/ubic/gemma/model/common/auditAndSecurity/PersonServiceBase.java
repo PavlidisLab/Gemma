@@ -36,6 +36,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#create(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public ubic.gemma.model.common.auditAndSecurity.Person create(
             final ubic.gemma.model.common.auditAndSecurity.Person person ) {
         try {
@@ -50,6 +51,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findByFullName(java.lang.String, java.lang.String)
      */
+    @Override
     public java.util.Collection findByFullName( final java.lang.String name, final java.lang.String lastName ) {
         try {
             return this.handleFindByFullName( name, lastName );
@@ -63,6 +65,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
             final ubic.gemma.model.common.auditAndSecurity.Person person ) {
         try {
@@ -77,6 +80,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#loadAll()
      */
+    @Override
     public java.util.Collection loadAll() {
         try {
             return this.handleLoadAll();
@@ -89,6 +93,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#remove(ubic.gemma.model.common.auditAndSecurity.Person)
      */
+    @Override
     public void remove( final ubic.gemma.model.common.auditAndSecurity.Person person ) {
         try {
             this.handleRemove( person );

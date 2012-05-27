@@ -84,6 +84,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
+    @Override
     public int columns( CompositeSequence el ) {
         int j = 0;
         ArrayDesign ad = el.getArrayDesign();
@@ -104,6 +105,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBestBioAssayDimension()
      */
+    @Override
     public BioAssayDimension getBestBioAssayDimension() {
 
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>( this.bioAssayDimensions.values() );
@@ -151,6 +153,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimension()
      */
+    @Override
     public BioAssayDimension getBioAssayDimension( CompositeSequence designElement ) {
 
         return this.bioAssayDimensions.get( designElement );
@@ -162,6 +165,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
+    @Override
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
         return this.columnBioAssayMapByInteger.get( index );
     }
@@ -171,6 +175,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialForColumn(int)
      */
+    @Override
     public BioMaterial getBioMaterialForColumn( int index ) {
         return this.columnBioMaterialMapByInteger.get( index );
     }
@@ -189,6 +194,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnIndex(ubic.gemma.model.expression.biomaterial.
      * BioMaterial)
      */
+    @Override
     public int getColumnIndex( BioMaterial bioMaterial ) {
         return columnBioMaterialMap.get( bioMaterial );
     }
@@ -198,10 +204,12 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getDesignElementForRow(int)
      */
+    @Override
     public CompositeSequence getDesignElementForRow( int index ) {
         return this.rowDesignElementMapByInteger.get( index );
     }
 
+    @Override
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
@@ -211,6 +219,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getQuantitationTypes()
      */
+    @Override
     public Collection<QuantitationType> getQuantitationTypes() {
         return quantitationTypes;
     }
@@ -229,6 +238,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
+    @Override
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         if ( this.rowElements == null ) {
             rowElements = new ArrayList<ExpressionDataMatrixRowElement>();
@@ -245,6 +255,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.
      * DesignElement)
      */
+    @Override
     public int getRowIndex( CompositeSequence designElement ) {
         Integer index = rowElementMap.get( designElement );
         if ( index == null ) return -1;
@@ -607,6 +618,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             Collection<? extends DesignElementDataVector> vectors ) {
         List<DesignElementDataVector> vectorSort = new ArrayList<DesignElementDataVector>( vectors );
         Collections.sort( vectorSort, new Comparator<DesignElementDataVector>() {
+            @Override
             public int compare( DesignElementDataVector o1, DesignElementDataVector o2 ) {
                 return o1.getDesignElement().getName().compareTo( o2.getDesignElement().getName() );
             }

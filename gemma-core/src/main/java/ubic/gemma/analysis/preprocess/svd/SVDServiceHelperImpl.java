@@ -97,6 +97,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#getImportantFactors(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, java.util.Collection, java.lang.Double)
      */
+    @Override
     public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
             Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
         Set<ExperimentalFactor> importantFactors = new HashSet<ExperimentalFactor>();
@@ -129,6 +130,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#getTopLoadedVectors(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, int, int)
      */
+    @Override
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
             int count ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
@@ -196,6 +198,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @param ee
      * @return
      */
+    @Override
     public boolean hasPca( ExpressionExperiment ee ) {
         return retrieveSvd( ee ) != null;
     }
@@ -206,6 +209,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @param id
      * @return value or null if there isn't one.
      */
+    @Override
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) return null;
@@ -223,6 +227,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * 
      * @see ubic.gemma.analysis.preprocess.SVDService#svd(java.util.Collection)
      */
+    @Override
     public void svd( Collection<ExpressionExperiment> ees ) {
         for ( ExpressionExperiment ee : ees ) {
             svd( ee );
@@ -234,6 +239,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * 
      * @see ubic.gemma.analysis.preprocess.SVDService#svd(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
+    @Override
     public SVDValueObject svd( ExpressionExperiment ee ) {
         assert ee != null;
 
@@ -277,6 +283,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, ubic.gemma.analysis.preprocess.svd.SVDValueObject)
      */
+    @Override
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) {
@@ -292,6 +299,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.analysis.expression.
      * PrincipalComponentAnalysis)
      */
+    @Override
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();

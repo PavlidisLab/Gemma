@@ -31,50 +31,62 @@ public class TfGeneAssociationServiceImpl implements TfGeneAssociationService {
     @Autowired
     private TfGeneAssociationDao tfGeneAssociationDao;
 
+    @Override
     public Collection<? extends TfGeneAssociation> create( Collection<? extends TfGeneAssociation> entities ) {
         return tfGeneAssociationDao.create( entities );
     }
 
+    @Override
     public TfGeneAssociation create( TfGeneAssociation entity ) {
         return tfGeneAssociationDao.create( entity );
     }
 
+    @Override
     public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
         return tfGeneAssociationDao.findByTargetGene( gene );
     }
 
+    @Override
     public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
         return tfGeneAssociationDao.findByTf( tf );
     }
 
+    @Override
     public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
         return tfGeneAssociationDao.load( ids );
     }
 
+    @Override
     public TfGeneAssociation load( Long id ) {
         return tfGeneAssociationDao.load( id );
     }
 
+    @Override
     public Collection<? extends TfGeneAssociation> loadAll() {
         return tfGeneAssociationDao.loadAll();
     }
 
+    @Override
     public void remove( Collection<? extends TfGeneAssociation> entities ) {
         tfGeneAssociationDao.remove( entities );
     }
 
+    @Override
     public void remove( Long id ) {
         tfGeneAssociationDao.remove( id );
     }
 
+    @Override
     public void remove( TfGeneAssociation entity ) {
         tfGeneAssociationDao.remove( entity );
     }
 
+    @Override
     public void update( Collection<? extends TfGeneAssociation> entities ) {
         tfGeneAssociationDao.update( entities );
     }
 
+    @Override
     public void update( TfGeneAssociation entity ) {
         tfGeneAssociationDao.update( entity );
     }

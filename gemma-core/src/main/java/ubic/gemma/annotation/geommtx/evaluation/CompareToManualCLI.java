@@ -61,8 +61,8 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.vocabulary.DC;
+import com.hp.hpl.jena.rdf.model.Resource; 
+import com.hp.hpl.jena.vocabulary.DC_11;
 
 /**
  * TODO Document Me
@@ -968,7 +968,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
             String GEOObjectURI = ExpressionExperimentAnnotatorImpl.gemmaNamespace + "experiment/" + ID;
             Resource expNode = model.createResource( GEOObjectURI );
-            expNode.addProperty( DC.title, experiment.getName() );
+            expNode.addProperty( DC_11.title, experiment.getName() );
         }
         try {
             model.write( new FileWriter( f ) );

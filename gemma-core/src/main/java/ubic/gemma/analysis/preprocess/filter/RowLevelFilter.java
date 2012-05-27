@@ -67,6 +67,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * @param data
      * @return
      */
+    @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
 
         if ( lowCut == -Double.MAX_VALUE && highCut == Double.MAX_VALUE ) {

@@ -79,6 +79,7 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     /**
      * two value objects are equal if their types are the same and their ids are the same
      */
+    @Override
     public boolean equals( GemmaSessionBackedValueObject ervo ) {
         if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
             return true;

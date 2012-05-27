@@ -36,6 +36,7 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
      */
+    @Override
     public ubic.gemma.model.common.measurement.Measurement create(
             final ubic.gemma.model.common.measurement.Measurement measurement ) {
         try {

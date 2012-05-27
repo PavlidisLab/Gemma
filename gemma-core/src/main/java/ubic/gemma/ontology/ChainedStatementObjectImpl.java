@@ -40,6 +40,7 @@ public class ChainedStatementObjectImpl implements ChainedStatementObject {
         this.statements = new HashSet<CharacteristicStatement>();
     }
 
+    @Override
     public void addStatement( CharacteristicStatement s ) {
         if ( !subject.equals( s.getSubject() ) ) {
             throw new IllegalArgumentException( "Statement must have same subject as all others" );

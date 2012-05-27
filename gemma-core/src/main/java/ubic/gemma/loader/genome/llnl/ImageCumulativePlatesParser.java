@@ -82,6 +82,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> im
         // }
     }
 
+    @Override
     public BioSequence parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
@@ -132,6 +133,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> im
      * 
      * @see ubic.gemma.loader.util.QueuingParser#parse(java.io.InputStream, java.util.concurrent.BlockingQueue)
      */
+    @Override
     public void parse( InputStream inputStream, BlockingQueue<BioSequence> queue ) throws IOException {
         this.results = queue;
         seen.clear();

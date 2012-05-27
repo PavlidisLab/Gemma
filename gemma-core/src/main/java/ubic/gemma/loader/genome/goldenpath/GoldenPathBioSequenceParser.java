@@ -73,11 +73,13 @@ public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> im
         genbank.setType( DatabaseType.SEQUENCE );
     }
 
+    @Override
     public void parse( InputStream inputStream, BlockingQueue<BioSequence> queue ) throws IOException {
         this.results = queue;
         parse( inputStream );
     }
 
+    @Override
     public BioSequence parseOneLine( String line ) {
         String[] fields = StringUtils.split( line );
         BioSequence bioSequence = BioSequence.Factory.newInstance();

@@ -46,7 +46,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.util.SequenceBinUtils;
-import ubic.gemma.util.TaxonUtility;
 
 /**
  * Using the Goldenpath databases for comparing sequence alignments to gene locations.
@@ -171,6 +170,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             return ( String ) qr.query( conn,
                     "select rg.name2 from all_mrna m inner join refGene rg ON m.qName = rg.name where m.qName = ? ",
                     new Object[] { ncbiId }, new ResultSetHandler() {
+                        @Override
                         @SuppressWarnings("synthetic-access")
                         public Object handle( ResultSet rs ) throws SQLException {
                             while ( rs.next() ) {
@@ -356,6 +356,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             return ( Collection<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @Override
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     Collection<GeneProduct> r = new HashSet<GeneProduct>();
@@ -538,6 +539,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         try {
             return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @Override
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     Collection<BlatResult> r = new HashSet<BlatResult>();
@@ -658,6 +660,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         try {
             return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @Override
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     Collection<Gene> r = new HashSet<Gene>();
@@ -739,6 +742,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         try {
             return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @Override
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     Collection<Gene> r = new HashSet<Gene>();

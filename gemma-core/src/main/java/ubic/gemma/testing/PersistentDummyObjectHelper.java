@@ -29,6 +29,8 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
@@ -77,6 +79,7 @@ import ubic.gemma.persistence.Persister;
  * @author pavlidis
  * @version $Id$
  */
+@Component
 public class PersistentDummyObjectHelper {
 
     public static final int NUM_FACTOR_VALUES = 2;
@@ -86,8 +89,10 @@ public class PersistentDummyObjectHelper {
     private static final int RANDOM_STRING_LENGTH = 10;
     public static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
 
+    @Autowired
     private Persister persisterHelper;
 
+    @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
     private ExternalDatabase geo;
@@ -96,17 +101,11 @@ public class PersistentDummyObjectHelper {
 
     private int testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
-    // private Taxon testTaxon;
-
     private ExternalDatabase pubmed;
 
     protected Log log = LogFactory.getLog( getClass() );
 
-    /**
-     * @return
-     */
-    Taxon testTaxon;
-    Collection<Taxon> testTaxa = null;
+    private Taxon testTaxon;
 
     private Collection<BioMaterial> getBioMaterials( Collection<FactorValue> allFactorValues ) {
 
@@ -687,6 +686,7 @@ public class PersistentDummyObjectHelper {
     public Contact getTestPersistentContact() {
         Contact c = Contact.Factory.newInstance();
         c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcontact" );
+        c.setEmail( c.getName() + "@foo.org" );
         c = ( Contact ) persisterHelper.persist( c );
         return c;
     }

@@ -492,6 +492,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         assert context != null;
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 doLoad( queue, generatorDone, loaderDone );

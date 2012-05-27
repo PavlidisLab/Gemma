@@ -36,12 +36,14 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends UserGroup> create( final java.util.Collection<? extends UserGroup> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<UserGroup>() {
+                    @Override
                     public UserGroup doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends UserGroup> entityIterator = entities.iterator(); entityIterator
@@ -55,6 +57,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     }
     
     
+    @Override
     public Collection<? extends UserGroup > load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from UserGroupImpl where id in (:ids)", "ids", ids );
     }
@@ -63,6 +66,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.UserGroup)
      */
+    @Override
     public UserGroup create( final ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
@@ -74,6 +78,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findByUserGroupName(int, java.lang.String)
      */
+    @Override
     public UserGroup findByUserGroupName( final java.lang.String name ) {
         return this.findByUserGroupName(
                 "from ubic.gemma.model.common.auditAndSecurity.UserGroup as userGroup where userGroup.name = :name",
@@ -108,6 +113,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#load(int, java.lang.Long)
      */
 
+    @Override
     public UserGroup load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserGroup.load - 'id' can not be null" );
@@ -122,6 +128,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      */
 
     
+    @Override
     public java.util.Collection<UserGroup> loadAll() {
         final Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.class );
@@ -133,6 +140,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserGroup.remove - 'id' can not be null" );
@@ -147,6 +155,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends UserGroup> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserGroup.remove - 'entities' can not be null" );
@@ -157,6 +166,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(ubic.gemma.model.common.auditAndSecurity.UserGroup)
      */
+    @Override
     public void remove( ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
@@ -168,12 +178,14 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends UserGroup> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserGroup.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<UserGroup>() {
+                    @Override
                     public UserGroup doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends UserGroup> entityIterator = entities.iterator(); entityIterator
@@ -188,6 +200,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#update(ubic.gemma.model.common.auditAndSecurity.UserGroup)
      */
+    @Override
     public void update( ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.update - 'userGroup' can not be null" );

@@ -39,6 +39,7 @@ public class InstanceStatementImpl extends AbstractStatement implements Instance
         this.individual = individual;
     }
 
+    @Override
     public OntologyIndividual getObject() {
         return individual;
     }

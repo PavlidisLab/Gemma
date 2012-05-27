@@ -156,6 +156,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     protected void handleThaw( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( geneCoexpressionAnalysis );
                 Hibernate.initialize( geneCoexpressionAnalysis );

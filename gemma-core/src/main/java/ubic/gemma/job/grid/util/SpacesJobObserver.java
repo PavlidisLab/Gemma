@@ -71,6 +71,7 @@ public class SpacesJobObserver implements RemoteEventListener {
      * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
+    @Override
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
 
         if ( remoteEvent instanceof EntryArrivedRemoteEvent ) {

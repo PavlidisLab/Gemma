@@ -44,7 +44,6 @@ import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.MailEngine;
-import ubic.gemma.util.MailEngineImpl;
 import ubic.gemma.web.util.MessageUtil;
 
 /**

@@ -105,10 +105,12 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
         this.getPersonDao().remove( person );
     }
 
+    @Override
     public Person load( Long id ) {
         return this.getPersonDao().load( id );
     }
 
+    @Override
     public void update( Person p ) {
         this.getPersonDao().update( p );
 

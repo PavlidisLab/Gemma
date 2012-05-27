@@ -41,6 +41,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#create(ubic.gemma.model.association.Gene2GeneProteinAssociation)
      */
+    @Override
     public ubic.gemma.model.association.Gene2GeneProteinAssociation create(
             final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
@@ -55,6 +56,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#create(ubic.gemma.model.association.Gene2GeneProteinAssociation)
      */
+    @Override
     public ubic.gemma.model.association.Gene2GeneProteinAssociation createOrUpdate(
             final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
@@ -72,6 +74,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#update(ubic.gemma.model.association.Gene2GeneProteinAssociation)
      */
+    @Override
     public void update( final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
             this.handleUpdate( gene2GeneProteinAssociation );
@@ -85,6 +88,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#find(ubic.gemma.model.association.Gene2GeneProteinAssociation)
      */
+    @Override
     public Gene2GeneProteinAssociation find(
             final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
@@ -100,6 +104,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#loadAll()
      */
+    @Override
     public Collection<Gene2GeneProteinAssociation> loadAll() {
         try {
             return this.handleLoadAll();
@@ -114,6 +119,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleDeleteAll()
      */
+    @Override
     public void deleteAll( Collection<Gene2GeneProteinAssociation> associations ) {
         try {
             this.handleDeleteAll( associations );
@@ -128,6 +134,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleDelete()
      */
+    @Override
     public void delete( Gene2GeneProteinAssociation association ) {
         try {
             this.handleDelete( association );
@@ -142,6 +149,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleThaw()
      */
+    @Override
     public void thaw( Gene2GeneProteinAssociation association ) {
         try {
             this.handleThaw( association );
@@ -156,6 +164,7 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleThaw()
      */
+    @Override
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
         try {
             return this.handleFindProteinInteractionsForGene( gene );

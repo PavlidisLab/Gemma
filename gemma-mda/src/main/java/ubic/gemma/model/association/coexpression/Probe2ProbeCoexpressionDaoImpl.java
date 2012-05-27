@@ -79,6 +79,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
     public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
 
         for ( String p2pClassName : p2pClassNames ) {
@@ -194,6 +195,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getCoexpressedProbes(java.util.
      * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
      */
+    @Override
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon ) {
 
@@ -860,6 +862,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
 
+            @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 Collection<String> chunk = new ArrayList<String>();
                 log.info( ee + ": Writing " + links.size() + " links into tables" );

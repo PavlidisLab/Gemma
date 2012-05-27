@@ -152,6 +152,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
         this.getLocalFileDao().update( localFile );
     }
 
+    @Override
     public Collection<LocalFile> loadAll() {
         return this.getLocalFileDao().loadAll();
     }

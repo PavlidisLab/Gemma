@@ -52,6 +52,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
+    @Override
     public void parse( InputStream is ) throws IOException {
 
         linesParsed = 0;
@@ -107,6 +108,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.File)
      */
+    @Override
     public void parse( File file ) throws IOException {
         if ( file == null ) {
             throw new IllegalArgumentException( "File cannot be null" );
@@ -124,6 +126,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
      * 
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
+    @Override
     public void parse( String filename ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "No filename provided" );
@@ -143,6 +146,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
     /**
      * 
      */
+    @Override
     public abstract Collection<T> getResults();
 
 }

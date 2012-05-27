@@ -40,6 +40,7 @@ public class AbstractFetcherTest extends TestCase {
          * 
          * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
          */
+        @Override
         public Collection<LocalFile> fetch( String identifier ) {
             return null;
         }

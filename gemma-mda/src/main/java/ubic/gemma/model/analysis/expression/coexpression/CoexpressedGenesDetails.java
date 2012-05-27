@@ -197,6 +197,7 @@ public class CoexpressedGenesDetails {
                 return true;
             }
 
+            @Override
             public int compareTo( Vk o ) {
                 return o.getV().compareTo( this.v );
             }

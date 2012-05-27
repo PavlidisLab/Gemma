@@ -68,6 +68,7 @@ class CollectionFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#getFilteredObject()
      */
+    @Override
     public Object getFilteredObject() {
         // Now the Iterator has ended, remove Objects from Collection
         Iterator<T> removeIter = removeList.iterator();
@@ -89,6 +90,7 @@ class CollectionFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#iterator()
      */
+    @Override
     public Iterator<T> iterator() {
         collectionIter = collection.iterator();
 
@@ -98,6 +100,7 @@ class CollectionFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#remove(java.lang.Object)
      */
+    @Override
     public void remove( T object ) {
         removeList.add( object );
     }

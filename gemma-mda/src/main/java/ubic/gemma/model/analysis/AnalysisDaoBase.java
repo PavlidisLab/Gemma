@@ -41,6 +41,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
+    @Override
     public Collection<T> findByInvestigation( final Investigation investigation ) {
         try {
             return this.handleFindByInvestigation( investigation );
@@ -54,6 +55,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigations(java.util.Collection)
      */
+    @Override
     public Map findByInvestigations( final Collection investigators ) {
         try {
             return this.handleFindByInvestigations( investigators );
@@ -67,6 +69,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
      */
+    @Override
     public Collection<T> findByName( final int transform, final String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -74,6 +77,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<T> findByName( final int transform, final String queryString,
             final String name ) {
@@ -89,6 +93,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
      */
+    @Override
     public Collection<T> findByName( String name ) {
         return this.findByName( TRANSFORM_NONE, name );
     }
@@ -96,6 +101,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
      */
+    @Override
     public Collection<T> findByName( final String queryString, final String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
@@ -103,6 +109,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<T> findByParentTaxon( final Taxon taxon ) {
         try {
             return this.handleFindByParentTaxon( taxon );
@@ -116,6 +123,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public Collection<T> findByTaxon( final Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );

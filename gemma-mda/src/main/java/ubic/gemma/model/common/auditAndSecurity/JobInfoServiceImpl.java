@@ -47,6 +47,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#create(ubic.gemma.model.common.auditAndSecurity.JobInfo
      * )
      */
+    @Override
     public JobInfo create( JobInfo entity ) {
         return jobInfoDao.create( entity );
     }
@@ -55,6 +56,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.util.Collection)
      */
+    @Override
     public Collection<? extends JobInfo> load( Collection<Long> ids ) {
         return jobInfoDao.load( ids );
     }
@@ -63,6 +65,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.lang.Long)
      */
+    @Override
     public JobInfo load( Long id ) {
         return jobInfoDao.load( id );
     }
@@ -71,6 +74,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection<? extends JobInfo> entities ) {
         jobInfoDao.remove( entities );
     }
@@ -79,6 +83,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.lang.Long)
      */
+    @Override
     public void remove( Long id ) {
         jobInfoDao.remove( id );
     }
@@ -89,10 +94,12 @@ public class JobInfoServiceImpl implements JobInfoService {
      * ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#update(ubic.gemma.model.common.auditAndSecurity.JobInfo
      * )
      */
+    @Override
     public void update( JobInfo entity ) {
         jobInfoDao.update( entity );
     }
 
+    @Override
     public Collection<JobInfo> getUsersJobs( String userName ) {
         return jobInfoDao.getUsersJob( userName );
     }

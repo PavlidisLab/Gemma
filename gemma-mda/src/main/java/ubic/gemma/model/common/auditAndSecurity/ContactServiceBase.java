@@ -36,6 +36,7 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public ubic.gemma.model.common.auditAndSecurity.Contact find(
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         try {
@@ -50,6 +51,7 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         try {
@@ -64,6 +66,7 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public void remove( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         try {
             this.handleRemove( contact );
@@ -84,6 +87,7 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @Override
     public void update( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         try {
             this.handleUpdate( contact );

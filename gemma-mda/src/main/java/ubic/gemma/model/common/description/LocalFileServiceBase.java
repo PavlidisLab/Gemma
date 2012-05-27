@@ -37,6 +37,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
      * @see ubic.gemma.model.common.description.LocalFileService#copyFile(ubic.gemma.model.common.description.LocalFile,
      *      ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile copyFile(
             final ubic.gemma.model.common.description.LocalFile sourceFile,
             final ubic.gemma.model.common.description.LocalFile targetFile ) {
@@ -52,6 +53,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public void deleteFile( final ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
             this.handleDeleteFile( localFile );
@@ -65,6 +67,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#find(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile find(
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
@@ -79,6 +82,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#findByPath(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile findByPath( final java.lang.String path ) {
         try {
             return this.handleFindByPath( path );
@@ -92,6 +96,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#findOrCreate(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate(
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
@@ -106,6 +111,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#save(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public ubic.gemma.model.common.description.LocalFile save(
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
@@ -127,6 +133,7 @@ public abstract class LocalFileServiceBase implements ubic.gemma.model.common.de
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#update(ubic.gemma.model.common.description.LocalFile)
      */
+    @Override
     public void update( final ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
             this.handleUpdate( localFile );

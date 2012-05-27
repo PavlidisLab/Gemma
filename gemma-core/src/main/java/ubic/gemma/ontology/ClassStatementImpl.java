@@ -38,6 +38,7 @@ public class ClassStatementImpl extends AbstractStatement implements ClassStatem
         this.object = object;
     }
 
+    @Override
     public OntologyTerm getObject() {
         return object;
     }

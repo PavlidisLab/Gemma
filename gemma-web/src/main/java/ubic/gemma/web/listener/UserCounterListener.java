@@ -43,6 +43,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
      * 
      * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
      */
+    @Override
     public synchronized void contextInitialized( ServletContextEvent sce ) {
         this.servletContext = sce.getServletContext();
         servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( 0 ) );
@@ -54,6 +55,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
      * 
      * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
      */
+    @Override
     public synchronized void contextDestroyed( ServletContextEvent event ) {
         servletContext = null;
     }
@@ -63,6 +65,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
      * 
      * @see javax.servlet.http.HttpSessionListener#sessionCreated(javax.servlet.http.HttpSessionEvent)
      */
+    @Override
     public void sessionCreated( HttpSessionEvent arg0 ) {
         UserTracker.incrementSessions();
         servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
@@ -74,6 +77,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
      * 
      * @see javax.servlet.http.HttpSessionListener#sessionDestroyed(javax.servlet.http.HttpSessionEvent)
      */
+    @Override
     public void sessionDestroyed( HttpSessionEvent arg0 ) {
         UserTracker.decrementSessions();
         servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );

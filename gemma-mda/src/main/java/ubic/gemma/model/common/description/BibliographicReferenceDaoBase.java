@@ -37,6 +37,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends BibliographicReference> create(
             final java.util.Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
@@ -44,6 +45,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
@@ -60,6 +62,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int transform,
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public BibliographicReference create(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null ) {
@@ -74,6 +77,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
      *      java.lang.String)
      */
+    @Override
     public BibliographicReference findByExternalId( final java.lang.String id, final java.lang.String databaseName ) {
         return this
                 .findByExternalId(
@@ -139,6 +143,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int,
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Override
     public BibliographicReference findByExternalId( final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
         return this.findByExternalId( "from BibliographicReferenceImpl b where b.pubAccession=:externalId", externalId );
     }
@@ -171,6 +176,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAllExperimentLinkedReferences()
      */
+    @Override
     public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         try {
             return this.handleGetAllExperimentLinkedReferences();
@@ -184,6 +190,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
@@ -199,6 +206,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#load(int, java.lang.Long)
      */
 
+    @Override
     public BibliographicReference load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BibliographicReference.load - 'id' can not be null" );
@@ -211,6 +219,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(java.util.Collection)
      */
+    @Override
     public java.util.Collection<BibliographicReference> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -225,6 +234,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll(int)
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public java.util.Collection<BibliographicReference> loadAll() {
         final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
@@ -236,6 +246,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BibliographicReference.remove - 'id' can not be null" );
@@ -250,6 +261,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.remove - 'entities' can not be null" );
@@ -260,6 +272,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public void remove( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null ) {
             throw new IllegalArgumentException(
@@ -272,12 +285,14 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
@@ -292,6 +307,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#update(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null ) {
             throw new IllegalArgumentException(

@@ -66,6 +66,7 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      * @param start How far into the list to start
      * @param limit Maximum records to retrieve (might be subject to security filtering)
      */
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit );
 
     /**
@@ -77,11 +78,13 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      * @param descending
      * @return
      */
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
 
     /**
      * @return how many Characteristics are in the system, excluding GO annotations.
      */
+    @Override
     public Integer count();
 
 }

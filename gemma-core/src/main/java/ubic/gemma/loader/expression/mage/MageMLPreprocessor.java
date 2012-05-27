@@ -82,6 +82,7 @@ public class MageMLPreprocessor implements Preprocessor {
      * @see ubic.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
      * ubic.gemma.loader.expression.mage.BioAssayDimensions)
      */
+    @Override
     public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
         RawDataParser rdp = new RawDataParser();
         rdp.setDimensions( dimensions );

@@ -39,6 +39,7 @@ public class MonitorTaskImpl implements MonitorTask {
      * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.task.MonitorTask#execute(ubic.gemma.grid.javaspaces.task.MonitorTaskCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( MonitorTaskCommand command ) {
 

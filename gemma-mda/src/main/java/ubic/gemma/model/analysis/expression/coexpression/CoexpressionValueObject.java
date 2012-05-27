@@ -216,6 +216,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * 
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo( CoexpressionValueObject o ) {
         int o1Size = this.getMaxLinkCount();
         int o2Size = o.getMaxLinkCount();

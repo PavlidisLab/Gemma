@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -89,7 +87,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     private static final int QUANTILE_OF_SIGNAL_TO_USE_IF_NO_BKG_AVAILABLE = 1;
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValuesImpl.class.getName() );
-
 
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
@@ -335,7 +332,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         return results;
     }
 
-
     /**
      * Determine a threshold based on the data.
      * 
@@ -512,9 +508,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     }
 
     private void logTimeInfo( StopWatch timer, Collection<DesignElementDataVector> items ) {
-        NumberFormat nf = DecimalFormat.getInstance();
-        nf.setMaximumFractionDigits( 2 );
-        log.info( "Loaded in " + nf.format( timer.getTime() / 1000 ) + "s. Thawing " + items.size() + " vectors" );
+
+        log.info( String.format( "Loaded in %.2fs. Thawing %d vectors", timer.getTime() / 1000, items.size() ) );
     }
 
     /**

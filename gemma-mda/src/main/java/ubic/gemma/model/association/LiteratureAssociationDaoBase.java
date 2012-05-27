@@ -34,12 +34,14 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#create(int, Collection)
      */
+    @Override
     public Collection create( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -51,6 +53,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
         return entities;
     }
 
+    @Override
     public Collection<? extends LiteratureAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from LiteratureAssociationImpl where id in (:ids)",
                 "ids", ids );
@@ -59,6 +62,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#create(int transform, LiteratureAssociation)
      */
+    @Override
     public LiteratureAssociation create( final LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
@@ -71,6 +75,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#load(int, java.lang.Long)
      */
+    @Override
     public LiteratureAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.load - 'id' can not be null" );
@@ -82,6 +87,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#loadAll(int)
      */
+    @Override
     public Collection loadAll() {
         final Collection results = this.getHibernateTemplate().loadAll( LiteratureAssociationImpl.class );
 
@@ -91,6 +97,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'id' can not be null" );
@@ -104,6 +111,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see RelationshipDao#remove(Collection)
      */
+    @Override
     public void remove( Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'entities' can not be null" );
@@ -114,6 +122,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#remove(LiteratureAssociation)
      */
+    @Override
     public void remove( LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
@@ -125,12 +134,14 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see RelationshipDao#update(Collection)
      */
+    @Override
     public void update( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -144,6 +155,7 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     /**
      * @see LiteratureAssociationDao#update(LiteratureAssociation)
      */
+    @Override
     public void update( LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(

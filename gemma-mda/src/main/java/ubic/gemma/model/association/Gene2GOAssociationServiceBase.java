@@ -95,6 +95,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public ubic.gemma.model.association.Gene2GOAssociation create(
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         try {
@@ -109,6 +110,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#find(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public ubic.gemma.model.association.Gene2GOAssociation find(
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         try {
@@ -123,6 +125,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection<Gene2GOAssociation> findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindAssociationByGene( gene );
@@ -136,6 +139,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public java.util.Collection<VocabCharacteristic> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
@@ -150,6 +154,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(java.lang.String,
      *      ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<Gene> findByGOTerm( final java.lang.String goID,
             final ubic.gemma.model.genome.Taxon taxon ) {
         try {
@@ -164,6 +169,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @Override
     public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         try {
@@ -182,6 +188,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#removeAll()
      */
+    @Override
     public void removeAll() {
         try {
             this.handleRemoveAll();

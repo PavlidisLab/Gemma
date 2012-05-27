@@ -170,6 +170,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         return results.containsKey( key );
     }
 
+    @Override
     public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
         this.resultsKeys = queue;
         this.parse( inputStream );

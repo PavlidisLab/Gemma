@@ -48,6 +48,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
      * 
      * @see ubic.gemma.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.io.InputStream)
      */
+    @Override
     public Date extract( InputStream is ) {
 
         DataInputStream str = new DataInputStream( is );
@@ -172,6 +173,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
      * 
      * @see ubic.gemma.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.lang.String)
      */
+    @Override
     public Date extract( String fileName ) {
         try {
             return extract( FileTools.getInputStreamFromPlainOrCompressedFile( fileName ) );

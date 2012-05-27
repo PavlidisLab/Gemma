@@ -30,6 +30,7 @@ public class ProbeLink implements Link {
         return firstDesignElementId;
     }
 
+    @Override
     public Double getScore() {
         return score;
     }
@@ -46,6 +47,7 @@ public class ProbeLink implements Link {
         this.firstDesignElementId = first_design_element_fk;
     }
 
+    @Override
     public void setScore( Double score ) {
         this.score = score;
     }

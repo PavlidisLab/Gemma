@@ -38,6 +38,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -66,6 +67,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
      * @see ubic.gemma.model.common.measurement.MeasurementDao#create(java.util.Collection)
      */
     
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -73,6 +75,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#create(ubic.gemma.model.common.measurement.Measurement)
      */
+    @Override
     public ubic.gemma.model.common.measurement.Measurement create(
             ubic.gemma.model.common.measurement.Measurement measurement ) {
         return ( ubic.gemma.model.common.measurement.Measurement ) this.create( TRANSFORM_NONE, measurement );
@@ -93,6 +96,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.common.measurement.Measurement load( java.lang.Long id ) {
         return ( ubic.gemma.model.common.measurement.Measurement ) this.load( TRANSFORM_NONE, id );
     }
@@ -101,6 +105,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
      * @see ubic.gemma.model.common.measurement.MeasurementDao#loadAll()
      */
     
+    @Override
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -118,6 +123,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Measurement.remove - 'id' can not be null" );
@@ -131,6 +137,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Measurement.remove - 'entities' can not be null" );
@@ -141,6 +148,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(ubic.gemma.model.common.measurement.Measurement)
      */
+    @Override
     public void remove( ubic.gemma.model.common.measurement.Measurement measurement ) {
         if ( measurement == null ) {
             throw new IllegalArgumentException( "Measurement.remove - 'measurement' can not be null" );
@@ -151,12 +159,14 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Measurement.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -170,6 +180,7 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#update(ubic.gemma.model.common.measurement.Measurement)
      */
+    @Override
     public void update( ubic.gemma.model.common.measurement.Measurement measurement ) {
         if ( measurement == null ) {
             throw new IllegalArgumentException( "Measurement.update - 'measurement' can not be null" );

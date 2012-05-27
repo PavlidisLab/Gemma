@@ -35,24 +35,29 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 @Service
 public class AuditEventServiceImpl extends AuditEventServiceBase {
 
+    @Override
     public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.getAuditEventDao().getEvents( auditable );
     }
 
+    @Override
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().getLastEvent( auditable, type );
     }
 
+    @Override
     public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().getLastEvent( auditables, type );
     }
 
+    @Override
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         return this.getAuditEventDao().getLastEvents( auditables, types );
     }
 
+    @Override
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
         return this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
     }

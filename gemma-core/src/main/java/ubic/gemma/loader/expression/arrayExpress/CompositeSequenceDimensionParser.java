@@ -62,6 +62,7 @@ public class CompositeSequenceDimensionParser extends BasicOrderedLineParser<Com
      * 
      * @see ubic.gemma.loader.util.parser.LineParser#parseOneLine(java.lang.String)
      */
+    @Override
     public CompositeSequence parseOneLine( String line ) {
 
         String[] toks = StringUtils.splitPreserveAllTokens( line );

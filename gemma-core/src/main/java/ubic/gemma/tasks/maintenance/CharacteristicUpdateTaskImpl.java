@@ -71,6 +71,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
     @Autowired
     private SecurityService securityService;
 
+    @Override
     @TaskMethod
     public TaskResult execute( CharacteristicUpdateCommand command ) {
         if ( command.isRemove() ) {

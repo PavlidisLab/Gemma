@@ -137,12 +137,14 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
         /*
          * Start a thread to monitor finished tasks that have not been retrieved
          */
         Thread sweepThread = new Thread( new Runnable() {
 
+            @Override
             public void run() {
                 while ( !Thread.interrupted() ) {
 
@@ -332,6 +334,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         // Wait for the task to complete in another thread.
         ExecutorService waiting = Executors.newSingleThreadExecutor();
         waiting.submit( new FutureTask<Object>( new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
 
                 TaskResult result = null;

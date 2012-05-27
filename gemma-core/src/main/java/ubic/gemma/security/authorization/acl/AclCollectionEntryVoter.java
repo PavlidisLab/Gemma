@@ -141,6 +141,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
         this.sidRetrievalStrategy = sidRetrievalStrategy;
     }
 
+    @Override
     public boolean supports( ConfigAttribute attribute ) {
         if ( ( attribute.getAttribute() != null ) && attribute.getAttribute().equals( processConfigAttribute ) ) {
             return true;
@@ -154,6 +155,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
      * @see org.springframework.security.acls.AclEntryVoter#vote(org.springframework.security.core.Authentication,
      * java.lang.Object, java.util.Collection)
      */
+    @Override
     public int vote( Authentication authentication, Object object, Collection<ConfigAttribute> attributes ) {
 
         for ( ConfigAttribute attr : attributes ) {

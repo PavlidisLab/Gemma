@@ -58,54 +58,67 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
 
     }
 
+    @Override
     public int columns() {
         return numCols;
     }
 
+    @Override
     public Object get( CompositeSequence designElement, BioAssay bioAssay ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object get( int row, int column ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[] getColumn( BioAssay bioAssay ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[] getColumn( Integer column ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[][] getColumns( List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[][] getRawMatrix() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[] getRow( CompositeSequence designElement ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[] getRow( Integer index ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Object[][] getRows( List<CompositeSequence> designElements ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public int rows() {
         return 0;
     }
 
+    @Override
     public void set( int row, int column, Object value ) {
         throw new UnsupportedOperationException();
 

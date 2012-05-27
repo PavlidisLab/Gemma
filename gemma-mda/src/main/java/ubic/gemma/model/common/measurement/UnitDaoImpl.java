@@ -38,6 +38,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
         super.setSessionFactory( sessionFactory );
     }
  
+    @Override
     public Unit find( Unit unit ) {
         try {
 
@@ -66,6 +67,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
      * (non-Javadoc)
      * @see ubic.gemma.model.common.measurement.UnitDao#findOrCreate(ubic.gemma.model.common.measurement.Unit)
      */
+    @Override
     public Unit findOrCreate( Unit unit ) {
         Unit existing = this.find( unit );
         if ( existing != null ) {

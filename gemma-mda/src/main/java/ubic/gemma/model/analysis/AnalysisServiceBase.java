@@ -33,6 +33,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
+    @Override
     public void delete( T toDelete ) {
         try {
             this.handleDelete( toDelete );
@@ -46,6 +47,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
+    @Override
     public java.util.Collection<T> findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
         try {
             return this.handleFindByInvestigation( investigation );
@@ -59,6 +61,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigations(java.util.Collection)
      */
+    @Override
     public java.util.Map findByInvestigations( final java.util.Collection investigations ) {
         try {
             return this.handleFindByInvestigations( investigations );
@@ -72,6 +75,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByName(java.lang.String)
      */
+    @Override
     public Collection<T> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
@@ -85,6 +89,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<T> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByParentTaxon( taxon );
@@ -98,6 +103,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );
@@ -111,6 +117,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByUniqueInvestigations(java.util.Collection)
      */
+    @Override
     public T findByUniqueInvestigations( final java.util.Collection investigations ) {
         try {
             return this.handleFindByUniqueInvestigations( investigations );
@@ -124,6 +131,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */
+    @Override
     public T load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -137,6 +145,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
+    @Override
     public java.util.Collection<T> loadAll() {
         try {
             return this.handleLoadAll();

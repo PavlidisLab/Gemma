@@ -99,6 +99,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object convert( Object sourceDomainObject ) {
 
@@ -206,6 +207,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
         Thread convertThread = new Thread( new Runnable() {
+            @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
 

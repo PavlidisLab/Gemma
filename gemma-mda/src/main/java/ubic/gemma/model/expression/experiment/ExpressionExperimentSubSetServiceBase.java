@@ -37,6 +37,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
             final ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
         try {
@@ -51,6 +52,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -64,6 +66,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#loadAll()
      */
+    @Override
     public java.util.Collection loadAll() {
         try {
             return this.handleLoadAll();

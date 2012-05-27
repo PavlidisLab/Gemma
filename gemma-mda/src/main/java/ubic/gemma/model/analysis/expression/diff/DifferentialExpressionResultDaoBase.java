@@ -39,6 +39,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends ProbeAnalysisResult> create(
             final java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
@@ -46,6 +47,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
@@ -62,6 +64,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
      */
+    @Override
     public ProbeAnalysisResult create( final ProbeAnalysisResult probeAnalysisResult ) {
         if ( probeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.create - 'ProbeAnalysisResult' can not be null" );
@@ -73,6 +76,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(java.util.Collection)
      */
+    @Override
     public java.util.Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             final java.util.Collection<ProbeAnalysisResult> ProbeAnalysisResults ) {
         try {
@@ -87,6 +91,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
      */
+    @Override
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
             final ProbeAnalysisResult ProbeAnalysisResult ) {
         try {
@@ -98,6 +103,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         }
     }
 
+    @Override
     public Collection<? extends ProbeAnalysisResult> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ProbeAnalysisResultImpl where id in (:ids)", "ids",
                 ids );
@@ -106,6 +112,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see diff.DifferentialExpressionResultDao#load(int, java.lang.Long)
      */
+    @Override
     public ProbeAnalysisResult load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.load - 'id' can not be null" );
@@ -116,6 +123,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see diff.DifferentialExpressionResultDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'id' can not be null" );
@@ -129,6 +137,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'entities' can not be null" );
@@ -139,6 +148,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see diff.DifferentialExpressionResultDao#remove(diff.ProbeAnalysisResult)
      */
+    @Override
     public void remove( ProbeAnalysisResult ProbeAnalysisResult ) {
         if ( ProbeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'ProbeAnalysisResult' can not be null" );
@@ -149,12 +159,14 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultDao#update(java.util.Collection)
      */
+    @Override
     public void update( final java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
@@ -169,6 +181,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see diff.DifferentialExpressionResultDao#update(diff.ProbeAnalysisResult)
      */
+    @Override
     public void update( ProbeAnalysisResult ProbeAnalysisResult ) {
         if ( ProbeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.update - 'ProbeAnalysisResult' can not be null" );

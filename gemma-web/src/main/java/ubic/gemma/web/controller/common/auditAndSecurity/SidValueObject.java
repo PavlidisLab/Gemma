@@ -49,6 +49,7 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
         this.authority = sidToString( owner );
     }
 
+    @Override
     public int compareTo( SidValueObject arg0 ) {
 
         /*

@@ -122,6 +122,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.io.InputStream)
      */
+    @Override
     public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException {
         this.importDesign( experiment, is, false );
     }
@@ -154,6 +155,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * @see ubic.gemma.loader.expression.simple.ExperimentalDesignImporter
      *      #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */
+    @Override
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
         this.mgedOntologyService = this.ontologyService.getMgedOntologyService();
         

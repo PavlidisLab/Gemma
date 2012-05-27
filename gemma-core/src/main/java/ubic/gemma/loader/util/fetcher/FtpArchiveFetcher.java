@@ -57,6 +57,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * 
      * @see ubic.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
+    @Override
     public void setDeleteAfterUnpack( boolean doDelete ) {
         this.doDelete = doDelete;
     }
@@ -179,6 +180,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      */
     protected void unPack( final File toUnpack ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+            @Override
             @SuppressWarnings("synthetic-access")
             public Boolean call() {
                 File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );

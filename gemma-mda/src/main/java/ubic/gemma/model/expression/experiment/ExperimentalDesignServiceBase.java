@@ -37,6 +37,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#create(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign create(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         try {
@@ -51,6 +52,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         try {
@@ -65,6 +67,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#findByName(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
@@ -78,6 +81,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         try {
@@ -92,6 +96,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         try {
@@ -106,6 +111,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -119,6 +125,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#loadAll()
      */
+    @Override
     public java.util.Collection<ExperimentalDesign> loadAll() {
         try {
             return this.handleLoadAll();
@@ -140,6 +147,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
+    @Override
     public void update( final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
         try {
             this.handleUpdate( experimentalDesign );

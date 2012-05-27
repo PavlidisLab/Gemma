@@ -181,6 +181,7 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * 
      */
+    @Override
     public BibliographicReference findByExternalId( DatabaseEntry accession ) {
         return this.getBibliographicReferenceDao().findByExternalId( accession );
     }

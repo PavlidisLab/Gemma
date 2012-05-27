@@ -50,6 +50,7 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
 
     private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
 
+    @Override
     public ArrayDesign parseOneLine( String line ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );

@@ -45,6 +45,7 @@ public class NativeQueryUtils {
      */
     public static List<?> find( HibernateTemplate hibernateTemplate, final String queryString ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            @Override
             public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );
@@ -66,6 +67,7 @@ public class NativeQueryUtils {
     public static List<?> findByNamedParam( HibernateTemplate hibernateTemplate, final String queryString,
             final String paramName, final Object param ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            @Override
             public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );
@@ -87,6 +89,7 @@ public class NativeQueryUtils {
     public static List<?> findByNamedParams( HibernateTemplate hibernateTemplate, final String queryString,
             final String[] paramNames, final Object[] params ) {
         return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            @Override
             public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );

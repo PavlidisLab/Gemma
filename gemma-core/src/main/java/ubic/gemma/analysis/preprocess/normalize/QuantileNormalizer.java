@@ -50,6 +50,7 @@ public class QuantileNormalizer<R, C> implements Normalizer<R, C> {
      * 
      * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
+    @Override
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
 
         MatrixNormalizer<R, C> m = new MatrixNormalizer<R, C>();

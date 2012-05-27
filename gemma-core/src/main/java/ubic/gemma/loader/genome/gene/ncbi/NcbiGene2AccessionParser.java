@@ -62,6 +62,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
     private Integer startingNcbiId = null;
     private boolean hasStarted = false;
 
+    @Override
     public void parse( InputStream is, BlockingQueue<NcbiGeneData> aQueue ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aQueue;
@@ -83,6 +84,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
+    @Override
     public NCBIGene2Accession parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 

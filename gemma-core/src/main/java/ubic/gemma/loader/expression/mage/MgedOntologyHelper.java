@@ -723,40 +723,52 @@ public class MgedOntologyHelper {
 
         private boolean withinEnum = false;
 
+        @Override
         public void characters( char[] ch, int start, int length ) {
         }
 
+        @Override
         public void endDocument() {
         }
 
+        @Override
         public void endElement( String namespaceURI, String localName, String qName ) {
             path.pop();
         }
 
+        @Override
         public void endPrefixMapping( String prefix ) {
         }
 
+        @Override
         public void error( SAXParseException exception ) {
         }
 
+        @Override
         public void fatalError( SAXParseException exception ) {
         }
 
+        @Override
         public void ignorableWhitespace( char[] ch, int start, int length ) {
         }
 
+        @Override
         public void processingInstruction( String target, String data ) {
         }
 
+        @Override
         public void setDocumentLocator( Locator locator ) {
         }
 
+        @Override
         public void skippedEntity( String name ) {
         }
 
+        @Override
         public void startDocument() {
         }
 
+        @Override
         public void startElement( String namespaceURI, String localName, String qName, Attributes atts ) {
             path.push( qName );
             if ( qName.equals( "daml:Class" ) ) {
@@ -838,9 +850,11 @@ public class MgedOntologyHelper {
             }
         }
 
+        @Override
         public void startPrefixMapping( String prefix, String uri ) {
         }
 
+        @Override
         public void warning( SAXParseException exception ) {
         }
 

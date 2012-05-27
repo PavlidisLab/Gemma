@@ -39,6 +39,7 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
      * baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      * baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
+    @Override
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
             DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights ) {
@@ -54,6 +55,7 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
      * ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      * baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
+    @Override
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal ) {
         log.debug( "normalizing..." );

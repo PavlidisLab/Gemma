@@ -1309,6 +1309,7 @@ public class DEDVController {
                 this.pValue = pValue;
             }
 
+            @Override
             public int compareTo( EE2PValue o ) {
                 if ( this.pValue > o.getPValue() )
                     return 1;

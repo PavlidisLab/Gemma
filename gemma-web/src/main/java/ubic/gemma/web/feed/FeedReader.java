@@ -106,6 +106,7 @@ public class FeedReader implements InitializingBean {
 
     }
 
+    @Override
     public void afterPropertiesSet() throws Exception {
         FeedFetcherCache feedInfoCache = HashMapFeedInfoCache.getInstance();
         feedFetcher = new HttpURLFeedFetcher( feedInfoCache );

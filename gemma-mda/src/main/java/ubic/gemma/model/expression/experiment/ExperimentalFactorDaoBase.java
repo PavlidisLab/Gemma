@@ -36,6 +36,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#create(int, java.util.Collection)
      */
+    @Override
     public java.util.Collection<? extends ExperimentalFactor> create(
             final java.util.Collection<? extends ExperimentalFactor> entities ) {
         if ( entities == null ) {
@@ -43,6 +44,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends ExperimentalFactor> entityIterator = entities.iterator(); entityIterator
@@ -59,6 +61,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#create(int transform,
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public ExperimentalFactor create( final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         if ( experimentalFactor == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.create - 'experimentalFactor' can not be null" );
@@ -67,6 +70,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
         return experimentalFactor;
     }
 
+    @Override
     public Collection<? extends ExperimentalFactor> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ExperimentalFactorImpl where id in (:ids)", "ids",
                 ids );
@@ -76,6 +80,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#load(int, java.lang.Long)
      */
 
+    @Override
     public ExperimentalFactor load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.load - 'id' can not be null" );
@@ -88,6 +93,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#loadAll(int)
      */
+    @Override
     public java.util.Collection<? extends ExperimentalFactor> loadAll() {
         final java.util.Collection<? extends ExperimentalFactor> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.class );
@@ -98,6 +104,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#remove(java.lang.Long)
      */
 
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.remove - 'id' can not be null" );
@@ -112,6 +119,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
+    @Override
     public void remove( java.util.Collection<? extends ExperimentalFactor> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.remove - 'entities' can not be null" );
@@ -124,6 +132,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
+    @Override
     public void remove( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         if ( experimentalFactor == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.remove - 'experimentalFactor' can not be null" );
@@ -135,12 +144,14 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
+    @Override
     public void update( final java.util.Collection<? extends ExperimentalFactor> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends ExperimentalFactor> entityIterator = entities.iterator(); entityIterator
@@ -155,6 +166,7 @@ public abstract class ExperimentalFactorDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#update(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
+    @Override
     public void update( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         if ( experimentalFactor == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.update - 'experimentalFactor' can not be null" );

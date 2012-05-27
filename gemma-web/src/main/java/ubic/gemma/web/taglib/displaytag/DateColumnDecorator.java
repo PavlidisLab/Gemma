@@ -41,6 +41,7 @@ public class DateColumnDecorator implements DisplaytagColumnDecorator {
      * 
      * @see org.displaytag.decorator.ColumnDecorator#decorate(java.lang.Object)
      */
+    @Override
     public Object decorate( Object columnValue, PageContext pc, MediaTypeEnum mte ) {
         assert columnValue instanceof Date;
         Date date = ( Date ) columnValue;

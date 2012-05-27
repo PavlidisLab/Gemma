@@ -47,6 +47,7 @@ public class RowNameFilter implements Filter<ExpressionDataDoubleMatrix> {
      * 
      * @see ubic.gemma.analysis.preprocess.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
+    @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
         return new ExpressionDataDoubleMatrix( dataMatrix, keepers );
     }

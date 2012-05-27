@@ -36,12 +36,14 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int,
      *      java.util.Collection)
      */
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -60,6 +62,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
      */
+    @Override
     public ProbeCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         if ( probeCoexpressionAnalysis == null ) {
@@ -96,6 +99,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
         return results;
     }
 
+    @Override
     public Collection<? extends ProbeCoexpressionAnalysis> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ProbeCoexpressionAnalysisImpl where id in (:ids)",
                 "ids", ids );
@@ -105,6 +109,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#load(int, java.lang.Long)
      */
 
+    @Override
     public ProbeCoexpressionAnalysis load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.load - 'id' can not be null" );
@@ -118,6 +123,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll(int)
      */
 
+    @Override
     public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class );
@@ -154,6 +160,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
      */
+    @Override
     public void remove(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         if ( probeCoexpressionAnalysis == null ) {
@@ -174,6 +181,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -188,6 +196,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
      */
+    @Override
     public void update(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         if ( probeCoexpressionAnalysis == null ) {

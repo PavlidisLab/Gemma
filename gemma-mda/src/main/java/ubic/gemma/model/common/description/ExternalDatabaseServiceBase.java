@@ -37,6 +37,7 @@ public abstract class ExternalDatabaseServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#find(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String name ) {
         try {
             return this.handleFind( name );
@@ -50,6 +51,7 @@ public abstract class ExternalDatabaseServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
      */
+    @Override
     public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
             final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
         try {
@@ -64,6 +66,7 @@ public abstract class ExternalDatabaseServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#loadAll()
      */
+    @Override
     public java.util.Collection loadAll() {
         try {
             return this.handleLoadAll();
@@ -77,6 +80,7 @@ public abstract class ExternalDatabaseServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#remove(ubic.gemma.model.common.description.ExternalDatabase)
      */
+    @Override
     public void remove( final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
         try {
             this.handleRemove( externalDatabase );

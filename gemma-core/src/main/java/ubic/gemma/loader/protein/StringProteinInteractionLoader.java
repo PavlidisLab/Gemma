@@ -217,6 +217,7 @@ public class StringProteinInteractionLoader {
         assert context != null;
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 doLoad( gene2GeneProteinAssociationQueue );

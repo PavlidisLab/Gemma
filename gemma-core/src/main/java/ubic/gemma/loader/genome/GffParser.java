@@ -69,6 +69,7 @@ public class GffParser extends BasicLineParser<Gene> {
         return results;
     }
 
+    @Override
     public Gene parseOneLine( String line ) {
 
         if ( this.taxon == null ) {

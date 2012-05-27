@@ -28,7 +28,6 @@ import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.BibliographicReference.Factory;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

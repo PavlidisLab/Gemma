@@ -83,6 +83,7 @@ public class HomePageController {
          */
         TreeSet<Map.Entry<Taxon, Long>> eesPerTaxonValueSorted = new TreeSet<Map.Entry<Taxon, Long>>(
                 new Comparator<Map.Entry<Taxon, Long>>() {
+                    @Override
                     public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
                         int cf = e1.getValue().compareTo( e2.getValue() );
                         if ( cf == 0 ) {

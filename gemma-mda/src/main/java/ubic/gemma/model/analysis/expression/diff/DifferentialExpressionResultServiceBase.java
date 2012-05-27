@@ -45,6 +45,7 @@ public abstract class DifferentialExpressionResultServiceBase implements
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(java.util.Collection)
      */
+    @Override
     public java.util.Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             final java.util.Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) {
         try {
@@ -59,6 +60,7 @@ public abstract class DifferentialExpressionResultServiceBase implements
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
+    @Override
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
             final ProbeAnalysisResult differentialExpressionAnalysisResult ) {
         try {
@@ -89,6 +91,7 @@ public abstract class DifferentialExpressionResultServiceBase implements
     /**
      * @see diff.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
      */
+    @Override
     public void thaw( final ExpressionAnalysisResultSet resultSet ) {
         try {
             this.handleThaw( resultSet );

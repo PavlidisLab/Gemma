@@ -250,6 +250,7 @@ public class NcbiGeneDomainObjectGenerator {
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
         Thread parseThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 try {
                     log.debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );

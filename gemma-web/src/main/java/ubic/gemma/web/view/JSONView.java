@@ -52,6 +52,7 @@ public class JSONView implements View {
      * 
      * @see org.springframework.web.servlet.View#getContentType()
      */
+    @Override
     public String getContentType() {
         return this.docType;
     }
@@ -62,6 +63,7 @@ public class JSONView implements View {
      * @see org.springframework.web.servlet.View#render(java.util.Map, javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse)
      */
+    @Override
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
 
         JSONObject jso = JSONObject.fromObject( map );

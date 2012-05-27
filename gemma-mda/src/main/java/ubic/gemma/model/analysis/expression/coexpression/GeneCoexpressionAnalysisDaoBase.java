@@ -35,12 +35,14 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(int,
      *      java.util.Collection)
      */
+    @Override
     public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -59,6 +61,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public GeneCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         if ( geneCoexpressionAnalysis == null ) {
@@ -118,6 +121,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public java.util.Collection getDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
@@ -132,6 +136,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public int getNumDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
@@ -146,6 +151,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#load(int, java.lang.Long)
      */
+    @Override
     public GeneCoexpressionAnalysis load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.load - 'id' can not be null" );
@@ -159,6 +165,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#loadAll(int)
      */
 
+    @Override
     public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl.class );
@@ -195,6 +202,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public void remove(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         if ( geneCoexpressionAnalysis == null ) {
@@ -207,6 +215,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         try {
@@ -229,6 +238,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -243,6 +253,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
+    @Override
     public void update(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         if ( geneCoexpressionAnalysis == null ) {

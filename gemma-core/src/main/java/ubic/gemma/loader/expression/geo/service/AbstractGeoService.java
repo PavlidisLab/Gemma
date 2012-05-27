@@ -99,6 +99,7 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
      * @see
      * org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
      */
+    @Override
     public void setBeanFactory( BeanFactory beanFactory ) throws BeansException {
         this.beanFactory = beanFactory;
     }

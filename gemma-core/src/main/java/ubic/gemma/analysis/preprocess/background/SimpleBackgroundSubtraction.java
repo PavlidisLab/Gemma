@@ -49,6 +49,7 @@ public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, 
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      * @see #setLowerLimit(double)
      */
+    @Override
     public DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background ) {
         int rows = signal.rows();
         int cols = signal.columns();

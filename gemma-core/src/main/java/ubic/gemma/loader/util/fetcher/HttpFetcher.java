@@ -52,6 +52,7 @@ public class HttpFetcher extends AbstractFetcher {
      * @pram url
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
+    @Override
     public Collection<LocalFile> fetch( String url ) {
         return fetch( url, null );
     }
@@ -121,6 +122,7 @@ public class HttpFetcher extends AbstractFetcher {
      */
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+            @Override
             @SuppressWarnings("synthetic-access")
             public Boolean call() throws FileNotFoundException, IOException {
                 log.info( "Fetching " + seekFile );

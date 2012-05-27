@@ -36,6 +36,7 @@ public class DescribableComparator implements Comparator<Describable> {
      * (non-Javadoc)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( Describable d1, Describable d2 ) {
         String s1 = d1.getName();
         String s2 = d2.getName();

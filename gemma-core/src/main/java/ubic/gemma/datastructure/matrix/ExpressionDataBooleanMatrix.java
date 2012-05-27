@@ -72,6 +72,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         vectorsToMatrix( vectors );
     }
 
+    @Override
     public int columns() {
         return matrix.columns();
     }
@@ -194,6 +195,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
+    @Override
     public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
         return this.matrix.get( matrix.getRowIndexByName( designElement ),
                 matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
@@ -204,6 +206,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
+    @Override
     public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         // TODO Implement me
         throw new UnsupportedOperationException();
@@ -215,6 +218,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
+    @Override
     public Boolean[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
         return getColumn( index );
@@ -225,6 +229,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
+    @Override
     public Boolean[] getColumn( Integer index ) {
         ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
         Boolean[] res = new Boolean[rawResult.size()];
@@ -241,6 +246,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
+    @Override
     public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
         // TODO Implement me
         throw new UnsupportedOperationException();
@@ -251,6 +257,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
+    @Override
     public Boolean[][] getRawMatrix() {
         Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -270,6 +277,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
+    @Override
     public Boolean[] getRow( CompositeSequence designElement ) {
         Integer row = this.rowElementMap.get( designElement );
         if ( row == null ) return null;
@@ -287,6 +295,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
+    @Override
     public Boolean[][] getRows( List<CompositeSequence> designElements ) {
         if ( designElements == null ) {
             return null;
@@ -302,6 +311,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         return result;
     }
 
+    @Override
     public int rows() {
         return matrix.rows();
     }
@@ -318,14 +328,17 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
     }
 
+    @Override
     public void set( int row, int column, Boolean value ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Boolean get( int row, int column ) {
         return matrix.get( row, column );
     }
 
+    @Override
     public Boolean[] getRow( Integer index ) {
         return matrix.getRow( index );
     }

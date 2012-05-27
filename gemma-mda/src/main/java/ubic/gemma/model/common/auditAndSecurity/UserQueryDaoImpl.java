@@ -51,6 +51,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#create(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
+    @Override
     public UserQuery create( UserQuery userQuery ) {
         return ( UserQuery ) this.getHibernateTemplate().save( userQuery );
 
@@ -62,6 +63,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findByUser(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     public Collection<UserQuery> findByUser( User user ) {
         final String query = "select q from UserImpl u inner join u.userQueries q where u = :u";
         return this.getHibernateTemplate().findByNamedParam( query, "u", user );
@@ -74,6 +76,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findMostRecentForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
      */
+    @Override
     public UserQuery findMostRecentForUser( User user ) {
         Collection<UserQuery> items = findByUser( user );
         if ( items.isEmpty() ) {
@@ -84,6 +87,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
         List<UserQuery> toSort = new ArrayList<UserQuery>( items );
 
         Collections.sort( toSort, new Comparator<UserQuery>() {
+            @Override
             public int compare( UserQuery o1, UserQuery o2 ) {
                 return -o1.getLastUsed().compareTo( o2.getLastUsed() );
             }
@@ -98,6 +102,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#load(java.lang.Long)
      */
+    @Override
     public UserQuery load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserRole.load - 'id' can not be null" );
@@ -110,6 +115,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#loadAll()
      */
+    @Override
     public Collection<? extends UserQuery> loadAll() {
         return this.getHibernateTemplate().loadAll( ubic.gemma.model.common.auditAndSecurity.UserQueryImpl.class );
     }
@@ -120,6 +126,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#remove(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
+    @Override
     public void remove( UserQuery userQuery ) {
         if ( userQuery == null ) {
             throw new IllegalArgumentException( "UserQueryRole.remove - 'userQuery' can not be null" );
@@ -135,6 +142,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeAllForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
      */
+    @Override
     public void removeAllForUser( User user ) {
         Collection<UserQuery> items = findByUser( user );
         for ( UserQuery userQuery : items ) {
@@ -149,6 +157,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeOldForUser(ubic.gemma.model.common.auditAndSecurity
      * .User, java.sql.Date)
      */
+    @Override
     public void removeOldForUser( User user, Date staleDate ) {
         Collection<UserQuery> items = findByUser( user );
         for ( UserQuery userQuery : items ) {

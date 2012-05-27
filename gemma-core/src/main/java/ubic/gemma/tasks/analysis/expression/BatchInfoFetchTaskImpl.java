@@ -41,6 +41,7 @@ public class BatchInfoFetchTaskImpl implements BatchInfoFetchTask {
      * 
      * @see ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask#execute()
      */
+    @Override
     @TaskMethod
     public TaskResult execute( ExpressionExperimentReportTaskCommand command ) {
 

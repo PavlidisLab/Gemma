@@ -37,6 +37,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#addEvent(ubic.gemma.model.common.Auditable,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
+    @Override
     public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
         try {
             return this.handleAddEvent( auditable, auditEvent );
@@ -50,6 +51,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#create(int transform, AuditTrail)
      */
+    @Override
     public AuditTrail create( final AuditTrail auditTrail ) {
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
@@ -62,6 +64,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
      * @see AuditTrailDao#create(Collection)
      */
 
+    @Override
     public Collection<? extends AuditTrail> create( final Collection<? extends AuditTrail> entities ) {
         return create( entities );
     }
@@ -69,6 +72,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#load(int, java.lang.Long)
      */
+    @Override
     public AuditTrail load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditTrail.load - 'id' can not be null" );
@@ -80,6 +84,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#loadAll(int)
      */
+    @Override
     public Collection<? extends AuditTrail> loadAll() {
         return this.getHibernateTemplate().loadAll( AuditTrailImpl.class );
     }
@@ -87,6 +92,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'id' can not be null" );
@@ -100,6 +106,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#remove(Collection)
      */
+    @Override
     public void remove( Collection<? extends AuditTrail> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'entities' can not be null" );
@@ -110,6 +117,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#remove(AuditTrail)
      */
+    @Override
     public void remove( AuditTrail auditTrail ) {
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
@@ -120,6 +128,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#update(Collection)
      */
+    @Override
     public void update( final Collection<? extends AuditTrail> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
@@ -132,6 +141,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * @see AuditTrailDao#update(AuditTrail)
      */
+    @Override
     public void update( AuditTrail auditTrail ) {
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );

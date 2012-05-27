@@ -83,6 +83,7 @@ public class NCBIGene2GOAssociationLoader {
         final Authentication authentication = context.getAuthentication();
 
         Thread loadThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 log.info( "Starting loading" );
                 SecurityContextHolder.setContext( context );
@@ -93,6 +94,7 @@ public class NCBIGene2GOAssociationLoader {
         loadThread.start();
 
         Thread parseThread = new Thread( new Runnable() {
+            @Override
             public void run() {
                 try {
                     // NCBIGene2GOAssociationParser parser = new NCBIGene2GOAssociationParser();

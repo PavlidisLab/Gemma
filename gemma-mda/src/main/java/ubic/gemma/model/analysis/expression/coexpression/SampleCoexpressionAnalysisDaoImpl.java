@@ -111,6 +111,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao#hasAnalysis(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment)
      */
+    @Override
     public boolean hasAnalysis( ExpressionExperiment ee ) {
         return !this
                 .getHibernateTemplate()

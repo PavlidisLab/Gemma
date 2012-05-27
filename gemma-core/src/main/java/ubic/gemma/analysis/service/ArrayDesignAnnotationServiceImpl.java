@@ -309,6 +309,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private GeneOntologyService goService;
 
     Transformer goTermExtractor = new Transformer() {
+        @Override
         public Object transform( Object input ) {
             return GeneOntologyServiceImpl.asRegularGoId( ( ( OntologyTerm ) input ) );
         }

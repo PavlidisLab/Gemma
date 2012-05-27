@@ -98,6 +98,7 @@ public class MockClient implements Observer {
         return pData;
     }
 
+    @Override
     public void update( Observable o, Object pd ) {
         pData = ( ProgressData ) pd;
         update++;

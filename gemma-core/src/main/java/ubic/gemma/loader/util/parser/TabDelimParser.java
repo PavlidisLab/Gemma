@@ -52,6 +52,7 @@ public class TabDelimParser extends BasicLineParser<String[]> {
      * 
      * @see ubic.gemma.loader.util.parser.LineParser#parseOneLine(java.lang.String)
      */
+    @Override
     public String[] parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         log.debug( "Got " + fields.length + " fields from line '" + line.substring( 0, Math.min( line.length(), 100 ) )

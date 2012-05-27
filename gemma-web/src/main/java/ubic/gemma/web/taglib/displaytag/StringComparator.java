@@ -29,6 +29,7 @@ public class StringComparator implements Comparator<String> {
      * (non-Javadoc)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
+    @Override
     public int compare( String s1, String s2 ) {
         return s1.compareToIgnoreCase( s2 );
     }

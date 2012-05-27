@@ -38,6 +38,7 @@ public class SVDServiceImpl implements SVDService {
     @Autowired
     private SVDServiceHelper svdServiceHelper;
        
+    @Override
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -52,6 +53,7 @@ public class SVDServiceImpl implements SVDService {
      * @param ee
      * @return
      */
+    @Override
     public boolean hasPca( Long eeId ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         
@@ -65,6 +67,7 @@ public class SVDServiceImpl implements SVDService {
      * @param id
      * @return value or null if there isn't one.
      */
+    @Override
     public SVDValueObject getSvd( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -74,6 +77,7 @@ public class SVDServiceImpl implements SVDService {
     }
 
     
+    @Override
     public SVDValueObject svd( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -81,6 +85,7 @@ public class SVDServiceImpl implements SVDService {
         return svdServiceHelper.svd( ee );
     }
    
+    @Override
     public SVDValueObject getSvdFactorAnalysis( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );

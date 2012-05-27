@@ -77,6 +77,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public String getName() {
         return this.fileItem.getFieldName();
     }
@@ -84,6 +85,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public boolean isEmpty() {
         return ( this.size == 0 );
     }
@@ -91,6 +93,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public String getOriginalFilename() {
         if ( this.fileItem.getName() == null ) {
             return null;
@@ -113,6 +116,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public String getContentType() {
         return this.fileItem.getContentType();
     }
@@ -120,6 +124,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public long getSize() {
         return size;
     }
@@ -127,6 +132,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public byte[] getBytes() {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
@@ -138,6 +144,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public InputStream getInputStream() throws IOException {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
@@ -149,6 +156,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     /**
      * 
      */
+    @Override
     public void transferTo( File dest ) throws IOException, IllegalStateException {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has already been moved - cannot be transferred again" );

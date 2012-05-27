@@ -98,6 +98,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     private Cache whatsNewCache;
 
+    @Override
     public void afterPropertiesSet() throws Exception {
         try {
 
@@ -122,6 +123,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * 
      * @see ubic.gemma.analysis.report.WhatsNewServiceI#generateWeeklyReport()
      */
+    @Override
     public void generateWeeklyReport() {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
@@ -133,6 +135,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * @param date
      * @return representing the updated or new objects.
      */
+    @Override
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
         Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
@@ -165,6 +168,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * 
      * @return WhatsNew the latest WhatsNew report cache.
      */
+    @Override
     public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
         try {
@@ -235,6 +239,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * 
      * @param date
      */
+    @Override
     public void saveReport( Date date ) {
         WhatsNew wn = getReport( date );
         initDirectories( true );

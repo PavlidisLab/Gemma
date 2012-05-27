@@ -75,6 +75,7 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         this.index = index;
     }
 
+    @Override
     public int compareTo( ExpressionDataMatrixRowElement o ) {
         return o.getDesignElement().getName().compareTo( this.getDesignElement().getName() );
     }

@@ -69,10 +69,12 @@ public class TaxonServiceImpl implements TaxonService {
         }
     };
      
+    @Override
     public TaxonValueObject loadValueObject( Long id ){
         return TaxonValueObject.fromEntity( load( id ) );
     }
     
+    @Override
     public Collection<TaxonValueObject> loadAllValueObjects( ){
         Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
         for(Taxon tax : loadAll()){
@@ -85,6 +87,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
+    @Override
     public Collection<TaxonValueObject> getTaxaSpecies() {
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -98,6 +101,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
+    @Override
     public Collection<Taxon> loadAllTaxaWithGenes() {
         SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -111,6 +115,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
+    @Override
     public Collection<TaxonValueObject> getTaxaWithGenes() {
         SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -124,6 +129,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return collection of taxa that have expression experiments available.
      */
+    @Override
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
         Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
@@ -141,6 +147,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @return List of taxa with array designs in gemma
      */
+    @Override
     public Collection<TaxonValueObject> getTaxaWithArrays() {
         Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
@@ -157,6 +164,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#find(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon find( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.getTaxonDao().find( taxon );
@@ -170,6 +178,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#findByAbbreviation(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
         try {
             return this.getTaxonDao().findByAbbreviation( abbreviation );
@@ -183,6 +192,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#findByCommonName(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String commonName ) {
         try {
             return this.getTaxonDao().findByCommonName( commonName );
@@ -196,6 +206,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#findByScientificName(java.lang.String)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon findByScientificName( final java.lang.String scientificName ) {
         try {
             return this.getTaxonDao().findByScientificName( scientificName );
@@ -209,6 +220,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public java.util.Collection<ubic.gemma.model.genome.Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
         try {
             return this.getTaxonDao().findChildTaxaByParent( parentTaxa );
@@ -222,6 +234,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.getTaxonDao().findOrCreate( taxon );
@@ -235,6 +248,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.genome.Taxon load( final java.lang.Long id ) {
         try {
             return this.getTaxonDao().load( id );
@@ -247,6 +261,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#loadAll()
      */
+    @Override
     public java.util.Collection<Taxon> loadAll() {
         try {
             return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
@@ -259,6 +274,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#remove(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.getTaxonDao().remove( taxon );
@@ -279,6 +295,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
      */
+    @Override
     public void update( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.getTaxonDao().update( taxon );
@@ -292,6 +309,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * thaws taxon
      */
+    @Override
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.getTaxonDao().thaw( taxon );        

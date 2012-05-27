@@ -46,6 +46,7 @@ public class ArrayDesignProbeMapperTaskImpl implements ArrayDesignProbeMapperTas
      * ubic.gemma.grid.javaspaces.task.expression.arrayDesign.ArrayDesignProbeMapperTask#execute(ubic.gemma.grid.javaspaces
      * .expression.arrayDesign.SpacesProbeMapperCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( ArrayDesignProbeMapTaskCommand command ) {
 

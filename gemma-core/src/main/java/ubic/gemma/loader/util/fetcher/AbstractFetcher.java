@@ -91,6 +91,7 @@ public abstract class AbstractFetcher implements Fetcher {
      * 
      * @param force
      */
+    @Override
     public void setForce( boolean force ) {
         this.force = force;
     }

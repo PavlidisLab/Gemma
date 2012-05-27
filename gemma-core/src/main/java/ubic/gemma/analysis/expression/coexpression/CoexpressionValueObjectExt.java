@@ -57,6 +57,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
 
     private Integer supportKey;
 
+    @Override
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
         return this.getSortKey().compareTo( arg0.getSortKey() );
     }

@@ -37,6 +37,7 @@ public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
     @Autowired
     private LinkAnalysisService linkAnalysisService = null;
 
+    @Override
     @TaskMethod
     public TaskResult execute( LinkAnalysisTaskCommand command ) {
         

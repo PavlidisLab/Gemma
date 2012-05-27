@@ -50,6 +50,7 @@ public class AutoTaggerTaskImpl implements AutoTaggerTask {
      * 
      * @see ubic.gemma.tasks.analysis.expression.AutoTaggerTask#execute(ubic.gemma.job.TaskCommand)
      */
+    @Override
     @TaskMethod
     public TaskResult execute( TaskCommand command ) {
 

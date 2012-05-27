@@ -347,6 +347,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      * 
      * @see java.lang.Comparable#compareTo(T)
      */
+    @Override
     public int compareTo( GeoData o ) {
         return o.getGeoAccession().compareTo( this.getGeoAccession() );
     }

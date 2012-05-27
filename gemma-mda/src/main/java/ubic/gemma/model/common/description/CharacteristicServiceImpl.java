@@ -129,14 +129,17 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         this.getCharacteristicDao().update( c );
     }
 
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
         return this.getCharacteristicDao().browse( start, limit );
     }
 
+    @Override
     public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
         return this.getCharacteristicDao().browse( start, limit, sortField, descending );
     }
 
+    @Override
     public Integer count() {
         return this.getCharacteristicDao().count();
     }

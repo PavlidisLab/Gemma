@@ -249,7 +249,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                         + "s were found when executing query" );
 
             } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
+                result = results.get( 0 );
             }
         }
 

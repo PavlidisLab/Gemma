@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence;
 
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,16 +55,24 @@ public class PersisterHelper extends RelationshipPersister {
     @Override
     public Object persist( Object entity ) {
 
-        if ( entity instanceof Auditable ) {
-            Auditable a = ( Auditable ) entity;
+        try {
 
-            if ( a.getAuditTrail() == null ) a.setAuditTrail( AuditTrail.Factory.newInstance() );
+            this.getSession().setFlushMode( FlushMode.COMMIT );
+            if ( entity instanceof Auditable ) {
+                Auditable a = ( Auditable ) entity;
 
-            a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
-            a.setStatus( statusDao.create() );
+                if ( a.getAuditTrail() == null ) a.setAuditTrail( AuditTrail.Factory.newInstance() );
+
+                a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
+                a.setStatus( statusDao.create() );
+            }
+
+            Object persisted = super.persist( entity );
+
+            return persisted;
+        } finally {
+            this.getSession().setFlushMode( FlushMode.AUTO );
         }
-
-        return super.persist( entity );
     }
 
 }

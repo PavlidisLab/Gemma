@@ -60,6 +60,7 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
      * org.springframework.security.access.AfterInvocationProvider#decide(org.springframework.security.core.Authentication
      * , java.lang.Object, java.util.Collection, java.lang.Object)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,
             Object returnedObject ) throws AccessDeniedException {

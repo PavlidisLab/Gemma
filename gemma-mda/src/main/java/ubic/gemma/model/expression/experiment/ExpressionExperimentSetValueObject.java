@@ -88,6 +88,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
         this.expressionExperimentIds = new HashSet<Long>();
     }
 
+    @Override
     public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
         if ( this.getName() == null || arg0.getName() == null ) return 0;
         return this.getName().compareTo( arg0.getName() );

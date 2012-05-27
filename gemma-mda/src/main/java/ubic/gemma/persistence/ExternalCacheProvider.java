@@ -46,6 +46,7 @@ public class ExternalCacheProvider implements CacheProvider {
     @Autowired
     private CacheManager cacheManager = null;
 
+    @Override
     public Cache buildCache( String name, Properties properties ) throws CacheException {
         try {
             Ehcache cache = cacheManager.getEhcache( name );
@@ -65,10 +66,12 @@ public class ExternalCacheProvider implements CacheProvider {
         }
     }
 
+    @Override
     public boolean isMinimalPutsEnabledByDefault() {
         return false;
     }
 
+    @Override
     public long nextTimestamp() {
         return Timestamper.next();
     }
@@ -83,10 +86,12 @@ public class ExternalCacheProvider implements CacheProvider {
         this.cacheManager = cacheManager;
     }
 
+    @Override
     public void start( Properties properties ) throws CacheException {
         // ignored, CacheManager lifecycle handled by the IoC container
     }
 
+    @Override
     public void stop() {
         // ignored, CacheManager lifecycle handled by the IoC container
     }
