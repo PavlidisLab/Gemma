@@ -72,14 +72,13 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
     @Before
     public void setup() throws Exception {
-        this.mos = os.getMgedOntologyService();
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/expdesign.import.testfull.data.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
+        mos = os.getMgedOntologyService();
         if ( !mos.isOntologyLoaded() ) {
-            mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
             mos.startInitializationThread( true );
             while ( !mos.isOntologyLoaded() ) {
                 Thread.sleep( 5000 );

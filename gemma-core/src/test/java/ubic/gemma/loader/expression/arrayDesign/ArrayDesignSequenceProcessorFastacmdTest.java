@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -35,6 +36,8 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
+    @Autowired
+    ArrayDesignSequenceProcessingService app;
 
     @Test
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
@@ -47,7 +50,6 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             return;
         }
         ad = arrayDesignService.thaw( ad );
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         try {
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
@@ -57,8 +59,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
                 // data already filled in by some other test.
             } else {
                 if ( res.size() == 242 ) {
-                    log
-                            .warn( "Got 242 for some reason instead of 243, here is some debugging information (test will pass)" );
+                    log.warn( "Got 242 for some reason instead of 243, here is some debugging information (test will pass)" );
                     for ( BioSequence bs : res ) {
                         log.warn( bs );
                     }

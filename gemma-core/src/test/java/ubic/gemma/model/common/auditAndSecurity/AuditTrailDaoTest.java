@@ -106,11 +106,10 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     @Test
     public void testHandleAddEventAuditableAuditEvent() throws Exception {
-        AuditTrailDao atd = ( AuditTrailDao ) getBean( "auditTrailDao" );
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setNote( "this is a test" );
-        auditEvent = atd.addEvent( auditable, auditEvent );
+        auditEvent = auditTrailDao.addEvent( auditable, auditEvent );
         assertNotNull( auditEvent.getId() );
         assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
 

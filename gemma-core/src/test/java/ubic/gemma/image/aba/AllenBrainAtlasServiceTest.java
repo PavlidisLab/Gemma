@@ -74,7 +74,6 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     /**
      * @throws Exception
      */
-    @SuppressWarnings("null")
     @Test
     public void testGetGene() throws Exception {
         AbaGene grin1 = null;
@@ -86,9 +85,8 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
                 log.warn( "Server error from Allen Atlas: skipping test" );
                 return;
             }
+            throw e;
         }
-
-        assertNotNull( grin1 );
 
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
 

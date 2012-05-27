@@ -55,20 +55,26 @@ import ubic.gemma.util.ChannelUtils;
  */
 public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTest {
 
-    //Tests disabled.
-    
+    // Tests disabled.
+    @Autowired
+    ArrayDesignService ads;
+
     @Autowired
     ArrayExpressLoadService svc;
+
+    @Autowired
+    ExpressionExperimentService ees;
+    @Autowired
+    DesignElementDataVectorService dedvs;
 
     /**
      * This only works if you have GPL81 fully loaded!!
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     public void testLoad() throws Exception {
         // Affymetrix GeneChip Murine Genome U74Av2 [MG_U74Av2] = GPL81
-        ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ArrayDesign ad = ads.findByShortName( "GPL81" );
 
         if ( ad == null || ads.getCompositeSequenceCount( ad ) < 12000 ) {
@@ -85,7 +91,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     public void testLoadWithAEDesign1() throws Exception {
 
         ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true, false ); // uses A-MEXP-153
@@ -111,7 +117,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     final public void testLoadWithAEDesign2() throws Exception {
 
         ExpressionExperiment experiment = svc.load( "E-MEXP-955", null, true, false );
@@ -137,7 +143,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     final public void testLoadWithAEDesign3() throws Exception {
 
         ExpressionExperiment experiment = svc.load( "E-TABM-631", null, true, false ); // uses A-MEXP-691, Illumina
@@ -165,13 +171,11 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     final public void testLoadWithAEDesign4() throws Exception {
 
         ExpressionExperiment expressionExperiment = svc.load( "E-SMDB-1853", null, true, true ); // <----
         assertNotNull( expressionExperiment );
-
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         /*
          * Make sure we start with the persistent instance. This is just paranoia.
@@ -203,7 +207,6 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         ArrayDesign ad = null;
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             if ( ad == null ) {
-                ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
                 ad = ads.thaw( ba.getArrayDesignUsed() );
                 for ( CompositeSequence cs : ba.getArrayDesignUsed().getCompositeSequences() ) {
                     probeNames.add( cs.getName() );
@@ -259,10 +262,6 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
          * Another problem: there is no channel 1 data in the processed data file.
          */
         assertEquals( 17799, probeNames.size() );
-
-        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
-
         dedvs.thaw( expressionExperiment.getRawExpressionDataVectors() );
 
         assertEquals( 10, expressionExperiment.getQuantitationTypes().size() );
@@ -278,7 +277,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     final public void testLoadWithAEDesign5() throws Exception {
 
         ExpressionExperiment experiment = svc.load( "E-MEXP-740", null, true, false );
@@ -305,7 +304,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    //@Test
+    // @Test
     final public void testLoadWithAEDesign6() throws Exception {
 
         ExpressionExperiment experiment = svc.load( "E-SMDB-3827", null, true, false );

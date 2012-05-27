@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
+import org.apache.commons.lang.RandomStringUtils; 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +48,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class SearchServiceTest extends BaseSpringContextTest {
-    private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/20655";
-    private static final String GENE_NCBI = "20655";
+    private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
 
     private static final String SPINAL_CORD = "http://purl.org/obo/owl/FMA#FMA_7647";
 
@@ -77,111 +76,21 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private VocabCharacteristic eeCharGeneURI;
     private VocabCharacteristic eeCharCortexURI;
 
-    /**
-     * Does the search engine correctly match the spinal cord URI and find objects directly tagged with that URI
-     */
-    @Test
-    public void testURISearch() {
-        SearchSettings settings = new SearchSettings();
-        settings.setQuery( SPINAL_CORD );
-        settings.setSearchExperiments( true );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
+    boolean setup = false;
 
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                return;
-            }
-        }
-        fail( "Didn't get expected result from search" );
-    }
-
-    /**
-     * Test we find EE tagged with a child term that matches the given uri.
-     */
-    @Test
-    public void testURIChildSearch() throws Exception {
-        SearchSettings settings = new SearchSettings();
-        settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
-                                                                      // 'spinal cord'.
-        settings.setSearchExperiments( true );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
-
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                return;
-            }
-        }
-        fail( "Didn't get expected result from search" );
-    }
-
-    /**
-     * Tests that gene uris get handled correctly
-     */
-    @Test
-    public void testGeneUriSearch() {
-
-        SearchSettings settings = new SearchSettings();
-        settings.setQuery( GENE_URI );
-        settings.setSearchGenes( true );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
-
-        for ( SearchResult sr : found.get( Gene.class ) ) {
-            if ( sr.getResultObject().equals( gene ) ) {
-                return;
-            }
-        }
-
-        fail( "Didn't get expected result from search" );
-
-    }
-
-    /**
-     * Tests that general search terms are resolved to their proper ontology terms and objects tagged with those terms
-     * are found, -- requires LARQ index.
-     */
-    @Test
-    public void testGeneralSearch4Brain() {
-
-        SearchSettings settings = new SearchSettings();
-        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
-        settings.setSearchExperiments( true );
-        settings.setUseCharacteristics( true );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
-
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                return;
-            }
-        }
-
-        fail( "Didn't get expected result from search" );
-    }
+    private String geneNcbiId;
 
     /**
      * @exception Exception
      */
     @Before
     public void setup() throws Exception {
+        if ( setup ) return;
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
 
         ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
-        // if ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-        // ontologyService.getFmaOntologyService().startInitializationThread( true );
-        // while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-        // Thread.sleep( 3000 );
-        // log.info( "Waiting for FMA to load" );
-        // if ( ++i > max ) {
-        // fail( "Could not load FMA" );
-        // }
-        // }
-        // }
-
         log.info( "Ready to test" );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
@@ -213,17 +122,98 @@ public class SearchServiceTest extends BaseSpringContextTest {
         chars.add( eeCharCortexURI );
         ee.setCharacteristics( chars );
         eeService.update( ee );
-        
+
         gene = this.getTestPeristentGene();
-        gene.setNcbiId( GENE_NCBI );
-        gene.setNcbiGeneId( new Integer( GENE_NCBI ) );
+
+        this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
+        gene.setNcbiId( geneNcbiId );
+        gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
+        setup = true;
+    }
+
+    /**
+     * Tests that general search terms are resolved to their proper ontology terms and objects tagged with those terms
+     * are found, -- requires LARQ index.
+     */
+    @Test
+    public void testGeneralSearch4Brain() {
+
+        SearchSettings settings = new SearchSettings();
+        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
+        settings.setSearchExperiments( true );
+        settings.setUseCharacteristics( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
+    }
+
+    /**
+     * Tests that gene uris get handled correctly
+     */
+    @Test
+    public void testGeneUriSearch() {
+
+        SearchSettings settings = new SearchSettings();
+        settings.setQuery( GENE_URI + this.geneNcbiId );
+        settings.setSearchGenes( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( Gene.class ) ) {
+            if ( sr.getResultObject().equals( gene ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
 
     }
 
-    @After
-    public void tearDown() throws Exception {
-        geneService.remove( gene );
-        eeService.delete( ee );
+    /**
+     * Test we find EE tagged with a child term that matches the given uri.
+     */
+    @Test
+    public void testURIChildSearch() throws Exception {
+        SearchSettings settings = new SearchSettings();
+        settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
+                                                                      // 'spinal cord'.
+        settings.setSearchExperiments( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+        fail( "Didn't get expected result from search" );
     }
+
+    /**
+     * Does the search engine correctly match the spinal cord URI and find objects directly tagged with that URI
+     */
+    @Test
+    public void testURISearch() {
+        SearchSettings settings = new SearchSettings();
+        settings.setQuery( SPINAL_CORD );
+        settings.setSearchExperiments( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+        fail( "Didn't get expected result from search" );
+    }
+
 }

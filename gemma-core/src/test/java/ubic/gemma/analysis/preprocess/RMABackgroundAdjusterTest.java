@@ -40,15 +40,15 @@ public class RMABackgroundAdjusterTest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
 
-    RMABackgroundAdjuster aa;
+    private RMABackgroundAdjuster aa;
 
-    DoubleMatrix celmatrix;
+    private DoubleMatrix<String, String> celmatrix;
 
-    ArrayDesign arrayDesign;
+    private ArrayDesign arrayDesign;
 
-    InputStream is;
+    private InputStream is;
 
-    boolean connected = false;
+    private boolean connected = false;
 
     /*
      * Test method for 'ubic.gemma.analysis.preprocess.RMABackgroundAdjuster.adjust(DoubleMatrixNamed,
@@ -71,7 +71,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
         aa.getRCommandObject().voidEval( "data(cdfenv.example)" );
 
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrix result = aa.adjust( celmatrix, null );
+        DoubleMatrix<String, String> result = aa.adjust( celmatrix, null );
         assertNotNull( result );
         assertEquals( 10000, result.rows() );
         assertEquals( 3, result.columns() );

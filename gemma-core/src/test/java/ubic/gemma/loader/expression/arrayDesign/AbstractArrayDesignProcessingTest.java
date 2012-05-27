@@ -61,7 +61,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         if ( ad == null ) {
 
             // first load small twoc-color
-            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
+            GeoService geoService = this.getBean( GeoService.class );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             try {

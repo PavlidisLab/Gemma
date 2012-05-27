@@ -189,12 +189,10 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParseWhereExtraValue() throws Exception {
 
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-
         InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
 
-        parser.importDesign( ee, is, false );
+        experimentalDesignImporter.importDesign( ee, is, false );
         ee = eeService.thawLite( ee );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();

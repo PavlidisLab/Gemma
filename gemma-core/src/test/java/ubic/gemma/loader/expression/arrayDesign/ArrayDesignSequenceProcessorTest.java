@@ -144,7 +144,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         }
 
         String path = ConfigUtils.getString( "gemma.home" );
-        GeoService geoService = ( GeoService ) this.getBean( "geoService" );
+        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
 
@@ -171,7 +171,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     public void testFetchAndLoadWithSequences() throws Exception {
 
         String path = ConfigUtils.getString( "gemma.home" );
-        GeoService geoService = ( GeoService ) this.getBean( "geoService" );
+        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,

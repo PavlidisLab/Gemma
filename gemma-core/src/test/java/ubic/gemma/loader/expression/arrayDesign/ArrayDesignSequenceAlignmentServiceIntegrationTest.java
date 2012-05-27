@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
@@ -36,6 +37,11 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
+    @Autowired
+    ArrayDesignSequenceProcessingService app;
+
+    @Autowired
+    ArrayDesignSequenceAlignmentService aligner;
 
     /**
      * Test method for
@@ -58,20 +64,17 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
             return;
         }
 
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         ad = arrayDesignService.thaw( ad );
         try {
-            app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
-                    .getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
+            app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                    ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
+                    false );
 
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 return;
             }
         }
-
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
         try {
             Collection<BlatResult> blatResults = aligner.processArrayDesign( ad );

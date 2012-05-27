@@ -19,6 +19,7 @@
 package ubic.gemma.persistence;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,6 +38,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author paul
  * @version $Id$
  */
+@SuppressWarnings("unused")
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
     /**
@@ -84,9 +86,14 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
             } ).start();
         }
 
+        int waits = 0;
+        int maxWaits = 20;
         while ( c.get() < numThreads * numExperimentsPerThread && !failed.get() ) {
             Thread.sleep( 5000 );
             log.info( "Waiting ..." );
+            if ( ++waits > maxWaits ) {
+                fail( "Multithreaded loading failure: timed out." );
+            }
         }
 
         Thread.sleep( 1000 );
@@ -96,6 +103,8 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          */
         if ( results.size() != numThreads * numExperimentsPerThread ) {
             log.warn( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
+        } else {
+            log.info( "TORTURE TEST PASSED!" );
         }
         // assertEquals( "Multithreaded loading failure: check logs for deadlock", numThreads * numExperimentsPerThread,
         // results.size() );

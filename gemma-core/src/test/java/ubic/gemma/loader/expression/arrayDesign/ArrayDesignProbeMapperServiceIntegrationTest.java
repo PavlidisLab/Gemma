@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
@@ -35,6 +36,12 @@ import ubic.gemma.util.ConfigUtils;
 public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
 
     Blat blat;
+    @Autowired
+    ArrayDesignSequenceProcessingService app;
+    @Autowired
+    ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    @Autowired
+    ArrayDesignSequenceAlignmentService aligner;
 
     @Before
     public void setup() throws Exception {
@@ -50,7 +57,6 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     public final void testProcessArrayDesign() throws Exception {
         if ( !fastaCmdExecutableExists() ) return;
         if ( ad == null ) return;
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
             ad = this.arrayDesignService.thaw( ad );
@@ -62,11 +68,6 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
                 return;
             }
         }
-
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
         try {
             aligner.processArrayDesign( ad );
