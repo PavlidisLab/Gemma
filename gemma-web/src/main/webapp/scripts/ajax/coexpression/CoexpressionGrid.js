@@ -428,6 +428,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
             }, this);
 
+            /*//disable this for now because we are listening to the keyup event instead
             this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
             	
             	if (e.getKey() == e.ENTER) {
@@ -435,7 +436,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             	}
 
             }, this);
-            
+            */
 		}
 		
 	},

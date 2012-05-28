@@ -126,7 +126,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
 				emptyText : 'Find gene in results',
 				listeners : {
 					"keyup" : {
-						fn : this.searchForText,//.createDelegate(this),
+						fn : this.searchForText,
 						scope : this,
 						delay : 500
 					}
@@ -228,6 +228,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
 
         Gemma.CytoscapeControlBar.superclass.initComponent.apply(this, arguments);
 
+        /*//as a result of making the spinner field respond to keyup events, this can cause problems so I am disabling it for now
         this.getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
 
             if (e.getKey() == e.ENTER) {
@@ -235,7 +236,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
             }
 
         }, this);
-
+*/
         this.getComponent('stringencySpinner').addListener('spin', function (field, e) {
             this.display.stringencyChange(this.getComponent('stringencySpinner').getValue());
         }, this);

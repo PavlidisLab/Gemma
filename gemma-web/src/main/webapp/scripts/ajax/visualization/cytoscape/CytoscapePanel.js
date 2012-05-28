@@ -70,7 +70,7 @@ Ext.Panel, {
                     		this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency, this.coexpressionSearchData.coexGridCoexCommand.stringency),
                     buttons: {
                         ok: 'Search for new graph data',
-                        cancel: 'Return to current graph stringency'
+                        cancel: 'Use lowest graph stringency'
                     },
                     fn: function (btn) {
                         if (btn == 'ok') {
@@ -87,8 +87,8 @@ Ext.Panel, {
                             
                         } else {
                         	//cancel was pressed
-                        	this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
-                                                        
+                        	this.stringencyChange(this.coexpressionSearchData.cytoscapeCoexCommand.stringency);
+                        	
                         }
                     }.createDelegate(this)
                 });   		
