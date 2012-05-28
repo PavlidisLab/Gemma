@@ -118,7 +118,20 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 xtype: 'label',
                 html: '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT + '" src="/Gemma/images/icons/question_blue.png"/>',
                 height: 15
-            },' ',' ',
+            },' ',' ',{
+				xtype : 'textfield',
+				ref: 'searchInCytoscape',				
+				tabIndex : 1,
+				enableKeyEvents : true,
+				emptyText : 'Find gene in results',
+				listeners : {
+					"keyup" : {
+						fn : this.searchForText,//.createDelegate(this),
+						scope : this,
+						delay : 500
+					}
+				}
+			},' ',' ',
             {
                 xtype: 'checkbox',								                
                 itemId: 'queryGenesOnly',
@@ -241,6 +254,12 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
 
     setStringency: function (stringency) {
         this.getComponent('stringencySpinner').setValue(stringency);
-    }
+    },
+    searchForText : function(button, keyev) {
+		var text = this.searchInCytoscape.getValue();
+		
+		this.display.selectSearchMatches(text);
+		
+	}
 
 });

@@ -373,6 +373,12 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
         this.visualization.filter("edges", filterFunctionEdges.createDelegate(this));
     },
+    
+    select: function (nodeIds){      
+
+        this.visualization.select("nodes", nodeIds);
+        
+    },
 
     extendSelectedNodesHandler: function () {
         if (this.ready) {
@@ -509,6 +515,24 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     
     disableQueryGenesOnly : function (disabled){
     	this.controlBar.getComponent('queryGenesOnly').setDisabled(disabled);
+    },
+    
+    selectSearchMatches : function(text){
+    	
+    	if (text.length < 2) {
+			
+			return;
+		}
+    	
+    	//call controller that tests coexSearchData
+    	var nodeIdsToSelect = this.controller.getMatchingGeneIdsByText(text);
+    	
+    	if (nodeIdsToSelect.length>0){
+    		this.select(nodeIdsToSelect);
+    	}
+    	
+    	//highlight nodes
+    	
     }
 
 });

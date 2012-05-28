@@ -150,35 +150,22 @@ Ext.onReady(function() {
 		}
 
 		if (!knownGeneGrid) {
-		
-			//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
-						
-			//add in the 'my genes only' results
-			 var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(result.knownGeneResults, result.queryGenesOnlyResults);
 			
-			if (searchPanel.getLastCoexpressionSearchCommand().displayStringency > searchPanel.getLastCoexpressionSearchCommand().stringency) {
-			
-				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, searchPanel.getLastCoexpressionSearchCommand().displayStringency);
-				
-				if (trimmed.length != 0) {
-					displayedResults = trimmed;
-					initialDisplayStringency = searchPanel.getLastCoexpressionSearchCommand().displayStringency;
-					
-				} else {
-					//there are no results after trimming at initial Display stringency so reset coexCommand.displayStringency
-					searchPanel.getLastCoexpressionSearchCommand().displayStringency = searchPanel.getLastCoexpressionSearchCommand().stringency;
-					
-				}
-			}			
-			
-			
-			var coexpressionSearchData = new Gemma.CoexpressionSearchData({
-				
+			var coexpressionSearchData = new Gemma.CoexpressionSearchData({				
 				coexGridCoexCommand: searchPanel.getLastCoexpressionSearchCommand(),
 				cytoscapeCoexCommand: Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand(searchPanel.getLastCoexpressionSearchCommand()),
-				coexGridResults: result
-				
+				coexGridResults: result				
 			});
+			
+			var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(result.knownGeneResults, result.queryGenesOnlyResults);					
+			
+			//Sometimes initial display stringency is set higher than a stringency we have results for, check this
+			var highestResultStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(displayedResults,
+					coexpressionSearchData.coexGridCoexCommand.displayStringency);
+			
+			if (coexpressionSearchData.coexGridCoexCommand.displayStringency > highestResultStringency){
+				coexpressionSearchData.coexGridCoexCommand.displayStringency = highestResultStringency;
+			}
 						
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width: 900,
@@ -190,8 +177,7 @@ Ext.onReady(function() {
 				user: user,
 				tabPanelViewFlag: true,
 				layoutOnTabChange: true,
-				hideMode: 'offsets',
-				
+				hideMode: 'offsets',				
 				coexpressionSearchData: coexpressionSearchData
 			
 			});
@@ -234,6 +220,8 @@ Ext.onReady(function() {
 		
 		knownGeneGrid.loadData(result.isCannedAnalysis, 2, displayedResults,
 				result.knownGeneDatasets);
+		
+		knownGeneGrid.refreshGridFromCoexpressionSearchData();
 		
 		knownGeneGrid.show();
 

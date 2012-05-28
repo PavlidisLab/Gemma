@@ -170,6 +170,66 @@ Gemma.CoexValueObjectUtil = {
             
             return combinedResults;
             
+        },
+        
+        filterGeneResultsByText: function(text, knowngenes){
+	    	
+        	var value = new RegExp(Ext.escapeRe(text), 'i');
+    		var genesMatchingSearch = [];	        
+	       
+	        var kglength = knowngenes.length;
+	        var i;
+	        for (i = 0; i < kglength; i++) {
+	        	
+	        	var foundGene = knowngenes[i].foundGene;
+	        	
+	        	var queryGene = knowngenes[i].queryGene;
+	        	
+	        	if (genesMatchingSearch.indexOf(foundGene.officialSymbol)!==1){
+	        		
+	        			if(value.test(foundGene.officialSymbol)){
+	        				genesMatchingSearch.push(foundGene.officialSymbol);
+	        			}        			
+	        			
+	        	}
+	        	
+	        	if (genesMatchingSearch.indexOf(queryGene.officialSymbol)!==1){
+	        		
+        			if(value.test(queryGene.officialSymbol)){
+        				genesMatchingSearch.push(queryGene.officialSymbol);
+        			}        			
+        			
+	        	}
+	            
+	        } // end for (<kglength)
+    	
+	        return genesMatchingSearch;
+        },
+        
+        getHighestResultStringencyUpToInitialDisplayStringency: function(knowngenes, initialDisplayStringency){
+	        
+        	var highestResultStringency=2;
+        	
+        	var kglength = knowngenes.length;
+	        var i;
+	        for (i = 0; i < kglength; i++) {
+	        	
+	        	if (knowngenes[i].posSupp > highestResultStringency){
+	        		highestResultStringency = knowngenes[i].posSupp;
+	        	}
+	        	
+	        	if (knowngenes[i].negSupp > highestResultStringency){
+	        		highestResultStringency = knowngenes[i].negSupp;
+	        	}
+	        	
+	        	if (highestResultStringency >= initialDisplayStringency){
+	        		return initialDisplayStringency;
+	        	}
+	            
+	        } // end for (<kglength)
+    	
+	        return highestResultStringency;
         }
+       
 		
 }

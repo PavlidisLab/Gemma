@@ -367,13 +367,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					
 				}
 				
-				this.combinedData = this.coexpressionSearchData.coexGridResults.knownGeneResults;
-				
-				if (this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults){
-					this.combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.coexGridResults.knownGeneResults,
-		        		this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults);
-				}
-				
 				if (this.coexpressionSearchData.coexGridCoexCommand.displayStringency > Gemma.MIN_STRINGENCY) {                                     
                     var bbarText = this.getBottomToolbar().getComponent('bbarStatus');                    
                     this.currentbbarText = "Display Stringency set to "+this.coexpressionSearchData.coexGridCoexCommand.displayStringency+" based on number of experiments chosen.";                    
@@ -414,12 +407,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.getTopToolbar().getComponent('queryGenesOnly').setDisabled(false);
 			}
 			
-			this.combinedData = this.coexpressionSearchData.coexGridResults.knownGeneResults;
+			var combinedData = this.coexpressionSearchData.coexGridResults.knownGeneResults;
 			
 			if (this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults){
-				this.combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.coexGridResults.knownGeneResults,
+				combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.coexGridResults.knownGeneResults,
 	        		this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults);
 			}
+			
+			
+			this.loadData(false, 2, combinedData, null);
 						
 			this.coexStringencyUpdate(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
 			this.hideBottomToolbar();
@@ -488,17 +484,27 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 	
 	refreshGridFromCoexpressionSearchData: function(){
-		if (this.getTopToolbar().getComponent('queryGenesOnly').checked==false){			
+		
+		if (this.getTopToolbar().getComponent('queryGenesOnly').checked==false){
 			
-			var displayData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.combinedData,
-					this.coexpressionSearchData.coexGridCoexCommand.displayStringency);        
-			
-			this.loadData(false, 2, displayData, null);        
+			this.getStore().filterBy(function(record, id){
+				
+				return (record.get('posSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency||
+					record.get('negSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency);				
+				
+			},this);			    
 		
 		} else {
-			var displayData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults,
-					this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
-			this.loadData(false, 2, displayData, null);
+			
+			this.getStore().filterBy(function(record, id){
+				
+				return ((record.get('posSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency||
+						record.get('negSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency)&&						
+						this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(record.get('queryGene').id)!==-1&&
+						this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(record.get('foundGene').id)!==-1);				
+				
+			},this);
+			
 		}
 		
 	},

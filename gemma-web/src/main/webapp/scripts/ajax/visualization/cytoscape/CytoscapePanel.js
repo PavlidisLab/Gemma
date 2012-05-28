@@ -124,10 +124,9 @@ Ext.Panel, {
 				
 			}else{
 				this.display.disableQueryGenesOnly(false);
-			}
+			}        	
         	
         	this.drawGraph();
-        	
         	
         }, this);        
         
@@ -406,7 +405,7 @@ Ext.Panel, {
             this.hideBottomToolbar();
         }
         
-        //in case a user typed an invalid string into the spinner box
+        //in case a user has typed an invalid string into the spinner box on the grid, this resets it
         this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
         
         this.searchForCytoscapeData();
@@ -505,6 +504,12 @@ Ext.Panel, {
     	Ext.Msg.alert(Gemma.HelpText.CommonWarnings.Timeout.title, Gemma.HelpText.CommonWarnings.Timeout.text);
     	this.loadMask.hide();
     	this.fireEvent('beforesearch');
+    },
+    
+    getMatchingGeneIdsByText : function(text){
+    	
+    	return Gemma.CoexValueObjectUtil.filterGeneResultsByText(text, this.coexpressionSearchData.cytoscapeResults.knownGeneResults);
+    	
     }
     
     
