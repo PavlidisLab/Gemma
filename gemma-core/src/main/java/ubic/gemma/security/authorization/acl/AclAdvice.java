@@ -380,13 +380,16 @@ public class AclAdvice {
     }
 
     /**
-     * Determine which ACL is going to be the parent.
+     * Determine which ACL is going to be the parent of the associations of the given object.
+     * <p>
+     * If the objected is a SecuredNotChild, then it will be treated as the parent. For example, ArrayDesigns associated
+     * with an Experiment has 'parent status' for securables associated with the AD, such as LocalFiles.
      * 
      * @param object
      * @param previousParent
      * @return
      */
-    private Acl chooseParent( Object object, Acl previousParent ) {
+    private Acl chooseParentForAssociations( Object object, Acl previousParent ) {
         Acl parentAcl;
         if ( SecuredNotChild.class.isAssignableFrom( object.getClass() )
                 || ( previousParent == null && Securable.class.isAssignableFrom( object.getClass() ) && !SecuredChild.class
@@ -637,7 +640,7 @@ public class AclAdvice {
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
 
-        Acl parentAcl = chooseParent( object, previousParent );
+        Acl parentAcl = chooseParentForAssociations( object, previousParent );
 
         for ( int j = 0; j < propertyNames.length; j++ ) {
 
