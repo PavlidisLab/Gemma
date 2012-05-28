@@ -190,6 +190,11 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
     }
 
+    /**
+     * This is one of our longer/slower tests.
+     * 
+     * @throws Exception
+     */
     @Test
     public void testConvertGSE18Stress() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -461,6 +466,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+        ExpressionExperiment ee = ees.iterator().next();
+        assertEquals( 133, ee.getBioAssays().size() );
+        assertEquals( 540, ee.getRawExpressionDataVectors().size() );
     }
 
     /**
@@ -507,6 +515,29 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertGSE2122SAGE() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2122" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+
+        ExpressionExperiment ee = ees.iterator().next();
+        assertEquals( 4, ee.getBioAssays().size() );
+        assertEquals( 0, ee.getRawExpressionDataVectors().size() );
+
     }
 
     /**
@@ -751,7 +782,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         assertNotNull( atlanticSalm );
 
-        gc = ( GeoConverter ) this.getBean( "geoConverter" );
+        gc = this.getBean( GeoConverter.class ); // prototype bean.
         // gc.clear();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(

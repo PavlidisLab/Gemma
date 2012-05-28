@@ -1186,7 +1186,10 @@ public class GeoConverterImpl implements GeoConverter {
         List<String> cloneIdentifiers = platform.getColumnData( "CLONE_ID" );
         List<String> identifiers = platform.getColumnData( identifier );
 
-        assert identifiers != null;
+        if ( identifiers == null ) {
+            // we don't get any probe information; e.g., MPSS, SAGE, Exon arrays.
+            return arrayDesign;
+        }
 
         assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
 

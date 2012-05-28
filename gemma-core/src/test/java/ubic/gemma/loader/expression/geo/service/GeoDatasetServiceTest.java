@@ -125,17 +125,40 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadGSE37646RNASEQ() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
-        ee = ( ExpressionExperiment ) results.iterator().next();
-        aclTestUtils.checkEEAcls( ee );
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+            aclTestUtils.checkEEAcls( ee );
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
+            return;
+        }
     }
 
     @Test
     public void testFetchAndLoadGSE12135EXON() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+            aclTestUtils.checkEEAcls( ee );
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
+            return;
+        }
+
+    }
+
+    @Test
+    public void testFetchAndLoadGSE2122SAGE() throws Exception {
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse2122shortSage" ) );
+        Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = eeService.thawLite( ee );
+        assertEquals( 4, ee.getBioAssays().size() );
         aclTestUtils.checkEEAcls( ee );
     }
 
@@ -383,7 +406,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     // @Test
     // public void test() throws Exception {
-    // fetchASeries( "GSE12147" );
+    // fetchASeries( "GSE2122" );
     // }
 
 }

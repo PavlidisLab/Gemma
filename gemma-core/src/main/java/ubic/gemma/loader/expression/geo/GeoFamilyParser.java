@@ -1167,10 +1167,20 @@ public class GeoFamilyParser implements Parser<Object> {
             haveReadPlatformHeader = true;
             return;
         }
+        GeoPlatform currentPlatform = results.getPlatformMap().get( currentPlatformAccession );
+        assert currentPlatform != null;
+
+        /*
+         * Skip platform information when it is not going to be usable.
+         */
+        if ( !currentPlatform.useDataFromGeo() ) {
+            return;
+        }
 
         String[] tokens = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
 
-        int numColumns = results.getPlatformMap().get( currentPlatformAccession ).getColumnNames().size();
+        List<String> columnNames = currentPlatform.getColumnNames();
+        int numColumns = columnNames.size();
 
         if ( numColumns != tokens.length && numWarnings < MAX_WARNINGS ) {
             log.warn( "Wrong number of tokens in line (" + tokens.length + ", expected " + numColumns + "), line was '"
@@ -1183,11 +1193,11 @@ public class GeoFamilyParser implements Parser<Object> {
             return;
         }
 
-        GeoPlatform platform = results.getPlatformMap().get( currentPlatformAccession );
+        GeoPlatform platform = currentPlatform;
 
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
-            String columnName = results.getPlatformMap().get( currentPlatformAccession ).getColumnNames().get( i );
+            String columnName = columnNames.get( i );
             platform.addToColumnData( columnName, token );
         }
         platformLines++;
@@ -1268,7 +1278,7 @@ public class GeoFamilyParser implements Parser<Object> {
             // no-op. This identifies which series were run on this platform. We don't care to get this
             // information this way.
         } else if ( startsWithIgnoreCase( line, "!Platform_data_row_count" ) ) {
-            // nothing.
+            // nothing. However, if this is zero, we might be able to skip later steps.
         } else if ( startsWithIgnoreCase( line, "!Platform_catalog_number" ) ) {
             // do nothing TODO we might want this.
         } else if ( startsWithIgnoreCase( line, "!Platform_last_update_date" ) ) {
@@ -1321,10 +1331,6 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( inPlatformTable ) {
                 parsePlatformLine( line );
             } else if ( inSampleTable ) {
-                /*
-                 * FIXME: skip this step if it's not a supported platform type (RNA-seq, exon arrays: we put the data in
-                 * later)
-                 */
                 parseSampleDataLine( line );
             } else if ( inSeriesTable ) {
                 // we ignore this and use the sample data instead.
@@ -1365,6 +1371,15 @@ public class GeoFamilyParser implements Parser<Object> {
             return;
         }
 
+        GeoSample sample = results.getSampleMap().get( currentSampleAccession );
+
+        /*
+         * skip this step if it's not a supported platform type (RNA-seq, exon arrays: we put the data in later)
+         */
+        if ( !sample.hasUsableData() ) {
+            return;
+        }
+
         String[] tokens = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
 
         assert tokens != null;
@@ -1393,7 +1408,6 @@ public class GeoFamilyParser implements Parser<Object> {
             return; // this happens if we are parsing a GPL file.
         }
 
-        GeoSample sample = results.getSampleMap().get( currentSampleAccession );
         GeoPlatform platformForSample = sample.getPlatforms().iterator().next(); // slow
 
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
@@ -1572,6 +1586,12 @@ public class GeoFamilyParser implements Parser<Object> {
             // e.g. 'transcriptomic'
         } else if ( startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
             // e.g. 'RNA-seq'
+        } else if ( startsWithIgnoreCase( line, "!Sample_anchor" ) ) {
+            // e.g. NlaIII for SAGE
+        } else if ( startsWithIgnoreCase( line, "!Sample_tag_length" ) ) {
+            // SAGE
+        } else if ( startsWithIgnoreCase( line, "!Sample_tag_count" ) ) {
+            // SAGE
         } else {
             log.error( "Unknown flag in sample: " + line );
         }

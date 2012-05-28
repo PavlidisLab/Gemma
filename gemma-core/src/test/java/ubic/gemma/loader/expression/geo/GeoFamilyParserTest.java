@@ -28,7 +28,6 @@ import org.junit.Test;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.model.GeoValues;
 
 /**
  * @author pavlidis
@@ -47,44 +46,6 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
-    /**
-     * This was getting garbled because not all samples have all the same quantitation types in the same order etc.
-     * 
-     * @throws Exception
-     */
-    // public void testParseGse59() throws Exception {
-    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/GSE59Short/GSE59_family.soft.gz" ) );
-    // parser.parse( is );
-    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
-    // // GeoValues values = series.getValues();
-    // System.err.print( values );
-    // }
-    // /**
-    // * This data set has a lot of changes in the column ordering, etc. for samples
-    // *
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testParseGSE3500() throws Exception {
-    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/gse3500Short/GSE3500_family.soft.gz" ) );
-    // parser.setAgressiveQtRemoval( true );
-    // parser.parse( is );
-    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3500" );
-    // GeoValues values = series.getValues();
-    // // System.err.print( values );
-    // }
-    // /**
-    // * Failed assertio durin gstoring CH1_BKG_MEAN
-    // *
-    // * @throws Exception
-    // */
-    // public void testParseGse2776() throws Exception {
-    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/gse2776Short/GSE2776.soft.gz" ) );
-    // parser.parse( is );
-    // }
     public void testParseBigBPlatformOnly() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
@@ -97,18 +58,6 @@ public class GeoFamilyParserTest extends TestCase {
                 .next();
         assertEquals( 12488, p.getColumnData( "GB_ACC" ).size() );
     }
-
-    // /**
-    // * This is a SAGE file, with repeated tags. - we don't support this.
-    // *
-    // * @throws Exception
-    // */
-    // public void testParseBigB() throws Exception {
-    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
-    // parser.parse( is );
-    // assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-    // }
 
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -129,6 +78,17 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
+    @Test
+    public void testParseSAGE() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ) );
+        parser.parse( is );
+        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
+                .iterator().next();
+        assertTrue( !sample.hasUsableData() );
+        assertEquals( 4, sample.getColumnNames().size() ); // includes ones we aren't using.
+    }
+
     /**
      * Lacks data for some samples (on purpose)
      * 
@@ -147,7 +107,7 @@ public class GeoFamilyParserTest extends TestCase {
         // /*
         // * However, 3 of those samples have no data.
         // */
-        GeoValues values = series.getValues();
+        // GeoValues values = series.getValues();
         // System.err.println( values );
 
     }

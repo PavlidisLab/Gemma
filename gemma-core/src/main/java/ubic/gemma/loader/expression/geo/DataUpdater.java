@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -63,17 +64,49 @@ public class DataUpdater {
      */
     public void addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
+     
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        Taxon primaryTaxon = ad.getPrimaryTaxon();
+
+        /*
+         * determine the target array design.
+         */
+        String targetPlatformAcc = "";
+        if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
+            targetPlatformAcc = "GPL11410"; // 
+        } else if ( primaryTaxon.getCommonName().equals( "human" ) ) {
+            targetPlatformAcc = "GPL5188"; // ? Not really; it has many more probes than it should?
+        } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
+            targetPlatformAcc = "GPL6543"; // ? not clear.  Not really; it has many more probes than it should?
+        } else {
+            throw new IllegalArgumentException( "Exon arrays only supported for mouse, human and rat" );
+        }
+
+        ArrayDesign targetPlatform = arrayDesignService.findByShortName( targetPlatformAcc );
+
+        if ( targetPlatform == null ) {
+            throw new IllegalArgumentException( "The target platform " + targetPlatformAcc
+                    + " could not be found in the system. Please load it first." );
+        }
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-        Collection<RawExpressionDataVector> vectors = apt.processExonArrayData( ee, ad, files );
+        Collection<RawExpressionDataVector> vectors = apt.processExonArrayData( ee, targetPlatform, files );
 
-        experimentService.replaceVectors( ee, ad, vectors );
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
+        
+        // FIXME switch to the other platform.
+
+        experimentService.replaceVectors( ee, targetPlatform, vectors );
 
     }
 

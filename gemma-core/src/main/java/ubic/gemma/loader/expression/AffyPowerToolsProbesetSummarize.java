@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -34,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -79,7 +81,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
-     * @param ad
+     * @param ad target platform
      * @param files list of CEL files (any other files included will be ignored)
      * @return
      */
@@ -116,12 +118,12 @@ public class AffyPowerToolsProbesetSummarize {
                 Thread.sleep( AFFY_UPDATE_INTERVAL_MS );
 
                 synchronized ( outputPath ) {
-                    File outputFile = new File( outputPath );
+                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
                     Long size = outputFile.length();
 
                     String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                    log.info( String.format( "apt-probeset-summarize output so far: %.2f", size / 1024.0 ) + " kb ("
-                            + minutes + " minutes elapsed)" );
+                    log.info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                            + " kb (" + minutes + " minutes elapsed)" );
                 }
             }
 
@@ -141,6 +143,7 @@ public class AffyPowerToolsProbesetSummarize {
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
             for ( BioAssay bioAssay : bioAssays ) {
+
                 if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
                         || bmap.containsKey( bioAssay.getName() ) ) {
                     throw new IllegalStateException( "Duplicate" );
@@ -155,7 +158,7 @@ public class AffyPowerToolsProbesetSummarize {
                 String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
 
                 /*
-                 * This part might be QUITE tricky to line up. Column names are like Aud_19L.CEL
+                 * Column names are like Aud_19L.CEL
                  */
                 BioAssay assay = bmap.get( sampleName );
 
@@ -164,6 +167,10 @@ public class AffyPowerToolsProbesetSummarize {
                             + sampleName );
                 }
 
+                log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
+                        + assay.getAccession().getAccession() + "]" );
+
+                assay.setArrayDesignUsed( ad ); // OK?
                 bad.getBioAssays().add( assay );
             }
 
@@ -177,53 +184,10 @@ public class AffyPowerToolsProbesetSummarize {
 
     }
 
-    /**
-     * Like
-     * 
-     * <pre>
-     * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
-     * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
-     * /bigscratch/GSE13344/*.CEL
-     * </pre>
-     * 
-     * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
-     * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
-     * 
-     * @param ad
-     * @param celfiles
-     * @param outputPath
-     * @return
-     */
-    private String getCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
-        /*
-         * Get the pgf, clf, mps file for this platform. qc probesets: optional.
-         */
-        String toolPath = ConfigUtils.getString( "affy.power.tools.exec" );
-        String refPath = ConfigUtils.getString( "affy.power.tools.ref.path" );
-        Taxon primaryTaxon = ad.getPrimaryTaxon();
-        String base = h;
-        String genome = hg;
-        if ( primaryTaxon.getCommonName().equals( "human" ) ) {
-            base = h;
-            genome = hg;
-        } else if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
-            base = m;
-            genome = mm;
-        } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
-            base = r;
-            genome = rn;
-        } else {
-            throw new IllegalArgumentException( "Cannot use " + primaryTaxon );
+    private void checkFileReadable( String pgf ) {
+        if ( !new File( pgf ).canRead() ) {
+            throw new IllegalArgumentException( pgf + " could not be read" );
         }
-
-        String pgf = refPath + File.separator + base + "." + ".pgf";
-        String clf = refPath + File.separator + base + "." + ".clf";
-        String mps = refPath + File.separator + base + ".dt1." + genome + ".core.mps";
-        String qcc = refPath + File.separator + base + "." + ".qcc";
-
-        String cmd = toolPath + " -a " + METHOD + " -p " + pgf + " -c " + clf + " -m " + mps + " -o " + outputPath
-                + " -qc " + qcc + StringUtils.join( celfiles, " " );
-        return cmd;
     }
 
     /**
@@ -231,7 +195,7 @@ public class AffyPowerToolsProbesetSummarize {
      * 
      * @param expressionExperiment
      * @param bioAssayDimension
-     * @param arrayDesign
+     * @param arrayDesign target design
      * @param quantitationType
      * @param matrix
      * @return Collection<DesignElementDataVector>
@@ -265,7 +229,7 @@ public class AffyPowerToolsProbesetSummarize {
             vectors.add( vector );
 
         }
-        log.info( "Created " + vectors.size() + " data vectors" );
+        log.info( "Setup " + vectors.size() + " data vectors" );
         return vectors;
     }
 
@@ -274,15 +238,27 @@ public class AffyPowerToolsProbesetSummarize {
      * @return
      */
     private List<String> getCelFiles( Collection<LocalFile> files ) {
-        /*
-         * Get the CEL files.
-         */
-        List<String> celfiles = new ArrayList<String>();
+
+        Set<String> celfiles = new HashSet<String>();
         for ( LocalFile f : files ) {
             try {
                 File fi = new File( f.getLocalURL().toURI() );
-                if ( fi.canRead() && fi.getName().toUpperCase().endsWith( "CEL" ) ) {
-                    celfiles.add( fi.getAbsolutePath() );
+                if ( fi.canRead()
+                        && ( fi.getName().toUpperCase().endsWith( ".CEL" ) || fi.getName().toUpperCase()
+                                .endsWith( ".CEL.GZ" ) ) ) {
+
+                    if ( FileTools.isGZipped( fi.getName() ) ) {
+                        log.info( "Found CEL file " + fi + ", unzipping" );
+                        try {
+                            String unGzipFile = FileTools.unGzipFile( fi.getAbsolutePath() );
+                            celfiles.add( unGzipFile );
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
+                        }
+                    } else {
+                        log.info( "Found CEL file " + fi );
+                        celfiles.add( fi.getAbsolutePath() );
+                    }
                 }
             } catch ( URISyntaxException e ) {
                 throw new RuntimeException( e );
@@ -292,7 +268,68 @@ public class AffyPowerToolsProbesetSummarize {
         if ( celfiles.isEmpty() ) {
             throw new IllegalArgumentException( "No valid CEL files were found" );
         }
-        return celfiles;
+        return new ArrayList<String>( celfiles );
+    }
+
+    /**
+     * Like
+     * 
+     * <pre>
+     * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
+     * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
+     * /bigscratch/GSE13344/*.CEL
+     * </pre>
+     * 
+     * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
+     * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
+     * 
+     * @param ad
+     * @param celfiles
+     * @param outputPath directory
+     * @return
+     */
+    private String getCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
+        /*
+         * Get the pgf, clf, mps file for this platform. qc probesets: optional.
+         */
+        String toolPath = ConfigUtils.getString( "affy.power.tools.exec" );
+        String refPath = ConfigUtils.getString( "affy.power.tools.ref.path" );
+
+        checkFileReadable( toolPath );
+
+        if ( !new File( refPath ).isDirectory() ) {
+            throw new IllegalStateException( refPath + " is not a valid directory" );
+        }
+
+        Taxon primaryTaxon = ad.getPrimaryTaxon();
+        String base = h;
+        String genome = hg;
+        if ( primaryTaxon.getCommonName().equals( "human" ) ) {
+            base = h;
+            genome = hg;
+        } else if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
+            base = m;
+            genome = mm;
+        } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
+            base = r;
+            genome = rn;
+        } else {
+            throw new IllegalArgumentException( "Cannot use " + primaryTaxon );
+        }
+
+        String pgf = refPath + File.separator + base + ".pgf";
+        String clf = refPath + File.separator + base + ".clf";
+        String mps = refPath + File.separator + base + ".dt1." + genome + ".core.mps";
+        String qcc = refPath + File.separator + base + ".qcc";
+
+        checkFileReadable( pgf );
+        checkFileReadable( clf );
+        checkFileReadable( mps );
+        checkFileReadable( qcc );
+
+        String cmd = toolPath + " -a " + METHOD + " -p " + pgf + " -c " + clf + " -m " + mps + " -o " + outputPath
+                + " --qc-probesets " + qcc + " " + StringUtils.join( celfiles, " " );
+        return cmd;
     }
 
     /**
@@ -302,7 +339,7 @@ public class AffyPowerToolsProbesetSummarize {
      */
     private String getOutputFilePath( ExpressionExperiment ee, String base ) {
         File tmpdir = new File( ConfigUtils.getDownloadPath() );
-        return tmpdir + "/" + ee.getId() + "_" + base + ".txt";
+        return tmpdir + File.separator + ee.getId() + "_" + base;
     }
 
     /**

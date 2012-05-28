@@ -182,6 +182,10 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
 
+        /*
+         * TODO: suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
+         */
+
         matchToExistingPlatforms( geoConverter, series, c );
 
         checkSamplesAreNew( series );
@@ -222,7 +226,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     private void check( ExpressionExperiment ee ) {
 
-        if ( ee.getBioAssays().size() == 0 ) {
+        if ( ee.getBioAssays().isEmpty() ) {
             throw new IllegalStateException( "Experiment has no bioassays " + ee );
         }
 
