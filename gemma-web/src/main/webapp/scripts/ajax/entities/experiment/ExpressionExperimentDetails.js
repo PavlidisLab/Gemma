@@ -459,7 +459,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 html: ob.processedExpressionVectorCount
             });
             k.highlight();
-        });
+        }, this);
         
         manager.on('differential', function(){
             window.location.reload(true);
@@ -776,7 +776,15 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     width: 80
                 }, {
                     fieldLabel: 'Differential Expr. Analyses',
-                    items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
+                    items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
+                    	experimentDetails: e,
+                    	listeners:{
+                    		'analysisDeleted': function(){
+                    			this.fireEvent('experimentDetailsReloadRequired');
+                    		},
+                    		scope: this
+                    	}
+                    })
                 }, {
                     fieldLabel: 'Status',
                     html: this.renderStatus(e)

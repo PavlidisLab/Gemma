@@ -135,7 +135,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						k.handleWait(data, false);
 						k.on('done', function(payload) {
 									this.fireEvent('reportUpdated', payload);
-								});
+								}, this);
 					}.createDelegate(this),
 					errorHandler : function(message, exception) {
 						Ext.Msg.alert("There was an error", message);
@@ -357,6 +357,43 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
+							
+						}
+					},
+					scope : this,
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
+				});
+	},
+	
+
+	deleteExperimentAnalysis : function(eeId, analysisId, redirectHome) {
+		Ext.Msg.show({
+					title : Gemma.HelpText.CommonWarnings.Deletion.title,
+					msg : String.format(Gemma.HelpText.CommonWarnings.Deletion.text, 'analysis'),
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = [];
+							callParams.push(eeId);
+							callParams.push(analysisId);
+							Ext.getBody().mask();
+							callParams.push({
+										callback : function(data) {
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, true);
+											this.relayEvents(k, ['done', 'fail']);
+											Ext.getBody().unmask();
+											k.on('done', function(payload) {
+												this.fireEvent('deletedAnalysis');
+												}.createDelegate(this));
+										}.createDelegate(this),
+										errorHandler : function(error) {
+											Ext.Msg.alert("Deletion failed", error);
+											Ext.getBody().unmask();
+										}.createDelegate(this)
+									});
+							DifferentialExpressionAnalysisController.remove.apply(this, callParams);
 							
 						}
 					},

@@ -24,6 +24,9 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
         var manager = new Gemma.EEManager({
             editable: this.editable,
         });
+        manager.on('reportUpdated', function(){
+        	this.fireEvent('reloadNeeded');
+        },this);
         var refreshButton = new Ext.Button({
             text: 'Refresh',
             icon: '/Gemma/images/icons/arrow_refresh_small.png',

@@ -6,7 +6,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * dataset/expression experiment. It is structured as a tree with each analysis
  * as a node and its result sets as its children
  * 
- * @param ee
+ * @config experimentDetails
  *            {ExpressionExperimentValueObject} the expression experiment for
  *            which to display the analyses
  * @class Gemma.DifferentialExpressionAnalysesSummaryTree
@@ -43,15 +43,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 						}
 					},
 
-					constructor : function(ee) {
-						Ext.apply(this, {
-							ee : ee
-						});
-						Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.constructor
-								.call(this);
-					},
-
 					initComponent : function() {
+						
+						this.ee = this.experimentDetails;
+
+				        this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+				        
 						Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent
 								.call(this);
 						this.build();
@@ -81,12 +78,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					},
 					build : function() {
 						var analyses = this.ee.differentialExpressionAnalyses;
-						Ext
-								.apply(
-										this,
-										{
-											totalProbes : this.ee.processedExpressionVectorCount
-										});
+						Ext.apply(this, {
+							totalProbes : this.ee.processedExpressionVectorCount
+						});
 
 						// console.log("in build" +
 						// this.ee.differentialExpressionAnalyses);
@@ -97,6 +91,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							text : 'root'
 						});
 						this.setRootNode(root);
+						
 						// just show "Not available" root if no analyses
 						if (!analyses || analyses.size() === 0) {
 							root.appendChild(new Ext.tree.TreeNode({
@@ -114,10 +109,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 						// div in which to draw a pie chart
 						for ( var j = 0; j < analyses.size(); j++) {
 							var analysis = analyses[j];
-							// console.log(analysis.protocol);
-
-							// console.log("ANALYSIS " + (j + 1) + " of " +
-							// analyses.size());
 
 							var parentNode = null;
 							var parentText = null;
@@ -130,36 +121,17 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							// FIXME. The analysis contains the subsetFactor as
 							// well.
 							if (analysis.subsetFactor) {
-								// console.log(analysis.subsetFactor);
 								var subsetFactor = analysis.subsetFactor;
-								var subsetFactorValue = analysis.subsetFactorValue;
-								subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
-										+ subsetFactor.category
-										+ " ("
-										+ subsetFactor.description
-										+ ") and selecting samples where the value was \'"
-										+ subsetFactorValue.value
-										+ '\'">'
-										+ "using a subset of the data ("
-										+ subsetFactor.category
-										+ " = "
-										+ analysis.subsetFactorValue.value
-										+ ')</span>';
+								subsetText = this.getSubsetText( analysis );
 								subsetIdent = subsetFactor
 										+ analysis.resultSets.size();
-								// console.log("susbetIdent: " + subsetIdent);
-								// if a similar subset node has already been
-								// created, insert
+								// if a similar subset node has already been created, insert
 								// this node adjacent to it
-								neighbourNode = root.findChild('subsetIdent',
-										subsetIdent);
+								neighbourNode = root.findChild('subsetIdent', subsetIdent);
 							}
 
 							// prepare download link
-							var downloadDiffDataLink = String
-									.format(
-											"<span style='cursor:pointer' ext:qtip='Download all differential expression data for this analysis in a tab-delimited  format' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp;  </span>",
-											analysis.id);
+							var downloadDiffDataLink = this.getDownloadLink(analysis);
 
 							// make node for analysis
 							parentNode = new Ext.tree.TreeNode({
@@ -185,11 +157,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							// put all info in parent node
 							if (analysis.resultSets.size() === 1) {
 								resultSet = analysis.resultSets[0];
-								// get experimental factor string and build
-								// analysis parent node
-								// text
-								analysisName = this
-										.getFactorNameText(resultSet);
+								// get experimental factor string and build analysis parent node text
+								analysisName = this.getFactorNameText(resultSet);
 								nodeText = '';
 								// if there's subset text, add baseline and
 								// links to it to
@@ -215,9 +184,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							// children
 							else {
 								for ( var i = 0; i < analysis.resultSets.size(); i++) {
-									// console.log("RESULT SET " + (i + 1) + "
-									// of " +
-									// analysis.resultSets.size());
 									resultSet = analysis.resultSets[i];
 
 									// get experimental factor string and build
@@ -277,37 +243,20 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 								}
 							}
 
-							var analysisDesc = '';
-							if (numberOfFactors === 1) {
-								analysisDesc = 'One-way ANOVA on ';
-							} else if (numberOfFactors === 2) {
-								analysisDesc = 'Two-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
-							} else if (numberOfFactors === 3) {
-								analysisDesc = 'Three-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
-							} else if (numberOfFactors === 4) {
-								analysisDesc = 'Four-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
-							} else if (numberOfFactors === 5) {
-								analysisDesc = 'Five-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
-							} else if (numberOfFactors === 6) {
-								analysisDesc = 'Six-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
+							var analysisDesc = this.getANOVAtypeText( numberOfFactors );
+							if (numberOfFactors === 1 || interaction <= 0) {
+								analysisDesc += ' on ';
 							} else {
-								analysisDesc = 'n-way ANOVA'
-										+ ((interaction > 0) ? ' with interactions on '
-												: ' on ');
-							}// just being overly safe here
+								analysisDesc += ' with interactions on ';
+							} 
+							
+							var deleteText = '';
+							if(this.isAdmin){
+								deleteText = this.getDeleteLink( analysis );
+							}
 
 							parentNode.setText(analysisDesc + parentText
-									+ subsetText + " " + parentNode.text);
+									+ subsetText + " " + parentNode.text + deleteText);
 
 							// if this parent node has an interaction child,
 							// that child should
@@ -330,6 +279,61 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 						}
 					},
 
+					getSubsetText: function( analysis ){
+						var subsetText = '';
+						if (analysis.subsetFactor) {
+							var subsetFactor = analysis.subsetFactor;
+							var subsetFactorValue = analysis.subsetFactorValue;
+							subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
+									+ subsetFactor.category
+									+ " ("
+									+ subsetFactor.description
+									+ ") and selecting samples where the value was \'"
+									+ subsetFactorValue.value
+									+ '\'">'
+									+ "using a subset of the data ("
+									+ subsetFactor.category
+									+ " = "
+									+ analysis.subsetFactorValue.value
+									+ ')</span>';
+						}
+						return subsetText;
+					},
+					getDownloadLink: function( analysis ){
+						// prepare download link
+						return String
+								.format(
+										"<span style='cursor:pointer' ext:qtip='Download all differential expression data for this analysis in a tab-delimited  format' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp;  </span>",
+										analysis.id);
+					},
+					getANOVAtypeText: function( numberOfFactors ){
+
+						var analysisDesc = '';
+						// just being overly safe here
+						switch( numberOfFactors ){
+						case 1: 
+							analysisDesc = 'One-way ANOVA';
+							break;
+						case 2:
+							analysisDesc = 'Two-way ANOVA';
+							break;
+						case 3:
+							analysisDesc = 'Three-way ANOVA';
+							break;
+						case 4:
+							analysisDesc = 'Four-way ANOVA';
+							break;
+						case 5:
+							analysisDesc = 'Five-way ANOVA';
+							beak;
+						case 6:
+							analysisDesc = 'Six-way ANOVA';
+							break;
+						default:
+							analysisDesc = 'n-way ANOVA';
+						}
+						return analysisDesc;
+					},
 					/**
 					 * get the number of probes that are differentially
 					 * expressed and the number of 'up' and 'down' probes
@@ -384,6 +388,22 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 									+ resultSet.baselineGroup.value;
 						}
 						return '';
+					},
+					getDeleteLink: function( analysis ){
+						// prepare download link
+						var manager = new Gemma.EEManager({id: "eemanager"});
+						manager.on('deletedAnalysis', function(){
+			                manager.updateEEReport( this.ee.id );
+						}, this);
+						manager.on('reportUpdated', function(){
+							this.fireEvent('analysisDeleted');
+						}, this);
+						return String.format(
+										"<span style='cursor:pointer' ext:qtip='Download all differential expression "+
+										"data for this analysis in a tab-delimited format' "+
+										"onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'> &nbsp; "+
+										"<img src='/Gemma/images/icons/cross.png'/> &nbsp;  </span>",
+										this.ee.id, analysis.id);						
 					},
 					getActionLinks : function(resultSet, factor, eeID, nodeId) {
 						/* link for details */
@@ -540,7 +560,6 @@ Ext.reg('differentialExpressionAnalysesSummaryTree',
  */
 function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
 
-	var params = {};
 	this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow(
 			{
 				thumbnails : false,
@@ -556,4 +575,4 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
 	this.visDiffWindow.show({
 		params : [ eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD ]
 	});
-}
+};
