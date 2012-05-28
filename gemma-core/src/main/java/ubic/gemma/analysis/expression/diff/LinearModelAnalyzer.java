@@ -500,7 +500,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Add interaction terms
          */
-        boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
+        boolean hasInteractionTerms = config.getInteractionsToInclude()!= null 
+                && !config.getInteractionsToInclude().isEmpty();
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
 

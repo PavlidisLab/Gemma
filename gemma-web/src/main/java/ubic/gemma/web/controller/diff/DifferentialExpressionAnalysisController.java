@@ -158,7 +158,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         }
 
         DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
-
+        if ( toRemove == null ) {
+            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
+        }
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
         return super.run( cmd );
