@@ -134,6 +134,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             throw new IllegalArgumentException( "There are no ProcessedExpressionDataVectors for " + ee
                     + ", they must be created first" );
         }
+        this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 

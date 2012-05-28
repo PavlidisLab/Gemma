@@ -765,9 +765,22 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Log transform, if necessary
          */
-        if ( !onLogScale( quantitationType, namedMatrix ) ) {
+
+        ScaleType scaleType = findScale( quantitationType, namedMatrix );
+
+        if ( scaleType.equals( ScaleType.LOG2 ) ) {
+            log.info( "Data is already on a log scale" );
+        } else if ( scaleType.equals( ScaleType.LN ) ) {
+            log.info( "Converting from ln to log2" );
+            MatrixStats.convertToLog2( namedMatrix, Math.E );
+        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
+            log.info( "Converting from log10 to log2" );
+            MatrixStats.convertToLog2( namedMatrix, 10 );
+        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
             log.info( " **** LOG TRANSFORMING **** " );
             MatrixStats.logTransform( namedMatrix );
+        } else {
+            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
         }
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
@@ -1372,20 +1385,16 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return
      * @see ExpressionExperimentFilter for a related implementation.
      */
-    private boolean onLogScale( QuantitationType quantitationType,
+    private ScaleType findScale( QuantitationType quantitationType,
             DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
 
         if ( quantitationType.getScale() != null ) {
             if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
-                return true;
+                return ScaleType.LOG2;
             } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
-                // pretty unlikely -- if we see this, it might be a mistake.
-                throw new UnsupportedOperationException(
-                        "Sorry, data on log-10 scale is not supported yet. Please check that it really is on log-10 scale." );
+                return ScaleType.LOG10;
             } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
-                // pretty unlikely -- if we see this, it might be a mistake.
-                throw new UnsupportedOperationException(
-                        "Sorry, data on natural log scale is not supported yet. Please check that it really is on log-e scale." );
+                return ScaleType.LN;
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
                 throw new UnsupportedOperationException(
                         "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
@@ -1397,13 +1406,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 double v = namedMatrix.get( i, j );
                 if ( v > 20 ) {
                     log.debug( "Data has large values, doesn't look log transformed" );
-                    return false;
+                    return ScaleType.LINEAR;
                 }
             }
         }
 
-        log.debug( "Data look log tranformed, not sure about base" );
-        return true;
+        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base" );
 
     }
 
