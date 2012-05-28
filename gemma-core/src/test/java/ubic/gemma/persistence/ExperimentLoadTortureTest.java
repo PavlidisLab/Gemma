@@ -21,6 +21,8 @@ package ubic.gemma.persistence;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -63,6 +65,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
         final AtomicBoolean failed = new AtomicBoolean( false );
 
+        Collection<Thread> threads = new HashSet<Thread>();
         for ( int i = 0; i < numThreads; i++ ) {
             final int t = i;
             new Thread( new Runnable() {
@@ -92,6 +95,9 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
             Thread.sleep( 5000 );
             log.info( "Waiting ..." );
             if ( ++waits > maxWaits ) {
+                for ( Thread t : threads ) {
+                    if ( t.isAlive() ) t.interrupt();
+                }
                 fail( "Multithreaded loading failure: timed out." );
             }
         }
