@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.util.ConfigUtils;
 
@@ -57,7 +58,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
+public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeoService geoService;
@@ -79,6 +80,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     ExpressionExperimentLoadTask expressionExperimentLoadTask;
 
+    @Autowired
+    AclTestUtils aclTestUtils;
+
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
@@ -88,16 +92,32 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE1133", false, true, false, false );
-        ee = ( ExpressionExperiment ) results.iterator().next(); // fixme, need to delete both.
-        ee = eeService.thawLite( ee );
+        Collection<?> results = null;
 
-        /*
-         * Sometimes pubmed barfs on us..but this should be populated.
-         */
-        assertNotNull( ee.getPrimaryPublication() );
-        assertEquals( "6062-7", ee.getPrimaryPublication().getPages() );
+        try {
+            results = geoService.fetchAndLoad( "GSE1133", false, true, false, false );
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
+            return;
+        }
+
         assertEquals( 2, results.size() );
+
+        for ( Object o : results ) {
+            ExpressionExperiment e = ( ExpressionExperiment ) o;
+            e = eeService.thawLite( e );
+
+            aclTestUtils.checkEEAcls( e );
+
+            assertNotNull( e.getPrimaryPublication() );
+            assertEquals( "6062-7", e.getPrimaryPublication().getPages() );
+
+            try {
+                eeService.delete( e );
+            } catch ( Exception ex ) {
+                log.info( "Failed to delete EE after test" );
+            }
+        }
 
     }
 
@@ -107,7 +127,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
         Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
-        ee = eeService.thawLite( ee );
+        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
@@ -116,7 +136,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
         Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
-        ee = eeService.thawLite( ee );
+        aclTestUtils.checkEEAcls( ee );
     }
 
     /**
@@ -138,6 +158,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             return;
         }
         ee = eeService.thawLite( ee );
+        aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() );
 
@@ -167,7 +188,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
-        Collection qts = eeService.getQuantitationTypes( ee );
+        aclTestUtils.checkEEAcls( ee );
+        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() );
 
         twoChannelMissingValues.computeMissingValues( ee );
@@ -206,7 +228,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // Mouse430A_2.
         ee = eeService.findByShortName( "GSE18707" );
-
+        aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
 
         assertEquals( 1, qts.size() );
@@ -296,15 +318,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /**
      * @param matrix
      */
-    @SuppressWarnings({ "unchecked", "unused" })
-    private void printMatrix( DoubleMatrix matrix ) {
+    @SuppressWarnings("unused")
+    private void printMatrix( DoubleMatrix<Object, Object> matrix ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "probe" );
-        for ( Object columnName : ( Collection<Object> ) matrix.getColNames() ) {
+        for ( Object columnName : matrix.getColNames() ) {
             buf.append( "\t" + columnName );
         }
         buf.append( "\n" );
-        for ( Object rowName : ( Collection<Object> ) matrix.getRowNames() ) {
+        for ( Object rowName : matrix.getRowNames() ) {
             buf.append( rowName );
             double[] array = matrix.getRowByName( rowName );
             for ( int i = 0; i < array.length; i++ ) {
@@ -358,10 +380,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.fetchAndLoad( accession, false, false, false, false );
     }
-//
-//      @Test
-//   public void test() throws Exception {
-//      fetchASeries( "GSE12147" );
-//     }
+
+    // @Test
+    // public void test() throws Exception {
+    // fetchASeries( "GSE12147" );
+    // }
 
 }

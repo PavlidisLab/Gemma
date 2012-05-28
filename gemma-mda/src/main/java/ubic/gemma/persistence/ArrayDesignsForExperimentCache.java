@@ -14,8 +14,10 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -53,6 +55,11 @@ public class ArrayDesignsForExperimentCache {
         for ( CompositeSequence cs : sequences.keySet() ) {
             addToCache( cs );
         }
+        this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
+    }
+
+    public void add( ArrayDesign arrayDesign, Set<CompositeSequence> seqs ) {
+        addToDesignElementCache( seqs );
         this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
     }
 
@@ -113,7 +120,15 @@ public class ArrayDesignsForExperimentCache {
      * @param c cache
      */
     private void addToDesignElementCache( final ArrayDesign arrayDesign ) {
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
+        addToDesignElementCache( compositeSequences );
+    }
+
+    /**
+     * @param seqs
+     */
+    private void addToDesignElementCache( Collection<CompositeSequence> seqs ) {
+        for ( CompositeSequence cs : seqs ) {
             addToCache( cs );
         }
     }
@@ -128,4 +143,5 @@ public class ArrayDesignsForExperimentCache {
         assert StringUtils.isNotBlank( arrayDesign.getShortName() );
         return cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getShortName();
     }
+
 }

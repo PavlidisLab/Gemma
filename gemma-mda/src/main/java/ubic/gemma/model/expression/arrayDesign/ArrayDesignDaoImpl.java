@@ -462,6 +462,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                         + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad", "ad", arrayDesign );
         Map<CompositeSequence, BioSequence> result = new HashMap<CompositeSequence, BioSequence>();
 
+        if ( r.isEmpty() ) {
+            return result;
+        }
+
         for ( CompositeSequence cs : ( ( ArrayDesign ) r.get( 0 ) ).getCompositeSequences() ) {
             result.put( cs, cs.getBiologicalCharacteristic() );
         }
@@ -871,7 +875,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                         "select distinct a from ArrayDesignImpl a left join fetch a.subsumedArrayDesigns "
                                 + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
-                                + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adid",
+                                + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.localFiles where a.id=:adid",
                         "adid", arrayDesign.getId() );
 
         if ( res.size() == 0 ) {
@@ -898,8 +902,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                                 + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
                                 + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                                + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
-                        EntityUtils.getIds( arrayDesigns ) );
+                                + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adids)",
+                        "adids", EntityUtils.getIds( arrayDesigns ) );
 
     }
 

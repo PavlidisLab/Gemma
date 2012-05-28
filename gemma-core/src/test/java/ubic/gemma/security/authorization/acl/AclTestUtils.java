@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -24,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * Methods for checking ACLs
+ * Methods for checking ACLs.
  * 
  * @author paul
  * @version $Id$
@@ -38,6 +40,9 @@ public class AclTestUtils {
     private AclService aclService;
 
     @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     /**
@@ -47,7 +52,7 @@ public class AclTestUtils {
      */
     public void checkDeletedAcl( Object f ) {
         try {
-            Acl acl = aclService.readAclById( new ObjectIdentityImpl( f ) );
+            Acl acl = getAcl( f );
             fail( "Failed to  delete ACL for " + f + ", got " + acl );
         } catch ( NotFoundException okaye ) {
             // okay
@@ -155,6 +160,19 @@ public class AclTestUtils {
                 checkHasAclParent( bm, ee );
                 checkLacksAces( bm );
             }
+
+            ArrayDesign arrayDesign = ba.getArrayDesignUsed();
+            checkHasAcl( arrayDesign );
+            assertTrue( getParentAcl( arrayDesign ) == null );
+
+            // make sure the localfiles are associated with the array design, not the ee.
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+            for ( LocalFile lf : arrayDesign.getLocalFiles() ) {
+                checkHasAcl( lf );
+                checkLacksAces( lf );
+                checkHasAclParent( lf, arrayDesign );
+            }
+
         }
     }
 
@@ -168,27 +186,38 @@ public class AclTestUtils {
     }
 
     public void checkHasAces( Object f ) {
-        Acl a = aclService.readAclById( new ObjectIdentityImpl( f ) );
+        Acl a = getAcl( f );
         assertTrue( a + " doesn't have ACEs, it should", a.getEntries().size() > 0 );
     }
 
-    public void checkLacksAces( Object f ) {
+    private Acl getAcl( Object f ) {
         Acl a = aclService.readAclById( new ObjectIdentityImpl( f ) );
+        return a;
+    }
+
+    public void checkLacksAces( Object f ) {
+        Acl a = getAcl( f );
         assertTrue( f + " has ACEs, it shouldn't", a.getEntries().size() == 0 );
     }
 
     public void checkHasAclParent( Object f, Object parent ) {
-        Acl a = aclService.readAclById( new ObjectIdentityImpl( f ) );
-        assertNotNull( a.getParentAcl() );
+        Acl parentAcl = getParentAcl( f );
+        assertNotNull( parentAcl );
 
         if ( parent != null ) {
-            Acl b = aclService.readAclById( new ObjectIdentityImpl( parent ) );
-            assertEquals( b, a.getParentAcl() );
+            Acl b = getAcl( parent );
+            assertEquals( b, parentAcl );
         }
 
-        assertNotNull( a.getParentAcl() );
+        assertNotNull( parentAcl );
 
-        log.debug( "ACL has correct parent for " + f + " <----- " + a.getParentAcl().getObjectIdentity() );
+        log.debug( "ACL has correct parent for " + f + " <----- " + parentAcl.getObjectIdentity() );
+    }
+
+    private Acl getParentAcl( Object f ) {
+        Acl a = getAcl( f );
+        Acl parentAcl = a.getParentAcl();
+        return parentAcl;
     }
 
 }

@@ -164,10 +164,9 @@ public class ProbeMapperTest extends TestCase {
             log.warn( "Skipping test because hg could not be configured" );
             return;
         }
-        GoldenPathSequenceAnalysis db = new GoldenPathSequenceAnalysis( Taxon.Factory.newInstance( "Homo sapiens",
-                "human", "", "", "", null, true, true, null, null, null ) );
+       
         ProbeMapperConfig config = new ProbeMapperConfig();
-        Collection<BlatAssociation> results = db.findAssociations( "chr1", 145517370L, 145518088L,
+        Collection<BlatAssociation> results = humangp.findAssociations( "chr1", 145517370L, 145518088L,
                 "145517370,145518070", "18,18", null, ThreePrimeDistanceMethod.RIGHT, config );
 
         assertTrue( !results.isEmpty() );

@@ -721,9 +721,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             for ( FactorValue factorValue : factorValues ) {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 fillInFactorValueAssociations( factorValue );
+
+                // this cascades from updates to the factor, but because autoflush is off, we have to do this here to
+                // get ACLs populated.
+                factorValue = factorValueDao.create( factorValue );
             }
 
-            // FactorValue is cascaded.
             experimentalFactor.setFactorValues( factorValues );
 
             experimentalFactorDao.update( experimentalFactor );

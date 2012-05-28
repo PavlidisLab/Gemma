@@ -180,10 +180,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         confirmPlatformUniqueness( series, doSampleMatching && !splitByPlatform );
 
-        /*
-         * FIXME - we have to make sure the samples have an array even when there is no data.
-         */
         ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
+
         matchToExistingPlatforms( geoConverter, series, c );
 
         checkSamplesAreNew( series );
@@ -509,6 +507,11 @@ public class GeoServiceImpl extends AbstractGeoService {
     private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign, String columnWithGeoNames ) {
         Set<String> geoProbeNames = new HashSet<String>();
 
+        if ( rawGEOPlatform.getDesignElements().isEmpty() ) {
+            log.info( "Platform has no elements: " + rawGEOPlatform );
+            return null;
+        }
+
         // This should always be "ID", so this is just defensive programming.
         for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
             String geoProbeName = cs.getName();
@@ -676,6 +679,11 @@ public class GeoServiceImpl extends AbstractGeoService {
 
             String columnWithGeoNames = null;
             columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
+
+            if ( columnWithGeoNames == null ) {
+                // no problem: this means the design has no elements, so it is actually a placeholder (e.g., MPSS)
+                return;
+            }
 
             log.info( "Loading probes ..." );
             Map<CompositeSequence, BioSequence> m = arrayDesignService.getBioSequences( existing );

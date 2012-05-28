@@ -278,8 +278,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         // transaction (read-only). Wasteful, if this is an existing design.
         // arrayDesign = arrayDesignService.thaw( arrayDesign );
-
-        cache.add( arrayDesign );
+        Map<CompositeSequence, BioSequence> sequences = arrayDesignService.getBioSequences( arrayDesign );
+        cache.add( arrayDesign, sequences.keySet() );
 
         if ( timer.getTime() > 20000 ) {
             log.info( "Load/persist & thaw array design: " + timer.getTime() + "ms" );

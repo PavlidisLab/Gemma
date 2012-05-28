@@ -388,11 +388,11 @@ public class AclAdvice {
      */
     private Acl chooseParent( Object object, Acl previousParent ) {
         Acl parentAcl;
-        if ( previousParent == null && Securable.class.isAssignableFrom( object.getClass() )
-                && !SecuredChild.class.isAssignableFrom( object.getClass() ) ) {
+        if ( SecuredNotChild.class.isAssignableFrom( object.getClass() )
+                || ( previousParent == null && Securable.class.isAssignableFrom( object.getClass() ) && !SecuredChild.class
+                        .isAssignableFrom( object.getClass() ) ) ) {
 
             parentAcl = getAcl( ( Securable ) object );
-
         } else {
             /*
              * Keep the previous parent. This means we 'pass through' and the parent is basically going to be the
@@ -568,9 +568,8 @@ public class AclAdvice {
             Acl currentParentAcl = childAcl.getParentAcl();
 
             if ( currentParentAcl != null && !currentParentAcl.equals( parentAcl ) ) {
-                throw new IllegalStateException(
-                        "Cannot change parentAcl from  non-null ACL to another or null: Current parent:"
-                                + currentParentAcl + " != Proposed parent:" + parentAcl );
+                throw new IllegalStateException( "Cannot change parentAcl once it has ben set: Current parent: "
+                        + currentParentAcl + " != Proposed parent:" + parentAcl );
             }
 
             boolean changedParentAcl = false;

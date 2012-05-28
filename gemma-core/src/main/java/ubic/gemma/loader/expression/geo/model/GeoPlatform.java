@@ -206,6 +206,10 @@ public class GeoPlatform extends GeoData {
         return this.description;
     }
 
+    public Collection<String> getDesignElements() {
+        return designElements;
+    }
+
     /**
      * @return Returns the distribution.
      */
