@@ -226,10 +226,6 @@ public class SearchSettings {
         return searchGenes;
     }
 
-    public boolean isSearchGenesByGO() {
-        return useGO;
-    }
-
     public boolean isSearchProbes() {
         return this.searchProbes;
     }
@@ -262,10 +258,6 @@ public class SearchSettings {
         this.searchGenes = searchGenes;
     }
 
-    public void setSearchGenesByGO( boolean useGO ) {
-        this.useGO = useGO;
-    }
-
     public void setSearchProbes( boolean searchProbes ) {
         this.searchProbes = searchProbes;
     }
@@ -290,8 +282,8 @@ public class SearchSettings {
         this.searchBibrefs = false;
         this.searchBioSequences = false;
         this.searchGenes = false;
-        this.useGO = false;
-        this.setSearchUsingPhenotypes( false );
+        this.setUseGO( false );
+        this.setUsePhenotypes( false );
         this.searchExperiments = false;
         this.searchProbes = false;
         this.searchGeneSets = false;
@@ -338,20 +330,28 @@ public class SearchSettings {
         return termUri;
     }
 
-    public boolean isSearchUsingPhenotypes() {
-        return usePhenotypes;
-    }
-
-    public void setSearchUsingPhenotypes( boolean usePhenotypes ) {
-        this.usePhenotypes = usePhenotypes;
-    }
-
     public boolean isSearchForPhenotypes() {
         return searchForPhenotypes;
     }
 
     public void setSearchForPhenotypes( boolean searchForPhenotypes ) {
         this.searchForPhenotypes = searchForPhenotypes;
+    }
+
+    public boolean isUseGO() {
+        return useGO;
+    }
+
+    public void setUseGO( boolean useGO ) {
+        this.useGO = useGO;
+    }
+
+    public boolean isUsePhenotypes() {
+        return usePhenotypes;
+    }
+
+    public void setUsePhenotypes( boolean usePhenotypes ) {
+        this.usePhenotypes = usePhenotypes;
     }
 
 

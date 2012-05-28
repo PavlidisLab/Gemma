@@ -2249,13 +2249,13 @@ public class SearchServiceImpl implements SearchService {
             accreteResults( rawResults, bioSequences );
         }
 
-        if ( settings.isSearchGenesByGO() ) {
+        if ( settings.isUseGO() ) {
             Collection<SearchResult> ontologyGenes = dbHitsToSearchResult(
                     geneSearchService.getGOGroupGenes( searchString, settings.getTaxon() ), "From GO group" );
             accreteResults( rawResults, ontologyGenes );
         }
 
-        if ( settings.isSearchUsingPhenotypes() ) {
+        if ( settings.isUsePhenotypes() ) {
 
             Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
                     geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
