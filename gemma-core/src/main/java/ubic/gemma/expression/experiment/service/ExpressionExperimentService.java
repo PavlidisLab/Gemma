@@ -173,7 +173,7 @@ public interface ExpressionExperimentService {
      * @param name
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ExpressionExperiment findByName( java.lang.String name );
 
     /**
