@@ -37,7 +37,8 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      *      java.util.Collection)
      */
     @Override
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends ProbeCoexpressionAnalysis> create(
+            final java.util.Collection<? extends ProbeCoexpressionAnalysis> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.create - 'entities' can not be null" );
         }
@@ -46,11 +47,9 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create(
-
-                            ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
-                                    .next() );
+                        for ( java.util.Iterator<? extends ProbeCoexpressionAnalysis> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -79,24 +78,8 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    public java.util.Collection findByName( final java.lang.String name ) {
+    public java.util.Collection<ProbeCoexpressionAnalysis> findByName( final java.lang.String name ) {
         return this.findByName( "select a from AnalysisImpl as a where a.name like :name", name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(int,
-     *      java.lang.String, java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
     }
 
     @Override
@@ -123,11 +106,12 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll(int)
      */
 
+    @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends ProbeCoexpressionAnalysis> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class );
-        return results;
+        return ( Collection<? extends ProbeCoexpressionAnalysis> ) results;
     }
 
     /**
@@ -150,7 +134,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends ProbeCoexpressionAnalysis> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.remove - 'entities' can not be null" );
         }
@@ -175,7 +159,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends ProbeCoexpressionAnalysis> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.update - 'entities' can not be null" );
         }
@@ -184,9 +168,9 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
-                                    .next() );
+                        for ( java.util.Iterator<? extends ProbeCoexpressionAnalysis> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -204,6 +188,22 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
                     "ProbeCoexpressionAnalysis.update - 'probeCoexpressionAnalysis' can not be null" );
         }
         this.getHibernateTemplate().update( probeCoexpressionAnalysis );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(int,
+     *      java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    private java.util.Collection<ProbeCoexpressionAnalysis> findByName( final java.lang.String queryString,
+            final java.lang.String name ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( name );
+        argNames.add( "name" );
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        return ( Collection<ProbeCoexpressionAnalysis> ) results;
     }
 
 }

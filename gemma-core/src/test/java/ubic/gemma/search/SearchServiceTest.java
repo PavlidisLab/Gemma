@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils; 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +91,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assert is != null;
 
         ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
-        log.info( "Ready to test" );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 

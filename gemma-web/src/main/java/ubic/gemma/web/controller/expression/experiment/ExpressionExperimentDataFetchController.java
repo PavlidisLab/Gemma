@@ -53,7 +53,6 @@ import ubic.gemma.web.view.DownloadBinaryFileView;
 @Controller
 public class ExpressionExperimentDataFetchController extends AbstractTaskService {
 
-    // ==========================================================
     class CoExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
 
         public CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
@@ -74,7 +73,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                 throw new RuntimeException(
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
-            
+
             File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
 
             watch.stop();
@@ -260,11 +259,10 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                 // } else if ( files.size() > 1 ) {
                 // throw new UnsupportedOperationException(
                 // "Sorry, you can't get multiple analyses at once using this method." );
-            } else {
-                String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
-                ModelAndView mav = new ModelAndView( new RedirectView( url ) );
-                return new TaskResult( command, mav );
             }
+            String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
+            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+            return new TaskResult( command, mav );
 
         }
 

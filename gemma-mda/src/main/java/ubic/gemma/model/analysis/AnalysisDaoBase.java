@@ -18,14 +18,11 @@
  */
 package ubic.gemma.model.analysis;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -56,54 +53,14 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigations(java.util.Collection)
      */
     @Override
-    public Map findByInvestigations( final Collection investigators ) {
+    public Map<Investigation, Collection<T>> findByInvestigations( final Collection<Investigation> investigations ) {
         try {
-            return this.handleFindByInvestigations( investigators );
+            return this.handleFindByInvestigations( investigations );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigations(java.util.Collection investigators)' --> "
                             + th, th );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
-     */
-    @Override
-    public Collection<T> findByName( final int transform, final String name ) {
-        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public Collection<T> findByName( final int transform, final String queryString,
-            final String name ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return ( Collection<T> ) results;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
-     */
-    @Override
-    public Collection<T> findByName( String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
-     */
-    @Override
-    public Collection<T> findByName( final String queryString, final String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
     /**
@@ -137,26 +94,22 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
      */
-    protected abstract Collection<T> handleFindByInvestigation(
-            Investigation investigation ) throws Exception;
+    protected abstract Collection<T> handleFindByInvestigation( Investigation investigation ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
      */
-    protected abstract Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+    protected abstract Map<Investigation, Collection<T>> handleFindByInvestigations(
             Collection<Investigation> investigatons ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon )
-            throws Exception;
+    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<T> handleFindByTaxon( Taxon taxon )
-            throws Exception;
- 
+    protected abstract Collection<T> handleFindByTaxon( Taxon taxon ) throws Exception;
 
 }

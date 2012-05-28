@@ -381,7 +381,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         SQLQuery nativeQ = this.getSession().createSQLQuery( nativeQuery );
         nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
         nativeQ.setParameter( "taxon", taxon );
-        List list = nativeQ.list();
+        List<?> list = nativeQ.list();
         Set<Long> ids = new HashSet<Long>();
         for ( Object o : list ) {
             ids.add( ( ( BigInteger ) o ).longValue() );

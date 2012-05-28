@@ -181,7 +181,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         confirmPlatformUniqueness( series, doSampleMatching && !splitByPlatform );
 
         /*
-         * FIXME - don't do this if the platform has no data.
+         * FIXME - we have to make sure the samples have an array even when there is no data.
          */
         ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
         matchToExistingPlatforms( geoConverter, series, c );

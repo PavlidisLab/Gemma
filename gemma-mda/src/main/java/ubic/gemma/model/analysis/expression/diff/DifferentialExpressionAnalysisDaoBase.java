@@ -105,52 +105,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
-            final java.lang.String name ) {
-        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
-     *      java.lang.String, java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
-            final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.List<DifferentialExpressionAnalysis> results = this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final java.lang.String queryString,
-            final java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
     @Override

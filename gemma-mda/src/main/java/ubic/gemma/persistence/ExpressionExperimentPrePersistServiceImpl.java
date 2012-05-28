@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -82,6 +83,14 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          * First time through.
          */
         Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
+
+        if ( vectors.isEmpty() ) {
+            /*
+             * That's okay; some data sets don't come with data.
+             */
+            prepareWithoutData( ee, cache );
+        }
+
         for ( DesignElementDataVector dataVector : vectors ) {
             CompositeSequence probe = dataVector.getDesignElement();
 
@@ -145,6 +154,18 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         }
 
         return cache;
+    }
+
+    /**
+     * @param ee
+     * @param cache
+     */
+    private void prepareWithoutData( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ArrayDesign arrayDesign = ba.getArrayDesignUsed();
+            arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
+            ba.setArrayDesignUsed( arrayDesign );
+        }
     }
 
     /**

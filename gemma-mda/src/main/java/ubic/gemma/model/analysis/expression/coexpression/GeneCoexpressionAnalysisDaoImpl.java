@@ -34,7 +34,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -56,7 +55,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    public Collection<GeneCoexpressionAnalysis> /* analyses */findByName( String name ) {
+    public Collection<GeneCoexpressionAnalysis> findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from GeneCoexpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
@@ -104,10 +103,10 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigations(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+    protected Map<Investigation, Collection<GeneCoexpressionAnalysis>> handleFindByInvestigations(
+            Collection<Investigation> investigations ) throws Exception {
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> results = new HashMap<Investigation, Collection<GeneCoexpressionAnalysis>>();
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+        for ( Investigation ee : investigations ) {
             Collection<GeneCoexpressionAnalysis> ae = this.findByInvestigation( ee );
             results.put( ee, ae );
         }

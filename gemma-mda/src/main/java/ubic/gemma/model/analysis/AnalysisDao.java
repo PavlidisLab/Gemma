@@ -43,26 +43,7 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      */
     public java.util.Map<Investigation, Collection<T>> findByInvestigations(
             java.util.Collection<Investigation> investigations );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<T> findByName( int transform, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(int, java.lang.String name)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByName( int transform, String queryString, java.lang.String name );
+ 
 
     /**
      * <p>
@@ -71,14 +52,7 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      */
     public java.util.Collection<T> findByName( java.lang.String name );
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByName( String queryString, java.lang.String name );
+   
 
     /**
      * 
