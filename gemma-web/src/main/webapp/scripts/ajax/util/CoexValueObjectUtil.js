@@ -200,6 +200,22 @@ Gemma.CoexValueObjectUtil = {
         			}        			
         			
 	        	}
+	        	
+	        	if (genesMatchingSearch.indexOf(foundGene.officialSymbol)!==1){
+	        		
+        			if(value.test(foundGene.officialName)){
+        				genesMatchingSearch.push(foundGene.officialSymbol);
+        			}        			
+        			
+	        	}
+        	
+	        	if (genesMatchingSearch.indexOf(queryGene.officialSymbol)!==1){
+        		
+	        		if(value.test(queryGene.officialName)){
+	        			genesMatchingSearch.push(queryGene.officialSymbol);
+	        		}        			
+    			
+	        	}
 	            
 	        } // end for (<kglength)
     	

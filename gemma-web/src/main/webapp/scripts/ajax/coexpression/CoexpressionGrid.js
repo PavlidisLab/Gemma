@@ -290,11 +290,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 												emptyText : 'Find gene in results',
 												listeners : {
 													"keyup" : {
-														fn : this.searchForText.createDelegate(this),
+														fn : this.searchForText,
 														scope : this,
-														options : {
-															delay : 100
-														}
+														delay : 400														
 													}
 												}
 											},
@@ -661,6 +659,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			if (value.test(foundGene.officialSymbol)) {
 				return true;
 			}else if(value.test(queryGene.officialSymbol)){
+				return true;
+			}else if (value.test(foundGene.officialName)){
+				return true;
+			}else if (value.test(queryGene.officialName)){
 				return true;
 			}
 
