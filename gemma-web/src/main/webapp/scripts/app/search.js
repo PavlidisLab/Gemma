@@ -163,9 +163,9 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 				useDatabase : searchDatabase,
 				useIndices : searchIndices,
 				useCharacteristics : searchCharacteristics,
-				searchGenesByGO : searchGO,
+				useGO : searchGO,
 				searchBibrefs: searchPapers,
-				searchUsingPhenotypes : searchUsingPhenotypes,
+				usePhenotypes : searchUsingPhenotypes,
 				searchForPhenotypes: searchForPhenotypes
 			}];
 			return {

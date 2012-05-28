@@ -48,8 +48,6 @@ public class SearchSettings {
     private boolean searchBioSequences = true;
     private boolean searchArrays = true;
     private boolean searchBibrefs = false;
-    private boolean searchGenesByGO = false;
-    private boolean searchUsingPhenotypes = false;
     private boolean searchGeneSets = true;
     private boolean searchExperimentSets = true;
     private boolean searchForPhenotypes = true;
@@ -57,6 +55,8 @@ public class SearchSettings {
     private boolean useIndices = true;
     private boolean useDatabase = true;
     private boolean useCharacteristics = true;
+    private boolean useGO = false;
+    private boolean usePhenotypes = false;
 
     /**
      * If the search is 'specific', we can use that to refine the search criteria
@@ -227,7 +227,7 @@ public class SearchSettings {
     }
 
     public boolean isSearchGenesByGO() {
-        return searchGenesByGO;
+        return useGO;
     }
 
     public boolean isSearchProbes() {
@@ -262,8 +262,8 @@ public class SearchSettings {
         this.searchGenes = searchGenes;
     }
 
-    public void setSearchGenesByGO( boolean searchGenesByGO ) {
-        this.searchGenesByGO = searchGenesByGO;
+    public void setSearchGenesByGO( boolean useGO ) {
+        this.useGO = useGO;
     }
 
     public void setSearchProbes( boolean searchProbes ) {
@@ -290,13 +290,12 @@ public class SearchSettings {
         this.searchBibrefs = false;
         this.searchBioSequences = false;
         this.searchGenes = false;
-        this.searchGenesByGO = false;
+        this.useGO = false;
         this.setSearchUsingPhenotypes( false );
         this.searchExperiments = false;
         this.searchProbes = false;
         this.searchGeneSets = false;
         this.searchExperimentSets = false;
-        this.setSearchUsingPhenotypes( false );
     }
 
     public ArrayDesign getArrayDesign() {
@@ -340,11 +339,11 @@ public class SearchSettings {
     }
 
     public boolean isSearchUsingPhenotypes() {
-        return searchUsingPhenotypes;
+        return usePhenotypes;
     }
 
-    public void setSearchUsingPhenotypes( boolean searchUsingPhenotypes ) {
-        this.searchUsingPhenotypes = searchUsingPhenotypes;
+    public void setSearchUsingPhenotypes( boolean usePhenotypes ) {
+        this.usePhenotypes = usePhenotypes;
     }
 
     public boolean isSearchForPhenotypes() {
