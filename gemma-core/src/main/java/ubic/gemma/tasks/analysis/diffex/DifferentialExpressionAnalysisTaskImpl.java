@@ -71,6 +71,20 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     @TaskMethod
     public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command ) {
 
+        if ( command instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
+            DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) command )
+                    .getToRemove();
+
+            if ( toRemove == null ) {
+                throw new IllegalArgumentException( "Analysis to remove must not be null" );
+            }
+
+            log.info( "Removing analysis ..." );
+            this.differentialExpressionAnalysisService.delete( toRemove );
+
+            return new TaskResult( command, true );
+        }
+
         Collection<DifferentialExpressionAnalysis> results = doAnalysis( command );
 
         Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<DifferentialExpressionAnalysis>();

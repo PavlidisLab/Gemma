@@ -33,9 +33,12 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.util.ConfigUtils;
@@ -99,6 +102,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
      * 
@@ -139,6 +145,26 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     }
 
     /**
+     * AJAX entry point to remove an analysis given by the ID
+     * 
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public String remove( Long eeId, Long id ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+        }
+
+        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
+
+        DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
+                toRemove );
+        return super.run( cmd );
+    }
+
+    /**
      * AJAX entry point when running completely automatically.
      * 
      * @param cmd
@@ -146,7 +172,6 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {

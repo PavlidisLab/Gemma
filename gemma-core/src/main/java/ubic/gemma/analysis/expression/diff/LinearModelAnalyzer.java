@@ -383,89 +383,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * Remove factors which are no longer usable, based on the subset.
-     * 
-     * @param expressionDataDoubleMatrix
-     * @param eesubSet
-     * @param factors
-     * @return
-     */
-    private Collection<ExperimentalFactor> fixFactorsForSubset( ExpressionDataDoubleMatrix dmatrix,
-            ExpressionExperimentSubSet eesubSet, List<ExperimentalFactor> factors ) {
-
-        List<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
-
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
-        ExperimentalFactor interceptFactor = determineInterceptFactor( factors, quantitationType );
-
-        /*
-         * Remove any constant factors, unless they are that intercept.
-         */
-        for ( ExperimentalFactor f : factors ) {
-
-            if ( f.getType().equals( FactorType.CONTINUOUS ) ) {
-                result.add( f );
-            } else if ( interceptFactor != null && interceptFactor.equals( f ) ) {
-                result.add( f );
-            } else {
-
-                Collection<FactorValue> levels = new HashSet<FactorValue>();
-                for ( BioAssay ba : eesubSet.getBioAssays() ) {
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        for ( FactorValue fv : bm.getFactorValues() ) {
-                            if ( fv.getExperimentalFactor().equals( f ) ) {
-                                levels.add( fv );
-                            }
-                        }
-                    }
-                }
-
-                if ( levels.size() > 1 ) {
-                    result.add( f );
-                }
-
-            }
-
-        }
-
-        return result;
-
-    }
-
-    /**
-     * Remove all configurations that have to do with factors that aren't in the selected factors
-     * 
-     * @param factors the factors that will be incluced
-     * @param config
-     * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
-     *         involve the given factors.
-     */
-    private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
-            DifferentialExpressionAnalysisConfig config ) {
-
-        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
-
-        newConfig.setBaseLineFactorValues( null );
-
-        if ( !config.getInteractionsToInclude().isEmpty() ) {
-            Collection<Collection<ExperimentalFactor>> newInteractionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
-            for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
-                if ( factors.containsAll( interactors ) ) {
-                    newInteractionsToInclude.add( interactors );
-                }
-            }
-
-            newConfig.setInteractionsToInclude( newInteractionsToInclude );
-        }
-
-        newConfig.setSubsetFactor( null );
-        newConfig.setFactorsToInclude( factors );
-
-        return newConfig;
-
-    }
-
-    /**
      * @param experimentalFactor
      * @param quantitationType
      * @return boolean true if we need the intercept.
@@ -607,6 +524,30 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         modelFormula = " ~ " + factTerm;
         return modelFormula;
+    }
+
+    /**
+     * Log transform, if necessary
+     */
+    private void checkAndFixLogScale( QuantitationType quantitationType,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+
+        ScaleType scaleType = findScale( quantitationType, namedMatrix );
+
+        if ( scaleType.equals( ScaleType.LOG2 ) ) {
+            log.info( "Data is already on a log2 scale" );
+        } else if ( scaleType.equals( ScaleType.LN ) ) {
+            log.info( "Converting from ln to log2" );
+            MatrixStats.convertToLog2( namedMatrix, Math.E );
+        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
+            log.info( "Converting from log10 to log2" );
+            MatrixStats.convertToLog2( namedMatrix, 10 );
+        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
+            log.info( " **** LOG TRANSFORMING **** " );
+            MatrixStats.logTransform( namedMatrix );
+        } else {
+            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
+        }
     }
 
     /**
@@ -762,26 +703,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
-        /*
-         * Log transform, if necessary
-         */
-
-        ScaleType scaleType = findScale( quantitationType, namedMatrix );
-
-        if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            log.info( "Data is already on a log scale" );
-        } else if ( scaleType.equals( ScaleType.LN ) ) {
-            log.info( "Converting from ln to log2" );
-            MatrixStats.convertToLog2( namedMatrix, Math.E );
-        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            log.info( "Converting from log10 to log2" );
-            MatrixStats.convertToLog2( namedMatrix, 10 );
-        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( namedMatrix );
-        } else {
-            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
-        }
+        checkAndFixLogScale( quantitationType, namedMatrix );
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
 
@@ -966,6 +888,125 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 baselineConditions, interceptFactor, interactionFactorLists, oneSampleTtest, resultLists,
                 subsetFactorValue );
         return expressionAnalysis;
+    }
+
+    /**
+     * @param quantitationType
+     * @param namedMatrix
+     * @return
+     * @see ExpressionExperimentFilter for a related implementation.
+     */
+    private ScaleType findScale( QuantitationType quantitationType,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+
+        if ( quantitationType.getScale() != null ) {
+            if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
+                return ScaleType.LOG2;
+            } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
+                return ScaleType.LOG10;
+            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
+                return ScaleType.LN;
+            } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
+                throw new UnsupportedOperationException(
+                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
+            }
+        }
+
+        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
+            for ( int j = 0; j < namedMatrix.columns(); j++ ) {
+                double v = namedMatrix.get( i, j );
+                if ( v > 20 ) {
+                    log.debug( "Data has large values, doesn't look log transformed" );
+                    return ScaleType.LINEAR;
+                }
+            }
+        }
+
+        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base" );
+
+    }
+
+    /**
+     * Remove all configurations that have to do with factors that aren't in the selected factors
+     * 
+     * @param factors the factors that will be incluced
+     * @param config
+     * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
+     *         involve the given factors.
+     */
+    private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
+
+        newConfig.setBaseLineFactorValues( null );
+
+        if ( !config.getInteractionsToInclude().isEmpty() ) {
+            Collection<Collection<ExperimentalFactor>> newInteractionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
+            for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
+                if ( factors.containsAll( interactors ) ) {
+                    newInteractionsToInclude.add( interactors );
+                }
+            }
+
+            newConfig.setInteractionsToInclude( newInteractionsToInclude );
+        }
+
+        newConfig.setSubsetFactor( null );
+        newConfig.setFactorsToInclude( factors );
+
+        return newConfig;
+
+    }
+
+    /**
+     * Remove factors which are no longer usable, based on the subset.
+     * 
+     * @param expressionDataDoubleMatrix
+     * @param eesubSet
+     * @param factors
+     * @return
+     */
+    private Collection<ExperimentalFactor> fixFactorsForSubset( ExpressionDataDoubleMatrix dmatrix,
+            ExpressionExperimentSubSet eesubSet, List<ExperimentalFactor> factors ) {
+
+        List<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
+
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        ExperimentalFactor interceptFactor = determineInterceptFactor( factors, quantitationType );
+
+        /*
+         * Remove any constant factors, unless they are that intercept.
+         */
+        for ( ExperimentalFactor f : factors ) {
+
+            if ( f.getType().equals( FactorType.CONTINUOUS ) ) {
+                result.add( f );
+            } else if ( interceptFactor != null && interceptFactor.equals( f ) ) {
+                result.add( f );
+            } else {
+
+                Collection<FactorValue> levels = new HashSet<FactorValue>();
+                for ( BioAssay ba : eesubSet.getBioAssays() ) {
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        for ( FactorValue fv : bm.getFactorValues() ) {
+                            if ( fv.getExperimentalFactor().equals( f ) ) {
+                                levels.add( fv );
+                            }
+                        }
+                    }
+                }
+
+                if ( levels.size() > 1 ) {
+                    result.add( f );
+                }
+
+            }
+
+        }
+
+        return result;
+
     }
 
     /**
@@ -1376,42 +1417,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         return subMatrices;
-
-    }
-
-    /**
-     * @param quantitationType
-     * @param namedMatrix
-     * @return
-     * @see ExpressionExperimentFilter for a related implementation.
-     */
-    private ScaleType findScale( QuantitationType quantitationType,
-            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
-
-        if ( quantitationType.getScale() != null ) {
-            if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
-                return ScaleType.LOG2;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
-                return ScaleType.LOG10;
-            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
-                return ScaleType.LN;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                throw new UnsupportedOperationException(
-                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
-            }
-        }
-
-        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
-            for ( int j = 0; j < namedMatrix.columns(); j++ ) {
-                double v = namedMatrix.get( i, j );
-                if ( v > 20 ) {
-                    log.debug( "Data has large values, doesn't look log transformed" );
-                    return ScaleType.LINEAR;
-                }
-            }
-        }
-
-        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base" );
 
     }
 
