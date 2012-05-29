@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,6 +131,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
         geneService.update( gene );
         setup = true;
     }
+    @After
+    public void tearDown() throws Exception {
+        geneService.remove( gene );
+        eeService.delete( ee );
+    }
 
     /**
      * Tests that general search terms are resolved to their proper ontology terms and objects tagged with those terms
@@ -141,7 +147,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         SearchSettings settings = new SearchSettings();
         // needed otherwise search can return > max results & query ee gets trimmed
         settings.noSearches();
-        settings.setMaxResults( 20000 );
+        settings.setMaxResults( 999999999 );
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
         settings.setUseCharacteristics( true );
