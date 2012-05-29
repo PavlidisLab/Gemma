@@ -106,6 +106,8 @@ public class EvidenceValueObject {
     private EvidenceSecurityValueObject evidenceSecurityValueObject = null;
     // linked to what gene
     private Integer geneNCBI = null;
+    
+    private String taxonCommonName = "";
 
     public EvidenceValueObject() {
         super();
@@ -119,6 +121,7 @@ public class EvidenceValueObject {
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
+        this.taxonCommonName = phenotypeAssociation.getGene().getTaxon().getCommonName();
 
         if ( phenotypeAssociation.getEvidenceSource() != null ) {
             this.evidenceSource = new EvidenceSourceValueObject( phenotypeAssociation.getEvidenceSource() );
@@ -250,6 +253,14 @@ public class EvidenceValueObject {
 
     public void setGeneNCBI( Integer geneNCBI ) {
         this.geneNCBI = geneNCBI;
+    }
+
+    public String getTaxonCommonName() {
+        return this.taxonCommonName;
+    }
+
+    public void setTaxonCommonName( String taxonCommonName ) {
+        this.taxonCommonName = taxonCommonName;
     }
 
     @Override
