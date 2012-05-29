@@ -9,6 +9,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * @config experimentDetails
  *            {ExpressionExperimentValueObject} the expression experiment for
  *            which to display the analyses
+ * @config editable {boolean} whether the user should be shown icons to delete analyses
  * @class Gemma.DifferentialExpressionAnalysesSummaryTree
  * @extends Ext.tree.TreePanel
  */
@@ -46,34 +47,19 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					initComponent : function() {
 						
 						this.ee = this.experimentDetails;
-
-				        this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+						
+						// always editable by admin user
+						if(this.editable == undefined && Ext.get("hasAdmin").getValue() == 'true'){
+							this.editable = true;
+						}
 				        
 						Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent
 								.call(this);
 						this.build();
-						// var sorter = new
-						// Ext.tree.TreeSorter(this,{folderSort:false});
-						// if this parent node has an interaction child, that
-						// child should go
-						// last among its siblings
-						new Ext.tree.TreeSorter(
-								this,
-								{
+						new Ext.tree.TreeSorter(this, {
+									folderSort: false,
 									dir : 'ASC',
-									sortType : function(node) {
-										if (node
-												&& node.attributes
-												&& node.attributes.numberOfFactors
-												&& node.attributes.text) {
-											return parseInt(
-													node.attributes.numberOfFactors,
-													10)
-													+ node.attributes.text;
-										}
-										return (node.attributes) ? node.attributes.text
-												: '';
-									}
+									property: 'text'
 								});
 					},
 					build : function() {
@@ -251,7 +237,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							} 
 							
 							var deleteText = '';
-							if(this.isAdmin){
+							if(this.editable){
 								deleteText = this.getDeleteLink( analysis );
 							}
 
@@ -261,21 +247,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							// if this parent node has an interaction child,
 							// that child should
 							// go last among its siblings
-							var sorter = new Ext.tree.TreeSorter(
-									this,
-									{
+							var sorter = new Ext.tree.TreeSorter(this, {
 										dir : 'ASC',
-										sortType : function(node) {
-											if (node.attributes) {
-												return parseInt(
-														node.attributes.numberOfFactors,
-														10);
-											}
-											return 0;
-										}
+										property: 'text'
 									});
 							sorter.doSort(parentNode);
-
 						}
 					},
 
@@ -399,8 +375,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							this.fireEvent('analysisDeleted');
 						}, this);
 						return String.format(
-										"<span style='cursor:pointer' ext:qtip='Download all differential expression "+
-										"data for this analysis in a tab-delimited format' "+
+										"<span style='cursor:pointer' ext:qtip='Delete this analysis' "+
 										"onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'> &nbsp; "+
 										"<img src='/Gemma/images/icons/cross.png'/> &nbsp;  </span>",
 										this.ee.id, analysis.id);						

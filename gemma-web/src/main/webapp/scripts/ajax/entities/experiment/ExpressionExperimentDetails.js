@@ -778,6 +778,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     fieldLabel: 'Differential Expr. Analyses',
                     items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
                     	experimentDetails: e,
+                    	editable: this.editable,
                     	listeners:{
                     		'analysisDeleted': function(){
                     			this.fireEvent('experimentDetailsReloadRequired');

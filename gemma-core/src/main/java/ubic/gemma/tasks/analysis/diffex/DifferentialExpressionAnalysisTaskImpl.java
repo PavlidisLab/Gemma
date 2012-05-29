@@ -152,7 +152,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             config.addInteractionToInclude( factors );
             config.setAnalysisType( AnalysisType.TWA );
         } else {
-            config.setInteractionsToInclude( null );
+            config.setInteractionsToInclude( new HashSet<Collection<ExperimentalFactor>>() );
         }
 
         results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );

@@ -116,6 +116,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             admin: this.admin,
             listeners:{
             	'experimentDetailsReloadRequired': function(){
+            		var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Refreshing..."});
+            		myMask.show();
             		window.location.reload(false); // could do something fancier like reloading just the component
             	},
             	scope:this
@@ -239,6 +241,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 editable: isEditable,
                 listeners:{
                 	'reloadNeeded': function(){
+                		var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Refreshing..."});
+                		myMask.show();
                 		window.location.reload(false); 
                 	}
                 }
