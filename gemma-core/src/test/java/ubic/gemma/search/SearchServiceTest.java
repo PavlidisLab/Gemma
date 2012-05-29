@@ -147,7 +147,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         SearchSettings settings = new SearchSettings();
         // needed otherwise search can return > max results & query ee gets trimmed
         settings.noSearches();
-        settings.setMaxResults( 999999999 );
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
         settings.setUseCharacteristics( true );
