@@ -1,36 +1,61 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2012 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.association.phenotype;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
-import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
 
+/**
+ * @author nicolas
+ * @version $Id$
+ */
 public class PhenotypeAssoOntologyHelper {
 
+    private List<AbstractOntologyService> ontologies = new ArrayList<AbstractOntologyService>();
     private OntologyService ontologyService = null;
-    private DiseaseOntologyService diseaseOntologyService = null;
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
 
     /** used to set the Ontology terms */
     public PhenotypeAssoOntologyHelper( OntologyService ontologyService ) throws Exception {
         this.ontologyService = ontologyService;
-        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        AbstractOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        if ( diseaseOntologyService != null ) {
+            ontologies.add( diseaseOntologyService );
+        }
+        AbstractOntologyService mammalianPhenotypeOntologyService = ontologyService
+                .getMammalianPhenotypeOntologyService();
+        if ( mammalianPhenotypeOntologyService != null ) {
+            ontologies.add( mammalianPhenotypeOntologyService );
+        }
+        AbstractOntologyService humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        if ( humanPhenotypeOntologyService != null ) {
+            ontologies.add( humanPhenotypeOntologyService );
+        }
     }
 
     /** search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO */
@@ -38,26 +63,13 @@ public class PhenotypeAssoOntologyHelper {
 
         HashMap<String, OntologyTerm> uniqueValueTerm = new HashMap<String, OntologyTerm>();
 
-        Collection<OntologyTerm> ontologyTermDisease = this.diseaseOntologyService.findTerm( searchQuery );
+        for ( AbstractOntologyService ontology : ontologies ) {
+            Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
 
-        for ( OntologyTerm ontologyTerm : ontologyTermDisease ) {
-            uniqueValueTerm.put( ontologyTerm.getLabel().toLowerCase(), ontologyTerm );
-        }
-
-        Collection<OntologyTerm> ontologyTermMammalianPhenotype = this.mammalianPhenotypeOntologyService
-                .findTerm( searchQuery );
-
-        for ( OntologyTerm ontologyTerm : ontologyTermMammalianPhenotype ) {
-            if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
-                uniqueValueTerm.put( ontologyTerm.getLabel(), ontologyTerm );
-            }
-        }
-
-        Collection<OntologyTerm> ontologyTermHumanPhenotype = this.humanPhenotypeOntologyService.findTerm( searchQuery );
-
-        for ( OntologyTerm ontologyTerm : ontologyTermHumanPhenotype ) {
-            if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
-                uniqueValueTerm.put( ontologyTerm.getLabel(), ontologyTerm );
+            for ( OntologyTerm ontologyTerm : hits ) {
+                if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
+                    uniqueValueTerm.put( ontologyTerm.getLabel().toLowerCase(), ontologyTerm );
+                }
             }
         }
 
@@ -68,15 +80,9 @@ public class PhenotypeAssoOntologyHelper {
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) {
 
         Collection<OntologyTerm> ontologyFound = new TreeSet<OntologyTerm>();
-
-        // search disease ontology
-        ontologyFound.addAll( this.diseaseOntologyService.findTerm( searchQuery ) );
-
-        // search mp ontology
-        ontologyFound.addAll( this.mammalianPhenotypeOntologyService.findTerm( searchQuery ) );
-
-        // search hp ontology
-        ontologyFound.addAll( this.humanPhenotypeOntologyService.findTerm( searchQuery ) );
+        for ( AbstractOntologyService ontology : ontologies ) {
+            ontologyFound.addAll( ontology.findTerm( searchQuery ) );
+        }
 
         return ontologyFound;
     }
@@ -101,21 +107,16 @@ public class PhenotypeAssoOntologyHelper {
     /** For a valueUri return the OntologyTerm found */
     public OntologyTerm findOntologyTermByUri( String valueUri ) {
 
-        if(valueUri.isEmpty()){
-            throw new IllegalArgumentException("URI to load was blank.");
+        if ( valueUri.isEmpty() ) {
+            throw new IllegalArgumentException( "URI to load was blank." );
         }
-        
-        OntologyTerm ontologyTerm = this.diseaseOntologyService.getTerm( valueUri );
 
-        if ( ontologyTerm == null ) {
-            ontologyTerm = this.mammalianPhenotypeOntologyService.getTerm( valueUri );
+        OntologyTerm ontologyTerm = null;
+        for ( AbstractOntologyService ontology : ontologies ) {
+            ontologyTerm = ontology.getTerm( valueUri );
+            if ( ontologyTerm != null ) return ontologyTerm;
         }
-        if ( ontologyTerm == null ) {
-            ontologyTerm = this.humanPhenotypeOntologyService.getTerm( valueUri );
-        }
-        if ( ontologyTerm == null ) {
-            throw new EntityNotFoundException( "Could not locate ontology term with uri: " + valueUri );
-        }
+
         return ontologyTerm;
     }
 
