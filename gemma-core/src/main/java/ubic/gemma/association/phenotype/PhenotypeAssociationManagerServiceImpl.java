@@ -299,32 +299,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
-            convertToFlatTree( simpleTreeValueObjects, t );
-        }
-
-        return simpleTreeValueObjects;
-    }
-
-    /**
-     * TODO to be erased, we will use loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) This method loads all
-     * phenotypes in the database and counts their occurence using the database It builts the tree using parents of
-     * terms, and will return 3 trees representing Disease, HP and MP
-     * 
-     * @return A collection of the phenotypes with the gene occurence
-     */
-    @Override
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree() {
-
-        EvidenceFilter evidenceFilter = new EvidenceFilter( null, false );
-
-        Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
-
-        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
-                SecurityServiceImpl.isUserAdmin(), evidenceFilter ) );
-
-        // undo the tree in a simple structure
-        for ( TreeCharacteristicValueObject t : ontologyTrees ) {
-            convertToFlatTree( simpleTreeValueObjects, t );
+            convertToFlatTree( simpleTreeValueObjects, t, null );
         }
 
         return simpleTreeValueObjects;
@@ -991,14 +966,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 if ( alreadyOnTree != null ) {
                     alreadyOnTree.getChildren().add( tc );
-                    tc.set_parent( alreadyOnTree.getUrlId() );
                 } else {
                     TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( onTerm.getLabel(),
                             onTerm.getUri() );
 
                     // add children to the parent
                     tree.getChildren().add( tc );
-                    tc.set_parent( tree.getUrlId() );
 
                     // put node in the hashmap for fast acces
                     phenotypeFoundInTree.put( tree.getValueUri(), tree );
@@ -1445,15 +1418,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /** take the trees made and put them in the exact way the client wants them */
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
-            TreeCharacteristicValueObject treeCharacteristicValueObject ) {
+            TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
         if ( treeCharacteristicValueObject != null ) {
-            SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject );
+            SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject,
+                    parent );
 
             simpleTreeValueObjects.add( simpleTreeValueObject );
 
             for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-                convertToFlatTree( simpleTreeValueObjects, tree );
+                convertToFlatTree( simpleTreeValueObjects, tree, treeCharacteristicValueObject.getUrlId() );
             }
         }
     }

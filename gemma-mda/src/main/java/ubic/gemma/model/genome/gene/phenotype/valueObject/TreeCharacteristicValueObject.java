@@ -36,7 +36,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     private String rootOfTree = "";
 
     private String _id = "";
-    private String _parent = null;
     private boolean _is_leaf = false;
 
     public TreeCharacteristicValueObject( String value, String valueUri, TreeSet<TreeCharacteristicValueObject> children ) {
@@ -81,14 +80,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public void set_id( String _id ) {
         this._id = _id;
-    }
-
-    public String get_parent() {
-        return this._parent;
-    }
-
-    public void set_parent( String _parent ) {
-        this._parent = _parent;
     }
 
     public boolean is_is_leaf() {
@@ -139,7 +130,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
 
         for ( TreeCharacteristicValueObject tc : this.children ) {
-            tc.set_parent( this.getUrlId() );
             tc.removeUnusedPhenotypes( rootValueUri );
         }
     }

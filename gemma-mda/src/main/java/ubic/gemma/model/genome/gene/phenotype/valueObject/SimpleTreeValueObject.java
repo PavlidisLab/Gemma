@@ -21,17 +21,17 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     private String _parent = null;
     private boolean _is_leaf = false;
     private String value = "";
-    protected String valueUri = "";
-    protected long publicGeneCount = 0L;
-    protected long privateGeneCount = 0L;
+    private String valueUri = "";
+    private long publicGeneCount = 0L;
+    private long privateGeneCount = 0L;
     private String urlId = "";
     private boolean dbPhenotype = false;
 
-    public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject ) {
+    public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
         this.urlId = treeCharacteristicValueObject.getUrlId();
         this._id = treeCharacteristicValueObject.get_id();
-        this._parent = treeCharacteristicValueObject.get_parent();
+        this._parent = parent;
         this._is_leaf = treeCharacteristicValueObject.is_is_leaf();
         this.value = treeCharacteristicValueObject.getValue();
         this.valueUri = treeCharacteristicValueObject.getValueUri();
@@ -116,6 +116,7 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ( ( this._parent == null ) ? 0 : this._parent.hashCode() );
         result = prime * result + ( ( this.value == null ) ? 0 : this.value.hashCode() );
         result = prime * result + ( ( this.valueUri == null ) ? 0 : this.valueUri.hashCode() );
         return result;
@@ -127,6 +128,9 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         SimpleTreeValueObject other = ( SimpleTreeValueObject ) obj;
+        if ( this._parent == null ) {
+            if ( other._parent != null ) return false;
+        } else if ( !this._parent.equals( other._parent ) ) return false;
         if ( this.value == null ) {
             if ( other.value != null ) return false;
         } else if ( !this.value.equals( other.value ) ) return false;
@@ -139,10 +143,13 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     @Override
     public int compareTo( SimpleTreeValueObject o ) {
 
+        if ( !this.valueUri.equalsIgnoreCase( o.valueUri ) ) {
+            return this.valueUri.compareToIgnoreCase( o.valueUri );
+        }
         if ( !this.value.equalsIgnoreCase( o.value ) ) {
             return this.value.compareToIgnoreCase( o.value );
         }
-        return this.valueUri.compareToIgnoreCase( o.valueUri );
+        return this._parent.compareToIgnoreCase( o._parent );
     }
 
 }

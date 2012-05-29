@@ -182,14 +182,6 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
-     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
-     * using parents of terms, and will return 3 trees representing Disease, HP and MP
-     * 
-     * @return A collection of the phenotypes with the gene occurence
-     */
-    public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree();
-
-    /**
      * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
      * including ontology children terms
      * 
