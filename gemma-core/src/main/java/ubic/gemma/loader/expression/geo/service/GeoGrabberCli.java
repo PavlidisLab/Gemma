@@ -34,9 +34,16 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class GeoGrabberCli extends AbstractSpringAwareCLI {
 
+    public static void main( String[] args ) {
+        GeoGrabberCli d = new GeoGrabberCli();
+        Exception e = d.doWork( args );
+        if ( e != null ) {
+            log.error( e, e );
+        }
+    }
+
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -44,8 +51,8 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
         super.processCommandLine( "foo", args );
 
         Set<String> seen = new HashSet<String>();
-        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        GeoBrowserService gbs = this.getBean( GeoBrowserService.class );
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
         try {
             int start = 0;
@@ -97,14 +104,6 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
             return e;
         }
         return null;
-    }
-
-    public static void main( String[] args ) {
-        GeoGrabberCli d = new GeoGrabberCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            log.error( e, e );
-        }
     }
 
 }

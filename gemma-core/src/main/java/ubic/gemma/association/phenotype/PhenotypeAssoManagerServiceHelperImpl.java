@@ -458,8 +458,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
 
         for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
-
-            myPhenotypes.add( this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() ) );
+            Characteristic c = this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() );
+            if ( c != null ) myPhenotypes.add( c );
         }
 
         phe.getPhenotypes().addAll( myPhenotypes );

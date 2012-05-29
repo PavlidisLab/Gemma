@@ -1193,7 +1193,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             // new one
             else {
-                finalPhenotypes.add( this.ontologyHelper.valueUri2Characteristic( updatedPhenotype.getValueUri() ) );
+                Characteristic c = this.ontologyHelper.valueUri2Characteristic( updatedPhenotype.getValueUri() );
+                if ( c != null ) finalPhenotypes.add( c );
             }
         }
 

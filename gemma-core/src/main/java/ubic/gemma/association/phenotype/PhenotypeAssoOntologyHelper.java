@@ -82,7 +82,9 @@ public class PhenotypeAssoOntologyHelper {
 
         Collection<OntologyTerm> ontologyFound = new TreeSet<OntologyTerm>();
         for ( AbstractOntologyService ontology : this.ontologies ) {
-            ontologyFound.addAll( ontology.findTerm( searchQuery ) );
+            assert ontology != null;
+            Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
+            if ( found != null && !found.isEmpty() ) ontologyFound.addAll( found );
         }
 
         return ontologyFound;
@@ -95,10 +97,12 @@ public class PhenotypeAssoOntologyHelper {
 
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
             // add the parent term found
+            assert ontologyTerm.getUri() != null;
             phenotypesFoundAndChildren.add( ontologyTerm.getUri() );
 
             // add all children of the term
             for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
+                assert ontologyTermChildren.getUri() != null;
                 phenotypesFoundAndChildren.add( ontologyTermChildren.getUri() );
             }
         }
@@ -125,6 +129,8 @@ public class PhenotypeAssoOntologyHelper {
     public Characteristic valueUri2Characteristic( String valueUri ) {
 
         OntologyTerm o = findOntologyTermByUri( valueUri );
+
+        if ( o == null ) return null;
 
         VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
