@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -534,14 +535,12 @@ public class GeoValues implements Serializable {
                 if ( skippableQuantitationTypes.contains( qType ) ) continue;
                 Collection<String> qtNames = quantitationTypeIndexMap.get( platform ).get( qType );
 
-                // if ( qtNames.size() > 1 ) {
-                // log.warn( "There are " + qtNames.size() + " names for this data column" );
-                // }
-
                 Map<String, List<Object>> q = d.get( qType );
                 boolean warned = false;
-                for ( String designElement : q.keySet() ) {
-                    List<Object> vals = q.get( designElement );
+                for ( Entry<String, List<Object>> e : q.entrySet() ) {
+                    String designElement = e.getKey();
+                    List<Object> vals = e.getValue();
+
                     if ( vals.size() < numSamples ) {
                         int paddingAmount = numSamples - vals.size();
                         if ( !warned )
@@ -558,22 +557,6 @@ public class GeoValues implements Serializable {
                                 + " designelement=" + designElement + " qType=" + qType + " expected " + numSamples
                                 + " values, got " + vals.size() + "; name(s) for qType are "
                                 + StringUtils.join( qtNames, "," ) );
-                        // pad all the other vectors that are too short.
-                        // int paddingAmount = vals.size() - numSamples;
-                        // if ( !warned )
-                        // log.warn( "Vector for designelement=" + designElement + " on platform=" + platform
-                        // + " is long; Padding other vectors with " + paddingAmount
-                        // + " values for quantitation type " + qType + " (" + StringUtils.join( qtNames, "/" )
-                        // + ")" );
-                        // warned = true;
-                        // for ( String de : q.keySet() ) {
-                        // List<Object> v = q.get( de );
-                        // if ( v.size() < vals.size() ) {
-                        // for ( int i = 0; i < paddingAmount; i++ ) {
-                        // vals.add( null );
-                        // }
-                        // }
-                        // }
                     }
                 }
                 if ( log.isDebugEnabled() )

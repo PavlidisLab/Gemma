@@ -995,7 +995,7 @@ public class GeoFamilyParser implements Parser<Object> {
             // this
             // // from the platform
             // // directly.
-        } else if ( startsWithIgnoreCase( line, "!dataset_platform =" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform" ) ) {
             if ( !results.getPlatformMap().containsKey( value ) ) {
                 results.getPlatformMap().put( value, new GeoPlatform() );
                 results.getPlatformMap().get( value ).setGeoAccession( value );
@@ -2014,7 +2014,8 @@ public class GeoFamilyParser implements Parser<Object> {
      * @return
      */
     private boolean startsWithIgnoreCase( String string, String pattern ) {
-        return string.toUpperCase().startsWith( pattern.toUpperCase() );
+        // it will never be the same string.
+        return string.regionMatches( true, 0, pattern, 0, pattern.length() );
     }
 
     /**
