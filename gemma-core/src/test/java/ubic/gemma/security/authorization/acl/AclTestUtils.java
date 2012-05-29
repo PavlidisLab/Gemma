@@ -56,7 +56,8 @@ public class AclTestUtils {
             fail( "Failed to  delete ACL for " + f + ", got " + acl );
         } catch ( NotFoundException okaye ) {
             // okay
-            log.debug( "Deleted acl for " + f );
+            if ( log.isDebugEnabled() )
+                log.debug( "As expected, there was no acl for " + f.getClass().getSimpleName() );
         }
     }
 
