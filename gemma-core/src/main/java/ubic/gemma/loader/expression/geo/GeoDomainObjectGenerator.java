@@ -81,6 +81,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         log.info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
         Collection<GeoData> result = new HashSet<GeoData>();
         if ( geoAccession.startsWith( "GPL" ) ) {
+            this.processPlatformsOnly = true;
             GeoPlatform platform = processPlatform( geoAccession );
             result.add( platform );
         } else if ( geoAccession.startsWith( "GDS" ) ) {

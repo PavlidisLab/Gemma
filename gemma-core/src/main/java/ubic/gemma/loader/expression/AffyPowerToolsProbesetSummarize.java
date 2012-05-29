@@ -81,19 +81,19 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
-     * @param ad target platform
+     * @param targetPlatform target platform
      * @param files list of CEL files (any other files included will be ignored)
      * @return
      */
-    public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee, ArrayDesign ad,
-            Collection<LocalFile> files ) {
+    public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
+            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
 
         List<String> celfiles = getCelFiles( files );
         log.info( celfiles.size() + " cel files" );
 
         String outputPath = getOutputFilePath( ee, "apt-output" );
 
-        String cmd = getCommand( ad, celfiles, outputPath );
+        String cmd = getCommand( targetPlatform, celfiles, outputPath );
 
         log.info( "Running: " + cmd );
 
@@ -170,11 +170,10 @@ public class AffyPowerToolsProbesetSummarize {
                 log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
                         + assay.getAccession().getAccession() + "]" );
 
-                assay.setArrayDesignUsed( ad ); // OK?
+                assay.setArrayDesignUsed( targetPlatform ); // OK?
                 bad.getBioAssays().add( assay );
-            }
-
-            return convertDesignElementDataVectors( ee, bad, ad, makeExonArrayQuantiationType(), matrix );
+            } 
+            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
 
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
@@ -229,7 +228,7 @@ public class AffyPowerToolsProbesetSummarize {
             vectors.add( vector );
 
         }
-        log.info( "Setup " + vectors.size() + " data vectors" );
+        log.info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
         return vectors;
     }
 
@@ -302,6 +301,7 @@ public class AffyPowerToolsProbesetSummarize {
         }
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
+
         String base = h;
         String genome = hg;
         if ( primaryTaxon.getCommonName().equals( "human" ) ) {

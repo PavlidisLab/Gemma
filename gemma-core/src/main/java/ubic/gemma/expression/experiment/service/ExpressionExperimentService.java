@@ -548,9 +548,11 @@ public interface ExpressionExperimentService {
      * @param ee
      * @param ad
      * @param vectors
+     * @return the updated Experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void replaceVectors( ExpressionExperiment ee, ArrayDesign ad, Collection<RawExpressionDataVector> vectors );
+    public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
+            Collection<RawExpressionDataVector> vectors );
 
     /**
      * Used when we want to replace the vectors. Does not take care of computing the processed data vectors, but it does

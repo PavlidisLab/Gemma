@@ -125,7 +125,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             this.geoDomainObjectGenerator.initialize();
         }
 
-        geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
+        geoDomainObjectGenerator.setProcessPlatformsOnly( geoAccession.startsWith( "GPL" ) || loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );
         geoDomainObjectGenerator.setAggressiveQtRemoval( aggressiveQuantitationTypeRemoval );
 

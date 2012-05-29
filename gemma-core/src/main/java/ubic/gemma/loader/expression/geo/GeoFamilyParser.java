@@ -1171,11 +1171,12 @@ public class GeoFamilyParser implements Parser<Object> {
         assert currentPlatform != null;
 
         /*
-         * Skip platform information when it is not going to be usable.
+         * Skip platform information when it is not going to be usable, unless we are ONLY parsing a platform.
          */
-        if ( !currentPlatform.useDataFromGeo() ) {
-            return;
-        }
+        // Actually this isn't as important, since we filter out bad elements.
+        // if ( !processPlatformsOnly && !currentPlatform.useDataFromGeo() ) {
+        // return;
+        // }
 
         String[] tokens = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
 
@@ -1258,9 +1259,9 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_web_link" ) ) {
             platformContactSet( currentPlatformAccession, "webLink", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_support" ) ) {
-            // FIXME, use this (maybe)
+            // use this (maybe)
         } else if ( startsWithIgnoreCase( line, "!Platform_coating" ) ) {
-            // FIXME use this (maybe)
+            // use this (maybe)
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_fax" ) ) {
             platformContactSet( currentSeriesAccession, "fax", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_web_link" ) ) {
@@ -1280,7 +1281,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Platform_data_row_count" ) ) {
             // nothing. However, if this is zero, we might be able to skip later steps.
         } else if ( startsWithIgnoreCase( line, "!Platform_catalog_number" ) ) {
-            // do nothing TODO we might want this.
+            // do nothing
         } else if ( startsWithIgnoreCase( line, "!Platform_last_update_date" ) ) {
             platformLastUpdateDate( currentPlatformAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Platform_supplementary_file" ) ) {

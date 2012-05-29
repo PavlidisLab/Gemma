@@ -31,21 +31,16 @@ import ubic.gemma.model.genome.Taxon;
  */
 public interface GeoConverter extends Converter<GeoData, Object> {
 
-    byte[] convertData( List<Object> vector, QuantitationType qt );
-
     /**
      * Remove old results. Call this prior to starting conversion of a full dataset.
      */
     public abstract void clear();
 
-    /**
-     * Converts a supplementary file to a LocalFile object. If the supplementary file is null, the LocalFile=null is
-     * returned.
-     * 
-     * @param object
-     * @return LocalFile
-     */
-    public abstract LocalFile convertSupplementaryFileToLocalFile( Object object );
+    @Override
+    public abstract Collection<Object> convert( Collection<? extends GeoData> geoObjects );
+
+    @Override
+    public abstract Object convert( GeoData geoObject );
 
     /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
@@ -58,6 +53,18 @@ public interface GeoConverter extends Converter<GeoData, Object> {
     public abstract void convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet );
 
     /**
+     * Converts a supplementary file to a LocalFile object. If the supplementary file is null, the LocalFile=null is
+     * returned.
+     * 
+     * @param object
+     * @return LocalFile
+     */
+    public abstract LocalFile convertSupplementaryFileToLocalFile( Object object );
+
+    public abstract Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
+            throws IllegalArgumentException;
+
+    /**
      * If true, and the series uses more than one platform, split it up. This often isn't necessary/desirable. This is
      * overridden if the series uses more than one species, in which case it is always split up.
      * 
@@ -65,13 +72,9 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      */
     public abstract void setSplitByPlatform( boolean splitByPlatform );
 
-    @Override
-    public abstract Collection<Object> convert( Collection<? extends GeoData> geoObjects );
+    byte[] convertData( List<Object> vector, QuantitationType qt );
 
-    public abstract Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
-            throws IllegalArgumentException;
-
-    @Override
-    public abstract Object convert( GeoData geoObject );
+    // this is here for tests only. The default value should be okay otherwise.
+    void setElementLimitForStrictness( int i );
 
 }

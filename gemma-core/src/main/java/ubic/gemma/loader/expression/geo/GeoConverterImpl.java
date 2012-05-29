@@ -114,6 +114,8 @@ import ubic.gemma.ontology.providers.MgedOntologyService;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeoConverterImpl implements GeoConverter {
 
+    private static final int DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS = 100000;
+
     /**
      * This string is inserted into the descriptions of constructed biomaterials.
      */
@@ -167,6 +169,11 @@ public class GeoConverterImpl implements GeoConverter {
      * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
      */
     private static final String RAT = "Rattus norvegicus";
+
+    /**
+     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
+     */
+    int tooManyElements = DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS;
 
     private static Map<String, String> organismDatabases = new HashMap<String, String>();
 
@@ -246,6 +253,109 @@ public class GeoConverterImpl implements GeoConverter {
                     + "')" );
         }
 
+    }
+
+    /**
+     * Convert a vector of strings into a byte[] for saving in the database. . Blanks(missing values) are treated as NAN
+     * (double), 0 (integer), false (booleans) or just empty strings (strings). Other invalid values are treated the
+     * same way as missing data (to keep the parser from failing when dealing with strange GEO files that have values
+     * like "Error" for an expression value).
+     * 
+     * @param vector of Strings to be converted to primitive values (double, int etc)
+     * @param qt The quantitation type for the values to be converted.
+     * @return
+     */
+    @Override
+    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
+
+        if ( vector == null || vector.size() == 0 ) return null;
+
+        boolean containsAtLeastOneNonNull = false;
+        for ( Object string : vector ) {
+            if ( string != null ) {
+                containsAtLeastOneNonNull = true;
+                break;
+            }
+        }
+
+        if ( !containsAtLeastOneNonNull ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( "No data for " + qt + " in vector of length " + vector.size() );
+            }
+            return null;
+        }
+
+        List<Object> toConvert = new ArrayList<Object>();
+        PrimitiveType pt = qt.getRepresentation();
+        int numMissing = 0;
+        for ( Object rawValue : vector ) {
+            if ( rawValue == null ) {
+                numMissing++;
+                handleMissing( toConvert, pt );
+            } else if ( rawValue instanceof String ) { // needs to be coverted.
+                String valueString = ( String ) rawValue;
+                if ( StringUtils.isBlank( valueString ) ) {
+                    numMissing++;
+                    handleMissing( toConvert, pt );
+                    continue;
+                }
+                try {
+                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                        toConvert.add( Double.parseDouble( valueString ) );
+                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                        toConvert.add( rawValue );
+                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
+                        if ( valueString.length() != 1 ) {
+                            throw new IllegalStateException( "Attempt to cast a string of length "
+                                    + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
+                        }
+                        toConvert.add( valueString.toCharArray()[0] );
+                    } else if ( pt.equals( PrimitiveType.INT ) ) {
+                        toConvert.add( Integer.parseInt( valueString ) );
+                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                        toConvert.add( Boolean.parseBoolean( valueString ) );
+                    } else {
+                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+                    }
+                } catch ( NumberFormatException e ) {
+                    numMissing++;
+                    handleMissing( toConvert, pt );
+                }
+            } else { // use as is.
+                toConvert.add( rawValue );
+            }
+        }
+
+        if ( numMissing == vector.size() ) {
+            return null;
+        }
+
+        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+
+        /*
+         * Debugging - absolutely make sure we can convert the data back.
+         */
+        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
+            if ( byteArrayToDoubles.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length
+                        + " doubles" );
+            }
+        } else if ( pt.equals( PrimitiveType.INT ) ) {
+            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
+            if ( byteArrayToInts.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length
+                        + " ints" );
+            }
+        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
+            if ( byteArrayToBooleans.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length
+                        + " booleans" );
+            }
+        }
+
+        return bytes;
     }
 
     /*
@@ -460,107 +570,12 @@ public class GeoConverterImpl implements GeoConverter {
         return buf.toString();
     }
 
-    /**
-     * Convert a vector of strings into a byte[] for saving in the database. . Blanks(missing values) are treated as NAN
-     * (double), 0 (integer), false (booleans) or just empty strings (strings). Other invalid values are treated the
-     * same way as missing data (to keep the parser from failing when dealing with strange GEO files that have values
-     * like "Error" for an expression value).
-     * 
-     * @param vector of Strings to be converted to primitive values (double, int etc)
-     * @param qt The quantitation type for the values to be converted.
-     * @return
+    /*
+     * This is really only here for tests, at the moment.
      */
     @Override
-    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
-
-        if ( vector == null || vector.size() == 0 ) return null;
-
-        boolean containsAtLeastOneNonNull = false;
-        for ( Object string : vector ) {
-            if ( string != null ) {
-                containsAtLeastOneNonNull = true;
-                break;
-            }
-        }
-
-        if ( !containsAtLeastOneNonNull ) {
-            if ( log.isDebugEnabled() ) {
-                log.debug( "No data for " + qt + " in vector of length " + vector.size() );
-            }
-            return null;
-        }
-
-        List<Object> toConvert = new ArrayList<Object>();
-        PrimitiveType pt = qt.getRepresentation();
-        int numMissing = 0;
-        for ( Object rawValue : vector ) {
-            if ( rawValue == null ) {
-                numMissing++;
-                handleMissing( toConvert, pt );
-            } else if ( rawValue instanceof String ) { // needs to be coverted.
-                String valueString = ( String ) rawValue;
-                if ( StringUtils.isBlank( valueString ) ) {
-                    numMissing++;
-                    handleMissing( toConvert, pt );
-                    continue;
-                }
-                try {
-                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                        toConvert.add( Double.parseDouble( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( rawValue );
-                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        if ( valueString.length() != 1 ) {
-                            throw new IllegalStateException( "Attempt to cast a string of length "
-                                    + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
-                        }
-                        toConvert.add( valueString.toCharArray()[0] );
-                    } else if ( pt.equals( PrimitiveType.INT ) ) {
-                        toConvert.add( Integer.parseInt( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                        toConvert.add( Boolean.parseBoolean( valueString ) );
-                    } else {
-                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-                    }
-                } catch ( NumberFormatException e ) {
-                    numMissing++;
-                    handleMissing( toConvert, pt );
-                }
-            } else { // use as is.
-                toConvert.add( rawValue );
-            }
-        }
-
-        if ( numMissing == vector.size() ) {
-            return null;
-        }
-
-        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
-
-        /*
-         * Debugging - absolutely make sure we can convert the data back.
-         */
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
-            if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length
-                        + " doubles" );
-            }
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
-            if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length
-                        + " ints" );
-            }
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
-            if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length
-                        + " booleans" );
-            }
-        }
-
-        return bytes;
+    public void setElementLimitForStrictness( int tooManyElements ) {
+        this.tooManyElements = tooManyElements;
     }
 
     /**
@@ -1216,12 +1231,47 @@ public class GeoConverterImpl implements GeoConverter {
 
         Pattern refSeqAccessionPattern = Pattern.compile( "^[A-Z]{2}_" );
 
+        boolean strictSelection = false;
+
+        if ( identifiers.size() > tooManyElements ) {
+            // something odd like an exon array.
+            log.warn( "Platform has more elements than expected, turning on strict selection method" );
+            strictSelection = true;
+        }
+
+        List<String> skipped = new ArrayList<String>();
         Collection<CompositeSequence> compositeSequences = new ArrayList<CompositeSequence>( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
             String externalAccession = null;
             if ( externalRefs != null ) {
                 externalAccession = getExternalAccession( externalRefs, i );
+            }
+
+            if ( strictSelection && StringUtils.isBlank( externalAccession ) ) {
+
+                // currently this is crafted to deal with affymetrix exon arrays, but could be expanded.
+
+                // mrna_assignment is less strict than gene_assignement
+
+                // salvage it if it has a gene assignment.
+                if ( platform.getColumnNames().contains( "gene_assignment" ) ) {
+                    String cd = platform.getColumnData( "gene_assignment" ).get( i );
+                    if ( StringUtils.isBlank( cd ) || cd.equals( "---" ) ) {
+                        skipped.add( id );
+                        if ( skipped.size() % 10000 == 0 ) {
+                            log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was " + id );
+                        }
+                        i++;
+                        continue;
+                    }
+                    // keep it.
+                } else {
+                    // we just skip ones that don't have an external accession.
+                    continue;
+                }
+
+                // remaining case here: externalAccession is blank, but there is another column that we think saves it.
             }
 
             String cloneIdentifier = cloneIdentifiers == null ? null : cloneIdentifiers.get( i );
@@ -1348,6 +1398,19 @@ public class GeoConverterImpl implements GeoConverter {
         arrayDesign.getExternalReferences().add( convertDatabaseEntry( platform ) );
 
         seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
+
+        if ( !skipped.isEmpty() ) {
+            log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was "
+                    + skipped.get( skipped.size() - 1 ) );
+        }
+
+        if ( arrayDesign.getCompositeSequences().size() > tooManyElements ) {
+            // this is just a safeguard; perhaps temporary.
+            throw new IllegalStateException( "Array design has too many elements to be loaded. "
+                    + arrayDesign.getCompositeSequences().size() );
+        }
+
+        log.info( arrayDesign.getCompositeSequences().size() + " elements on the platform" );
 
         return arrayDesign;
     }
