@@ -164,10 +164,14 @@ public class CoexpressionSearchController {
             return result;
 
         }
-
+        
+        boolean skipCoexpressionDetails = false;
+        
         log.info( "Coexpression search: " + searchOptions );
         if (queryGeneIds!=null){
             log.info( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
+            //we don't need to populate all the coex details for the viz, so set skip flag to false
+            skipCoexpressionDetails = true;
         }
 
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
@@ -175,7 +179,7 @@ public class CoexpressionSearchController {
         //maxResults set to zero indicates no limit.  maxResults is ignored in 'my genes only' query
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick(
                 searchOptions.getEeIds(), genes, searchOptions.getStringency(), MAX_RESULTS,
-                searchOptions.getQueryGenesOnly(), true );        
+                searchOptions.getQueryGenesOnly(), skipCoexpressionDetails );        
         
         log.info( "Returned from coexpression search: " + searchOptions );
         
@@ -186,7 +190,7 @@ public class CoexpressionSearchController {
             log.info( "Coexpression search step 2: getting 'query genes only' results for genes: " + genes );
             Collection<CoexpressionValueObjectExt> queryGenesOnlyResults = geneCoexpressionService.coexpressionSearchQuick(
                     searchOptions.getEeIds(), genes, 2, MAX_RESULTS,
-                    true, true );
+                    true, skipCoexpressionDetails );
             
             queryGenesOnlyResults = eliminateDuplicates(queryGenesOnlyResults);
             
@@ -195,12 +199,7 @@ public class CoexpressionSearchController {
         }
 
         int stringencyTrimLimit = searchOptions.getEeIds().size();
-
-        // make sure the limit isn't too big
-        if ( stringencyTrimLimit > 2000 ) {
-            stringencyTrimLimit = 2000;
-        }
-               
+           
         int resultsLimit = ConfigUtils.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
         
         // strip down results for front end if data is too large (only happens when queryGeneIds is sent in as a parameter, i.e. cytoscape coex vis query
@@ -522,7 +521,7 @@ public class CoexpressionSearchController {
 
         Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();
 
-        for ( int i = 2; i < stringencyTrimLimit; i++ ) {
+        for ( int i = 2; i <= stringencyTrimLimit; i++ ) {
 
             HashSet<Long> nodeIds = new HashSet<Long>();
 
