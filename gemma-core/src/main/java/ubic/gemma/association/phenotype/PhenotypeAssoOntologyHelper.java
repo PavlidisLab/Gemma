@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -45,16 +46,16 @@ public class PhenotypeAssoOntologyHelper {
         this.ontologyService = ontologyService;
         AbstractOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
         if ( diseaseOntologyService != null ) {
-            ontologies.add( diseaseOntologyService );
+            this.ontologies.add( diseaseOntologyService );
         }
         AbstractOntologyService mammalianPhenotypeOntologyService = ontologyService
                 .getMammalianPhenotypeOntologyService();
         if ( mammalianPhenotypeOntologyService != null ) {
-            ontologies.add( mammalianPhenotypeOntologyService );
+            this.ontologies.add( mammalianPhenotypeOntologyService );
         }
         AbstractOntologyService humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
         if ( humanPhenotypeOntologyService != null ) {
-            ontologies.add( humanPhenotypeOntologyService );
+            this.ontologies.add( humanPhenotypeOntologyService );
         }
     }
 
@@ -63,7 +64,7 @@ public class PhenotypeAssoOntologyHelper {
 
         HashMap<String, OntologyTerm> uniqueValueTerm = new HashMap<String, OntologyTerm>();
 
-        for ( AbstractOntologyService ontology : ontologies ) {
+        for ( AbstractOntologyService ontology : this.ontologies ) {
             Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
 
             for ( OntologyTerm ontologyTerm : hits ) {
@@ -80,7 +81,7 @@ public class PhenotypeAssoOntologyHelper {
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) {
 
         Collection<OntologyTerm> ontologyFound = new TreeSet<OntologyTerm>();
-        for ( AbstractOntologyService ontology : ontologies ) {
+        for ( AbstractOntologyService ontology : this.ontologies ) {
             ontologyFound.addAll( ontology.findTerm( searchQuery ) );
         }
 
@@ -112,12 +113,12 @@ public class PhenotypeAssoOntologyHelper {
         }
 
         OntologyTerm ontologyTerm = null;
-        for ( AbstractOntologyService ontology : ontologies ) {
+        for ( AbstractOntologyService ontology : this.ontologies ) {
             ontologyTerm = ontology.getTerm( valueUri );
             if ( ontologyTerm != null ) return ontologyTerm;
         }
 
-        return ontologyTerm;
+        throw new EntityNotFoundException( valueUri );
     }
 
     /** For a valueUri return the Characteristic (represents a phenotype) */
