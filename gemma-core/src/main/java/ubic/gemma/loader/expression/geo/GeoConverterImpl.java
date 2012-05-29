@@ -1505,7 +1505,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                     // if probe organism can not be found i.e it is not a known abbreviation or scientific name
                     // and it was not already created during platform organism processing then warn user
-                    throw new IllegalArgumentException( probeOrganism + " is not recognized as a taxon in Gemma" );
+                    throw new IllegalArgumentException( "'" + probeOrganism + "' is not recognized as a taxon in Gemma" );
                 }
             }
         }

@@ -178,19 +178,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /*
-     * @see TestCase#setUp()
-     */
-    // protected void setUp() throws Exception {
-    // super.setUp();
-    // }
-    /*
-     * @see TestCase#tearDown()
-     */
-    // @Override
-    // protected void tearDown() throws Exception {
-    // super.tearDown();
-    // }
-    /*
      * Test method for 'ubic.gemma.loader.expression.geo.GeoConverter.convertData(List<String>)'
      */
     @Test
@@ -701,10 +688,14 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Collection<Taxon> platformTaxa = new HashSet<Taxon>();
         Collection<String> probeTaxa = new ArrayList<String>();
         Taxon salmonid = taxonService.findByCommonName( "salmonid" );
-        Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
+        Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
         Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
+
+        assertNotNull( rainbowTrout );
+        assertNotNull( atlanticSalm );
+
         atlanticSalm.setParentTaxon( salmonid );
-        rainbowTroat.setParentTaxon( salmonid );
+        rainbowTrout.setParentTaxon( salmonid );
         Taxon human = taxonService.findByCommonName( "human" );
 
         platformTaxa.add( atlanticSalm );
@@ -715,7 +706,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Taxon primaryTaxon = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
         assertEquals( "atlantic salmon", primaryTaxon.getCommonName() );
         // test that can work out parent taxon
-        platformTaxa.add( rainbowTroat );
+        platformTaxa.add( rainbowTrout );
         Taxon primaryTaxonTwo = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
         assertEquals( "salmonid", primaryTaxonTwo.getCommonName() );
 

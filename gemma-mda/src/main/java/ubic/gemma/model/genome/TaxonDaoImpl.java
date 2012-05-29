@@ -76,7 +76,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
 
     }
 
-    public void handleThaw( final Taxon taxon ) throws Exception {
+    public void handleThaw( final Taxon taxon ) {
         if ( taxon == null ) {
             log.warn( "Attempt to thaw null" );
             return;
@@ -130,7 +130,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
                     "More than one instance of 'ubic.gemma.model.genome.Taxon"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = ( Taxon ) results.iterator().next();
+            result = ( Taxon ) results.get( 0 );
         }
         return result;
 
@@ -188,13 +188,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      */
     @Override
     public Taxon findByAbbreviation( final java.lang.String abbreviation ) {
-        try {
-            return this.handleFindByAbbreviation( abbreviation );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonDaoBase.findByAbbreviation(java.lang.String abbreviation)' --> "
-                            + th, th );
-        }
+        return this.handleFindByAbbreviation( abbreviation );
     }
 
     /*
@@ -341,13 +335,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
      */
     @Override
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            this.handleThaw( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> " + th,
-                    th );
-        }
+        this.handleThaw( taxon );
     }
 
     /**

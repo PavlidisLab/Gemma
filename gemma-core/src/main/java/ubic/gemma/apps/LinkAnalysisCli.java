@@ -111,16 +111,17 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         super.addDateOption();
 
-        Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" ).withDescription(
-                "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" ).create( 'c' );
+        Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" )
+                .withDescription( "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" )
+                .create( 'c' );
         addOption( cdfCut );
 
-        Option tooSmallToKeep = OptionBuilder.hasArg().withArgName( "Cache Threshold" ).withDescription(
-                "The threshold for coefficient cache" ).withLongOpt( "cachecut" ).create( 'k' );
+        Option tooSmallToKeep = OptionBuilder.hasArg().withArgName( "Cache Threshold" )
+                .withDescription( "The threshold for coefficient cache" ).withLongOpt( "cachecut" ).create( 'k' );
         addOption( tooSmallToKeep );
 
-        Option fwe = OptionBuilder.hasArg().withArgName( "Family Wise Error Rate" ).withDescription(
-                "The setting for family wise error control" ).withLongOpt( "fwe" ).create( 'w' );
+        Option fwe = OptionBuilder.hasArg().withArgName( "Family Wise Error Rate" )
+                .withDescription( "The setting for family wise error control" ).withLongOpt( "fwe" ).create( 'w' );
         addOption( fwe );
 
         buildFilterConfigOptions();
@@ -147,12 +148,15 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( fileOpt );
 
         // supply taxon on command line
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon species name e.g. 'chinook' has to be a species " ).create( "t" );
+        Option taxonNameOption = OptionBuilder.hasArg()
+                .withDescription( "Taxon species name e.g. 'chinook' has to be a species " ).create( "t" );
         addOption( taxonNameOption );
 
-        Option arrayOpt = OptionBuilder.hasArg().withArgName( "Array Design" ).withDescription(
-                "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
+        Option arrayOpt = OptionBuilder
+                .hasArg()
+                .withArgName( "Array Design" )
+                .withDescription(
+                        "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
                 .create( "array" );
         addOption( arrayOpt );
 
@@ -163,8 +167,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "text" );
         addOption( textOutOpt );
 
-        Option metricOption = OptionBuilder.hasArg().withArgName( "metric" ).withDescription(
-                "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
+        Option metricOption = OptionBuilder.hasArg().withArgName( "metric" )
+                .withDescription( "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
         addOption( metricOption );
 
         Option imagesOption = OptionBuilder.withDescription( "Suppress the generation of correlation matrix images" )
@@ -200,9 +204,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "choosecut" );
         addOption( chooseCutOption );
 
-        Option probeDegreeThresholdOption = OptionBuilder.hasArg().withArgName( "threshold" ).withDescription(
-                "Probes with greater than this number of links will be ignored; default is "
-                        + LinkAnalysisConfig.DEFAULT_PROBE_DEGREE_THRESHOLD ).create( "probeDegreeLim" );
+        Option probeDegreeThresholdOption = OptionBuilder
+                .hasArg()
+                .withArgName( "threshold" )
+                .withDescription(
+                        "Probes with greater than this number of links will be ignored; default is "
+                                + LinkAnalysisConfig.DEFAULT_PROBE_DEGREE_THRESHOLD ).create( "probeDegreeLim" );
         addOption( probeDegreeThresholdOption );
 
         addForceOption();
@@ -216,7 +223,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
-        this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
+        this.linkAnalysisService = this.getBean( LinkAnalysisService.class );
 
         if ( this.dataFileName != null ) {
             /*
@@ -224,7 +231,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
              * code)
              */
 
-            ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
 
@@ -250,8 +257,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             QuantitationType qtype = makeQuantitationType();
 
-            SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = ( SimpleExpressionDataLoaderService ) this
-                    .getBean( "simpleExpressionDataLoaderService" );
+            SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = this
+                    .getBean( SimpleExpressionDataLoaderService.class );
             ByteArrayConverter bArrayConverter = new ByteArrayConverter();
             try {
                 InputStream data = new FileInputStream( new File( this.dataFileName ) );
@@ -320,8 +327,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                log
-                        .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
+                log.error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
 
@@ -395,8 +401,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 log.info( "Singular correlation threshold chosen" );
                 this.linkAnalysisConfig.setSingularThreshold( SingularThreshold.valueOf( singularThreshold ) );
             } else {
-                log
-                        .error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
+                log.error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
             }
         }
 
@@ -408,19 +413,28 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     private void buildFilterConfigOptions() {
-        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
-                "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+        Option minPresentFraction = OptionBuilder
+                .hasArg()
+                .withArgName( "Missing Value Threshold" )
+                .withDescription(
+                        "Fraction of data points that must be present in a profile to be retained , default="
+                                + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
         addOption( minPresentFraction );
 
-        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+        Option lowExpressionCut = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression Threshold" )
+                .withDescription(
+                        "Fraction of expression vectors to reject based on low values, default="
+                                + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
         addOption( lowExpressionCut );
 
-        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+        Option lowVarianceCut = OptionBuilder
+                .hasArg()
+                .withArgName( "Variance Threshold" )
+                .withDescription(
+                        "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                                + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
         addOption( lowVarianceCut );
 
         Option knownGenesOnlyOption = OptionBuilder.withDescription(
@@ -515,7 +529,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             LinkAnalysis la = linkAnalysisService.doAnalysis( ee, linkAnalysisConfig, filterConfig );
             linkAnalysisService.saveResults( ee, la, linkAnalysisConfig, filterConfig );
-            
+
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
