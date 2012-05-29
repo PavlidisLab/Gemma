@@ -749,7 +749,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         ArrayDesign ad = ( ArrayDesign ) result;
 
-        assertEquals( 264, ad.getCompositeSequences().size() );
+        assertEquals( 168, ad.getCompositeSequences().size() );
     }
 
     /**
