@@ -51,7 +51,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Set<String> loadAllPhenotypesUri() {
         Set<String> phenotypesURI = new HashSet<String>();
 
-        String queryString = "select value_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
+        String queryString = "select value_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value_uri";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
