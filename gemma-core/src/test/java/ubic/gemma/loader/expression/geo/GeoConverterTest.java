@@ -744,7 +744,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
                 "GPL6096" );
 
-        gc.setElementLimitForStrictness( 100 );
+        gc.setElementLimitForStrictness( 500 );
         Object result = this.gc.convert( platform );
         assertNotNull( result );
         ArrayDesign ad = ( ArrayDesign ) result;
