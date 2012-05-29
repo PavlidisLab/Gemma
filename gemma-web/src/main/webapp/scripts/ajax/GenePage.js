@@ -41,22 +41,29 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		Gemma.GenePage.superclass.initComponent.call(this);
 		
 		//DETAILS TAB
-		this.add(new Gemma.GeneDetails({
+		var details = new Gemma.GeneDetails({
 			title: 'Details',
+			itemId: 'details',
 			geneId: geneId
-		}));
+		});
+		details.on('changeTab', function(tabName){
+			this.setActiveTab(tabName);
+		},this);
+		this.add(details);
 		
 		//ALLEN BRAIN ATLAS IMAGES
 		this.add({
 			xtype:'geneallenbrainatlasimages',
 			geneId: geneId,
-			title:'Expression Images'
+			title:'Expression Images',
+			itemId:'expression'
 		});
 		
 		// diff expression grid
 		
 		var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-			title: 'Differential Expression'
+			title: 'Differential Expression',
+			itemId: 'diffEx'
 		});
 		diffExGrid.on('render', function(){
 			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
@@ -81,7 +88,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			title: 'Coexpression',
 			colspan: 2,
 			lite: true,
-			noSmallGemma: true
+			noSmallGemma: true,
+			itemId: 'coex'
 		});
 		coexpressedGeneGrid.on('render', function(){
 			coexpressedGeneGrid.doSearch({
@@ -98,7 +106,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			xtype: 'geneproductgrid',
 			geneid: geneId,
 			title: 'Gene Products',
-			deferLoadToRender: true
+			deferLoadToRender: true,
+			itemId: 'products'
 		});
 		
 		this.add({
@@ -107,11 +116,13 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			border: true,
 			geneid: this.geneId,
 			minHeight: 150,
-			deferLoadToRender: true
+			deferLoadToRender: true,
+			itemId: 'goGrid'
 		});
 		
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
+			itemId: 'phenotypes',
 			hasRelevanceColumn: false,
 			deferLoadToRender: true,
 			currentGene: {
@@ -144,7 +155,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		this.add(phenotypeEvidenceGridPanel);
 		
 		this.on('render', function(){
-			this.setActiveTab(0);
+			this.setActiveTab('details');
 		});
 	}
 });

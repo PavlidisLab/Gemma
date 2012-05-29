@@ -64,6 +64,37 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	
 	/**
 	 * 
+	 * @param geneDetails
+	 * @returns {String}
+	 */
+	renderPhenotypes : function(geneDetails) {
+		if (geneDetails.phenotypes && geneDetails.phenotypes.length > 0) {
+			var i = 0;
+			var text = '';
+			var limit = Math.min(3,geneDetails.phenotypes.length);
+			for(i = 0; i < limit ; i++){
+				text += '<a target="_blank" href="'+Gemma.LinkRoots.phenotypePage + geneDetails.phenotypes[i].urlId +
+				'">'+geneDetails.phenotypes[i].value+'</a>';
+				if( (i+1) !== limit){
+					text += ', ';
+				}
+			}
+			if(limit < geneDetails.phenotypes.length){
+				text += ', '+ (geneDetails.phenotypes.length-limit) +' more';
+			}
+			text += "<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='See all associated phenotypes'"+
+				"onClick='Ext.getCmp(&#39;"+this.id+"&#39;).changeTab(&#39;phenotypes&#39;)'>";
+			return text;
+		} else {
+			return "[ None ]";
+		}
+	},
+
+	changeTab:function( tabName ){
+		this.fireEvent('changeTab', tabName);
+	},
+	/**
+	 * 
 	 * @param ncbiId
 	 * @param count
 	 * @returns {String}
@@ -79,7 +110,6 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 			return "[ Not available ]";
 		}
 	},
-	
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
 		
@@ -138,6 +168,11 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT +'\'); return false">' +
 							'<img src="/Gemma/images/help.png" /> </a>',
 							html: this.renderNodeDegree( geneDetails ) 
+						}, {
+							fieldLabel: 'Phenotypes' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+							'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.phenotypeTT +'\'); return false">' +
+							'<img src="/Gemma/images/help.png" /> </a>',
+							html: this.renderPhenotypes( geneDetails ) 
 						}, {
 							fieldLabel: 'Probes' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
 								'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +

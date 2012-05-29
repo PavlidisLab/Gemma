@@ -25,6 +25,7 @@ import java.util.HashSet;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
  * @author kelsey
@@ -96,6 +97,8 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String officialName;
 
     private java.lang.String officialSymbol;
+    
+    private Collection<CharacteristicValueObject> phenotypes;
 
     private Double score; // This is for genes in genesets might have a rank or a score associated with them.
 
@@ -372,5 +375,14 @@ public class GeneValueObject implements java.io.Serializable {
     public void setTaxonScientificName( java.lang.String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
     }
+
+    public Collection<CharacteristicValueObject> getPhenotypes() {
+        return phenotypes;
+    }
+
+    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+        this.phenotypes = phenotypes;
+    }
+
 
 }

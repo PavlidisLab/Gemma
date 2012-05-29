@@ -10,11 +10,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
- 
+
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -22,6 +24,7 @@ import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -97,6 +100,13 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
         details.setHomologues( homologues );
 
+        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
+        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
+        for(PhenotypeAssociation pa : phenoAssocs){
+            cvos.addAll(CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ));
+        }
+        details.setPhenotypes( cvos );
+        
         /*
          * Look for the gene as an attribute in experiments.
          */
