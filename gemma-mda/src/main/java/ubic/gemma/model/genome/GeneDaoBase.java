@@ -45,12 +45,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException( "Error performing 'ubic.gemma.model.genome.GeneDao.countAll()' --> "
-                    + th, th );
-        }
+        return this.handleCountAll();
+
     }
 
     /**
@@ -95,13 +91,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     @Override
     public ubic.gemma.model.genome.Gene findByAccession( final java.lang.String accession,
             final ubic.gemma.model.common.description.ExternalDatabase source ) {
-        try {
-            return this.handleFindByAccession( accession, source );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.findByAccession(java.lang.String accession, ubic.gemma.model.common.description.ExternalDatabase source)' --> "
-                            + th, th );
-        }
+        return this.handleFindByAccession( accession, source );
+
     }
 
     /**
@@ -109,13 +100,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<Gene> findByAlias( final java.lang.String search ) {
-        try {
-            return this.handleFindByAlias( search );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.findByAlias(java.lang.String search)' --> " + th,
-                    th );
-        }
+        return this.handleFindByAlias( search );
+
     }
 
     /**
@@ -145,6 +131,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(int, java.lang.String, java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     public java.util.Collection<Gene> findByOfficalSymbol( final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -159,16 +146,18 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(int, java.lang.String)
      */
-    public java.util.Collection<Gene> findByOfficialName( final int transform, final java.lang.String officialName ) {
-        return this.findByOfficialName( transform,
-                "from GeneImpl g where g.officialName=:officialName order by g.officialName", officialName );
+    @Override
+    public java.util.Collection<Gene> findByOfficialName( final java.lang.String officialName ) {
+        return this.findByOfficialName( "from GeneImpl g where g.officialName=:officialName order by g.officialName",
+                officialName );
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(int, java.lang.String, java.lang.String)
      */
 
-    public java.util.Collection<Gene> findByOfficialName( final int transform, final java.lang.String queryString,
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Gene> findByOfficialName( final java.lang.String queryString,
             final java.lang.String officialName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -181,34 +170,13 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName ) {
-        return this.findByOfficialName( TRANSFORM_NONE, officialName );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(java.lang.String, java.lang.String)
-     */
-    public java.util.Collection<Gene> findByOfficialName( final java.lang.String queryString,
-            final java.lang.String officialName ) {
-        return this.findByOfficialName( TRANSFORM_NONE, queryString, officialName );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbol(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
     public ubic.gemma.model.genome.Gene findByOfficialSymbol( final java.lang.String symbol,
             final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByOfficialSymbol( symbol, taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.findByOfficialSymbol(java.lang.String symbol, ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleFindByOfficialSymbol( symbol, taxon );
+
     }
 
     /**
@@ -225,6 +193,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String, java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -241,6 +210,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @SuppressWarnings("unchecked")
     public java.util.Collection<Gene> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -271,13 +241,9 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
             final Collection<ubic.gemma.model.genome.Gene> genes,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
             final boolean interGeneOnly ) {
-        try {
-            return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
-                            + th, th );
-        }
+
+        return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
+
     }
 
     /**
@@ -287,13 +253,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     @Override
     public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency ) {
-        try {
-            return this.handleGetCoexpressedGenes( gene, ees, stringency );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
-                            + th, th );
-        }
+        return this.handleGetCoexpressedGenes( gene, ees, stringency );
     }
 
     /**
@@ -301,13 +261,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public long getCompositeSequenceCountById( final long id ) {
-        try {
-            return this.handleGetCompositeSequenceCountById( id );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCompositeSequenceCountById(long id)' --> "
-                            + th, th );
-        }
+        return this.handleGetCompositeSequenceCountById( id );
+
     }
 
     /**
@@ -317,13 +272,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     @Override
     public java.util.Collection<CompositeSequence> getCompositeSequences( final ubic.gemma.model.genome.Gene gene,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetCompositeSequences( gene, arrayDesign );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCompositeSequences(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
+        return this.handleGetCompositeSequences( gene, arrayDesign );
+
     }
 
     /**
@@ -331,13 +281,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<CompositeSequence> getCompositeSequencesById( final long id ) {
-        try {
-            return this.handleGetCompositeSequencesById( id );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCompositeSequencesById(long id)' --> " + th,
-                    th );
-        }
+        return this.handleGetCompositeSequencesById( id );
+
     }
 
     /**
@@ -345,13 +290,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<Gene> getGenesByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleGetGenesByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getGenesByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleGetGenesByTaxon( taxon );
+
     }
 
     /**
@@ -359,13 +299,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<Gene> getMicroRnaByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleGetMicroRnaByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.getMicroRnaByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleGetMicroRnaByTaxon( taxon );
+
     }
 
     /**
@@ -393,24 +328,20 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<Gene> load( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoadMultiple( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadMultiple(java.util.Collection ids)' --> "
-                            + th, th );
-        }
+        return this.handleLoadMultiple( ids );
+
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#loadAll(int)
      */
 
+    @SuppressWarnings("unchecked")
     @Override
     public java.util.Collection<Gene> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.GeneImpl.class );
-        return results;
+        return ( Collection<Gene> ) results;
     }
 
     /**
@@ -418,46 +349,13 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public java.util.Collection<Gene> loadKnownGenes( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleLoadKnownGenes( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadKnownGenes(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
+        return this.handleLoadKnownGenes( taxon );
 
-    // /**
-    // * @see ubic.gemma.model.genome.GeneDao#loadPredictedGenes(ubic.gemma.model.genome.Taxon)
-    // */
-    // public java.util.Collection<PredictedGene> loadPredictedGenes( final ubic.gemma.model.genome.Taxon taxon ) {
-    // try {
-    // return this.handleLoadPredictedGenes( taxon );
-    // } catch ( Throwable th ) {
-    // throw new java.lang.RuntimeException(
-    // "Error performing 'ubic.gemma.model.genome.GeneDao.loadPredictedGenes(ubic.gemma.model.genome.Taxon taxon)' --> "
-    // + th, th );
-    // }
-    // }
-    //
-    // /**
-    // * @see ubic.gemma.model.genome.GeneDao#loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-    // */
-    // public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final ubic.gemma.model.genome.Taxon
-    // taxon ) {
-    // try {
-    // return this.handleLoadProbeAlignedRegions( taxon );
-    // } catch ( Throwable th ) {
-    // throw new java.lang.RuntimeException(
-    // "Error performing 'ubic.gemma.model.genome.GeneDao.loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon taxon)' --> "
-    // + th, th );
-    // }
-    // }
+    }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#remove(java.lang.Long)
      */
-
     @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
@@ -467,29 +365,6 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
         if ( entity != null ) {
             this.remove( entity );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#remove(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    public void remove( ubic.gemma.model.genome.Gene gene ) {
-        if ( gene == null ) {
-            throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
-        }
-        this.getHibernateTemplate().delete( gene );
     }
 
     /**
@@ -504,13 +379,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public Gene thaw( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleThaw( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.thaw(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
+        return this.handleThaw( gene );
+
     }
 
     /**
@@ -520,13 +390,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public Gene thawAliases( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.thawAliases( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.thawAliases(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
+        return this.thawAliases( gene );
+
     }
 
     /**
@@ -534,13 +399,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     @Override
     public Collection<Gene> thawLite( final java.util.Collection<Gene> genes ) {
-        try {
-            return this.handleThawLite( genes );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.thawLite(java.util.Collection genes)' --> " + th,
-                    th );
-        }
+        return this.handleThawLite( genes );
+
     }
 
     /**
@@ -548,7 +408,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends Gene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.update - 'entities' can not be null" );
         }
@@ -557,8 +417,9 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.genome.Gene ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -579,102 +440,81 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+    protected abstract java.lang.Integer handleCountAll();
 
     /**
      * Performs the core logic for
      * {@link #findByAccession(java.lang.String, ubic.gemma.model.common.description.ExternalDatabase)}
      */
     protected abstract ubic.gemma.model.genome.Gene handleFindByAccession( java.lang.String accession,
-            ubic.gemma.model.common.description.ExternalDatabase source ) throws java.lang.Exception;
+            ubic.gemma.model.common.description.ExternalDatabase source );
 
     /**
      * Performs the core logic for {@link #findByAlias(java.lang.String)}
      */
-    protected abstract java.util.Collection<Gene> handleFindByAlias( java.lang.String search )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleFindByAlias( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #findByOfficialSymbol(java.lang.String, ubic.gemma.model.genome.Taxon)}
      */
     protected abstract ubic.gemma.model.genome.Gene handleFindByOfficialSymbol( java.lang.String symbol,
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+            ubic.gemma.model.genome.Taxon taxon );
 
     protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) throws Exception;
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly );
 
     /**
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
     protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency ) throws java.lang.Exception;
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**
      * Performs the core logic for {@link #getCompositeSequenceCountById(long)}
      */
-    protected abstract long handleGetCompositeSequenceCountById( long id ) throws java.lang.Exception;
+    protected abstract long handleGetCompositeSequenceCountById( long id );
 
     /**
      * Performs the core logic for
      * {@link #getCompositeSequences(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract java.util.Collection<CompositeSequence> handleGetCompositeSequences(
-            ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
+            ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * Performs the core logic for {@link #getCompositeSequencesById(long)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleGetCompositeSequencesById( long id )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<CompositeSequence> handleGetCompositeSequencesById( long id );
 
     /**
      * Performs the core logic for {@link #getGenesByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenesByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleGetGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * Performs the core logic for {@link #getMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<Gene> handleGetMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleGetMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * Performs the core logic for {@link #loadKnownGenes(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<Gene> handleLoadKnownGenes( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleLoadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
-
-    //
-    // /**
-    // * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
-    // */
-    // protected abstract java.util.Collection<PredictedGene> handleLoadPredictedGenes( ubic.gemma.model.genome.Taxon
-    // taxon )
-    // throws java.lang.Exception;
-    //
-    // /**
-    // * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
-    // */
-    // protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
-    // ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract Gene handleThaw( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
+    protected abstract Gene handleThaw( ubic.gemma.model.genome.Gene gene );
 
     /**
      * Performs the core logic for {@link #thawLite(java.util.Collection)}
      */
-    protected abstract Collection<Gene> handleThawLite( java.util.Collection<Gene> genes ) throws java.lang.Exception;
+    protected abstract Collection<Gene> handleThawLite( java.util.Collection<Gene> genes );
 
 }

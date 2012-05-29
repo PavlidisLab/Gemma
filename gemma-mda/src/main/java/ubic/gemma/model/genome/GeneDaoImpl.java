@@ -554,6 +554,58 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return result;
     }
 
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    @Override
+    public void remove( java.util.Collection<? extends Gene> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
+        }
+        // remove associations
+        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
+                "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g in (:g)",
+                "g", entities );
+        if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
+
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#remove(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    public void remove( ubic.gemma.model.genome.Gene gene ) {
+        if ( gene == null ) {
+            throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
+        }
+        // remove associations
+        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
+                "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
+                gene );
+        if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
+
+        this.getHibernateTemplate().delete( gene );
+    }
+
+    /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    @Override
+    public Gene thawAliases( final Gene gene ) {
+        if ( gene.getId() == null ) return gene;
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from GeneImpl g "
+                        + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid",
+                gene.getId() );
+
+        return ( Gene ) res.iterator().next();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -565,7 +617,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         final String query = "select count(*) from GeneImpl";
         List<?> r = getHibernateTemplate().find( query );
         return ( Integer ) r.iterator().next();
@@ -573,7 +625,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     @SuppressWarnings({ "cast" })
     @Override
-    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
+    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) {
         Collection<Gene> genes = new HashSet<Gene>();
         final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
@@ -613,7 +665,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected Collection<Gene> handleFindByAlias( String search ) throws Exception {
+    protected Collection<Gene> handleFindByAlias( String search ) {
         final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.alias = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
@@ -639,7 +691,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( final Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) throws Exception {
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) {
 
         if ( genes.size() == 0 || ees.size() == 0 ) {
             throw new IllegalArgumentException( "nothing to search" );
@@ -713,7 +765,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( final Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency ) throws Exception {
+            Collection<? extends BioAssaySet> ees, Integer stringency ) {
 
         Gene givenG = gene;
         final long id = givenG.getId();
@@ -804,7 +856,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected long handleGetCompositeSequenceCountById( long id ) throws Exception {
+    protected long handleGetCompositeSequenceCountById( long id ) {
         final String queryString = "select count(distinct cs) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
@@ -819,8 +871,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign )
-            throws Exception {
+    protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq = null;
         final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
@@ -846,7 +897,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequencesById( long id ) throws Exception {
+    protected Collection<CompositeSequence> handleGetCompositeSequencesById( long id ) {
         final String queryString = "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProductImpl "
                 + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
@@ -859,7 +910,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleGetGenesByTaxon( Taxon taxon ) {
 
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
@@ -875,7 +926,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) {
 
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
@@ -892,7 +943,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) {
 
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
@@ -904,13 +955,40 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
+    // */
+    // @Override
+    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) {
+    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+    // + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
+    //
+    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    //
+    // }
+
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+    // */
+    // @Override
+    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) {
+    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+    // + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
+    //
+    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    // }
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
      */
     @Override
-    protected Collection<Gene> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+    protected Collection<Gene> handleLoadMultiple( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
             return new HashSet<Gene>();
         }
@@ -942,40 +1020,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return genes;
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
-    // */
-    // @Override
-    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-    // + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
-    //
-    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    //
-    // }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-    // */
-    // @Override
-    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-    // + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
-    //
-    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    // }
-
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleThaw(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Gene handleThaw( final Gene gene ) throws Exception {
+    protected Gene handleThaw( final Gene gene ) {
         if ( gene.getId() == null ) return gene;
 
         List<?> res = this
@@ -993,30 +1044,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Gene ) res.iterator().next();
     }
 
-    /**
-     * Only thaw the Aliases, very light version
-     * 
-     * @param gene
-     */
-    @Override
-    public Gene thawAliases( final Gene gene ) {
-        if ( gene.getId() == null ) return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from GeneImpl g "
-                        + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid",
-                gene.getId() );
-
-        return ( Gene ) res.iterator().next();
-    }
-
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleThawLite(java.util.Collection)
      */
     @Override
-    protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) throws Exception {
+    protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) {
         if ( genes.isEmpty() ) return new HashSet<Gene>();
 
         Collection<Gene> result = new HashSet<Gene>();
@@ -1158,10 +1192,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * @param css
-     * @return
-     * @throws Exception
+     * @return @
      */
-    private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) throws Exception {
+    private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) {
         Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
         if ( css == null || css.size() == 0 ) {
             return csId2geneIds;
@@ -1449,11 +1482,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * Fill in specificity information.
      * 
-     * @param coexpressions
-     * @throws Exception <p>
-     *         Performance notes: This often takes 3-5 seconds. PP Feb 2010
+     * @param coexpressions @
+     *        <p>
+     *        Performance notes: This often takes 3-5 seconds. PP Feb 2010
      */
-    private void postProcessSpecificity( final CoexpressionCollectionValueObject coexpressions ) throws Exception {
+    private void postProcessSpecificity( final CoexpressionCollectionValueObject coexpressions ) {
         // fill in information about the query gene
         StopWatch timer = new StopWatch();
         timer.start();

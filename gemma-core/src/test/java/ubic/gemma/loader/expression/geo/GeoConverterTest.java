@@ -866,14 +866,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
      * @throws Exception
      */
     @Test
-    @Transactional
     public void testMultipleTaxaIdentifiedBYAbbreviationsOnArrayWithOrganismColumn() throws Exception {
 
-        // Taxon t = taxonService.findByScientificName( "Salmonidae" );
+        Taxon t = taxonService.findByScientificName( "Salmonidae" );
 
-        // if ( t == null ) {
-        // super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-        // }
+        if ( t == null ) {
+            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
+        }
 
         Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
         Taxon whiteFish = taxonService.findByAbbreviation( "cclu" );

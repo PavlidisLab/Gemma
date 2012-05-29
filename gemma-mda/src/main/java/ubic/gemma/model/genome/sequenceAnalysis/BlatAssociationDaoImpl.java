@@ -24,7 +24,7 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,16 +138,11 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     }
 
     private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
-        session.lock( blatAssociation, LockMode.NONE );
+        session.buildLockRequest( LockOptions.NONE ).lock( blatAssociation );
         Hibernate.initialize( blatAssociation.getBioSequence() );
         Hibernate.initialize( blatAssociation.getGeneProduct() );
         Hibernate.initialize( blatAssociation.getBlatResult() );
         Hibernate.initialize( blatAssociation.getBlatResult().getTargetChromosome() );
-        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene() );
-        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
-        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene().getProducts() );
-        // Hibernate.initialize( blatAssociation.getBioSequence() );
-        // Hibernate.initialize( blatAssociation.getBioSequence().getSequenceDatabaseEntry() );
     }
 
     @Override

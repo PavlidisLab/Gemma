@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,6 +49,11 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     Gene g = null;
 
+    @Before
+    public void setup() {
+        clean();
+    }
+
     @After
     public void teardown() {
         if ( g != null ) {
@@ -59,7 +65,10 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
             }
         }
         try {
-            geneService.remove( geneService.loadAll() );
+            Collection<Gene> allGenes = geneService.loadAll();
+            for ( Gene gene : allGenes ) {
+                geneService.remove( gene );
+            }
         } catch ( Exception e ) {
 
         }
@@ -151,5 +160,24 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         g = geneService.findByNCBIId( 1 );
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
 
+    }
+
+    private void clean() {
+        if ( g != null ) {
+            try {
+                g = geneService.load( g.getId() );
+                geneService.remove( g );
+            } catch ( Exception e ) {
+                // ignore
+            }
+        }
+        try {
+            Collection<Gene> allGenes = geneService.loadAll();
+            for ( Gene gene : allGenes ) {
+                geneService.remove( gene );
+            }
+        } catch ( Exception e ) {
+            // ignore
+        }
     }
 }
