@@ -183,4 +183,12 @@ public class PhenotypeAssoOntologyHelper {
         }
         return characteristic;
     }
+    
+    /** Gemma might be ready but the ontology thread not finish loading */
+    public boolean areOntologiesAllLoaded() {
+
+        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
+                && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
+                .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
+    }
 }

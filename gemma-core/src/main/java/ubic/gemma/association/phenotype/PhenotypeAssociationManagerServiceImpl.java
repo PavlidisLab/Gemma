@@ -901,7 +901,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     treesPhenotypes.add( treeCharacteristicValueObject );
 
                 } catch ( EntityNotFoundException entityNotFoundException ) {
-                    if ( areOntologiesAllLoaded() ) {
+                    if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
                         System.err.println( "A valueUri found in the database was not found in the ontology" );
                         System.err.println( "This can happen when a valueUri is updated in the ontology" );
                         System.err.println( "valueUri: " + valueUri );
@@ -1443,13 +1443,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
         return possibleChildrenPhenotypes;
-    }
-
-    private boolean areOntologiesAllLoaded() {
-
-        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
-                && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
-                .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
     }
 
 }
