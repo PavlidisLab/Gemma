@@ -23,7 +23,8 @@ import java.util.Collection;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
- * Interface representing a class that can retrieve sequences from Blast databases.
+ * Interface representing a class that can retrieve sequences from Blast databases. (In later versions of BLAST this is
+ * known as Blastdbcmd)
  * 
  * @author pavlidis
  * @version $Id$

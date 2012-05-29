@@ -36,13 +36,15 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.util.concurrent.ParsingStreamConsumer;
 
 /**
- * Simple implementation of methods for fetching sequences from blast-formatted databases.
+ * Simple implementation of methods for fetching sequences from blast-formatted databases, using blastdbcmd (aka
+ * fastacmd)
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class SimpleFastaCmd implements FastaCmd {
 
+    // this name should be eventually changed to blastdbCmd.exe, since NCBI BLAST changed the name of the program.
     public static final String FASTA_CMD_ENV_VAR = "fastaCmd.exe";
 
     private static Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
@@ -51,8 +53,22 @@ public class SimpleFastaCmd implements FastaCmd {
 
     private static String blastDbHome = System.getenv( "BLASTDB" );
 
+    private String dbOption = "d";
+    private String queryOption = "s";
+    private String entryBatchOption = "i";
+
+    public SimpleFastaCmd() {
+        super();
+        if ( fastaCmdExecutable.contains( "blastdbcmd" ) ) {
+            dbOption = "db";
+            queryOption = "entry";
+            entryBatchOption = "entry_batch";
+        }
+    }
+
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     @Override
@@ -66,6 +82,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
     @Override
@@ -81,6 +98,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
      */
     @Override
@@ -119,7 +137,8 @@ public class SimpleFastaCmd implements FastaCmd {
 
         tmpOut.close();
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = fastaCmdExecutable + " -d " + database + " -i " + tmp.getAbsolutePath();
+        String command = fastaCmdExecutable + " -" + dbOption + " " + database + " -" + entryBatchOption + " "
+                + tmp.getAbsolutePath();
         log.debug( command );
         Process pr = null;
         log.debug( "BLASTDB=" + blastHome );
@@ -176,7 +195,7 @@ public class SimpleFastaCmd implements FastaCmd {
             blastHome = blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = fastaCmdExecutable + " -d " + database + " -s " + key;
+        String command = fastaCmdExecutable + " -" + dbOption + " " + database + " -" + queryOption + " " + key;
         Process pr = Runtime.getRuntime().exec( command, opts );
         if ( log.isDebugEnabled() ) log.debug( command + " ( " + opts[0] + ")" );
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
@@ -191,6 +210,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String)
      */
     @Override
@@ -204,6 +224,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String, java.lang.String)
      */
     @Override
@@ -217,6 +238,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     @Override
@@ -226,6 +248,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
     @Override
@@ -235,6 +258,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccession(java.lang.String, java.lang.String)
      */
     @Override
