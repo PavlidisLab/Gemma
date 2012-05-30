@@ -18,6 +18,13 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	},
 	layout:'vbox',
 	renderHomologues: function(homologues, mainGeneSymbol){
+		homologues.sort(function(a,b){
+			var A = a.taxonCommonName.toLowerCase();
+		    var B = b.taxonCommonName.toLowerCase();
+		    if (A < B) return -1;
+		    if (A > B) return  1;
+		    return 0;
+		});
 		var homologueStr = '';
 		var j, homologue;
 		for (j = 0; j < homologues.length; j++) {
@@ -37,6 +44,13 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	},
 	
 	renderGeneSets:function(geneSets){
+		geneSets.sort(function(a,b){
+			var A = a.name.toLowerCase();
+		    var B = b.name.toLowerCase();
+		    if (A < B) return -1;
+		    if (A > B) return  1;
+		    return 0;
+		});
 		var geneSetLinks = []; 
 		for (var i = 0; i < geneSets.length; i++) {
 			if (geneSets[i] && geneSets[i].name && geneSets[i].id) {
@@ -69,18 +83,26 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	 */
 	renderPhenotypes : function(geneDetails) {
 		if (geneDetails.phenotypes && geneDetails.phenotypes.length > 0) {
+			var phenotypes = geneDetails.phenotypes;
+			phenotypes.sort(function(a,b){
+				var A = a.value.toLowerCase();
+			    var B = b.value.toLowerCase();
+			    if (A < B) return -1;
+			    if (A > B) return  1;
+			    return 0;
+			});
 			var i = 0;
 			var text = '';
-			var limit = Math.min(3,geneDetails.phenotypes.length);
+			var limit = Math.min(3,phenotypes.length);
 			for(i = 0; i < limit ; i++){
-				text += '<a target="_blank" href="'+Gemma.LinkRoots.phenotypePage + geneDetails.phenotypes[i].urlId +
-				'">'+geneDetails.phenotypes[i].value+'</a>';
+				text += '<a target="_blank" href="'+Gemma.LinkRoots.phenotypePage + phenotypes[i].urlId +
+				'">'+phenotypes[i].value+'</a>';
 				if( (i+1) !== limit){
 					text += ', ';
 				}
 			}
-			if(limit < geneDetails.phenotypes.length){
-				text += ', '+ (geneDetails.phenotypes.length-limit) +' more';
+			if(limit < phenotypes.length){
+				text += ', '+ (phenotypes.length-limit) +' more';
 			}
 			text += "<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='See all associated phenotypes'"+
 				"onClick='Ext.getCmp(&#39;"+this.id+"&#39;).changeTab(&#39;phenotypes&#39;)'>";
@@ -109,6 +131,10 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		} else {
 			return "[ Not available ]";
 		}
+	},
+	renderAliases: function(aliases) {
+		aliases.sort();
+		return aliases.join(', ');
 	},
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
@@ -141,7 +167,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: geneDetails.taxonCommonName
 						}, {
 							fieldLabel: 'Aliases',
-							html: geneDetails.aliases.join(', ')
+							html: this.renderAliases(geneDetails.aliases)
 						}, {
 							fieldLabel: 'NCBI ID',
 							html: geneDetails.ncbiId + ' <a target="_blank" title="NCBI Gene link"' +
