@@ -86,7 +86,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Before
     public void setup() throws Exception {
-        if ( setup ) return;
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
@@ -129,12 +128,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
         gene.setNcbiId( geneNcbiId );
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
-        setup = true;
     }
+
     @After
     public void tearDown() throws Exception {
-        geneService.remove( gene );
-        eeService.delete( ee );
+        if ( gene != null ) geneService.remove( gene );
+        if ( ee != null ) eeService.delete( ee );
     }
 
     /**
