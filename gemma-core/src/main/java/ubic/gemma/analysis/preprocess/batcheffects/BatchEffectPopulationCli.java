@@ -49,7 +49,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
         Exception ex = super.processCommandLine( "BatchEffectPopulation", args );
         if ( ex != null ) return ex;
 
-        BatchInfoPopulationService ser = ( BatchInfoPopulationService ) getBean( "batchInfoPopulationService" );
+        BatchInfoPopulationService ser = getBean( BatchInfoPopulationService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             if ( bas instanceof ExpressionExperiment ) {

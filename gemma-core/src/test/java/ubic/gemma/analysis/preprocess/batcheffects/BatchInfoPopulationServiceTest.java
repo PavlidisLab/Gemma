@@ -40,7 +40,7 @@ public class BatchInfoPopulationServiceTest {
 
     @Test
     public void testDatesToBatchA() throws Exception {
-        BatchInfoPopulationServiceImpl ser = new BatchInfoPopulationServiceImpl();
+        BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
 
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10, 10, 1, 1 );
@@ -68,8 +68,7 @@ public class BatchInfoPopulationServiceTest {
 
     @Test
     public void testDatesToBatchB() throws Exception {
-        BatchInfoPopulationServiceImpl ser = new BatchInfoPopulationServiceImpl();
-
+        BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10 );
         Date d = cal.getTime();
@@ -100,8 +99,7 @@ public class BatchInfoPopulationServiceTest {
 
     @Test
     public void testDatesToBatchC() throws Exception {
-        BatchInfoPopulationServiceImpl ser = new BatchInfoPopulationServiceImpl();
-
+        BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10, 10, 1, 1 );
         Date d = cal.getTime();
@@ -126,8 +124,7 @@ public class BatchInfoPopulationServiceTest {
 
     @Test
     public void testDatesToBatchD() throws Exception {
-        BatchInfoPopulationServiceImpl ser = new BatchInfoPopulationServiceImpl();
-
+        BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10, 10, 1, 1 );
         Date d = cal.getTime();
