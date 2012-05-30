@@ -195,7 +195,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         EasyMock.replay( phenotypeAssoOntologyHelperMocked );
 
-        this.phenotypeAssociationManagerService.setOntologyHelper( phenotypeAssoOntologyHelperMocked );
+        // We cannot do this == this is not a mock object being modified!
+
+        // this.phenotypeAssociationManagerService.setOntologyHelper( phenotypeAssoOntologyHelperMocked );
     }
 
 }
