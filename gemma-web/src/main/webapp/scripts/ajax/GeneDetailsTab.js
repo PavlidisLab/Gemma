@@ -113,7 +113,8 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
 		
-		this.on('render', function(){
+		// need to do this on render so we can show a load mask
+		this.on('afterrender', function(){
 			if (!this.loadMask && this.getEl()) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
 					msg: Gemma.StatusText.Loading.generic,
@@ -124,7 +125,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 			
 			GeneController.loadGeneDetails(this.geneId, function(geneDetails){
 			
-			this.loadMask.hide();
+				this.loadMask.hide();
 				this.add([
 				{
 						html: '<div style="font-weight: bold; font-size:1.3em;">' + geneDetails.name + '<br>' +
@@ -185,7 +186,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: geneDetails.description
 						}]
 					}]);
-				this.doLayout();
+				this.syncSize();
 			}.createDelegate(this));
 		});
 	}
