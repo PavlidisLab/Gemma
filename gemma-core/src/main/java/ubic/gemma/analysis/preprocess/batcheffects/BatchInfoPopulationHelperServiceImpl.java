@@ -31,6 +31,7 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -53,6 +54,7 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  * @author paul
  * @version $Id$
  */
+@Service
 public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulationHelperService {
 
     private static Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );

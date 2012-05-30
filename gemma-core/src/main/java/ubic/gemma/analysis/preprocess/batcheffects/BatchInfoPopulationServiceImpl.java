@@ -89,7 +89,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     @Autowired
-    private BatchInfoPopulationHelperService helper = null;
+    private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService = null;
@@ -191,7 +191,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         removeExistingBatchFactor( ee );
 
-        ExperimentalFactor factor = helper.convertToFactor( ee, dates );
+        ExperimentalFactor factor = batchInfoPopulationHelperService.convertToFactor( ee, dates );
 
         if ( !dates.isEmpty() ) {
             int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues()
