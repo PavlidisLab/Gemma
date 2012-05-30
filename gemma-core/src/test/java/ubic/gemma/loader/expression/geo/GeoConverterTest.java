@@ -403,21 +403,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
-     * Not all quantitation types are found in all samples, and not all in the same order. This is a broken GSE for us.
-     */
-    // public void testConvertGSE4345() throws Exception {
-    // InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/gse4345Short/GSE4345.soft.gz" ) );
-    // GeoFamilyParser parser = new GeoFamilyParser();
-    // parser.parse( is );
-    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE4345" );
-    // DatasetCombiner datasetCombiner = new DatasetCombiner();
-    // GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-    // series.setSampleCorrespondence( correspondence );
-    // Object result = this.gc.convert( series );
-    // assertNotNull( result );
-    // }
-    /**
      * Has two species.
      * 
      * @throws Exception
@@ -859,12 +844,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Test
     public void testMultipleTaxaIdentifiedBYAbbreviationsOnArrayWithOrganismColumn() throws Exception {
 
-        Taxon t = taxonService.findByScientificName( "Salmonidae" );
-
-        if ( t == null ) {
-            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
-        }
-
         Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
         Taxon whiteFish = taxonService.findByAbbreviation( "cclu" );
         Taxon rainbowSmelt = taxonService.findByAbbreviation( "omor" );
@@ -873,7 +852,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( atlanticSalm );
 
         gc = this.getBean( GeoConverter.class ); // prototype bean.
-        // gc.clear();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GPL2899_family.soft.gz" ) );
@@ -899,8 +877,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
             }
         }
         assertEquals( 4, taxa.size() );
-
-        log.info( taxa.toArray() );
 
         // original file has five taxa, test file just kept four.
         assertTrue( taxa.contains( atlanticSalm ) );
