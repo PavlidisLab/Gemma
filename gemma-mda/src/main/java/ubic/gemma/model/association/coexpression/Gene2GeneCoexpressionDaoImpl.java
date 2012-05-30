@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.sf.ehcache.Element;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -186,17 +184,17 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         /*
          * Filter
          */
-        Collection<Integer> seen = new HashSet<Integer>();
+        Collection<GeneLink> seen = new HashSet<GeneLink>();
         Collections.sort( rawResults, new SupportComparator() );
         for ( Gene2GeneCoexpression g2g : rawResults ) {
 
             if ( g2g.getNumDataSets() < stringency ) continue;
 
-            int hash = hash( g2g );
-            if ( seen.contains( hash ) ) {
+            GeneLink link = new GeneLink( g2g );
+            if ( seen.contains( link ) ) {
                 continue;
             }
-            seen.add( hash );
+            seen.add( link );
 
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
@@ -330,12 +328,12 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
             Collections.sort( lr, new SupportComparator() );
 
-            Collection<Integer> seen = new HashSet<Integer>();
+            Collection<GeneLink> seen = new HashSet<GeneLink>();
 
             for ( Gene2GeneCoexpression g2g : r ) {
 
-                int hash = hash( g2g );
-                if ( seen.contains( hash ) ) {
+                GeneLink link = new GeneLink( g2g );
+                if ( seen.contains( link ) ) {
                     continue;
                 }
 
@@ -346,7 +344,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 result.get( g2g.getFirstGene() ).add( g2g );
                 result.get( g2g.getSecondGene() ).add( g2g );
 
-                seen.add( hash );
+                seen.add( link );
             }
 
             /*
@@ -357,15 +355,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         return result;
 
-    }
-
-    public int hash( Gene2GeneCoexpression g2g ) {
-        int g1 = g2g.getFirstGene().hashCode();
-        int g2 = g2g.getSecondGene().hashCode();
-        if ( g1 < g2 ) {
-            return new HashCodeBuilder().append( g1 ).append( g2 ).toHashCode();
-        }
-        return new HashCodeBuilder().append( g2 ).append( g1 ).toHashCode();
     }
 
     /**
@@ -433,9 +422,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             Set<GeneLink> allSeen = new HashSet<GeneLink>();
             for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
                 Gene2GeneCoexpression g2g = iterator.next();
-                Gene g1 = g2g.getFirstGene();
-                Gene g2 = g2g.getSecondGene();
-                GeneLink seen = new GeneLink( g1, g2 );
+
+                GeneLink seen = new GeneLink( g2g );
 
                 if ( allSeen.contains( seen ) ) {
                     iterator.remove();
@@ -509,8 +497,13 @@ class GeneLink {
 
     private Gene g1;
     private Gene g2;
+    private boolean positive = true;
 
-    public GeneLink( Gene g1, Gene g2 ) {
+    public GeneLink( Gene2GeneCoexpression link ) {
+        this( link.getFirstGene(), link.getSecondGene(), link.getEffect() > 0 );
+    }
+
+    public GeneLink( Gene g1, Gene g2, boolean positive ) {
         if ( g1.getId() < g2.getId() ) {
             this.g1 = g1;
             this.g2 = g2;
@@ -518,6 +511,7 @@ class GeneLink {
             this.g1 = g2;
             this.g2 = g1;
         }
+        this.positive = positive;
     }
 
     @Override
@@ -526,6 +520,7 @@ class GeneLink {
         int result = 1;
         result = prime * result + ( ( g1 == null ) ? 0 : g1.hashCode() );
         result = prime * result + ( ( g2 == null ) ? 0 : g2.hashCode() );
+        result = prime * result + ( positive ? 1231 : 1237 );
         return result;
     }
 
@@ -541,6 +536,7 @@ class GeneLink {
         if ( g2 == null ) {
             if ( other.g2 != null ) return false;
         } else if ( !g2.equals( other.g2 ) ) return false;
+        if ( positive != other.positive ) return false;
         return true;
     }
 
