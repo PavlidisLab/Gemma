@@ -63,7 +63,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         if ( ee == null ) {
             String path = getTestFileBasePath();
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gds868Short" ) );
+                    + "gds994Medium" ) );
             Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
