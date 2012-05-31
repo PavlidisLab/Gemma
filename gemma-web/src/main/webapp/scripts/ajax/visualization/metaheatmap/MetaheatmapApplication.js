@@ -268,6 +268,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 									}
 									var geneSetGrid = new Gemma.GeneMembersSaveGrid({
 										genes: this.visualizationPanel.getSelectedGeneIds(),
+										allowSaveToSession: false,
 										frame: false
 									});
 									this.getEl().mask();

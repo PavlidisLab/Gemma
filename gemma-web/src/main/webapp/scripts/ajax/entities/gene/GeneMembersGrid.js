@@ -171,24 +171,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 		
 	},
-	/*buttons:[new Ext.Button({
-			text: "Done",
-			handler: this.done,
-			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
-			scope: this,
-			disabled: true,
-			hidden: this.allowSaveToSession
-		}), new Ext.Button({
-			text: "Export",
-			qtip: 'Get a plain text version of this list',
-			handler: this.exportToTxt,
-			scope: this,
-			disabled: false
-		}),{
-			text: "Cancel",
-			handler: this.cancel,
-			scope: this
-		}],*/
 	initComponent : function() {
 		Ext.apply(this, {
 			store : new Ext.data.SimpleStore({
@@ -381,7 +363,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 	// take note of these config options
 	/**
-	 * @cfg controls presence of 'done' button
+	 * @cfg controls action of 'ok' button (if false, will act as cancel)
 	 */
 	allowSaveToSession:true,
 	/**
@@ -397,9 +379,9 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	 */
 	sortableColumnsView:false, 
 	/**
-	 * @cfg controls whether the cancel button is visible
+	 * @cfg controls whether the ok & cancel buttons are visible
 	 */
-	hideCancel:false,
+	hideOkCancel:false,
 	/**
 	 * @cfg controls whether to show a 'save as' button in addition to a save button
 	 */
@@ -536,13 +518,19 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			scope: this,
 			disabled: this.enableSaveOnlyAfterModification
 		});
-		this.doneButton = new Ext.Button({
-			text: "Done",
-			handler: this.done,
-			qtip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.doneTT,
+		this.okButton = new Ext.Button({
+			text: "OK",
+			handler: this.okHandler,
 			scope: this,
-			disabled: true,
-			hidden: !this.allowSaveToSession
+			disabled: (!this.allowSaveToSession || this.hideOkCancel),
+			hidden: (!this.allowSaveToSession || this.hideOkCancel)
+		});	
+		this.cancelButton = new Ext.Button({
+			text: "Cancel",
+			handler: this.cancel,
+			scope: this,
+			hidden: (this.allowSaveToSession || this.hideOkCancel),
+			disabled: (this.allowSaveToSession || this.hideOkCancel)
 		});
 		this.exportButton = new Ext.Button({
 			icon: "/Gemma/images/download.gif",
@@ -550,18 +538,11 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			handler: this.exportToTxt,
 			scope: this,
 			disabled: false
-		});		
-		this.cancelButton = new Ext.Button({
-			text: "Cancel",
-			handler: this.cancel,
-			scope: this,
-			hidden: this.hideCancel,
-			disabled: this.hideCancel
-		});
+		});	
 		
 		Ext.apply(this, {
 			buttonAlign: 'left',
-			fbar : [this.exportButton,'->',this.saveButton, this.saveAsButton, this.doneButton, this.cancelButton]
+			fbar : [this.exportButton,'->',this.saveButton, this.saveAsButton, this.okButton, this.cancelButton]
 		});
 		
 		// note: using initComponent of super's super!! (otherwise buttons don't work)
@@ -612,22 +593,18 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 		this.on('doneModification', function() {
 			this.changesMade = false;
-				// this.saveButton.disable();
-				 this.doneButton.disable();
-			});
+		});
 
 		this.getStore().on("remove", function() {
 					this.fireEvent("removegenes");
 					this.changesMade = true;
 					this.saveButton.enable();
-					this.doneButton.enable();
 				}, this);
 
 		this.getStore().on("add", function() {
 					this.fireEvent("addgenes");
 					this.changesMade = true;
 					this.saveButton.enable();
-					this.doneButton.enable();
 				}, this);
 
 		
@@ -667,14 +644,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 				type : 'boolean',
 				defaultValue : true
 			}]),
-
-	/**
-	 * When user clicks cancel, just let parent know
-	 */
-	cancel : function() {
-		this.fireEvent('doneModification');
-	},
-
 	/**
 	 * Sets ups name and description for new group
 	 * TODO refactor out, some duplicated code with ExpressionExperimentMembersGrid.createDetails
@@ -723,12 +692,20 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			this.newGroupDescription = "Temporary gene group created " + (new Date()).toString();
 		}
 	},
+	okHandler: function(){
+		// if user has made changes, save to session
+		// if user hasn't made changes, just close
+		if(this.changesMade && this.allowSaveToSession){
+			this.prepareAndSaveToSession();
+		}else{
+			this.cancel();
+		}
+	},
 
 	/**
-	 * When user clicks done, just save to session
+	 * populate set details and save to session
 	 */
-	done : function() {
-						
+	prepareAndSaveToSession : function() {
 		// check if user is trying to save an empty set
 		if(this.getStore().getRange() && this.getStore().getRange().length === 0){
 			Ext.Msg.alert('Cannot use empty set', 'You are trying to use an empty set. '+
@@ -738,7 +715,14 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		this.createDetails();
 		this.createInSession();
 	},
-	
+
+	/**
+	 * When user clicks cancel, just let parent know
+	 */
+	cancel : function() {
+		this.fireEvent('doneModification');
+	},
+
 	exportToTxt : function(){
 		// make download link
 		var downloadLink = String.format("/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds());
