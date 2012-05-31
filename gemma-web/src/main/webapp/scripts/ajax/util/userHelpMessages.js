@@ -262,8 +262,8 @@ Gemma.HelpText.WidgetDefaults = {
 		},
 		StatusText: {
 			random: 'Visualizing 20 \'random\' genes.',
-			one: 'Visualizaing selected gene.',
-			multiple: 'Visualizaing selected genes. Note that not all genes are necessarily in the data set.'
+			one: 'Visualizing selected gene.',
+			multiple: 'Visualizing selected genes. Note that not all genes are necessarily in the data set.'
 		}
 	},
 	EEManager:{
