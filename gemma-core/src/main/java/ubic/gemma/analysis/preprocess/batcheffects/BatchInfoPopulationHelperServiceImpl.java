@@ -109,6 +109,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             // we still put the processing dates in, below.
         } else {
             ef = makeFactorForBatch( ee );
+            // assert ef.getId() != null;
+
             for ( String batchId : datesToBatch.keySet() ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
@@ -144,7 +146,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
          */
         for ( BioMaterial bm : dates.keySet() ) {
-            bioMaterialService.thaw( bm );
+            // bioMaterialService.thaw( bm );
 
             if ( !d2fv.isEmpty() ) bm.getFactorValues().add( d2fv.get( dates.get( bm ) ) );
 
@@ -328,10 +330,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             throw new IllegalStateException( "No experimental design for " + ee );
         }
 
-        /*
-         * Note: this call should not be needed because of cascade behaviour.
-         */
-        // experimentalFactorService.create( ef );
+        experimentalFactorService.create( factor );
 
         if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         ed.getExperimentalFactors().add( factor );
