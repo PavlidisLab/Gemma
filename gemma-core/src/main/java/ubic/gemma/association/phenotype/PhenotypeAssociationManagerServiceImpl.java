@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +76,9 @@ import ubic.gemma.security.authentication.UserManager;
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
+
+    @Autowired
+    private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     @Autowired
     private PhenotypeAssociationService associationService;
@@ -902,9 +907,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
-                        System.err.println( "A valueUri found in the database was not found in the ontology" );
-                        System.err.println( "This can happen when a valueUri is updated in the ontology" );
-                        System.err.println( "valueUri: " + valueUri );
+                        log.error( "A valueUri found in the database was not found in the ontology" );
+                        log.error( "This can happen when a valueUri is updated in the ontology" );
+                        log.error( "valueUri: " + valueUri );
                     }
                 }
             }
@@ -1429,7 +1434,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             simpleTreeValueObjects.add( simpleTreeValueObject );
 
             for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-                convertToFlatTree( simpleTreeValueObjects, tree, treeCharacteristicValueObject.getUrlId() );
+                convertToFlatTree( simpleTreeValueObjects, tree, treeCharacteristicValueObject.get_id() );
             }
         }
     }
