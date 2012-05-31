@@ -65,23 +65,9 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         Gene gene = this.geneService.load( geneId );
 
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( gene.getId() );
-        Collection<GeneValueObject> initialResults = this.geneService.loadValueObjects( ids );
+        GeneValueObject details = this.geneService.loadValueObject( geneId );
 
-        if ( initialResults.size() == 0 ) {
-            return null;
-        }
-
-        GeneValueObject initialResult = initialResults.iterator().next();
-        GeneValueObject details = new GeneValueObject( initialResult );
-
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
-        }
-        details.setAliases( aliasStrs );
+        details.setAliases( getAliasStrings( gene ) );
 
         if( gene.getMultifunctionality() != null ){
             details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
@@ -91,21 +77,11 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
-        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
-        details.setGeneSets( gsvos );
+        details.setGeneSets( this.getGeneSets( gene ) );
 
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
-        details.setHomologues( homologues );
-
-        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
-        for(PhenotypeAssociation pa : phenoAssocs){
-            cvos.addAll(CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ));
-        }
-        details.setPhenotypes( cvos );
+        details.setHomologues( getHomologues( gene ) );
+        
+        details.setPhenotypes( this.getPhenotypes( gene ) );
         
         /*
          * Look for the gene as an attribute in experiments.
@@ -119,6 +95,53 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         return details;
 
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    private Collection<String> getAliasStrings( Gene gene ) {
+        Collection<GeneAlias> aliasObjs = gene.getAliases();
+        Collection<String> aliasStrs = new ArrayList<String>();
+        for ( GeneAlias ga : aliasObjs ) {
+            aliasStrs.add( ga.getAlias() );
+        }
+        return aliasStrs;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    private Collection<GeneSetValueObject> getGeneSets( Gene gene ) {
+        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
+        return gsvos;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    private Collection<GeneValueObject> getHomologues( Gene gene ) {
+        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        return homologues;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    private Collection<CharacteristicValueObject> getPhenotypes( Gene gene ) {
+        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
+        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
+        for(PhenotypeAssociation pa : phenoAssocs){
+            cvos.addAll(CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ));
+        }
+        return cvos;
     }
 
     /**
