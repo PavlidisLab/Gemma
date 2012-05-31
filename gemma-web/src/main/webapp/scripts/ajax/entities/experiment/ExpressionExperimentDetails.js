@@ -315,6 +315,13 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     },
     renderEESets:function(eeSets){
+    	eeSets.sort(function(a,b){
+			var A = a.name.toLowerCase();
+		    var B = b.name.toLowerCase();
+		    if (A < B) return -1;
+		    if (A > B) return  1;
+		    return 0;
+		});
 		var eeSetLinks = [];
 		var i;
 		for (i = 0; i < eeSets.length; i++) {
