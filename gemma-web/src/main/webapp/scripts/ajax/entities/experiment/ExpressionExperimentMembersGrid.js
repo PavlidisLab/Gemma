@@ -28,11 +28,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	queryText : '',
 	addExperiments: true,
 	taxonId: null,
-	allowSaveToSession:true, // controls presence of 'done' button
+	allowSaveToSession:true, // controls action of 'ok' button (if false, will act as cancel)
 	allowAdditions:true, // controls presence of top toolbar
 	allowRemovals:true, // controls presence of 'remove experiment' buttons on every row
 	sortableColumnsView:false, // controls whether the data appears in two columns or formatted into one
-	hideCancel:false,
+	hideOkCancel:false,
 	showSeparateSaveAs: false, // show a 'save as' button in addition to a save button
 	enableSaveOnlyAfterModification: false, // if save button is show, leave it disabled until an experiment is added or removed
 	/**
@@ -299,12 +299,19 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			scope: this,
 			disabled: this.enableSaveOnlyAfterModification // defaults to false
 		});
-		this.doneButton = new Ext.Button({
-			text: "Done",
-			handler: this.done,
-			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
+		this.okButton = new Ext.Button({
+			text: "OK",
+			handler: this.okHandler,
 			scope: this,
-			disabled: true
+			disabled: (!this.allowSaveToSession || this.hideOkCancel),
+			hidden: (!this.allowSaveToSession || this.hideOkCancel)
+		});	
+		this.cancelButton = new Ext.Button({
+			text: "Cancel",
+			handler: this.cancel,
+			scope: this,
+			hidden: (this.allowSaveToSession || this.hideOkCancel),
+			disabled: (this.allowSaveToSession || this.hideOkCancel)
 		});
 		this.exportButton = new Ext.Button({
 			icon: "/Gemma/images/download.gif",
@@ -313,30 +320,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			scope: this,
 			disabled: false
 		});	
-		this.cancelButton = new Ext.Button({
-			text: "Cancel",
-			handler: this.cancel,
-			scope: this,
-			hidden: this.hideCancel
-		});
 	
 		Ext.apply(this, {
-		
-			setButtonVisibilities: function(){
-				
-				this.saveButton.show();
-				
-				if (this.allowSaveToSession) {
-					this.doneButton.show();
-				}
-				else {
-					this.doneButton.hide();
-				}				
-			},
 			buttonAlign: 'left',
-			buttons: [this.exportButton, '->',this.saveButton, this.saveAsButton, this.doneButton, this.cancelButton]
+			buttons: [this.exportButton, '->',this.saveButton, this.saveAsButton, this.okButton, this.cancelButton]
 		});
-		this.setButtonVisibilities();
+		this.saveButton.show();		
 
 		Ext.apply(this, {
 			store : new Ext.data.SimpleStore({
@@ -371,20 +360,16 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.on('doneModification', function() {
 			this.changesMade = false;
-				// this.saveButton.disable();
-				 this.doneButton.disable();
-			});
+		});
 
 		this.getStore().on("remove", function(){
 			this.changesMade = true;
 			this.saveButton.enable();
-			this.doneButton.enable();
 		}, this);
 
 		this.getStore().on("add", function(){
 			this.changesMade = true;
 			this.saveButton.enable();
-			this.doneButton.enable();
 		}, this);
 
 		this.getStore().on("load", function(store, records, options) {
@@ -505,11 +490,20 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		//items:[new Gemma.LoginPanel({})]});
 		//win.show();
 	},
+	okHandler: function(){
+		// if user has made changes, save to session
+		// if user hasn't made changes, just close
+		if(this.changesMade && this.allowSaveToSession){
+			this.prepareAndSaveToSession();
+		}else{
+			this.cancel();
+		}
+	},
 
 	/**
-	 * When user clicks done, just save to session
+	 * populate set details and save to session
 	 */
-	done : function() {
+	prepareAndSaveToSession : function() {
 				
 		// check if user is trying to save an empty set
 		if(this.getStore().getRange() && this.getStore().getRange().length === 0){

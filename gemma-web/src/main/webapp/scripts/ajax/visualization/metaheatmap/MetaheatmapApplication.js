@@ -297,7 +297,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 									}
 									var eeSetGrid = new Gemma.ExpressionExperimentMembersGrid({
 										eeids: this.visualizationPanel.getSelectedDatasetIds(),
-										frame: false
+										frame: false,
+										allowSaveToSession: false
 									});
 									this.getEl().mask();
 									var popup = new Ext.Window({

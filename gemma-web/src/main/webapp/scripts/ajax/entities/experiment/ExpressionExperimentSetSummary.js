@@ -282,7 +282,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 			allowRemovals: this.editable,
 			allowAdditions: this.editable,
 			sortableColumnsView:true,
-			hideCancel:true,
+			hideOkCancel:true,
 			showSeparateSaveAs:true,
 			enableSaveOnlyAfterModification: true,
 			flex: 1
