@@ -203,6 +203,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.geneSelectionEditor.on('geneListModified', function(geneSetIds, geneIds) {
 				this.setGeneIds(geneIds);
 				this.updateButtonText();
+				this.geneCombo.setValue('Custom gene group ('+geneIds.length+' genes)');
 				this.listModified = true;
 			}, this);
 
@@ -298,6 +299,8 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.setGeneIds([]);
 		this.updateButtonText();
 		this.geneCombo.reset();
+		this.editBtn.disable();
+		this.clearBtn.disable();
 	},
 	vizBtnHandler: function(){
 	
@@ -313,6 +316,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			geneList = [];
 			title = "Data for a 'random' sampling of probes";
 			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
+			this.editBtn.disable();
 		}
 		Ext.apply(this.visPanel, {
 			downloadLink: downloadLink
