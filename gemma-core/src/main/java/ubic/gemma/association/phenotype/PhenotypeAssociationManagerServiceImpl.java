@@ -813,7 +813,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
-        if ( ( evidenceFilter != null && !evidenceFilter.isShowOnlyEditable() ) || isAdmin ) {
+        if ( !showOnlyEditable ) {
             // all Public phenotypes in Gemma linked to all the genes containing them
             publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
                     null );
@@ -831,7 +831,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
         HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
-        if ( isAdmin ) {
+        if ( isAdmin && !showOnlyEditable ) {
             // admin can see all private data
             userOwnedorSharedPhenotypesGenesAssociations = this.associationService
                     .findAllPhenotypesGenesAssociations( taxon );
