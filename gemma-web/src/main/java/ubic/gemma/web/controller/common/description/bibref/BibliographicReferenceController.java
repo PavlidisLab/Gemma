@@ -83,9 +83,23 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+    @RequestMapping("/searchBibRefs.html")
+    public abstract ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response );
+    
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
     @RequestMapping("/showAllEeBibRefs.html")
     public abstract ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response );
 
+
+    /**
+     * AJAX 
+     * @return collection of all bib refs that are for an experiment
+     */
+    public Collection<BibliographicReferenceValueObject> loadAllForExperiments();
     /**
      * For AJAX calls. Refresh the Gemma entry based on information from PubMed.
      * 

@@ -68,7 +68,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					anchor += generateLink('showDialogViewBibliographicReferenceOutsideOfGemma();', imageSrc, 'View Bibliographic Reference', size, size);
 				} else {
 					var description = 'Go to Bibliographic Reference (in new window)';
-					anchor += '<a target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html?pubmedID=' +
+					anchor += '<a target="_blank" href="/Gemma/bibRef/searchBibRefs.html?pubmedID=' +
 			        	pudmedId +
 			        	'"><img src="' + imageSrc + '" alt="' + description + '" ext:qtip="' + description + '" width="' + size + '" height="' + size + '" /></a>';
 				}		        	

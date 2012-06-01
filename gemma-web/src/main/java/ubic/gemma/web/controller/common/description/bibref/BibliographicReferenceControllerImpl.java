@@ -21,8 +21,10 @@ package ubic.gemma.web.controller.common.description.bibref;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +41,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
@@ -264,12 +267,44 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     }
 
     /* (non-Javadoc)
+     * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#searchBibRefs(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
+    @Override
+    @RequestMapping("/searchBibRefs.html")
+    public ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "bibRefList" );
+    }
+    
+    /* (non-Javadoc)
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/showAllEeBibRefs.html")
-    public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "bibRefList" );
+    public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ){
+        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService.getAllExperimentLinkedReferences();
+        
+        Map<CitationValueObject, ExpressionExperimentValueObject> citationToEEs = new HashMap<CitationValueObject, ExpressionExperimentValueObject>();
+        for( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet()){
+            citationToEEs.put( CitationValueObject.convert2CitationValueObject( entry.getValue() ), 
+                    new ExpressionExperimentValueObject( entry.getKey() ));
+        }
+        //Collection<CitationValueObject> citations = BibliographicReferenceValueObject.constructCitations( eeToBibRefs.values() );
+        
+        return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
+    @Override
+    public Collection<BibliographicReferenceValueObject> loadAllForExperiments( ){
+        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService.getAllExperimentLinkedReferences();
+        Collection<BibliographicReference> bibRefs = eeToBibRefs.values();
+        Collection<BibliographicReferenceValueObject> bibRefVOs = BibliographicReferenceValueObject.convert2ValueObjects( bibRefs );
+        
+        //Collection<CitationValueObject> citations = BibliographicReferenceValueObject.constructCitations( eeToBibRefs.values() );
+        
+        return bibRefVOs;
     }
 
     /* (non-Javadoc)
