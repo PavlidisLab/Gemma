@@ -15,11 +15,11 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
@@ -124,7 +124,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
 
-        Collection<CharacteristicValueObject> mgedCategory = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> mgedCategory = new TreeSet<CharacteristicValueObject>();
 
         String queryString = "SELECT distinct CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION join INVESTIGATION on PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID join CHARACTERISTIC on CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
