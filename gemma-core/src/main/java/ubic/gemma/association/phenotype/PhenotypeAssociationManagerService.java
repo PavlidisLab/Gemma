@@ -70,6 +70,17 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri );
 
     /**
+     * Return all evidence for a specific gene id with evidence flagged, indicating more information
+     * 
+     * @param geneId The Evidence id
+     * @param phenotypesValuesUri the chosen phenotypes
+     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
+     * @return The Gene we are interested in
+     */
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
+            EvidenceFilter evidenceFilter );
+
+    /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query

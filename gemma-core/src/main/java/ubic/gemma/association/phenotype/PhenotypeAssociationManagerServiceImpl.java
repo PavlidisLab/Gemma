@@ -207,6 +207,30 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
+     * Return all evidence for a specific gene id with evidence flagged, indicating more information
+     * 
+     * @param geneId The Evidence id
+     * @param phenotypesValuesUri the chosen phenotypes
+     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
+     * @return The Gene we are interested in
+     */
+    @Override
+    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
+            EvidenceFilter evidenceFilter ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findPhenotypeAssociationForGeneId( geneId );
+
+        if ( evidenceFilter.isShowOnlyEditable() ) {
+            phenotypeAssociations = filterPhenotypeAssociationsMyAnnotation( phenotypeAssociations );
+        }
+
+        Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
+
+        return groupCommonEvidences( evidenceValueObjects );
+    }
+
+    /**
      * Given a set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
@@ -1108,6 +1132,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /** Change a searchQuery to make it search in the Ontology using * and AND */
     private String prepareOntologyQuery( String searchQuery ) {
+        if ( searchQuery.startsWith( "\\\"" ) && searchQuery.endsWith( "\\\"" ) ) {
+            return searchQuery;
+        }
+
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
     }
@@ -1448,6 +1476,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
         return possibleChildrenPhenotypes;
+    }
+
+    /** filter evidence by owned by user or shared write access */
+    private Collection<PhenotypeAssociation> filterPhenotypeAssociationsMyAnnotation(
+            Collection<PhenotypeAssociation> phenotypeAssociations ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociationsFiltered = new HashSet<PhenotypeAssociation>();
+
+        for ( PhenotypeAssociation p : phenotypeAssociations ) {
+
+            Boolean currentUserHasWritePermission = false;
+            Boolean isShared = this.securityService.isShared( p );
+            Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
+
+            if ( isShared ) {
+                currentUserHasWritePermission = this.securityService.isEditable( p );
+            }
+
+            if ( currentUserHasWritePermission || currentUserIsOwner ) {
+                phenotypeAssociationsFiltered.add( p );
+            }
+        }
+        return phenotypeAssociationsFiltered;
     }
 
 }
