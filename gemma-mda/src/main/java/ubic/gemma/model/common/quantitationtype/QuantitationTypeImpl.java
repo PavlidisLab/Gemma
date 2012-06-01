@@ -19,9 +19,6 @@ package ubic.gemma.model.common.quantitationtype;
  */
 public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationtype.QuantitationType {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -352202738189491165L;
 
     @Override
@@ -103,11 +100,11 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
         if ( this.getScale() != null ) {
             hashCode = hashCode + this.getScale().hashCode();
         }
-        hashCode += this.getIsBackground().hashCode();
-        hashCode += this.getIsBackgroundSubtracted().hashCode();
-        hashCode += this.getIsNormalized().hashCode();
-        hashCode += this.getIsPreferred().hashCode();
-        hashCode += this.getIsRatio().hashCode();
+        if ( this.getIsBackground() != null ) hashCode += this.getIsBackground().hashCode();
+        if ( this.getIsBackgroundSubtracted() != null ) hashCode += this.getIsBackgroundSubtracted().hashCode();
+        if ( this.getIsNormalized() != null ) hashCode += this.getIsNormalized().hashCode();
+        if ( this.getIsPreferred() != null ) hashCode += this.getIsPreferred().hashCode();
+        if ( this.getIsRatio() != null ) hashCode += this.getIsRatio().hashCode();
 
         return hashCode;
     }

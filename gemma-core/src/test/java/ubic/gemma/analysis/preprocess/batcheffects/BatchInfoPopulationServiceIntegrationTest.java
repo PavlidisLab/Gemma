@@ -18,6 +18,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,13 +59,14 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
         assertNotNull( newee );
         newee = eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
+
     }
 
     /**
@@ -81,9 +83,8 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE20219", false, true, false, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
-
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
         assertNotNull( newee );

@@ -15,12 +15,14 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -31,9 +33,13 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -60,6 +66,9 @@ public class DataUpdater {
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private BioAssayDimensionService assayDimensionService;
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
@@ -89,7 +98,7 @@ public class DataUpdater {
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
-        ArrayDesign targetPlatform = prepareTargetPlatform( primaryTaxon );
+        ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
@@ -127,30 +136,102 @@ public class DataUpdater {
     }
 
     /**
+     * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
+     * quantitation type.
+     * <p>
+     * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
+     * SimpleExpressionDataLoaderService.
+     * 
      * @param ee
-     * @param ad
      * @param data
      */
-    public void addData( ExpressionExperiment ee, ArrayDesign ad, ExpressionDataDoubleMatrix data ) {
-        throw new UnsupportedOperationException( "not implemented yet" );
+    public void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
+                    + "you must switch/merge first and then provide appropriate replacement data." );
+        }
+
+        if ( data.rows() == 0 ) {
+            throw new IllegalArgumentException( "Data had no rows" );
+        }
+
+        ArrayDesign originalArrayDesign = ads.iterator().next();
+
+        Collection<QuantitationType> qts = data.getQuantitationTypes();
+
+        if ( qts.size() > 1 ) {
+            throw new IllegalArgumentException( "Only support a single quantitation type" );
+        }
+
+        if ( qts.isEmpty() ) {
+            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
+        }
+
+        QuantitationType qt = qts.iterator().next();
+        qt.setIsPreferred( true );
+
+        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
+
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
+
+        BioAssayDimension bioAssayDimension = data.getBestBioAssayDimension();
+
+        bioAssayDimension = assayDimensionService.findOrCreate( bioAssayDimension );
+
+        for ( int i = 0; i < data.rows(); i++ ) {
+            byte[] bdata = bArrayConverter.doubleArrayToBytes( data.getRow( i ) );
+
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
+            vector.setData( bdata );
+
+            CompositeSequence cs = data.getRowElement( i ).getDesignElement();
+
+            if ( cs == null ) {
+                continue;
+            }
+
+            if ( !cs.getArrayDesign().equals( targetPlatform ) ) {
+                throw new IllegalArgumentException( "Input data must use the target platform (was: "
+                        + cs.getArrayDesign() + ", expected: " + targetPlatform );
+            }
+
+            vector.setDesignElement( cs );
+            vector.setQuantitationType( qt );
+            vector.setExpressionExperiment( ee );
+            vector.setBioAssayDimension( bioAssayDimension );
+            vectors.add( vector );
+
+        }
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "no vectors!" );
+        }
+
+        experimentService.replaceVectors( ee, targetPlatform, vectors );
+
+        if ( !targetPlatform.equals( originalArrayDesign ) ) {
+            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+            auditTrailService.addUpdateEvent(
+                    ee,
+                    eventType,
+                    "Switched in course of updating vectors using data input (from "
+                            + originalArrayDesign.getShortName() + " to " + targetPlatform.getShortName() + ")" );
+        }
+
+        audit( ee, "Data vector replacement for " + targetPlatform );
+
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
     }
 
     /**
-     * @param ee
-     * @param data
+     * determine the target array design. We use filtered versions of these platforms from GEO.
+     * 
+     * @param primaryTaxon
+     * @return
      */
-    public void replaceData( ExpressionExperiment ee, ExpressionDataDoubleMatrix data ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException();
-        }
-        addData( ee, ads.iterator().next(), data );
-    }
+    private ArrayDesign prepareTargetPlatformForExonArrays( Taxon primaryTaxon ) {
 
-    private ArrayDesign prepareTargetPlatform( Taxon primaryTaxon ) {
-        /*
-         * determine the target array design. We use filtered versions of these platforms from GEO.
-         */
         String targetPlatformAcc = "";
         if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
             targetPlatformAcc = "GPL6096";

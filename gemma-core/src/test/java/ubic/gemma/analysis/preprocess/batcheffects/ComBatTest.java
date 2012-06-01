@@ -46,7 +46,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
@@ -77,7 +78,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
@@ -133,7 +135,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
         DoubleMatrix2D result = comBat.run();
         assertNotNull( result );
     }
@@ -151,7 +154,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/example.metadata.nocov.small.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
@@ -200,7 +204,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         ObjectMatrix<String, String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
 
         DoubleMatrix2D X = comBat.getDesignMatrix();
 
@@ -232,7 +237,8 @@ public class ComBatTest {
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
                 "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
-        ComBat<String, String> comBat = new ComBat<String, String>( testMatrix, sampleInfo );
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        ComBat<String, String> comBat = new ComBat( testMatrix, sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
 
         // log.info( X );

@@ -39,7 +39,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
     }
-    
+
     @Override
     public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thawLite( bioAssayDimension );
@@ -53,7 +53,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * .bioAssayData.BioAssayDimension)
      */
     @Override
-    protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) throws Exception {
+    protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().create( bioAssayDimension );
     }
 
@@ -62,7 +62,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      */
     @Override
     protected ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception {
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );
     }
 
@@ -72,7 +72,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase#handleLoad(java.lang.Long)
      */
     @Override
-    protected BioAssayDimension handleLoad( Long id ) throws Exception {
+    protected BioAssayDimension handleLoad( Long id ) {
         return this.getBioAssayDimensionDao().load( id );
     }
 
@@ -84,7 +84,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * .bioAssayData.BioAssayDimension)
      */
     @Override
-    protected void handleRemove( BioAssayDimension bioAssayDimension ) throws Exception {
+    protected void handleRemove( BioAssayDimension bioAssayDimension ) {
         this.getBioAssayDimensionDao().remove( bioAssayDimension );
     }
 
@@ -96,7 +96,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * .bioAssayData.BioAssayDimension)
      */
     @Override
-    protected void handleUpdate( BioAssayDimension bioAssayDimension ) throws Exception {
+    protected void handleUpdate( BioAssayDimension bioAssayDimension ) {
         this.getBioAssayDimensionDao().update( bioAssayDimension );
     }
 

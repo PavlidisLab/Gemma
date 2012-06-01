@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -176,6 +177,60 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             }
             i++;
         }
+    }
+
+    /**
+     * Create a matrix given a 'raw' matrix that uses the same samples as the experiment. Only simple situations are
+     * supported (one platform, not subsetting the dataset).
+     * 
+     * @param ee to be associated with this
+     * @param qt to be associated with this
+     * @param matrix with valid row and column elements, and the data
+     */
+    public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
+            DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
+        init();
+        this.expressionExperiment = ee;
+        this.matrix = matrix;
+        this.quantitationTypes.add( qt );
+
+        BioAssayDimension dim = BioAssayDimension.Factory.newInstance();
+
+        List<BioAssay> bioassays = new ArrayList<BioAssay>();
+        for ( BioMaterial bm : matrix.getColNames() ) {
+            Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+            if ( bioAssaysUsedIn.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Can't make new data from matrix that has multiple bioassays per biomaterial" );
+            }
+
+            BioAssay bioAssay = bioAssaysUsedIn.iterator().next();
+
+            if ( !ee.getBioAssays().contains( bioAssay ) ) {
+                throw new IllegalArgumentException( "Bioassays in the matrix must match those in the experiment" );
+            }
+
+            bioassays.add( bioAssay );
+
+        }
+
+        if ( bioassays.size() != ee.getBioAssays().size() ) {
+            throw new IllegalArgumentException( "All bioassays in the experiment must be used in the matrix" );
+        }
+
+        dim.setBioAssays( bioassays );
+        dim.setDescription( "Built from matrix supplied to Constructor" );
+        dim.setName( "For " + ee + " from matrix" );
+
+        int i = 0;
+        for ( CompositeSequence cs : matrix.getRowNames() ) {
+            bioAssayDimensions.put( cs, dim );
+            this.addToRowMaps( i, cs );
+            i++;
+        }
+
+        setUpColumnElements();
+
     }
 
     /**

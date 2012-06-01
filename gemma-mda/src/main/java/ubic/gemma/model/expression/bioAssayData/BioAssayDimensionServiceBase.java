@@ -40,13 +40,7 @@ public abstract class BioAssayDimensionServiceBase implements
     @Override
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-        try {
-            return this.handleCreate( bioAssayDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( bioAssayDimension );
     }
 
     /**
@@ -55,26 +49,14 @@ public abstract class BioAssayDimensionServiceBase implements
     @Override
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-        try {
-            return this.handleFindOrCreate( bioAssayDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( bioAssayDimension );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#load(java.lang.Long)
      */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.handleLoad( id );
     }
 
     /**
@@ -82,13 +64,7 @@ public abstract class BioAssayDimensionServiceBase implements
      */
     @Override
     public void remove( final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-        try {
-            this.handleRemove( bioAssayDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
-                            + th, th );
-        }
+        this.handleRemove( bioAssayDimension );
     }
 
     /**
@@ -103,13 +79,7 @@ public abstract class BioAssayDimensionServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     public void update( final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-        try {
-            this.handleUpdate( bioAssayDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( bioAssayDimension );
     }
 
     /**
@@ -123,30 +93,27 @@ public abstract class BioAssayDimensionServiceBase implements
      * Performs the core logic for {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
      */
     protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
      */
     protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
 }
