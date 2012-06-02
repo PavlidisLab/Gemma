@@ -112,13 +112,14 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
             this.ready = true;
 
+            this.scaleFont(this.visualization.zoom());
             this.fireEvent('doneDrawingCytoscape');
 
         }.createDelegate(this));
         // end vis.ready()
         Gemma.CytoscapeDisplay.superclass.initComponent.apply(this, arguments);
 
-        this.addEvents('doneDrawingCytoscape');
+        this.addEvents('doneDrawingCytoscape', 'searchTextBoxMatch');
 
     },
 
@@ -379,6 +380,11 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         this.visualization.select("nodes", nodeIds);
         
     },
+    
+    deselect : function (){
+    	this.visualization.deselect("nodes");
+    	this.visualization.deselect("edges");
+    },
 
     extendSelectedNodesHandler: function () {
         if (this.ready) {
@@ -488,7 +494,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
             this.currentDisplayStringency = stringency;
             this.controlBar.setStringency(stringency);
         } else {
-            this.controlBar.setStringency(this.currentDisplayStringency)
+            this.controlBar.setStringency(this.currentDisplayStringency);
         }
 
     },
@@ -501,6 +507,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     stringencyChange: function (stringency) {
 
         if (this.ready) {
+        	//this.clearSearchBox();
             this.controller.stringencyChange(stringency);
         }
     },
@@ -517,10 +524,21 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     	this.controlBar.getComponent('queryGenesOnly').setDisabled(disabled);
     },
     
-    selectSearchMatches : function(text){
+    textBoxMatchHandler: function(text){
+    	this.controlBar.searchInCytoscapeBox.setValue(text);
+    	this.selectSearchMatches(text);
+    },
+    
+    selectSearchMatchesFromControlBar: function(text){
+    	this.fireEvent('searchTextBoxMatch', text);
+    	this.selectSearchMatches(text);
+    },
+    
+    selectSearchMatches : function(text){   	
+    	
     	
     	if (text.length < 2) {
-			
+    		this.deselect();			
 			return;
 		}
     	
@@ -528,10 +546,17 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     	var nodeIdsToSelect = this.controller.getMatchingGeneIdsByText(text);
     	
     	if (nodeIdsToSelect.length>0){
+    		this.deselect();
     		this.select(nodeIdsToSelect);
+    		
     	}
     	
     	//highlight nodes
+    	
+    },
+    
+    clearSearchBox : function(){
+    	this.controlBar.searchInCytoscapeBox.setValue('');
     	
     }
 

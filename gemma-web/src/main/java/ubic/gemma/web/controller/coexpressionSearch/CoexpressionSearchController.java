@@ -170,7 +170,7 @@ public class CoexpressionSearchController {
         log.info( "Coexpression search: " + searchOptions );
         if (queryGeneIds!=null){
             log.info( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
-            //we don't need to populate all the coex details for the viz, so set skip flag to false
+            //we don't need to populate all the coex details for the viz, so set skip flag to true
             skipCoexpressionDetails = true;
         }
 

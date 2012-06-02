@@ -675,16 +675,17 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 allUsedGenes.add( foundGene );
 
-                // FIXME Symptom fix for duplicate found genes
+                //use this flag to test for a duplicate link with opposite stringency support (positive/negative)
+                boolean testForDuplicateFlag = false;
+                
+                //duplicate found genes can occur when there is both positive and negative support for the same link
                 // Keep track of the found genes that we can correctly identify
                 // duplicates.
-                // All keep the g2g object for debugging purposes.
+                // All keep the g2g object for debugging purposes.                
                 if ( foundGenes.containsKey( foundGene ) ) {
                     foundGenes.get( foundGene ).add( g2g );
-                    // log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
-                    // + " From analysis: " + g2g.getSourceAnalysis().getId() );
-                    continue; // Found a duplicate gene, don't add to results
-                              // just our debugging list
+                    
+                    testForDuplicateFlag = true;
 
                 }
 
@@ -745,17 +746,25 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
                             relevantEEIdList ) );
 
-                    /*
-                     * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in
-                     * the full set of data sets that were used in the original analysis.
-                     */
-                    if ( numSupportingDatasets < stringency ) {
+                    
+                    if (testForDuplicateFlag){
+                    	
+                    	if(!testAndModifyDuplicateResultForOppositeStringency(ecvos, queryGene, foundGene, g2g.getEffect(), numSupportingDatasets, specificDatasets.size(), numTestingDatasets )){
+                    		//log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
+                            // + " From analysis: " + g2g.getSourceAnalysis().getId() );
+                    	} else {
+                    		log.info( "Opposite stringency duplicate result found in coexpression results, this result has been merged: " + foundGene);
+                    	}
+                    	continue;
+                    	
+                    }else if ( numSupportingDatasets < stringency ) {// check in case any data sets were filtered out.(i.e., we're not interested in the full set of data sets that were used in the original analysis.
                         continue;
                     }
 
                     allTestedDataSets.addAll( testingDatasets );
 
                     int supportFromSpecificProbes = specificDatasets.size();
+                    
                     if ( g2g.getEffect() < 0 ) {
                         cvo.setPosSupp( 0 );
                         cvo.setNegSupp( numSupportingDatasets );
@@ -780,7 +789,19 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 } else {
 
                     int numSupportingDatasets = supportingDatasets.size();
-                    if ( numSupportingDatasets < stringency ) {
+                    
+                    
+                    if (testForDuplicateFlag){
+                    	
+                    	if(!testAndModifyDuplicateResultForOppositeStringency(ecvos, queryGene, foundGene, g2g.getEffect(), numSupportingDatasets, null, null)){
+                    		//log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
+                            // + " From analysis: " + g2g.getSourceAnalysis().getId() );
+                    	} else {
+                    		log.info( "Opposite stringency duplicate result found in coexpression results, this result has been merged: " + foundGene);
+                    	}
+                    	continue;
+                    	
+                    }else if ( numSupportingDatasets < stringency ) {
                         continue;
                     }
 
@@ -1472,6 +1493,47 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             }
         }
         return associationsMappedByGeneId;
+    }
+    
+    /**
+     * 
+     * 
+     */
+    private boolean testAndModifyDuplicateResultForOppositeStringency(List<CoexpressionValueObjectExt> ecvos, Gene queryGene, Gene foundGene, Double effect, Integer numSupportingDatasets, Integer supportFromSpecificProbes, Integer numTestedIn){
+    	    	
+    	for (CoexpressionValueObjectExt ecvo : ecvos){
+    		
+    		if (ecvo.getFoundGene().getOfficialSymbol().equals(foundGene.getOfficialSymbol()) 
+    				&& ecvo.getQueryGene().getOfficialSymbol().equals(queryGene.getOfficialSymbol())){
+    			if (ecvo.getNegSupp() > 0  && effect > 0){
+    				ecvo.setPosSupp(numSupportingDatasets);
+    				if (supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ){
+                        ecvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
+    				}
+    				//this may not be necessary, putting in just in case of a difference
+    				if (numTestedIn != null){
+    					ecvo.setNumTestedIn( Math.max( ecvo.getNumTestedIn(), numTestedIn));
+    				}
+    				ecvo.setSupportKey( Math.max( ecvo.getPosSupp(), ecvo.getNegSupp() ) );
+    				return true;
+    			}else if (ecvo.getPosSupp() > 0 && effect < 0){
+    				ecvo.setNegSupp(numSupportingDatasets);
+    				if (supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ){
+                        ecvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
+    				}
+    				//this may not be necessary, putting in just in case of a difference
+    				if (numTestedIn != null){
+    					ecvo.setNumTestedIn( Math.max( ecvo.getNumTestedIn(), numTestedIn));
+    				}
+    				ecvo.setSupportKey( Math.max( ecvo.getPosSupp(), ecvo.getNegSupp() ) );
+    				return true;
+    			}
+    			
+    		}
+    	
+    	}
+    	
+    	return false;
     }
 
 }

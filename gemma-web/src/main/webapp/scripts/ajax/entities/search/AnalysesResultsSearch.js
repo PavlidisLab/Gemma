@@ -295,7 +295,9 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 				taxonId: searchForm.getTaxonId(),
 				taxonName: searchForm.getTaxonName(),
 				hideMode:'visibility',
-				coexpressionSearchData: coexpressionSearchData
+				coexpressionSearchData: coexpressionSearchData,
+				knownGeneGrid: knownGeneGrid,
+				searchPanel: searchForm
 				
 			});
 	
@@ -303,13 +305,8 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 	searchPanel.collapse();
 	
 	coexResultsTabPanel.add(knownGeneGrid);
-	coexResultsTabPanel.add(cytoscapePanel);	
-    
-	cytoscapePanel.relayEvents(knownGeneGrid, ['stringencyUpdateFromCoexGrid','queryGenesOnlyUpdateFromCoexGrid']);
-    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryGenesOnlyUpdateFromCoexpressionViz']);
-    knownGeneGrid.relayEvents(coexpressionSearchData, ['searchForCoexGridDataComplete']);	    
-    searchForm.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz', 'beforesearch']);
-    
+	coexResultsTabPanel.add(cytoscapePanel);    
+	
 	// won't fire the render event if it's already rendered
 	//coexResultsTabPanel.render('analysis-results-search-form-results');
 	

@@ -100,6 +100,10 @@ Ext.Panel, {
         }, this);
         
         this.on('doneDrawingCytoscape', function () {
+        	
+        	this.display.clearSearchBox();
+        	this.fireEvent("textBoxMatchFromCoexpressionViz", '');
+        	
         	//check to see if it is query genes only
             if (this.display.isQueryGenesOnly()){
             	this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
@@ -114,7 +118,11 @@ Ext.Panel, {
 
         }, this);
         
-      
+        this.on('searchTextBoxMatch', function (text) {
+        	this.fireEvent("textBoxMatchFromCoexpressionViz", text);       	
+
+        }, this);
+        
         this.on('searchForCytoscapeDataComplete', function() {
         	
         	if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length <2) {
@@ -170,11 +178,28 @@ Ext.Panel, {
         	this.display.setQueryGenesOnly(checked);        	
         	
         }, this);
+        
+        this.on('textBoxMatchFromCoexGrid', function (text) {
+        	if (this.display.ready){
+        		this.display.textBoxMatchHandler(text);       	
+        	}
+        }, this);
 
-        this.addEvents('stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryUpdateFromCoexpressionViz','coexWarningAlreadyDisplayed');
-        this.relayEvents(this.display, ['doneDrawingCytoscape']);
+        this.addEvents('stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryUpdateFromCoexpressionViz','coexWarningAlreadyDisplayed','textBoxMatchFromCoexpressionViz');
+        this.relayEvents(this.display, ['doneDrawingCytoscape', 'searchTextBoxMatch']);
         this.relayEvents(this.coexpressionSearchData, ['searchForCoexGridDataComplete','searchForCytoscapeDataComplete','searchErrorFromCoexpressionSearchData']);
 
+        
+        if(this.knownGeneGrid){
+        	this.relayEvents(this.knownGeneGrid, ['stringencyUpdateFromCoexGrid','queryGenesOnlyUpdateFromCoexGrid','textBoxMatchFromCoexGrid']);
+        	this.knownGeneGrid.relayEvents(this, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryGenesOnlyUpdateFromCoexpressionViz','textBoxMatchFromCoexpressionViz']);
+        	this.knownGeneGrid.relayEvents(this.coexpressionSearchData, ['searchForCoexGridDataComplete']);	    
+        }
+	    
+        if (this.searchPanel){
+        	this.searchPanel.relayEvents(this, ['queryUpdateFromCoexpressionViz', 'beforesearch']);
+        }
+        
     },
     
     searchForCytoscapeData : function(){

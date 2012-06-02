@@ -290,7 +290,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 												emptyText : 'Find gene in results',
 												listeners : {
 													"keyup" : {
-														fn : this.searchForText,
+														fn : function(button, keyev){
+															this.fireEvent('textBoxMatchFromCoexGrid',this.getTopToolbar().getComponent(this.id + '-search-in-grid').getValue() );
+															this.refreshGridFromCoexpressionSearchData();															
+														},
 														scope : this,
 														delay : 400														
 													}
@@ -394,6 +397,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					
 		}, this);
 		
+		this.on('textBoxMatchFromCoexpressionViz', function (text) {		
+			
+			this.getTopToolbar().getComponent(this.id + '-search-in-grid').setValue(text);
+			this.refreshGridFromCoexpressionSearchData();
+					
+		}, this);
+		
 		this.on('searchForCoexGridDataComplete', function () {
 			
 			if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length <2) {
@@ -444,7 +454,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	//called from CoexpressionGrid toolbar
 	stringencyChange: function(){
 		
-		var spinnerValue = this.getTopToolbar().getComponent('stringencySpinner').getValue()
+		var spinnerValue = this.getTopToolbar().getComponent('stringencySpinner').getValue();
 		
 		if (Ext.isNumber(spinnerValue) && spinnerValue>1){
 		
@@ -484,27 +494,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	
 	refreshGridFromCoexpressionSearchData: function(){
 		
-		if (this.getTopToolbar().getComponent('queryGenesOnly').checked==false){
-			
-			this.getStore().filterBy(function(record, id){
-				
-				return (record.get('posSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency||
-					record.get('negSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency);				
-				
-			},this);			    
-		
-		} else {
-			
-			this.getStore().filterBy(function(record, id){
-				
-				return ((record.get('posSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency||
-						record.get('negSupp')>=this.coexpressionSearchData.coexGridCoexCommand.displayStringency)&&						
-						this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(record.get('queryGene').id)!==-1&&
-						this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(record.get('foundGene').id)!==-1);				
-				
-			},this);
-			
-		}
+		this.getStore().filterBy(this.filter(), this, 0);		
 		
 	},
 	
@@ -641,30 +631,43 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					}, this, 0);
 			btn.setText(Gemma.SHOW_ALL);
 		}
-	},
+	},	
 
-	searchForText : function(button, keyev) {
+	filter : function() {
+		
 		var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
-		if (text.length < 2) {
-			this.getStore().clearFilter();
-			return;
+		
+		var stringency = this.coexpressionSearchData.coexGridCoexCommand.displayStringency;
+		var queryGenesOnly = this.getTopToolbar().getComponent('queryGenesOnly').checked;
+		
+		var value;
+		
+		if (text && text.length > 1) {
+			value = new RegExp(Ext.escapeRe(text), 'i');
 		}
-		this.getStore().filterBy(this.filter(text), this, 0);
-	},
-
-	filter : function(text) {
-		var value = new RegExp(Ext.escapeRe(text), 'i');
 		return function(r, id) {
-			var foundGene = (r.get("foundGene"));
-			var queryGene = (r.get("queryGene"));
-			if (value.test(foundGene.officialSymbol)) {
+			
+			if (r.get("supportKey")< stringency){
+				return false;
+			}
+			
+			if ( queryGenesOnly && (this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(r.get('queryGene').id)==-1||
+							this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(r.get('foundGene').id)==-1)){
+				return false;
+			}
+			
+			if (!value){
 				return true;
-			}else if(value.test(queryGene.officialSymbol)){
-				return true;
-			}else if (value.test(foundGene.officialName)){
-				return true;
-			}else if (value.test(queryGene.officialName)){
-				return true;
+			}else{
+			
+				var foundGene = (r.get("foundGene"));
+				var queryGene = (r.get("queryGene"));
+						
+			
+				if (value.test(foundGene.officialSymbol)|| value.test(queryGene.officialSymbol) || value.test(foundGene.officialName) || value.test(queryGene.officialName)) {
+					return true;
+				}
+			
 			}
 
 			return false;

@@ -194,7 +194,9 @@ Ext.onReady(function() {
 					taxonId: searchPanel.getTaxonId(),
 					taxonName: searchPanel.getTaxonName(),
 					hideMode:'visibility',
-					coexpressionSearchData: coexpressionSearchData
+					coexpressionSearchData: coexpressionSearchData,
+					knownGeneGrid: knownGeneGrid,
+					searchPanel: searchPanel
 					
 				});
 		
@@ -206,11 +208,6 @@ Ext.onReady(function() {
 		
 		resultsPanel.add(knownGeneGrid);
 		resultsPanel.add(cytoscapePanel);	
-	    
-		cytoscapePanel.relayEvents(knownGeneGrid, ['stringencyUpdateFromCoexGrid','queryGenesOnlyUpdateFromCoexGrid']);
-	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz', 'queryGenesOnlyUpdateFromCoexpressionViz']);
-	    knownGeneGrid.relayEvents(coexpressionSearchData, ['searchForCoexGridDataComplete']);	    
-	    searchPanel.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz', 'beforesearch']);
 	    
 		// won't fire the render event if it's already rendered
 		resultsPanel.render('analysis-results-search-form-results');
