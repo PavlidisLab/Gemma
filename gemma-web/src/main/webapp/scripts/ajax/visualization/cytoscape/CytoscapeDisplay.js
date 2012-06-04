@@ -388,13 +388,15 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
     extendSelectedNodesHandler: function () {
         if (this.ready) {
-            this.controller.extendNodes(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")));
+        	var selectedNodes = this.controller.restrictSelectedNodesByCurrentSettings(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")));
+            this.controller.extendNodes(selectedNodes);
         }
     },
 
     reRunSearchWithSelectedNodesHandler: function () {
-        if (this.ready) {        	
-            this.controller.searchWithSelectedNodes(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")) );
+        if (this.ready) {
+        	var selectedNodes = this.controller.restrictSelectedNodesByCurrentSettings(Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects(this.visualization.selected("nodes")));
+            this.controller.searchWithSelectedNodes(selectedNodes);
         }
     },    
 
@@ -536,19 +538,17 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     
     selectSearchMatches : function(text){   	
     	
+    	this.deselect();
     	
-    	if (text.length < 2) {
-    		this.deselect();			
+    	if (text.length < 2) {    					
 			return;
 		}
     	
     	//call controller that tests coexSearchData
     	var nodeIdsToSelect = this.controller.getMatchingGeneIdsByText(text);
     	
-    	if (nodeIdsToSelect.length>0){
-    		this.deselect();
-    		this.select(nodeIdsToSelect);
-    		
+    	if (nodeIdsToSelect.length>0){    		
+    		this.select(nodeIdsToSelect);    		
     	}
     	
     	//highlight nodes

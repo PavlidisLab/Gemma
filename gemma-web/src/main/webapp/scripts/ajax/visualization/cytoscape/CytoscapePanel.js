@@ -437,6 +437,32 @@ Ext.Panel, {
         
     	}
     },
+    
+    //ensure that selected nodes that are filtered out due to stringency/my genes only are not used for new searches
+    restrictSelectedNodesByCurrentSettings: function (selectedNodes){
+    	
+    	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(this.coexpressionSearchData.cytoscapeResults.knownGeneResults,
+    			this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+    
+    	trimmed.trimmedNodeIds;
+    	
+    	var restrictedNodes = [];
+    	var i;
+    	
+    	for (i = 0 ; i<selectedNodes.length ; i++){
+    		if (trimmed.trimmedNodeIds.indexOf(selectedNodes[i]) !==-1){
+    			
+    			if (this.display.isQueryGenesOnly() && this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(selectedNodes[i]) ==-1){
+    				continue;
+    			}
+    			
+    			restrictedNodes.push(selectedNodes[i]);    			
+    		}
+    	}
+    	
+    	return restrictedNodes;
+    	
+    },
 
     drawGraph: function () {
         this.display.drawGraph(this.coexpressionSearchData);

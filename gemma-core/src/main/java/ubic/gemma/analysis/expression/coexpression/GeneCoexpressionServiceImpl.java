@@ -753,7 +753,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     		//log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
                             // + " From analysis: " + g2g.getSourceAnalysis().getId() );
                     	} else {
-                    		log.info( "Opposite stringency duplicate result found in coexpression results, this result has been merged: " + foundGene);
+                    		log.info( "Opposite stringency duplicate result found in coexpression results, this result has been merged: Query Gene:"+queryGene +"  Found Gene:" + foundGene);
                     	}
                     	continue;
                     	

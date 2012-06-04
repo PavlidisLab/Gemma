@@ -248,9 +248,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
         this.getComponent('stringencySpinner').setValue(stringency);
     },
     searchForText : function(button, keyev) {
-		var text = this.searchInCytoscapeBox.getValue();
-		
-		this.display.selectSearchMatchesFromControlBar(text);
+		this.display.selectSearchMatchesFromControlBar(this.searchInCytoscapeBox.getValue());
 		
 	}
 
