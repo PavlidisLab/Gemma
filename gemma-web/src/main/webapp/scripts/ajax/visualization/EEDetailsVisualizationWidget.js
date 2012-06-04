@@ -148,8 +148,13 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 	
 		Gemma.VisualizationWidgetGeneSelectionToolbar.superclass.initComponent.call(this);
 		
-		this.visPanel.on('loadSucceeded', function(){
-			this.updateStatusText();
+		this.visPanel.on('loadSucceeded', function( returnedGeneCount, queryGeneCount ){
+			if( returnedGeneCount !== undefined && queryGeneCount !== undefined && 
+					returnedGeneCount !== null && queryGeneCount !== null && queryGeneCount > 0 ){
+				this.updateFoundVsQueryText( returnedGeneCount, queryGeneCount );
+			}else{
+				this.updateStatusText();
+			}
 		},this);
 		
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
@@ -224,7 +229,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			xtype: 'panel',
 			html: 'Visualizing 20 \'random\' genes',
 			border: false,
-			bodyStyle: 'background-color:transparent; color:black; padding-right:5px'
+			bodyStyle: 'background-color:transparent; color:grey; padding-left:5px'
 		});
 	},
 	afterRender: function(c, l){
@@ -233,7 +238,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.addSpacer();
 		this.add(this.clearBtn, this.vizBtn);
 		this.addButton(this.extraButtons);
-		this.addFill();
+		//this.addFill();
 		this.add(this.tbarText);
 	},	
 	launchGeneSelectionEditor : function() {
@@ -284,16 +289,31 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			this.vizBtn.setText(String.format(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.multiple, numIds));
 		}
 	},
-	updateStatusText: function(){
-		var numIds = this.getGeneIds().length;
-		if (numIds === 0) {
-			this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.random);
-		}else if (numIds === 1) {
-			this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.one);
-		}else {
-			this.tbarText.update(String.format(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.multiple, numIds));
+	updateStatusText: function( status ){
+		if(status && status.length > 0 ){
+			this.tbarText.update(status);
+		}else{
+			var numIds = this.getGeneIds().length;
+			if (numIds === 0) {
+				this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.random);
+			}else if (numIds === 1) {
+				this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.one);
+			}else {
+				this.tbarText.update(String.format(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.multiple, numIds));
+			}
 		}
 	},
+	updateFoundVsQueryText: function( foundCount, queryCount ){
+		if( foundCount !== undefined && queryCount !== undefined &&foundCount !== null && queryCount !== null ){
+			this.tbarText.update(String.format(
+				Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.geneMatchCount, 
+				foundCount, queryCount));
+		}else{
+			this.tbarText.update('');
+		}
+	},
+	
+	
 	clearHandler: function(){
 		// TODO reset the combo 
 		this.setGeneIds([]);

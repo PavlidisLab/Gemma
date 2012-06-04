@@ -685,11 +685,30 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			this.fireEvent('loadFailed');
 			return;
 		}
+		
+		var queryGeneList = options.params[1];
+		var returnedGeneCount = this.getReturnedGeneCount( records );
+		
 		if(!this.hidden){ // in case window was closed before it finished loading
 			this.zoom(records[0], this.id);
-			this.fireEvent('loadSucceeded');
+			this.fireEvent('loadSucceeded', returnedGeneCount, queryGeneList.length);
 		}
 		
+	},
+	getReturnedGeneCount: function( records ){
+		var returnedGeneIds = {};
+		var returnedGeneCount = 0;
+		for(var i =0; i < records.length; i++){
+			for(var j =0; j < records[i].get('profiles').size(); j++){
+				for(var k =0; k < records[i].get('profiles')[j].genes.length; k++){
+					if(returnedGeneIds[records[i].get('profiles')[j].genes[k].id] === undefined){
+						returnedGeneIds[records[i].get('profiles')[j].genes[k].id] = true;
+						returnedGeneCount++;
+					}
+				}
+			}
+		}
+		return returnedGeneCount;
 	},
 
 	setHeatmapMode : function(b) {

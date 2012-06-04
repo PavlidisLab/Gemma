@@ -176,16 +176,17 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 params: [[eeId], geneList]
             });
         });
+        var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
+                eeId: eeId,
+                visPanel: viz,
+                taxonId: experimentDetails.parentTaxonId
+            });
         return {
             items: viz,
             layout: 'fit',
             padding: 0,
             title: 'Visualize Expression',
-            tbar: new Gemma.VisualizationWidgetGeneSelectionToolbar({
-                eeId: eeId,
-                visPanel: viz,
-                taxonId: experimentDetails.parentTaxonId
-            })
+            tbar: geneTBar
         };
     },
     makeDiagnosticsTab: function(experimentDetails, isAdmin){
