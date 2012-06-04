@@ -21,10 +21,11 @@ package ubic.gemma.web.controller.common.description.bibref;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -282,11 +283,16 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @RequestMapping("/showAllEeBibRefs.html")
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ){
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService.getAllExperimentLinkedReferences();
-        
-        Map<CitationValueObject, ExpressionExperimentValueObject> citationToEEs = new HashMap<CitationValueObject, ExpressionExperimentValueObject>();
+                    
+        // map sorted in natural order of the keys
+        SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<CitationValueObject, Collection<ExpressionExperimentValueObject>>();
         for( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet()){
-            citationToEEs.put( CitationValueObject.convert2CitationValueObject( entry.getValue() ), 
-                    new ExpressionExperimentValueObject( entry.getKey() ));
+            CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
+            if(!citationToEEs.containsKey( cvo )){
+                citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
+            }
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey() ) );
+            
         }
         //Collection<CitationValueObject> citations = BibliographicReferenceValueObject.constructCitations( eeToBibRefs.values() );
         

@@ -6,23 +6,28 @@
 
 <div style="padding-left: 15px">
 <h3>List of all ${fn:length(citationToEEs)} published papers with data in Gemma:</h3>
-
+To search for a paper or experiment and see more details, visit the 
+<a target="_blank" href="/Gemma/bibRef/searchBibRefs.html">annotated paper search page</a>.  
+<br><br>
 <table>
 <c:forEach items="${citationToEEs}" var="citationToEE">
 	<tr>
 	<td>
-		<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${citationToEE.value.id}">
-		
-		<c:out value="${citationToEE.value.shortName}"></c:out>
-		</a>
+		<c:out value="${citationToEE.key.citation}"></c:out>
 	</td>
-	<td style="padding-right: 10px">
-		<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${citationToEE.key.pubmedURL}">
+		<td style="padding-right: 10px">
+		<a target="_blank" href="${citationToEE.key.pubmedURL}">
 			<img src="/Gemma/images/pubmed.gif" alt="PubMed link"/>
 		</a>
-	<td>
-		<c:out value="${citationToEE.key.citation}"></c:out>
-	</td></tr>
+		</td>
+		<td>
+		<c:forEach items="${citationToEE.value}" var="ee">
+			<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${ee.id}">
+				<c:out value="${ee.shortName}"></c:out>
+			</a>&nbsp;&nbsp;
+		</c:forEach>
+	</td>
+	</tr>
 </c:forEach>
 </table>
 

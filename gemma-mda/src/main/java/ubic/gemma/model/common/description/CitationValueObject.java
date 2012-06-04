@@ -38,7 +38,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
  *      BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  * @version
  */
-public class CitationValueObject {
+public class CitationValueObject implements Comparable<CitationValueObject> {
 
     // for constructing pubmedURLs
     final static String PUBMED_URL_ROOT = "http://www.ncbi.nlm.nih.gov/pubmed/";
@@ -211,6 +211,11 @@ public class CitationValueObject {
             if ( other.pubmedAccession != null ) return false;
         } else if ( !pubmedAccession.equals( other.pubmedAccession ) ) return false;
         return true;
+    }
+
+    @Override
+    public int compareTo( CitationValueObject o ) {
+        return this.getCitation().compareTo( o.getCitation() );
     }
 
 }
