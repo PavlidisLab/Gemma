@@ -77,13 +77,13 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         addOption( otherArrayDesignOption );
 
-        Option newAdName = OptionBuilder.hasArg().withArgName( "name" ).withDescription(
-                "Name for new array design, if the given array is not already a merged design" ).withLongOpt( "name" )
-                .create( 'n' );
+        Option newAdName = OptionBuilder.hasArg().withArgName( "name" )
+                .withDescription( "Name for new array design, if the given array is not already a merged design" )
+                .withLongOpt( "name" ).create( 'n' );
         addOption( newAdName );
-        Option newAdShortName = OptionBuilder.hasArg().withArgName( "name" ).withDescription(
-                "Short name for new array design, if the given array is not already a merged design" ).withLongOpt(
-                "shortname" ).create( 's' );
+        Option newAdShortName = OptionBuilder.hasArg().withArgName( "name" )
+                .withDescription( "Short name for new array design, if the given array is not already a merged design" )
+                .withLongOpt( "shortname" ).create( 's' );
         addOption( newAdShortName );
 
         Option addOption = OptionBuilder.withDescription(
@@ -150,7 +150,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                         "You must provide a short name for the new design unless using -add" );
             }
         }
-        arrayDesignMergeService = ( ArrayDesignMergeService ) this.getBean( "arrayDesignMergeService" );
+        arrayDesignMergeService = this.getBean( ArrayDesignMergeService.class );
 
     }
 

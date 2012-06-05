@@ -218,13 +218,13 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     protected void processOptions() {
         super.processOptions();
 
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        taxonService = ( TaxonService ) getBean( "taxonService" );
-        bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
-        arrayDesignService = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
-        annotationAssociationService = ( AnnotationAssociationService ) getBean( "annotationAssociationService" );
-        externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
+        geneService = this.getBean( GeneService.class );
+        taxonService = getBean( TaxonService.class );
+        bioSequenceService = getBean( BioSequenceService.class );
+        arrayDesignService = getBean( ArrayDesignService.class );
+        compositeSequenceService = getBean( CompositeSequenceService.class );
+        annotationAssociationService = getBean( AnnotationAssociationService.class );
+        externalDatabaseService = getBean( ExternalDatabaseService.class );
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );

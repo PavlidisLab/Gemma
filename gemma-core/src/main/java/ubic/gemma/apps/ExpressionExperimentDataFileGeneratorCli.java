@@ -37,9 +37,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO Document Me
- * 
- * @author ?
+ * @author paul
  * @version $Id$
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
@@ -167,7 +165,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             this.force_write = true;
         }
 
-        expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
+        expressionDataFileService = this.getBean( ExpressionDataFileService.class );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
@@ -175,7 +173,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         try {
             ee = this.eeService.thawLite( ee );
 
-            AuditTrailService ats = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            AuditTrailService ats = this.getBean( AuditTrailService.class );
             AuditEventType type = CommentedEvent.Factory.newInstance();
 
             expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );

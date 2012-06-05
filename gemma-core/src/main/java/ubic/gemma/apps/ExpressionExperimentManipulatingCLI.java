@@ -199,10 +199,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     protected void processOptions() {
         super.processOptions();
 
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        taxonService = ( TaxonService ) getBean( "taxonService" );
-        this.auditEventService = ( AuditEventService ) getBean( "auditEventService" );
+        eeService = this.getBean( ExpressionExperimentService.class );
+        geneService = this.getBean( GeneService.class );
+        taxonService = getBean( TaxonService.class );
+        this.auditEventService = getBean( AuditEventService.class );
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );
@@ -343,8 +343,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             throw new IllegalArgumentException( "Please provide an eeset name" );
         }
 
-        ExpressionExperimentSetService expressionExperimentSetService = ( ExpressionExperimentSetService ) this
-                .getBean( "expressionExperimentSetService" );
+        ExpressionExperimentSetService expressionExperimentSetService = this
+                .getBean( ExpressionExperimentSetService.class );
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( optionValue );
         if ( sets.size() > 1 ) {
             throw new IllegalArgumentException( "More than on EE set has name '" + optionValue + "'" );

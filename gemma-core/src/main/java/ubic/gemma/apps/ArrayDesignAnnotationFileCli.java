@@ -233,10 +233,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Loading gene information for " + arrayDesign );
 
-        /*
-         * FIXME: first Check if file exists.
-         */
-
         if ( arrayDesign.getStatus().getTroubled() ) {
             log.warn( "Troubled: " + arrayDesign );
             return false;
@@ -290,7 +286,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
             Taxon taxon = null;
             if ( this.taxonName != null ) {
-                TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+                TaxonService taxonService = getBean( TaxonService.class );
                 taxon = taxonService.findByCommonName( taxonName );
                 if ( taxon == null ) {
                     throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
@@ -419,9 +415,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         super.processOptions();
 
-        this.arrayDesignAnnotationService = ( ArrayDesignAnnotationService ) getBean( "arrayDesignAnnotationService" );
-        this.goService = ( GeneOntologyService ) getBean( "geneOntologyService" );
-        this.compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
+        this.arrayDesignAnnotationService = getBean( ArrayDesignAnnotationService.class );
+        this.goService = getBean( GeneOntologyService.class );
+        this.compositeSequenceService = getBean( CompositeSequenceService.class );
     }
 
     /**
@@ -482,8 +478,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         InputStream is = new FileInputStream( geneFileName );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        GeneService geneService = getBean( GeneService.class );
+        TaxonService taxonService = getBean( TaxonService.class );
         Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
@@ -512,8 +508,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * 
      */
     private void processGenesForTaxon() {
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        GeneService geneService = getBean( GeneService.class );
+        TaxonService taxonService = getBean( TaxonService.class );
         Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );

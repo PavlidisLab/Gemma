@@ -27,6 +27,8 @@ import ubic.gemma.loader.entrez.pubmed.PubMedService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
+ * Load PubMed files from XML files -- not used routinely!
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -53,8 +55,8 @@ public class PubMedLoaderCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "Directory" ).withDescription(
-                "Directory of PubMed XML files to load" ).withLongOpt( "dir" ).create( 'd' );
+        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "Directory" )
+                .withDescription( "Directory of PubMed XML files to load" ).withLongOpt( "dir" ).create( 'd' );
         this.addOption( fileOption );
 
     }
@@ -62,7 +64,7 @@ public class PubMedLoaderCli extends AbstractSpringAwareCLI {
     @Override
     protected Exception doWork( String[] args ) {
         processCommandLine( "Load PubMed records", args );
-        PubMedService pms = ( PubMedService ) this.getBean( "pubMedService" );
+        PubMedService pms = this.getBean( PubMedService.class );
         pms.loadFromDirectory( new File( directory ) );
         return null;
     }

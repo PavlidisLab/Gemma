@@ -77,8 +77,8 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
         addOption( expOption );
 
-        Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" ).withDescription(
-                "Experimental design description file" ).withLongOpt( "designFile" ).create( 'f' );
+        Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" )
+                .withDescription( "Experimental design description file" ).withLongOpt( "designFile" ).create( 'f' );
         addOption( designFileOption );
 
         Option dryRunOption = OptionBuilder.create( "dryrun" );
@@ -95,7 +95,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         Exception e = processCommandLine( "experimentalDesignImport", args );
         if ( e != null ) return e;
 
-        MgedOntologyService mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
+        MgedOntologyService mos = this.getBean( MgedOntologyService.class );
         mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             try {
@@ -106,7 +106,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
             log.info( "Waiting for mgedontology to load" );
         }
 
-        ExperimentalDesignImporter edimp = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
+        ExperimentalDesignImporter edimp = this.getBean( ExperimentalDesignImporter.class );
 
         try {
 
@@ -128,8 +128,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
             errorObjects.add( "Expression experiment short name must be provided" );
             return null;
         }
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
+        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
         ExpressionExperiment experiment = eeService.findByShortName( name );
 
         if ( experiment == null ) {

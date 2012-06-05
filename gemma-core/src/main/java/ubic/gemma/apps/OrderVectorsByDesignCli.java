@@ -49,7 +49,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     @Override
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "OrderVectorsByDesign", args );
-        ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
+        ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
 

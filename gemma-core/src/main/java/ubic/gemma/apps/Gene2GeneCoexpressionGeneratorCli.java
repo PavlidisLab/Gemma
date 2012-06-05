@@ -116,7 +116,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
 
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
-        ( ( Probe2ProbeCoexpressionCache ) this.getBean( "probe2ProbeCoexpressionCache" ) ).setEnabled( false );
+        ( this.getBean( Probe2ProbeCoexpressionCache.class ) ).setEnabled( false );
 
         if ( this.nodeDegreeOnly ) {
             geneVoteAnalyzer.nodeDegreeAnalysis( expressionExperiments, toUseGenes, useDB );
@@ -190,7 +190,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     }
 
     private void initSpringBeans() {
-        geneVoteAnalyzer = ( Gene2GenePopulationService ) this.getBean( "gene2GenePopulationService" );
+        geneVoteAnalyzer = this.getBean( Gene2GenePopulationService.class );
 
     }
 }

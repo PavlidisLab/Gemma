@@ -220,9 +220,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     protected void processOptions() {
         super.processOptions();
 
-        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        userManager = ( UserManager ) this.getBean( "userManager" );
+        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
+        arrayDesignService = this.getBean( ArrayDesignService.class );
+        userManager = this.getBean( UserManager.class );
 
         if ( this.hasOption( 'a' ) ) {
             arraysFromCliList();

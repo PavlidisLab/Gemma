@@ -68,8 +68,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" ).withDescription(
-                "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" )
+                .withDescription( "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
         addOption( fileOption );
     }
 
@@ -78,7 +78,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         Exception exception = processCommandLine( "repeatScan", args );
         if ( exception != null ) return exception;
 
-        bsService = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        bsService = this.getBean( BioSequenceService.class );
 
         Date skipIfLastRunLaterThan = getLimitingDate();
 

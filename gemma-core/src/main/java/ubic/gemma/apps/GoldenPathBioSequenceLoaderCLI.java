@@ -100,13 +100,13 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
     @Override
     protected void buildOptions() {
 
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" ).withDescription(
-                "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon name" )
+                .withDescription( "Taxon common name, e.g., 'rat'" ).withLongOpt( "taxon" ).create( 't' );
 
         addOption( taxonOption );
 
-        Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" ).withDescription(
-                "Path to file (two columns)" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" )
+                .withDescription( "Path to file (two columns)" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
 
@@ -151,9 +151,9 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
             limitArg = getIntegerOptionValue( 'L' );
         }
         // MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
-        this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
-        this.externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-        this.taxonService = ( TaxonService ) getBean( "taxonService" );
+        this.bioSequenceService = getBean( BioSequenceService.class );
+        this.externalDatabaseService = getBean( ExternalDatabaseService.class );
+        this.taxonService = getBean( TaxonService.class );
     }
 
     private void doLoad( String file, Taxon taxon, int limit ) throws IOException {
@@ -170,7 +170,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
         GoldenPathDumper dumper = new GoldenPathDumper( taxon );
-        externalDatabaseService = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+        externalDatabaseService = this.getBean( ExternalDatabaseService.class );
 
         dumper.setExternalDatabaseService( externalDatabaseService );
         gp.setLimit( limit );

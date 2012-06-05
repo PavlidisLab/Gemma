@@ -76,14 +76,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     protected void buildOptions() {
         super.buildOptions();
 
-        Option fileOption = OptionBuilder.hasArg().withArgName( "Input sequence file" ).withDescription(
-                "Path to file (FASTA)" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().withArgName( "Input sequence file" )
+                .withDescription( "Path to file (FASTA)" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
 
         Option sequenceIdentifierOption = OptionBuilder.hasArg().withArgName( "Input identifier file" )
-                .withDescription( "Path to file (two columns with probe ids and sequence accessions)" ).withLongOpt(
-                        "ids" ).create( 'i' );
+                .withDescription( "Path to file (two columns with probe ids and sequence accessions)" )
+                .withLongOpt( "ids" ).create( 'i' );
 
         addOption( sequenceIdentifierOption );
 
@@ -96,24 +96,29 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         String seqtypes = buf.toString();
         seqtypes = StringUtils.chop( seqtypes );
 
-        Option sequenceTypeOption = OptionBuilder.hasArg().isRequired().withArgName( "Sequence type" ).withDescription(
-                seqtypes ).withLongOpt( "type" ).create( 'y' );
+        Option sequenceTypeOption = OptionBuilder.hasArg().isRequired().withArgName( "Sequence type" )
+                .withDescription( seqtypes ).withLongOpt( "type" ).create( 'y' );
 
         addOption( sequenceTypeOption );
 
         addOption( OptionBuilder.hasArg().withArgName( "accession" ).withDescription( "A single accession to update" )
                 .withLongOpt( "sequence" ).create( 's' ) );
 
-        Option forceOption = OptionBuilder.withArgName( "Force overwriting of existing sequences" ).withLongOpt(
-                "force" ).withDescription(
-                "If biosequences are encountered that already have sequences filled in, "
-                        + "they will be overwritten; default is to leave them." ).create( "force" );
+        Option forceOption = OptionBuilder
+                .withArgName( "Force overwriting of existing sequences" )
+                .withLongOpt( "force" )
+                .withDescription(
+                        "If biosequences are encountered that already have sequences filled in, "
+                                + "they will be overwritten; default is to leave them." ).create( "force" );
 
         addOption( forceOption );
 
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
-                "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" ).create(
-                't' );
+        Option taxonOption = OptionBuilder
+                .hasArg()
+                .withArgName( "taxon" )
+                .withDescription(
+                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
+                .create( 't' );
 
         addOption( taxonOption );
 
@@ -212,9 +217,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Override
     protected void processOptions() {
         super.processOptions();
-        arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
-                .getBean( "arrayDesignSequenceProcessingService" );
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        arrayDesignSequenceProcessingService = this.getBean( ArrayDesignSequenceProcessingService.class );
+        this.taxonService = this.getBean( TaxonService.class );
 
         if ( this.hasOption( 'y' ) ) {
             sequenceType = this.getOptionValue( 'y' );

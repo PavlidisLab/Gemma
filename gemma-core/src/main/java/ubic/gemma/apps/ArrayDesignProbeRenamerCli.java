@@ -57,8 +57,9 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" ).withDescription(
-                "Two-column file with old and new identifiers (additional columns ignored)" ).create( 'f' ) );
+        addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" )
+                .withDescription( "Two-column file with old and new identifiers (additional columns ignored)" )
+                .create( 'f' ) );
     }
 
     @Override
@@ -80,8 +81,8 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
         arrayDesign = unlazifyArrayDesign( arrayDesign );
 
-        ArrayDesignProbeRenamingService arrayDesignProbeRenamingService = ( ArrayDesignProbeRenamingService ) this
-                .getBean( "arrayDesignProbeRenamingService" );
+        ArrayDesignProbeRenamingService arrayDesignProbeRenamingService = this
+                .getBean( ArrayDesignProbeRenamingService.class );
 
         try {
             File file = new File( fileName );

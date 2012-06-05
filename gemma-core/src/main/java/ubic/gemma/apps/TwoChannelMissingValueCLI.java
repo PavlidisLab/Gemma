@@ -99,16 +99,19 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     protected void buildOptions() {
         super.buildOptions();
 
-        Option signal2noiseOption = OptionBuilder.hasArg().withArgName( "Signal-to-noise" ).withDescription(
-                "Signal to noise ratio, below which values are considered missing; default="
-                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" )
-                .create( 's' );
+        Option signal2noiseOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Signal-to-noise" )
+                .withDescription(
+                        "Signal to noise ratio, below which values are considered missing; default="
+                                + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
+                .withLongOpt( "signal2noise" ).create( 's' );
 
         addOption( signal2noiseOption );
 
-        Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" ).withDescription(
-                "Additional numeric values (comma delimited) to be considered missing values." ).create(
-                MISSING_VALUE_OPTION );
+        Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" )
+                .withDescription( "Additional numeric values (comma delimited) to be considered missing values." )
+                .create( MISSING_VALUE_OPTION );
 
         addOption( extraMissingIndicators );
 
@@ -161,12 +164,11 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 this.bail( ErrorCode.INVALID_OPTION );
             }
         }
-        tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
-        this.pedvs = ( ProcessedExpressionDataVectorCreateService ) this
-                .getBean( "processedExpressionDataVectorCreateService" );
+        tcmv = this.getBean( TwoChannelMissingValues.class );
+        dedvs = this.getBean( DesignElementDataVectorService.class );
+        eeService = this.getBean( ExpressionExperimentService.class );
+        quantitationTypeService = this.getBean( QuantitationTypeService.class );
+        this.pedvs = this.getBean( ProcessedExpressionDataVectorCreateService.class );
     }
 
     /**

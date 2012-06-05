@@ -61,7 +61,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
             return e;
         }
 
-        mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
+        mergingService = this.getBean( VectorMergingService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {

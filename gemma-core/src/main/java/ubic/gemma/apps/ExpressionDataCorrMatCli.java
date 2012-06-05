@@ -90,8 +90,8 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
             return;
         }
 
-        SampleCoexpressionMatrixService sampleCoexpressionMatrixService = ( SampleCoexpressionMatrixService ) this
-                .getBean( "sampleCoexpressionMatrixService" );
+        SampleCoexpressionMatrixService sampleCoexpressionMatrixService = this
+                .getBean( SampleCoexpressionMatrixService.class );
 
         sampleCoexpressionMatrixService.create( ee, this.force );
         audit( ee, null );

@@ -46,6 +46,7 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -55,9 +56,10 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @Override 
+    @Override
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( "Taxon loader", args );
@@ -76,7 +78,7 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
             }
 
             TaxonLoader tl = new TaxonLoader();
-            tl.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+            tl.setPersisterHelper( this.getBean( PersisterHelper.class ) );
             int numLoaded = tl.load( names.asFile() );
             log.info( "Loaded " + numLoaded + " taxa" );
         } catch ( Exception e ) {

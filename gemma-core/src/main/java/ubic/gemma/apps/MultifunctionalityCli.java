@@ -60,7 +60,7 @@ public class MultifunctionalityCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
-            TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+            TaxonService taxonService = getBean( TaxonService.class );
             this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 log.error( "ERROR: Cannot find taxon " + taxonName );

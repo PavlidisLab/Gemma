@@ -41,10 +41,10 @@ public class PazarLoaderCli extends AbstractSpringAwareCLI {
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "Load Pazar data", args );
 
-        TfGeneAssociationService tfs = ( TfGeneAssociationService ) this.getBean( "tfGeneAssociationService" );
+        TfGeneAssociationService tfs = this.getBean( TfGeneAssociationService.class );
         tfs.removeAll();
 
-        PazarLoader l = ( PazarLoader ) this.getBean( "pazarLoader" );
+        PazarLoader l = this.getBean( PazarLoader.class );
 
         try {
             l.load( file );

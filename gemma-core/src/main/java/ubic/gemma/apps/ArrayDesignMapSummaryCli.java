@@ -53,8 +53,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Array design mapping summary", args );
         if ( err != null ) return err;
-        ArrayDesignMapResultService arrayDesignMapResultService = ( ArrayDesignMapResultService ) this
-                .getBean( "arrayDesignMapResultService" );
+        ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
         for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
 

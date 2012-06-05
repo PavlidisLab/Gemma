@@ -103,7 +103,7 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
             gffFileIs.close();
             Collection<Gene> res = parser.getResults();
 
-            geneService = ( GeneService ) this.getBean( "geneService" );
+            geneService = this.getBean( GeneService.class );
             int numFound = 0;
             int notFound = 0;
             for ( Gene gene : res ) {
@@ -135,8 +135,8 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
         }
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        persisterHelper = ( Persister ) this.getBean( "persisterHelper" );
+        this.taxonService = this.getBean( TaxonService.class );
+        persisterHelper = this.getBean( Persister.class );
     }
 
 }

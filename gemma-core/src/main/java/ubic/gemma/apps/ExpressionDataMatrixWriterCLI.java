@@ -94,9 +94,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         Exception err = processCommandLine( "expressionDataMatrixWriterCLI", args );
         if ( err != null ) return err;
 
-        ExpressionDataMatrixService ahs = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
+        ExpressionDataMatrixService ahs = this.getBean( ExpressionDataMatrixService.class );
 
-        CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+        CompositeSequenceService css = this.getBean( CompositeSequenceService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             ExpressionDataDoubleMatrix dataMatrix;

@@ -102,10 +102,9 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     @Override
     protected void processOptions() {
         super.processOptions();
-        processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) this
-                .getBean( "processedExpressionDataVectorCreateService" );
-        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        processedExpressionDataVectorCreateService = this.getBean( ProcessedExpressionDataVectorCreateService.class );
+        this.auditTrailService = this.getBean( AuditTrailService.class );
+        eeService = this.getBean( ExpressionExperimentService.class );
     }
 
     /**

@@ -78,23 +78,23 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" ).create( 'g' );
         addOption( geneOption );
 
-        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" ).withLongOpt(
-                "ExpressionExperiments" ).create( 'e' );
+        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" )
+                .withLongOpt( "ExpressionExperiments" ).create( 'e' );
         addOption( eeOption );
 
-        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt( "ArrayDesigns" ).create(
-                'a' );
+        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt( "ArrayDesigns" )
+                .create( 'a' );
         addOption( adOption );
 
-        Option bibliographicOption = OptionBuilder.withDescription( "Index Bibliographic References" ).withLongOpt(
-                "Bibliographic" ).create( 'b' );
+        Option bibliographicOption = OptionBuilder.withDescription( "Index Bibliographic References" )
+                .withLongOpt( "Bibliographic" ).create( 'b' );
         addOption( bibliographicOption );
 
         Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt( "probes" ).create( 's' );
         addOption( probeOption );
 
-        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" ).create(
-                'q' );
+        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" )
+                .create( 'q' );
         addOption( sequenceOption );
     }
 
@@ -110,6 +110,9 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             return err;
         }
         try {
+            /*
+             * These beans are defined in Spring XML.
+             */
             if ( this.indexG ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "Gene index" );
             }

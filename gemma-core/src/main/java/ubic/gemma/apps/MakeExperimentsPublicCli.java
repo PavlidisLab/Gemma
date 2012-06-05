@@ -33,7 +33,7 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "Delete experiments", args );
 
-        SecurityService securityService = ( SecurityService ) this.getBean( "securityService" );
+        SecurityService securityService = this.getBean( SecurityService.class );
 
         securityService.makePublic( this.expressionExperiments );
 

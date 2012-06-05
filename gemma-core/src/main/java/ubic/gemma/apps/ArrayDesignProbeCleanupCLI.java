@@ -70,8 +70,9 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "file" ).withDescription(
-                "File (tabbed) with probe ids in the first column" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "file" )
+                .withDescription( "File (tabbed) with probe ids in the first column" ).withLongOpt( "file" )
+                .create( 'f' );
 
         addOption( fileOption );
 
@@ -129,8 +130,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
             try {
                 if ( br != null ) br.close();
             } catch ( IOException e ) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new RuntimeException( "Failed to close", e );
             }
         }
 
@@ -140,8 +140,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     @Override
     protected void processOptions() {
         super.processOptions();
-        this.compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
-        this.designElementDataVectorService = ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" );
+        this.compositeSequenceService = getBean( CompositeSequenceService.class );
+        this.designElementDataVectorService = getBean( DesignElementDataVectorService.class );
         if ( this.hasOption( 'f' ) ) {
             file = this.getOptionValue( 'f' );
         }

@@ -127,8 +127,8 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
     public void loadProteinProteinInteractions() throws IOException {
         StringProteinInteractionLoader loader = new StringProteinInteractionLoader();
 
-        geneService = ( GeneService ) getBean( "geneService" );
-        externalDatabaseService = ( ( ExternalDatabaseService ) getBean( "externalDatabaseService" ) );
+        geneService = getBean( GeneService.class );
+        externalDatabaseService = getBean( ExternalDatabaseService.class );
         // set all the loaders
         if ( this.getPersisterHelper() == null || geneService == null || externalDatabaseService == null ) {
             throw new RuntimeException( "Spring configuration problem" );
@@ -146,9 +146,11 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         // taxon
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
-                        + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
+        Option taxonNameOption = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
+                                + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
                 .withLongOpt( "taxon" ).create( 't' );
         addOption( taxonNameOption );
         //
@@ -160,15 +162,19 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
                 .withLongOpt( "isStringFileRemote" ).create( 'r' );
         addOption( isStringFileRemote );
 
-        Option stringProteinProteinFileName = OptionBuilder.hasArg().withDescription(
-                "Input File Path for string protein interaction file  "
-                        + "Optional path to the protein.links.detailed file" ).withLongOpt(
-                "stringProteinProteinFileName" ).create( 's' );
+        Option stringProteinProteinFileName = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Input File Path for string protein interaction file  "
+                                + "Optional path to the protein.links.detailed file" )
+                .withLongOpt( "stringProteinProteinFileName" ).create( 's' );
         addOption( stringProteinProteinFileName );
 
-        Option biomartFileNameLocal = OptionBuilder.hasArg().withDescription(
-                "Input File Path for biomart file should only be supplied when taxon supplied "
-                        + "Optional can only be " ).withLongOpt( "biomartFileName" ).create( 'b' );
+        Option biomartFileNameLocal = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Input File Path for biomart file should only be supplied when taxon supplied "
+                                + "Optional can only be " ).withLongOpt( "biomartFileName" ).create( 'b' );
         addOption( biomartFileNameLocal );
 
     }
@@ -232,7 +238,7 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
      */
     protected Collection<Taxon> getValidTaxon() {
         Taxon taxon = null;
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        this.taxonService = this.getBean( TaxonService.class );
         Collection<Taxon> taxa = new ArrayList<Taxon>();
 
         if ( taxonName != null || StringUtils.isNotBlank( taxonName ) ) {

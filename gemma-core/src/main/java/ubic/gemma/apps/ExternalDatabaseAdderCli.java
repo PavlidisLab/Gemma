@@ -27,7 +27,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * TODO Document Me
+ * Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.
  * 
  * @author paul
  * @version $Id$
@@ -52,7 +52,6 @@ public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
 
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -61,7 +60,7 @@ public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
             Exception err = processCommandLine( "One-off External database adder", args );
             if ( err != null ) return err;
 
-            ContactService contactService = ( ContactService ) this.getBean( "contactService" );
+            ContactService contactService = this.getBean( ContactService.class );
 
             ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
 
@@ -85,7 +84,7 @@ public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
             toAdd.setType( DatabaseType.OTHER );
             toAdd.setWebUri( "http://omim.org/" );
 
-            ExternalDatabaseService eds = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+            ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 
             eds.findOrCreate( toAdd );
         } catch ( Exception e ) {

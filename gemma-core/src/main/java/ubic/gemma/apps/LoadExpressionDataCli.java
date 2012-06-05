@@ -235,10 +235,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
-            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
+            GeoService geoService = this.getBean( GeoService.class );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-            ArrayExpressLoadService aeService = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+            ArrayExpressLoadService aeService = this.getBean( ArrayExpressLoadService.class );
 
             if ( accessions == null && accessionFile == null ) {
                 return new IllegalArgumentException(
@@ -418,11 +418,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         this.suppressPostProcessing = hasOption( "nopost" );
 
-        this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
-        this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        this.sampleCoexpressionMatrixService = ( SampleCoexpressionMatrixService ) getBean( "sampleCoexpressionMatrixService" );
+        this.eeService = getBean( ExpressionExperimentService.class );
+        this.adService = getBean( ArrayDesignService.class );
+        this.processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
+        this.tcmv = this.getBean( TwoChannelMissingValues.class );
+        this.sampleCoexpressionMatrixService = getBean( SampleCoexpressionMatrixService.class );
     }
 
     /**

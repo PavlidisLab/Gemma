@@ -429,6 +429,7 @@ public class Blat {
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
             Socket socket = new Socket( host, port );
+
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {
@@ -448,7 +449,7 @@ public class Blat {
             } catch ( IllegalThreadStateException e1 ) {
                 log.info( "Server seems to have started" );
             } catch ( InterruptedException e1 ) {
-                
+
             }
 
         }
@@ -458,7 +459,7 @@ public class Blat {
      * Stop the gfServer, if it was started by this.
      */
     public void stopServer( int port ) {
-        if (  !doShutdown ) {
+        if ( !doShutdown ) {
             return;
         }
         log.info( "Shutting down gfServer" );

@@ -29,7 +29,7 @@ import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * TODO Document Me
+ * Update the primary publication for experiments.
  * 
  * @author paul
  * @version $Id$
@@ -56,8 +56,8 @@ public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Expression experiment bibref finder ", args );
         if ( err != null ) return err;
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        PersisterHelper ph = ( PersisterHelper ) this.getBean( "persisterHelper" );
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
+        PersisterHelper ph = this.getBean( PersisterHelper.class );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
 
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();

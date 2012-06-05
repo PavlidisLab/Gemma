@@ -44,8 +44,6 @@ public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
 
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -53,11 +51,11 @@ public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "Experimental Design view ", args );
         if ( err != null ) return err;
 
-        ExperimentalDesignService eds = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
+        ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );
 
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects( EntityUtils.getIds( ees
-                .loadAll() ), false );
+        ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
+        Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects(
+                EntityUtils.getIds( ees.loadAll() ), false );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<Long, ExpressionExperimentValueObject>();
 

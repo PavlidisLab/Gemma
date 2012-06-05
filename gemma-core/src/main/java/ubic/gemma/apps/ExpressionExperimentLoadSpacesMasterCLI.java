@@ -18,11 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.rmi.RemoteException;
-
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
-import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
@@ -81,7 +78,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     @Override
-    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+    public void notify( RemoteEvent remoteEvent ) {
         log.debug( "notified ..." );
 
         try {
@@ -145,7 +142,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
      */
     protected void init() throws Exception {
 
-        spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
+        spacesUtil = this.getBean( SpacesUtil.class );
         ApplicationContext updatedContext = spacesUtil.addGemmaSpacesToApplicationContext();
 
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )

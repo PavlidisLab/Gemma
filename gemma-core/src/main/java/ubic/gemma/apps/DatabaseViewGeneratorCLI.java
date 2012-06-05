@@ -65,21 +65,23 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         super.buildStandardOptions();
 
-        Option datasetSummary = OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all accessible datasets in gemma" ).withLongOpt(
-                "dataset" ).create( 'd' );
+        Option datasetSummary = OptionBuilder
+                .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" )
+                .withLongOpt( "dataset" ).create( 'd' );
 
-        Option datasetTissueSummary = OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all the tissues in accesable datasets" ).withLongOpt(
-                "tissue" ).create( 't' );
+        Option datasetTissueSummary = OptionBuilder
+                .withDescription(
+                        "Will generate a zip file containing a summary of all the tissues in accesable datasets" )
+                .withLongOpt( "tissue" ).create( 't' );
 
         Option diffExpSummary = OptionBuilder
                 .withDescription(
                         "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" )
                 .withLongOpt( "diffexpression" ).create( 'x' );
 
-        Option limitOpt = OptionBuilder.hasArg().withArgName( "Limit number of datasets" ).withDescription(
-                "will impose a limit on how many datasets to process" ).withLongOpt( "limit" ).create( 'l' );
+        Option limitOpt = OptionBuilder.hasArg().withArgName( "Limit number of datasets" )
+                .withDescription( "will impose a limit on how many datasets to process" ).withLongOpt( "limit" )
+                .create( 'l' );
 
         addOption( datasetSummary );
         addOption( datasetTissueSummary );
@@ -93,7 +95,7 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         Exception err = super.processCommandLine( "DatabaseViewGeneratorCLI", args );
         if ( err != null ) return err;
 
-        DatabaseViewGenerator v = ( DatabaseViewGenerator ) getBean( "databaseViewGenerator" );
+        DatabaseViewGenerator v = getBean( DatabaseViewGenerator.class );
 
         try {
             if ( generateDatasetSummary ) v.generateDatasetView( limit );

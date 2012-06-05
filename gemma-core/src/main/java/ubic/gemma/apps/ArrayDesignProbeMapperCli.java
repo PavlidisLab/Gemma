@@ -509,8 +509,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
         arrayDesign = arrayDesignService.thawLite( arrayDesign );
-        CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) this
-                .getBean( "compositeSequenceService" );
+        CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         for ( String probeName : this.probeNames ) {
             CompositeSequence probe = compositeSequenceService.findByName( arrayDesign, probeName );
@@ -653,9 +652,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void processOptions() {
         super.processOptions();
-        arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
+        this.taxonService = this.getBean( TaxonService.class );
 
         if ( hasOption( THREADS_OPTION ) ) {
             this.numThreads = this.getIntegerOptionValue( "threads" );
@@ -671,7 +669,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
             String sourceDBName = this.getOptionValue( "source" );
 
-            ExternalDatabaseService eds = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+            ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 
             this.sourceDatabase = eds.find( sourceDBName );
 

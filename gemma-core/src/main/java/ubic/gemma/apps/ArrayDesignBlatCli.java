@@ -98,9 +98,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                         "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple array designs to run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
-        Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
-                "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
-                .withLongOpt( "scoreThresh" ).create( 's' );
+        Option blatScoreThresholdOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Blat score threshold" )
+                .withDescription(
+                        "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold
+                                + "]" ).withLongOpt( "scoreThresh" ).create( 's' );
 
         this.addOption( OptionBuilder.withDescription( "Run on more sensitive server, if available" ).create(
                 "sensitive" ) );
@@ -265,7 +268,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
         }
 
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        this.taxonService = this.getBean( TaxonService.class );
 
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
@@ -275,8 +278,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             }
         }
 
-        arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
-                .getBean( "arrayDesignSequenceAlignmentService" );
+        arrayDesignSequenceAlignmentService = this.getBean( ArrayDesignSequenceAlignmentService.class );
 
     }
 

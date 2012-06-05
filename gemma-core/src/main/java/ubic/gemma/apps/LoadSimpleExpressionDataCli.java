@@ -107,12 +107,12 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "File Name" ).withDescription(
-                "the list of experiments in flat file" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "File Name" )
+                .withDescription( "the list of experiments in flat file" ).withLongOpt( "file" ).create( 'f' );
         addOption( fileOption );
 
-        Option dirOption = OptionBuilder.hasArg().withArgName( "File Folder" ).withDescription(
-                "The folder for containing the experiment files" ).withLongOpt( "dir" ).create( 'd' );
+        Option dirOption = OptionBuilder.hasArg().withArgName( "File Folder" )
+                .withDescription( "The folder for containing the experiment files" ).withLongOpt( "dir" ).create( 'd' );
         addOption( dirOption );
 
     }
@@ -129,11 +129,11 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
             return err;
         }
         try {
-            this.eeLoaderService = ( SimpleExpressionDataLoaderService ) this
-                    .getBean( "simpleExpressionDataLoaderService" );
-            this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-            this.adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-            this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+            this.eeLoaderService = this
+                    .getBean( SimpleExpressionDataLoaderService.class );
+            this.eeService = this.getBean( ExpressionExperimentService.class );
+            this.adService = this.getBean( ArrayDesignService.class );
+            this.taxonService = this.getBean( TaxonService.class );
             if ( this.fileName != null ) {
                 log.info( "Loading experiments from " + this.fileName );
                 InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );

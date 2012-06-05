@@ -96,8 +96,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
             return err;
         }
 
-        this.differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
-                .getBean( "differentialExpressionAnalyzerService" );
+        this.differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( !( ee instanceof ExpressionExperiment ) ) {

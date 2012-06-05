@@ -82,7 +82,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             return exp;
         }
 
-        serv = ( ExpressionExperimentPlatformSwitchService ) this.getBean( "expressionExperimentPlatformSwitchService" );
+        serv = this
+                .getBean( ExpressionExperimentPlatformSwitchService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
@@ -124,7 +125,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         if ( this.hasOption( 'a' ) ) {
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        arrayDesignService = this.getBean( ArrayDesignService.class );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
@@ -132,7 +133,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         try {
             ee = this.eeService.thawLite( ee );
 
-            AuditTrailService ats = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            AuditTrailService ats = this.getBean( AuditTrailService.class );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             if ( this.arrayDesignName != null ) {
                 ArrayDesign ad = locateArrayDesign( this.arrayDesignName );

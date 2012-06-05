@@ -58,7 +58,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.GoMetric;
 import ubic.gemma.ontology.GoMetric.Metric;
@@ -133,8 +133,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
          */
         @Override
         public int compareTo( GenePair o2 ) {
-            return this.getFirstGenes().iterator().next().getName().compareTo(
-                    o2.getFirstGenes().iterator().next().getName() );
+            return this.getFirstGenes().iterator().next().getName()
+                    .compareTo( o2.getFirstGenes().iterator().next().getName() );
         }
 
         /*
@@ -461,36 +461,37 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option goMetricOption = OptionBuilder.hasArg().withArgName( "Choice of GO Metric" ).withDescription(
-                "resnik, lin, jiang, percent, cosine, kappa; default = simple" ).withLongOpt( "metric" ).create( 'm' );
+        Option goMetricOption = OptionBuilder.hasArg().withArgName( "Choice of GO Metric" )
+                .withDescription( "resnik, lin, jiang, percent, cosine, kappa; default = simple" )
+                .withLongOpt( "metric" ).create( 'm' );
         addOption( goMetricOption );
 
-        Option maxOption = OptionBuilder.hasArg().withArgName( "Choice of using MAX calculation" ).withDescription(
-                "MAX" ).withLongOpt( "max" ).create( 'x' );
+        Option maxOption = OptionBuilder.hasArg().withArgName( "Choice of using MAX calculation" )
+                .withDescription( "MAX" ).withLongOpt( "max" ).create( 'x' );
         addOption( maxOption );
 
         Option weightedOption = OptionBuilder.hasArg().withArgName( "Choice of using weighted matrix" )
                 .withDescription( "weight" ).withLongOpt( "weight" ).create( 'w' );
         addOption( weightedOption );
 
-        Option dataOption = OptionBuilder.hasArg().withArgName(
-                "Choice of generating random gene pairs OR Input data file" ).withDescription( "dataType" )
-                .isRequired().create( 'd' );
+        Option dataOption = OptionBuilder.hasArg()
+                .withArgName( "Choice of generating random gene pairs OR Input data file" )
+                .withDescription( "dataType" ).isRequired().create( 'd' );
         addOption( dataOption );
 
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" ).withDescription(
-                "human, rat, mouse" ).isRequired().create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" )
+                .withDescription( "human, rat, mouse" ).isRequired().create( 't' );
         addOption( taxonOption );
 
-        Option firstGeneOption = OptionBuilder.hasArg().withArgName( "colindex" ).withDescription(
-                "Column index with gene1 (starting from 0; default=0)" ).create( "g1col" );
-        Option secondGeneOption = OptionBuilder.hasArg().withArgName( "colindex" ).withDescription(
-                "Column index with gene2 (starting from 0; default=1)" ).create( "g2col" );
+        Option firstGeneOption = OptionBuilder.hasArg().withArgName( "colindex" )
+                .withDescription( "Column index with gene1 (starting from 0; default=0)" ).create( "g1col" );
+        Option secondGeneOption = OptionBuilder.hasArg().withArgName( "colindex" )
+                .withDescription( "Column index with gene2 (starting from 0; default=1)" ).create( "g2col" );
         addOption( firstGeneOption );
         addOption( secondGeneOption );
 
-        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array Design" ).withDescription(
-                "Short Name of Microarray Design" ).create( "array" );
+        Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array Design" )
+                .withDescription( "Short Name of Microarray Design" ).create( "array" );
         addOption( arrayDesignOption );
 
         Option numberOfRandomRunsOption = OptionBuilder
@@ -501,15 +502,15 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 .create( "runs" );
         addOption( numberOfRandomRunsOption );
 
-        Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
-                "Write output to this file" ).create( 'o' );
+        Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" )
+                .withDescription( "Write output to this file" ).create( 'o' );
         addOption( outFileOption );
 
         Option noZeroGo = OptionBuilder.withDescription( "Exclude genes with no GO terms" ).create( "noZeroGo" );
         addOption( noZeroGo );
 
-        Option print = OptionBuilder.hasArg().withArgName( "Output file for random links" ).withDescription(
-                "Print out randomly chosen probe pairs in a separate output file" ).create( "print" );
+        Option print = OptionBuilder.hasArg().withArgName( "Output file for random links" )
+                .withDescription( "Print out randomly chosen probe pairs in a separate output file" ).create( "print" );
         addOption( print );
 
         Option probenames = OptionBuilder
@@ -520,18 +521,20 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 .create( "probenames" );
         addOption( probenames );
 
-        Option subsetOption = OptionBuilder.hasArg().withArgName(
-                "Approximate number of probe pairs desired to score from full set" ).withDescription(
-                "Take random subset of probe pairs approximated to given argument from input file to score" ).create(
-                "subset" );
+        Option subsetOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Approximate number of probe pairs desired to score from full set" )
+                .withDescription(
+                        "Take random subset of probe pairs approximated to given argument from input file to score" )
+                .create( "subset" );
         addOption( subsetOption );
 
-        Option aspectOption = OptionBuilder.hasArg().withArgName( "aspect" ).withDescription(
-                "Limit to mf, bp or cc. Default=use all three" ).create( "aspect" );
+        Option aspectOption = OptionBuilder.hasArg().withArgName( "aspect" )
+                .withDescription( "Limit to mf, bp or cc. Default=use all three" ).create( "aspect" );
         addOption( aspectOption );
 
-        Option outputGoAnnots = OptionBuilder.hasArg().withArgName( "path" ).withDescription(
-                "Also rint out the Gene-GO relationships in a tabbed format" ).create( "termsout" );
+        Option outputGoAnnots = OptionBuilder.hasArg().withArgName( "path" )
+                .withDescription( "Also rint out the Gene-GO relationships in a tabbed format" ).create( "termsout" );
         addOption( outputGoAnnots );
 
     }
@@ -626,12 +629,12 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     }
 
     protected void initBeans() {
-        taxonService = ( TaxonService ) getBean( "taxonService" );
-        geneService = ( GeneService ) getBean( "geneService" );
-        goService = ( GeneOntologyService ) getBean( "geneOntologyService" );
-        goMetric = ( GoMetric ) getBean( "goMetric" );
-        arrayDesignService = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        css = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
+        taxonService = getBean( TaxonService.class );
+        geneService = getBean( GeneService.class );
+        goService = getBean( GeneOntologyService.class );
+        goMetric = getBean( GoMetric.class );
+        arrayDesignService = getBean( ArrayDesignService.class );
+        css = getBean( CompositeSequenceService.class );
 
     }
 
@@ -1401,9 +1404,9 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 // desired
                 continue;
             }
-           
-                genePair.addFirstGene( firstGene );
-            
+
+            genePair.addFirstGene( firstGene );
+
         }
 
         for ( Gene secondGene : secondGenes ) {
@@ -1419,8 +1422,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 continue;
             }
 
-             genePair.addSecondGene( secondGene );
-            
+            genePair.addSecondGene( secondGene );
+
         }
 
         return genePair;
@@ -1451,7 +1454,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         Collection<String> remove = new HashSet<String>();
 
         for ( String t : terms ) {
-            Collection<OntologyTerm> parents = goService.getAllParents( GeneOntologyServiceImpl.getTermForURI( t ), partOf );
+            Collection<OntologyTerm> parents = goService.getAllParents( GeneOntologyServiceImpl.getTermForURI( t ),
+                    partOf );
 
             for ( OntologyTerm p : parents ) {
                 if ( p.getUri().equalsIgnoreCase( process ) ) {
