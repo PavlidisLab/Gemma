@@ -138,7 +138,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         /*
          * Start a thread to monitor finished tasks that have not been retrieved
          */
@@ -335,7 +335,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         ExecutorService waiting = Executors.newSingleThreadExecutor();
         waiting.submit( new FutureTask<Object>( new Callable<Object>() {
             @Override
-            public Object call() throws Exception {
+            public Object call() {
 
                 TaskResult result = null;
                 try {
@@ -559,7 +559,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      * @param taskId
      * @return
      */
-    private void clearCancelled( String taskId ) throws Exception {
+    private void clearCancelled( String taskId ) {
         cancelledTasks.remove( taskId );
         ProgressManager.signalCancelled( taskId );
     }

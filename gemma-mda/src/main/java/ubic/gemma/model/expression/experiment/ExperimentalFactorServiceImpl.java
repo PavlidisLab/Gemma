@@ -14,11 +14,11 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection; 
+import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis; 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 
 /**
  * @author pavlidis
@@ -51,7 +51,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * .experiment.ExperimentalFactor)
      */
     @Override
-    protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) throws Exception {
+    protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) {
         return this.getExperimentalFactorDao().create( experimentalFactor );
     }
 
@@ -63,7 +63,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * .experiment.ExperimentalFactor)
      */
     @Override
-    protected void handleDelete( ExperimentalFactor experimentalFactor ) throws Exception {
+    protected void handleDelete( ExperimentalFactor experimentalFactor ) {
 
         /*
          * First, check to see if there are any diff results that use this factor.
@@ -85,7 +85,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * .experiment.ExperimentalFactor)
      */
     @Override
-    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) throws Exception {
+    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) {
         return this.getExperimentalFactorDao().find( experimentalFactor );
     }
 
@@ -97,7 +97,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * .experiment.ExperimentalFactor)
      */
     @Override
-    protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) throws Exception {
+    protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) {
         return this.getExperimentalFactorDao().findOrCreate( experimentalFactor );
     }
 
@@ -107,7 +107,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected ExperimentalFactor handleLoad( Long id ) throws Exception {
+    protected ExperimentalFactor handleLoad( Long id ) {
         return this.getExperimentalFactorDao().load( id );
     }
 
@@ -115,12 +115,12 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
      */
     @Override
-    protected java.util.Collection<ExperimentalFactor> handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<ExperimentalFactor> handleLoadAll() {
         return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().loadAll();
     }
 
     @Override
-    protected void handleUpdate( ExperimentalFactor experimentalFactor ) throws Exception {
+    protected void handleUpdate( ExperimentalFactor experimentalFactor ) {
         this.getExperimentalFactorDao().update( experimentalFactor );
     }
 

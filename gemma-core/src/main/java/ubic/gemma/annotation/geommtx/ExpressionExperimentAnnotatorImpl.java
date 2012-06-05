@@ -121,7 +121,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
         boolean activated = ConfigUtils.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
 
@@ -140,8 +140,11 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      * @seeubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator#annotate(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, boolean)
      */
-    /* (non-Javadoc)
-     * @see ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator#annotate(ubic.gemma.model.expression.experiment.ExpressionExperiment, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator#annotate(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, boolean)
      */
     @Override
     public Collection<Characteristic> annotate( ExpressionExperiment e, boolean force ) {

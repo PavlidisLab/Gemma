@@ -63,7 +63,7 @@ public class ManualAuthenticationServiceImpl implements ApplicationContextAware,
      * We need to do this because normally the anonymous provider has
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
         AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider();
         aap.setKey( AuthenticationUtils.ANONYMOUS_AUTHENTICATION_KEY );

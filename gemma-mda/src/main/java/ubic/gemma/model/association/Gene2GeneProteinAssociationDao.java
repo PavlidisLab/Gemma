@@ -24,7 +24,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * 
  * Dao for Gene2GeneProteinAssociation
  * 
  * @author ldonnison
@@ -32,42 +31,39 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface Gene2GeneProteinAssociationDao extends BaseDao<Gene2GeneProteinAssociation> {
 
-    
     /**
      * Given a gene2GeneProteinAssociation find its entry. It presumes that gene one and gene two are in the same order
      * as stored in the db.
+     * 
      * @param gene2GeneProteinAssociation
      * @return gene2GeneProteinAssociation matching record
      */
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
-    
     /**
-     * Thaw the gene2GeneProteinAssociation genes are not automatically loaded, so this
-     * method thaws the genes.
+     * Thaw the gene2GeneProteinAssociation genes are not automatically loaded, so this method thaws the genes.
+     * 
      * @param gene2GeneProteinAssociation
      * @throws Exception
      */
-    public void thaw (Gene2GeneProteinAssociation gene2GeneProteinAssociation) throws Exception;
-    
+    public void thaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+
     /**
-     * Finder method that given a gene finds its interactions. The query checks if the gene matches 
-     * either gene one or gene two.
+     * Finder method that given a gene finds its interactions. The query checks if the gene matches either gene one or
+     * gene two.
+     * 
      * @param gene The gene to find interactions for
      * @return gene2GeneProteinAssociation Collection of associations assocaited with this gene
      */
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );
-    
-    
-    
+
     /**
-     * Given a Gene2GeneProteinAssociation check if it already exists by checking if for those two genes in an interaction exists in db. 
-     * If the interaction exists then issue an update.
+     * Given a Gene2GeneProteinAssociation check if it already exists by checking if for those two genes in an
+     * interaction exists in db. If the interaction exists then issue an update.
      * 
      * @param gene2GeneProteinAssociation Gene2GeneProteinAssociation to be created or updated
      * @return gene2GeneProteinAssociation Created or updated Gene2GeneProteinAssociation
      */
     public Gene2GeneProteinAssociation createOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-    
 
 }

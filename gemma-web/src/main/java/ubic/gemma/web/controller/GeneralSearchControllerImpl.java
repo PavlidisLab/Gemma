@@ -237,6 +237,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @return Object
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         SearchSettings searchSettings = new SearchSettings();
@@ -252,6 +253,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected Map<String, List<? extends Object>> referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();

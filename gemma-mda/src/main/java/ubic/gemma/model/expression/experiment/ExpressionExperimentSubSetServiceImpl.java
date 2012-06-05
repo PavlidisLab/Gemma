@@ -38,20 +38,19 @@ public class ExpressionExperimentSubSetServiceImpl extends
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
-    
+
     @Autowired
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-    
+
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
-        
+
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
     @Override
     protected ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
-            throws java.lang.Exception {
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
         return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
     }
 
@@ -61,7 +60,7 @@ public class ExpressionExperimentSubSetServiceImpl extends
      * @return ExpressionExperimentSubSet
      */
     @Override
-    protected ExpressionExperimentSubSet handleLoad( Long id ) throws java.lang.Exception {
+    protected ExpressionExperimentSubSet handleLoad( Long id ) {
         return this.getExpressionExperimentSubSetDao().load( id );
     }
 
@@ -69,8 +68,7 @@ public class ExpressionExperimentSubSetServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Collection<ExpressionExperimentSubSet> handleLoadAll() throws java.lang.Exception {
+    protected Collection<ExpressionExperimentSubSet> handleLoadAll() {
         return ( Collection<ExpressionExperimentSubSet> ) this.getExpressionExperimentSubSetDao().loadAll();
     }
 
@@ -83,38 +81,33 @@ public class ExpressionExperimentSubSetServiceImpl extends
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
         return this.getExpressionExperimentSubSetDao().find( entity );
     }
-    
 
     @Override
     public void delete( ExpressionExperimentSubSet entity ) {
-        try {           
-            this.handleDelete( entity );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ExpressionExperimentSubSetService.delete(ExpressionExperimentSubSet expressionExperimentSubSet)' --> "
-                            + th, th );
-        }
+        this.handleDelete( entity );
     }
-    
+
     /**
-     * doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting experiment set members
+     * doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting
+     * experiment set members
+     * 
      * @param subset
      * @throws Exception
      */
-    protected void handleDelete( ExpressionExperimentSubSet subset ) throws Exception {
+    protected void handleDelete( ExpressionExperimentSubSet subset ) {
 
         if ( subset == null ) {
             throw new IllegalArgumentException( "ExperimentSubSet cannot be null" );
         }
-       
+
         /*
          * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
          * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
          * will not be possible (at best we can mark it as troubled). If there is no analysis object using the set, it's
          * okay. There are ways around this but it's messy, so for now we just refuse to delete such experiments.
          */
-        Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.geneCoexpressionAnalysisDao.findByInvestigation(
-                subset );
+        Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.geneCoexpressionAnalysisDao
+                .findByInvestigation( subset );
 
         if ( g2gAnalyses.size() > 0 ) {
             throw new IllegalArgumentException( "Sorry, you can't delete subset: " + subset
@@ -129,12 +122,11 @@ public class ExpressionExperimentSubSetServiceImpl extends
             Long toDelete = de.getId();
             this.differentialExpressionAnalysisDao.remove( toDelete );
         }
-        
+
         // Remove probe2probe links
         this.probe2ProbeCoexpressionDao.deleteLinks( subset );
 
         this.expressionExperimentSubSetDao.remove( subset );
     }
-
 
 }

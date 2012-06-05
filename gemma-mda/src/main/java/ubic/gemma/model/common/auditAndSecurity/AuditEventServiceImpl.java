@@ -86,7 +86,7 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
      */
     @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception {
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         return this.getAuditEventDao().getNewSinceDate( date );
     }
 
@@ -94,12 +94,12 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
      */
     @Override
-    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception {
+    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
         return this.getAuditEventDao().getUpdatedSinceDate( date );
     }
 
     @Override
-    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
+    protected void handleThaw( AuditEvent auditEvent ) {
         this.getAuditEventDao().thaw( auditEvent );
     }
 

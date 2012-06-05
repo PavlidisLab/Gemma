@@ -18,6 +18,7 @@
  */
 package ubic.gemma.ontology;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -26,6 +27,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -78,10 +80,14 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             }
         }
 
+        OntologyTerm t1 = os.getTerm( "http://purl.org/obo/owl/DOID#DOID_0050001" );
+        assertNotNull( t1 );
+
         // Actinomadura madurae infectious disease
         assertTrue( os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050001" ) );
 
         // inflammatory diarrhea, not obolete as of May 2012.
+        assertNotNull( os.getTerm( "http://purl.org/obo/owl/DOID#DOID_0050132" ) );
         assertTrue( !os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050132" ) );
 
     }

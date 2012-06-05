@@ -74,19 +74,6 @@ public interface ArrayDesignSequenceProcessingService {
             InputStream probeSequenceFile, Taxon taxon, boolean force ) throws IOException;
 
     /**
-     * @param Array design name.
-     * @param Array design file in our 'old fashioned' format.
-     * @param Affymetrix probe file
-     * @param taxon
-     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
-     *         filled in.
-     * @deprecated {@see processAffymetrixDesign}
-     */
-    @Deprecated
-    public abstract ArrayDesign processAffymetrixDesign( String arrayDesignName, String arrayDesignFile,
-            String probeSequenceFile, Taxon taxon ) throws IOException;
-
-    /**
      * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on the
      * array.
      * <p>

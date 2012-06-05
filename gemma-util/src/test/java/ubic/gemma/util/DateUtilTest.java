@@ -30,7 +30,7 @@ import junit.framework.TestCase;
  */
 public class DateUtilTest extends TestCase {
 
-    public void testgetRelativeDateDayago() throws Exception {
+    public void testgetRelativeDateDayago() {
 
         Date now = new Date();
 
@@ -41,7 +41,7 @@ public class DateUtilTest extends TestCase {
 
     }
 
-    public void testgetRelativeTomorrow() throws Exception {
+    public void testgetRelativeTomorrow() {
 
         Date now = new Date();
 
@@ -52,7 +52,7 @@ public class DateUtilTest extends TestCase {
 
     }
 
-    public void testgetRelative5yearsago() throws Exception {
+    public void testgetRelative5yearsago() {
 
         Date now = new Date();
 
@@ -62,9 +62,8 @@ public class DateUtilTest extends TestCase {
         assertEquals( expectedValue, actualValue );
 
     }
-    
-    
-    public void testgetRelative5yearsFromnow() throws Exception {
+
+    public void testgetRelative5yearsFromnow() {
 
         Date now = new Date();
 

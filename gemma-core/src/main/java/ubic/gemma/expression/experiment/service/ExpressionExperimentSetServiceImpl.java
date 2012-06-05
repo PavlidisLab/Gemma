@@ -449,8 +449,7 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     @Override
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception {
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         return this.getExpressionExperimentSetDao().create( expressionExperimentSet );
     }
 
@@ -458,19 +457,17 @@ public class ExpressionExperimentSetServiceImpl extends
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
-    protected void handleDelete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception {
+    protected void handleDelete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         this.getExpressionExperimentSetDao().remove( expressionExperimentSet );
     }
 
     @Override
-    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
+    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) {
         return this.getExpressionExperimentSetDao().findByName( name );
     }
 
     @Override
-    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
-            throws Exception {
+    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) {
         return this.getExpressionExperimentSetDao().getAnalyses( expressionExperimentSet );
     }
 
@@ -478,8 +475,7 @@ public class ExpressionExperimentSetServiceImpl extends
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
-            throws java.lang.Exception {
+    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id ) {
         return this.getExpressionExperimentSetDao().load( id );
     }
 
@@ -487,7 +483,7 @@ public class ExpressionExperimentSetServiceImpl extends
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadAll()
      */
     @Override
-    protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();
 
     }
@@ -497,7 +493,7 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
-            ubic.gemma.model.common.auditAndSecurity.User user ) throws java.lang.Exception {
+            ubic.gemma.model.common.auditAndSecurity.User user ) {
         // @todo implement protected java.util.Collection
         // handleLoadUserSets(ubic.gemma.model.common.auditAndSecurity.User user)
         throw new java.lang.UnsupportedOperationException(
@@ -508,8 +504,7 @@ public class ExpressionExperimentSetServiceImpl extends
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
 
         if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
             throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );

@@ -40,7 +40,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     BioSequence bs;
 
     @Before
-    public void onSetUpInTransaction() throws Exception {
+    public void onSetUpInTransaction() {
 
         bs = BioSequence.Factory.newInstance();
 
@@ -62,13 +62,13 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     }
 
     @After
-    public void onTearDownInTransaction() throws Exception {
-        BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+    public void onTearDownInTransaction() {
+        BioSequenceService bss = this.getBean( BioSequenceService.class );
         bss.remove( bs );
     }
 
     @Test
-    public final void testPersistBioSequence() throws Exception {
+    public final void testPersistBioSequence() {
         bs = ( BioSequence ) persisterHelper.persist( bs );
         assertNotNull( bs.getId() );
     }

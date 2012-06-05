@@ -114,7 +114,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }

@@ -71,7 +71,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
         // term for Biological macromolecule in FMA (FMAID=63887)
         fmaMolecule = ontologyService.getTerm( "http://purl.org/obo/owl/FMA#FMA_63887" );

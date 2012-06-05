@@ -24,12 +24,14 @@ import java.util.Comparator;
 /**
  * A simple JavaBean to represent label-value pairs. This is most commonly used when constructing user interface
  * elements which have a label to be displayed to the user, and a corresponding value to be returned to the server. One
- * example is the <code>&lt;html:options&gt;</code> tag. <p/> <p/> Note: this class has a natural ordering that is
- * inconsistent with equals.
+ * example is the <code>&lt;html:options&gt;</code> tag.
+ * <p/>
+ * <p/>
+ * Note: this class has a natural ordering that is inconsistent with equals.
  * 
  * @see org.apache.struts.util.LabelValueBean
  */
-public class LabelValue implements Comparable, Serializable {
+public class LabelValue implements Comparable<LabelValue>, Serializable {
 
     /**
      * 
@@ -38,11 +40,11 @@ public class LabelValue implements Comparable, Serializable {
     /**
      * Comparator that can be used for a case insensitive sort of <code>LabelValue</code> objects.
      */
-    public static final Comparator CASE_INSENSITIVE_ORDER = new Comparator() {
+    public static final Comparator<LabelValue> CASE_INSENSITIVE_ORDER = new Comparator<LabelValue>() {
         @Override
-        public int compare( Object o1, Object o2 ) {
-            String label1 = ( ( LabelValue ) o1 ).getLabel();
-            String label2 = ( ( LabelValue ) o2 ).getLabel();
+        public int compare( LabelValue o1, LabelValue o2 ) {
+            String label1 = o1.getLabel();
+            String label2 = o2.getLabel();
             return label1.compareToIgnoreCase( label2 );
         }
     };
@@ -103,10 +105,10 @@ public class LabelValue implements Comparable, Serializable {
      * @see Comparable
      */
     @Override
-    public int compareTo( Object o ) {
+    public int compareTo( LabelValue o ) {
         // Implicitly tests for the correct type, throwing
         // ClassCastException as required by interface
-        String otherLabel = ( ( LabelValue ) o ).getLabel();
+        String otherLabel = o.getLabel();
 
         return this.getLabel().compareTo( otherLabel );
     }

@@ -37,7 +37,7 @@ public class TaskUtilsTest {
      * Test method for {@link ubic.gemma.job.TaskUtils#generateTaskId()}.
      */
     @Test
-    public final void testGenerateTaskId() throws Exception {
+    public final void testGenerateTaskId() {
         Collection<String> seen = new HashSet<String>();
 
         for ( int i = 0; i < 1000; i++ ) {

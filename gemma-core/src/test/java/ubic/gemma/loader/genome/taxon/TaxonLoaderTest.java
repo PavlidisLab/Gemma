@@ -41,14 +41,13 @@ public class TaxonLoaderTest extends BaseSpringContextTest {
     }
 
     @Before
-    public void setup() throws Exception {
-
+    public void setup() {
         is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
     }
 
     @Test
     public void testLoadInputStream() throws Exception {
-        TaxonLoader tl = new TaxonLoader(); 
+        TaxonLoader tl = new TaxonLoader();
         tl.setPersisterHelper( persisterHelper );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );

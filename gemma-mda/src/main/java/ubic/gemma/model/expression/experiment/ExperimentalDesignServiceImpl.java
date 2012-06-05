@@ -39,7 +39,7 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
      * .experiment.ExperimentalDesign)
      */
     @Override
-    protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) throws Exception {
+    protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) {
         return this.getExperimentalDesignDao().create( experimentalDesign );
     }
 
@@ -50,28 +50,27 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
      * experiment.ExperimentalDesign)
      */
     @Override
-    protected ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign ) throws Exception {
+    protected ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign ) {
         return this.getExperimentalDesignDao().find( experimentalDesign );
     }
 
     @Override
-    protected ExperimentalDesign handleFindByName( String name ) throws Exception {
+    protected ExperimentalDesign handleFindByName( String name ) {
         return this.getExperimentalDesignDao().findByName( name );
     }
 
     @Override
-    protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) throws Exception {
+    protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) {
         return this.getExperimentalDesignDao().findOrCreate( experimentalDesign );
     }
 
     @Override
-    protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign )
-            throws Exception {
+    protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign ) {
         return this.getExperimentalDesignDao().getExpressionExperiment( experimentalDesign );
     }
 
     @Override
-    protected ExperimentalDesign handleLoad( Long id ) throws Exception {
+    protected ExperimentalDesign handleLoad( Long id ) {
         return this.getExperimentalDesignDao().load( id );
     }
 
@@ -79,12 +78,12 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
      */
     @Override
-    protected java.util.Collection<ExperimentalDesign> handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<ExperimentalDesign> handleLoadAll() {
         return ( Collection<ExperimentalDesign> ) this.getExperimentalDesignDao().loadAll();
     }
 
     @Override
-    protected void handleUpdate( ExperimentalDesign experimentalDesign ) throws Exception {
+    protected void handleUpdate( ExperimentalDesign experimentalDesign ) {
         this.getExperimentalDesignDao().update( experimentalDesign );
     }
 

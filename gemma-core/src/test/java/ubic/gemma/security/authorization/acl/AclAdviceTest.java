@@ -131,7 +131,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testAnalysisAcl() throws Exception {
+    public void testAnalysisAcl()   {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();

@@ -311,7 +311,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
      * Gene2GeneProteinAssociation)
      */
     @Override
-    public void thaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) throws Exception {
+    public void thaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null ) return;
         if ( gene2GeneProteinAssociation.getId() == null ) return;
 

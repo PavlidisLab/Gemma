@@ -86,7 +86,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     @Override
     public boolean isMultipart( HttpServletRequest request ) {
-        return ServletFileUpload.isMultipartContent( request );
+        return FileUploadBase.isMultipartContent( request );
     }
 
     /*
@@ -97,7 +97,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
      * 
      * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
      */
-    @Override 
+    @Override
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
         String enc = determineEncoding( request );
 

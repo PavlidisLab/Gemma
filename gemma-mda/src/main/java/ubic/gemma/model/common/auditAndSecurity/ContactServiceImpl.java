@@ -35,7 +35,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#createDatabaseEntity(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     protected ubic.gemma.model.common.auditAndSecurity.Contact handleCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
+            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return this.getContactDao().create( contact );
     }
 
@@ -44,12 +44,12 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
      */
     @Override
     protected ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
+            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return this.getContactDao().find( contact );
     }
 
     @Override
-    protected Contact handleFindOrCreate( Contact contact ) throws Exception {
+    protected Contact handleFindOrCreate( Contact contact ) {
         return this.getContactDao().findOrCreate( contact );
     }
 
@@ -57,7 +57,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
+    protected void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         this.getContactDao().remove( contact );
     }
 
@@ -65,7 +65,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         this.getContactDao().update( contact );
     }
 

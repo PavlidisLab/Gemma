@@ -18,16 +18,20 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
- * <p>
  * Spring Service base class for
  * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService</code>, provides access to all
  * services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
+ * @version $Id$
  */
 public abstract class DifferentialExpressionAnalysisServiceBase extends
         ubic.gemma.model.analysis.AnalysisServiceImpl<DifferentialExpressionAnalysis> implements
@@ -59,7 +63,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
     @Override
-    public java.util.Collection find( final ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
             final ExpressionAnalysisResultSet resultSet, final double threshold ) {
         try {
             return this.handleFind( gene, resultSet, threshold );
@@ -74,7 +78,8 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findByInvestigationIds(java.util.Collection)
      */
     @Override
-    public java.util.Map findByInvestigationIds( final java.util.Collection investigationIds ) {
+    public Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds(
+            final java.util.Collection<Long> investigationIds ) {
         try {
             return this.handleFindByInvestigationIds( investigationIds );
         } catch ( Throwable th ) {
@@ -88,14 +93,9 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
     @Override
-    public java.util.Collection findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindExperimentsWithAnalyses( gene );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
+        return this.handleFindExperimentsWithAnalyses( gene );
+
     }
 
     /**
@@ -124,14 +124,9 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#thaw(java.util.Collection)
      */
     @Override
-    public void thaw( final java.util.Collection expressionAnalyses ) {
-        try {
-            this.handleThaw( expressionAnalyses );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.thaw(java.util.Collection expressionAnalyses)' --> "
-                            + th, th );
-        }
+    public void thaw( final java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        this.handleThaw( expressionAnalyses );
+
     }
 
     /**
@@ -140,13 +135,8 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        try {
-            this.handleThaw( differentialExpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis)' --> "
-                            + th, th );
-        }
+        this.handleThaw( differentialExpressionAnalysis );
+
     }
 
     /**
@@ -161,42 +151,39 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * {@link #create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
      */
     protected abstract ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis handleCreate(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis );
 
     @Override
-    protected abstract void handleDelete( DifferentialExpressionAnalysis toDelete ) throws Exception;
+    protected abstract void handleDelete( DifferentialExpressionAnalysis toDelete );
 
     /**
      * Performs the core logic for
      * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene,
-            ExpressionAnalysisResultSet resultSet, double threshold ) throws java.lang.Exception;
+    protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind(
+            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByInvestigationIds( java.util.Collection investigationIds )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds(
+            java.util.Collection<Long> investigationIds );
 
     /**
      * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection handleFindExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
+    protected abstract Collection<BioAssaySet> handleFindExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection expressionAnalyses ) throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
      * Performs the core logic for
      * {@link #thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
      */
     protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
 }

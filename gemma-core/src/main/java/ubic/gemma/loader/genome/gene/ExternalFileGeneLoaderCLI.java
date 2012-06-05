@@ -75,8 +75,8 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
                 .hasArg().withArgName( "file" ).create( "f" );
         addOption( directGene );
 
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon common name e.g. 'salmonoid' does not have to be a species " ).create( "t" );
+        Option taxonNameOption = OptionBuilder.hasArg()
+                .withDescription( "Taxon common name e.g. 'salmonoid' does not have to be a species " ).create( "t" );
         addOption( taxonNameOption );
 
         requireLogin();
@@ -108,7 +108,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
      */
     public void processGeneList() {
 
-        loader = ( ExternalFileGeneLoaderService ) this.getBean( "externalFileGeneLoaderService" );
+        loader = this.getBean( ExternalFileGeneLoaderService.class );
 
         try {
             int count = loader.load( directGeneInputFileName, taxonName );

@@ -89,7 +89,7 @@ public class UserListControllerImpl implements UserListController {
      */
     @Override
     @RequestMapping(value = "/admin/activeUsers.html", method = RequestMethod.GET)
-    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) {
         /*
          * FIXME: this lists all users, not the ones who are active.
          */

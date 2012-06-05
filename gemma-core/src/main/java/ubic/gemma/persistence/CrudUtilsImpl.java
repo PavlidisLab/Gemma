@@ -159,7 +159,7 @@ public class CrudUtilsImpl implements InitializingBean, CrudUtils {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         metaData = sessionFactory.getAllClassMetadata();
         collectionMetaData = sessionFactory.getAllCollectionMetadata();
     }

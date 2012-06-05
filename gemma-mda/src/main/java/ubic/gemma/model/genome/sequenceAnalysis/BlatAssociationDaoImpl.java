@@ -104,7 +104,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     }
 
     @Override
-    protected void handleThaw( final BlatAssociation blatAssociation ) throws Exception {
+    protected void handleThaw( final BlatAssociation blatAssociation ) {
         if ( blatAssociation == null ) return;
         if ( blatAssociation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -118,7 +118,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     }
 
     @Override
-    protected void handleThaw( final Collection<BlatAssociation> blatAssociations ) throws Exception {
+    protected void handleThaw( final Collection<BlatAssociation> blatAssociations ) {
         if ( blatAssociations == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {

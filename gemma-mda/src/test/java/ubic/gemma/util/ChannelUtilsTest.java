@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2008-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ import junit.framework.TestCase;
  */
 public class ChannelUtilsTest extends TestCase {
 
-    public final void testChannelASignal() throws Exception {
+    public final void testChannelASignal() {
         assertTrue( ChannelUtils.isSignalChannelA( "Cy3_foreground_low_pmt" ) );
         assertTrue( ChannelUtils.isSignalChannelA( "ch1_sig_mean" ) );
     }
 
-    public final void testChannelBSignal() throws Exception {
+    public final void testChannelBSignal() {
         assertTrue( ChannelUtils.isSignalChannelB( "Cy5_foreground_low_pmt" ) );
         assertTrue( ChannelUtils.isSignalChannelB( "ch2_sig_mean" ) );
     }

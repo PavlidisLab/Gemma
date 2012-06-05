@@ -64,16 +64,17 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation )
+            throws Exception {
         final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+    protected Map<Investigation, Collection<ProbeCoexpressionAnalysis>> handleFindByInvestigations(
+            Collection<Investigation> investigations ) {
         Map<Investigation, Collection<ProbeCoexpressionAnalysis>> results = new HashMap<Investigation, Collection<ProbeCoexpressionAnalysis>>();
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+        for ( Investigation ee : investigations ) {
             Collection<ProbeCoexpressionAnalysis> ae = this.findByInvestigation( ee );
             results.put( ee, ae );
         }
@@ -81,7 +82,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByParentTaxon( Taxon taxon ) {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
                 + " p  inner join as.experimentAnalyzed  as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
@@ -89,7 +90,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
                 + " inner join as.experimentAnalyzed  as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";

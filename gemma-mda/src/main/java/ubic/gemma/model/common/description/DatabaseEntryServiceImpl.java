@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.description.DatabaseEntryServiceBase {
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getDatabaseEntryDao().countAll();
     }
 
@@ -38,7 +38,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      * @see ubic.gemma.model.common.description.DatabaseEntryService#createDatabaseEntity(ubic.gemma.model.common.description.DatabaseEntry)
      */
     protected ubic.gemma.model.common.description.DatabaseEntry handleCreate(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception {
+            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         return this.getDatabaseEntryDao().create( databaseEntry );
     }
 
@@ -47,7 +47,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      */
     @Override
     protected ubic.gemma.model.common.description.DatabaseEntry handleFind(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception {
+            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         return this.getDatabaseEntryDao().find( databaseEntry );
     }
 
@@ -55,8 +55,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception {
+    protected void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         this.getDatabaseEntryDao().remove( databaseEntry );
     }
 
@@ -64,8 +63,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      * @see ubic.gemma.model.common.description.DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         this.getDatabaseEntryDao().update( databaseEntry );
     }
 

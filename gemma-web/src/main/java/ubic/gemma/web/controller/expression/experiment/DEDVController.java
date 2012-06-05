@@ -140,7 +140,7 @@ public class DEDVController {
      * of genes. The EE info is in the value object.
      */
     public Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> getDEDV( Collection<Long> eeIds,
-            Collection<Long> geneIds ) throws Exception {
+            Collection<Long> geneIds ) {
         StopWatch watch = new StopWatch();
         watch.start();
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );

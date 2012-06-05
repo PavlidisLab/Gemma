@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getGeneProductDao().countAll();
     }
 
@@ -41,7 +41,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      */
     @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this.getGeneProductDao().create( geneProduct );
     }
 
@@ -49,7 +49,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+    protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         this.getGeneProductDao().remove( geneProduct );
     }
 
@@ -59,8 +59,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct )
-            throws Exception {
+    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
         return this.getGeneProductDao().find( gProduct );
     }
 
@@ -69,7 +68,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      */
     @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this.getGeneProductDao().findOrCreate( geneProduct );
     }
 
@@ -79,7 +78,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) {
         return this.getGeneProductDao().getGenesByName( search );
     }
 
@@ -89,7 +88,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByNcbiId( String search ) {
         return this.getGeneProductDao().getGenesByNcbiId( search );
     }
 
@@ -97,7 +96,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
      */
     @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) throws java.lang.Exception {
+    protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) {
         return this.getGeneProductDao().load( id );
     }
 
@@ -107,7 +106,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+    protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) {
         return ( Collection<GeneProduct> ) this.getGeneProductDao().load( ids );
     }
 
@@ -115,7 +114,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         this.getGeneProductDao().update( geneProduct );
     }
 

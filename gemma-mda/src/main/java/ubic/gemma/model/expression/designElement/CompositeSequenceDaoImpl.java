@@ -406,7 +406,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @Override
     protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
-            Collection<CompositeSequence> compositeSequences ) throws Exception {
+            Collection<CompositeSequence> compositeSequences ) {
 
         log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
@@ -602,7 +602,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     }
 
     @Override
-    protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) throws Exception {
+    protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override

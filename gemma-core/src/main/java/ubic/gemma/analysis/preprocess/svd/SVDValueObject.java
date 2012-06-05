@@ -102,7 +102,7 @@ public class SVDValueObject implements Serializable {
     /**
      * @param pca
      */
-    public SVDValueObject( PrincipalComponentAnalysis pca ) throws Exception {
+    public SVDValueObject( PrincipalComponentAnalysis pca ) {
         this.id = pca.getExperimentAnalyzed().getId();
 
         this.variances = pca.getVarianceFractions();

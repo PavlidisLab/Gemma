@@ -23,6 +23,8 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * Provides basic services for dealing with analysis
  * 
@@ -36,7 +38,7 @@ public interface AnalysisService<T extends Analysis> {
      * deletes the given analysis from the system
      * </p>
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( T toDelete );
 
     /**
@@ -44,8 +46,8 @@ public interface AnalysisService<T extends Analysis> {
      * find all the analyses that involved the given investigation
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> findByInvestigation( Investigation investigation );
 
     /**
      * <p>
@@ -56,26 +58,26 @@ public interface AnalysisService<T extends Analysis> {
      * one of the investigations for that analysis was in the given collection started with
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public java.util.Map<Investigation, Collection<T>> findByInvestigations(
             java.util.Collection<? extends Investigation> investigations );
 
     /**
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<T> findByName( java.lang.String name );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> findByParentTaxon( Taxon taxon );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> findByTaxon( Taxon taxon );
 
     /**
      * <p>
@@ -83,15 +85,15 @@ public interface AnalysisService<T extends Analysis> {
      * investigations given exacly matches other wise returns null
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public T findByUniqueInvestigations( java.util.Collection<? extends Investigation> investigations );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public T findByUniqueInvestigations( Collection<? extends Investigation> investigations );
 
     /**
      * <p>
      * Returns the analysis with the specified ID
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public T load( java.lang.Long id );
 
     /**
@@ -99,7 +101,7 @@ public interface AnalysisService<T extends Analysis> {
      * Returns all of the analysis objects
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<T> loadAll();
 
     /**
@@ -112,7 +114,7 @@ public interface AnalysisService<T extends Analysis> {
      * 
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<T> loadMyAnalyses();
 
     /**
@@ -125,6 +127,6 @@ public interface AnalysisService<T extends Analysis> {
      * 
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_SHARED_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_SHARED_DATA" })
     public Collection<T> loadMySharedAnalyses();
 }

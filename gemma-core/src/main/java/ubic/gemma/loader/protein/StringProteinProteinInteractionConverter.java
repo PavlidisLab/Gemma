@@ -100,12 +100,11 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Object convert( Object sourceDomainObject ) {
 
         Object processedObject = null;
         if ( sourceDomainObject instanceof Collection ) {
-            processedObject = this.convert( ( Collection ) sourceDomainObject );
+            processedObject = this.convert( ( Collection<?> ) sourceDomainObject );
         } else if ( sourceDomainObject instanceof StringProteinProteinInteraction ) {
             StringProteinProteinInteraction stringProteinProteinInteraction = ( StringProteinProteinInteraction ) sourceDomainObject;
             processedObject = convert( stringProteinProteinInteraction );

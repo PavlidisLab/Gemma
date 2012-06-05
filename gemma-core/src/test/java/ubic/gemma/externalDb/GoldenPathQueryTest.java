@@ -41,7 +41,7 @@ public class GoldenPathQueryTest extends TestCase {
     GoldenPathQuery queryer;
     private boolean hasDb = false;
 
-    public final void testQueryEst() throws Exception {
+    public final void testQueryEst() {
         if ( !hasDb ) {
             log.warn( "Skipping test because hg could not be configured" );
             return;
@@ -50,7 +50,7 @@ public class GoldenPathQueryTest extends TestCase {
         assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
-    public final void testQueryMrna() throws Exception {
+    public final void testQueryMrna() {
         if ( !hasDb ) {
             log.warn( "Skipping test because hg could not be configured" );
             return;
@@ -62,7 +62,7 @@ public class GoldenPathQueryTest extends TestCase {
         assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
-    public final void testQueryNoResult() throws Exception {
+    public final void testQueryNoResult() {
         if ( !hasDb ) {
             log.warn( "Skipping test because hg could not be configured" );
             return;
@@ -72,7 +72,7 @@ public class GoldenPathQueryTest extends TestCase {
     }
 
     @Override
-    protected void setUp() throws Exception {
+    protected void setUp() {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
         t.setIsGenesUsable( true );

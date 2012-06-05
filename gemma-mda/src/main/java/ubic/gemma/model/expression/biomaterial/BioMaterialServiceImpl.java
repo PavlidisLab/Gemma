@@ -87,22 +87,21 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * .BioMaterial)
      */
     @Override
-    protected BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception {
+    protected BioMaterial handleCopy( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().copy( bioMaterial );
     }
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getBioMaterialDao().countAll();
     }
 
     /**
      * @param bioMaterial
-     * @return
-     * @throws Exception
+     * @return @
      */
     @Override
-    protected BioMaterial handleCreate( BioMaterial bioMaterial ) throws Exception {
+    protected BioMaterial handleCreate( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().create( bioMaterial );
     }
 
@@ -110,7 +109,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) throws Exception {
+    protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().findOrCreate( bioMaterial );
     }
 
@@ -118,7 +117,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrId(java.lang.Long)
      */
     @Override
-    protected BioMaterial handleLoad( Long id ) throws Exception {
+    protected BioMaterial handleLoad( Long id ) {
         return this.getBioMaterialDao().load( id );
     }
 
@@ -126,7 +125,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
     @Override
-    protected Collection<BioMaterial> handleLoadAll() throws Exception {
+    protected Collection<BioMaterial> handleLoadAll() {
         return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
     }
 
@@ -136,7 +135,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection<BioMaterial> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+    protected Collection<BioMaterial> handleLoadMultiple( Collection<Long> ids ) {
         return this.getBioMaterialDao().load( ids );
     }
 
@@ -144,7 +143,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    protected void handleRemove( BioMaterial bioMaterial ) throws Exception {
+    protected void handleRemove( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().remove( bioMaterial );
 
     }
@@ -152,8 +151,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#saveBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
-            throws java.lang.Exception {
+    protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         this.getBioMaterialDao().create( bioMaterial );
     }
 
@@ -165,7 +163,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * .BioMaterial)
      */
     @Override
-    protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
+    protected void handleUpdate( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().update( bioMaterial );
     }
 }

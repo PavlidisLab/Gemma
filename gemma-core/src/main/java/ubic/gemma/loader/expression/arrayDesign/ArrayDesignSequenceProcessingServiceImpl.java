@@ -18,10 +18,8 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -271,22 +269,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Done adding sequence information!" );
         return bioSequences;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processAffymetrixDesign(java.lang
-     * .String, java.lang.String, java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    @Deprecated
-    public ArrayDesign processAffymetrixDesign( String arrayDesignName, String arrayDesignFile,
-            String probeSequenceFile, Taxon taxon ) throws IOException {
-        InputStream arrayDesignFileStream = new BufferedInputStream( new FileInputStream( arrayDesignFile ) );
-        InputStream probeSequenceFileStream = new BufferedInputStream( new FileInputStream( probeSequenceFile ) );
-        return this.processAffymetrixDesign( arrayDesignName, taxon, arrayDesignFileStream, probeSequenceFileStream );
     }
 
     /*

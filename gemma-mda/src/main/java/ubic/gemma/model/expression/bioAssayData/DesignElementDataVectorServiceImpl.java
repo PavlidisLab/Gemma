@@ -38,14 +38,14 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getRawExpressionDataVectorDao().countAll();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<? extends DesignElementDataVector> handleCreate(
-            Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+            Collection<? extends DesignElementDataVector> vectors ) {
 
         if ( vectors == null || vectors.isEmpty() ) {
             return vectors;
@@ -63,7 +63,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     @Override
     protected Collection<? extends DesignElementDataVector> handleFind( ArrayDesign arrayDesign,
-            QuantitationType quantitationType ) throws Exception {
+            QuantitationType quantitationType ) {
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         results.addAll( this.getRawExpressionDataVectorDao().find( arrayDesign, quantitationType ) );
         results.addAll( this.getProcessedExpressionDataVectorDao().find( arrayDesign, quantitationType ) );
@@ -71,8 +71,7 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection<? extends DesignElementDataVector> handleFind( Collection<QuantitationType> quantitationTypes )
-            throws Exception {
+    protected Collection<? extends DesignElementDataVector> handleFind( Collection<QuantitationType> quantitationTypes ) {
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         results.addAll( this.getRawExpressionDataVectorDao().find( quantitationTypes ) );
         results.addAll( this.getProcessedExpressionDataVectorDao().find( quantitationTypes ) );
@@ -80,8 +79,7 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection<? extends DesignElementDataVector> handleFind( QuantitationType quantitationType )
-            throws Exception {
+    protected Collection<? extends DesignElementDataVector> handleFind( QuantitationType quantitationType ) {
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         results.addAll( this.getRawExpressionDataVectorDao().find( quantitationType ) );
         results.addAll( this.getProcessedExpressionDataVectorDao().find( quantitationType ) );
@@ -89,13 +87,13 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected DesignElementDataVector handleLoad( Long id ) throws Exception {
+    protected DesignElementDataVector handleLoad( Long id ) {
         return this.getRawExpressionDataVectorDao().load( id );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleRemove( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+    protected void handleRemove( Collection<? extends DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.isEmpty() ) {
             return;
         }
@@ -109,7 +107,7 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected void handleRemove( DesignElementDataVector dedv ) throws Exception {
+    protected void handleRemove( DesignElementDataVector dedv ) {
         if ( dedv instanceof RawExpressionDataVector ) {
             this.getRawExpressionDataVectorDao().remove( ( RawExpressionDataVector ) dedv );
         } else if ( dedv instanceof ProcessedExpressionDataVector ) {
@@ -128,7 +126,7 @@ public class DesignElementDataVectorServiceImpl extends
      * (ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
-    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
+    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) {
         this.getRawExpressionDataVectorDao().removeDataForCompositeSequence( compositeSequence );
     }
 
@@ -141,12 +139,12 @@ public class DesignElementDataVectorServiceImpl extends
      * ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) throws Exception {
+    protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) {
         this.getRawExpressionDataVectorDao().removeDataForQuantitationType( quantitationType );
     }
 
     @Override
-    protected void handleThaw( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+    protected void handleThaw( Collection<? extends DesignElementDataVector> vectors ) {
 
         if ( vectors == null ) {
             return;
@@ -159,7 +157,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleThaw( DesignElementDataVector dedv ) throws Exception {
+    protected void handleThaw( DesignElementDataVector dedv ) {
         if ( dedv instanceof RawExpressionDataVector )
             this.getRawExpressionDataVectorDao().thaw( ( Collection<? extends DesignElementDataVector> ) dedv );
         else if ( dedv instanceof ProcessedExpressionDataVector )
@@ -168,7 +166,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleUpdate( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+    protected void handleUpdate( Collection<? extends DesignElementDataVector> vectors ) {
 
         if ( vectors == null || vectors.isEmpty() ) {
             return;
@@ -187,7 +185,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
+    protected void handleUpdate( DesignElementDataVector dedv ) {
         if ( dedv instanceof RawExpressionDataVector ) {
             this.getRawExpressionDataVectorDao().update( ( Collection<RawExpressionDataVector> ) dedv );
         } else if ( dedv instanceof ProcessedExpressionDataVector ) {

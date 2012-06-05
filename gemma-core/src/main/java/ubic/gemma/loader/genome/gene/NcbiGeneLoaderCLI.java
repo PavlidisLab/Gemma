@@ -69,7 +69,7 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "NcbiGeneLoaderCLI", args );
         if ( err != null ) return err;
         loader = new NcbiGeneLoader();
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );
         loader.setSkipDownload( this.skipDownload );

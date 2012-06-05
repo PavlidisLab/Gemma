@@ -419,7 +419,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException {
+    public void updateScoreDistributionFiles( ExpressionExperiment ee ) {
 
         Collection<DifferentialExpressionAnalysis> analyses = this.getAnalyses( ee );
 

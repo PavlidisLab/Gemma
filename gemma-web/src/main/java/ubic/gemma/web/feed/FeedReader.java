@@ -107,7 +107,7 @@ public class FeedReader implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         FeedFetcherCache feedInfoCache = HashMapFeedInfoCache.getInstance();
         feedFetcher = new HttpURLFeedFetcher( feedInfoCache );
         this.feedUrl = ConfigUtils.getString( GEMMA_HOME_FEEDURL_CONFIG_PARAM );

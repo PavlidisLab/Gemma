@@ -20,6 +20,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * <p>
  * Spring Service base class for
@@ -55,7 +57,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService#getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
     @Override
-    public java.util.Collection getDatasetsAnalyzed(
+    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
         try {
             return this.handleGetDatasetsAnalyzed( analysis );
@@ -138,7 +140,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
      * Performs the core logic for
      * {@link #getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
-    protected abstract java.util.Collection handleGetDatasetsAnalyzed(
+    protected abstract java.util.Collection<ExpressionExperiment> handleGetDatasetsAnalyzed(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
             throws java.lang.Exception;
 

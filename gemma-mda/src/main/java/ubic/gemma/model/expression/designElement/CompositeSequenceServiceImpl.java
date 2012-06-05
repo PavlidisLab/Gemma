@@ -49,7 +49,7 @@ public class CompositeSequenceServiceImpl extends
     private ArrayDesignService arrayDesignService;
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getCompositeSequenceDao().countAll();
     }
 
@@ -59,7 +59,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    protected Collection<CompositeSequence> handleCreate( Collection compositeSequences ) throws Exception {
+    protected Collection<CompositeSequence> handleCreate( Collection compositeSequences ) {
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
     }
 
@@ -71,12 +71,12 @@ public class CompositeSequenceServiceImpl extends
      * .designElement.CompositeSequence)
      */
     @Override
-    protected CompositeSequence handleCreate( CompositeSequence compositeSequence ) throws Exception {
+    protected CompositeSequence handleCreate( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().create( compositeSequence );
     }
 
     @Override
-    protected CompositeSequence handleFind( CompositeSequence compositeSequence ) throws Exception {
+    protected CompositeSequence handleFind( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().find( compositeSequence );
     }
 
@@ -88,7 +88,7 @@ public class CompositeSequenceServiceImpl extends
      * .genome.biosequence.BioSequence)
      */
     @Override
-    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) {
         return this.getCompositeSequenceDao().findByBioSequence( bioSequence );
     }
 
@@ -100,17 +100,17 @@ public class CompositeSequenceServiceImpl extends
      * String)
      */
     @Override
-    protected Collection handleFindByBioSequenceName( String name ) throws Exception {
+    protected Collection handleFindByBioSequenceName( String name ) {
         return this.getCompositeSequenceDao().findByBioSequenceName( name );
     }
 
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
+    protected Collection handleFindByGene( Gene gene ) {
         return this.getCompositeSequenceDao().findByGene( gene );
     }
 
     @Override
-    protected Collection handleFindByGene( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+    protected Collection handleFindByGene( Gene gene, ArrayDesign arrayDesign ) {
         return this.getCompositeSequenceDao().findByGene( gene, arrayDesign );
     }
 
@@ -122,7 +122,7 @@ public class CompositeSequenceServiceImpl extends
      * .arrayDesign.ArrayDesign, java.lang.String)
      */
     @Override
-    protected CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name ) throws Exception {
+    protected CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name ) {
         return this.getCompositeSequenceDao().findByName( arrayDesign, name );
     }
 
@@ -132,7 +132,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected Collection<CompositeSequence> handleFindByName( String name ) throws Exception {
+    protected Collection<CompositeSequence> handleFindByName( String name ) {
         return this.getCompositeSequenceDao().findByName( name );
     }
 
@@ -145,8 +145,7 @@ public class CompositeSequenceServiceImpl extends
      * .lang.String[], java.util.Collection)
      */
     @Override
-    protected Collection handleFindByNamesInArrayDesigns( Collection compositeSequenceNames, Collection arrayDesigns )
-            throws Exception {
+    protected Collection handleFindByNamesInArrayDesigns( Collection compositeSequenceNames, Collection arrayDesigns ) {
         LinkedHashMap<String, CompositeSequence> compositeSequencesMap = new LinkedHashMap<String, CompositeSequence>();
 
         Iterator iter = arrayDesigns.iterator();
@@ -173,24 +172,24 @@ public class CompositeSequenceServiceImpl extends
     }
 
     @Override
-    protected CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence ) throws Exception {
+    protected CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().findOrCreate( compositeSequence );
     }
 
     @Override
-    protected Map handleGetGenes( Collection sequences ) throws Exception {
+    protected Map handleGetGenes( Collection sequences ) {
         return this.getCompositeSequenceDao().getGenes( sequences );
     }
 
     @Override
-    protected Collection handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
+    protected Collection handleGetGenes( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().getGenes( compositeSequence );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
-            Collection compositeSequences ) throws Exception {
+            Collection compositeSequences ) {
         return this.getCompositeSequenceDao().getGenesWithSpecificity( compositeSequences );
     }
 
@@ -201,18 +200,17 @@ public class CompositeSequenceServiceImpl extends
      * expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
+    protected Collection handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
         return this.getCompositeSequenceDao().getRawSummary( arrayDesign, numResults );
     }
 
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences, Integer numResults ) throws Exception {
+    protected Collection handleGetRawSummary( Collection compositeSequences, Integer numResults ) {
         return this.getCompositeSequenceDao().getRawSummary( compositeSequences, numResults );
     }
 
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
-            throws Exception {
+    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
         return this.getCompositeSequenceDao().getRawSummary( compositeSequence, numResults );
     }
 
@@ -222,7 +220,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.lang.Long)
      */
     @Override
-    protected CompositeSequence handleLoad( Long id ) throws Exception {
+    protected CompositeSequence handleLoad( Long id ) {
         return this.getCompositeSequenceDao().load( id );
     }
 
@@ -233,12 +231,12 @@ public class CompositeSequenceServiceImpl extends
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection<CompositeSequence> handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<CompositeSequence> handleLoadMultiple( Collection ids ) {
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().load( ids );
     }
 
     @Override
-    protected void handleRemove( CompositeSequence compositeSequence ) throws Exception {
+    protected void handleRemove( CompositeSequence compositeSequence ) {
         this.getCompositeSequenceDao().remove( compositeSequence );
 
     }
@@ -249,7 +247,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleRemove(Collection)
      */
     @Override
-    protected void handleRemove( java.util.Collection sequencesToDelete ) throws java.lang.Exception {
+    protected void handleRemove( java.util.Collection sequencesToDelete ) {
 
         // check the collection to make sure it contains no transitive entities (just check the id and make sure its
         // non-null
@@ -268,7 +266,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#saveCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     protected void handleSaveCompositeSequence(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception {
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         this.getCompositeSequenceDao().create( compositeSequence );
     }
 
@@ -278,7 +276,7 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleThaw(java.util.Collection)
      */
     @Override
-    protected void handleThaw( Collection compositeSequences ) throws Exception {
+    protected void handleThaw( Collection compositeSequences ) {
         this.getCompositeSequenceDao().thaw( compositeSequences );
     }
 
@@ -290,7 +288,7 @@ public class CompositeSequenceServiceImpl extends
      * .designElement.CompositeSequence)
      */
     @Override
-    protected void handleUpdate( CompositeSequence compositeSequence ) throws Exception {
+    protected void handleUpdate( CompositeSequence compositeSequence ) {
         this.getCompositeSequenceDao().update( compositeSequence );
     }
 

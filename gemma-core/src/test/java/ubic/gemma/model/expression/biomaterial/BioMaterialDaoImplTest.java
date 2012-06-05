@@ -40,7 +40,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
     BioMaterialDao bioMaterialDao;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();
         searchkeyAcc = testbm.getExternalAccession().getAccession();

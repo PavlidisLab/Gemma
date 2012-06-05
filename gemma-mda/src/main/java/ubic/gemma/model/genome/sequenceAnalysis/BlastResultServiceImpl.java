@@ -31,18 +31,15 @@ public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnal
      */
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) throws java.lang.Exception {
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         return this.getBlastResultDao().create( blastResult );
     }
-
-   
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult )
-            throws java.lang.Exception {
+    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
         this.getBlastResultDao().remove( blastResult );
     }
 

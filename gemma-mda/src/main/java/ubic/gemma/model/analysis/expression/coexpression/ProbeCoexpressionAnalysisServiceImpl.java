@@ -52,43 +52,45 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
      */
     @Override
     protected ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis handleCreate(
-            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis )
-            throws java.lang.Exception {
+            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
     }
 
     @Override
-    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) throws Exception {
+    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) {
         this.getProbeCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
-        return this.getProbeCoexpressionAnalysisDao().findByInvestigations( investigations );
+    protected Map<Investigation, Collection<ProbeCoexpressionAnalysis>> handleFindByInvestigations(
+            Collection<? extends Investigation> investigations ) {
+        return this.getProbeCoexpressionAnalysisDao().findByInvestigations(
+                ( Collection<Investigation> ) investigations );
     }
 
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByName( String name ) {
         return this.getProbeCoexpressionAnalysisDao().findByName( name );
     }
 
     @Override
-    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @Override
-    protected ProbeCoexpressionAnalysis handleLoad( Long id ) throws Exception {
+    protected ProbeCoexpressionAnalysis handleLoad( Long id ) {
         return this.getProbeCoexpressionAnalysisDao().load( id );
     }
 
@@ -96,29 +98,29 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
     @Override
-    protected Collection handleLoadAll() throws java.lang.Exception {
-        return this.getProbeCoexpressionAnalysisDao().loadAll();
+    protected Collection<ProbeCoexpressionAnalysis> handleLoadAll() {
+        return ( Collection<ProbeCoexpressionAnalysis> ) this.getProbeCoexpressionAnalysisDao().loadAll();
     }
- 
+
     @Override
     public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
         return loadAll();
     }
- 
+
     @Override
     public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadAll();
     }
 
     @Override
-    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations( Collection<Investigation> investigations )
-            throws Exception {
+    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations(
+            Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;
         }
-        Collection found = this.findByInvestigation( investigations.iterator().next() );
+        Collection<ProbeCoexpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
         if ( found.isEmpty() ) return null;
-        return ( ProbeCoexpressionAnalysis ) found.iterator().next();
+        return found.iterator().next();
     }
 
 }

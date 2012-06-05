@@ -42,7 +42,7 @@ public class PhenotypeAssoOntologyHelper {
     private OntologyService ontologyService = null;
 
     /** used to set the Ontology terms */
-    public PhenotypeAssoOntologyHelper( OntologyService ontologyService ) throws Exception {
+    public PhenotypeAssoOntologyHelper( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
         AbstractOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
         if ( diseaseOntologyService != null ) {
@@ -183,7 +183,7 @@ public class PhenotypeAssoOntologyHelper {
         }
         return characteristic;
     }
-    
+
     /** Gemma might be ready but the ontology thread not finish loading */
     public boolean areOntologiesAllLoaded() {
 

@@ -45,20 +45,21 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      * Classes examined when getting the "parents" of characteristics.
      */
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
-            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class, PhenotypeAssociationImpl.class };
+            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class,
+            PhenotypeAssociationImpl.class };
 
     @Override
-    protected Characteristic handleCreate( Characteristic c ) throws Exception {
+    protected Characteristic handleCreate( Characteristic c ) {
         return this.getCharacteristicDao().create( c );
     }
 
     @Override
-    protected void handleDelete( Characteristic c ) throws Exception {
+    protected void handleDelete( Characteristic c ) {
         this.getCharacteristicDao().remove( c );
     }
 
     @Override
-    protected void handleDelete( Long id ) throws Exception {
+    protected void handleDelete( Long id ) {
         this.getCharacteristicDao().remove( id );
     }
 
@@ -71,12 +72,12 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     }
 
     @Override
-    protected Collection handleFindByUri( Collection uris ) throws Exception {
+    protected Collection handleFindByUri( Collection uris ) {
         return this.getCharacteristicDao().findByUri( uris );
     }
 
     @Override
-    protected Collection handleFindByUri( String searchString ) throws Exception {
+    protected Collection handleFindByUri( String searchString ) {
         return this.getCharacteristicDao().findByUri( searchString );
     }
 
@@ -84,19 +85,20 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
     @Override
-    protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
+    protected java.util.Collection handleFindByValue( java.lang.String search ) {
         return this.getCharacteristicDao().findByValue( search + '%' );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description
      * .Characteristic)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Object handleGetParent( Characteristic characteristic ) throws Exception {
+    protected Object handleGetParent( Characteristic characteristic ) {
         Collection chars = Arrays.asList( new Characteristic[] { characteristic } );
         for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
             Map<Characteristic, Object> charToParent = this.getCharacteristicDao().getParents( parentClass, chars );
@@ -107,11 +109,12 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetParents( Collection characteristics ) throws Exception {
+    protected Map handleGetParents( Collection characteristics ) {
         Map charToParent = new HashMap<Characteristic, Object>();
         for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
             charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
@@ -120,12 +123,12 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     }
 
     @Override
-    protected Characteristic handleLoad( Long id ) throws Exception {
+    protected Characteristic handleLoad( Long id ) {
         return this.getCharacteristicDao().load( id );
     }
 
     @Override
-    protected void handleUpdate( Characteristic c ) throws Exception {
+    protected void handleUpdate( Characteristic c ) {
         this.getCharacteristicDao().update( c );
     }
 

@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Gene;
 public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         return this.getBioSequenceDao().countAll();
     }
 
@@ -48,7 +48,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * BioSequence)
      */
     @Override
-    protected BioSequence handleCreate( BioSequence bioSequence ) throws Exception {
+    protected BioSequence handleCreate( BioSequence bioSequence ) {
         return this.getBioSequenceDao().create( bioSequence );
     }
 
@@ -58,7 +58,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleCreate( Collection<BioSequence> bioSequences ) throws Exception {
+    protected Collection<BioSequence> handleCreate( Collection<BioSequence> bioSequences ) {
         return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
     }
 
@@ -67,22 +67,22 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      */
     @Override
     protected ubic.gemma.model.genome.biosequence.BioSequence handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception {
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.getBioSequenceDao().find( bioSequence );
     }
 
     @Override
-    protected BioSequence handleFindByAccession( DatabaseEntry accession ) throws Exception {
+    protected BioSequence handleFindByAccession( DatabaseEntry accession ) {
         return this.getBioSequenceDao().findByAccession( accession );
     }
 
     @Override
-    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) throws Exception {
+    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) {
         return this.getBioSequenceDao().findByGenes( genes );
     }
 
     @Override
-    protected Collection<BioSequence> handleFindByName( String name ) throws Exception {
+    protected Collection<BioSequence> handleFindByName( String name ) {
         return this.getBioSequenceDao().findByName( name );
     }
 
@@ -90,7 +90,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
-    protected BioSequence handleFindOrCreate( BioSequence bioSequence ) throws Exception {
+    protected BioSequence handleFindOrCreate( BioSequence bioSequence ) {
         return this.getBioSequenceDao().findOrCreate( bioSequence );
     }
 
@@ -100,7 +100,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences ) throws Exception {
+    protected Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences ) {
         Collection<BioSequence> result = new HashSet<BioSequence>();
         for ( BioSequence bioSequence : bioSequences ) {
             result.add( this.getBioSequenceDao().findOrCreate( bioSequence ) );
@@ -114,7 +114,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByAccession(java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByAccession( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByAccession( String search ) {
         return this.getBioSequenceDao().getGenesByAccession( search );
     }
 
@@ -124,7 +124,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
-    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) {
         return this.getBioSequenceDao().getGenesByName( search );
     }
 
@@ -134,7 +134,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(long)
      */
     @Override
-    protected BioSequence handleLoad( long id ) throws Exception {
+    protected BioSequence handleLoad( long id ) {
         return this.getBioSequenceDao().load( id );
     }
 
@@ -144,7 +144,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+    protected Collection<BioSequence> handleLoadMultiple( Collection<Long> ids ) {
         return this.getBioSequenceDao().load( ids );
     }
 
@@ -152,8 +152,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception {
+    protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         this.getBioSequenceDao().remove( bioSequence );
     }
 
@@ -165,7 +164,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * )
      */
     @Override
-    protected BioSequence handleThaw( BioSequence bioSequence ) throws Exception {
+    protected BioSequence handleThaw( BioSequence bioSequence ) {
         return this.getBioSequenceDao().thaw( bioSequence );
     }
 
@@ -175,7 +174,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(java.util.Collection)
      */
     @Override
-    protected Collection<BioSequence> handleThaw( Collection<BioSequence> bioSequences ) throws Exception {
+    protected Collection<BioSequence> handleThaw( Collection<BioSequence> bioSequences ) {
         return this.getBioSequenceDao().thaw( bioSequences );
     }
 
@@ -183,7 +182,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
      */
     @Override
-    protected void handleUpdate( Collection<BioSequence> bioSequences ) throws Exception {
+    protected void handleUpdate( Collection<BioSequence> bioSequences ) {
         this.getBioSequenceDao().update( bioSequences );
     }
 
@@ -191,8 +190,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         this.getBioSequenceDao().update( bioSequence );
     }
 

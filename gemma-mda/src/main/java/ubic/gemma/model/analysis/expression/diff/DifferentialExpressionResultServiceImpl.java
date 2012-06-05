@@ -76,13 +76,16 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public List<Double> findGeneInResultSet(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit ) {
-        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );        
+    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit ) {
+        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
     }
-    
+
     @Override
-    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed ) {
-        return this.getDifferentialExpressionResultDao().findProbeAnalysisResultIdsInResultSet( resultSetId, geneIds, adUsed );                
+    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId,
+            Collection<Long> geneIds, Collection<Long> adUsed ) {
+        return this.getDifferentialExpressionResultDao().findProbeAnalysisResultIdsInResultSet( resultSetId, geneIds,
+                adUsed );
     }
 
     public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
@@ -127,7 +130,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      */
     @Override
     protected Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
-            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) throws Exception {
+            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) {
         return this.getDifferentialExpressionResultDao().getExperimentalFactors( differentialExpressionAnalysisResults );
     }
 
@@ -140,27 +143,26 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      */
     @Override
     protected Collection<ExperimentalFactor> handleGetExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
+            ProbeAnalysisResult differentialExpressionAnalysisResult ) {
         return this.getDifferentialExpressionResultDao().getExperimentalFactors( differentialExpressionAnalysisResult );
     }
 
     @Override
-    protected void handleThaw( ExpressionAnalysisResultSet resultSet ) throws Exception {
+    protected void handleThaw( ExpressionAnalysisResultSet resultSet ) {
         this.getExpressionAnalysisResultSetDao().thaw( resultSet );
     }
-    
+
     @Override
-    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold ) {
-        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId, threshold );                
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
+        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId,
+                threshold );
     }
 
     @Override
     public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
             Integer maxResultsToReturn, Integer minNumberOfResults ) {
-        return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
+        return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
+                minNumberOfResults );
     }
-
-    
-    
 
 }

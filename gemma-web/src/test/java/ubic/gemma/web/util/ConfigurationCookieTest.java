@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  */
 public class ConfigurationCookieTest extends TestCase {
 
-    public void testConfigurationCookieA() throws Exception {
+    public void testConfigurationCookieA() {
         ConfigurationCookie cookie = new ConfigurationCookie( "foo" );
         cookie.setProperty( "arg", "bla" );
         String actualValue = cookie.getString( "arg" );
@@ -49,7 +49,7 @@ public class ConfigurationCookieTest extends TestCase {
         assertEquals( 1, actualValue );
     }
 
-    public void testConfigurationCookieD() throws Exception {
+    public void testConfigurationCookieD() {
         ConfigurationCookie cookie = new ConfigurationCookie( "foo" );
         cookie.addProperty( "arg", "bla" );
         String actualValue = cookie.getValue();

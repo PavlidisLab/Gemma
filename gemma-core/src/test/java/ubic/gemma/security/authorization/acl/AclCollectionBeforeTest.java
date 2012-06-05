@@ -82,15 +82,14 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
             userManager.loadUserByUsername( userName );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", userName, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 )
-                    + "@gmail.com", "key", new Date() ) );
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
 
     }
 
     @Test
     @ExpectedException(AccessDeniedException.class)
-    public final void testAclCollectionEntryVoter() throws Exception {
+    public final void testAclCollectionEntryVoter() {
         securityService.makePrivate( one );
 
         super.runAsUser( userName );
@@ -100,7 +99,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testAclCollectionEntryVoterOK() throws Exception {
+    public final void testAclCollectionEntryVoterOK() {
 
         super.runAsUser( userName );
 

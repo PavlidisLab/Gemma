@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 import ubic.gemma.model.analysis.AnalysisDaoImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * <p>
@@ -75,15 +78,10 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
      */
     @Override
-    public java.util.Collection getDatasetsAnalyzed(
+    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
-        try {
-            return this.handleGetDatasetsAnalyzed( analysis );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao.getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
+        return this.handleGetDatasetsAnalyzed( analysis );
+
     }
 
     /**
@@ -92,13 +90,8 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     @Override
     public int getNumDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
-        try {
-            return this.handleGetNumDatasetsAnalyzed( analysis );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao.getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
+        return this.handleGetNumDatasetsAnalyzed( analysis );
+
     }
 
     /**
@@ -118,11 +111,12 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#loadAll(int)
      */
 
+    @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<GeneCoexpressionAnalysis> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl.class );
-        return results;
+        return ( Collection<GeneCoexpressionAnalysis> ) results;
     }
 
     /**
@@ -145,7 +139,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends GeneCoexpressionAnalysis> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.remove - 'entities' can not be null" );
         }
@@ -171,13 +165,8 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
     @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
-        try {
-            this.handleThaw( geneCoexpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao.thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis)' --> "
-                            + th, th );
-        }
+        this.handleThaw( geneCoexpressionAnalysis );
+
     }
 
     /**
@@ -185,7 +174,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends GeneCoexpressionAnalysis> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.update - 'entities' can not be null" );
         }
@@ -194,7 +183,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<?> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                             update( ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) entityIterator
                                     .next() );
                         }
@@ -220,23 +209,19 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * Performs the core logic for
      * {@link #getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
-    protected abstract java.util.Collection handleGetDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperiment> handleGetDatasetsAnalyzed(
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
      * Performs the core logic for
      * {@link #getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
-    protected abstract int handleGetNumDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception;
+    protected abstract int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis );
 
     /**
      * Performs the core logic for
      * {@link #thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
-    protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis );
+    protected abstract void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis );
 
 }

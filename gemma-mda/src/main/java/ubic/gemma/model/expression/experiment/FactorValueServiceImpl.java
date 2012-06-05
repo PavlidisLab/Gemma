@@ -38,24 +38,24 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
     }
 
     @Override
-    protected FactorValue handleCreate( FactorValue factorValue ) throws Exception {
+    protected FactorValue handleCreate( FactorValue factorValue ) {
         return this.getFactorValueDao().create( factorValue );
     }
 
     @Override
-    protected void handleDelete( FactorValue factorValue ) throws Exception {
+    protected void handleDelete( FactorValue factorValue ) {
         this.getFactorValueDao().remove( factorValue );
     }
 
     @Override
-    protected FactorValue handleFindOrCreate( FactorValue factorValue ) throws Exception {
+    protected FactorValue handleFindOrCreate( FactorValue factorValue ) {
         return this.getFactorValueDao().findOrCreate( factorValue );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#getAllFactorValues()
      */
-    protected java.util.Collection handleGetAllFactorValues() throws java.lang.Exception {
+    protected java.util.Collection handleGetAllFactorValues() {
         return this.getFactorValueDao().loadAll();
     }
 
@@ -65,7 +65,7 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleLoad(java.lang.Long)
      */
     @Override
-    protected FactorValue handleLoad( Long id ) throws Exception {
+    protected FactorValue handleLoad( Long id ) {
         return this.getFactorValueDao().load( id );
     }
 
@@ -75,15 +75,14 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleLoadAll()
      */
     @Override
-    protected Collection handleLoadAll() throws Exception {
+    protected Collection handleLoadAll() {
         return this.getFactorValueDao().loadAll();
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#saveFactorValue(ubic.gemma.model.expression.experiment.FactorValue)
      */
-    protected void handleSaveFactorValue( ubic.gemma.model.expression.experiment.FactorValue factorValue )
-            throws java.lang.Exception {
+    protected void handleSaveFactorValue( ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
         this.getFactorValueDao().create( factorValue );
     }
 
@@ -93,7 +92,7 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleUpdate(java.util.Collection)
      */
     @Override
-    protected void handleUpdate( Collection factorValues ) throws Exception {
+    protected void handleUpdate( Collection factorValues ) {
         this.getFactorValueDao().update( factorValues );
     }
 
@@ -105,7 +104,7 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
      * .FactorValue)
      */
     @Override
-    protected void handleUpdate( FactorValue factorValue ) throws Exception {
+    protected void handleUpdate( FactorValue factorValue ) {
         this.getFactorValueDao().update( factorValue );
     }
 

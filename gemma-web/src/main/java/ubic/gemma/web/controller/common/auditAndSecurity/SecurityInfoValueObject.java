@@ -31,8 +31,6 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  */
 public class SecurityInfoValueObject {
 
-    private static final long serialVersionUID = 2166768356457316142L;
-
     /**
      * Groups the user has control over.
      */

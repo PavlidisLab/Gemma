@@ -399,7 +399,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     /*
      * Please leave this here, we use it to load data sets for chopping.
      */
-    void fetchASeries( String accession ) throws Exception {
+    void fetchASeries( String accession ) {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.fetchAndLoad( accession, false, false, false, false );
     }

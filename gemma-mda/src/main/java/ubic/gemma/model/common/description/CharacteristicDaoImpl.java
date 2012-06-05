@@ -60,7 +60,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
-    protected Map handleFindByParentClass( Class parentClass ) throws Exception {
+    protected Map handleFindByParentClass( Class parentClass ) {
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
@@ -83,7 +83,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @Override
-    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) throws Exception {
+    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<String>();
         Collection<Characteristic> results = new HashSet<Characteristic>();
@@ -108,7 +108,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
     @Override
-    protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
+    protected Collection<Characteristic> handleFindByUri( String searchString ) {
         final String queryString = "select char from VocabCharacteristicImpl as char where  char.valueUri = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", searchString );
     }
@@ -119,7 +119,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
-    protected Collection<Characteristic> handleFindByValue( String search ) throws Exception {
+    protected Collection<Characteristic> handleFindByValue( String search ) {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
         StopWatch timer = new StopWatch();
         timer.start();
@@ -140,7 +140,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * java.util.Collection)
      */
     @Override
-    protected Map handleGetParents( Class parentClass, Collection<Characteristic> characteristics ) throws Exception {
+    protected Map handleGetParents( Class parentClass, Collection<Characteristic> characteristics ) {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         if ( characteristics == null || characteristics.size() == 0 ) {
@@ -169,9 +169,10 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
-        else if ( parentClass == Gene2GOAssociationImpl.class ) field = "ontologyEntry";
-        else if ( parentClass == PhenotypeAssociationImpl.class){
-            field = "phenotypes";            
+        else if ( parentClass == Gene2GOAssociationImpl.class )
+            field = "ontologyEntry";
+        else if ( parentClass == PhenotypeAssociationImpl.class ) {
+            field = "phenotypes";
         }
 
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "

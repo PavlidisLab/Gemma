@@ -159,10 +159,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             // Order of calls matters (for now). Can be made more robust if needed.
             DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();
 
-            addGenesToSearchResultValueObject( genes, geneGroupNames, searchResult );
+            addGenesToSearchResultValueObject( searchResult );
 
-            List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( experiments,
-                    experimentGroupNames, searchResult );
+            List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( searchResult );
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
 
@@ -171,8 +170,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             return searchResult;
         }
 
-        private void addGenesToSearchResultValueObject( List<List<Gene>> genes, List<String> geneGroupNames,
-                DifferentialExpressionGenesConditionsValueObject searchResult ) {
+        private void addGenesToSearchResultValueObject( DifferentialExpressionGenesConditionsValueObject searchResult ) {
             int geneGroupIndex = 0;
             for ( List<Gene> geneGroup : genes ) {
                 String geneGroupName = geneGroupNames.get( geneGroupIndex );
@@ -195,7 +193,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         private List<ExpressionAnalysisResultSet> addConditionsToSearchResultValueObject(
-                List<Collection<ExpressionExperiment>> experimentGroups, List<String> experimentGroupNames,
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
             StopWatch watch = new StopWatch( "addConditionsToSearchResultValueObject" );
@@ -203,7 +200,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> usedResultSets = new LinkedList<ExpressionAnalysisResultSet>();
 
             int experimentGroupIndex = 0;
-            for ( Collection<ExpressionExperiment> experimentGroup : experimentGroups ) {
+            for ( Collection<ExpressionExperiment> experimentGroup : experiments ) {
 
                 String stage = "Loading " + experimentGroupNames.get( experimentGroupIndex ) + " experiments...";
                 double progress = 0.0;
@@ -468,18 +465,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             return "rs:" + resultSetId + "fv:" + factorValueId;
         }
 
-        private List<Long> getIds( Collection<ExpressionAnalysisResultSet> resultSets ) {
-            List<Long> ids = new LinkedList<Long>();
-            for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-                ids.add( resultSet.getId() );
-            }
-            return ids;
-        }
-
         private List<Long> getGeneIds(
-                Collection<ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject.Gene> genes ) {
+                Collection<ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject.Gene> g ) {
             List<Long> ids = new LinkedList<Long>();
-            for ( ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject.Gene gene : genes ) {
+            for ( ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject.Gene gene : g ) {
                 ids.add( gene.getId() );
             }
             return ids;
@@ -566,11 +555,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             result = backgroundTask.get(); // blocks
         } catch ( InterruptedException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException( e );
         } catch ( ExecutionException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException( e );
         } finally {
             this.diffExpSearchTasksCache.remove( taskId );
         }

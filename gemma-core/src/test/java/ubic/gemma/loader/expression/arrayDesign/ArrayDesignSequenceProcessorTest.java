@@ -68,7 +68,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     BioSequenceService bss;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         taxon = taxonService.findByCommonName( "mouse" );
 
@@ -168,7 +168,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFetchAndLoadWithSequences() throws Exception {
+    public void testFetchAndLoadWithSequences() {
 
         String path = ConfigUtils.getString( "gemma.home" );
         GeoService geoService = this.getBean( GeoService.class );
@@ -197,7 +197,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testMultiTaxonArray() throws Exception {
+    public void testMultiTaxonArray() {
         // This array design has not taxon so unless taxon provided will throw an exception
         ArrayDesign ad = testHelper.getTestPersistentArrayDesign( 10, false, false );
 

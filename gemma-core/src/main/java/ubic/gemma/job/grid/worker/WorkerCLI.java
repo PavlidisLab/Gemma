@@ -148,7 +148,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     @Override
-    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+    public void notify( RemoteEvent remoteEvent ) {
 
         try {
             EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;

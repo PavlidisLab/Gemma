@@ -91,7 +91,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testAddAffyExonHuman() throws Exception {
+    public void testAddAffyExonHuman() {
         ExpressionExperiment ee; // GSE22498
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -105,7 +105,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testAddAffyExonRat() throws Exception {
+    public void testAddAffyExonRat() {
         ExpressionExperiment ee; // GSE33597
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

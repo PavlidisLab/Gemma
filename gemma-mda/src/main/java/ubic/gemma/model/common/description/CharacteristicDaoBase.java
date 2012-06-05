@@ -80,13 +80,8 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      */
     @Override
     public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
-        try {
-            return this.handleFindByParentClass( parentClass );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByParentClass(java.lang.Class parentClass)' --> "
-                            + th, th );
-        }
+        return this.handleFindByParentClass( parentClass );
+
     }
 
     /**
@@ -94,13 +89,8 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      */
     @Override
     public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
-        try {
-            return this.handleFindByUri( searchString );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.lang.String searchString)' --> "
-                            + th, th );
-        }
+        return this.handleFindByUri( searchString );
+
     }
 
     /**
@@ -108,13 +98,8 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      */
     @Override
     public java.util.Collection<Characteristic> findByUri( final java.util.Collection<String> uris ) {
-        try {
-            return this.handleFindByUri( uris );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.util.Collection uris)' --> "
-                            + th, th );
-        }
+        return this.handleFindByUri( uris );
+
     }
 
     /**
@@ -122,13 +107,8 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      */
     @Override
     public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
-        try {
-            return this.handleFindByValue( search );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByValue(java.lang.String search)' --> "
-                            + th, th );
-        }
+        return this.handleFindByValue( search );
+
     }
 
     /**
@@ -247,30 +227,27 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     /**
      * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
      */
-    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass ) throws java.lang.Exception;
+    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass );
 
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString );
 
     /**
      * Performs the core logic for {@link #findByUri(java.util.Collection)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris );
 
     /**
      * Performs the core logic for {@link #findByValue(java.lang.String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #getParents(java.lang.Class, java.util.Collection)}
      */
     protected abstract java.util.Map handleGetParents( java.lang.Class parentClass,
-            java.util.Collection<Characteristic> characteristics ) throws java.lang.Exception;
+            java.util.Collection<Characteristic> characteristics );
 
 }

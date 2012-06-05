@@ -68,10 +68,9 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      */
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return this.getBlatResultDao().create( blatResult );
     }
- 
 
     /*
      * (non-Javadoc)
@@ -81,11 +80,9 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * .biosequence.BioSequence)
      */
     @Override
-    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) {
         return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
-
- 
 
     /*
      * (non-Javadoc)
@@ -93,7 +90,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoad( Collection ids ) {
         return this.getBlatResultDao().load( ids );
     }
 
@@ -101,13 +98,12 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
-            throws java.lang.Exception {
+    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         this.getBlatResultDao().remove( blatResult );
     }
 
     @Override
-    protected void handleUpdate( BlatResult blatResult ) throws Exception {
+    protected void handleUpdate( BlatResult blatResult ) {
         this.getBlatResultDao().update( blatResult );
     }
 

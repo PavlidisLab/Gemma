@@ -204,8 +204,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
         FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
             @Override
-            @SuppressWarnings("synthetic-access")
-            public Exception call() throws Exception {
+            public Exception call() {
                 try {
                     return doParse( dis );
                 } catch ( Exception e ) {

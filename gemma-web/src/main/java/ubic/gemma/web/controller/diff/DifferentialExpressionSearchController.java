@@ -76,23 +76,23 @@ import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueOb
 public class DifferentialExpressionSearchController {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
-    
+
     private static final double DEFAULT_THRESHOLD = 0.01;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    
+
     @Autowired
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
-    
+
     @Autowired
     private GeneService geneService;
-    
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    
+
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
 
@@ -107,23 +107,22 @@ public class DifferentialExpressionSearchController {
 
     @Autowired
     private DifferentialExpressionGeneConditionSearchService geneConditionSearchService;
-    
-    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult (String taskId) {
+
+    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
         return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
     }
 
-    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(String taskId) {
+    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(
+            String taskId ) {
         return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
     }
-    
-    public String scheduleDiffExpSearchTask (
-            Long taxonId,
+
+    public String scheduleDiffExpSearchTask( Long taxonId,
             Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
-            Collection<GeneSetValueObject> geneValueObjects,
-            List<String> geneSessionGroupQueries,
+            Collection<GeneSetValueObject> geneValueObjects, List<String> geneSessionGroupQueries,
             List<String> experimentSessionGroupQueries ) {
 
-        log.info("Starting gene x condition search...");
+        log.info( "Starting gene x condition search..." );
         // Load experiments
         List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
         List<String> datasetGroupNames = new ArrayList<String>();
@@ -133,7 +132,7 @@ public class DifferentialExpressionSearchController {
                 datasetGroupNames.add( eevo.getName() );
             }
         }
-        
+
         // Load genes
         List<List<Gene>> genes = new ArrayList<List<Gene>>();
         List<String> geneGroupNames = new ArrayList<String>();
@@ -145,61 +144,63 @@ public class DifferentialExpressionSearchController {
             }
         }
 
-        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask ( genes, experiments, geneGroupNames, datasetGroupNames );
+        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask( genes, experiments, geneGroupNames,
+                datasetGroupNames );
         return taskId;
     }
 
-        
-//    public DifferentialExpressionGenesConditionsValueObject geneConditionSearch (
-//            Long taxonId,
-//            Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
-//            Collection<GeneSetValueObject> geneValueObjects,
-//            List<String> geneSessionGroupQueries,
-//            List<String> experimentSessionGroupQueries ) {
-//
-//        log.info("Starting gene x condition search...");
-//        org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("geneConditionSearch");
-//        watch.start("Loading "+ datasetValueObjects.size() +" experiment sets.");
-//        // Load experiments
-//        List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
-//        List<String> datasetGroupNames = new ArrayList<String>();
-//        for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
-//            if ( eevo != null ) {
-//                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
-//                datasetGroupNames.add( eevo.getName() );
-//            }
-//        }
-//        
-//        watch.stop();
-//        watch.start("Loading "+ geneValueObjects.size() +" gene sets.");
-//        // updates param
-//        //recreateSessionBoundEEGroupsFromBookmark( experimentSessionGroupQueries, experiments, datasetGroupNames );
-//
-//        // Load genes
-//        List<List<Gene>> genes = new ArrayList<List<Gene>>();
-//        List<String> geneGroupNames = new ArrayList<String>();
-//
-//        for ( GeneSetValueObject gsvo : geneValueObjects ) {
-//            if ( gsvo != null ) {
-//                geneGroupNames.add( gsvo.getName() );
-//                genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
-//            }
-//        }
-//
-//        // note: this method makes changes to params
-////        recreateSessionBoundGeneGroupsFromBookmark( geneSessionGroupQueries, genes, geneNames, geneFullNames, geneIds,
-////                geneGroupNames );
-//
-//        watch.stop();
-//        watch.start("Pupulate heatmap object.");        
-//        DifferentialExpressionGenesConditionsValueObject result = geneConditionSearchService.createGenesConditionsValueObject( genes, experiments, geneGroupNames, datasetGroupNames );
-//        watch.stop();
-//
-//        log.info( watch.prettyPrint() );
-//        
-//        return result;
-//    }
-        
+    // public DifferentialExpressionGenesConditionsValueObject geneConditionSearch (
+    // Long taxonId,
+    // Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
+    // Collection<GeneSetValueObject> geneValueObjects,
+    // List<String> geneSessionGroupQueries,
+    // List<String> experimentSessionGroupQueries ) {
+    //
+    // log.info("Starting gene x condition search...");
+    // org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("geneConditionSearch");
+    // watch.start("Loading "+ datasetValueObjects.size() +" experiment sets.");
+    // // Load experiments
+    // List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
+    // List<String> datasetGroupNames = new ArrayList<String>();
+    // for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
+    // if ( eevo != null ) {
+    // experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+    // datasetGroupNames.add( eevo.getName() );
+    // }
+    // }
+    //
+    // watch.stop();
+    // watch.start("Loading "+ geneValueObjects.size() +" gene sets.");
+    // // updates param
+    // //recreateSessionBoundEEGroupsFromBookmark( experimentSessionGroupQueries, experiments, datasetGroupNames );
+    //
+    // // Load genes
+    // List<List<Gene>> genes = new ArrayList<List<Gene>>();
+    // List<String> geneGroupNames = new ArrayList<String>();
+    //
+    // for ( GeneSetValueObject gsvo : geneValueObjects ) {
+    // if ( gsvo != null ) {
+    // geneGroupNames.add( gsvo.getName() );
+    // genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
+    // }
+    // }
+    //
+    // // note: this method makes changes to params
+    // // recreateSessionBoundGeneGroupsFromBookmark( geneSessionGroupQueries, genes, geneNames, geneFullNames, geneIds,
+    // // geneGroupNames );
+    //
+    // watch.stop();
+    // watch.start("Pupulate heatmap object.");
+    // DifferentialExpressionGenesConditionsValueObject result =
+    // geneConditionSearchService.createGenesConditionsValueObject( genes, experiments, geneGroupNames,
+    // datasetGroupNames );
+    // watch.stop();
+    //
+    // log.info( watch.prettyPrint() );
+    //
+    // return result;
+    // }
+
     /**
      * Session-bound gene groups are encoded in bookmarkable URLs as the query that made them (minus modifications) here
      * we're "recreating" these groups (session-bound groups aren't actually created) Makes changes to params
@@ -546,6 +547,7 @@ public class DifferentialExpressionSearchController {
 
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
+        // FIXME problem: there can be multiple analyses, this method should return a collection
         Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigationIds( securityFilteredIds );
 
@@ -554,8 +556,8 @@ public class DifferentialExpressionSearchController {
             return result;
         }
 
-        Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-                .loadValueObjects( diffAnalyses.keySet(), false );
+        Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService.loadValueObjects(
+                diffAnalyses.keySet(), false );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
@@ -751,7 +753,6 @@ public class DifferentialExpressionSearchController {
         return experiments;
     }
 
-    
     /**
      * @param ids
      * @return
@@ -769,88 +770,88 @@ public class DifferentialExpressionSearchController {
         return filteredIds;
     }
 
-// TODO: Dead code?
-//    /*
-//     * Handles the case exporting results as text.
-//     * 
-//     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-//     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-//     */
-//    @Override
-//    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-//            throws Exception {
-//
-//        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
-//
-//        // -------------------------
-//        // Download diff expression data for a specific diff expresion search
-//
-//        double threshold = DEFAULT_THRESHOLD;
-//        try {
-//            threshold = Double.parseDouble( request.getParameter( "t" ) );
-//        } catch ( NumberFormatException e ) {
-//            log.warn( "invalid threshold; using default " + threshold );
-//        }
-//
-//        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-//
-//        Long eeSetId = null;
-//        Collection<Long> eeIds = null;
-//        try {
-//            eeSetId = Long.parseLong( request.getParameter( "a" ) );
-//        } catch ( NumberFormatException e ) {
-//            //
-//        }
-//        if ( eeSetId == null ) {
-//            eeIds = extractIds( request.getParameter( "ees" ) );
-//        }
-//
-//        String fs = request.getParameter( "fm" );
-//        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
-//
-//        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
-//        command.setGeneIds( geneIds );
-//        command.setEeSetId( eeSetId );
-//        command.setEeIds( eeIds );
-//        command.setSelectedFactors( selectedFactors );
-//        command.setThreshold( threshold );
-//
-//        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
-//
-//        ModelAndView mav = new ModelAndView( new TextView() );
-//
-//        StringBuilder buf = new StringBuilder();
-//
-//        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
-//            buf.append( demavo );
-//        }
-//
-//        String output = buf.toString();
-//
-//        mav.addObject( "text", output.length() > 0 ? output : "no results" );
-//        return mav;
-//
-//    }
-//    
-//    
-//    /**
-//     * Returns a collection of {@link Long} ids from strings.
-//     * 
-//     * @param idString
-//     * @return
-//     */
-//    protected Collection<Long> extractIds( String idString ) {
-//        Collection<Long> ids = new ArrayList<Long>();
-//        if ( idString != null ) {
-//            for ( String s : idString.split( "," ) ) {
-//                try {
-//                    ids.add( Long.parseLong( s.trim() ) );
-//                } catch ( NumberFormatException e ) {
-//                    log.warn( "invalid id " + s );
-//                }
-//            }
-//        }
-//        return ids;
-//    }
+    // TODO: Dead code?
+    // /*
+    // * Handles the case exporting results as text.
+    // *
+    // * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+    // * HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    // */
+    // @Override
+    // protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+    // throws Exception {
+    //
+    // if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
+    //
+    // // -------------------------
+    // // Download diff expression data for a specific diff expresion search
+    //
+    // double threshold = DEFAULT_THRESHOLD;
+    // try {
+    // threshold = Double.parseDouble( request.getParameter( "t" ) );
+    // } catch ( NumberFormatException e ) {
+    // log.warn( "invalid threshold; using default " + threshold );
+    // }
+    //
+    // Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+    //
+    // Long eeSetId = null;
+    // Collection<Long> eeIds = null;
+    // try {
+    // eeSetId = Long.parseLong( request.getParameter( "a" ) );
+    // } catch ( NumberFormatException e ) {
+    // //
+    // }
+    // if ( eeSetId == null ) {
+    // eeIds = extractIds( request.getParameter( "ees" ) );
+    // }
+    //
+    // String fs = request.getParameter( "fm" );
+    // Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
+    //
+    // DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
+    // command.setGeneIds( geneIds );
+    // command.setEeSetId( eeSetId );
+    // command.setEeIds( eeIds );
+    // command.setSelectedFactors( selectedFactors );
+    // command.setThreshold( threshold );
+    //
+    // Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
+    //
+    // ModelAndView mav = new ModelAndView( new TextView() );
+    //
+    // StringBuilder buf = new StringBuilder();
+    //
+    // for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
+    // buf.append( demavo );
+    // }
+    //
+    // String output = buf.toString();
+    //
+    // mav.addObject( "text", output.length() > 0 ? output : "no results" );
+    // return mav;
+    //
+    // }
+    //
+    //
+    // /**
+    // * Returns a collection of {@link Long} ids from strings.
+    // *
+    // * @param idString
+    // * @return
+    // */
+    // protected Collection<Long> extractIds( String idString ) {
+    // Collection<Long> ids = new ArrayList<Long>();
+    // if ( idString != null ) {
+    // for ( String s : idString.split( "," ) ) {
+    // try {
+    // ids.add( Long.parseLong( s.trim() ) );
+    // } catch ( NumberFormatException e ) {
+    // log.warn( "invalid id " + s );
+    // }
+    // }
+    // }
+    // return ids;
+    // }
 
 }

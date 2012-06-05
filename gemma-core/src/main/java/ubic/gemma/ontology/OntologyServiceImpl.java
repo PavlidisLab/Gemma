@@ -225,7 +225,7 @@ public class OntologyServiceImpl implements OntologyService {
     private ObiService obiService;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
         this.birnLexOntologyService = new BirnLexOntologyService();
         this.nifstdOntologyService = new NIFSTDOntologyService();
@@ -546,7 +546,8 @@ public class OntologyServiceImpl implements OntologyService {
     public boolean isObsolete( String uri ) {
         OntologyTerm t = this.getTerm( uri );
         if ( t != null ) {
-            for ( OntologyTerm p : t.getParents( false ) ) {
+            Collection<OntologyTerm> parents = t.getParents( false );
+            for ( OntologyTerm p : parents ) {
                 if ( p.getUri().equals( "http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" ) ) {
                     return true;
                 }

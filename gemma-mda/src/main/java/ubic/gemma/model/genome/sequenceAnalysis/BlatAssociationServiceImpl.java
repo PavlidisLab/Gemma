@@ -36,7 +36,7 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
      */
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) throws java.lang.Exception {
+            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
         return this.getBlatAssociationDao().create( blatAssociation );
     }
 
@@ -46,7 +46,7 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection<BlatAssociation> handleFind( Gene gene ) throws Exception {
+    protected Collection<BlatAssociation> handleFind( Gene gene ) {
         return this.getBlatAssociationDao().find( gene );
     }
 
@@ -55,22 +55,22 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
      */
     @Override
     protected java.util.Collection<BlatAssociation> handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception {
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.getBlatAssociationDao().find( bioSequence );
     }
 
     @Override
-    protected void handleThaw( BlatAssociation blatAssociation ) throws Exception {
+    protected void handleThaw( BlatAssociation blatAssociation ) {
         this.getBlatAssociationDao().thaw( blatAssociation );
     }
 
     @Override
-    protected void handleThaw( Collection<BlatAssociation> blatAssociations ) throws Exception {
+    protected void handleThaw( Collection<BlatAssociation> blatAssociations ) {
         this.getBlatAssociationDao().thaw( blatAssociations );
     }
 
     @Override
-    protected void handleUpdate( BlatAssociation blatAssociation ) throws Exception {
+    protected void handleUpdate( BlatAssociation blatAssociation ) {
         this.getBlatAssociationDao().update( blatAssociation );
     }
 

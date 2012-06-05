@@ -53,7 +53,7 @@ public class BibliographicReferenceServiceImpl extends
      * ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
-    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) throws Exception {
+    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
         bibliographicReference.setFullTextPdf( pdfFile );
         this.getBibliographicReferenceDao().update( bibliographicReference );
 
@@ -64,8 +64,7 @@ public class BibliographicReferenceServiceImpl extends
      */
     @Override
     protected BibliographicReference handleCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception {
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         return getBibliographicReferenceDao().create( bibliographicReference );
     }
 
@@ -76,8 +75,7 @@ public class BibliographicReferenceServiceImpl extends
      */
     @Override
     protected BibliographicReference handleFind(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception {
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
 
         return getBibliographicReferenceDao().find( bibliographicReference );
     }
@@ -86,8 +84,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
-            throws java.lang.Exception {
+    protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id ) {
 
         return this.getBibliographicReferenceDao().findByExternalId( id, PUB_MED_DATABASE_NAME );
 
@@ -99,32 +96,29 @@ public class BibliographicReferenceServiceImpl extends
      */
     @Override
     protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
-            java.lang.String databaseName ) throws java.lang.Exception {
+            java.lang.String databaseName ) {
 
         return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
 
-    
-
     @Override
-    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference )
-            throws Exception {
+    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference ) {
         return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
     }
 
     @Override
-    protected Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
-            throws Exception {
+    protected Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
         return this.getBibliographicReferenceDao().getAllExperimentLinkedReferences();
     }
 
     @Override
-    protected Collection<ExpressionExperiment> handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
+            BibliographicReference bibliographicReference ) {
         return this.getBibliographicReferenceDao().getRelatedExperiments( bibliographicReference );
     }
 
     @Override
-    protected BibliographicReference handleLoad( Long id ) throws Exception {
+    protected BibliographicReference handleLoad( Long id ) {
         return this.getBibliographicReferenceDao().load( id );
     }
 
@@ -135,37 +129,36 @@ public class BibliographicReferenceServiceImpl extends
      * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang
      * .Long)
      */
-    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
+    protected BibliographicReference handleLoadBibliographicReference( Long id ) {
         return getBibliographicReferenceDao().load( id );
     }
 
     @Override
-    protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+    protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) {
         return this.getBibliographicReferenceDao().load( ids );
     }
 
     @Override
-    protected Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( Collection<Long> ids ) throws Exception {
+    protected Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( Collection<Long> ids ) {
         Collection<BibliographicReference> bibRefs = this.getBibliographicReferenceDao().load( ids );
-        if(bibRefs.isEmpty()){
+        if ( bibRefs.isEmpty() ) {
             return new ArrayList<BibliographicReferenceValueObject>();
         }
-        Map<Long, BibliographicReferenceValueObject> idTobibRefVO =  new HashMap<Long, BibliographicReferenceValueObject>();
-        
-        for(BibliographicReference bibref : bibRefs){
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<Long, BibliographicReferenceValueObject>();
+
+        for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
             idTobibRefVO.put( bibref.getId(), vo );
         }
-        
+
         this.populateRelatedExperiments( bibRefs, idTobibRefVO );
         this.populateBibliographicPhenotypes( idTobibRefVO );
-        
+
         return idTobibRefVO.values();
     }
 
-
     @Override
-    protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
+    protected void handleRemove( BibliographicReference bibliographicReference ) {
         this.getBibliographicReferenceDao().remove( bibliographicReference );
     }
 
@@ -173,8 +166,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
-            throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
         getBibliographicReferenceDao().update( BibliographicReference );
     }
 
@@ -262,30 +254,31 @@ public class BibliographicReferenceServiceImpl extends
      * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
      */
     @Override
-    public Collection<ExpressionExperiment> getRelatedExperiments(
-            BibliographicReference bibRef ) {
+    public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
         Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
         records.add( bibRef );
-        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao().getRelatedExperiments( records );
-        if(map.containsKey( bibRef )){
+        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao()
+                .getRelatedExperiments( records );
+        if ( map.containsKey( bibRef ) ) {
             return map.get( bibRef );
         }
         return new ArrayList<ExpressionExperiment>();
     }
-    
-    @Override 
-    public List<BibliographicReferenceValueObject> search(String query){
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
+
+    @Override
+    public List<BibliographicReferenceValueObject> search( String query ) {
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
+                SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
-        for(BibliographicReference entity : resultEntities){
+        for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
             this.populateBibliographicPhenotypes( vo );
             this.populateRelatedExperiments( entity, vo );
             results.add( vo );
         }
-        
+
         return results;
-        
+
     }
 
 }

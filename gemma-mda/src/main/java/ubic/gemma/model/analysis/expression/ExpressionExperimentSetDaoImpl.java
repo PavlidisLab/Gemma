@@ -117,7 +117,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
 
             @Override
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+            public Object doInHibernate( Session session ) throws HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
                 Hibernate.initialize( expressionExperimentSet );
                 Hibernate.initialize( expressionExperimentSet.getTaxon() );

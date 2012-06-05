@@ -37,7 +37,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
      */
     @Override
-    protected java.util.Collection handleCreate( java.util.Collection gene2genes ) throws java.lang.Exception {
+    protected java.util.Collection handleCreate( java.util.Collection gene2genes ) {
 
         if ( !this.validCollection( gene2genes ) ) return null;
 
@@ -50,7 +50,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      */
     @Override
     protected ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) throws java.lang.Exception {
+            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) {
 
         return this.getGene2GeneCoexpressionDao().create( gene2gene );
 
@@ -59,7 +59,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
     /**
      * Performs the core logic for {@link #delete(java.util.Collection)}
      */
-    protected void handleDelete( java.util.Collection deletes ) throws java.lang.Exception {
+    protected void handleDelete( java.util.Collection deletes ) {
         this.getGene2GeneCoexpressionDao().remove( deletes );
 
     }
@@ -68,11 +68,8 @@ public class Gene2GeneCoexpressionServiceImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
     @Override
-    protected void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete )
-            throws java.lang.Exception {
-
+    protected void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete ) {
         this.getGene2GeneCoexpressionDao().remove( toDelete );
-
     }
 
     /*
@@ -95,7 +92,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      */
     @Override
     protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception {
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, stringency, maxResults,
                 sourceAnalysis );
     }

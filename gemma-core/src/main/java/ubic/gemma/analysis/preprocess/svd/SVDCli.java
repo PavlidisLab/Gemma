@@ -68,7 +68,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
         if ( err != null ) return err;
 
-        SVDService svdser = ( SVDService ) this.getBean( "sVDService" );
+        SVDService svdser = this.getBean( SVDService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 

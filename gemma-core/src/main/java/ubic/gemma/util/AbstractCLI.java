@@ -170,7 +170,7 @@ public abstract class AbstractCLI {
         return this.options.addOptionGroup( group );
     }
 
-    public List getArgList() {
+    public List<?> getArgList() {
         return commandLine.getArgList();
     }
 
@@ -204,7 +204,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
      */
-    public final Collection getOptions() {
+    public final Collection<?> getOptions() {
         return this.options.getOptions();
     }
 
@@ -236,7 +236,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
-    public final List getRequiredOptions() {
+    public final List<?> getRequiredOptions() {
         return this.options.getRequiredOptions();
     }
 

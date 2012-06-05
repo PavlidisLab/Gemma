@@ -61,10 +61,11 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         int numSequencesToCreate = 20;
         for ( int i = 0; i < numSequencesToCreate; i++ ) {
@@ -98,7 +99,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
             blatAssociationService.create( ba );
 
         }
-   }
+    }
 
     /**
      * Test method for

@@ -89,11 +89,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private static final String fetchResultsBySingleResultSetQuery = "select distinct r "
-        + " from DifferentialExpressionAnalysisImpl a " + " inner join a.experimentAnalyzed e  "
-        + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-        + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+            + " from DifferentialExpressionAnalysisImpl a " + " inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
+            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
-    
     private static final String fetchResultsByResultSetAndGeneQuery = "select dear.CORRECTED_PVALUE "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
             + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
@@ -114,7 +113,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             + " where par.ID = dear.ID and g2s.CS = par.PROBE_FK and "
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and "
             + " g2s.AD in (:ad_ids) and "
-            + " g2s.GENE IN (:gene_ids) ";//GROUP BY g2s.GENE, dear.CORRECTED_P_VALUE_BIN ORDER BY dear.CORRECTED_P_VALUE_BIN DESC";
+            + " g2s.GENE IN (:gene_ids) ";// GROUP BY g2s.GENE, dear.CORRECTED_P_VALUE_BIN ORDER BY
+                                          // dear.CORRECTED_P_VALUE_BIN DESC";
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -501,35 +501,40 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         private long probeAnalysisResultId;
         private int numberOfProbes = 0;
         private int numberOfProbesDiffExpressed = 0;
-        
+
         public int getNumberOfProbesDiffExpressed() {
             return numberOfProbesDiffExpressed;
         }
+
         public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
             this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
         }
+
         public long getProbeAnalysisResultId() {
             return probeAnalysisResultId;
         }
+
         public void setProbeAnalysisResultId( long probeAnalysisResultId ) {
             this.probeAnalysisResultId = probeAnalysisResultId;
         }
+
         public int getNumberOfProbes() {
             return numberOfProbes;
         }
+
         public void setNumberOfProbes( int numberOfProbes ) {
             this.numberOfProbes = numberOfProbes;
         }
     }
-    
+
     @Override
-    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId, Collection<Long> geneIds,
-            Collection<Long> adUsed ) {
+    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId,
+            Collection<Long> geneIds, Collection<Long> adUsed ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Long,DiffExprGeneSearchResult> results = new HashMap<Long,DiffExprGeneSearchResult>();
+        Map<Long, DiffExprGeneSearchResult> results = new HashMap<Long, DiffExprGeneSearchResult>();
 
         Map<Long, Integer> goodPvalue = new HashMap<Long, Integer>();
 
@@ -548,7 +553,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
             if ( queryResult.isEmpty() ) return results;
 
-            // Get probe result with the best pValue.            
+            // Get probe result with the best pValue.
             for ( Object o : queryResult ) {
                 Object[] row = ( Object[] ) o;
                 BigInteger geneId = ( BigInteger ) row[0];
@@ -556,35 +561,35 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 BigInteger probeAnalysisId = ( BigInteger ) row[2];
 
                 // Count diff expressed probes per gene.
-                if (results.get( geneId.longValue() ) != null) {
+                if ( results.get( geneId.longValue() ) != null ) {
                     DiffExprGeneSearchResult r = results.get( geneId.longValue() );
                     r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-                    if (pValueBin != null && pValueBin > 0) {
-                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
-                    }                    
+                    if ( pValueBin != null && pValueBin > 0 ) {
+                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
+                    }
                 }
-                
+
                 if ( goodPvalue.get( geneId.longValue() ) == null ) { // first encounter
                     goodPvalue.put( geneId.longValue(), pValueBin );
-                    
-                    DiffExprGeneSearchResult r =  new DiffExprGeneSearchResult();
+
+                    DiffExprGeneSearchResult r = new DiffExprGeneSearchResult();
                     r.setProbeAnalysisResultId( probeAnalysisId.longValue() );
                     r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-                    if (pValueBin != null && pValueBin > 0) {
-                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
-                    }                    
-                    
-                    results.put( geneId.longValue(), r );                    
+                    if ( pValueBin != null && pValueBin > 0 ) {
+                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
+                    }
+
+                    results.put( geneId.longValue(), r );
                 } else {
-                    if ( pValueBin != null && goodPvalue.get( geneId.longValue() ) < pValueBin) {
-                        // replace   
+                    if ( pValueBin != null && goodPvalue.get( geneId.longValue() ) < pValueBin ) {
+                        // replace
                         goodPvalue.put( geneId.longValue(), pValueBin );
-                        
+
                         DiffExprGeneSearchResult r = results.get( geneId.longValue() );
                         r.setProbeAnalysisResultId( probeAnalysisId.longValue() );
-                        //results.put( geneId.longValue(),r );                    
-                    }                    
-                }                
+                        // results.put( geneId.longValue(),r );
+                    }
+                }
             }
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -592,11 +597,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         } finally {
             super.releaseSession( session );
         }
-        
+
         timer.stop();
-       // if ( log.isDebugEnabled() )
-            log.info( "Fetching ProbeResults for geneIds " + StringUtils.join( geneIds, "," ) + " and result set "
-                    + resultSetId + " ad used " +  StringUtils.join( adUsed, "," ) + " took : " + timer.getTime() + " ms" );
+        // if ( log.isDebugEnabled() )
+        log.info( "Fetching ProbeResults for geneIds " + StringUtils.join( geneIds, "," ) + " and result set "
+                + resultSetId + " ad used " + StringUtils.join( adUsed, "," ) + " took : " + timer.getTime() + " ms" );
 
         return results;
     }
@@ -782,20 +787,25 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     @Override
-    public List<ProbeAnalysisResult> findInResultSet(ExpressionAnalysisResultSet resultSet, Double threshold, Integer limit,
-            Integer minNumberOfResults ) {
+    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
+            Integer limit, Integer minNumberOfResults ) {
+
+        if ( minNumberOfResults == null ) {
+            throw new IllegalArgumentException( "Minimum number of results cannot be null" );
+        }
 
         List<ProbeAnalysisResult> results = new ArrayList<ProbeAnalysisResult>();
-        
+
         if ( resultSet == null ) {
             return results;
         }
         Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<ExpressionAnalysisResultSet>();
-        resultsAnalyzed.add (resultSet);
-        
+        resultsAnalyzed.add( resultSet );
+
         StopWatch timer = new StopWatch();
         timer.start();
-        String qs = fetchResultsBySingleResultSetQuery + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
+        String qs = fetchResultsBySingleResultSetQuery
+                + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
 
@@ -807,23 +817,20 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         Object[] objectValues = { resultsAnalyzed, threshold };
 
         List<?> qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
-        
-        // If too few probes meet threshold, just get top minNumberOfResults.
-        if (qresult.size() < minNumberOfResults) {
+
+        // If too few probes meet threshold, redo and just get top minNumberOfResults.
+        if ( qresult.size() < minNumberOfResults ) {
             qs = fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
 
             tpl = new HibernateTemplate( this.getSessionFactory() );
-
-            if ( minNumberOfResults != null ) {
-                tpl.setMaxResults( minNumberOfResults );
-            }
+            tpl.setMaxResults( minNumberOfResults );
 
             String[] paramName = { "resultsAnalyzed" };
             Object[] objectValue = { resultsAnalyzed };
 
             qresult = tpl.findByNamedParam( qs, paramName, objectValue );
         }
-        
+
         for ( Object o : qresult ) {
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) o;
             results.add( probeResult );

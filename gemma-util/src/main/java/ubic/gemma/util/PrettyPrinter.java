@@ -145,7 +145,7 @@ public class PrettyPrinter {
      * @param gemmeCollection
      * @param level
      */
-    private static void print( StringBuffer buf, Collection gemmaCollection, int level )
+    private static void print( StringBuffer buf, Collection<?> gemmaCollection, int level )
             throws IllegalArgumentException, IntrospectionException, IllegalAccessException, InvocationTargetException {
         int i = 0;
         for ( Object gemmaObj : gemmaCollection ) {
@@ -174,10 +174,10 @@ public class PrettyPrinter {
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 
         if ( bean == null ) return;
-        Class gemmaClass = bean.getClass();
+        Class<?> gemmaClass = bean.getClass();
 
         if ( bean instanceof Collection ) {
-            print( buf, ( Collection ) bean, ++level );
+            print( buf, ( Collection<?> ) bean, ++level );
             return;
         }
 

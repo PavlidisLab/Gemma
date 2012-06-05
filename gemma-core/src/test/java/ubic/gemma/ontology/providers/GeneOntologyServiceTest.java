@@ -40,7 +40,7 @@ public class GeneOntologyServiceTest extends TestCase {
     GeneOntologyServiceImpl gos;
     private static Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
-    public final void testAllParents() throws Exception {
+    public final void testAllParents() {
         String id = "GO:0035242";
 
         OntologyTerm termForId = gos.getTermForId( id );
@@ -50,7 +50,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 9, terms.size() );
     }
 
-    public final void testAllParents2() throws Exception {
+    public final void testAllParents2() {
         String id = "GO:0000006";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -59,7 +59,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 11, terms.size() );
     }
 
-    public final void testGetAspect() throws Exception {
+    public final void testGetAspect() {
         String aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
         aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0016791" ).toString().toLowerCase();
@@ -68,7 +68,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( "molecular_function", aspect );
     }
 
-    public final void testAsRegularGoId() throws Exception {
+    public final void testAsRegularGoId() {
         String id = "GO:0000107";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -76,7 +76,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( id, formatedId );
     }
 
-    public final void testGetAllChildren() throws Exception {
+    public final void testGetAllChildren() {
         String id = "GO:0016791";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -85,7 +85,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 136, terms.size() );
     }
 
-    public final void testGetChildren() throws Exception {
+    public final void testGetChildren() {
         String id = "GO:0016791";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -94,7 +94,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 65, terms.size() );
     }
 
-    public final void testGetChildrenPartOf() throws Exception {
+    public final void testGetChildrenPartOf() {
         String id = "GO:0023025";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -105,14 +105,14 @@ public class GeneOntologyServiceTest extends TestCase {
     }
 
     // latest versions do not have definitions included.
-    // public final void testGetDefinition() throws Exception {
+    // public final void testGetDefinition() {
     // String id = "GO:0000007";
     // String definition = gos.getTermDefinition( id );
     // assertNotNull( definition );
     // assertTrue( definition.startsWith( "I am a test definition" ) );
     // }
 
-    public final void testGetParents() throws Exception {
+    public final void testGetParents() {
         String id = "GO:0000014";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -124,7 +124,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 1, terms.size() );
     }
 
-    public final void testGetParentsPartOf() throws Exception {
+    public final void testGetParentsPartOf() {
         String id = "GO:0000332";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
@@ -137,7 +137,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 12, terms.size() );
     }
 
-    public final void testGetTermForId() throws Exception {
+    public final void testGetTermForId() {
         String id = "GO:0000310";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );

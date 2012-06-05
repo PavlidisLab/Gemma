@@ -250,7 +250,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see gene.GeneService#handleFindByID(java.lang.long)
      */
-    protected Gene handleFindByID( Long id ) throws java.lang.Exception {
+    protected Gene handleFindByID( Long id ) {
         return this.getGeneDao().load( id );
     }
 
@@ -270,7 +270,7 @@ public class GeneServiceImpl implements GeneService {
      * 
      * @see gene.GeneService#createGene(Gene)
      */
-    protected Gene handleSaveGene( Gene gene ) throws java.lang.Exception {
+    protected Gene handleSaveGene( Gene gene ) {
         return this.getGeneDao().create( gene );
     }
 

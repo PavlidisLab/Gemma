@@ -231,15 +231,10 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     /*
      * (non-Javadoc)
      * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.providers.GeneOntologyService#afterPropertiesSet()
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.init( false );
     }
 

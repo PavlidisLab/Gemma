@@ -38,7 +38,7 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
     BioSequenceService bioSequenceService;
 
     @Test
-    public void testGetTranscriptBioSequences() throws Exception {
+    public void testGetTranscriptBioSequences() {
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
 

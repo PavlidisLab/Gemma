@@ -34,6 +34,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -104,7 +105,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      */
     @Override
     protected Map<Investigation, Collection<GeneCoexpressionAnalysis>> handleFindByInvestigations(
-            Collection<Investigation> investigations ) throws Exception {
+            Collection<Investigation> investigations ) {
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> results = new HashMap<Investigation, Collection<GeneCoexpressionAnalysis>>();
         for ( Investigation ee : investigations ) {
             Collection<GeneCoexpressionAnalysis> ae = this.findByInvestigation( ee );
@@ -139,13 +140,13 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
     }
 
     @Override
-    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         List<?> list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
         return ( ( Long ) list.iterator().next() ).intValue();

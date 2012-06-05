@@ -48,7 +48,7 @@ public class GemmaEndpointTest extends TestCase {
             }
 
             @Override
-            protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+            protected Element invokeInternal( Element requestElement, Document document ) {
                 return null;
             }
         }

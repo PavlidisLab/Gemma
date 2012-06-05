@@ -39,7 +39,7 @@ public class BatchInfoPopulationServiceTest {
     private static Log log = LogFactory.getLog( BatchInfoPopulationServiceTest.class );
 
     @Test
-    public void testDatesToBatchA() throws Exception {
+    public void testDatesToBatchA() {
         BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
 
         Calendar cal = Calendar.getInstance();
@@ -67,7 +67,7 @@ public class BatchInfoPopulationServiceTest {
     }
 
     @Test
-    public void testDatesToBatchB() throws Exception {
+    public void testDatesToBatchB() {
         BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10 );
@@ -98,7 +98,7 @@ public class BatchInfoPopulationServiceTest {
     }
 
     @Test
-    public void testDatesToBatchC() throws Exception {
+    public void testDatesToBatchC() {
         BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10, 10, 1, 1 );
@@ -123,7 +123,7 @@ public class BatchInfoPopulationServiceTest {
     }
 
     @Test
-    public void testDatesToBatchD() throws Exception {
+    public void testDatesToBatchD() {
         BatchInfoPopulationHelperServiceImpl ser = new BatchInfoPopulationHelperServiceImpl();
         Calendar cal = Calendar.getInstance();
         cal.set( 2004, 3, 10, 10, 1, 1 );

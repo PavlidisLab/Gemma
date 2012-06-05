@@ -214,7 +214,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * .BioMaterial)
      */
     @Override
-    protected BioMaterial handleCopy( final BioMaterial bioMaterial ) throws Exception {
+    protected BioMaterial handleCopy( final BioMaterial bioMaterial ) {
 
         return ( BioMaterial ) this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {

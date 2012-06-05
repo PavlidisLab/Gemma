@@ -63,29 +63,30 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * )
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis handleCreate(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception {
+    protected GeneCoexpressionAnalysis handleCreate( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().create( analysis );
     }
 
     @Override
-    protected void handleDelete( GeneCoexpressionAnalysis toDelete ) throws Exception {
+    protected void handleDelete( GeneCoexpressionAnalysis toDelete ) {
         this.getGeneCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         return this.getGeneCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
-        return this.getGeneCoexpressionAnalysisDao().findByInvestigations( investigations );
+    protected Map<Investigation, Collection<GeneCoexpressionAnalysis>> handleFindByInvestigations(
+            Collection<? extends Investigation> investigations ) {
+        return this.getGeneCoexpressionAnalysisDao()
+                .findByInvestigations( ( Collection<Investigation> ) investigations );
     }
 
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByName( String name ) {
         return this.getGeneCoexpressionAnalysisDao().findByName( name );
     }
 
@@ -97,7 +98,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * .Taxon)
      */
     @Override
-    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
@@ -108,22 +109,23 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected GeneCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
+    protected GeneCoexpressionAnalysis handleFindByUniqueInvestigations(
+            Collection<? extends Investigation> investigations ) {
 
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> anas = this.getGeneCoexpressionAnalysisDao()
-                .findByInvestigations( investigations );
+                .findByInvestigations( ( Collection<Investigation> ) investigations );
 
         /*
          * Find an analysis that uses all the investigations.
          */
 
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+        for ( Investigation ee : investigations ) {
 
             if ( !anas.containsKey( ee ) ) {
                 return null; // then there can be none meeting the criterion.
@@ -142,17 +144,17 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getDatasetsAnalyzed( analysis );
     }
 
     @Override
-    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getNumDatasetsAnalyzed( analysis );
     }
 
     @Override
-    protected GeneCoexpressionAnalysis handleLoad( Long id ) throws Exception {
+    protected GeneCoexpressionAnalysis handleLoad( Long id ) {
         return this.getGeneCoexpressionAnalysisDao().load( id );
     }
 
@@ -162,18 +164,18 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
      */
     @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getGeneCoexpressionAnalysisDao().loadAll();
+    protected Collection<GeneCoexpressionAnalysis> handleLoadAll() {
+        return ( Collection<GeneCoexpressionAnalysis> ) this.getGeneCoexpressionAnalysisDao().loadAll();
     }
 
     @Override
-    protected void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) throws Exception {
+    protected void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().thaw( geneCoexpressionAnalysis );
 
     }
 
     @Override
-    protected void handleUpdate( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) throws Exception {
+    protected void handleUpdate( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
     }
 

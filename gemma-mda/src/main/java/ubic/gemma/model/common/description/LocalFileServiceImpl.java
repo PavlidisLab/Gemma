@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
@@ -99,7 +100,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * )
      */
     @Override
-    protected LocalFile handleFind( LocalFile localFile ) throws Exception {
+    protected LocalFile handleFind( LocalFile localFile ) {
         return this.getLocalFileDao().find( localFile );
     }
 
@@ -109,10 +110,14 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleFindByPath(java.lang.String)
      */
     @Override
-    protected LocalFile handleFindByPath( String path ) throws Exception {
+    protected LocalFile handleFindByPath( String path ) {
         File f = new File( path );
         LocalFile seek = LocalFile.Factory.newInstance();
-        seek.setLocalURL( f.toURI().toURL() );
+        try {
+            seek.setLocalURL( f.toURI().toURL() );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
         return this.getLocalFileDao().find( seek );
     }
 
@@ -124,7 +129,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * .LocalFile)
      */
     @Override
-    protected LocalFile handleFindOrCreate( LocalFile localFile ) throws Exception {
+    protected LocalFile handleFindOrCreate( LocalFile localFile ) {
         return this.getLocalFileDao().findOrCreate( localFile );
     }
 
@@ -136,7 +141,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * )
      */
     @Override
-    protected LocalFile handleSave( LocalFile localFile ) throws Exception {
+    protected LocalFile handleSave( LocalFile localFile ) {
         return this.getLocalFileDao().create( localFile );
     }
 
@@ -148,7 +153,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * )
      */
     @Override
-    protected void handleUpdate( LocalFile localFile ) throws Exception {
+    protected void handleUpdate( LocalFile localFile ) {
         this.getLocalFileDao().update( localFile );
     }
 

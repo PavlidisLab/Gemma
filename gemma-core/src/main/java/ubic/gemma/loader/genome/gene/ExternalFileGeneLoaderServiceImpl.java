@@ -65,8 +65,11 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     @Autowired
     private GeneService geneService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#createGene(java.lang.String[], ubic.gemma.model.genome.Taxon)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#createGene(java.lang.String[],
+     * ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Gene createGene( String[] fields, Taxon taxon ) {
@@ -94,7 +97,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return gene;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#createGeneProducts(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -109,7 +114,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return geneProducts;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#load(java.lang.String, java.lang.String)
      */
     @Override
@@ -139,11 +146,15 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return loadedGeneCount;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#updateTaxonWithGenesLoaded(ubic.gemma.model.genome.Taxon)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#updateTaxonWithGenesLoaded(ubic.gemma.model.genome
+     * .Taxon)
      */
     @Override
-    public void updateTaxonWithGenesLoaded( Taxon taxon ) throws Exception {
+    public void updateTaxonWithGenesLoaded( Taxon taxon ) {
         Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
         // if this taxon has children flag not to use their genes
         if ( childTaxa != null && !childTaxa.isEmpty() ) {
@@ -164,7 +175,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#validateTaxon(java.lang.String)
      */
     @Override
