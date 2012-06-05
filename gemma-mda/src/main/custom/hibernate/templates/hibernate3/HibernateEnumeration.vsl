@@ -46,6 +46,7 @@ public final class $enumeration.enumerationName
     /**
      *  @see ${hibernateUtils.hibernateUserTypePackage}.UserType#sqlTypes()
      */
+      @Override
     public int[] sqlTypes()
     {
         return SQL_TYPES;
@@ -54,6 +55,7 @@ public final class $enumeration.enumerationName
     /**
      *  @see ${hibernateUtils.hibernateUserTypePackage}.UserType#deepCopy(java.lang.Object)
      */
+      @Override
     public Object deepCopy(Object value) throws HibernateException
     {
         // Enums are immutable - nothing to be done to deeply clone it
@@ -63,6 +65,7 @@ public final class $enumeration.enumerationName
     /**
      *  @see ${hibernateUtils.hibernateUserTypePackage}.UserType#isMutable()
      */
+      @Override
     public boolean isMutable()
     {
         // Enums are immutable
@@ -81,6 +84,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.UserType#returnedClass()
      */
+      @Override
     public Class#if($enableTemplating)<?>#end returnedClass()
     {
         return ${enumeration.name}.class;
@@ -89,6 +93,7 @@ public final class $enumeration.enumerationName
     /**
      *  @see ${hibernateUtils.hibernateUserTypePackage}.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
+      @Override
     public Object nullSafeGet(ResultSet resultSet, String[] values, Object owner) throws HibernateException, SQLException
     {
 #if ($enumeration.literalType.primitive)
@@ -105,6 +110,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int)
      */
+      @Override
     public void nullSafeSet(PreparedStatement statement, Object value, int index) throws HibernateException, SQLException
     {
         if (value == null)
@@ -125,6 +131,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.UserType#replace(Object original, Object target, Object owner)
      */
+      @Override
     public Object replace(Object original, Object target, Object owner)
     {
         return original;
@@ -133,6 +140,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.UserType#assemble(java.io.Serializable cached, Object owner)
      */
+      @Override
     public Object assemble(java.io.Serializable cached, Object owner)
     {
         return cached;
@@ -141,6 +149,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.UserType#disassemble(Object value)
      */
+      @Override
     public java.io.Serializable disassemble(Object value)
     {
         return (java.io.Serializable)value;
@@ -158,6 +167,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.EnhancedUserType#objectToSQLString(Object object)
      */
+      @Override
     public String objectToSQLString(Object object)
     {
         return java.lang.String.valueOf((($enumeration.fullyQualifiedName)object).getValue());
@@ -166,6 +176,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.EnhancedUserType#toXMLString(Object object)
      */
+      @Override
     public String toXMLString(Object object)
     {
         return java.lang.String.valueOf((($enumeration.fullyQualifiedName)object).getValue());
@@ -174,6 +185,7 @@ public final class $enumeration.enumerationName
     /**
      * @see ${hibernateUtils.hibernateUserTypePackage}.EnhancedUserType#fromXMLString(String string)
      */
+      @Override
     public Object fromXMLString(String string)
     {
 #if ($enumeration.literalType.primitive)
