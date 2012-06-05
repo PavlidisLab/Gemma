@@ -85,16 +85,18 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 					showOnlyEditableCheckbox.setValue(currentFilters.showOnlyEditable);
 					showOnlyEditableCheckbox.resumeEvents();
 
-					// Reset radio buttons using currentFilters' values because users
-					// may change radio buttons without pressing the Apply button.
-					speciesRadioGroup.items.each(function(currRadio) {
-						// Check if currRadio has been rendered and is the same as the current species filter.
-						if (currRadio.el && currRadio.inputValue === currentFilters.taxonCommonName) {
-							currRadio.suspendEvents();
-							currRadio.setValue(true);
-							currRadio.resumeEvents();
-						}
-					});
+					if (thisMenu.rendered) {
+						// Reset radio buttons using currentFilters' values because users
+						// may change radio buttons without pressing the Apply button.
+						speciesRadioGroup.items.each(function(currRadio) {
+							// Check if currRadio has been rendered and is the same as the current species filter.
+							if (currRadio.el && currRadio.inputValue === currentFilters.taxonCommonName) {
+								currRadio.suspendEvents();
+								currRadio.setValue(true);
+								currRadio.resumeEvents();
+							}
+						});
+					}
     			}
     		},
     		items: [
