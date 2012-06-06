@@ -6,5 +6,6 @@ Gemma.LinkRoots = {
 	expressionExperimentSetPage : "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=",
 	geneSetPage : "/Gemma/geneSet/showGeneSet.html?id=",
 	genePage : "/Gemma/gene/showGene.html?id=",
+	genePageNCBI : "/Gemma/gene/showGene.html?ncbiid=",
 	phenotypePage : "/Gemma/phenotypes.html?phenotypeUrlId="
 };

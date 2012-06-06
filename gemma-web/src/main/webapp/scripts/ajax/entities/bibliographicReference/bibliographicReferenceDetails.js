@@ -5,7 +5,7 @@ Ext.namespace('Gemma.BibliographicReference');
 // in the same way as in FormPanel, we make it to have form layout by using the config:
 // 		layout: 'form'
 Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
-	genePhenotypeSeparator: '&hArr;',
+	genePhenotypeSeparator: '<span style="font-size:22px; line-height:14px;">&harr;</span>',
 	layout: 'form',
 	title: 'Bibliographic Reference Details',
 	autoScroll: true, // Use overflow:'auto' to show scroll bars automatically
@@ -37,8 +37,9 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			if (bibliographicPhenotype.evidenceId == currentEvidenceId) {
 				genePhenotypeRow += '<b>';
 			}
-			
-			genePhenotypeRow += bibliographicPhenotype.geneName + ' ' + this.genePhenotypeSeparator + ' ';
+			genePhenotypeRow += '<a target="_blank" href="'+
+				Gemma.LinkRoots.genePageNCBI+bibliographicPhenotype.geneNCBI+'">' +
+				bibliographicPhenotype.geneName + '</a> ' + this.genePhenotypeSeparator + ' ';
 			
 			for (var i = 0; i <	bibliographicPhenotype.phenotypesValues.length; i++) {
 				genePhenotypeRow += bibliographicPhenotype.phenotypesValues[i].value;
@@ -61,7 +62,6 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			updateFields: function(bibRefRecord, evidenceId) {
 				this.citation.show();		
 				this.detailsFieldset.show();		
-				this.bibtitle.setValue(bibRefRecord.get('title'));
 				this.abstractBibli.setValue(bibRefRecord.get('abstractText'));
 				this.authors.setValue(bibRefRecord.get('authorList'));
 				if (bibRefRecord.get('citation')) {
@@ -71,10 +71,13 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 				
 				var allExperiments = '';
 				var i;
+				var ee;
 				for (i = 0; i <	bibRefRecord.get('experiments').length; i++) {
-					allExperiments += bibRefRecord.get('experiments')[i].shortName +
+					ee = bibRefRecord.get('experiments')[i];
+					allExperiments += '<a href="'+Gemma.LinkRoots.expressionExperimentPage+ee.id
+										+ '" target="_blank" >' + ee.shortName +'</a>' +
 					" : ";
-					allExperiments += bibRefRecord.get('experiments')[i].name +
+					allExperiments += ee.name +
 					"<br />";
 				}
 				this.experiments.setValue(allExperiments);
@@ -100,6 +103,8 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 					}
 				}
 				this.chemicals.setValue(allChemicalsTerms);
+				
+				this.tagsFieldset.setVisible( (allMeshTerms.length > 0 && allChemicalsTerms.length > 0) );
 				
 				currentBibliographicPhenotypes = bibRefRecord.get('bibliographicPhenotypes');
 				currentEvidenceId = evidenceId;
@@ -164,11 +169,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 		this.citation = new Ext.form.DisplayField({
 			hideLabel: true
 		});
-		
-		this.bibtitle = new Ext.form.DisplayField({
-			fieldLabel: 'Title'
-		});
-		
+				
 		this.abstractBibli = new Ext.form.TextArea({
 			anchor: '100%',
 			grow: true,
@@ -176,7 +177,8 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			growMax: 62,
 			fieldLabel: 'Abstract',
 			disabledClass: 'disabled-plain',
-			disabled: true
+			disabled: true,
+			boxMaxWidth: 600
 		});
 		
 		this.authors = new Ext.form.DisplayField({
@@ -205,9 +207,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			title: 'Publication Details',
 			collapsible: true,
 			style: "margin-bottom: 3px;",
-			items: [
-				this.bibtitle, this.abstractBibli, this.authors, this.pubmed, this.mesh, this.chemicals	
-			]
+			items: [ this.abstractBibli, this.authors, this.pubmed ]
 		});
 
 		this.experiments = new Ext.form.DisplayField({
@@ -224,7 +224,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			},
 			cls: 'no-collapsed-border',
 			anchor: '100%',
-			title: 'Current Annotations',
+			title: 'Associations',
 			collapsible: true,
 			style: "margin-bottom: 3px;",
 			items: [
@@ -232,7 +232,22 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
 			]
 		});
 		
-		this.add(this.citation, this.detailsFieldset, this.annotationsFieldset);
+		this.tagsFieldset =	new Ext.form.FieldSet({
+	        collapsed: this.collapseByDefault,
+			defaults: {
+				labelStyle: 'padding-top: 1px;'
+			},
+			cls: 'no-collapsed-border',
+			anchor: '100%',
+			title: 'Tags',
+			collapsible: true,
+			style: "margin-bottom: 3px;",
+			items: [
+			    this.mesh, this.chemicals
+			]
+		});
+		
+		this.add(this.citation, this.detailsFieldset, this.annotationsFieldset, this.tagsFieldset);
 		this.doLayout();
 	} // initComponent
 });

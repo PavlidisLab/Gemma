@@ -69,7 +69,7 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
 		id: 'title',
 		width: 350
 	}, {
-		header: "Publication",
+		header: "Journal",
 		dataIndex: 'publication',
 		width: 135
 	}, {
