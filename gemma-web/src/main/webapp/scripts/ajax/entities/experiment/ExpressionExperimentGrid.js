@@ -129,6 +129,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				dataIndex : "shortName",
 				tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
 				renderer : this.formatEE,
+				scope: this,
 				// width : 80,
 				width:0.15,
 				sortable : true
@@ -246,7 +247,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// fixme: this is duplicated code.
 		var eeTemplate = new Ext.XTemplate(
 				'<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-				'{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
+				'{id}"',
 				' ext:qtip="{name}">{shortName}</a></tpl>');
 		return this.experimentNameAsLink ? eeTemplate.apply(record.data) : value;
 	},
@@ -278,7 +279,7 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 		header : "Dataset",
 		dataIndex : "shortName",
 		tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
-		renderer : this.formatEE,
+		//renderer : this.formatEE, // can't use rendered in list view
 		width : 0.2,
 		sortable : true
 	}, {
@@ -304,6 +305,7 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 		width : 0.1,
 		sortable : true
 	}],
+
 	store : new Ext.data.Store({
 				proxy : new Ext.data.DWRProxy({
 							apiActionToHandlerMap : {
@@ -336,15 +338,13 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 										name : "description",
 										type : "string"
 									}, {
-										name : "differentialExpressionAnalysisId",
-										type : "string"
-									}, {
 										name : 'taxonId',
 										type : 'int'
 									}]
 						})
 			})
 });
+
 
 /**
  * 
@@ -390,4 +390,86 @@ Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 		});
 
+Gemma.ExpressionExperimentQCGrid = Ext.extend(Gemma.ExpressionExperimentGrid, {
+	loadMask: true,
+	record : Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "shortName",
+		type : "string"
+	}, {
+		name : "name",
+		type : "string"
+	}, {
+		name : "sampleRemoved",
+		type : "string"
+	}, {
+		name : "batchEffect",
+		type : "string"
+	}]),
+	booleanRenderer: function(value){
+		return (value == "true")?"Yes":'<span style="color:grey">No</span>';
+	},
+	initComponent : function() {
 
+		Gemma.ExpressionExperimentQCGrid.superclass.initComponent.call(this);
+		var store = new Ext.data.Store({
+						autoLoad:true,
+						proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadExpressionExperimentsWithQcIssues),
+						reader: new Ext.data.JsonReader({
+								root: 'records', // required.
+								successProperty: 'success', // same as default.
+								messageProperty: 'message', // optional
+								totalProperty: 'total', // default is 'total'; optional unless paging.
+								idProperty: "id", // same as default
+								fields: this.record
+							})
+					});
+		store.on('load', function( store, records, options){
+			this.setTitle( records.length+" Experiments had Samples Removed due To Outliers");
+		}, this);
+		Ext.apply(this, {
+			store : store
+		});
+
+		Ext.apply(this, {
+			colModel: new Ext.grid.ColumnModel({
+				defaults: {
+					sortable: true
+				},
+
+				columns : [{
+					id : 'shortName',
+					header : "Dataset",
+					dataIndex : "shortName",
+					tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
+					renderer : this.formatEE,
+					scope: this,
+					width:0.15
+				}, {
+					id : 'name',
+					header : "Name",
+					dataIndex : "name",
+					tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
+					width:0.55
+				}/*,{
+					id : 'sampleRemoved',
+					header : "Samples Removed",
+					dataIndex : "sampleRemoved",
+					tooltip : "Experiments that have had samples removed due to outliers.",
+					width:0.1,
+					renderer: this.booleanRenderer
+				}/*,{
+					id : 'batchEffect',
+					header : "Batch Effects",
+					dataIndex : "batchEffect",
+					tooltip : "Experiments that have possible batch effects.",
+					width:0.1,
+					renderer: this.booleanRenderer
+				}*/ ]
+			})
+		});
+
+	}
+});

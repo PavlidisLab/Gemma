@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -36,4 +39,13 @@ public interface AuditTrailDao extends BaseDao<AuditTrail> {
      */
     public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
+
+    /**
+     * get all entities of the class specified that have the event type specified in their audit trails
+     * @param entityClass
+     * @param auditEventClass
+     * @return
+     */
+    Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass );
 }

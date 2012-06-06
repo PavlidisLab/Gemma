@@ -123,4 +123,8 @@ public interface AuditTrailService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass );
+    
+
 }

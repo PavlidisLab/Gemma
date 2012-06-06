@@ -27,6 +27,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -563,4 +564,13 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
+    
+    public List<ExpressionExperimentValueObject> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass );
+
+    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect( );
+
+    public String describeBatchEffect( ExpressionExperiment ee );
+
+    public String describeBatchConfound( ExpressionExperiment ee );
+
 }

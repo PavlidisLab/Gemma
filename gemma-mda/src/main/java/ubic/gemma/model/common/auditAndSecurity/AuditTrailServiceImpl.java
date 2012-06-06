@@ -288,4 +288,9 @@ public class AuditTrailServiceImpl implements AuditTrailService {
                     "Error performing 'AuditTrailService.getLastValidationEvent(Auditable auditable)' --> " + th, th );
         }
     }
+    
+    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass ){
+        return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
+    }
+
 }

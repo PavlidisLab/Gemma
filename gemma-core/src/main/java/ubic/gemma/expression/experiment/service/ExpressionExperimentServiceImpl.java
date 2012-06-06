@@ -33,6 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -45,8 +50,10 @@ import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisDao;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -67,6 +74,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -99,9 +107,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private OntologyService ontologyService;
-
+    
     @Autowired
     private AuditEventDao auditEventDao;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
@@ -133,6 +144,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Autowired
     private QuantitationTypeService quantitationTypeDao;
 
+    @Autowired
+    private SVDService svdService;
+
+    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+
+    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
+    
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         return this.expressionExperimentDao.browse( start, limit );
@@ -1213,4 +1231,74 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return troubleMap;
     }
 
+    @Override
+    public List<ExpressionExperimentValueObject> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ){
+        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent( ExpressionExperiment.class, auditEventClass ) );
+        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
+    }
+    
+
+    @Override
+    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect( ){
+        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent( ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
+        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
+        for(ExpressionExperiment ee : entities){
+            if(this.describeBatchEffect( ee ) == null){
+                toRemove.add( ee );
+            }
+        }
+        entities.removeAll( toRemove );
+        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );        
+    }
+    
+    /**
+     * @param ee
+     * @return String msg describing confound if it is present, null otherwise
+     */
+    @Override
+    public String describeBatchConfound( ExpressionExperiment ee ) {
+            Collection<BatchConfoundValueObject> confounds;
+            try {
+                confounds = BatchConfound.test( ee );
+            } catch ( Exception e ) {
+                return null;
+            }
+            String result = null;
+
+            for ( BatchConfoundValueObject c : confounds ) {
+                if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                    String factorName = c.getEf().getName();
+                    result = "Factor: " + factorName + " may be confounded with batches; p="
+                            + String.format( "%.2g", c.getP() ) + "<br />" ;
+                }
+            }
+            return result;
+    }
+
+    /**
+     * @param ee
+     * @return String msg describing effect if it is present, null otherwise
+     */
+    @Override
+    public String describeBatchEffect( ExpressionExperiment ee ) {
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
+                if ( svd == null ) break;
+                for ( Integer component : svd.getFactorPvals().keySet() ) {
+                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
+
+                    Double pval = cmpEffects.get( ef.getId() );
+                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
+                        return "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
+                                + String.format( "%.2g", pval ) + "<br />";
+                    }
+                }
+            }
+        }
+        return null;
+
+    }
 }

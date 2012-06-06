@@ -487,6 +487,10 @@ ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadCountsForDataSummaryTable', 
 			callback);
 }
+ExpressionExperimentController.loadExpressionExperimentsWithQcIssues = function(callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadExpressionExperimentsWithQcIssues', 
+			callback);
+}
 
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)

@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashSet;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +30,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
@@ -117,6 +121,36 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         assert results.size() == 1;
         Object result = results.iterator().next();
         return ( User ) result;
+    }
+    
+    /**
+     * 
+     * @param entityClass
+     * @param auditEventClass
+     * @return
+     */
+    @Override
+    public java.util.Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass) {
+
+        String entityCanonicalName = entityClass.getName();
+        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName() + "Impl";
+
+        String eventCanonicalName = auditEventClass.getName();
+        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass.getName() + "Impl";
+        
+        Collection<Auditable> result = new ArrayList<Auditable>();
+            String queryString = "select distinct auditableEntity from "
+                    + entityCanonicalName + " auditableEntity "
+                    + " inner join auditableEntity.auditTrail trail "
+                    + " inner join trail.events auditEvents "
+                    + " inner join auditEvents.eventType et where et.class = "+ eventCanonicalName;
+            try {
+                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                result.addAll( queryObject.list() );
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw super.convertHibernateAccessException( ex );
+            }
+        return result;
     }
 
 }

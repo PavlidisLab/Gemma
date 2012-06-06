@@ -84,8 +84,10 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpression
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -577,6 +579,43 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return result;
     }
 
+
+    /**
+     * AJAX; get a collection of experiments that have had samples removed due to outliers 
+     * and experiment that have possible batch effects detected
+     * 
+     * @param id Identifier for the experiment
+     */
+    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues( ){
+        
+        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService.getExperimentsWithEvent( SampleRemovalEvent.class );
+        
+        //List<ExpressionExperimentValueObject> batchEffectEEs = expressionExperimentService.getExperimentsWithBatchEffect();
+        List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
+       
+        HashSet<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
+        ees.addAll( sampleRemovedEEs );
+        ees.addAll( batchEffectEEs );
+        
+        List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
+        
+        for(ExpressionExperimentValueObject ee : ees){
+            JSONObject record = new JSONObject();
+            record.element( "id", ee.getId() );
+            record.element( "shortName", ee.getShortName() );
+            record.element( "name", ee.getName() );
+            record.element( "sampleRemoved", sampleRemovedEEs.contains( ee ) );
+            record.element( "batchEffect", batchEffectEEs.contains( ee ) );
+            jsonRecords.add( record );
+        }
+        
+        JsonReaderResponse<JSONObject> returnVal = new JsonReaderResponse<JSONObject>(
+                jsonRecords);
+        
+        return returnVal;
+        
+    }
+    
     /**
      * AJAX; Populate all the details.
      * 
@@ -1087,6 +1126,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return records;
     }
 
+    
     /**
      * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
      * 
@@ -1656,23 +1696,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
     
      */
     private String batchConfound( ExpressionExperiment ee ) {
-        Collection<BatchConfoundValueObject> confounds;
-        try {
-            confounds = BatchConfound.test( ee );
-        } catch ( Exception e ) {
-            return null;
+        String result = expressionExperimentService.describeBatchConfound(ee);
+        if( result == null){
+            result = "";
         }
-        StringBuilder buf = new StringBuilder();
-        buf.append( "" );
-
-        for ( BatchConfoundValueObject c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                String factorName = c.getEf().getName();
-                buf.append( "Factor: " + factorName + " may be confounded with batches; p="
-                        + String.format( "%.2g", c.getP() ) + "<br />" );
-            }
-        }
-        return buf.toString();
+        return result;
     }
 
     /**
@@ -1680,24 +1708,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return
      */
     private String batchEffect( ExpressionExperiment ee ) {
-        String result = "";
-
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null ) break;
-                for ( Integer component : svd.getFactorPvals().keySet() ) {
-                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-
-                    Double pval = cmpEffects.get( ef.getId() );
-                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
-                        result = "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
-                                + String.format( "%.2g", pval ) + "<br />";
-                    }
-
-                }
-                break;
-            }
+        String result = expressionExperimentService.describeBatchEffect(ee);
+        if( result == null){
+            result = "";
         }
         return result;
 
