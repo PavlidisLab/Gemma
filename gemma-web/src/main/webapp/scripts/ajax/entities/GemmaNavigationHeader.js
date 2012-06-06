@@ -249,7 +249,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 		});
 		
 		var adminBtn = new Ext.Button({
-			text: 'Administration',
+			text: 'Admin',
 			hidden: !isAdmin,
 			menu: new Ext.menu.Menu({
 				defaults: menuDefaults,
@@ -290,6 +290,9 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 				}, {
 					text: 'Widget Test Page',
 					href : "/Gemma/admin/widgetTest.html"
+				}, {
+					text: 'Expression Experiment QC',
+					href : "/Gemma/expressionExperimentsWithQC.html"
 				}],
 				listeners: {
 					mouseover: function(){
