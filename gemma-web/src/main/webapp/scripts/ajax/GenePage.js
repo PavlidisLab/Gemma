@@ -6,6 +6,8 @@ Gemma.MAX_DIFF_RESULTS = 75;
  * 
  * Top level container for all sections of gene info
  * 
+ * To open the page at a specific tab, include ?tab=[tabName] suffix in the URL. Tab names are each tab's itemId.
+ * 
  * @class Gemma.GenePage
  * @extends Ext.TabPanel
  * 
@@ -33,7 +35,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		}
 	},
 	initComponent: function(){
-		
+
 		var geneId = this.geneId;
 		
 		var isAdmin = (Ext.get("hasAdmin"))?(Ext.get("hasAdmin").getValue() === 'true')?true:false:false;
@@ -154,8 +156,19 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		
 		this.add(phenotypeEvidenceGridPanel);
 		
+		var initialTab = 'details';
+		this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
+        if ( this.loadSpecificTab ) {
+            var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
+            if (param.tab) {
+            	if(this.getComponent( param.tab ) != undefined){
+            		initialTab =  param.tab;
+            	}
+            }
+        }
+		
 		this.on('render', function(){
-			this.setActiveTab('details');
+			this.setActiveTab( initialTab );
 		});
 	}
 });

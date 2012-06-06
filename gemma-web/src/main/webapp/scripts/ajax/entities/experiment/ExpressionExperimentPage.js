@@ -11,6 +11,9 @@ Ext.namespace('Gemma');
  * 5. Quantitation Types ?
  * 6. History (admin only)
  * 7. Admin (running analyses)
+ * 
+ * 
+ * To open the page at a specific tab, include ?tab=[tabName] suffix in the URL. Tab names are each tab's itemId.
  *
  * @class Gemma.ExpressionExperimentPage
  * @extends Ext.TabPanel
@@ -23,6 +26,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         autoScroll: true,
         width: 850
     },
+    initialTab: 'details',
     deferredRender: true,
     listeners: {
         'tabchange': function(tabPanel, newTab){
@@ -36,12 +40,23 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             return true;
         }
     },
+    checkURLforInitialTab: function(){
+    	this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
+        if ( this.loadSpecificTab ) {
+        	var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
+        	if (param.tab) {
+        		if(this.getComponent( param.tab ) != undefined){
+        			this.initialTab =  param.tab;
+        		}
+        	}
+        }
+    },
     initComponent: function(){
     
         var eeId = this.eeId;
 
         var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
-        
+                
         Gemma.ExpressionExperimentPage.superclass.initComponent.call(this);
         this.on('render', function(){
             if (!this.loadMask) {
@@ -50,38 +65,45 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
                 });
             }
-            this.loadMask.show();
-            ExpressionExperimentController.loadExpressionExperimentDetails(eeId, function(experimentDetails){
-            	this.loadFromExperimentValueObject(experimentDetails, isAdmin);
-            }.createDelegate(this));
-            
-            
-            Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
-                var appScope = this;
-                ExpressionExperimentController.canCurrentUserEditExperiment(experimentDetails.id, {
-                    callback: function(editable){
-                        //console.log(this);
-                        appScope.adjustForIsAdmin(isAdmin, editable);
-                    },
-                    scope: appScope
-                });
-                
-            }, this);
-            
-            Gemma.Application.currentUser.on("logOut", function(){
-            
-                this.adjustForIsAdmin(false, false);
-                
-            }, this);
+            this.loadMask.show();  
         });
+
+        ExpressionExperimentController.loadExpressionExperimentDetails(eeId, function(experimentDetails){
+        	this.initFromExperimentValueObject(experimentDetails, isAdmin);
+
+            this.checkURLforInitialTab();
+            this.setActiveTab( this.initialTab );
+            
+        }.createDelegate(this));
+
+   	
+        Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+            var appScope = this;
+            ExpressionExperimentController.canCurrentUserEditExperiment(experimentDetails.id, {
+                callback: function(editable){
+                    //console.log(this);
+                    appScope.adjustForIsAdmin(isAdmin, editable);
+                },
+                scope: appScope
+            });
+            
+        }, this);
+        
+        Gemma.Application.currentUser.on("logOut", function(){
+        
+            this.adjustForIsAdmin(false, false);
+            
+        }, this);
     },
-    loadFromExperimentValueObject: function( experimentDetails, isAdmin ){
+    initFromExperimentValueObject: function( experimentDetails, isAdmin ){
         
         this.experimentDetails = experimentDetails;
         this.editable = experimentDetails.canCurrentUserEditExperiment;
         this.ownedByCurrentUser = experimentDetails.doesCurrentUserOwnExperiment;
         
-        this.loadMask.hide();
+        if(this.loadMask){
+        	this.loadMask.hide();
+        }
         
         // DETAILS TAB
         this.add(this.makeDetailsTab( experimentDetails ));
@@ -99,16 +121,17 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         // QUANTITATION TYPES TAB
         this.add(new Gemma.ExpressionExperimentQuantitationTypeGrid({
             title: 'Quantitation Types',
+            itemId: 'quantitation',
             eeid: experimentDetails.id
         }));
         
         this.adjustForIsAdmin(isAdmin, this.editable);
        
-        this.setActiveTab(0);
     },
     makeDetailsTab : function(experimentDetails){
     	return new Gemma.ExpressionExperimentDetails({
-            title: 'Details',
+    		title: 'Details',
+            itemId: 'details',
             id : 'ee-details-panel',
             experimentDetails: experimentDetails,
             editable: this.editable,
@@ -142,6 +165,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             title: 'Experimental Design',
             tbar: [{
                 text: 'Show Details',
+                itemId: 'design',
                 tooltip: 'Go to the design details',
                 icon: '/Gemma/images/magnifier.png',
                 handler: function(){
@@ -183,6 +207,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             });
         return {
             items: viz,
+            itemId: 'visualize',
             layout: 'fit',
             padding: 0,
             title: 'Visualize Expression',
@@ -207,6 +232,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 			});
         return {
             title: 'Diagnostics',
+            itemId: 'diagnostics',
 			items: [this.refreshDiagnosticsBtn,{html:experimentDetails.QChtml,border:false}]
         };
     },
@@ -218,6 +244,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         if ((isAdmin || isEditable) && !this.historyTab) {
             this.historyTab = new Gemma.AuditTrailGrid({
                 title: 'History',
+                itemId: 'history',
                 bodyBorder: false,
                 collapsible: false,
                 viewConfig: {
@@ -239,6 +266,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             this.toolTab = new Gemma.ExpressionExperimentTools({
                 experimentDetails: this.experimentDetails,
                 title: 'Admin',
+                itemId: 'admin',
                 editable: isEditable,
                 listeners:{
                 	'reloadNeeded': function(){
