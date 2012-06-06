@@ -84,6 +84,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/analysesResultsSearch.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentSetManager.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentsWithQC.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -368,6 +369,7 @@
 			<dwr:include method="browseSpecificIds" />
 			<dwr:include method="browseByTaxon" />
 			<dwr:include method="loadCountsForDataSummaryTable" />
+			<dwr:include method="loadExpressionExperimentsWithQcIssues" />
 		</dwr:remote>
 	</bean>
 
