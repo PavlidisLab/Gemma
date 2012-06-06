@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -31,11 +32,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
@@ -157,5 +160,22 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditEventType = ( AuditEventType ) method.invoke( type );
         assertNotNull( auditEventType );
         assertTrue( auditEventType instanceof ValidatedFlagEvent );
+    }
+    
+   @Test
+    public final void testGetEntitiesWithEvent(){
+        AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        Collection<AuditEvent> events = auditTrail.getEvents();
+        assertTrue(events.contains( ev ));
+        events = auditTrailService.getEvents( auditable );
+        assertTrue(events.contains( ev ));
+        
+        List<? extends Auditable> results = auditTrailService.getEntitiesWithEvent( ArrayDesign.class, SampleRemovalEvent.class );
+        assertTrue( results.contains( auditable ) );
+        
     }
 }
