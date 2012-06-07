@@ -27,13 +27,35 @@ import org.springframework.mail.SimpleMailMessage;
  */
 public interface MailEngine {
 
+    /**
+     * @param bodyText
+     * @param subject
+     */
     public abstract void sendAdminMessage( String bodyText, String subject );
 
+    /**
+     * Convenience method for sending messages with attachments.
+     * 
+     * @param emailAddresses
+     * @param resource
+     * @param bodyText
+     * @param subject
+     * @param attachmentName
+     * @throws MessagingException
+     */
     public abstract void sendMessage( String[] emailAddresses, ClassPathResource resource, String bodyText,
             String subject, String attachmentName ) throws MessagingException;
 
+    /**
+     * @param msg
+     */
     public abstract void send( SimpleMailMessage msg );
 
+    /**
+     * @param msg
+     * @param templateName
+     * @param model
+     */
     public abstract void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model );
 
 }

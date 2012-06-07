@@ -148,16 +148,17 @@ public class JavascriptLogger {
     private String formatLogEntry( String errorMessage, String url, String line, String href, String userAgent ) {
         // get user name or anon
         User user = null;
-        String name = "";
+        String name = "anonymous";
         try {
             user = userManager.getCurrentUser();
         } catch ( org.springframework.security.core.userdetails.UsernameNotFoundException err ) {
-            // happens when user is anon
-            name = "anon";
+            // used to happen when user is anon; now we just return null
+            name = "anonymous";
         }
 
         if ( user != null ) {
-            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityServiceImpl.isUserAdmin() + ")";
+            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityServiceImpl.isUserAdmin()
+                    + ")";
         }
 
         return "error[" + errorMessage + "] jsFile[" + url + ":ln" + line + "]" + " page[" + href + "] browser["

@@ -41,9 +41,9 @@ Ext.onReady(function() {
 						}
 						Element.update('errorMessage', msg);
 
-						Ext.getCmp('captcha').reset();
-						Ext.getCmp('password').reset();
-						Ext.getCmp('passwordConfirm').reset();
+						Ext.getCmp('signup.captcha').reset();
+						Ext.getCmp('signup.password.field').reset();
+						Ext.getCmp('signup.passwordConfirm.field').reset();
 
 						Ext.getCmp('my-status').clearStatus();
 					}
@@ -73,12 +73,12 @@ Ext.onReady(function() {
 
 		items : [{
 					fieldLabel : 'Username',
-					name : 'username',
+					name : 'signup.username.field',
 					allowBlank : false,
 					vtype : 'alphanum'
 				}, {
 					fieldLabel : 'Email',
-					id : 'email',
+					id : 'signup.email.field',
 					name : 'email',
 					allowBlank : false,
 					vtype : 'email',
@@ -86,16 +86,16 @@ Ext.onReady(function() {
 					invalidText : "A valid email address is required"
 				}, {
 					fieldLabel : 'Confirm Email',
-					id : 'emailConfirm',
+					id : 'signup.emailConfirm.field',
 					name : 'emailConfirm',
 					allowBlank : false,
 					vtype : 'email',
 					validator : function(value) {
-						return (value == document.getElementById("email").value) || "Your email addresses do not match";
+						return (value == document.getElementById("signup.email.field").value) || "Your email addresses do not match";
 					}
 				}, {
 					fieldLabel : 'Password',
-					id : 'password',
+					id : 'signup.password.field',
 					name : 'password',
 					allowBlank : false,
 					maxLength : 16,
@@ -103,17 +103,17 @@ Ext.onReady(function() {
 					inputType : 'password'
 				}, {
 					fieldLabel : 'Confirm password',
-					id : 'passwordConfirm',
+					id : 'signup.passwordConfirm.field',
 					name : 'passwordConfirm',
 					inputType : 'password',
 					vtype : 'password',
 					allowBlank : false,
-					initialPassField : 'password'
+					initialPassField : 'signup.password.field'
 
 				}, {
 					xtype : 'recaptcha',
 					name : 'recaptcha',
-					id : 'captcha',
+					id : 'signup.captcha',
 					// FIXME don't hardcode!
 					publickey : '6Lf4KAkAAAAAADFjpOSiyfHhlQ1pkznapAnmIvyr',
 					theme : 'white',

@@ -20,6 +20,7 @@ package ubic.gemma.security.authentication;
 
 import java.util.Collection;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.GroupManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
@@ -65,7 +66,7 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @param userName
      * @return
      */
-    public User findByUserName( String userName );
+    public User findByUserName( String userName ) throws UsernameNotFoundException;
 
     /**
      * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
@@ -79,7 +80,7 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @param username
      * @return names of groups the user is in.
      */
-    public Collection<String> findGroupsForUser( String username );
+    public Collection<String> findGroupsForUser( String username ) throws UsernameNotFoundException;
 
     /**
      * Generate a token that can be used to check if the user's email is valid.
@@ -87,13 +88,18 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @param username
      * @return
      */
-    public String generateSignupToken( String username );
+    public String generateSignupToken( String username ) throws UsernameNotFoundException;
 
     /**
-     * @return the current user, or null if anonymous
+     * @return the current user or null if the user is anonymous.
      */
     public User getCurrentUser();
 
+    /**
+     * Returns a String username (the principal).
+     * 
+     * @return
+     */
     public String getCurrentUsername();
 
     /**
@@ -108,14 +114,14 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     public boolean groupExists( String name );
 
     /**
-     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * Need a passthrough method to userService else we get a circular dependency issue at runtime startup.
      * 
      * @return
      */
     public Collection<User> loadAll();
 
     public boolean loggedIn();
-    
+
     /**
      * Sign in the user identified
      * 

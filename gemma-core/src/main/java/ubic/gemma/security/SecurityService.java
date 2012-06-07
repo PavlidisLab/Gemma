@@ -23,6 +23,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.util.AuthorityConstants;
 
 /**
  * @author paul
@@ -34,7 +35,7 @@ public interface SecurityService {
      * This is defined in spring-security AuthenticationConfigBuilder, and can be set in the <security:anonymous />
      * configuration of the <security:http/> namespace config
      */
-    public static final String ANONYMOUS = "anonymousUser";
+    public static final String ANONYMOUS = AuthorityConstants.ANONYMOUS_USER_NAME;
 
     /**
      * @param userName
@@ -66,6 +67,7 @@ public interface SecurityService {
      */
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public abstract java.util.Map<Securable, Boolean> arePrivate( Collection<? extends Securable> securables );
+
     /**
      * @throws AuthorizationServiceException if the collection is empty, see comments in
      *         {@link ubic.gemma.security.authorization.acl.AclCollectionEntryVoter AclCollectionEntryVoter}

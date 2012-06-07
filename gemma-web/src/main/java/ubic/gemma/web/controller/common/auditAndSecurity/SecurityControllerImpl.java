@@ -58,10 +58,9 @@ import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
- * Manages data-level security (ie. can make data private). 
- * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
- * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
- * arrays instead.
+ * Manages data-level security (ie. can make data private). Note: do not use parameterized collections as parameters for
+ * ajax methods in this class! Type information is lost during proxy creation so DWR can't figure out what type of
+ * collection the method should take. See bug 2756. Use arrays instead.
  * 
  * @author keshav
  * @version $Id$
@@ -93,17 +92,24 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Autowired
     private SecurityService securityService = null;
-    
+
     @Autowired
     private UserManager userManager = null;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#addUserToGroup(java.lang.String, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#addUserToGroup(java.lang.String,
+     * java.lang.String)
      */
     @Override
     public boolean addUserToGroup( String userName, String groupName ) {
 
         User userTakingAction = userManager.getCurrentUser();
+
+        if ( userTakingAction == null ) {
+            throw new IllegalStateException( "Cannot add user to group when user is not logged in" );
+        }
 
         User u;
         if ( userManager.userExists( userName ) ) {
@@ -147,7 +153,9 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#createGroup(java.lang.String)
      */
     @Override
@@ -162,7 +170,9 @@ public class SecurityControllerImpl implements SecurityController {
         return groupName;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#deleteGroup(java.lang.String)
      */
     @Override
@@ -181,7 +191,9 @@ public class SecurityControllerImpl implements SecurityController {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAuthenticatedUserCount()
      */
     @Override
@@ -189,7 +201,9 @@ public class SecurityControllerImpl implements SecurityController {
         return securityService.getAuthenticatedUserCount();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAuthenticatedUserNames()
      */
     @Override
@@ -197,7 +211,9 @@ public class SecurityControllerImpl implements SecurityController {
         return securityService.getAuthenticatedUserNames();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailableGroups()
      */
     @Override
@@ -225,7 +241,9 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailablePrincipalSids()
      */
     @Override
@@ -246,7 +264,9 @@ public class SecurityControllerImpl implements SecurityController {
         return results;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailableSids()
      */
     @Override
@@ -267,7 +287,9 @@ public class SecurityControllerImpl implements SecurityController {
         return results;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getGroupMembers(java.lang.String)
      */
     @Override
@@ -310,8 +332,11 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getSecurityInfo(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getSecurityInfo(ubic.gemma.web.remote.
+     * EntityDelegator)
      */
     @Override
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
@@ -323,7 +348,9 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getUsersData(java.lang.String, boolean)
      */
     @Override
@@ -349,8 +376,12 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupReadable(ubic.gemma.web.remote.EntityDelegator, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupReadable(ubic.gemma.web.remote.
+     * EntityDelegator, java.lang.String)
      */
     @Override
     public boolean makeGroupReadable( EntityDelegator ed, String groupName ) {
@@ -359,8 +390,12 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupWriteable(ubic.gemma.web.remote.EntityDelegator, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupWriteable(ubic.gemma.web.remote
+     * .EntityDelegator, java.lang.String)
      */
     @Override
     public boolean makeGroupWriteable( EntityDelegator ed, String groupName ) {
@@ -369,8 +404,11 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePrivate(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePrivate(ubic.gemma.web.remote.
+     * EntityDelegator)
      */
     @Override
     public boolean makePrivate( EntityDelegator ed ) {
@@ -379,8 +417,12 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePublic(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePublic(ubic.gemma.web.remote.EntityDelegator
+     * )
      */
     @Override
     public boolean makePublic( EntityDelegator ed ) {
@@ -389,8 +431,12 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupReadable(ubic.gemma.web.remote.EntityDelegator, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupReadable(ubic.gemma.web.remote
+     * .EntityDelegator, java.lang.String)
      */
     @Override
     public boolean removeGroupReadable( EntityDelegator ed, String groupName ) {
@@ -399,8 +445,12 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupWriteable(ubic.gemma.web.remote.EntityDelegator, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupWriteable(ubic.gemma.web.remote
+     * .EntityDelegator, java.lang.String)
      */
     @Override
     public boolean removeGroupWriteable( EntityDelegator ed, String groupName ) {
@@ -409,8 +459,12 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeUsersFromGroup(java.util.Collection, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeUsersFromGroup(java.util.Collection,
+     * java.lang.String)
      */
     @Override
     public boolean removeUsersFromGroup( String[] userNames, String groupName ) {
@@ -429,16 +483,24 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#setExpressionExperimentService(ubic.gemma.expression.experiment.service.ExpressionExperimentService)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#setExpressionExperimentService(ubic.gemma
+     * .expression.experiment.service.ExpressionExperimentService)
      */
     @Override
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermission(ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermission(ubic.gemma.web.controller
+     * .common.auditAndSecurity.SecurityInfoValueObject)
      */
     @Override
     public SecurityInfoValueObject updatePermission( SecurityInfoValueObject settings ) {
@@ -475,9 +537,9 @@ public class SecurityControllerImpl implements SecurityController {
 
             // this test only makes sense for changing the group's name, not for changing the permissions
             // of potentially shared entities
-            //if ( !getGroupsUserCanEdit().contains( currentGroupName ) ) {
-            //    throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
-           // }
+            // if ( !getGroupsUserCanEdit().contains( currentGroupName ) ) {
+            // throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
+            // }
 
             Boolean readable = settings.isCurrentGroupCanRead();
             Boolean writeable = settings.isCurrentGroupCanWrite();
@@ -545,7 +607,9 @@ public class SecurityControllerImpl implements SecurityController {
         return securable2VO( s );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermissions(java.util.Collection)
      */
     @Override
@@ -642,7 +706,8 @@ public class SecurityControllerImpl implements SecurityController {
                 // okay, they just aren't allowed to see those.
             }
         } else {
-            Collection<ExpressionExperiment> usersEEs = expressionExperimentService.loadUserOwnedExpressionExperiments();
+            Collection<ExpressionExperiment> usersEEs = expressionExperimentService
+                    .loadUserOwnedExpressionExperiments();
             secs.addAll( ees );
             secs.addAll( usersEEs );
         }

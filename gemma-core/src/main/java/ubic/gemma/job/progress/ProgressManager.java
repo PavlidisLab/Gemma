@@ -125,8 +125,7 @@ public class ProgressManager {
      */
     public static boolean destroyFailedProgressJob( ProgressJob progressJob, boolean doForward, Throwable cause ) {
         if ( progressJob == null ) {
-            log
-                    .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
+            log.debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
             return false;
         }
         log.debug( "Finishing up failed " + progressJob );
@@ -163,8 +162,7 @@ public class ProgressManager {
     public static boolean destroyProgressJob( ProgressJob progressJob, boolean doForward ) {
 
         if ( progressJob == null ) {
-            log
-                    .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
+            log.debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
             return false;
         }
         log.debug( "Destroying " + progressJob );
@@ -301,6 +299,7 @@ public class ProgressManager {
             User u = userManager.getCurrentUser();
             jobI.setUser( u );
         } catch ( UsernameNotFoundException e ) {
+            // note: getCurrentUser no longer throws an exception.
             log.warn( "No current user, using null for anon user." );
             // JobInfo.user = null just means job was run by anonymous user
             jobI.setUser( null );

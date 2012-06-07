@@ -68,7 +68,8 @@ public class RetryLogger extends RetryListenerSupport {
     private void log( RetryContext context, Throwable throwable ) {
         if ( context.getRetryCount() > 0 ) {
             log.warn( "Retry attempt: " + context.getRetryCount() + " [ Triggered by: "
-                    + context.getLastThrowable().getMessage() + "]" );
+                    + context.getLastThrowable().getClass().getName() + ": " + context.getLastThrowable().getMessage()
+                    + "]" );
 
             if ( throwable != null ) {
                 // only log it the first time.

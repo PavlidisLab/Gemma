@@ -455,10 +455,10 @@ public class UserManagerImpl implements UserManager {
         return getUserForUserName( getCurrentUsername() );
     }
 
-    /**
-     * Returns a String username (the principal).
+    /*
+     * (non-Javadoc)
      * 
-     * @return
+     * @see ubic.gemma.security.authentication.UserManager#getCurrentUsername()
      */
     @Override
     public String getCurrentUsername() {
@@ -839,10 +839,14 @@ public class UserManagerImpl implements UserManager {
 
     /**
      * @param username
-     * @return
-     * @throws UsernameNotFoundException if the user does not exist in the system.
+     * @return user, or null if the user is anonymous.
+     * @throws UsernameNotFoundException if the user does not exist in the system
      */
-    private User getUserForUserName( String username ) {
+    private User getUserForUserName( String username ) throws UsernameNotFoundException {
+
+        if ( AuthorityConstants.ANONYMOUS_USER_NAME.equals( username ) ) {
+            return null;
+        }
 
         User u = userService.findByUserName( username );
 

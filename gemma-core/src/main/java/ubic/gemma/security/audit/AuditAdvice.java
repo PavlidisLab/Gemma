@@ -106,8 +106,14 @@ public class AuditAdvice {
         Object object = getPersistentObject( retValue, methodName, args );
 
         if ( object == null ) return;
-
         User user = userManager.getCurrentUser();
+
+        if ( user == null ) {
+            log.info( "User could not be determined (anonymous?), audit will be skipped." );
+            return;
+        }
+
+        assert user != null;
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
                 if ( Auditable.class.isAssignableFrom( o.getClass() ) ) {

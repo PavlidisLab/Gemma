@@ -67,7 +67,7 @@ Ext.onReady(function() {
 									}
 								}, {
 									fieldLabel : 'Email',
-									id : 'email',
+									id : 'user.email',
 									name : 'email',
 									allowBlank : false,
 									vtype : 'email',
