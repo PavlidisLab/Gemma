@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.retry;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.retry.RetryCallback;
@@ -40,16 +41,14 @@ public class RetryLogger extends RetryListenerSupport {
 
     @Override
     public <T> void close( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-        log( context );
-        if ( throwable != null ) log.error( throwable, throwable );
+        log( context, throwable );
         super.close( context, callback, throwable );
     }
 
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
         synchronized ( context ) {
-            log( context );
-            if ( throwable != null ) log.error( throwable, throwable );
+            log( context, throwable );
         }
         super.onError( context, callback, throwable );
     }
@@ -62,14 +61,21 @@ public class RetryLogger extends RetryListenerSupport {
      */
     @Override
     public <T> boolean open( RetryContext context, RetryCallback<T> callback ) {
-        log( context );
+        log( context, null );
         return super.open( context, callback );
     }
 
-    private void log( RetryContext context ) {
+    private void log( RetryContext context, Throwable throwable ) {
         if ( context.getRetryCount() > 0 ) {
             log.warn( "Retry attempt: " + context.getRetryCount() + " [ Triggered by: "
                     + context.getLastThrowable().getMessage() + "]" );
+
+            if ( throwable != null ) {
+                // only log it the first time.
+                if ( context.getRetryCount() == 1 ) {
+                    log.error( "ERROR DETAILS (logged first time only): " + ExceptionUtils.getStackTrace( throwable ) );
+                }
+            }
         }
     }
 }
