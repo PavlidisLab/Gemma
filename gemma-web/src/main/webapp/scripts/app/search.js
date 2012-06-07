@@ -379,7 +379,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 												}, {
 													id : 'search-ars-chkbx',
 													name : "searchArrays",
-													boxLabel : "Arrays",
+													boxLabel : "Platforms",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {

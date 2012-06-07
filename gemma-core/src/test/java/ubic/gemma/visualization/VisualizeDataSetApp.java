@@ -137,7 +137,7 @@ public class VisualizeDataSetApp {
 
         if ( dataMatrix == null ) throw new RuntimeException( "dataMatrix cannot be " + null );
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", null,
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Platform", "Expression Value", null,
                 PlotOrientation.VERTICAL, false, false, false );
 
         MatrixSeries series = new MatrixSeries( title, dataMatrix[0].length, dataMatrix.length );
@@ -165,13 +165,13 @@ public class VisualizeDataSetApp {
         }
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
-        Iterator iter = dataCol.iterator();
+        Iterator<double[]> iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            XYSeries series = getSeries( j, ( double[] ) iter.next() );
+            XYSeries series = getSeries( j, iter.next() );
             xySeriesCollection.addSeries( series );
         }
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", xySeriesCollection,
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Platform", "Expression Value", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
         chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
 

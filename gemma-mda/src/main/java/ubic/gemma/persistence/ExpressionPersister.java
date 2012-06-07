@@ -295,21 +295,21 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( arrayDesign ) ) {
             arrayDesignUsed = arrayDesign;
         } else if ( c == null || !c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
-            throw new UnsupportedOperationException( "You must provide the persistent array designs in a cache object" );
+            throw new UnsupportedOperationException( "You must provide the persistent platforms in a cache object" );
         } else {
             arrayDesignUsed = c.getArrayDesignCache().get( arrayDesign.getShortName() );
 
             if ( arrayDesignUsed == null || arrayDesignUsed.getId() == null ) {
-                throw new IllegalStateException( "You must provide the array design in the cache object" );
+                throw new IllegalStateException( "You must provide the platform in the cache object" );
             }
 
             arrayDesignUsed = ( ArrayDesign ) this.getSession().load( ArrayDesignImpl.class, arrayDesignUsed.getId() );
 
             if ( arrayDesignUsed == null ) {
-                throw new IllegalStateException( "No array design matching " + arrayDesign.getShortName() );
+                throw new IllegalStateException( "No platform matching " + arrayDesign.getShortName() );
             }
 
-            log.debug( "Setting array design used for bioassay to " + arrayDesignUsed.getId() );
+            log.debug( "Setting platform used for bioassay to " + arrayDesignUsed.getId() );
         }
 
         assert !isTransient( arrayDesignUsed );

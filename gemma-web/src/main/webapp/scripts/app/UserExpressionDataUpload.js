@@ -198,7 +198,7 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 					 */
 					Ext.Msg.alert("Your data look valid", "Your data matrix had " + result.numRows + " rows, "
 									+ result.numColumns + " columns, " + result.numberMatchingProbes
-									+ " probes on the array design matched your data, "
+									+ " probes on the platform matched your data, "
 									+ result.numberOfNonMatchingProbes + " didn't."
 									+ " If this all looks correct to you, click 'submit' to continue", function() {
 								/*
@@ -380,7 +380,7 @@ Ext.onReady(function() {
 						xtype : 'fieldset',
 						style : 'margin : 5px',
 						height : 'auto',
-						title : "Select the array design you used",
+						title : "Select the platform you used",
 
 						layout : 'table',
 						layoutConfig : {
@@ -397,17 +397,17 @@ Ext.onReady(function() {
 									xtype : 'panel',
 									html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
 											+ " id='array-design-info-inner-html'>"
-											+ "<p style='color:grey;'>Array design details will be displayed here</p></div>"
+											+ "<p style='color:grey;'>Platform details will be displayed here</p></div>"
 									// ,width : 500,
 									// style : 'overflow :scroll;margin: 4px 0px 4px 0px;border:solid 1px;',
 									// height : 100,
 									// readOnly : true
 								}, {
 									xtype : 'label',
-									html : "Don't see your array design listed? Please see "
-											+ "<a target='_blank' href='/Gemma/arrays/showAllArrayDesigns.html'>the array design list</a>"
+									html : "Don't see your platform listed? Please see "
+											+ "<a target='_blank' href='/Gemma/arrays/showAllArrayDesigns.html'>the platform list</a>"
 											+ " for more information, "
-											+ "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your array design."
+											+ "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your platform."
 								}]
 						// fixme add link to report.
 					}, new Gemma.QuantitationTypePanel({

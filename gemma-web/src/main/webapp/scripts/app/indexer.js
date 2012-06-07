@@ -106,7 +106,7 @@ var indexForm = function() {
 
 	adCheckBox = new Ext.form.Checkbox({
 				labelSeparator : '',
-				boxLabel : 'Index Array Designs',
+				boxLabel : 'Index Platforms',
 				name : 'ad'
 			});
 	simple.add(adCheckBox);

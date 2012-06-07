@@ -94,7 +94,7 @@ public class LinkAnalysis {
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         if ( this.probeToGeneMap.size() == 0 ) {
-            log.warn( "No genes found for this dataset. Do the associated array designs need processing?" );
+            log.warn( "No genes found for this dataset. Do the associated platforms need processing?" );
         }
 
         log.info( "Current Options: \n" + this.config );

@@ -137,7 +137,7 @@ public class WhatsNewBoxTag extends TagSupport {
                 buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
                         + " href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
                 buf.append( StringUtils.join( ids, "," ) );
-                buf.append( "\">" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
+                buf.append( "\">" + numADs + " new platform" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
 
             if ( updatedEEs > 0 ) {
@@ -173,7 +173,7 @@ public class WhatsNewBoxTag extends TagSupport {
                 buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
                         + " href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
                 buf.append( StringUtils.join( ids, "," ) );
-                buf.append( "\">" + updatedAds + " updated array design" + ( updatedAds > 1 ? "s" : "" )
+                buf.append( "\">" + updatedAds + " updated platform" + ( updatedAds > 1 ? "s" : "" )
                         + "</a>.<br />" );
 
             }

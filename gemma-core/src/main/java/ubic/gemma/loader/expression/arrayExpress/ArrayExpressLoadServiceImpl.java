@@ -463,12 +463,12 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
         for ( BioAssay assay : bioAssays ) {
             ads.add( assay.getArrayDesignUsed() );
         }
-        log.info( "There are " + ads.size() + " array designs for this experiment" );
+        log.info( "There are " + ads.size() + " platforms for this experiment" );
         if ( ads.size() != 1 ) {
             throw new IllegalStateException(
                     "Expression experiment uses multiple Array Designs, "
                             + ads.size()
-                            + "  Unable to match up multiple array designs with single array design selected. Failed to load Expression experiment. " );
+                            + "  Unable to match up multiple platforms with single platform selected. Failed to load Expression experiment. " );
         }
 
         // Just make sure all the bioAssays are pointing to the correct AD.
@@ -495,7 +495,7 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
             if ( assay.getArrayDesignUsed() != null ) {
                 ads.add( assay.getArrayDesignUsed() );
             } else {
-                // throw new IllegalStateException( "Bioassay didn't have a valid array design filled in: " + assay );
+                // throw new IllegalStateException( "Bioassay didn't have a valid platform filled in: " + assay );
                 /*
                  * We will try to get it later.
                  */
@@ -508,10 +508,10 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
         }
 
         if ( ads.size() == 0 ) {
-            throw new IllegalStateException( "Could not get array design information" );
+            throw new IllegalStateException( "Could not get platform information" );
         }
 
-        log.info( "There are " + ads.size() + " array designs for this experiment" );
+        log.info( "There are " + ads.size() + " platforms for this experiment" );
 
         // At this point the name is like "A-AFFY-6"
         for ( ArrayDesign design : ads ) {
@@ -521,12 +521,12 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
 
             if ( designFiles.size() == 0 ) {
                 throw new IllegalStateException(
-                        "Could not locate the array design details file from ArrayExpress for " + design );
+                        "Could not locate the platform details file from ArrayExpress for " + design );
             }
 
             if ( designFiles.size() > 1 ) {
                 throw new IllegalStateException(
-                        "Could not locate the specific array design details file from ArrayExpress for " + design
+                        "Could not locate the specific platform details file from ArrayExpress for " + design
                                 + "(got multiple files!)" );
             }
 

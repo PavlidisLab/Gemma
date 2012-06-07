@@ -83,7 +83,7 @@ public class ProcessedDataMerger {
 
             ArrayDesign baAd = assay.getArrayDesignUsed();
             if ( ad != null && !ad.equals( baAd ) ) {
-                throw new IllegalStateException( "Sorry, can't handle multiple array design experiments" );
+                throw new IllegalStateException( "Sorry, can't handle multi-platform experiments" );
             }
 
             if ( assay.getSamplesUsed().size() == 0 ) {
@@ -94,12 +94,12 @@ public class ProcessedDataMerger {
         }
 
         if ( ad == null ) {
-            throw new IllegalStateException( "No array design for any assays!" );
+            throw new IllegalStateException( "No platform for any assays!" );
         }
 
         if ( ad.getCompositeSequences().size() == 0 ) {
             throw new IllegalStateException(
-                    "The array design has not been associated with the composite sequences yet" );
+                    "The platform has not been associated with the composite sequences yet" );
         }
 
         Map<String, CompositeSequence> csNameMap = new HashMap<String, CompositeSequence>();

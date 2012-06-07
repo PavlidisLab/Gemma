@@ -52,7 +52,7 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
 
     @Override
     public void setAsText( String text ) throws IllegalArgumentException {
-        if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
+        if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a platform ..." );
         Object ad = arrayDesignService.findByName( text );
         this.setValue( ad ); // okay to be null.F
     }

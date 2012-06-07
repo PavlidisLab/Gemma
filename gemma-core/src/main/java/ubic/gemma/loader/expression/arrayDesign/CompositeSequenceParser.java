@@ -77,7 +77,7 @@ public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> 
         biologicalCharacteristic.setTaxon( taxon );
 
         // this will be changed later, typically.
-        biologicalCharacteristic.setDescription( description + " (From microarray manufacturer)" );
+        biologicalCharacteristic.setDescription( description + " (From platform source)" );
 
         biologicalCharacteristic.setSequenceDatabaseEntry( dbEntry );
 

@@ -134,7 +134,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                     arrayDesigns.add( arrayDesignService.load( adid ) );
                 }
             } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
-                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                log.info( "Platform " + commandObject.getArrayDesignName() + " is new, will create from data." );
                 ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
                 arrayDesign.setName( commandObject.getArrayDesignName() );
                 arrayDesign.setPrimaryTaxon( commandObject.getTaxon() );
@@ -281,7 +281,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
         if ( arrayDesignIds.isEmpty() ) {
             result.setArrayDesignMatchesDataFile( false );
-            result.setArrayDesignMismatchProblemMessage( "Array design must be provided" );
+            result.setArrayDesignMismatchProblemMessage( "Platform must be provided" );
             return result;
         }
 

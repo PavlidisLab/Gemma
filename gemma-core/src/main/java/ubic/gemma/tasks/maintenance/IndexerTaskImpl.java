@@ -95,7 +95,7 @@ public class IndexerTaskImpl implements IndexerTask {
 
         }
         if ( command.isIndexAD() ) {
-            if ( rebuildIndex( arrayGps, "Array Design index" ) )
+            if ( rebuildIndex( arrayGps, "Platform/Array design index" ) )
                 result.setPathToArrayIndex( getIndexPath( compassArray ) );
             else
                 result.setPathToArrayIndex( null );

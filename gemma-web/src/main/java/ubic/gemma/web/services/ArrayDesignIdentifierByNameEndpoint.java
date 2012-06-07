@@ -103,7 +103,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         // using the ArrayDesignService
         ArrayDesign ad = arrayDesignService.findByShortName( adName );
         if ( ad == null ) {
-            String msg = "No array design with short name, " + adName + " can be found.";
+            String msg = "No platform with short name, " + adName + " can be found.";
             return buildBadResponse( document, msg );
         }
         // get Array Design ID and build results in the form of a collection

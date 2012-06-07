@@ -491,7 +491,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         addOption( secondGeneOption );
 
         Option arrayDesignOption = OptionBuilder.hasArg().isRequired().withArgName( "Array Design" )
-                .withDescription( "Short Name of Microarray Design" ).create( "array" );
+                .withDescription( "Short Name of Platform" ).create( "array" );
         addOption( arrayDesignOption );
 
         Option numberOfRandomRunsOption = OptionBuilder
@@ -772,7 +772,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         }
         this.adShortName = getOptionValue( "array" );
         if ( StringUtils.isBlank( this.adShortName ) ) {
-            System.out.println( "You MUST enter the shortname for the associated microarray design" );
+            System.out.println( "You MUST enter the shortname for the associated platform" );
             System.exit( 0 );
         }
         if ( StringUtils.isNumeric( input ) ) {// set size entered

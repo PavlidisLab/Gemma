@@ -54,7 +54,7 @@ public class ArrayDesignSeqeunceAddValidator implements Validator {
         // "Sequence file is required" );
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "arrayDesign", "errors.required",
-                "Array Design is required" );
+                "Platform is required" );
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "sequenceType", "errors.required",
                 "Sequence type is required" );

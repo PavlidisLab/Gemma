@@ -121,7 +121,7 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
             xySeriesCollection.addSeries( series );
         }
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", xySeriesCollection,
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Platform", "Expression Value", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
         chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
 

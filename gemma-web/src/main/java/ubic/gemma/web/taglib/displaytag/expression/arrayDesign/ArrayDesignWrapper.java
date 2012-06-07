@@ -72,7 +72,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         if ( !object.getIsMerged() && !object.getIsMergee()
                 && ( object.getExpressionExperimentCount() == null || object.getExpressionExperimentCount() == 0 ) ) {
             return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
-                    + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
+                    + "\" onSubmit=\"return confirmDelete('Platform " + object.getName()
                     + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
         }
         return "";
@@ -213,7 +213,7 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getRefreshReport() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( object == null ) {
-            return "Array Design unavailable";
+            return "Platform unavailable";
         }
         return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateArrayDesignReport(" + object.getId() + ")\" >";
     }

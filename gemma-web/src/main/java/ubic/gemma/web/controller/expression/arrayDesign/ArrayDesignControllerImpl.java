@@ -132,7 +132,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         public TaskResult processJob() {
             ArrayDesign ad = arrayDesignService.load( command.getEntityId() );
             if ( ad == null ) {
-                throw new IllegalArgumentException( "Could not load array design with id=" + command.getEntityId() );
+                throw new IllegalArgumentException( "Could not load platform with id=" + command.getEntityId() );
             }
             arrayDesignService.remove( ad );
             return new TaskResult( command, new ModelAndView( new RedirectView(
@@ -180,7 +180,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
         ArrayDesign ad = arrayDesignService.load( arrayDesignId );
         if ( ad == null ) {
-            throw new IllegalArgumentException( "No such array design with id=" + arrayDesignId );
+            throw new IllegalArgumentException( "No such platform with id=" + arrayDesignId );
         }
 
         if ( StringUtils.isBlank( alternateName ) ) {
@@ -241,7 +241,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( "Array design with id=" + id + " not found" );
+            throw new EntityNotFoundException( "Platform with id=" + id + " not found" );
         }
 
         // check that no EE depend on the arraydesign we want to delete
@@ -270,7 +270,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         String arrayDesignIdStr = request.getParameter( "id" );
         if ( arrayDesignIdStr == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+            throw new EntityNotFoundException( "Must provide a platform name or Id" );
         }
 
         String fileType = request.getParameter( "fileType" );
@@ -360,7 +360,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) ).addObject(
-                "message", searchResults.size() + " Array Designs matched your search." );
+                "message", searchResults.size() + " Platforms matched your search." );
 
     }
 
@@ -566,7 +566,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
         if ( ( name == null ) && ( idStr == null ) ) {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Must provide an array design name or id. Displaying all Arrays" );
+                    "message", "Must provide an platform name or id. Displaying all platforms" );
 
         }
         ArrayDesign arrayDesign = null;
@@ -580,7 +580,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
         if ( arrayDesign == null ) {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
+                    "message", "Unable to load platform with id: " + idStr + ". Displaying all platforms" );
         }
 
         arrayDesign = arrayDesignService.thawLite( arrayDesign );
@@ -653,7 +653,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
         if ( arrayDesignIdStr == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+            throw new EntityNotFoundException( "Must provide a platform name or Id" );
         }
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
@@ -688,7 +688,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Array design with id=" + id + " not found" );
+                    "message", "Platform with id=" + id + " not found" );
         }
 
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );

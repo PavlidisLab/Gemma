@@ -344,7 +344,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
 
                 if ( arrayDesigns.size() == 0 ) {
-                    String message = "No array designs found for " + expressionExperiment;
+                    String message = "No platforms found for " + expressionExperiment;
                     log.error( message );
                     errors.addError( new ObjectError( command.toString(), null, null, message ) );
                     return null;
@@ -355,7 +355,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             } else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
                 /* search by gene */
                 if ( arrayDesigns.size() == 0 ) {
-                    String message = "No array designs found for " + expressionExperiment;
+                    String message = "No platforms found for " + expressionExperiment;
                     log.error( message );
                     errors.addError( new ObjectError( command.toString(), null, null, message ) );
                     return null;

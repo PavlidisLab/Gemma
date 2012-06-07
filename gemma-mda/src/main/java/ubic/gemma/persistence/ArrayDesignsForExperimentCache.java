@@ -139,7 +139,7 @@ public class ArrayDesignsForExperimentCache {
      */
     private String makeKey( CompositeSequence cs ) {
         ArrayDesign arrayDesign = cs.getArrayDesign();
-        assert arrayDesign != null : cs + " does not have an array design";
+        assert arrayDesign != null : cs + " does not have a platform";
         assert StringUtils.isNotBlank( arrayDesign.getShortName() );
         return cs.getName() + ArrayDesignsForExperimentCache.DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getShortName();
     }

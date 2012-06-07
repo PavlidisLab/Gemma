@@ -446,7 +446,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 						width : 100,
 						dataIndex : "arrayDesignName",
 						renderer : this.arraylink.createDelegate(this),
-						tooltip : "Name of array design (click for details - leaves this page)"
+						tooltip : "Name of platform (click for details - leaves this page)"
 					}, {
 						sortable : true,
 						id : 'probe',
@@ -511,7 +511,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 									xtype : 'button',
 									name : 'Search',
 									text : 'Search',
-									tooltip : 'Search for probes on this array design',
+									tooltip : 'Search for probes on this platform',
 									id : 'search-button',
 									handler : this.search.createDelegate(this)
 

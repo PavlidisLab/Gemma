@@ -106,11 +106,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 return persistNewArrayDesign( arrayDesign );
             }
 
-            log.info( "Array design exactly matching " + arrayDesign + " doesn't exist, but found " + existing
+            log.info( "Platform exactly matching " + arrayDesign + " doesn't exist, but found " + existing
                     + "; returning" );
 
         } else {
-            log.info( "Array Design " + arrayDesign + " already exists, returning..." );
+            log.info( "Platform " + arrayDesign + " already exists, returning..." );
         }
 
         return existing;
@@ -127,7 +127,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( arrayDesign == null ) return null;
 
-        log.info( "Persisting new array design " + arrayDesign.getName() );
+        log.info( "Persisting new platform " + arrayDesign.getName() );
 
         try {
             this.getSession().setFlushMode( FlushMode.COMMIT );

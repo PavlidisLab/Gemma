@@ -229,7 +229,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      */
     @Override
     public void generateAllArrayDesignReport() {
-        log.info( "Generating report summarizing all array designs ... " );
+        log.info( "Generating report summarizing all platforms ... " );
 
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
@@ -240,7 +240,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes();
         long numGenes = arrayDesignService.numAllGenes();
 
-        // create a surrogate ArrayDesignValue object to represent the total of all array designs
+        // create a surrogate ArrayDesignValue object to represent the total of all platforms
         ArrayDesignValueObject adVo = new ArrayDesignValueObject();
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
@@ -283,7 +283,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         log.info( "Generating global report" );
         generateAllArrayDesignReport();
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
-        log.info( "Creating reports for " + ads.size() + " array designs" );
+        log.info( "Creating reports for " + ads.size() + " platforms" );
         for ( ArrayDesignValueObject ad : ads ) {
             generateArrayDesignReport( ad );
         }
@@ -367,7 +367,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             generateArrayDesignReport( adVo.iterator().next() );
             return getSummaryObject( id );
         }
-        log.warn( "No value objects return for requested array designs" );
+        log.warn( "No value objects return for requested platforms" );
         return null;
 
     }
@@ -410,7 +410,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     /**
-     * Get the cached summary object that represents all array designs.
+     * Get the cached summary object that represents all platforms.
      * 
      * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
      */

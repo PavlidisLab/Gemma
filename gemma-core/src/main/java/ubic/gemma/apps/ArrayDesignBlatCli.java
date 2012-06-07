@@ -78,7 +78,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     public String getShortDesc() {
-        return "Run BLAT on the sequences for a microarray; the results are persisted in the DB.";
+        return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
     /*
