@@ -157,7 +157,7 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 					'<tr>'+
 						'<td style="padding-right: 10px">'+
 							'<span style="white-space: nowrap"> <!-- for IE -->'+ 
-									'<b>Array Designs:</b>  </span>'+
+									'<b>Platforms:</b>  </span>'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
 							'<a href="/Gemma/arrays/showAllArrayDesigns.html">'+

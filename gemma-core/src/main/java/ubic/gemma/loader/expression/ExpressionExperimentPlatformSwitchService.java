@@ -134,7 +134,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         }
 
         log.info( elsWithNoSeq.size()
-                + " composite sequences on the new array design have no biologicalcharacteristic." );
+                + " elements on the new platform have no associated sequence." );
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
@@ -145,7 +145,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             oldAd = arrayDesignService.thaw( oldAd );
 
             if ( oldAd.getCompositeSequences().size() == 0 ) {
-                throw new IllegalStateException( oldAd + " has no composite sequences" );
+                throw new IllegalStateException( oldAd + " has no elements" );
             }
 
             Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp, oldAd );

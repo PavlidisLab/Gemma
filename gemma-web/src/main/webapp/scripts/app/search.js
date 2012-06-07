@@ -787,7 +787,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		} else if (clazz === "CompositeSequence"  || clazz === "CompositeSequenceValueObject") {
 			return "Probe";
 		} else if (clazz === "ArrayDesignValueObject") {
-			return "Array";
+			return "Platform";
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return "Sequence";
 		} else if (clazz === "GeneValueObject") {
@@ -838,7 +838,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		} else if (clazz === "CompositeSequence" || clazz === "CompositeSequenceValueObject") {
 			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - " +
 			(data.description ? data.description : "") +
-			(data.arrayDesign ? "; Array: " + data.arrayDesign.shortName : '');
+			(data.arrayDesign ? "; Platform: " + data.arrayDesign.shortName : '');
 		} else if (clazz === "ArrayDesignValueObject") {
 			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " +
 			data.name;

@@ -157,7 +157,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         forceFit: true
     },
     myPageSize: 50,
-    title: 'Array Designs',
+    title: 'Platforms',
 	totalCount: 0,
     showOrphans : false,
 	showMergees : true,
@@ -173,7 +173,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		ArrayDesignController.loadArrayDesignsForShowAll(adIds, function(arrayDesigns){
 				this.loadMask.hide();
 				this.getStore().loadData(arrayDesigns);
-				this.setTitle(arrayDesigns.length + ((arrayDesigns.length === 1) ? " Array Design" : " Array Designs"));
+				this.setTitle(arrayDesigns.length + ((arrayDesigns.length === 1) ? " Platform" : " Platforms"));
 				this.totalCount = arrayDesigns.length;
 				this.getStore().applyMultiFilters();
 				if(extraCallback) extraCallback(extraCallbackParams);
@@ -215,7 +215,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				tooltip: 'Refresh'
 			}, {
 				iconCls: 'icon-cross',
-				tooltip: 'Delete array design',
+				tooltip: 'Delete platform',
 				hideIndex: 'cannotBeDeleted'// hide if == true
 			}],
 			callbacks: {
@@ -228,7 +228,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			action: function(grid, record, action, row, col){
 				if (action === 'icon-cross') {
 					Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.Deletion.title, 
-						String.format(Gemma.HelpText.CommonWarnings.Deletion.text, 'array design') , function(btnId){
+						String.format(Gemma.HelpText.CommonWarnings.Deletion.text, 'platform') , function(btnId){
 						if (btnId === 'yes') {
 							
 							var callParams = [];
@@ -543,7 +543,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					scope:this
 				},'-',{
 					ref:'ArrayDesignsSummaryWindowBtn',
-					text: 'Array Designs Summary',
+					text: 'Platforms Summary',
 					cls: 'x-toolbar-standardbutton',
 					hidden:true,
 					handler: function(){
@@ -566,7 +566,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		}, this);
 		
 		this.getStore().on('datachanged',function(store){
-			this.setTitle(this.getStore().getCount()+" of "+this.totalCount+" Array Designs");
+			this.setTitle(this.getStore().getCount()+" of "+this.totalCount+" Platforms");
 		},this);
 										
 		// if the user is an admin, show the status column
@@ -620,7 +620,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 });
 
 Gemma.ArrayDesignsSummaryWindow = Ext.extend(Ext.Window,{
-	title: 'Summary for All Array Designs',
+	title: 'Summary for All Platforms',
 	shadow: false,
 	loadText: function(){
 		if (!this.loadMask) {

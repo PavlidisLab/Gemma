@@ -166,7 +166,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         // sanity
         if ( usedDesignElements.size() != matrix.rows() ) {
-            log.warn( "Some rows of matrix were not matched to any of the given array designs (" + matrix.rows()
+            log.warn( "Some rows of matrix were not matched to any of the given platforms (" + matrix.rows()
                     + " rows, " + usedDesignElements.size() + " found" );
         }
 
@@ -219,7 +219,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         log.info( "Found " + rows.size() + " data rows for " + design );
 
         if ( rows.size() == 0 ) {
-            log.warn( "An array design was entered ( " + design + " ) for which there are no matching rows in the data" );
+            log.warn( "A platform was entered ( " + design + " ) for which there are no matching rows in the data" );
             return null;
         }
 
@@ -444,7 +444,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
      */
     private void newArrayDesign( DoubleMatrix<String, String> matrix, ArrayDesign newDesign,
             boolean probeNamesAreImageClones, Taxon taxon ) {
-        log.info( "Creating new ArrayDesign " + newDesign );
+        log.info( "Creating new platform " + newDesign );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
@@ -457,7 +457,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
             newDesign.getCompositeSequences().add( cs );
         }
-        log.info( "New array design has " + newDesign.getCompositeSequences().size() + " compositeSequences" );
+        log.info( "New platform has " + newDesign.getCompositeSequences().size() + " elements" );
     }
 
     /**

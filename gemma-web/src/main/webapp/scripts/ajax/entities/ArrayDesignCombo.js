@@ -16,7 +16,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	forceSelection : true,
 	typeAhead : true,
 	triggerAction : 'all',
-	emptyText : 'Select an array design',
+	emptyText : 'Select a platform',
 
 	stateId : 'Gemma.ArrayDesign',
 

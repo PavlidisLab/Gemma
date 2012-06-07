@@ -1185,7 +1185,7 @@ public class GeoConverterImpl implements GeoConverter {
         Taxon primaryTaxon = this.getPrimaryArrayTaxon( platformTaxa, probeOrganism );
 
         if ( primaryTaxon == null ) {
-            throw new IllegalStateException( "No taxon could be determined for array design: " + arrayDesign );
+            throw new IllegalStateException( "No taxon could be determined for platform: " + arrayDesign );
         }
 
         arrayDesign.setPrimaryTaxon( primaryTaxon );
@@ -1406,7 +1406,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( arrayDesign.getCompositeSequences().size() > tooManyElements ) {
             // this is just a safeguard; perhaps temporary.
-            throw new IllegalStateException( "Array design has too many elements to be loaded. "
+            throw new IllegalStateException( "Platform has too many elements to be loaded. "
                     + arrayDesign.getCompositeSequences().size() );
         }
 

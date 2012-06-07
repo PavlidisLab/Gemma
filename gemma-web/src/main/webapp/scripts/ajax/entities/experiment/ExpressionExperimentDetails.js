@@ -774,7 +774,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     '</div>',
                     width: 400
                 }, {
-                    fieldLabel: 'Array designs',
+                    fieldLabel: 'Platforms',
                     html: this.renderArrayDesigns(e.arrayDesigns),
                     width: 480
                 }, {
@@ -806,7 +806,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     fieldLabel: 'Created',
                     html: Ext.util.Format.date(e.dateCreated) + ' from ' + this.renderSourceDatabaseEntry(e)
                 }, {
-                    html: 'The last time an array design associated with this experiment was updated: ' + e.lastArrayDesignUpdateDate,
+                    html: 'The last time a platform associated with this experiment was updated: ' + e.lastArrayDesignUpdateDate,
                     hidden: !e.lastArrayDesignUpdateDate
                 }]
             }]

@@ -220,9 +220,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
             }
 
             if ( availableArrayDesigns.size() > 1 ) {
-                throw new IllegalStateException( "More than one array design without acceptable mapping to bioassays." );
+                throw new IllegalStateException( "More than one platform without acceptable mapping to bioassays." );
             } else if ( availableArrayDesigns.size() == 0 ) {
-                log.warn( "No arrayDesigns and none associated with the bioassays" );
+                log.warn( "No platforms and none associated with the bioassays" );
                 return null;
             }
             return availableArrayDesigns.iterator().next();

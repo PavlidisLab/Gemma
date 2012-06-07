@@ -41,7 +41,7 @@ Gemma.EvidenceCodes = {
 
 Gemma.StatusText = {
 	Loading: {
-		arrayDesigns: "Loading array designs...",
+		arrayDesigns: "Loading platforms...",
 		experiments: "Loading experiments...",
 		experimentFactors: "Loading factors",
 		generic: "Loading...",
@@ -183,14 +183,14 @@ Gemma.HelpText.WidgetDefaults = {
 							+ " click 'save' to make the change stick, or 'delete' to remove a selected tag."
 	},
 	ArrayDesignsNonPagingGrid:{
-		emptyText: 'Either you didn\'t select any array designs, or you don\'t have permissions to view the ones you chose.',
+		emptyText: 'Either you didn\'t select any platforms, or you don\'t have permissions to view the ones you chose.',
 		actionsColumnTT: 'Regenerate this report or delete orphaned designs (designs that aren\'t used by any experiments in Gemma)',
 		isMergedTT: "merged: this design was created by merging others",
 		isMergeeTT: "mergee: this design was merged with others to create a new design",
 		isSubsumedTT: "subsumed: all the sequences in this design are covered by another",
 		isSubsumerTT: "subsumer: this design \'covers\' one or more others in that it contains all their sequences",
-		hideOrhpansTT: "Click to show/hide array designs that aren't used by any experiments in Gemma",
-		hideTroubledTT: "Click to show/hide array designs that are troubled"
+		hideOrhpansTT: "Click to show/hide platforms that aren't used by any experiments in Gemma",
+		hideTroubledTT: "Click to show/hide platforms that are troubled"
 	},
 	CoexpressionGrid :{
 		stringencySpinnerTT: "Add/remove genes with more/less dataset support that confirms coexpression",
@@ -319,11 +319,11 @@ Gemma.HelpText.WidgetDefaults = {
 					+ '<li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
 					+ ', and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
 					+ '<li>Most of the descriptive text you enter can be modified later. '
-					+ 'The taxon, array design and the data themselves cannot easily be altered after submission.</li>'
+					+ 'The taxon, platform and the data themselves cannot easily be altered after submission.</li>'
 					+ '<li>For help with the file data file format, see '
 					+ '<a target="_blank" href="/Gemma/static/expressionExperiment/upload_help.html">this page</a>.</li> '
-					+ '<li>The probe identifiers in your file must match those in the array design on record.</li>'
-					+ '<li>If you used more than one array type in your study, there may be a "combined" array that will take care of your case. If not, let us know.</li>'
+					+ '<li>The probe identifiers in your file must match those in the platform on record.</li>'
+					+ '<li>If you used more than one platform in your study, there may be a "combined" platform that will take care of your case. If not, let us know.</li>'
 					+ '<li>Problems? Questions? Please <a href="mailto:gemma@ubic.ca">contact us</a></li></ul>',
 		loadingGEOWarningTitle: 'GEO Dataset Check',
 		loadingGEOWarningText: 'It looks like you\'re trying to load a GEO dataset. ' +
@@ -333,7 +333,7 @@ Gemma.HelpText.WidgetDefaults = {
 	ExpressionExperimentDetails: {
 		statusMultiplePreferredQuantitationTypes : 'This experiment has multiple \'preferred\' quantitation types. ' +
             'This isn\'t necessarily a problem but is suspicious.',
-		statusMultipleTechnologyTypes : 'This experiment seems to mix array designs with different technology types.',
+		statusMultipleTechnologyTypes : 'This experiment seems to mix platforms with different technology types.',
 		profileDownloadTT: 'Tab-delimited data file for this experiment. ' +
                     'The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes'
 	},

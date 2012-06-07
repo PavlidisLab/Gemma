@@ -253,7 +253,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                                 + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
-                buf.append( "<p><strong>Array design in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
+                buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
                         + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
             } else {
                 buf.append( "<p><strong>" + gpl + " [New to Gemma]</strong>" );
