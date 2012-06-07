@@ -29,8 +29,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * A service to return the full list of Expression Experiment Set IDs along with the corresponding name and experiment
@@ -73,14 +72,13 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
 
         setLocalName( LOCAL_NAME );
 
-        Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
+        Collection<ExpressionExperimentSetValueObject> eesCol = expressionExperimentSetService
+                .loadAllExperimentSetValueObjectsWithTaxon();
 
-        // retain expression experiment sets that have a name assigned
-        Collection<ExpressionExperimentSet> eesColToUse = new HashSet<ExpressionExperimentSet>();
-        for ( ExpressionExperimentSet ees : eesCol ) {
-            if ( ees.getName() != null )
-            // if ( ees.getTaxon().equals( taxon ) ) eesColToUse.add( ees );
-                eesColToUse.add( ees );
+        // retain expression experiment sets that have a name assigned (probably not necessary?)
+        Collection<ExpressionExperimentSetValueObject> eesColToUse = new HashSet<ExpressionExperimentSetValueObject>();
+        for ( ExpressionExperimentSetValueObject ees : eesCol ) {
+            if ( ees.getName() != null ) eesColToUse.add( ees );
         }
 
         // start building the wrapper
@@ -90,7 +88,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        for ( ExpressionExperimentSet ees : eesColToUse ) {
+        for ( ExpressionExperimentSetValueObject ees : eesColToUse ) {
 
             Element e1 = document.createElement( "expression_experiment_set_id" );
             e1.appendChild( document.createTextNode( ees.getId().toString() ) );
@@ -100,14 +98,14 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             e2.appendChild( document.createTextNode( ees.getName() ) );
             responseElement.appendChild( e2 );
 
-            Collection<Long> eeIds = getExperimentIDs( ees );
+            Collection<Long> eeIds = ees.getExpressionExperimentIds();
             Element e3 = document.createElement( "datasets" );
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
 
             Element e4 = document.createElement( "taxon" );
-
-            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
+            assert ees.getTaxonId() != null;
+            e4.appendChild( document.createTextNode( ees.getTaxonId().toString() ) );
             responseElement.appendChild( e4 );
 
         }
@@ -120,13 +118,6 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         }
         return responseWrapper;
 
-    }
-
-    private Collection<Long> getExperimentIDs( ExpressionExperimentSet ees ) {
-        Collection<Long> eeIds = new HashSet<Long>();
-        for ( BioAssaySet bas : ees.getExperiments() )
-            eeIds.add( bas.getId() );
-        return eeIds;
     }
 
 }
