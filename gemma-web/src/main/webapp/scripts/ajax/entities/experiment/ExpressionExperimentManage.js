@@ -719,7 +719,7 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
 				header : '#ADs',
 				sortable : true,
 				dataIndex : 'arrayDesignCount',
-				tooltip : "The number of different array design platforms used in the study",
+				tooltip : "The number of different platforms used in the study",
 				width : 35
 			}, {
 				header : '#BAs',

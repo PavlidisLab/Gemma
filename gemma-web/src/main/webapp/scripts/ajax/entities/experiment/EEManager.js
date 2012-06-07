@@ -217,7 +217,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	unmatchBioAssays : function(id) {
 		Ext.Msg.show({
 					title : 'Are you sure?',
-					msg : 'Are you sure you to unmatch the bioassays? (This has no effect if there is only one array design)',
+					msg : 'Are you sure you to unmatch the bioassays? (This has no effect if there is only one platform)',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
