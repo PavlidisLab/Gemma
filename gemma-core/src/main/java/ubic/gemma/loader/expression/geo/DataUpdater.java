@@ -123,19 +123,6 @@ public class DataUpdater {
     }
 
     /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        // AuditEventType eventType = DataVectorUpdateEvent.Factory.newInstance();
-
-        /*
-         * This is temporary until we have a more specific event type.
-         */
-        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
-    }
-
-    /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type.
      * <p>
@@ -222,6 +209,19 @@ public class DataUpdater {
         audit( ee, "Data vector replacement for " + targetPlatform );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        // AuditEventType eventType = DataVectorUpdateEvent.Factory.newInstance();
+
+        /*
+         * This is temporary until we have a more specific event type.
+         */
+        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note, "DataVectorUpdateEventImpl placeholder" );
     }
 
     /**
