@@ -33,7 +33,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -254,18 +253,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     protected ArrayDesign unlazifyArrayDesign( ArrayDesign arrayDesign ) {
         return arrayDesignService.thaw( arrayDesign );
-    }
-
-    /**
-     * @param note
-     */
-    protected void updateAudit( ArrayDesign ad, String note ) {
-        AuditEvent ae = AuditEvent.Factory.newInstance();
-        ae.setNote( note );
-        ae.setAction( AuditAction.UPDATE );
-        ae.setPerformer( userManager.getCurrentUser() );
-        ad.getAuditTrail().addEvent( ae );
-        arrayDesignService.update( ad );
     }
 
     /**

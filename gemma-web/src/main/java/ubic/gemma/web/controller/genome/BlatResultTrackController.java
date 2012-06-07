@@ -54,8 +54,7 @@ public class BlatResultTrackController extends AbstractController {
     private BlatResultService blatResultService;
 
     @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response ) {
         String idS = request.getParameter( "id" );
         Long id = null;
         try {
