@@ -88,6 +88,16 @@ public class AffyPowerToolsProbesetSummarize {
     public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
             ArrayDesign targetPlatform, Collection<LocalFile> files ) {
 
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+
+        if ( bioAssays.isEmpty() ) {
+            throw new IllegalArgumentException( "Experiment had no assays" );
+        }
+
+        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+            throw new IllegalArgumentException( "Target design had no elements" );
+        }
+
         List<String> celfiles = getCelFiles( files );
         log.info( celfiles.size() + " cel files" );
 
@@ -133,6 +143,17 @@ public class AffyPowerToolsProbesetSummarize {
 
             DoubleMatrix<String, String> matrix = parse( new FileInputStream( outputPath + File.separator + METHOD
                     + ".summary.txt" ) );
+
+            if ( matrix.rows() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no rows" );
+            }
+            if ( matrix.columns() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no columns" );
+            }
+            if ( matrix.columns() != bioAssays.size() ) {
+                throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
+            }
+
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
             bad.setName( "For " + ee.getShortName() );
             bad.setDescription( "Generated from output of apt-probeset-summarize" );
@@ -140,7 +161,7 @@ public class AffyPowerToolsProbesetSummarize {
             /*
              * Add them ...
              */
-            Collection<BioAssay> bioAssays = ee.getBioAssays();
+
             Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
             for ( BioAssay bioAssay : bioAssays ) {
 
@@ -172,7 +193,7 @@ public class AffyPowerToolsProbesetSummarize {
 
                 assay.setArrayDesignUsed( targetPlatform ); // OK?
                 bad.getBioAssays().add( assay );
-            } 
+            }
             return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
 
         } catch ( InterruptedException e ) {

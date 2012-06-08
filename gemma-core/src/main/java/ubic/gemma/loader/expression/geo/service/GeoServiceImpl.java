@@ -135,9 +135,10 @@ public class GeoServiceImpl extends AbstractGeoService {
         if ( loadPlatformOnly ) {
             Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
             if ( platforms.size() == 0 ) {
-                log.warn( "Got no results" );
+                log.warn( "GeoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );t no results" );
                 return null;
             }
+            geoConverter.setForceConvertElements( true );
             Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
@@ -181,10 +182,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         confirmPlatformUniqueness( series, doSampleMatching && !splitByPlatform );
 
         ArrayDesignsForExperimentCache c = new ArrayDesignsForExperimentCache();
-
-        /*
-         * TODO: suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
-         */
 
         matchToExistingPlatforms( geoConverter, series, c );
 
@@ -708,9 +705,14 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @param
      */
     private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series, ArrayDesignsForExperimentCache c ) {
+
         Set<GeoPlatform> platforms = getPlatforms( series );
         if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
+            /*
+             * We suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
+             */
+            if ( !pl.useDataFromGeo() ) continue;
             matchToExistingPlatform( geoConverter, pl, c );
         }
     }
@@ -753,7 +755,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
-                expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
+                expressionExperiment = this.expressionExperimentService.thaw( expressionExperiment );
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {

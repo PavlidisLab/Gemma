@@ -175,6 +175,8 @@ public class GeoConverterImpl implements GeoConverter {
      */
     int tooManyElements = DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS;
 
+    private boolean forceConvertElements = false;
+
     private static Map<String, String> organismDatabases = new HashMap<String, String>();
 
     static {
@@ -543,6 +545,18 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /*
+     * This is really only here for tests, at the moment.
+     */
+    @Override
+    public void setElementLimitForStrictness( int tooManyElements ) {
+        this.tooManyElements = tooManyElements;
+    }
+
+    public void setForceConvertElements( boolean forceConvertElements ) {
+        this.forceConvertElements = forceConvertElements;
+    }
+
+    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.expression.geo.GeoConverter#setSplitByPlatform(boolean)
@@ -568,14 +582,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return buf.toString();
-    }
-
-    /*
-     * This is really only here for tests, at the moment.
-     */
-    @Override
-    public void setElementLimitForStrictness( int tooManyElements ) {
-        this.tooManyElements = tooManyElements;
     }
 
     /**
@@ -1159,7 +1165,6 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<String> externalReferences = determinePlatformExternalReferenceIdentifier( platform );
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
         String sequenceColumn = determinePlatformSequenceColumn( platform );
-        String probeOrganismColumn = determinePlatformProbeOrganismColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
         List<String> descriptions = platform.getColumnData( descriptionColumn );
@@ -1170,9 +1175,10 @@ public class GeoConverterImpl implements GeoConverter {
         }
         // The primary taxon for the array: this should be a taxon that is listed as the platform taxon on geo
         // submission
+        String probeOrganismColumn = determinePlatformProbeOrganismColumn( platform );
         Collection<Taxon> platformTaxa = convertPlatformOrganisms( platform, probeOrganismColumn );
 
-        // these taxons represent taxons for the probes
+        // represent taxa for the probes
         List<String> probeOrganism = null;
         if ( probeOrganismColumn != null ) {
             log.debug( "Organism details found for probes on array " + platform.getGeoAccession() );
@@ -1190,10 +1196,48 @@ public class GeoConverterImpl implements GeoConverter {
 
         arrayDesign.setPrimaryTaxon( primaryTaxon );
 
+        // We don't get reporters from GEO SOFT files.
+        // arrayDesign.setReporters( new HashSet() );
+
+        if ( StringUtils.isNotBlank( platform.getManufacturer() ) ) {
+            Contact manufacturer = Contact.Factory.newInstance();
+            manufacturer.setName( platform.getManufacturer() );
+            arrayDesign.setDesignProvider( manufacturer );
+        }
+
+        arrayDesign.getExternalReferences().add( convertDatabaseEntry( platform ) );
+
+        seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
+
         if ( identifier == null ) {
             // we don't get any probe information; e.g., MPSS, SAGE, Exon arrays.
+            log.warn( "No identifiers, so platform elements will be skipped" );
             return arrayDesign;
         }
+
+        convertPlatformElements( identifier, platform, arrayDesign, externalReferences, probeOrganismColumn,
+                externalDb, descriptions, sequences, probeOrganism, primaryTaxon );
+
+        return arrayDesign;
+    }
+
+    /**
+     * Convert the elements/probes.
+     * 
+     * @param identifier
+     * @param platform
+     * @param arrayDesign
+     * @param externalReferences
+     * @param probeOrganismColumn
+     * @param externalDb
+     * @param descriptions
+     * @param sequences
+     * @param probeOrganism
+     * @param primaryTaxon
+     */
+    private void convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
+            Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb,
+            List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon ) {
 
         /*
          * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
@@ -1203,7 +1247,13 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( identifiers == null ) {
             // we don't get any probe information; e.g., MPSS, SAGE, Exon arrays.
-            return arrayDesign;
+            log.warn( "No identifiers, so platform elements will be skipped" );
+            return;
+        }
+
+        if ( !platform.useDataFromGeo() && !forceConvertElements ) {
+            log.warn( "Will not convert elements for this platform - set forceConvertElements to override" );
+            return;
         }
 
         assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
@@ -1386,19 +1436,6 @@ public class GeoConverterImpl implements GeoConverter {
         arrayDesign.setCompositeSequences( new HashSet<CompositeSequence>( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
-        // We don't get reporters from GEO SOFT files.
-        // arrayDesign.setReporters( new HashSet() );
-
-        if ( StringUtils.isNotBlank( platform.getManufacturer() ) ) {
-            Contact manufacturer = Contact.Factory.newInstance();
-            manufacturer.setName( platform.getManufacturer() );
-            arrayDesign.setDesignProvider( manufacturer );
-        }
-
-        arrayDesign.getExternalReferences().add( convertDatabaseEntry( platform ) );
-
-        seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
-
         if ( !skipped.isEmpty() ) {
             log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was "
                     + skipped.get( skipped.size() - 1 ) );
@@ -1411,8 +1448,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         log.info( arrayDesign.getCompositeSequences().size() + " elements on the platform" );
-
-        return arrayDesign;
     }
 
     /**

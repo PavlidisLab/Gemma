@@ -107,7 +107,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private OntologyService ontologyService;
-    
+
     @Autowired
     private AuditEventDao auditEventDao;
 
@@ -150,7 +150,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
     private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
-    
+
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         return this.expressionExperimentDao.browse( start, limit );
@@ -607,13 +607,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
-        try {
-            return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
     /**
@@ -621,22 +615,16 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        try {
-            Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
 
-            Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
+        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
 
-            for ( QuantitationType qt : quantitationTypes ) {
-                if ( qt.getIsPreferred() ) {
-                    preferredQuantitationTypes.add( qt );
-                }
+        for ( QuantitationType qt : quantitationTypes ) {
+            if ( qt.getIsPreferred() ) {
+                preferredQuantitationTypes.add( qt );
             }
-            return preferredQuantitationTypes;
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getPreferredQuantitationType(ExpressionExperiment EE)' --> "
-                            + th, th );
         }
+        return preferredQuantitationTypes;
     }
 
     public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
@@ -659,13 +647,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getPreferredDesignElementDataVectorCount(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
     }
 
     /**
@@ -673,13 +655,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final java.lang.Long Id ) {
-        try {
-            return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getQuantitationTypeCountById(java.lang.Long Id)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
     }
 
     /**
@@ -687,13 +663,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getQuantitationTypes(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
     }
 
     /**
@@ -703,13 +673,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getQuantitationTypes(ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
     public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
@@ -958,6 +922,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         bad = this.bioAssayDimensionDao.create( bad );
 
         QuantitationType qt = qts.iterator().next();
+
         qt = this.quantitationTypeDao.create( qt );
 
         for ( RawExpressionDataVector vec : vectors ) {
@@ -965,8 +930,18 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             vec.setQuantitationType( qt );
         }
 
+        Collection<QuantitationType> toRemove = new HashSet<QuantitationType>();
+        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
+            toRemove.add( oldvec.getQuantitationType() );
+        }
+
         eeToUpdate.getProcessedExpressionDataVectors().clear();
-        eeToUpdate.setRawExpressionDataVectors( vectors );
+        eeToUpdate.getRawExpressionDataVectors().clear();
+        for ( QuantitationType oldqt : toRemove ) {
+            quantitationTypeDao.remove( oldqt );
+        }
+
+        eeToUpdate.getRawExpressionDataVectors().addAll( vectors );
         ArrayDesign vectorAd = vectors.iterator().next().getDesignElement().getArrayDesign();
 
         if ( ad == null ) {
@@ -984,6 +959,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
         this.update( eeToUpdate );
         ee = eeToUpdate;
+
+        log.info( eeToUpdate.getRawExpressionDataVectors().size() + " vectors for experiment" );
+
         return eeToUpdate;
     }
 
@@ -1038,13 +1016,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.thaw( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.thaw(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.thaw( expressionExperiment );
     }
 
     /**
@@ -1052,13 +1024,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.thawLite(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
     }
 
     /**
@@ -1066,13 +1032,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.thawLite(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
     }
 
     /**
@@ -1080,13 +1040,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public void update( final ExpressionExperiment expressionExperiment ) {
-        try {
-            this.expressionExperimentDao.update( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.update(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        this.expressionExperimentDao.update( expressionExperiment );
     }
 
     /*
@@ -1232,49 +1186,51 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ){
+    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
+            Class<? extends AuditEventType> auditEventClass ) {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent( ExpressionExperiment.class, auditEventClass ) );
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
+                ExpressionExperiment.class, auditEventClass ) );
         return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
     }
-    
 
     @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect( ){
+    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect() {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent( ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
+                ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
-        for(ExpressionExperiment ee : entities){
-            if(this.describeBatchEffect( ee ) == null){
+        for ( ExpressionExperiment ee : entities ) {
+            if ( this.describeBatchEffect( ee ) == null ) {
                 toRemove.add( ee );
             }
         }
         entities.removeAll( toRemove );
-        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );        
+        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
     }
-    
+
     /**
      * @param ee
      * @return String msg describing confound if it is present, null otherwise
      */
     @Override
     public String describeBatchConfound( ExpressionExperiment ee ) {
-            Collection<BatchConfoundValueObject> confounds;
-            try {
-                confounds = BatchConfound.test( ee );
-            } catch ( Exception e ) {
-                return null;
-            }
-            String result = null;
+        Collection<BatchConfoundValueObject> confounds;
+        try {
+            confounds = BatchConfound.test( ee );
+        } catch ( Exception e ) {
+            return null;
+        }
+        String result = null;
 
-            for ( BatchConfoundValueObject c : confounds ) {
-                if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                    String factorName = c.getEf().getName();
-                    result = "Factor: " + factorName + " may be confounded with batches; p="
-                            + String.format( "%.2g", c.getP() ) + "<br />" ;
-                }
+        for ( BatchConfoundValueObject c : confounds ) {
+            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                String factorName = c.getEf().getName();
+                result = "Factor: " + factorName + " may be confounded with batches; p="
+                        + String.format( "%.2g", c.getP() ) + "<br />";
             }
-            return result;
+        }
+        return result;
     }
 
     /**

@@ -236,7 +236,8 @@ public class DataUpdater {
         if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
             targetPlatformAcc = "GPL6096";
         } else if ( primaryTaxon.getCommonName().equals( "human" ) ) {
-            targetPlatformAcc = "GPL5188";
+            targetPlatformAcc = "GPL5175"; // [HuEx-1_0-st] Affymetrix Human Exon 1.0 ST Array [transcript (gene)
+                                           // version]
         } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
             targetPlatformAcc = "GPL6543";
         } else {
@@ -245,7 +246,16 @@ public class DataUpdater {
 
         ArrayDesign targetPlatform = arrayDesignService.findByShortName( targetPlatformAcc );
 
-        if ( targetPlatform == null ) {
+        if ( targetPlatform != null ) {
+            targetPlatform = arrayDesignService.thaw( targetPlatform );
+
+            if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+                /*
+                 * Ok, we have to 'reload it'.
+                 */
+                geoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );
+            }
+        } else {
             log.warn( "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );
 
             Collection<?> r = geoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );
@@ -256,8 +266,6 @@ public class DataUpdater {
 
         }
 
-        targetPlatform = arrayDesignService.thaw( targetPlatform );
         return targetPlatform;
     }
-
 }

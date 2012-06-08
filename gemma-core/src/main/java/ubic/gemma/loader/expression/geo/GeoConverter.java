@@ -74,6 +74,14 @@ public interface GeoConverter extends Converter<GeoData, Object> {
 
     byte[] convertData( List<Object> vector, QuantitationType qt );
 
+    /**
+     * Set the behaviour when a platform that normally would not be loaded in detail is encountered, such as an Exon
+     * array.
+     * 
+     * @param forceConvertElements
+     */
+    public void setForceConvertElements( boolean forceConvertElements );
+
     // this is here for tests only. The default value should be okay otherwise.
     void setElementLimitForStrictness( int i );
 
