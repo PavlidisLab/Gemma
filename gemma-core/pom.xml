@@ -3,13 +3,13 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.6-SNAPSHOT</version>
+		<version>1.7-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-core</artifactId>
 	<name>Gemma Core</name>
-	<version>1.6-SNAPSHOT</version>
+	<version>1.7-SNAPSHOT</version>
 	<description>Module containing core gemma functionality.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -320,11 +320,6 @@
 			<version>0.1.17</version>
 		</dependency>
 		<dependency>
-			<groupId>org.directwebremoting</groupId>
-			<artifactId>dwr</artifactId>
-			<version>2.0.5</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
 			<version>1.7.1</version>
@@ -394,6 +389,11 @@
 			<artifactId>spark</artifactId>
 			<version>1.2</version>
 		</dependency>
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>1.8.0.10</version>
+		</dependency>            
 	</dependencies>
 	<repositories>
 		<repository>

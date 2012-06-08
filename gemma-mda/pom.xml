@@ -7,11 +7,11 @@
 	<![CDATA[Model-driven architecture generated code and implementations.]]>
 	</description>
 	<artifactId>gemma-mda</artifactId>
-	<version>1.6-SNAPSHOT</version>
+	<version>1.7-SNAPSHOT</version>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.6-SNAPSHOT</version>
+		<version>1.7-SNAPSHOT</version>
 	</parent>
 	<packaging>jar</packaging>
 	<dependencies>
