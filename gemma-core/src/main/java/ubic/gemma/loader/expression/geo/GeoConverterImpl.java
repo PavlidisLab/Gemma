@@ -552,6 +552,7 @@ public class GeoConverterImpl implements GeoConverter {
         this.tooManyElements = tooManyElements;
     }
 
+    @Override
     public void setForceConvertElements( boolean forceConvertElements ) {
         this.forceConvertElements = forceConvertElements;
     }
@@ -1896,6 +1897,8 @@ public class GeoConverterImpl implements GeoConverter {
                         LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
                         ba.setRawDataFile( rawDataFile );// deal with null at UI
 
+                        // TODO these custom string prefixes should be made into constants, need to make public for use
+                        // by ExpressionExperimentAnnotator
                         ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
                                 + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
                         ba.getSamplesUsed().add( bioMaterial );
