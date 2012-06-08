@@ -53,6 +53,8 @@ Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
 	     return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
 	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
 		 return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
+	 }  else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
+		 return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
 	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
 		 return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
 	 } else  {

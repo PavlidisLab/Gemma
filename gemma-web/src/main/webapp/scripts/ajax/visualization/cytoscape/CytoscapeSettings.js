@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 
 Gemma.CytoscapeSettings = {
-
+	
     backgroundColor: "#FFF7FB",
 
     // node stuff
@@ -40,11 +40,12 @@ Gemma.CytoscapeSettings = {
     
     maxGeneIdsPerCoexVisQuery:200,
     
-    //e.g. dark is >0.2 and <0.4, darkest is <=0.2
+    //e.g. dark colour is >dark value and <moderate value, darkest is <=0.2
     //darkest : most specificity, lightest: least specificity
     nodeDegreeValue:{
-    	lightest:0.6,
-    	light:0.4,
+    	lightest:0.7,
+    	light:0.6,
+    	moderate: 0.35,
     	dark:0.2
     },
     
@@ -55,11 +56,15 @@ Gemma.CytoscapeSettings = {
     	},
     	light:{
     		name: "Low",
-    		value: "#969696"
+    		value: "#C9C9C9"
+    	},
+    	moderate:{
+    		name: "Moderate",
+    		value: "#737373"
     	},
     	dark:{
     		name: "High",
-    		value: "#5E5E5E"
+    		value: "#404040"
     	},
     	darkest:{
     		name: "Highest",
@@ -193,6 +198,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
                 entries: [
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.value},
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.light.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.light.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.moderate.value },
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.dark.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.dark.value },
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.darkest.value }
                 ]
@@ -228,6 +234,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
                 entries: [
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.lightest.value},
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.light.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.light.value },
+                          {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.moderate.value },
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.dark.name , value: Gemma.CytoscapeSettings.nodeDegreeColor.dark.value },
                           {attrValue: Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name , value:Gemma.CytoscapeSettings.nodeDegreeColor.darkest.value }
                 ]

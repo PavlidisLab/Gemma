@@ -33,7 +33,8 @@ public class CoexpressionMetaValueObject {
 
     private List<ExpressionExperimentValueObject> datasets;
     private String errorState;
-    private String displayInfo;
+    private int nonQueryGeneTrimmedValue;
+    private int maxEdges;
     private Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
     private Collection<CoexpressionValueObjectExt> knownGeneResults;
     private Collection<CoexpressionValueObjectExt> queryGenesOnlyResults;
@@ -146,14 +147,6 @@ public class CoexpressionMetaValueObject {
         return buf.toString();
     }
 
-    public void setDisplayInfo( String displayInfo ) {
-        this.displayInfo = displayInfo;
-    }
-
-    public String getDisplayInfo() {
-        return displayInfo;
-    }
-
     public void setQueryGenesOnlyResults( Collection<CoexpressionValueObjectExt> queryGenesOnlyResults ) {
         this.queryGenesOnlyResults = queryGenesOnlyResults;
     }
@@ -161,5 +154,21 @@ public class CoexpressionMetaValueObject {
     public Collection<CoexpressionValueObjectExt> getQueryGenesOnlyResults() {
         return queryGenesOnlyResults;
     }
+
+	public int getMaxEdges() {
+		return maxEdges;
+	}
+
+	public void setMaxEdges(int maxEdges) {
+		this.maxEdges = maxEdges;
+	}
+
+	public int getNonQueryGeneTrimmedValue() {
+		return nonQueryGeneTrimmedValue;
+	}
+
+	public void setNonQueryGeneTrimmedValue(int nonQueryGeneTrimmedValue) {
+		this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
+	}
 
 }

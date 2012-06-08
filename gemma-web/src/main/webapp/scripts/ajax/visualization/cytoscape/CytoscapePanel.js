@@ -29,23 +29,63 @@ Ext.Panel, {
 
         controlBar.display = this.display;
 
-        Ext.apply(
-        this, {
-            tbar: controlBar,
-            bbar: [{
+        this.graphSizeMenu = new Ext.menu.Menu({
+        	
+            items: [{
+                itemId: 'graphSizeLarge',
+                text: 'Large',                
+                handler: function () {
+                	this.graphSizeMenuHandler("large");
+                },
+                scope: this
+            }, {
+                itemId: 'graphSizeMedium',
+                text: 'Medium',                
+                handler: function () {                	
+                	this.graphSizeMenuHandler("medium");
+                },
+                scope: this
+            }, {
+                itemId: 'graphSizeSmall',
+                text: 'Small',                
+                handler: function () {
+                	this.graphSizeMenuHandler("small");
+                },
+                scope: this
+            }]
+        });
+        
+        var bbar = new Ext.Toolbar({
+        	hidden: true,
+        	items: [{
                 xtype: 'tbtext',
                 text: '',
                 itemId: 'bbarStatus'
-            }, '->',
+            },
             {
                 xtype: 'button',
-                icon: "/Gemma/images/icons/cross.png",
-                itemId: 'bbarClearButton',
-                handler: function () {
-                	this.hideBottomToolbar();
-                },
-                scope: this
-            }],
+                id: 'graphSizeMenu',
+                text: '<b>Graph Size</b>',
+                menu: this.graphSizeMenu
+                
+            }, {
+                xtype: 'label',
+                id: 'tooltipMenuNotEnabled',
+                html: '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.graphSizeMenuTT2 + '" src="/Gemma/images/icons/question_blue.png"/>&nbsp',
+                height: 15
+            }, {
+                xtype: 'label',
+                id: 'tooltipMenuEnabled',
+                html: '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.graphSizeMenuTT + '" src="/Gemma/images/icons/question_blue.png"/>&nbsp',
+                height: 15
+            }]
+        	
+        });
+        
+        Ext.apply(
+        this, {
+            tbar: controlBar,
+            bbar: bbar,
             margins: {
                 top: 0,
                 right: 0,
@@ -132,7 +172,11 @@ Ext.Panel, {
 				
 			}else{
 				this.display.disableQueryGenesOnly(false);
-			}        	
+			}      	
+        	
+        	this.coexpressionGraphData = new Gemma.CoexpressionGraphData(this.coexpressionSearchData);        	
+        	
+        	this.showUserMessageBarAfterNewData();        	
         	
         	this.drawGraph();
         	
@@ -301,8 +345,6 @@ Ext.Panel, {
     
     newSearchForLowerStringencyHandlerNoWarning: function (stringencyValue){
     	
-    	this.hideBottomToolbar();
-
         var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(stringencyValue);
 
         Ext.apply(
@@ -321,9 +363,7 @@ Ext.Panel, {
         this.clearError();
 
         if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-            
-        	this.hideBottomToolbar();
-
+                    	
             //initialSearch for coex grid data will be at 2
             var resultsStringency = 2;
             
@@ -408,10 +448,10 @@ Ext.Panel, {
     },
  
     //This is called the first time the cytoscape panel is rendered.  
-    //It is a special case because it uses the partial results from the coexpression grid to do the complete search
-    //and needs to set up values of the top and bottom toolbar
+    //It is a special case because it uses the partial results from the coexpression grid to do the complete search    
     cytoscapePanelAfterRenderHandler: function () {
 
+    	//stopRender is needed because of a bug in extjs where a tabpanel render its components upon removal
     	if (!this.stopRender){
     	
         if (!this.loadMask) {
@@ -420,15 +460,7 @@ Ext.Panel, {
                 msg: Gemma.StatusText.Searching.analysisResults,
                 msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
             });
-        }
-        
-        if (this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency > Gemma.MIN_STRINGENCY) {
-            var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
-            this.currentbbarText = "Display Stringency set to " + this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency + " based on number of experiments chosen.";
-            bbarText.setText(this.currentbbarText);
-        } else {
-            this.hideBottomToolbar();
-        }
+        }        
         
         //in case a user has typed an invalid string into the spinner box on the grid, this resets it
         this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
@@ -465,8 +497,7 @@ Ext.Panel, {
     },
 
     drawGraph: function () {
-        this.display.drawGraph(this.coexpressionSearchData);
-        this.showUserMessageBar(this.coexpressionSearchData.cytoscapeResults.displayInfo);
+        this.display.drawGraph(this.coexpressionSearchData);        
         this.loadMask.hide();
     },
 
@@ -475,46 +506,123 @@ Ext.Panel, {
             Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
         }
     },
-    
-    hideBottomToolbar: function(){
-		if (!this.getBottomToolbar.hidden){
-			this.currentbbarText="";
-			this.getBottomToolbar().hide();
-			this.doLayout();
+	
+	//after new data we need to determine whether it is appropriate to show the graph or not
+	showUserMessageBarAfterNewData: function(){		
+		
+		if (!this.coexpressionGraphData.mediumGraphDataEnabled){
+			
+			if(this.coexpressionSearchData.cytoscapeResults.nonQueryGeneTrimmedValue>0){
+				this.showUserMessageBar(this.coexpressionSearchData.cytoscapeResults.nonQueryGeneTrimmedValue, false);
+			}else{
+				this.getBottomToolbar().hide();
+	    		this.doLayout();				
+			}
+			return;
 		}
+		
+		var resultsObject = this.coexpressionGraphData.getGraphData();
+    			
+    	if (resultsObject.trimStringency){
+    		this.coexpressionSearchData.cytoscapeResults.knownGeneResults = resultsObject.geneResults;
+    		this.showUserMessageBar(resultsObject.trimStringency, true);
+    	}else if(this.coexpressionSearchData.cytoscapeResults.nonQueryGeneTrimmedValue>0){
+    		this.showUserMessageBar(this.coexpressionSearchData.cytoscapeResults.nonQueryGeneTrimmedValue, false);        		
+    	} else{
+    		this.getBottomToolbar().hide();
+    		this.doLayout();
+    	}
+		
+		
+		
 	},
-
-    showUserMessageBar: function (displayInfo) {
-        var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
-
-        if (displayInfo) {
-
-            if (this.currentbbarText) {
-                bbarText.setText(this.currentbbarText + ' ' + displayInfo);
-            } else {
-                bbarText.setText(displayInfo);
-            }
-            if (!this.getBottomToolbar().isVisible()) {
-                this.getBottomToolbar().setVisible(true);
-                this.doLayout();
-            }
-        } else if (this.currentbbarText) {
-
-            bbarText.setText(this.currentbbarText);
-
-            if (!this.getBottomToolbar().isVisible()) {
-                this.getBottomToolbar().setVisible(true);
-                this.doLayout();
-            }
-        } else {
-
-            if (this.getBottomToolbar().isVisible()) {
-                this.getBottomToolbar().setVisible(false);
-                this.doLayout();
-            }
-
-        }
-
+	
+    showUserMessageBar: function (trimmedValue, showGraphSizeMenu) {
+        
+    	var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
+    	
+    	var graphSizeButton = this.getBottomToolbar().getComponent("graphSizeMenu");
+    	
+    	if (showGraphSizeMenu){
+    		
+    		bbarText.setText("Edges not involving query genes have been trimmed to a stringency of: ");
+    		
+    		if (trimmedValue == 0){
+    			graphSizeButton.setText("No Trimming ");
+    		}else{
+    			graphSizeButton.setText(trimmedValue+" ");
+    		}
+    		this.getBottomToolbar().getComponent('tooltipMenuEnabled').setVisible(true);
+    		this.getBottomToolbar().getComponent('tooltipMenuNotEnabled').setVisible(false);
+    		
+    		
+    		if (this.coexpressionGraphData.largeGraphDataEnabled){
+    			
+    			//case where the original Results haven't been trimmed
+    			if (this.coexpressionGraphData.originalResults.trimStringency == 0){
+    				
+    				this.graphSizeMenu.getComponent("graphSizeLarge").setText("No Trimming ("+this.coexpressionGraphData.originalResults.geneResults.length+" edges)");
+    			}else{    			
+    				this.graphSizeMenu.getComponent("graphSizeLarge").setText(this.coexpressionGraphData.originalResults.trimStringency+" ("+this.coexpressionGraphData.originalResults.geneResults.length+" edges)");    				
+    			}
+    			
+    			this.graphSizeMenu.getComponent("graphSizeLarge").show();
+    			
+    			if (trimmedValue == this.coexpressionGraphData.originalResults.trimStringency){
+    				this.graphSizeMenu.getComponent("graphSizeLarge").addClass("buttonBold");
+    			}else{
+    				this.graphSizeMenu.getComponent("graphSizeLarge").removeClass("buttonBold");
+    			}
+    		}else{
+    			this.graphSizeMenu.getComponent("graphSizeLarge").hide();
+    		}
+    		
+    		if (this.coexpressionGraphData.mediumGraphDataEnabled){
+    			this.graphSizeMenu.getComponent("graphSizeMedium").setText(this.coexpressionGraphData.graphDataMedium.trimStringency+" ("+this.coexpressionGraphData.graphDataMedium.geneResults.length+" edges)");
+    			this.graphSizeMenu.getComponent("graphSizeMedium").show();
+    			
+    			if (trimmedValue == this.coexpressionGraphData.graphDataMedium.trimStringency){
+    				this.graphSizeMenu.getComponent("graphSizeMedium").addClass("buttonBold");
+    			}else{
+    				this.graphSizeMenu.getComponent("graphSizeMedium").removeClass("buttonBold");
+    			}
+    			
+    		}else{
+    			this.graphSizeMenu.getComponent("graphSizeMedium").hide();
+    		}
+    		
+    		if (this.coexpressionGraphData.smallGraphDataEnabled){
+    			this.graphSizeMenu.getComponent("graphSizeSmall").setText(this.coexpressionGraphData.graphDataSmall.trimStringency+" ("+this.coexpressionGraphData.graphDataSmall.geneResults.length+" edges)");
+    			this.graphSizeMenu.getComponent("graphSizeSmall").show();
+    			
+    			if (trimmedValue == this.coexpressionGraphData.graphDataSmall.trimStringency){
+    				this.graphSizeMenu.getComponent("graphSizeSmall").addClass("buttonBold");
+    			}else{
+    				this.graphSizeMenu.getComponent("graphSizeSmall").removeClass("buttonBold");
+    			}
+    		}else{
+    			this.graphSizeMenu.getComponent("graphSizeSmall").hide();
+    		}
+    		
+    		
+    		if(!graphSizeButton.isVisible()){        		
+    			graphSizeButton.show();
+    		}
+    		
+    	}else{
+    		
+    		this.getBottomToolbar().getComponent('tooltipMenuEnabled').setVisible(false);
+    		this.getBottomToolbar().getComponent('tooltipMenuNotEnabled').setVisible(true);
+    		
+    		if (graphSizeButton.isVisible()){        		
+    			graphSizeButton.hide();
+    		}    		
+    		bbarText.setText("Edges not involving query genes have been trimmed to a stringency of: "+trimmedValue);
+    	}
+    	
+    	this.getBottomToolbar().show();
+            
+        this.doLayout();            
     },
 
     updateSearchFormGenes: function (geneIds) {
@@ -561,6 +669,13 @@ Ext.Panel, {
     	
     	return Gemma.CoexValueObjectUtil.filterGeneResultsByText(text, this.coexpressionSearchData.cytoscapeResults.knownGeneResults);
     	
+    },
+    
+    graphSizeMenuHandler: function(graphSize){
+    	var resultsObject = this.coexpressionGraphData.getGraphData(graphSize);
+    	this.coexpressionSearchData.cytoscapeResults.knownGeneResults = resultsObject.geneResults;
+    	this.showUserMessageBar(resultsObject.trimStringency, true);    	
+    	this.drawGraph(); 
     }
     
     

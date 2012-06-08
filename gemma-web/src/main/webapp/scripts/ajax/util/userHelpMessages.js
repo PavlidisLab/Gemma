@@ -234,7 +234,10 @@ Gemma.HelpText.WidgetDefaults = {
 		noNodeLabelsText: 'Node Labels Off',
 		invalidStringencyWarning: 'You cannot lower the stringency below 2. Please select a different stringency',
 		newSearchOrReturnToCurrentStringencyOption: 'You are viewing the data on the table at a lower stringency than the current graph data stringency.'+
-			'Would you like use the current lowest graph stringency of {0} or search for new graph data at stringency {1}?'
+			'Would you like use the current lowest graph stringency of {0} or search for new graph data at stringency {1}?',
+		graphSizeMenuTT: 'Due to browser performance limitations when rendering large graphs we have trimmed edges between non-query genes. Use the control'+
+			' to adjust the trim stringency and change the number of edges in your graph',
+		graphSizeMenuTT2: 'Due to browser performance limitations when rendering large graphs we have trimmed edges between non-query genes.'
 		
 	},
 	DatasetGroupEditor:{

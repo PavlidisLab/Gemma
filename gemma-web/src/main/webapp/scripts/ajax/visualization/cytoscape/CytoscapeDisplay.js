@@ -148,12 +148,13 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         var data = {
             nodes: [],
             edges: []
-        }
+        };
         // helper array to prevent duplicate nodes from being
         // entered
         var graphNodeIds = [];
         var edgeSet = [];
         var kglength = knowngenes.length;
+        var i;
         // populate node data plus populate edge data
         for (i = 0; i < kglength; i++) {
 

@@ -181,7 +181,7 @@ public class CoexpressionSearchController {
                 searchOptions.getEeIds(), genes, searchOptions.getStringency(), MAX_RESULTS,
                 searchOptions.getQueryGenesOnly(), skipCoexpressionDetails );        
         
-        log.info( "Returned from coexpression search: " + searchOptions );
+        log.info( "Returned from coexpression search, size of results:"+ geneResults.size()  +" searchOptions:" + searchOptions );
         
         result.setKnownGeneResults( geneResults );
         
@@ -202,9 +202,12 @@ public class CoexpressionSearchController {
            
         int resultsLimit = ConfigUtils.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
         
+        result.setMaxEdges(resultsLimit);
+        
         // strip down results for front end if data is too large (only happens when queryGeneIds is sent in as a parameter, i.e. cytoscape coex vis query
         if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {            
-            trimGraphForFrontEndDisplay(result, stringencyTrimLimit, resultsLimit, searchOptions, queryGeneIds);                        
+            trimGraphForFrontEndDisplay(result, stringencyTrimLimit, resultsLimit, searchOptions, queryGeneIds);
+            
         }
         
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -594,12 +597,9 @@ public class CoexpressionSearchController {
                 + "  Total results removed: " + ( oldSize - geneResults.size() ) );
 
         
-        result.setKnownGeneResults( geneResults );        
-       
+        result.setKnownGeneResults( geneResults );
         
-        result.setDisplayInfo( "Results not involving query genes have been removed to a stringency of "
-                + displayTrimmedStringency + " due to size of graph." );
-        
+        result.setNonQueryGeneTrimmedValue(displayTrimmedStringency);
         
     }
     

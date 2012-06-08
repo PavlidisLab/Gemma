@@ -691,3 +691,8 @@ left: 60px; /*position where enlarged image should offset horizontally */
 .indent20, .indent20 p, .indent20 ul{
 	padding-left:20px
 }
+
+.buttonBold {
+	font-weight: bold;
+}
+
