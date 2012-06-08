@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
@@ -339,7 +340,7 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
                 relevantPublicationsPubmed.add( relevantPublicationPubmed );
             }
 
-            Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
+            SortedSet<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
             Set<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
 

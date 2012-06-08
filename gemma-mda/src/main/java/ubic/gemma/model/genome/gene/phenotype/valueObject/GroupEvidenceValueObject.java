@@ -35,10 +35,14 @@ public class GroupEvidenceValueObject extends EvidenceValueObject {
         this.setEvidenceCode( litEvidenceValueObject.getEvidenceCode() );
         this.setEvidenceSecurityValueObject( litEvidenceValueObject.getEvidenceSecurityValueObject() );
         this.setEvidenceSource( litEvidenceValueObject.getEvidenceSource() );
+        this.setGeneId(litEvidenceValueObject.getGeneId());
         this.setGeneNCBI( litEvidenceValueObject.getGeneNCBI() );
+        this.setGeneOfficialSymbol(litEvidenceValueObject.getGeneOfficialSymbol());
+        this.setHomologueEvidence(litEvidenceValueObject.isHomologueEvidence());
         this.setIsNegativeEvidence( litEvidenceValueObject.getIsNegativeEvidence() );
         this.setPhenotypes( litEvidenceValueObject.getPhenotypes() );
         this.setRelevance( litEvidenceValueObject.getRelevance() );
+        this.setTaxonCommonName(litEvidenceValueObject.getTaxonCommonName());
     }
 
     public Collection<LiteratureEvidenceValueObject> getLiteratureEvidences() {

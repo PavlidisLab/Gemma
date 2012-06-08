@@ -20,14 +20,16 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation; 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
@@ -37,7 +39,7 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
  * @version $Id$
  * @author nicolas
  */
-public class EvidenceValueObject {
+public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
     /**
      * Convert an collection of evidence entities to their corresponding value objects
@@ -93,7 +95,7 @@ public class EvidenceValueObject {
     private boolean isNegativeEvidence = false;
 
     private String className = "";
-    private Set<CharacteristicValueObject> phenotypes = null;
+    private SortedSet<CharacteristicValueObject> phenotypes = null;
     private EvidenceSourceValueObject evidenceSource = null;
 
     /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
@@ -104,10 +106,13 @@ public class EvidenceValueObject {
     private Long lastUpdated = null;
     // security for the evidence
     private EvidenceSecurityValueObject evidenceSecurityValueObject = null;
-    // linked to what gene
-    private Integer geneNCBI = null;
     
+    // linked to what gene
+    private Long geneId = null;
+    private Integer geneNCBI = null;
+    private String geneOfficialSymbol = "";
     private String taxonCommonName = "";
+    private boolean isHomologueEvidence = false;
 
     public EvidenceValueObject() {
         super();
@@ -137,11 +142,13 @@ public class EvidenceValueObject {
         }
 
         this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().getTime();
+        this.geneId = phenotypeAssociation.getGene().getId();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
+        this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();
 
     }
 
-    protected EvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
+    protected EvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes, String description,
             String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource ) {
         super();
         this.description = description;
@@ -176,7 +183,7 @@ public class EvidenceValueObject {
         return this.isNegativeEvidence;
     }
 
-    public Set<CharacteristicValueObject> getPhenotypes() {
+    public SortedSet<CharacteristicValueObject> getPhenotypes() {
         return this.phenotypes;
     }
 
@@ -219,7 +226,7 @@ public class EvidenceValueObject {
         this.isNegativeEvidence = isNegativeEvidence;
     }
 
-    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
+    public void setPhenotypes( SortedSet<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
@@ -247,13 +254,29 @@ public class EvidenceValueObject {
         this.evidenceSecurityValueObject = evidenceSecurityValueObject;
     }
 
-    public Integer getGeneNCBI() {
+    public Long getGeneId() {
+		return this.geneId;
+	}
+
+	public void setGeneId(Long geneId) {
+		this.geneId = geneId;
+	}
+
+	public Integer getGeneNCBI() {
         return this.geneNCBI;
     }
 
     public void setGeneNCBI( Integer geneNCBI ) {
         this.geneNCBI = geneNCBI;
     }
+
+	public String getGeneOfficialSymbol() {
+		return this.geneOfficialSymbol;
+	}
+
+	public void setGeneOfficialSymbol(String geneOfficialSymbol) {
+		this.geneOfficialSymbol = geneOfficialSymbol;
+	}
 
     public String getTaxonCommonName() {
         return this.taxonCommonName;
@@ -263,7 +286,15 @@ public class EvidenceValueObject {
         this.taxonCommonName = taxonCommonName;
     }
 
-    @Override
+    public boolean isHomologueEvidence() {
+		return this.isHomologueEvidence;
+	}
+
+	public void setHomologueEvidence(boolean isHomologueEvidence) {
+		this.isHomologueEvidence = isHomologueEvidence;
+	}
+
+	@Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -308,4 +339,63 @@ public class EvidenceValueObject {
         return true;
     }
 
+    protected int comparePropertiesTo(EvidenceValueObject evidenceValueObject) {
+    	if (this == evidenceValueObject) return 0;
+
+    	if (!this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence) return -1;
+    	if (this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence) return 1;
+
+    	int comparison = this.relevance.compareTo(evidenceValueObject.relevance);
+    	if (comparison != 0) return comparison;
+
+    	if ((this.phenotypes != null && this.phenotypes.size() > 0) &&
+    	    (evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0)) {
+    	    return -1;
+    	}    
+    	    
+    	if ((this.phenotypes == null || this.phenotypes.size() == 0) &&
+    	    (evidenceValueObject.phenotypes != null && evidenceValueObject.phenotypes.size() > 0)) {
+    	    return 1;
+    	}    
+
+    	if (this.phenotypes != null && evidenceValueObject.phenotypes != null) {
+    		Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();
+    		Iterator<CharacteristicValueObject> otherIterator = evidenceValueObject.phenotypes.iterator();
+
+    		while (true) {
+    			boolean thisHasNext = thisIterator.hasNext();
+    			boolean otherHasNext = otherIterator.hasNext();
+    		
+	        	if (!thisHasNext && otherHasNext) return -1;
+	        	if (thisHasNext && !otherHasNext) return 1;
+	        	if (!thisHasNext && !otherHasNext) break;
+
+    			comparison = thisIterator.next().compareTo(otherIterator.next());
+    			if (comparison != 0) return comparison;
+    		}
+    	}
+    	    
+    	if (!this.isNegativeEvidence && evidenceValueObject.isNegativeEvidence) return -1;
+    	if (this.isNegativeEvidence && !evidenceValueObject.isNegativeEvidence) return 1;
+
+    	comparison = this.className.compareTo(evidenceValueObject.className);
+    	if (comparison != 0) return comparison;
+
+    	comparison = this.evidenceCode.compareTo(evidenceValueObject.evidenceCode);
+    	if (comparison != 0) return comparison;
+
+    	return 0;
+    }
+    
+	@Override
+	public int compareTo(EvidenceValueObject evidenceValueObject) {
+		int comparison = comparePropertiesTo(evidenceValueObject);
+		
+		if (comparison == 0) {
+			// Use id for comparison so that each evidence object is unique. 
+			comparison = this.getId().compareTo(evidenceValueObject.getId());
+		}
+
+		return comparison;
+	}
 }

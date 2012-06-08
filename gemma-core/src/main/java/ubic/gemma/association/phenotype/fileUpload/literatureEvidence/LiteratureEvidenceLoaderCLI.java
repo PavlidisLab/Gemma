@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
 import ubic.gemma.model.DatabaseEntryValueObject;
@@ -122,7 +122,7 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
             String evidenceCode = phenoAss.getEvidenceCode();
             String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
 
-            Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
+            SortedSet<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
             EvidenceSourceValueObject evidenceSource = null;
 

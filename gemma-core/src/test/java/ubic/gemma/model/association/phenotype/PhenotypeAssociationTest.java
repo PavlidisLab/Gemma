@@ -20,6 +20,8 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.easymock.classextension.EasyMock;
@@ -159,7 +161,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( "1" );
 
-        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+        SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 
         CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( "testUri" );
 

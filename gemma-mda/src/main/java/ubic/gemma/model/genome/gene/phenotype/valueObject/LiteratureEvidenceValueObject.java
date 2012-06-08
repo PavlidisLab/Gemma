@@ -19,18 +19,17 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 
-public class LiteratureEvidenceValueObject extends EvidenceValueObject implements
-        Comparable<LiteratureEvidenceValueObject> {
+public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
     private CitationValueObject citationValueObject = null;
 
-    public LiteratureEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
+    public LiteratureEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource, String pubmedID ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
@@ -39,7 +38,7 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject implement
         this.citationValueObject.setPubmedAccession( pubmedID );
     }
 
-    public LiteratureEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String pubmedID,
+    public LiteratureEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes, String pubmedID,
             String description, String evidenceCode, boolean isNegativeEvidence ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, null );
         this.citationValueObject = new CitationValueObject();
@@ -88,15 +87,23 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject implement
 
     // order by highess pubmed
     @Override
-    public int compareTo( LiteratureEvidenceValueObject o ) {
-        if ( this.citationValueObject != null && o.getCitationValueObject() != null
+	public int compareTo( EvidenceValueObject evidenceValueObject ) {
+    	int comparison = comparePropertiesTo(evidenceValueObject); 
+    	
+        if ( comparison == 0 && evidenceValueObject instanceof LiteratureEvidenceValueObject) {
+        	LiteratureEvidenceValueObject o = (LiteratureEvidenceValueObject)evidenceValueObject;
+        	
+        	if ( this.citationValueObject != null 
+        		&& o.getCitationValueObject() != null
                 && this.citationValueObject.getPubmedAccession() != null
                 && o.getCitationValueObject().getPubmedAccession() != null ) {
-            Long pubmed1 = new Long( this.citationValueObject.getPubmedAccession() );
-            Long pubmed2 = new Long( o.getCitationValueObject().getPubmedAccession() );
-            return pubmed2.compareTo( pubmed1 );
+	            Long pubmed1 = new Long( this.citationValueObject.getPubmedAccession() );
+	            Long pubmed2 = new Long( o.getCitationValueObject().getPubmedAccession() );
+	            return pubmed2.compareTo( pubmed1 );
+        	}
         }
-        return -1;
+
+        return comparison;
     }
 
 }

@@ -18,13 +18,13 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 
 public class GenericEvidenceValueObject extends EvidenceValueObject {
 
-    public GenericEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes, String description,
+    public GenericEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes, String description,
             String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
     }

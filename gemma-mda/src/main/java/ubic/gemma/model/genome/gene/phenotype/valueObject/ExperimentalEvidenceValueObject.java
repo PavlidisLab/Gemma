@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -35,7 +36,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
-    public ExperimentalEvidenceValueObject( Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
+    public ExperimentalEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource, String primaryPublication, Set<String> relevantPublication,
             Set<CharacteristicValueObject> experimentCharacteristics ) {

@@ -1,7 +1,7 @@
 package ubic.gemma.association.phenotype.fileUpload;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -14,7 +14,7 @@ public class EvidenceLineInfo {
     protected String associationType = null;
     protected boolean isEdivenceNegative = false;
     protected String[] phenotype = null;
-    protected Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+    protected SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
     
     protected String externalDatabaseName = "";
     protected String databaseID = "";
@@ -86,11 +86,11 @@ public class EvidenceLineInfo {
         this.phenotype = phenotype;
     }
 
-    public Set<CharacteristicValueObject> getPhenotypes() {
+    public SortedSet<CharacteristicValueObject> getPhenotypes() {
         return this.phenotypes;
     }
 
-    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
+    public void setPhenotypes( SortedSet<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 

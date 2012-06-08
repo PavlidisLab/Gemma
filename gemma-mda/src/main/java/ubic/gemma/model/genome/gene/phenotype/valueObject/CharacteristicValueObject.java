@@ -271,8 +271,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             return this.taxon.compareToIgnoreCase( o.taxon );
         } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
             return this.value.compareToIgnoreCase( o.value );
-        } else {
+        } else if (this.valueUri != null) {
+        	// TODO: Frances: In phenotype page, when I have this selection "autism spectrum disorder" -> "CNTNAP2", valueUri is null and value is "immuno staining assay".
             return this.valueUri.compareToIgnoreCase( o.valueUri );
+        } else {
+        	return -1;
         }
     }
 

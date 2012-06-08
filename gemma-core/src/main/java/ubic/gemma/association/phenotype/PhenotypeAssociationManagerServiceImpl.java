@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -38,8 +38,10 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -82,6 +84,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private PhenotypeAssociationService associationService;
+
+    @Autowired
+    private GeneService geneService = null;
+
+    @Autowired
+    private HomologeneService homologeneService = null;
 
     @Autowired
     private PhenotypeAssoManagerServiceHelper phenotypeAssoManagerServiceHelper;
@@ -185,6 +193,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
+		Gene gene = this.geneService.load( geneId );
+		
+		Collection<Gene> homologues = this.homologeneService.getHomologues( gene );    	    	
+		        
+		Collection<PhenotypeAssociation> homologuePhenotypeAssociations = null;
+		
+		for (Gene homologue : homologues) {
+			Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
+					.findPhenotypeAssociationForGeneId( homologue.getId() );
+			if (homologuePhenotypeAssociations == null) {
+				homologuePhenotypeAssociations = currHomologuePhenotypeAssociations;
+			}
+			homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
+		}
+		
+		Collection<EvidenceValueObject> homologueEvidenceValueObjects = this.convert2ValueObjects( homologuePhenotypeAssociations );
+		for (EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects) {
+			evidenceValueObject.setHomologueEvidence(true);
+		}
+		
+		evidenceValueObjects.addAll(homologueEvidenceValueObjects);
+                
         // for all similar literature evidences combine them into 1 evidence without loosing information
         return groupCommonEvidences( evidenceValueObjects );
     }
@@ -1394,7 +1424,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** Literature Evidence that are very similar are grouped together into a new type called GroupEvidenceValueObject */
     private Collection<EvidenceValueObject> groupCommonEvidences( Collection<EvidenceValueObject> evidenceValueObjects ) {
 
-        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new HashSet<EvidenceValueObject>();
+    	Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new TreeSet<EvidenceValueObject>();
 
         HashMap<String, Collection<LiteratureEvidenceValueObject>> commonEvidences = new HashMap<String, Collection<LiteratureEvidenceValueObject>>();
 
@@ -1430,6 +1460,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 evidenceValueObjectsRegrouped.add( groupEvidenceValueObject );
             }
         }
+
         return evidenceValueObjectsRegrouped;
     }
 
@@ -1445,7 +1476,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         key = key + evidence.getDescription();
         key = key + evidence.getGeneNCBI();
         key = key + evidence.getIsNegativeEvidence();
-        key = key + evidence.getEvidenceCode();
+        
+        // When we display homologue's evidence, we don't show evidence code. So,
+        // we don't use evidence code as part of the key for homologue's evidence.
+        if (!evidence.isHomologueEvidence()) {        
+        	key = key + evidence.getEvidenceCode();
+        }
+        
         key = key + evidence.getEvidenceSource().getAccession();
 
         return key;

@@ -113,8 +113,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			icon: "/Gemma/images/icons/add.png",
 			tooltip: "Add new phenotype association"
     	});
-		    	
-		var rowExpander = new Ext.grid.RowExpander({
+		   
+    	
+		MyRowExpander = Ext.extend(Ext.grid.RowExpander, {
+			getRowClass: function(record, index, rowParams, store) {
+				if (record.data.homologueEvidence) {	
+					rowParams.tstyle = 'color: gray;';
+				} else {
+					rowParams.tstyle = 'color: black;';
+				}
+				
+				return this.superclass().getRowClass.call(this, record, index, rowParams, store);
+			},
 			enableCaching: false, // It needs to be false. Otherwise, its content will not be updated after grid's data is changed.
 			lazyRender: false, // It needs to be false. Otherwise, after grid's data is changed, all rows will be collapsed even though the expand button ("+" button) shows the correct state.
 			// Use class="x-grid3-cell-inner" so that we have padding around the description.
@@ -122,7 +132,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		        '<div class="x-grid3-cell-inner" style="white-space: normal;">{rowExpanderText}</div>'
 		    )
 		});
-
+		var rowExpander = new MyRowExpander();    	
+    	
 		if (this.evidencePhenotypeColumnRenderer == null) {
 			this.evidencePhenotypeColumnRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 				var phenotypesHtml = '';
@@ -139,7 +150,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				return phenotypesHtml;
 		    }
 		}
-			
+
 		var evidenceStore = new Ext.data.Store({
 			proxy: this.evidenceStoreProxy == null ?
 						new Ext.data.DWRProxy({
@@ -166,6 +177,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		 			'relevantPublicationsCitationValueObjects',
 		 			// for LiteratureEvidenceValueObject
 		 			'citationValueObject',
+					// for showing homologues' evidence
+					'geneId', 'geneNCBI', 'geneOfficialSymbol', 'taxonCommonName', 'homologueEvidence',
 		            {
 						name: 'rowExpanderText',
 						convert: function(value, record) {
@@ -260,9 +273,17 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							if (record.description != null && record.description !== '') {
 								descriptionHtml += '<p><b>Note</b>: ' + record.description + '</p>';
 							}
+
+							if (record.homologueEvidence) {							
+								descriptionHtml += String.format("<p><b>*</b> Inferred from homology with the {0} gene {1} " +
+									"<a target='_blank' href='/Gemma/gene/showGene.html?id={2}' ext:qtip='Go to {1} Details (in new window)'>" +
+										"<img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/>" + 
+									"</a></p>",
+								record.taxonCommonName, record.geneOfficialSymbol, record.geneId);
+							}
 							
 							return descriptionHtml;
-						}	
+						}
 		            }
 		        ]
 		    }),
@@ -358,12 +379,15 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							typeColumnHtml += ' from ' + externalSource;
 						}
 					
-						return (record.data.isNegativeEvidence ? 
-									"<img ext:qwidth='200' ext:qtip='" +
-										Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT+
-										"' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " :
-									"") +
-								typeColumnHtml;						
+						typeColumnHtml = 
+							(record.data.isNegativeEvidence ? 
+								"<img ext:qwidth='200' ext:qtip='" +
+									Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT+
+									"' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " :
+								"") +
+							typeColumnHtml;
+						
+						return '<span style="white-space: normal;">' + typeColumnHtml +'</span>'					
 					},
 					sortable: true
 				},
@@ -372,9 +396,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					dataIndex: 'evidenceCode',
 					width: 0.33,
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						var evidenceCode = Gemma.decodeEvidenceCode(value);						
-		            	
-						return '<span ext:qwidth="200" ext:qtip="' + evidenceCode.tooltipText + '">' + evidenceCode.displayText + '</span>';
+						var columnRenderer;
+						if (record.data.homologueEvidence) {
+							columnRenderer = '<span ext:qwidth="200" ext:qtip="' + 
+								'Inferred from homology with the ' + record.data.taxonCommonName + ' gene ' + record.data.geneOfficialSymbol + '.' + 
+								'">' +
+								'Inferred from ' + record.data.geneOfficialSymbol + ' [' + record.data.taxonCommonName + ']' + '</span>';
+						} else {
+							var evidenceCode = Gemma.decodeEvidenceCode(value);						
+			            	
+							columnRenderer = '<span ext:qwidth="200" ext:qtip="' + evidenceCode.tooltipText + '">' + evidenceCode.displayText + '</span>';
+						}
+						return columnRenderer; 
 		            },
 					sortable: true
 				},
