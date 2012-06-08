@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.sf.ehcache.CacheManager;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -77,13 +78,14 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 @Service
 public class ExpressionExperimentAnnotatorImpl implements InitializingBean, ExpressionExperimentAnnotator {
 
+    // for RDF output.
     public static String gemmaNamespace = "http://bioinformatics.ubc.ca/Gemma/";
 
     protected static Log log = LogFactory.getLog( ExpressionExperimentAnnotatorImpl.class );
 
     private static AtomicBoolean initializing = new AtomicBoolean( false );
 
-    private final static String MODEL_OUTPUT_PATH = ConfigUtils.getAnalysisStoragePath(); // FIXME
+    private final static String MODEL_OUTPUT_PATH = ConfigUtils.getAnalysisStoragePath();
 
     private static AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -318,7 +320,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
         log.info( "Examining name" );
         annotateName( model, experiment );
 
-        log.info( "Examining description (might take a while)" );
+        log.info( "Examining description" );
         annotateDescription( model, experiment );
 
         log.info( "Examining publications" );
@@ -337,12 +339,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      */
     private void annotateBioAssays( Model model, ExpressionExperiment experiment ) {
 
-        // this experiment hangs MMTx, runs out of memory (FIXME not portable!! How about GSE code?)
-        if ( experiment.getId() == 576l ) {
-            log.info( "skipping all Bioassays for 576" );
-            return;
-        }
-
+        int i = 0;
+        StopWatch timer = new StopWatch();
+        timer.start();
         for ( BioAssay ba : experiment.getBioAssays() ) {
             String nameSpaceBase = "bioAssay/" + ba.getId() + "/";
             if ( ba.getName() != null ) {
@@ -352,6 +351,13 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
             if ( ba.getDescription() != null ) {
                 doRDF( model, experiment.getId(), ba.getDescription(), nameSpaceBase + "description" );
             }
+
+            if ( ++i % 10 == 0 && timer.getTime() > 10000 ) {
+                log.info( i + " bioassays processed" );
+                timer.reset();
+                timer.start();
+            }
+
         }
     }
 
@@ -361,12 +367,6 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      */
     private void annotateDescription( Model model, ExpressionExperiment experiment ) {
         String description = experiment.getDescription();
-        // weird special case of something messed up in the experiment ... please remove this.
-        if ( experiment.getId() == 444 ) {
-            description = description.replace( "stroma", "stroma" );
-            log.info( "fixing 444" );
-        }
-
         doRDF( model, experiment.getId(), description, "experiment/" + experiment.getId() + "/description" );
     }
 
@@ -392,20 +392,6 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
                     doRDF( model, experiment.getId(), factor.getName(), nameSpaceBaseFactors + "name" );
 
                     doRDF( model, experiment.getId(), factor.getDescription(), nameSpaceBaseFactors + "description" );
-
-                    // Collection<FactorValue> factorValues = factor.getFactorValues();
-                    // for ( FactorValue factorValue : factorValues ) {
-                    // log.info( factorValue.getValue() );
-                    // log.info( factorValue.getId() );
-                    // for ( Characteristic c : factorValue.getCharacteristics() ) {
-                    // log.info( c.getName() );
-                    // log.info( c.getValue() );
-                    // log.info( c.getDescription());
-                    // log.info( c.getId() );
-                    // }
-                    //
-                    // // doRDF( factorValue.getValue(), nameSpaceBaseFactors + "factorValue/" + factorValue.getId());
-                    // }
 
                 }
             }
@@ -469,6 +455,8 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     private void doRDF( Model model, Long eeId, String text, String desc ) {
         if ( StringUtils.isBlank( text ) ) return;
         String textToProcess = text;
+
+        // FIXME these strings should be obtained from GeoConverter, not hardcoded here.
         textToProcess = textToProcess.replaceAll( "Source GEO sample is GSM[0-9]+", "" );
         textToProcess = textToProcess.replaceAll( "Last updated [(]according to GEO[)].+[\\d]{4}", "" );
 
