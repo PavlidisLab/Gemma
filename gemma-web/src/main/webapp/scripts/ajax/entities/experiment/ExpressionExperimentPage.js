@@ -272,7 +272,11 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 	'reloadNeeded': function(){
                 		var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Refreshing..."});
                 		myMask.show();
-                		window.location.reload(false); 
+                		var reloadToAdminTab = document.URL;
+                		reloadToAdminTab = reloadToAdminTab.replace(/&*tab=\w*/, '');
+                		reloadToAdminTab += '&tab=admin';
+                		window.location.href = reloadToAdminTab;
+
                 	}
                 }
             });
