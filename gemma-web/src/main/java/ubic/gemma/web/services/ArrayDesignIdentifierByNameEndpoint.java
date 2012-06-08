@@ -77,19 +77,19 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         for ( String ad : adResult ) {
             adName = ad;
         }
-        log.info( "XML input read: array design name, " + adName );
+        log.info( "XML input read: platform name, " + adName );
         // using the SearchService to get array design(s) when given free text
 
         // Map<Class, List<SearchResult>> results = searchService.search(SearchSettings.ArrayDesignSearch(name));
-        //			
+        //
         // List<SearchResult> adResults = results.get(ArrayDesign.class);
-        //						
+        //
         // if (adResults == null)
         // responseElement.appendChild(document
         // .createTextNode("No Array Design Service with that name."));
-        //	
+        //
         // else {
-        //				
+        //
         // //get array design identifier(s) and write it(them) to XML
         // for (SearchResult ad: adResults){
         // Element e = document.createElement("arrayDesignID");
@@ -97,7 +97,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         // e.appendChild(document.createTextNode(ad.getId().toString()));
         // responseElement.appendChild(e);
         // }
-        //				
+        //
         // }
 
         // using the ArrayDesignService
@@ -114,7 +114,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for array design id result built in " + time + "ms." );
+        log.info( "XML response for platform id result built in " + time + "ms." );
         return wrapper;
     }
 

@@ -205,7 +205,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else {
                 if ( this.arrayDesignsToProcess.isEmpty() ) {
                     throw new IllegalArgumentException(
-                            "You must specify an array design, a taxon, gene file, or batch." );
+                            "You must specify a platform, a taxon, gene file, or batch." );
                 }
                 for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
                     if ( doAllTypes ) {

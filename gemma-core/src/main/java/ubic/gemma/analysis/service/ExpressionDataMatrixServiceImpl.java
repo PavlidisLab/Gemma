@@ -113,7 +113,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
         if ( ad == null ) {
-            throw new IllegalArgumentException( "No array design named '" + arrayDesignName + "'" );
+            throw new IllegalArgumentException( "No platform named '" + arrayDesignName + "'" );
         }
         Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
         arrayDesignsUsed.add( ad );

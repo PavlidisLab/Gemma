@@ -48,9 +48,9 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option otherArrayDesignOption = OptionBuilder.isRequired().hasArg().withArgName( "Other array design" )
-                .withDescription( "Short name(s) of arrays to compare to the first one, comma-delimited" ).withLongOpt(
-                        "other" ).create( 'o' );
+        Option otherArrayDesignOption = OptionBuilder.isRequired().hasArg().withArgName( "Other platform" )
+                .withDescription( "Short name(s) of platforms to compare to the first one, comma-delimited" )
+                .withLongOpt( "other" ).create( 'o' );
 
         addOption( otherArrayDesignOption );
     }

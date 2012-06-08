@@ -320,7 +320,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
                 Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
                 if ( arrayDesignsUsed.size() > 1 ) {
                     log.warn( "Skipping postprocessing because experiment uses "
-                            + "multiple array types. Please check valid entry and run postprocessing separately." );
+                            + "multiple platforms. Please check valid entry and run postprocessing separately." );
                 }
 
                 ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();

@@ -96,8 +96,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
 
         if ( this.arrayDesignsToProcess.size() > 1 ) {
-            throw new IllegalArgumentException(
-                    "Cannot be applied to more than one array design given to the '-a' option" );
+            throw new IllegalArgumentException( "Cannot be applied to more than one platform given to the '-a' option" );
         }
         BufferedReader br = null;
         ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();

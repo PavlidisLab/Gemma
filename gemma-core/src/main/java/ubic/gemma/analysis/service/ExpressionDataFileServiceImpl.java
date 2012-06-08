@@ -519,8 +519,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         buf.append( "# Generated On: " + timestamp + " \n" );
         buf.append( DISCLAIMER );
         if ( geneAnnotations.isEmpty() ) {
-            log.info( "Micro Array Annotation File Missing for Experiment, unable to include annotation information" );
-            buf.append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            log.info( "Platform anotation File Missing for Experiment, unable to include annotation information" );
+            buf.append( "# The platform annotation file is missing for this Experiment, unable to include gene annotation information \n" );
             buf.append( "probeId_1 \t probeId_2 \t score \n" );
         } else
             buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );

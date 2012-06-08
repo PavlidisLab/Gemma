@@ -694,14 +694,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.hasOption( "probes" ) ) {
 
             if ( this.arrayDesignsToProcess == null || this.arrayDesignsToProcess.size() > 1 ) {
-                throw new IllegalArgumentException( "With -probes you must provide exactly one array design" );
+                throw new IllegalArgumentException( "With '-probes' you must provide exactly one platform" );
             }
 
             this.useDB = false;
             probeNames = this.getOptionValue( "probes" ).split( "," );
 
             if ( probeNames.length == 0 ) {
-                throw new IllegalArgumentException( "You must provide at least one probe name when using -probe" );
+                throw new IllegalArgumentException( "You must provide at least one probe name when using '-probes'" );
             }
         }
 

@@ -95,7 +95,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .hasArg()
                 .withArgName( "PSL file" )
                 .withDescription(
-                        "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple array designs to run); -t option overrides" )
+                        "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple platforms to run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
         Option blatScoreThresholdOption = OptionBuilder
@@ -112,7 +112,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .hasArg()
                 .withArgName( "taxon" )
                 .withDescription(
-                        "Taxon common name (e.g., human); if array design name not given (analysis will be restricted to sequences on that array for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
+                        "Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
 
         addOption( taxonOption );

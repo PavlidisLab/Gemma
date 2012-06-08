@@ -68,26 +68,26 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         Option otherArrayDesignOption = OptionBuilder
                 .isRequired()
                 .hasArg()
-                .withArgName( "Other array designs" )
+                .withArgName( "Other platforms" )
                 .withDescription(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
-                                + "If the array given with -a is already a merged design, these will be added to it if the -add option is given"
+                                + "If the platform given with -a is already a merged design, these will be added to it if the -add option is given"
                                 + "The designs cannot be ones already merged into another design, but they can be mergees." )
                 .withLongOpt( "other" ).create( 'o' );
 
         addOption( otherArrayDesignOption );
 
         Option newAdName = OptionBuilder.hasArg().withArgName( "name" )
-                .withDescription( "Name for new array design, if the given array is not already a merged design" )
+                .withDescription( "Name for new platform, if the given platform is not already a merged design" )
                 .withLongOpt( "name" ).create( 'n' );
         addOption( newAdName );
         Option newAdShortName = OptionBuilder.hasArg().withArgName( "name" )
-                .withDescription( "Short name for new array design, if the given array is not already a merged design" )
+                .withDescription( "Short name for new platform, if the given platform is not already a merged design" )
                 .withLongOpt( "shortname" ).create( 's' );
         addOption( newAdShortName );
 
         Option addOption = OptionBuilder.withDescription(
-                "If the given array is already a merged design, add the -o designs to it. "
+                "If the given platform is already a merged design, add the -o designs to it. "
                         + "Recommended unless there is a specific reason to create a new design." ).create( "add" );
         addOption( addOption );
     }
