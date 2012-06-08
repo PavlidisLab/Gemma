@@ -158,7 +158,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				    	        read: {
 				        	        dwrFunction: GeneController.loadGeneEvidence,
 				            	    getDwrArgsFunction: function(request){
-				            	    	return [request.params["geneId"], request.params["phenotypeValueUris"]];
+				            	    	return [
+											request.params['taxonCommonName'],
+				            	    		request.params['showOnlyEditable'],
+				            	    		request.params["geneId"],
+					            	    	request.params["phenotypeValueUris"]
+				            	    	];
 					                }
 				    	        }
 					        }
@@ -500,7 +505,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			tbar: [
 				createPhenotypeAssociationButton
 			],
-		    setCurrentData: function(currentPhenotypes, currentGene) {
+		    setCurrentData: function(currentFilters, currentPhenotypes, currentGene) {
 		    	this.currentPhenotypes = currentPhenotypes;
 
 				createPhenotypeAssociationButton.setDisabled(currentGene == null);
@@ -517,8 +522,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								    	
 					evidenceStore.reload({
 						params: {
-							'geneId': currentGene.id,
-							'phenotypeValueUris': phenotypeValueUris		    			
+							taxonCommonName: currentFilters.taxonCommonName,
+							showOnlyEditable: currentFilters.showOnlyEditable,
+							geneId: currentGene.id,
+							phenotypeValueUris: phenotypeValueUris		    			
 						}
 					});
 				} else {

@@ -257,6 +257,33 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
+        // Get the Gene object for finding homologues' evidence.
+		Gene gene = this.geneService.load( geneId );
+		
+		Collection<Gene> homologues = this.homologeneService.getHomologues( gene );    	    	
+		        
+		Collection<PhenotypeAssociation> homologuePhenotypeAssociations = null;
+		
+		for (Gene homologue : homologues) {
+			Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
+					.findPhenotypeAssociationForGeneId( homologue.getId() );
+			if (homologuePhenotypeAssociations == null) {
+				homologuePhenotypeAssociations = currHomologuePhenotypeAssociations;
+			}
+			homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
+		}
+		
+        if ( evidenceFilter.isShowOnlyEditable() ) {
+        	homologuePhenotypeAssociations = filterPhenotypeAssociationsMyAnnotation( homologuePhenotypeAssociations );
+        }
+
+		Collection<EvidenceValueObject> homologueEvidenceValueObjects = this.convert2ValueObjects( homologuePhenotypeAssociations );
+		for (EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects) {
+			evidenceValueObject.setHomologueEvidence(true);
+		}
+		
+		evidenceValueObjects.addAll(homologueEvidenceValueObjects);
+        
         return groupCommonEvidences( evidenceValueObjects );
     }
 

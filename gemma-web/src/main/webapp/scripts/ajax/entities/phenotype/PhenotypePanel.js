@@ -58,7 +58,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				geneStoreProxy: this.geneStoreProxy,
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
-						evidenceGrid.setCurrentData(selectedPhenotypes, selectedGene);
+						evidenceGrid.setCurrentData(currentFilters, selectedPhenotypes, selectedGene);
 						currentGene = selectedGene;
         			}
 				}

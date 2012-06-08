@@ -49,6 +49,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.WebConstants;
@@ -115,11 +116,13 @@ public class GeneController extends BaseController {
     }
 
     /** used to show gene info in the phenotype tab */
-    public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId, String[] phenotypeValueUris ) {
+    public Collection<EvidenceValueObject> loadGeneEvidence( String taxonCommonName,
+    		boolean showOnlyEditable, Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId(
                 geneId,
                 phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
-                        .asList( phenotypeValueUris ) ) );
+                        .asList( phenotypeValueUris ) ),
+                new EvidenceFilter(taxonCommonName, showOnlyEditable));
     }
 
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
