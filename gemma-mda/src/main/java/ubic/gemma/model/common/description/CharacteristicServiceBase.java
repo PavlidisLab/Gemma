@@ -37,13 +37,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     @Override
     public ubic.gemma.model.common.description.Characteristic create(
             final ubic.gemma.model.common.description.Characteristic c ) {
-        try {
-            return this.handleCreate( c );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.create(ubic.gemma.model.common.description.Characteristic c)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( c );
     }
 
     /**
@@ -51,13 +45,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      */
     @Override
     public void delete( final java.lang.Long id ) {
-        try {
-            this.handleDelete( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.delete(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        this.handleDelete( id );
     }
 
     /**
@@ -65,27 +53,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      */
     @Override
     public void delete( final ubic.gemma.model.common.description.Characteristic c ) {
-        try {
-            this.handleDelete( c );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.delete(ubic.gemma.model.common.description.Characteristic c)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.CharacteristicService#findByParentClass(java.lang.Class)
-     */
-    @Override
-    public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
-        try {
-            return this.handleFindByParentClass( parentClass );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.findByParentClass(java.lang.Class parentClass)' --> "
-                            + th, th );
-        }
+        this.handleDelete( c );
     }
 
     /**
@@ -93,55 +61,32 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      */
     @Override
     public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
-        try {
-            return this.handleFindByUri( searchString );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.findByUri(java.lang.String searchString)' --> "
-                            + th, th );
-        }
+        return this.handleFindByUri( searchString );
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.util.Collection)
      */
     @Override
-    public java.util.Collection<Characteristic> findByUri( final java.util.Collection uris ) {
-        try {
-            return this.handleFindByUri( uris );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.findByUri(java.util.Collection uris)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Characteristic> findByUri( final java.util.Collection<String> uris ) {
+        return this.handleFindByUri( uris );
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
     @Override
-    public java.util.Collection findByValue( final java.lang.String search ) {
-        try {
-            return this.handleFindByValue( search );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.findByValue(java.lang.String search)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
+        return this.handleFindByValue( search );
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#getParents(java.util.Collection)
      */
     @Override
-    public java.util.Map getParents( final java.util.Collection characteristics ) {
-        try {
-            return this.handleGetParents( characteristics );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.getParents(java.util.Collection characteristics)' --> "
-                            + th, th );
-        }
+    public java.util.Map<Characteristic, Object> getParents( final java.util.Collection<Characteristic> characteristics ) {
+        return this.handleGetParents( characteristics );
+
     }
 
     /**
@@ -149,13 +94,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      */
     @Override
     public ubic.gemma.model.common.description.Characteristic load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.handleLoad( id );
     }
 
     /**
@@ -170,13 +109,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      */
     @Override
     public void update( final ubic.gemma.model.common.description.Characteristic c ) {
-        try {
-            this.handleUpdate( c );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.update(ubic.gemma.model.common.description.Characteristic c)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( c );
     }
 
     /**
@@ -190,64 +123,47 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * Performs the core logic for {@link #create(ubic.gemma.model.common.description.Characteristic)}
      */
     protected abstract ubic.gemma.model.common.description.Characteristic handleCreate(
-            ubic.gemma.model.common.description.Characteristic c ) throws java.lang.Exception;
+            ubic.gemma.model.common.description.Characteristic c );
 
     /**
      * Performs the core logic for {@link #delete(java.lang.Long)}
      */
-    protected abstract void handleDelete( java.lang.Long id ) throws java.lang.Exception;
+    protected abstract void handleDelete( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.common.description.Characteristic)}
      */
-    protected abstract void handleDelete( ubic.gemma.model.common.description.Characteristic c )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
-     */
-    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass ) throws java.lang.Exception;
+    protected abstract void handleDelete( ubic.gemma.model.common.description.Characteristic c );
 
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString );
 
     /**
      * Performs the core logic for {@link #findByUri(java.util.Collection)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris );
 
     /**
      * Performs the core logic for {@link #findByValue(java.lang.String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getParent(ubic.gemma.model.common.description.Characteristic)}
-     */
-    protected abstract java.lang.Object handleGetParent(
-            ubic.gemma.model.common.description.Characteristic characteristic ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #getParents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetParents( java.util.Collection<Characteristic> characteristics )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<Characteristic, Object> handleGetParents(
+            java.util.Collection<Characteristic> characteristics );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.common.description.Characteristic handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.common.description.Characteristic handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.common.description.Characteristic)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.Characteristic c )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.common.description.Characteristic c );
 
 }

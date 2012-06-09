@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +43,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     /**
      * Classes examined when getting the "parents" of characteristics.
      */
-    private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
+    private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
             BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class,
             PhenotypeAssociationImpl.class };
 
@@ -63,21 +62,13 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         this.getCharacteristicDao().remove( id );
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleFindByParentClass(java.lang.Object)
-     */
     @Override
-    protected Map handleFindByParentClass( java.lang.Class parentClass ) {
-        return this.getCharacteristicDao().findByParentClass( parentClass );
-    }
-
-    @Override
-    protected Collection handleFindByUri( Collection uris ) {
+    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
         return this.getCharacteristicDao().findByUri( uris );
     }
 
     @Override
-    protected Collection handleFindByUri( String searchString ) {
+    protected Collection<Characteristic> handleFindByUri( String searchString ) {
         return this.getCharacteristicDao().findByUri( searchString );
     }
 
@@ -85,38 +76,20 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
     @Override
-    protected java.util.Collection handleFindByValue( java.lang.String search ) {
+    protected java.util.Collection<Characteristic> handleFindByValue( java.lang.String search ) {
         return this.getCharacteristicDao().findByValue( search + '%' );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description
-     * .Characteristic)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Object handleGetParent( Characteristic characteristic ) {
-        Collection chars = Arrays.asList( new Characteristic[] { characteristic } );
-        for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
-            Map<Characteristic, Object> charToParent = this.getCharacteristicDao().getParents( parentClass, chars );
-            if ( charToParent.containsKey( characteristic ) ) return charToParent.get( characteristic );
-        }
-        return null;
-    }
-
+    
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetParents( Collection characteristics ) {
-        Map charToParent = new HashMap<Characteristic, Object>();
-        for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
+    protected Map<Characteristic, Object> handleGetParents( Collection<Characteristic> characteristics ) {
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        for ( Class<?> parentClass : CLASSES_WITH_CHARACTERISTICS ) {
             charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
         }
         return charToParent;

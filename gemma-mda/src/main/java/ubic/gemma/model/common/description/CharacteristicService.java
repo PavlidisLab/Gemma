@@ -50,15 +50,6 @@ public interface CharacteristicService {
 
     /**
      * <p>
-     * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
-     * parent objects.
-     * </p>
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    public Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
-
-    /**
-     * <p>
      * Looks for an exact match of the give string to a valueUri in the characteritic database
      * </p>
      */

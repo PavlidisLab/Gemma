@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -79,7 +80,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByParentClass(java.lang.Class)
      */
     @Override
-    public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
+    public Map<Characteristic, Object> findByParentClass( final java.lang.Class<?> parentClass ) {
         return this.handleFindByParentClass( parentClass );
 
     }
@@ -115,15 +116,9 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      * @see ubic.gemma.model.common.description.CharacteristicDao#getParents(java.lang.Class, java.util.Collection)
      */
     @Override
-    public java.util.Map getParents( final java.lang.Class<?> parentClass,
+    public java.util.Map<Characteristic, Object> getParents( final java.lang.Class<?> parentClass,
             final java.util.Collection<Characteristic> characteristics ) {
-        try {
-            return this.handleGetParents( parentClass, characteristics );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.getParents(java.lang.Class parentClass, java.util.Collection characteristics)' --> "
-                            + th, th );
-        }
+        return this.handleGetParents( parentClass, characteristics );
     }
 
     /**
@@ -227,7 +222,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     /**
      * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
      */
-    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass );
+    protected abstract java.util.Map<Characteristic, Object> handleFindByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
@@ -247,7 +242,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     /**
      * Performs the core logic for {@link #getParents(java.lang.Class, java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetParents( java.lang.Class parentClass,
+    protected abstract java.util.Map<Characteristic, Object> handleGetParents( java.lang.Class<?> parentClass,
             java.util.Collection<Characteristic> characteristics );
 
 }

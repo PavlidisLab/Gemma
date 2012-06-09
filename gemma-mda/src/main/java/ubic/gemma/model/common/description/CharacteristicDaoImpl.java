@@ -60,7 +60,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
-    protected Map handleFindByParentClass( Class parentClass ) {
+    protected Map<Characteristic, Object> handleFindByParentClass( Class<?> parentClass ) {
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
@@ -140,12 +140,16 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * java.util.Collection)
      */
     @Override
-    protected Map handleGetParents( Class parentClass, Collection<Characteristic> characteristics ) {
+    protected Map<Characteristic, Object> handleGetParents( Class<?> parentClass,
+            Collection<Characteristic> characteristics ) {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         if ( characteristics == null || characteristics.size() == 0 ) {
             return charToParent;
         }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
         for ( Characteristic c : characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
@@ -153,7 +157,13 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
                 batch.clear();
             }
         }
-        batchGetParents( parentClass, batch, charToParent );
+        if ( !batch.isEmpty() ) batchGetParents( parentClass, batch, charToParent );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetch parents of characteristics: " + timer.getTime() + "ms for " + characteristics.size()
+                    + " elements" );
+        }
+
         return charToParent;
     }
 

@@ -34,16 +34,13 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.model.expression.experiment.FactorValueImpl;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -118,18 +115,6 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testFindByParentClass() {
-        Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.findByParentClass( ExpressionExperimentImpl.class );
-        assertEquals( ee, charToParent.get( eeChar1 ) );
-        assertEquals( ee, charToParent.get( eeChar2 ) );
-        charToParent = characteristicService.findByParentClass( BioMaterialImpl.class );
-        assertEquals( bm, charToParent.get( bmChar ) );
-        charToParent = characteristicService.findByParentClass( FactorValueImpl.class );
-        assertEquals( fv, charToParent.get( fvChar ) );
-    }
-
-    @Test
     public final void testGetParents() {
         Map<Characteristic, Object> charToParent;
         charToParent = characteristicService.getParents( Arrays.asList( new Characteristic[] { eeChar1 } ) );
@@ -172,7 +157,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     // Collection<Long> results = eeService.findByGene( genes.iterator().next());
     // log.info( results );
     // assertEquals(89, results.size() );
-    //        
+    //
     // }
 
     // This test uses the DB
@@ -181,13 +166,13 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     // .getBean( "expressionExperimentService" );
     // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
     // .getBean( "bibliographicReferenceService" );
-    //        
+    //
     // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
     //
     // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
     // assertEquals(1,foundEEs.size());
     // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
-    //       
+    //
     // }
 
 }
