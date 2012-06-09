@@ -21,12 +21,13 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig; 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -43,7 +44,7 @@ import cern.colt.list.DoubleArrayList;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     private static final int DEFAULT_QUANTILE = 15;

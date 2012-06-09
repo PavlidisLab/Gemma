@@ -12,6 +12,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
@@ -39,7 +40,7 @@ import cern.colt.list.DoubleArrayList;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialExpressionService {
 
     private static final String FV_SEP = ", ";

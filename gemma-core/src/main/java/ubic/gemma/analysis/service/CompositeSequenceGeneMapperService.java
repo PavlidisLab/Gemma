@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.service.GeneService;
@@ -39,7 +40,7 @@ import ubic.gemma.model.genome.Gene;
  * @deprecated Methods here can be done other ways, or added to the CompositeSequenceService if need be.
  */
 @Deprecated
-@Service
+@Component
 public class CompositeSequenceGeneMapperService {
     private Log log = LogFactory.getLog( this.getClass() );
 

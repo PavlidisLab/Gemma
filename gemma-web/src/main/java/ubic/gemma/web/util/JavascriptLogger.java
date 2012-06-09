@@ -152,7 +152,8 @@ public class JavascriptLogger {
         try {
             user = userManager.getCurrentUser();
         } catch ( org.springframework.security.core.userdetails.UsernameNotFoundException err ) {
-            // used to happen when user is anon; now we just return null
+            // used to happen when user is anon; now we just return null, so we should not reach this block. Just being
+            // safe.
             name = "anonymous";
         }
 

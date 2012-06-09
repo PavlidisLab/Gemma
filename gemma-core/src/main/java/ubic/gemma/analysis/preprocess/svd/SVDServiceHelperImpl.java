@@ -266,13 +266,15 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
         BioAssayDimension b = mat.getBestBioAssayDimension();
 
+        
+        // FIXME put these two operations in a single transaction.
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
                 svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
-
         /*
          * Add an audit event.
          */
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
+        // transaction should end here.
 
         return svdFactorAnalysis( pca );
     }

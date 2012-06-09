@@ -73,16 +73,24 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
      */
     @Override
     public DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment ) {
         return create( expressionExperiment, false );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#create(ubic.gemma.model.expression.experiment.ExpressionExperiment, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#create(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, boolean)
      */
     @Override
     public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute ) {
@@ -106,12 +114,17 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#create(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#create(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
+        // WARNING long transaction.
         FilterConfig fconfig = new FilterConfig();
         fconfig.setIgnoreMinimumRowsThreshold( true );
         fconfig.setIgnoreMinimumSampleThreshold( true );
@@ -121,17 +134,18 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         DoubleMatrix<BioAssay, BioAssay> mat = getMatrix( datamatrix );
         assert mat != null;
 
-        sampleCoexpressionMatrixDao.create( mat,
-                datamatrix.getBestBioAssayDimension(),
+        sampleCoexpressionMatrixDao.create( mat, datamatrix.getBestBioAssayDimension(),
                 datamatrix.getExpressionExperiment() );
 
         return mat;
     }
 
-    
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#hasMatrix(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#hasMatrix(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
      */
     @Override
     public boolean hasMatrix( ExpressionExperiment ee ) {

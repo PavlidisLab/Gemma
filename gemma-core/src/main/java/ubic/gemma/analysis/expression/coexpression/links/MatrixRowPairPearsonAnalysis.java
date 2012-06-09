@@ -20,6 +20,8 @@ package ubic.gemma.analysis.expression.coexpression.links;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.time.StopWatch;
+
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -129,6 +131,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
         /* for each vector, compare it to all other vectors */
         ExpressionDataMatrixRowElement itemA = null;
+        StopWatch timer = new StopWatch();
+        timer.start();
         double[] vectorA = new double[] {};
         double syy, sxy, sxx, sx, sy, xj, yj;
         int skipped = 0;
@@ -201,8 +205,12 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
             }
             if ( ( i + 1 ) % 2000 == 0 ) {
+                double t = timer.getTime() / 1000.0;
                 log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" )
+                        + String.format( ", time elapsed since last check: %.2f", t ) + "s" );
+                timer.reset();
+                timer.start();
             }
         }
         log.info( skipped + " rows skipped, where probe lacks a gene annotation" );
@@ -261,6 +269,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
          * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
          * mapped to them.
          */
+        StopWatch timer = new StopWatch();
+        timer.start();
         ExpressionDataMatrixRowElement itemA = null;
         ExpressionDataMatrixRowElement itemB = null;
         double[] vectorA = null;
@@ -291,8 +301,12 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                 ++numComputed;
             }
             if ( ( i + 1 ) % 2000 == 0 ) {
+                double t = timer.getTime() / 1000.0;
                 log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" )
+                        + String.format( ", time elapsed since last check: %.2f", t ) + "s" );
+                timer.reset();
+                timer.start();
             }
         }
         log.info( skipped + " rows skipped, due to no gene association" );

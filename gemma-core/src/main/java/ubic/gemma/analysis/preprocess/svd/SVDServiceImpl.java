@@ -17,6 +17,7 @@ package ubic.gemma.analysis.preprocess.svd;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -26,10 +27,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Perform SVD on expression data and store the results.
- * 
- *
  */
-@Service
+@Component
 public class SVDServiceImpl implements SVDService {
 
     @Autowired
@@ -37,12 +36,12 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private SVDServiceHelper svdServiceHelper;
-       
+
     @Override
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        
+
         if ( ee == null ) return null;
 
         return svdServiceHelper.getTopLoadedVectors( ee, component, count );
@@ -56,9 +55,9 @@ public class SVDServiceImpl implements SVDService {
     @Override
     public boolean hasPca( Long eeId ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        
+
         return svdServiceHelper.hasPca( ee );
-        
+
     }
 
     /**
@@ -71,25 +70,24 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject getSvd( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        
+
         return svdServiceHelper.retrieveSvd( ee );
 
     }
 
-    
     @Override
     public SVDValueObject svd( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        
+
         return svdServiceHelper.svd( ee );
     }
-   
+
     @Override
     public SVDValueObject getSvdFactorAnalysis( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        
+
         return svdServiceHelper.svdFactorAnalysis( ee );
     }
 

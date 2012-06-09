@@ -21,6 +21,7 @@ package ubic.gemma.tasks.analysis.expression;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
@@ -35,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class TwoChannelMissingValueTaskImpl implements TwoChannelMissingValueTask {
 
     @Autowired

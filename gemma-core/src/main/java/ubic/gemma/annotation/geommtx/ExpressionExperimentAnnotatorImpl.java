@@ -37,7 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.GEOMMTx.ProjectRDFModelTools;
 import ubic.GEOMMTx.Text2Owl;
@@ -75,7 +75,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
  * @author lfrench, paul
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentAnnotatorImpl implements InitializingBean, ExpressionExperimentAnnotator {
 
     // for RDF output.

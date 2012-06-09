@@ -29,7 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author anton
  *
  */
-@Service
+@Component
 @Path("/eedesign")
 public class EEDesignWebService {
             

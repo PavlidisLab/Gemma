@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.apps.Blat;
@@ -45,7 +46,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ProbeMapperImpl implements ProbeMapper {
 
     private Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );

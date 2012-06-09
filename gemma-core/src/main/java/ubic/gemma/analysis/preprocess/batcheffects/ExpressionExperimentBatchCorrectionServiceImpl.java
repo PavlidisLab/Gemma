@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import cern.colt.matrix.DoubleMatrix2D;
@@ -56,7 +57,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentBatchCorrectionServiceImpl implements ExpressionExperimentBatchCorrectionService {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentBatchCorrectionServiceImpl.class );

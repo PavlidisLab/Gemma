@@ -92,22 +92,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     @Autowired
     private AnalysisUtilService analysisUtilService;
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
     /**
      * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
      * 
@@ -133,8 +117,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
         }
 
-        log.info( elsWithNoSeq.size()
-                + " elements on the new platform have no associated sequence." );
+        log.info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );

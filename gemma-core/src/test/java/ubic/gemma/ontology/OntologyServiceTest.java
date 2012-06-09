@@ -50,9 +50,9 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             os.getMgedOntologyService().startInitializationThread( true );
             int c = 0;
             while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-                Thread.sleep( 1000 );
+                Thread.sleep( 5000 );
                 log.info( "Waiting for Ontology to load" );
-                if ( ++c > 100 ) {
+                if ( ++c > 20 ) {
                     fail( "Ontology load timeout" );
                 }
             }

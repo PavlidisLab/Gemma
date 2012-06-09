@@ -21,6 +21,7 @@ package ubic.gemma.tasks.analysis.sequence;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -39,7 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask {
 
     @Autowired

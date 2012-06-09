@@ -19,6 +19,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
@@ -61,7 +62,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class PreprocessorServiceImpl implements PreprocessorService {
 
     private static Log log = LogFactory.getLog( PreprocessorServiceImpl.class );

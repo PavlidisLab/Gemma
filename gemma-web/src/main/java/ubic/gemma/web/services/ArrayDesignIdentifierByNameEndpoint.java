@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
  * @author klc, gavin
  * @version$Id$
  */
-
 public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
 
     private ArrayDesignService arrayDesignService;
@@ -54,10 +53,6 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         this.arrayDesignService = ads;
     }
 
-    // public void setSearchService( SearchService ss ) {
-    // this.searchService = ss;
-    // }
-
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
      * 
@@ -66,7 +61,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -78,27 +73,6 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
             adName = ad;
         }
         log.info( "XML input read: platform name, " + adName );
-        // using the SearchService to get array design(s) when given free text
-
-        // Map<Class, List<SearchResult>> results = searchService.search(SearchSettings.ArrayDesignSearch(name));
-        //
-        // List<SearchResult> adResults = results.get(ArrayDesign.class);
-        //
-        // if (adResults == null)
-        // responseElement.appendChild(document
-        // .createTextNode("No Array Design Service with that name."));
-        //
-        // else {
-        //
-        // //get array design identifier(s) and write it(them) to XML
-        // for (SearchResult ad: adResults){
-        // Element e = document.createElement("arrayDesignID");
-        // //ad is a SearchResult object, but it will return the id of the returned entity...?
-        // e.appendChild(document.createTextNode(ad.getId().toString()));
-        // responseElement.appendChild(e);
-        // }
-        //
-        // }
 
         // using the ArrayDesignService
         ArrayDesign ad = arrayDesignService.findByShortName( adName );

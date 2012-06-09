@@ -17,6 +17,7 @@ package ubic.gemma.analysis.expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
@@ -32,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class AnalysisUtilServiceImpl implements AnalysisUtilService {
 
     private static Log log = LogFactory.getLog( AnalysisUtilServiceImpl.class );

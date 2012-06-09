@@ -36,6 +36,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -57,7 +58,7 @@ import cern.colt.list.DoubleArrayList;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionDataMatrixVisualizationService {
 
     private static final int IMAGE_CELL_SIZE = 10;

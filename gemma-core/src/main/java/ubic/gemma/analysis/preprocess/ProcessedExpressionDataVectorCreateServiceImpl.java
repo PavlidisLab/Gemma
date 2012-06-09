@@ -100,7 +100,7 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
      */
     @Override
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
-
+        // WARNING long transaction.
         try {
             ee = processedDataService.createProcessedDataVectors( ee );
             ee = this.eeService.thawLite( ee );

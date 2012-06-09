@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -66,7 +67,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
     private static final double THRESH_HOLD = 0.01;
