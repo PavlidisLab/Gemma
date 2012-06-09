@@ -42,12 +42,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     @Override
     public Collection<Auditable> getNewSinceDate( final Date date ) {
-        try {
-            return this.handleGetNewSinceDate( date );
-        } catch ( Throwable th ) {
-            throw new AuditEventServiceException(
-                    "Error performing 'AuditEventService.getNewSinceDate(Date date)' --> " + th, th );
-        }
+        return this.handleGetNewSinceDate( date );
     }
 
     /**
@@ -55,12 +50,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     @Override
     public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
-        try {
-            return this.handleGetUpdatedSinceDate( date );
-        } catch ( Throwable th ) {
-            throw new AuditEventServiceException(
-                    "Error performing 'AuditEventService.getUpdatedSinceDate(Date date)' --> " + th, th );
-        }
+        return this.handleGetUpdatedSinceDate( date );
     }
 
     /**
@@ -68,19 +58,6 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     public void setAuditEventDao( AuditEventDao auditEventDao ) {
         this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * @see AuditEventService#thaw(AuditEvent)
-     */
-    @Override
-    public void thaw( final AuditEvent auditEvent ) {
-        try {
-            this.handleThaw( auditEvent );
-        } catch ( Throwable th ) {
-            throw new AuditEventServiceException(
-                    "Error performing 'AuditEventService.thaw(AuditEvent auditEvent)' --> " + th, th );
-        }
     }
 
     /**
@@ -93,12 +70,12 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     /**
      * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date ) throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date );
 
     /**
      * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date ) throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date );
 
     /**
      * Performs the core logic for {@link #thaw(AuditEvent)}

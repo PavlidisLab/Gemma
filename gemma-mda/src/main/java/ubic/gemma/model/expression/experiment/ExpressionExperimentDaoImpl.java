@@ -1755,33 +1755,13 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
         }
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-        // Hibernate.initialize( result.getQuantitationTypes() );
-        // Hibernate.initialize( result.getCharacteristics() );
-        // Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
-        // Hibernate.initialize( result.getBioAssays() );
-        // Hibernate.initialize( result.getAuditTrail() );
-        // Hibernate.initialize( result.getAuditTrail().getEvents() );
-        /*
-         * for ( BioAssay ba : result.getBioAssays() ) { Hibernate.initialize( ba.getArrayDesignUsed() );
-         * Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() ); Hibernate.initialize(
-         * ba.getDerivedDataFiles() ); Hibernate.initialize( ba.getSamplesUsed() ); for ( BioMaterial bm :
-         * ba.getSamplesUsed() ) { Hibernate.initialize( bm.getFactorValues() ); Hibernate.initialize(
-         * bm.getTreatments() ); } }
-         */
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {
             Hibernate.initialize( experimentalDesign );
 
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
-            /*
-             * experimentalDesign.getTypes().size(); for ( ExperimentalFactor factor :
-             * experimentalDesign.getExperimentalFactors() ) { Hibernate.initialize( factor.getAnnotations() ); for (
-             * FactorValue f : factor.getFactorValues() ) { Hibernate.initialize( f.getCharacteristics() ); if (
-             * f.getMeasurement() != null ) { Hibernate.initialize( f.getMeasurement() ); if (
-             * f.getMeasurement().getUnit() != null ) { Hibernate.initialize( f.getMeasurement().getUnit() ); } } } }
-             */
         }
 
         thawReferences( result );

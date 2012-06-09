@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -119,11 +118,6 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         assertNotNull( svd.getvMatrix() );
 
         assertEquals( 10, svd.getBioMaterialIds().length );
-    }
-
-    @Before
-    public void setUp() throws Exception {
-
     }
 
     @After

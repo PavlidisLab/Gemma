@@ -64,13 +64,13 @@ public interface AuditEventService {
     /**
      * Returns a collection of Auditables created since the date given.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
 
     /**
      * Returns a collection of Auditable objects that were updated since the date entered.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     /*
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
@@ -79,17 +79,10 @@ public interface AuditEventService {
     public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
 
     /**
-     * 
-     */
-    @Deprecated
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
-
-    /**
      * @param auditable
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
 
     /**
@@ -97,13 +90,13 @@ public interface AuditEventService {
      * @param type
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public Map<Auditable, AuditEvent> getLastEvent( java.util.Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
 
@@ -116,7 +109,7 @@ public interface AuditEventService {
      *         <p>
      *         Note: cannot secure this very easily since map key is a Class.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
@@ -124,7 +117,7 @@ public interface AuditEventService {
      * @param events
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
 
 }

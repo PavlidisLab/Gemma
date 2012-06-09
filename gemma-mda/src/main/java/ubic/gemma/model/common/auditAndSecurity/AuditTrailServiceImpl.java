@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -93,14 +94,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public void addComment( final Auditable auditable, final String comment, final String detail ) {
-        try {
-            AuditEventType type = new CommentedEventImpl();
-            this.addUpdateEvent( auditable, type, comment, detail );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addComment(Auditable auditable, String comment, String detail)' --> "
-                            + th, th );
-        }
+        AuditEventType type = new CommentedEventImpl();
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
@@ -108,16 +103,10 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public void addOkFlag( final Auditable auditable, final String comment, final String detail ) {
-        try {
-            // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
-            // should only be used to reverse "trouble".
-            AuditEventType type = new OKStatusFlagEventImpl();
-            this.addUpdateEvent( auditable, type, comment, detail );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addOkFlag(Auditable auditable, String comment, String detail)' --> "
-                            + th, th );
-        }
+        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
+        // should only be used to reverse "trouble".
+        AuditEventType type = new OKStatusFlagEventImpl();
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
@@ -125,14 +114,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
-        try {
-            AuditEventType type = new TroubleStatusFlagEventImpl();
-            this.addUpdateEvent( auditable, type, comment, detail );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addTroubleFlag(Auditable auditable, String comment, String detail)' --> "
-                            + th, th );
-        }
+        AuditEventType type = new TroubleStatusFlagEventImpl();
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
@@ -140,18 +123,12 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        try {
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            auditEvent.setAction( AuditAction.UPDATE );
-            auditEvent.setNote( note );
-            this.statusDao.update( auditable, null );
-            return this.auditTrailDao.addEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> " + th,
-                    th );
-        }
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setNote( note );
+        this.statusDao.update( auditable, null );
+        return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
     /**
@@ -160,27 +137,21 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note, boolean detachedAuditable ) {
-        try {
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            auditEvent.setAction( AuditAction.UPDATE );
-            auditEvent.setEventType( auditEventType );
-            auditEvent.setNote( note );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
 
-            // FIXME: Temporary solution.
-            if ( !this.sessionFactory.getCurrentSession().contains( auditable ) ) {
-                // Re-attach if it is not already in current session
-                this.sessionFactory.getCurrentSession().update( auditable );
-            }
-
-            // TODO: Use AuditHelper?
-            this.statusDao.update( auditable, auditEventType );
-            return this.auditTrailDao.addEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note)' --> "
-                            + th, th );
+        // FIXME: Temporary solution.
+        if ( !this.sessionFactory.getCurrentSession().contains( auditable ) ) {
+            // Re-attach if it is not already in current session
+            this.sessionFactory.getCurrentSession().update( auditable );
         }
+
+        // TODO: Use AuditHelper?
+        this.statusDao.update( auditable, auditEventType );
+        return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
     /**
@@ -188,19 +159,13 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
-        try {
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            auditEvent.setAction( AuditAction.UPDATE );
-            auditEvent.setEventType( auditEventType );
-            auditEvent.setNote( note );
-            this.statusDao.update( auditable, auditEventType );
-            return this.auditTrailDao.addEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note)' --> "
-                            + th, th );
-        }
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
+        this.statusDao.update( auditable, auditEventType );
+        return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
     /**
@@ -209,20 +174,14 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note, final String detail ) {
-        try {
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            auditEvent.setAction( AuditAction.UPDATE );
-            auditEvent.setEventType( auditEventType );
-            auditEvent.setNote( note );
-            auditEvent.setDetail( detail );
-            this.statusDao.update( auditable, auditEventType );
-            return this.auditTrailDao.addEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, AuditEventType auditEventType, String note, String detail)' --> "
-                            + th, th );
-        }
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
+        auditEvent.setDetail( detail );
+        this.statusDao.update( auditable, auditEventType );
+        return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
     /**
@@ -231,14 +190,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public void addValidatedFlag( final Auditable auditable, final String comment, final String detail ) {
-        try {
-            AuditEventType type = new ValidatedFlagEventImpl();
-            this.addUpdateEvent( auditable, type, comment, detail );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addValidatedFlag(Auditable auditable, String comment, String detail)' --> "
-                            + th, th );
-        }
+        AuditEventType type = new ValidatedFlagEventImpl();
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
@@ -246,13 +199,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public AuditTrail create( final AuditTrail auditTrail ) {
-        try {
-            return this.auditTrailDao.create( auditTrail );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.create(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
-                            + th, th );
-        }
+        return this.auditTrailDao.create( auditTrail );
     }
 
     /**
@@ -260,20 +207,15 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
-        try {
-            AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
-            if ( troubleEvent == null ) {
-                return null;
-            }
-            AuditEvent okEvent = this.auditEventDao.getLastEvent( auditable, OKStatusFlagEventImpl.class );
-            if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
-                return null;
-            }
-            return troubleEvent;
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.getLastTroubleEvent(Auditable auditable)' --> " + th, th );
+        AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
+        if ( troubleEvent == null ) {
+            return null;
         }
+        AuditEvent okEvent = this.auditEventDao.getLastEvent( auditable, OKStatusFlagEventImpl.class );
+        if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
+            return null;
+        }
+        return troubleEvent;
     }
 
     /**
@@ -281,15 +223,12 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     public AuditEvent getLastValidationEvent( final Auditable auditable ) {
-        try {
-            return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.getLastValidationEvent(Auditable auditable)' --> " + th, th );
-        }
+        return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
     }
-    
-    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass ){
+
+    @Override
+    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass ) {
         return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
     }
 

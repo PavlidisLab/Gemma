@@ -40,8 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component; 
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -53,6 +52,7 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -110,6 +110,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     /*
      * (non-Javadoc)
@@ -638,6 +641,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
          */
 
         for ( ExpressionAnalysisResultSet ears : results ) {
+            differentialExpressionResultService.thaw( ears );
             sortedFirstColumnOfResults = analysisResultSetToString( ears, geneAnnotations, buf, probe2String,
                     sortedFirstColumnOfResults );
 

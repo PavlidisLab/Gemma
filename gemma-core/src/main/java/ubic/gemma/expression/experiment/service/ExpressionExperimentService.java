@@ -525,6 +525,10 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 

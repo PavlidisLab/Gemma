@@ -53,11 +53,11 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
             a.getStatus().setLastUpdateDate( now );
             this.update( a.getStatus() );
         }
-        if(auditEventType instanceof TroubleStatusFlagEventImpl){
+        if ( auditEventType instanceof TroubleStatusFlagEventImpl ) {
             this.setTroubled( a, true );
-        }else if (auditEventType instanceof OKStatusFlagEventImpl){
+        } else if ( auditEventType instanceof OKStatusFlagEventImpl ) {
             this.setTroubled( a, false );
-        }else if (auditEventType instanceof ValidatedFlagEventImpl){
+        } else if ( auditEventType instanceof ValidatedFlagEventImpl ) {
             this.setValidated( a, true );
         }
 
@@ -108,6 +108,5 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
         return ( Status ) entity;
     }
-
 
 }

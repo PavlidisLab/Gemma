@@ -37,6 +37,7 @@ import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -90,6 +91,9 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     /*
      * (non-Javadoc)
@@ -245,6 +249,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
+        processedExpressionDataVectorService.thaw( vectos );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
         log.info( "Starting SVD" );
@@ -262,19 +267,9 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             bioMaterialIds.add( mat.getBioMaterialForColumn( i ).getId() );
         }
 
-        principalComponentAnalysisService.removeForExperiment( ee );
-
         BioAssayDimension b = mat.getBestBioAssayDimension();
 
-        
-        // FIXME put these two operations in a single transaction.
-        PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
-                svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
-        /*
-         * Add an audit event.
-         */
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
-        // transaction should end here.
+        PrincipalComponentAnalysis pca = updatePca( ee, svd, v, b );
 
         return svdFactorAnalysis( pca );
     }
@@ -595,6 +590,26 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
         fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
+    }
+
+    /**
+     * FIXME make this a transactional method.
+     * 
+     * @param ee
+     * @param svd
+     * @param v
+     * @param b
+     * @return
+     */
+    private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
+            DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension b ) {
+        principalComponentAnalysisService.removeForExperiment( ee );
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
+                svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
+
+        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
+        return pca;
     }
 
 }

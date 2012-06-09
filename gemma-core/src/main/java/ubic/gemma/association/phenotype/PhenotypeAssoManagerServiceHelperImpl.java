@@ -92,7 +92,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
     }
 
