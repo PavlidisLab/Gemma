@@ -137,21 +137,21 @@ import ubic.gemma.util.ReflectionUtil;
 public class SearchServiceImpl implements SearchService {
 
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
-//
-//    /**
-//     * Defines the properties we look at for 'highlighting'.
-//     */
-//    private static final String[] propertiesToSearch = new String[] { "all", "name", "description",
-//            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
-//            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
-//            "expressionExperiment.experimentalDesign.experimentalFactors.name",
-//            "expressionExperiment.experimentalDesign.experimentalFactors.description",
-//            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
-//            "expressionExperiment.primaryPublication.authorList",
-//            "expressionExperiment.otherRelevantPublications.abstractText",
-//            "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
-//            "expressionExperiment.experimentalDesign.experimentalFactors.name",
-//            "expressionExperiment.experimentalDesign.factorValues.value" };
+    //
+    // /**
+    // * Defines the properties we look at for 'highlighting'.
+    // */
+    // private static final String[] propertiesToSearch = new String[] { "all", "name", "description",
+    // "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
+    // "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
+    // "expressionExperiment.experimentalDesign.experimentalFactors.name",
+    // "expressionExperiment.experimentalDesign.experimentalFactors.description",
+    // "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
+    // "expressionExperiment.primaryPublication.authorList",
+    // "expressionExperiment.otherRelevantPublications.abstractText",
+    // "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
+    // "expressionExperiment.experimentalDesign.experimentalFactors.name",
+    // "expressionExperiment.experimentalDesign.factorValues.value" };
 
     /**
      * Penalty applied to all 'index' hits
@@ -1893,12 +1893,8 @@ public class SearchServiceImpl implements SearchService {
              * Always give compass hits a lower score so they can be differentiated from exact database hits.
              */
             r.setScore( new Double( hits.score( i ) * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
-            CompassHighlightedText highlightedText = hits.highlightedText( i );
-            if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
-                r.setHighlightedText( "... " + highlightedText.getHighlightedText() + " ..." );
-            } else {
-                if ( log.isDebugEnabled() ) log.debug( "No highlighted text for " + r );
-            }
+
+            getHighlightedText( hits, i, r );
 
             if ( log.isDebugEnabled() ) log.debug( i + " " + hits.score( i ) + " " + r );
 
@@ -1910,11 +1906,25 @@ public class SearchServiceImpl implements SearchService {
                     + " raw hits tested) in " + timer.getTime() + "ms" );
         }
         if ( timer.getTime() > 5000 ) {
-            log.info( "****Extremely long Lucene Search processing!" + results.size() + " hits retrieved (out of "
+            log.info( "****Extremely long Lucene Search processing! " + results.size() + " hits retrieved (out of "
                     + Math.min( MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in " + timer.getTime() + "ms" );
         }
 
         return results;
+    }
+
+    /**
+     * @param hits
+     * @param i
+     * @param r
+     */
+    private void getHighlightedText( CompassHits hits, int i, SearchResult r ) {
+        CompassHighlightedText highlightedText = hits.highlightedText( i );
+        if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
+            r.setHighlightedText( highlightedText.getHighlightedText() );
+        } else {
+            if ( log.isDebugEnabled() ) log.debug( "No highlighted text for " + r );
+        }
     }
 
     /**

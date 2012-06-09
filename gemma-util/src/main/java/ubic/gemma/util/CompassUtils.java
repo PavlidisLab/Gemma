@@ -20,14 +20,11 @@ package ubic.gemma.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.store.FSDirectory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
@@ -48,21 +45,25 @@ public class CompassUtils {
      */
     public static void deleteCompassLocks() {
         /*
-         * FIXME lock directory is now the same as the indexes, by default.
+         * FIXME Note that normally the lock files are not present - only during indexing. So I am turning this into a
+         * no-op for now until we evaluate the necessity. - PP
+         * 
+         * The locks are stored in the same directoy as the indexes, so to do this we need to know the location of the
+         * indexes (there are multiple locations)
          */
 
-        Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
-                .suffixFileFilter( "lock" ), null );
-
-        if ( lockFiles.size() == 0 ) {
-            log.debug( "Lucene lock files do not exist." );
-            return;
-        }
-
-        for ( File file : lockFiles ) {
-            log.debug( "Removing Lucene lock file " + file );
-            file.delete();
-        }
+        // Collection<File> lockFiles = FileUtils.listFiles( /* FIXME */,
+        // FileFilterUtils.suffixFileFilter( "lock" ), null );
+        //
+        // if ( lockFiles.size() == 0 ) {
+        // log.debug( "Lucene lock files do not exist." );
+        // return;
+        // }
+        //
+        // for ( File file : lockFiles ) {
+        // log.debug( "Removing Lucene lock file " + file );
+        // file.delete();
+        // }
     }
 
     /**
@@ -116,7 +117,7 @@ public class CompassUtils {
             gps.index();
         } catch ( Exception e ) {
             String bodyText = "Failed to build Index. Error is:  " + e;
-            log.warn( bodyText );
+            log.error( bodyText, e );
             return false;
         }
 
@@ -125,9 +126,8 @@ public class CompassUtils {
             gps.getIndexCompass().getSearchEngineOptimizer().optimize();
         } catch ( Exception e ) {
             String bodyText = "Failed to optimize Index. Error is:  " + e;
-            log.warn( bodyText );
+            log.error( bodyText, e );
             return false;
-            // mailEngine.sendAdminMessage(bodyText, "Failed optimizing");
         }
 
         log.info( "Optimizing complete" );
@@ -148,7 +148,7 @@ public class CompassUtils {
      */
     public static synchronized void swapCompassIndex( InternalCompass compass, String pathToIndex ) throws IOException {
 
-        log.info("Attempting to swap indexes. From " + pathToIndex);
+        log.info( "Attempting to swap indexes. From " + pathToIndex );
         final File srcDir = new File( pathToIndex );
         String engineSetting = compass.getSettings().getSetting( "compass.engine.connection" );
 

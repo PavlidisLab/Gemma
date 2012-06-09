@@ -171,9 +171,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         long time = System.currentTimeMillis();
 
         log.info( "Rebuilding " + whatIndexingMsg );
-        // /device.index();
         CompassUtils.rebuildCompassIndex( device );
-
         time = System.currentTimeMillis() - time;
 
         log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );

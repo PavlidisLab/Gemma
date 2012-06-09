@@ -6,10 +6,7 @@
           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
           http://www.springframework.org/schema/context 
           http://www.springframework.org/schema/context/spring-context-3.0.xsd">
-	<!-- 
-	author: keshav   
-	$Id$ 
--->
+	<!-- author: keshav $Id$ -->
 	<bean id="indexerTask" class="ubic.gemma.tasks.maintenance.IndexerTaskImpl">
 		<property name="expressionGps">
 			<ref bean="expressionGps" />
@@ -60,8 +57,8 @@
 			<ref bean="compassExperimentSet" />
 		</property>
 		<property name="mailEngine">
-			<ref bean="mailEngine" /> 
-		</property>		
+			<ref bean="mailEngine" />
+		</property>
 	</bean>
 
 	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
@@ -92,7 +89,7 @@
 		</property>
 	</bean>
 
-	<!-- Generic compass configuration beans  -->
+	<!-- Generic compass configuration beans -->
 	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" scope="prototype">
 		<property name="name" value="hibernateGpsDevice" />
 		<property name="sessionFactory" ref="sessionFactory" />
@@ -107,11 +104,11 @@
 			</bean>
 		</property>
 		<property name="parallelIndexExecutor">
-			<bean class="org.compass.gps.device.support.parallel.ConcurrentParallelIndexExecutor">		
-				<constructor-arg type="int" value="2"/>
-			</bean>	
+			<bean class="org.compass.gps.device.support.parallel.ConcurrentParallelIndexExecutor">
+				<constructor-arg type="int" value="2" />
+			</bean>
 		</property>
-				
+
 		<property name="fetchCount">
 			<value>200</value>
 		</property>
@@ -186,7 +183,7 @@
 			</list>
 		</property>
 	</bean>
-	
+
 	<bean id="geneSetGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassGeneSet" />
@@ -197,7 +194,7 @@
 			</list>
 		</property>
 	</bean>
-	
+
 	<bean id="experimentSetGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassExperimentSet" />
@@ -209,7 +206,7 @@
 		</property>
 	</bean>
 
-	<!-- Details of how indexing is done -->
+	<!-- Details of how indexing is done. See http://www.compass-project.org/docs/2.2.0/reference/html/core-settings.html -->
 	<bean id="compassExpression" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
@@ -219,22 +216,19 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/expression
-				</prop>
-				<prop key="compass.engine.lockFile">
-					file://${gemma.compass.dir}/compass/gemma/expression/expression.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/expression
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
+				<prop key="compass.engine.optimizer.adaptive.mergeFactor">5</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
-				<prop key="compass.engine.maxBufferedDocs">50</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -250,10 +244,11 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/gene</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/gene/gene.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/gene</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/gene.lock
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+gene</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
@@ -261,10 +256,8 @@
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">100</prop>
-				<prop key="compass.engine.maxBufferedDocs">100</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -281,20 +274,19 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/array</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/array/array.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/array</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/array.lock
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
-				<prop key="compass.engine.maxBufferedDocs">50</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -311,20 +303,17 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/probe</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/probe/probe.lock
-				</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/probe</prop>
 				<prop key="compass.transaction.lockTimeout">60</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">100</prop>
-				<prop key="compass.engine.maxBufferedDocs">100</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -341,22 +330,18 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/biosequence
-				</prop>
-				<prop key="compass.engine.lockFile">
-					file://${gemma.compass.dir}/compass/gemma/biosequence/biosequence.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/biosequence
 				</prop>
 				<prop key="compass.transaction.lockTimeout">60</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
-				<prop key="compass.engine.maxBufferedDocs">50</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -373,12 +358,10 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/bibliographic
-				</prop>
-				<prop key="compass.engine.lockFile">
-					file://${gemma.compass.dir}/compass/gemma/bibliographic/bibliographic.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/bibliographic
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+Root</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
@@ -386,15 +369,14 @@
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
+				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
-	
+
 	<bean id="compassGeneSet" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
@@ -404,28 +386,23 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/geneset
-				</prop>
-				<prop key="compass.engine.lockFile">
-					file://${gemma.compass.dir}/compass/gemma/geneset/geneset.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/geneset
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+Root</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
-	
+
 	<bean id="compassExperimentSet" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
@@ -435,21 +412,16 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/experimentset
-				</prop>
-				<prop key="compass.engine.lockFile">
-					file://${gemma.compass.dir}/compass/gemma/experimentset/experimentset.lock
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/experimentset
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+Root</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
