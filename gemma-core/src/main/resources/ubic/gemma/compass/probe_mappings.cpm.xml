@@ -17,10 +17,5 @@
 		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-	 	<component name="arrayDesign" ref-alias="arrayDesign" />  
-	</class>
- 	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="false" support-unmarshall="false">
-		<id name="id" />
-		<property name="name"> <meta-data>name</meta-data></property>
 	</class>
 </compass-core-mapping>

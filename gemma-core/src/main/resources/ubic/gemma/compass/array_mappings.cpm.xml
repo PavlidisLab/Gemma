@@ -28,7 +28,6 @@
 		</property>
 		<component name="designProvider" ref-alias="contact" />
 		<component name="alternateNames" ref-alias="alternateName" />
-		<component name="primaryTaxon" ref-alias="primaryTaxon" />
 	</class>
 	<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
 		<id name="id" />
@@ -40,21 +39,6 @@
 		<id name="id" />
 		<property name="name">
 			<meta-data store="no">name</meta-data>
-		</property>
-	</class>
-	<class name="genome.TaxonImpl" alias="primaryTaxon" root="false"  support-unmarshall="false">
-		<id name="id" />
-		<property name="scientificName">
-			<meta-data>scientific name</meta-data>
-		</property>
-		<property name="commonName">
-			<meta-data>common name</meta-data>
-		</property>
-		<property name="abbreviation">
-			<meta-data>abbreviation</meta-data>
-		</property>
-		<property name="ncbiId">
-			<meta-data>ncbi id</meta-data>
 		</property>
 	</class>
 </compass-core-mapping>

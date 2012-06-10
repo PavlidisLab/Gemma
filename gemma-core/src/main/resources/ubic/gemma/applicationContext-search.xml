@@ -312,7 +312,7 @@
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
-				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.mergeFactor">10</prop>
 				<prop key="compass.engine.ramBufferSize">256</prop>
 			</props>
 		</property>

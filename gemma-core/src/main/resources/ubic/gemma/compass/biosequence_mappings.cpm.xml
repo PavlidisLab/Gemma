@@ -2,7 +2,6 @@
 <!DOCTYPE compass-core-mapping PUBLIC 
     "-//Compass/Compass Core Mapping DTD 2.2//EN"
     "http://www.compass-project.org/dtd/compass-core-mapping-2.2.dtd">
-
 <!--
 	This document is a Compass mapping file, allowing the Gemma objects to be 
 	indexed and searched.  All "searchable"  attributes 
@@ -20,11 +19,5 @@
 		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-		<component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct" />
-	</class>
-	<!--  Little woried about this as bioSequence2GeneProduct is an abstract class.  There are 3 concrete subclasses...
-		currently using BlatAssociationImpl... if bioSequence2GeneProduct is used bombs when unmarsheling.  -->
-	<class name="genome.sequenceAnalysis.BlatAssociationImpl" alias="bioSequence2GeneProduct" root="false"  support-unmarshall="false">
-		<id name="id" />
 	</class>
 </compass-core-mapping>

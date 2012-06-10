@@ -27,11 +27,6 @@
 		<component name="experimentalDesign" ref-alias="experimentalDesign" />
 		<component name="primaryPublication" ref-alias="primaryPublication" />
 		<component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
-		<!--    
-			
-			<component name="owner" ref-alias="contact" />
-			
-		-->
 	</class>
 	<class name="expression.bioAssay.BioAssayImpl" alias="bioAssay" root="false">
 		<id name="id" />
@@ -42,7 +37,6 @@
 			<meta-data>description</meta-data>
 			<meta-data>bioassay description</meta-data>
 		</property>
-		<component name="arrayDesignUsed" ref-alias="arrayDesign" />
 	</class>
 	<class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign" root="false">
 		<id name="id" />
@@ -124,58 +118,4 @@
 			<meta-data>description</meta-data>
 		</property>
 	</class>
-
-
-	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="true">
-		<id name="id" />
-		<property name="name">
-			<meta-data>name</meta-data>
-			<meta-data>array design name</meta-data>
-		</property>
-		<property name="description">
-			<meta-data>description</meta-data>
-			<meta-data>array design description</meta-data>
-		</property>
-		<property name="shortName">
-			<meta-data>shortName</meta-data>
-			<meta-data>array design short name</meta-data>
-		</property>
-		<component name="designProvider" ref-alias="contact" />
-		<component name="alternateNames" ref-alias="alternateName" />
-		<component name="primaryTaxon" ref-alias="primaryTaxon" />
-	</class>
-	<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
-		<id name="id" />
-		<property name="name">
-			<meta-data store="no">name</meta-data>
-		</property>
-	</class>
-	<class name="expression.arrayDesign.AlternateNameImpl" alias="alternateName" root="false">
-		<id name="id" />
-		<property name="name">
-			<meta-data store="no">name</meta-data>
-		</property>
-	</class>
-	<class name="genome.TaxonImpl" alias="primaryTaxon" root="false"  support-unmarshall="false">
-		<id name="id" />
-		<property name="scientificName">
-			<meta-data>scientific name</meta-data>
-		</property>
-		<property name="commonName">
-			<meta-data>common name</meta-data>
-		</property>
-		<property name="abbreviation">
-			<meta-data>abbreviation</meta-data>
-		</property>
-		<property name="ncbiId">
-			<meta-data>ncbi id</meta-data>
-		</property>
-	</class>
-
-	<!--
-		<class name="common.auditAndSecurity.Contact" alias="owner" root="false"> <id name="id" /> <property name="name">
-		<meta-data>name</meta-data> <meta-data>username</meta-data> </property> <property name="address">
-		<meta-data>address</meta-data> </property> <property name="phone"> <meta-data>phone</meta-data>
-		<meta-data>telephone</meta-data> </property> <property name="email"> <meta-data>email</meta-data> </property> </class>
-	-->
 </compass-core-mapping>
