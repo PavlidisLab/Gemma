@@ -314,6 +314,9 @@
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.mergeFactor">10</prop>
 				<prop key="compass.engine.ramBufferSize">256</prop>
+				<!-- see AbstractConcurrentTransactionProcessor; 'lucene' because that is the transaction isolation method we are using -->
+				<prop key="compass.transaction.processor.lucene.backlog">1000</prop> <!-- undocumented, default is 100 -->
+				<prop key="compass.transaction.processor.lucene.addTimeout">100000</prop> <!-- undocumented, default is 10000 (ms) -->
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -342,6 +345,9 @@
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
 				<prop key="compass.engine.ramBufferSize">256</prop>
+				<!-- see AbstractConcurrentTransactionProcessor; 'lucene' because that is the transaction isolation method we are using -->
+				<prop key="compass.transaction.processor.lucene.backlog">1000</prop> <!-- undocumented, default is 100 -->
+				<prop key="compass.transaction.processor.lucene.addTimeout">100000</prop> <!-- undocumented, default is 10000 (ms) -->
 			</props>
 		</property>
 		<property name="transactionManager">
