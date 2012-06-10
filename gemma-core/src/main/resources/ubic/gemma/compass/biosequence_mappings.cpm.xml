@@ -11,7 +11,7 @@
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="true"  support-unmarshall="false">
+	<class name="genome.biosequence.BioSequenceImpl" alias="bioSequence" root="true"  support-unmarshall="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
