@@ -47,7 +47,7 @@ Ext.onReady(function() {
 <div style="padding-left:0px">
 <div align="center">
 
-	<div style="width: 900px; padding-bottom:20px" id="generalSearchSimple-div"></div>
+	<div style="width: 900px; padding-bottom:20px;" id="generalSearchSimple-div"  align="left"></div>
 	
 	<div style="width: 900px">
 		<div align="center">
