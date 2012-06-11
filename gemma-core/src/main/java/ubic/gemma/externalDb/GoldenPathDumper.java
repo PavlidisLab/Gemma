@@ -337,7 +337,7 @@ public class GoldenPathDumper extends GoldenPath {
      * @return
      */
     private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
-        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( this.jt.getDataSource(), table, type, limit );
+        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( this.jdbcTemplate.getDataSource(), table, type, limit );
         return bsQuery.execute();
     }
 
@@ -347,7 +347,7 @@ public class GoldenPathDumper extends GoldenPath {
      */
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
-        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jt.getDataSource(), query );
+        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jdbcTemplate.getDataSource(), query );
         return bsQuery.execute();
     }
 
@@ -357,7 +357,7 @@ public class GoldenPathDumper extends GoldenPath {
      */
     private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
-        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jt.getDataSource(), query );
+        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jdbcTemplate.getDataSource(), query );
         return bsQuery.execute();
     }
 

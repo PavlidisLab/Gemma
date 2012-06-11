@@ -170,9 +170,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
         GoldenPathDumper dumper = new GoldenPathDumper( taxon );
-        externalDatabaseService = this.getBean( ExternalDatabaseService.class );
 
-        dumper.setExternalDatabaseService( externalDatabaseService );
         gp.setLimit( limit );
         gp.load( dumper );
 

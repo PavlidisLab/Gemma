@@ -163,10 +163,10 @@ public class GoldenPathQuery extends GoldenPath {
     }
 
     @Override
-    protected void init( int port, String host, String user, String password ) {
-        super.init( port, host, user, password );
-        estQuery = new EstQuery( this.jt.getDataSource() );
-        mrnaQuery = new MrnaQuery( this.jt.getDataSource() );
+    protected void init() {
+        super.init();
+        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
+        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
     }
 
 }
