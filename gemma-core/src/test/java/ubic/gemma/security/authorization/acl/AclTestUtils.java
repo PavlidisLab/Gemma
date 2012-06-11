@@ -203,7 +203,7 @@ public class AclTestUtils {
 
     public void checkHasAclParent( Object f, Object parent ) {
         Acl parentAcl = getParentAcl( f );
-        assertNotNull( parentAcl );
+        assertNotNull( "No ACL for parent of " + f, parentAcl );
 
         if ( parent != null ) {
             Acl b = getAcl( parent );

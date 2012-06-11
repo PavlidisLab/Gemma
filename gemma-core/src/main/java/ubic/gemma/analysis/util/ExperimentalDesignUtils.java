@@ -338,7 +338,9 @@ public class ExperimentalDesignUtils {
              * TODO: It would be better to throw a more specific catchable exception, so the caller can decide what to
              * do.
              */
-            throw new IllegalStateException( samp + " did not have a matching factor value for: " + factor );
+            throw new IllegalStateException( samp + " did not have a matching factor value for: " + factor
+                    + "[assay e.g. " + samp.getBioAssaysUsedIn().iterator().next() + "]" );
+
         }
         return value;
     }
