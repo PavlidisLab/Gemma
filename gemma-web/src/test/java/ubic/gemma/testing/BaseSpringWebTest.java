@@ -19,6 +19,7 @@
 package ubic.gemma.testing;
 
 import org.junit.Before;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
@@ -58,7 +59,7 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
     public final void setupWebTest() {
         // change the port on the mailSender so it doesn't conflict with an
         // existing SMTP server on localhost
-        JavaMailSenderImpl mailSender = ( JavaMailSenderImpl ) getBean( "mailSender" );
+        JavaMailSenderImpl mailSender = ( JavaMailSenderImpl ) getBean( JavaMailSender.class );
         assert mailSender != null;
         mailSender.setPort( MAIL_PORT );
         mailSender.setHost( "localhost" );
