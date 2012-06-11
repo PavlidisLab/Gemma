@@ -36,12 +36,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.tasks.maintenance.IndexerTask;
+import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -70,6 +74,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @Autowired
     OntologyService ontologyService;
+
+    @Autowired
+    IndexerTask indexService;
 
     private ExpressionExperiment ee;
     private Gene gene;
@@ -131,9 +138,46 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if ( gene != null ) geneService.remove( gene );
         if ( ee != null ) eeService.delete( ee );
+    }
+
+    @Test
+    public void testSearchByBibRefId() {
+
+        String id;
+        if ( ee.getPrimaryPublication() == null ) {
+            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+            BibliographicReference bibref = fetcher.retrieveByHTTP( 21878914 );
+            bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+            ee.setPrimaryPublication( bibref );
+            eeService.update( ee );
+            id = "21878914";
+        } else {
+            id = ee.getPrimaryPublication().getPubAccession().getAccession();
+        }
+
+        log.info( "indexing ..." );
+
+        IndexerTaskCommand c = new IndexerTaskCommand();
+        c.setIndexBibRef( true );
+        indexService.execute( c );
+
+        SearchSettings settings = new SearchSettings();
+        settings.noSearches();
+        settings.setQuery( id );
+        settings.setSearchExperiments( true );
+        settings.setUseCharacteristics( false );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
     }
 
     /**
@@ -144,7 +188,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
     public void testGeneralSearch4Brain() {
 
         SearchSettings settings = new SearchSettings();
-        // needed otherwise search can return > max results & query ee gets trimmed
         settings.noSearches();
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
@@ -187,7 +230,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Test we find EE tagged with a child term that matches the given uri.
      */
     @Test
-    public void testURIChildSearch() throws Exception {
+    public void testURIChildSearch() {
         SearchSettings settings = new SearchSettings();
         settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
                                                                       // 'spinal cord'.

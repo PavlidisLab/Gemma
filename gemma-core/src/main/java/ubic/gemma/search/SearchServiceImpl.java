@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,6 +95,7 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -1653,6 +1655,28 @@ public class SearchServiceImpl implements SearchService {
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )
                         results.addAll( dbHitsToSearchResult( expressionExperiments ) );
+                }
+            }
+        }
+
+        if ( results.size() == 0 ) {
+            /*
+             * Search for bib refs
+             */
+            List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
+                    .search( settings.getQuery() );
+
+            if ( !bibrefs.isEmpty() ) {
+                Collection<BibliographicReference> refs = new HashSet<BibliographicReference>();
+                Collection<SearchResult> r = this.compassBibliographicReferenceSearch( settings );
+                for ( SearchResult searchResult : r ) {
+                    refs.add( ( BibliographicReference ) searchResult.getResultObject() );
+                }
+
+                Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
+                        .getRelatedExperiments( refs );
+                for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments.entrySet() ) {
+                    results.addAll( dbHitsToSearchResult( e.getValue() ) );
                 }
             }
         }
