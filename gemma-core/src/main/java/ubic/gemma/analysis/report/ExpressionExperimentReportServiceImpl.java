@@ -249,7 +249,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
 
-        Collection<Long> validatedEEs = getValidated( ees );
+        Collection<Long> validatedEEs = getValidated( vos );
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
@@ -399,11 +399,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return results;
     }
 
-    private Collection<Long> getValidated( Collection<ExpressionExperiment> ees ) {
+    private Collection<Long> getValidated( Collection<ExpressionExperimentValueObject> vos ) {
         Collection<Long> result = new HashSet<Long>();
-        for ( ExpressionExperiment ee : ees ) {
+        for ( ExpressionExperimentValueObject ee : vos ) {
 
-            if ( ee.getStatus().getValidated() ) {
+            if ( ee.getValidated() ) {
                 result.add( ee.getId() );
             }
         }
