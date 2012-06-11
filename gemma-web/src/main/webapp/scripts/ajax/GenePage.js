@@ -52,6 +52,22 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			this.setActiveTab(tabName);
 		},this);
 		this.add(details);
+				
+		this.add(this.initDiffExTab( geneId ));
+		
+		this.add(this.initCoexTab( geneId ));
+						
+		this.add(this.initPhenotypeTab());
+		
+		this.add({
+			title:'Gene Ontology Terms',
+			xtype: 'genegogrid',
+			border: true,
+			geneid: this.geneId,
+			minHeight: 150,
+			deferLoadToRender: true,
+			itemId: 'goGrid'
+		});
 		
 		//ALLEN BRAIN ATLAS IMAGES
 		this.add({
@@ -61,8 +77,51 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			itemId:'expression'
 		});
 		
-		// diff expression grid
+
+		/* see bug 2972
+		 * this.add({
+			xtype: 'geneproductgrid',
+			geneid: geneId,
+			title: 'Gene Products',
+			deferLoadToRender: true,
+			itemId: 'products'
+		});*/
 		
+		var initialTab = 'details';
+		this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
+        if ( this.loadSpecificTab ) {
+            var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
+            if (param.tab) {
+            	if(this.getComponent( param.tab ) != undefined){
+            		initialTab =  param.tab;
+            	}
+            }
+        }
+		
+		this.on('render', function(){
+			this.setActiveTab( initialTab );
+		});
+	},
+	initCoexTab: function( geneId ){
+		var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
+			title: 'Coexpression',
+			colspan: 2,
+			lite: true,
+			noSmallGemma: true,
+			itemId: 'coex'
+		});
+		coexpressedGeneGrid.on('render', function(){
+			coexpressedGeneGrid.doSearch({
+				geneIds: [geneId],
+				quick: true,
+				stringency: 2,
+				forceProbeLevelSearch: false
+			});
+		});
+		return coexpressedGeneGrid;
+		
+	},
+	initDiffExTab: function( geneId ){
 		var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
 			title: 'Differential Expression',
 			itemId: 'diffEx'
@@ -82,45 +141,9 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				params: [geneId, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
 			});
 		});
-		this.add(diffExGrid);
-		
-		
-		// Coexpression grid.
-		var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
-			title: 'Coexpression',
-			colspan: 2,
-			lite: true,
-			noSmallGemma: true,
-			itemId: 'coex'
-		});
-		coexpressedGeneGrid.on('render', function(){
-			coexpressedGeneGrid.doSearch({
-				geneIds: [geneId],
-				quick: true,
-				stringency: 2,
-				forceProbeLevelSearch: false
-			});
-		});
-		this.add(coexpressedGeneGrid);
-		
-		
-		this.add({
-			xtype: 'geneproductgrid',
-			geneid: geneId,
-			title: 'Gene Products',
-			deferLoadToRender: true,
-			itemId: 'products'
-		});
-		
-		this.add({
-			title:'Gene Ontology Terms',
-			xtype: 'genegogrid',
-			border: true,
-			geneid: this.geneId,
-			minHeight: 150,
-			deferLoadToRender: true,
-			itemId: 'goGrid'
-		});
+		return diffExGrid;
+	},
+	initPhenotypeTab : function(){
 		
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
@@ -154,21 +177,6 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			},
 			this);
 		
-		this.add(phenotypeEvidenceGridPanel);
-		
-		var initialTab = 'details';
-		this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
-        if ( this.loadSpecificTab ) {
-            var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
-            if (param.tab) {
-            	if(this.getComponent( param.tab ) != undefined){
-            		initialTab =  param.tab;
-            	}
-            }
-        }
-		
-		this.on('render', function(){
-			this.setActiveTab( initialTab );
-		});
+		return phenotypeEvidenceGridPanel;
 	}
 });
