@@ -77,23 +77,24 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.numValues = factor.getFactorValues().size();
 
         for ( FactorValue value : factor.getFactorValues() ) {
-
-            if ( value.getMeasurement() != null ) {
-                if ( this.type.equals( "categorical" ) ) {
-                    throw new IllegalStateException(
-                            "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
-                                    + factor );
-                }
-
-                this.type = "continuous";
-            } else {
-                if ( this.type.equals( "continuous" ) ) {
-                    throw new IllegalStateException(
-                            "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
-                                    + factor );
-                }
-                this.type = "categorical";
-            }
+            
+              // For backwards compatibility? For old entries created prior to introduction of 'type' field in ExperimentalFactor.
+//            if ( value.getMeasurement() != null ) {
+//                if ( this.type.equals( "categorical" ) ) {
+//                    throw new IllegalStateException(
+//                            "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
+//                                    + factor );
+//                }
+//
+//                this.type = "continuous";
+//            } else {
+//                if ( this.type.equals( "continuous" ) ) {
+//                    throw new IllegalStateException(
+//                            "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
+//                                    + factor );
+//                }
+//                this.type = "categorical";
+//            }
 
             Characteristic c = value.getExperimentalFactor().getCategory();
             if ( c == null ) {
