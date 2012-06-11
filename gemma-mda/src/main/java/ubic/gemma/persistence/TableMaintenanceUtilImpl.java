@@ -86,6 +86,15 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     @Autowired
     private SessionFactory sessionFactory;
 
+    private boolean sendEmail = true;
+
+    /*
+     * For use in tests.
+     */
+    public void disableEmail() {
+        this.sendEmail = false;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -226,6 +235,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      * @param results
      */
     private void sendEmail( Gene2CsStatus results ) {
+        if ( !sendEmail ) return;
         SimpleMailMessage msg = new SimpleMailMessage();
         String adminEmailAddress = ConfigUtils.getAdminEmailAddress();
         if ( StringUtils.isBlank( adminEmailAddress ) ) {

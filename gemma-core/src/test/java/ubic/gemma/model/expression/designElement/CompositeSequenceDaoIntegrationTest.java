@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.TableMaintenanceUtilImpl;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.util.ConfigUtils;
 
@@ -85,7 +86,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         if ( !setupDone ) {
             // insert the needed genes and gene products into the system.(can use NCBI gene loader, but for subset)
             NcbiGeneLoader loader = new NcbiGeneLoader();
-            loader.setTaxonService( ( TaxonService ) this.getBean( "taxonService" ) );
+            loader.setTaxonService( this.getBean( TaxonService.class ) );
             loader.setPersisterHelper( persisterHelper );
             String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
             filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
@@ -152,7 +153,8 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
     @Test
     public void testHandleGetGenesCompositeSequences() {
 
-        TableMaintenenceUtil tu = ( TableMaintenenceUtil ) this.getBean( "tableMaintenanceUtil" );
+        TableMaintenenceUtil tu = this.getBean( TableMaintenenceUtil.class );
+        ( ( TableMaintenanceUtilImpl ) tu ).disableEmail();
         tu.updateGene2CsEntries();
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
