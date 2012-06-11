@@ -147,7 +147,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @Override
-    public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) throws Exception {
+    public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
             DifferentialExpressionAnalysis dea = ea;
             doThaw( dea, false );
@@ -212,7 +212,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
-            double threshold ) throws Exception {
+            double threshold ) {
         final String findByResultSet = "select distinct r from DifferentialExpressionAnalysisImpl a"
                 + "   inner join a.experimentAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
@@ -231,8 +231,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation )
-            throws Exception {
+    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         return getAnalyses( investigation );
     }
 
@@ -245,7 +244,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
-            Collection<Long> investigationIds ) throws Exception {
+            Collection<Long> investigationIds ) {
 
         Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Long, Collection<DifferentialExpressionAnalysis>>();
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
@@ -255,10 +254,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
             DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            if ( results.containsKey( bas.getId() ) ) {
-                results.put( bas.getId(), new HashSet<DifferentialExpressionAnalysis>() );
+            Long id = bas.getId();
+            if ( !results.containsKey( id ) ) {
+                results.put( id, new HashSet<DifferentialExpressionAnalysis>() );
             }
-            results.get( bas.getId() ).add( dea );
+            results.get( id ).add( dea );
         }
         return results;
     }
@@ -270,7 +270,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
-            Collection<Investigation> investigations ) throws Exception {
+            Collection<Investigation> investigations ) {
 
         Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
 
@@ -316,7 +316,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * (ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
+    protected Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene ) {
 
         StopWatch timer = new StopWatch();
         timer.start();

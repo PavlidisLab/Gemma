@@ -81,10 +81,11 @@ public interface DifferentialExpressionAnalysisService extends
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     /**
-     * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
+     * Given a collection of ids, return a map of id -> collection of differential expression analysis
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds( Collection<Long> investigationIds );
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
+            Collection<Long> investigationIds );
 
     /**
      * Return a collection of experiments in which the given gene was analyzed.

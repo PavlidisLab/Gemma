@@ -36,6 +36,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author klc
@@ -68,7 +69,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     private String testAnalysisName;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
@@ -157,6 +158,14 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         assertEquals( 1, results.get( e1 ).size() );
         assertEquals( 2, results.get( e3 ).size() );
+
+        // also by ID
+        Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService.findByInvestigationIds( EntityUtils
+                .getIds( investigations ) );
+        assertEquals( 2, ees.size() );
+
+        assertEquals( 1, ees.get( e1.getId() ).size() );
+        assertEquals( 2, ees.get( e3.getId() ).size() );
     }
 
     @Test

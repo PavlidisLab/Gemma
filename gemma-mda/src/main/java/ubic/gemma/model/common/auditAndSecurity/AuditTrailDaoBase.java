@@ -39,13 +39,7 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
      */
     @Override
     public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
-        try {
-            return this.handleAddEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'AuditTrailDao.addEvent(ubic.gemma.model.common.Auditable auditable, AuditEvent auditEvent)' --> "
-                            + th, th );
-        }
+        return this.handleAddEvent( auditable, auditEvent );
     }
 
     /**
@@ -152,7 +146,6 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     /**
      * Performs the core logic for {@link #addEvent(ubic.gemma.model.common.Auditable, AuditEvent)}
      */
-    protected abstract AuditEvent handleAddEvent( ubic.gemma.model.common.Auditable auditable, AuditEvent auditEvent )
-            throws java.lang.Exception;
+    protected abstract AuditEvent handleAddEvent( ubic.gemma.model.common.Auditable auditable, AuditEvent auditEvent );
 
 }

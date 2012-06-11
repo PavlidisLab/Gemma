@@ -102,7 +102,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection<Long> investigationIds ) {
+    protected Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
+            Collection<Long> investigationIds ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigationIds( investigationIds );
     }
 

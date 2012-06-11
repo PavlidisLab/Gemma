@@ -36,9 +36,6 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath*:ubic/gemma/applicationContext-validation.xml" }, inheritLocations = true)
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
-    /**
-     * 
-     */
     protected static final int MAIL_PORT = 2525;
 
     /**
@@ -54,10 +51,11 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public final void setupWebTest() throws Exception {
+    public final void setupWebTest() {
         // change the port on the mailSender so it doesn't conflict with an
         // existing SMTP server on localhost
         JavaMailSenderImpl mailSender = ( JavaMailSenderImpl ) getBean( "mailSender" );

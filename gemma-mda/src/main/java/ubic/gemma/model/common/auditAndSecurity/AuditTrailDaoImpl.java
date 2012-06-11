@@ -21,7 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +53,9 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
      * 
      */
     @Override
-    protected AuditEvent handleAddEvent( final Auditable auditable, final AuditEvent auditEvent ) throws Exception {
+    protected AuditEvent handleAddEvent( final Auditable auditable, final AuditEvent auditEvent ) {
+
+        Auditable aprime = ( Auditable ) this.getSession().get( auditable.getClass(), auditable.getId() );
 
         if ( auditEvent.getAction() == null ) {
             throw new IllegalArgumentException( "auditEvent was missing a required field" );
@@ -73,13 +74,13 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
          * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
          * defensive.
          */
-        if ( auditable.getAuditTrail() == null ) {
-            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+        if ( aprime.getAuditTrail() == null ) {
+            aprime.setAuditTrail( AuditTrail.Factory.newInstance() );
         }
 
-        auditable.getAuditTrail().addEvent( auditEvent );
+        aprime.getAuditTrail().addEvent( auditEvent );
 
-        this.getHibernateTemplate().saveOrUpdate( auditable.getAuditTrail() );
+        this.getHibernateTemplate().saveOrUpdate( aprime.getAuditTrail() );
 
         return auditEvent;
     }
@@ -122,34 +123,34 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         Object result = results.iterator().next();
         return ( User ) result;
     }
-    
+
     /**
-     * 
      * @param entityClass
      * @param auditEventClass
      * @return
      */
     @Override
-    public java.util.Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass) {
+    public java.util.Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass ) {
 
         String entityCanonicalName = entityClass.getName();
-        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName() + "Impl";
+        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName()
+                + "Impl";
 
         String eventCanonicalName = auditEventClass.getName();
-        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass.getName() + "Impl";
-        
+        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass
+                .getName() + "Impl";
+
         Collection<Auditable> result = new ArrayList<Auditable>();
-            String queryString = "select distinct auditableEntity from "
-                    + entityCanonicalName + " auditableEntity "
-                    + " inner join auditableEntity.auditTrail trail "
-                    + " inner join trail.events auditEvents "
-                    + " inner join auditEvents.eventType et where et.class = "+ eventCanonicalName;
-            try {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-                result.addAll( queryObject.list() );
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw super.convertHibernateAccessException( ex );
-            }
+        String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
+                + " inner join auditableEntity.auditTrail trail " + " inner join trail.events auditEvents "
+                + " inner join auditEvents.eventType et where et.class = " + eventCanonicalName;
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            result.addAll( queryObject.list() );
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
         return result;
     }
 

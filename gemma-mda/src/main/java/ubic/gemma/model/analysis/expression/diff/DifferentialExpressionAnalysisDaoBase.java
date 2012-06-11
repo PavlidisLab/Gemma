@@ -81,27 +81,16 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     @Override
     public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
             final ExpressionAnalysisResultSet resultSet, final double threshold ) {
-        try {
-            return this.handleFind( gene, resultSet, threshold );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.find(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold)' --> "
-                            + th, th );
-        }
+        return this.handleFind( gene, resultSet, threshold );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByInvestigationIds(java.util.Collection)
      */
     @Override
-    public java.util.Map findByInvestigationIds( final java.util.Collection<Long> investigationIds ) {
-        try {
-            return this.handleFindByInvestigationIds( investigationIds );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findByInvestigationIds(java.util.Collection investigationIds)' --> "
-                            + th, th );
-        }
+    public java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
+            final java.util.Collection<Long> investigationIds ) {
+        return this.handleFindByInvestigationIds( investigationIds );
     }
 
     /**
@@ -109,13 +98,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
      */
     @Override
     public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindExperimentsWithAnalyses( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
+        return this.handleFindExperimentsWithAnalyses( gene );
     }
 
     @Override
@@ -194,13 +177,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
      */
     @Override
     public void thaw( final java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        try {
-            this.handleThaw( expressionAnalyses );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.thaw(java.util.Collection expressionAnalyses)' --> "
-                            + th, th );
-        }
+        this.handleThaw( expressionAnalyses );
     }
 
     /**
@@ -209,13 +186,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        try {
-            this.handleThaw( differentialExpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis)' --> "
-                            + th, th );
-        }
+        this.handleThaw( differentialExpressionAnalysis );
     }
 
     /**
@@ -259,33 +230,30 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
      * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
     protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind(
-            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold )
-            throws java.lang.Exception;
+            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
      */
     protected abstract java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
-            java.util.Collection<Long> investigationIds ) throws java.lang.Exception;
+            java.util.Collection<Long> investigationIds );
 
     /**
      * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
      */
     protected abstract java.util.Collection<BioAssaySet> handleFindExperimentsWithAnalyses(
-            ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
+            ubic.gemma.model.genome.Gene gene );
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
      * Performs the core logic for
      * {@link #thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
      */
     protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
 }

@@ -70,13 +70,14 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     /**
      * 
      */
-    public java.util.Map findByInvestigationIds( java.util.Collection<Long> investigationIds );
+    public java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
+            java.util.Collection<Long> investigationIds );
 
     /**
      * @param gene
      * @return
      */
-    public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 

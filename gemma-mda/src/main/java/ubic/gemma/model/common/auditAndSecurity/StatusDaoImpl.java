@@ -20,6 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Date;
 
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,39 +47,48 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
 
     @Override
     public void update( Auditable a, AuditEventType auditEventType ) {
+
+        Auditable aprime = ( Auditable ) this.getSession().get( a.getClass(), a.getId() );
+
         Date now = new Date();
-        if ( a.getStatus() == null ) {
-            a.setStatus( create() );
+        if ( aprime.getStatus() == null ) {
+            aprime.setStatus( create() );
         } else {
-            a.getStatus().setLastUpdateDate( now );
-            this.update( a.getStatus() );
+            Hibernate.initialize( aprime.getStatus() );
+            aprime.getStatus().setLastUpdateDate( now );
+            this.update( aprime.getStatus() );
         }
+
         if ( auditEventType instanceof TroubleStatusFlagEventImpl ) {
-            this.setTroubled( a, true );
+            this.setTroubled( aprime, true );
         } else if ( auditEventType instanceof OKStatusFlagEventImpl ) {
-            this.setTroubled( a, false );
+            this.setTroubled( aprime, false );
         } else if ( auditEventType instanceof ValidatedFlagEventImpl ) {
-            this.setValidated( a, true );
+            this.setValidated( aprime, true );
         }
 
     }
 
     @Override
     public void setTroubled( Auditable a, boolean value ) {
-        a.getStatus().setTroubled( value );
+        Auditable aprime = ( Auditable ) this.getSession().get( a.getClass(), a.getId() );
+        Hibernate.initialize( aprime.getStatus() );
+        aprime.getStatus().setTroubled( value );
         if ( value ) {
-            a.getStatus().setValidated( false );
+            aprime.getStatus().setValidated( false );
         }
-        this.update( a.getStatus() );
+        this.update( aprime.getStatus() );
     }
 
     @Override
     public void setValidated( Auditable a, boolean value ) {
-        a.getStatus().setValidated( value );
+        Auditable aprime = ( Auditable ) this.getSession().get( a.getClass(), a.getId() );
+        Hibernate.initialize( aprime.getStatus() );
+        aprime.getStatus().setValidated( value );
         if ( value ) {
-            a.getStatus().setTroubled( false );
+            aprime.getStatus().setTroubled( false );
         }
-        this.update( a.getStatus() );
+        this.update( aprime.getStatus() );
     }
 
     @Override
