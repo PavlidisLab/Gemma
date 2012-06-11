@@ -68,6 +68,19 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
+        } else {
+            // Backwards compatibility: for old entries created prior to introduction of 'type' field in ExperimentalFactor entity.
+            // We have to take a guess.
+            if (factor.getFactorValues().isEmpty()) {
+                this.type = "categorical";
+            } else {
+                // Just use first factor value to make our guess.
+                if (factor.getFactorValues().iterator().next().getMeasurement() != null) {
+                    this.type = "continuous";
+                } else {
+                    this.type = "categorical";                    
+                }                
+            }
         }
 
         if ( factor.getFactorValues() == null || factor.getFactorValues().isEmpty() ) {
@@ -78,7 +91,6 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
         for ( FactorValue value : factor.getFactorValues() ) {
             
-              // For backwards compatibility? For old entries created prior to introduction of 'type' field in ExperimentalFactor.
 //            if ( value.getMeasurement() != null ) {
 //                if ( this.type.equals( "categorical" ) ) {
 //                    throw new IllegalStateException(
