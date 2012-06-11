@@ -62,6 +62,9 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
 
     private boolean indexQ = false;
 
+    private boolean indexX = false;
+    private boolean indexY = false;
+
     @Override
     public String getShortDesc() {
         return "Create or update the searchable indexes for a Gemma production system";
@@ -96,6 +99,10 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" )
                 .create( 'q' );
         addOption( sequenceOption );
+
+        addOption( OptionBuilder.withDescription( "Index EE sets" ).withLongOpt( "eesets" ).create( 'x' ) );
+
+        addOption( OptionBuilder.withDescription( "Index gene sets" ).withLongOpt( "genesets" ).create( 'y' ) );
     }
 
     /*
@@ -133,6 +140,14 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             if ( this.indexQ ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "biosequenceGps" ), "BioSequence Index" );
             }
+
+            if ( this.indexY ) {
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "experimentSetGps" ), "Experiment set Index" );
+            }
+
+            if ( this.indexX ) {
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneSetGps" ), "Gene set Index" );
+            }
         } catch ( Exception e ) {
             log.error( e );
             return e;
@@ -159,6 +174,9 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 's' ) ) indexP = true;
 
         if ( hasOption( 'q' ) ) indexQ = true;
+        if ( hasOption( 'x' ) ) indexX = true;
+        if ( hasOption( 'y' ) ) indexY = true;
+
     }
 
     /**
