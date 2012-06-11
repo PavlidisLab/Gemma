@@ -690,6 +690,29 @@ public class PubMedXMLParser {
                 }
             } else if ( name.equals( "PMID" ) ) {
                 processAccession( bibRef, item );
+            } else if ( name.equals( "CommentsCorrectionsList" ) ) {
+
+                NodeList jNodes = item.getChildNodes();
+                for ( int q = 0; q < jNodes.getLength(); q++ ) {
+                    Node jitem = jNodes.item( q );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    Node reftype = jitem.getAttributes().getNamedItem( "RefType" );
+
+                    if ( reftype == null ) continue;
+
+                    String reftypeName = ( ( Attr ) reftype ).getValue();
+                    log.info( reftypeName );
+                    if ( reftypeName.equals( "RetractionIn" ) ) {
+                        log.info( "Paper is retracted!" );
+                    }
+                    bibRef.setDescription( "Retracted []" );
+                    /*
+                     * Such papers also have <PublicationType>Retracted Publication</PublicationType>
+                     */
+                }
+
             }
         }
         return article;

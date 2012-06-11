@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2011//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_110101.dtd">
+<PubmedArticleSet>
+	<PubmedArticle>
+		<MedlineCitation Owner="NLM" Status="MEDLINE">
+			<PMID Version="1">7914452</PMID>
+			<DateCreated>
+				<Year>1994</Year>
+				<Month>09</Month>
+				<Day>12</Day>
+			</DateCreated>
+			<DateCompleted>
+				<Year>1994</Year>
+				<Month>09</Month>
+				<Day>12</Day>
+			</DateCompleted>
+			<DateRevised>
+				<Year>2007</Year>
+				<Month>11</Month>
+				<Day>14</Day>
+			</DateRevised>
+			<Article PubModel="Print">
+				<Journal>
+					<ISSN IssnType="Print">1061-4036</ISSN>
+					<JournalIssue CitedMedium="Print">
+						<Volume>6</Volume>
+						<Issue>4</Issue>
+						<PubDate>
+							<Year>1994</Year>
+							<Month>Apr</Month>
+						</PubDate>
+					</JournalIssue>
+					<Title>Nature genetics</Title>
+					<ISOAbbreviation>Nat. Genet.</ISOAbbreviation>
+				</Journal>
+				<ArticleTitle>Ceruloplasmin gene defect associated with epilepsy in EL mice.</ArticleTitle>
+				<Pagination>
+					<MedlinePgn>426-31</MedlinePgn>
+				</Pagination>
+				<Abstract>
+					<AbstractText>Epilepsy is a dominant trait in EL mice, a model for human complex partial seizures. We recently mapped the major gene, El-1, to chromosome 9 near the predicted location for the ceruloplasmin (Cp) gene. We now present evidence for a partial duplication in the Cp gene in EL mice. This Cp duplication is coinherited with seizures in backcross generations and is associated with enhanced expression of Cp mRNA and increased Cp oxidase activity. Moreover, the duplication is associated with an enhanced frequency of double recombinants, simulating negative interference. The findings are relevant to the basic mechanisms of epilepsy and to theories of genetic recombination and gene mapping.</AbstractText>
+				</Abstract>
+				<Affiliation>Department of Biology, Boston College, Chestnut Hill, Massachusetts 02167.</Affiliation>
+				<AuthorList CompleteYN="Y">
+					<Author ValidYN="Y">
+						<LastName>Garey</LastName>
+						<ForeName>C E</ForeName>
+						<Initials>CE</Initials>
+					</Author>
+					<Author ValidYN="Y">
+						<LastName>Schwarzman</LastName>
+						<ForeName>A L</ForeName>
+						<Initials>AL</Initials>
+					</Author>
+					<Author ValidYN="Y">
+						<LastName>Rise</LastName>
+						<ForeName>M L</ForeName>
+						<Initials>ML</Initials>
+					</Author>
+					<Author ValidYN="Y">
+						<LastName>Seyfried</LastName>
+						<ForeName>T N</ForeName>
+						<Initials>TN</Initials>
+					</Author>
+				</AuthorList>
+				<Language>eng</Language>
+				<GrantList CompleteYN="Y">
+					<Grant>
+						<GrantID>NS 23355</GrantID>
+						<Acronym>NS</Acronym>
+						<Agency>NINDS NIH HHS</Agency>
+						<Country>United States</Country>
+					</Grant>
+				</GrantList>
+				<PublicationTypeList>
+					<PublicationType>Journal Article</PublicationType>
+					<PublicationType>Research Support, Non-U.S. Gov't</PublicationType>
+					<PublicationType>Research Support, U.S. Gov't, P.H.S.</PublicationType>
+					<PublicationType>Retracted Publication</PublicationType>
+				</PublicationTypeList>
+			</Article>
+			<MedlineJournalInfo>
+				<Country>UNITED STATES</Country>
+				<MedlineTA>Nat Genet</MedlineTA>
+				<NlmUniqueID>9216904</NlmUniqueID>
+				<ISSNLinking>1061-4036</ISSNLinking>
+			</MedlineJournalInfo>
+			<ChemicalList>
+				<Chemical>
+					<RegistryNumber>0</RegistryNumber>
+					<NameOfSubstance>Nerve Tissue Proteins</NameOfSubstance>
+				</Chemical>
+				<Chemical>
+					<RegistryNumber>7440-50-8</RegistryNumber>
+					<NameOfSubstance>Copper</NameOfSubstance>
+				</Chemical>
+				<Chemical>
+					<RegistryNumber>EC 1.16.3.1</RegistryNumber>
+					<NameOfSubstance>Ceruloplasmin</NameOfSubstance>
+				</Chemical>
+			</ChemicalList>
+			<CitationSubset>IM</CitationSubset>
+			<CommentsCorrectionsList>
+				<CommentsCorrections RefType="CommentIn">
+					<RefSource>NIH Guide Grants Contracts. 2000 Oct 10;:OD-01-002</RefSource>
+					<PMID Version="1">12458559</PMID>
+				</CommentsCorrections>
+				<CommentsCorrections RefType="RetractionIn">
+					<RefSource>Garey CE, Schwarzman AL, Rise ML, Seyfried TN. Nat Genet. 1995 Sep;11(1):104</RefSource>
+					<PMID Version="1">7550304</PMID>
+				</CommentsCorrections>
+			</CommentsCorrectionsList>
+			<GeneSymbolList>
+				<GeneSymbol>Cp</GeneSymbol>
+				<GeneSymbol>El-1</GeneSymbol>
+			</GeneSymbolList>
+			<MeshHeadingList>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Animals</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Ceruloplasmin</DescriptorName>
+					<QualifierName MajorTopicYN="N">biosynthesis</QualifierName>
+					<QualifierName MajorTopicYN="Y">genetics</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Chromosome Mapping</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Copper</DescriptorName>
+					<QualifierName MajorTopicYN="N">physiology</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Crosses, Genetic</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Crossing Over, Genetic</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="Y">Disease Models, Animal</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Epilepsy, Complex Partial</DescriptorName>
+					<QualifierName MajorTopicYN="N">enzymology</QualifierName>
+					<QualifierName MajorTopicYN="Y">genetics</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Gene Expression Regulation, Enzymologic</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Humans</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Liver</DescriptorName>
+					<QualifierName MajorTopicYN="N">enzymology</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Mice</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Mice, Inbred C57BL</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Mice, Inbred DBA</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Mice, Inbred Strains</DescriptorName>
+					<QualifierName MajorTopicYN="Y">genetics</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Mice, Neurologic Mutants</DescriptorName>
+					<QualifierName MajorTopicYN="Y">genetics</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="Y">Multigene Family</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Nerve Tissue Proteins</DescriptorName>
+					<QualifierName MajorTopicYN="N">biosynthesis</QualifierName>
+					<QualifierName MajorTopicYN="N">genetics</QualifierName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Polymerase Chain Reaction</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Polymorphism, Restriction Fragment Length</DescriptorName>
+				</MeshHeading>
+				<MeshHeading>
+					<DescriptorName MajorTopicYN="N">Recombination, Genetic</DescriptorName>
+				</MeshHeading>
+			</MeshHeadingList>
+		</MedlineCitation>
+		<PubmedData>
+			<History>
+				<PubMedPubDate PubStatus="pubmed">
+					<Year>1994</Year>
+					<Month>4</Month>
+					<Day>1</Day>
+				</PubMedPubDate>
+				<PubMedPubDate PubStatus="medline">
+					<Year>1994</Year>
+					<Month>4</Month>
+					<Day>1</Day>
+					<Hour>0</Hour>
+					<Minute>1</Minute>
+				</PubMedPubDate>
+				<PubMedPubDate PubStatus="entrez">
+					<Year>1994</Year>
+					<Month>4</Month>
+					<Day>1</Day>
+					<Hour>0</Hour>
+					<Minute>0</Minute>
+				</PubMedPubDate>
+			</History>
+			<PublicationStatus>ppublish</PublicationStatus>
+			<ArticleIdList>
+				<ArticleId IdType="pubmed">7914452</ArticleId>
+				<ArticleId IdType="doi">10.1038/ng0494-426</ArticleId>
+			</ArticleIdList>
+		</PubmedData>
+	</PubmedArticle>
+</PubmedArticleSet>
+

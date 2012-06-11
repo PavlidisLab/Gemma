@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.model.common.description.PublicationType;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 /**
@@ -87,6 +88,41 @@ public class PubMedXMLParserTest extends TestCase {
             assertTrue( br.getAbstractText()
                     .contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
             log.info( br.getAbstractText() );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
+    }
+
+    /**
+     * PMID 7914452 is an example of a retracted article.
+     * 
+     * @throws Exception
+     */
+    public void testParseRetracted() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
+
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br.getAbstractText() );
+            assertTrue( br.getDescription().contains( "Retracted" ) );
+
+            boolean ok = false;
+            for ( PublicationType pt : br.getPublicationTypes() ) {
+                if ( "Retracted Publication".equals( pt.getType() ) ) {
+                    ok = true;
+                }
+            }
+            assertTrue( ok );
+
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
                 log.warn( "Test skipped due to connection exception" );
