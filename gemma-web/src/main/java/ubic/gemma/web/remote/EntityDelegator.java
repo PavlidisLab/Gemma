@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.remote;
 
+import ubic.gemma.util.EntityUtils;
+
 /**
  * Bean to expose for remote access via AJAX, when all that is needed is the ID and a way to know what the class is.
  * 
@@ -31,6 +33,11 @@ public class EntityDelegator {
     private String classDelegatingFor;
 
     public EntityDelegator() {
+    }
+
+    public EntityDelegator( Object entity ) {
+        this.id = EntityUtils.getId( entity );
+        this.classDelegatingFor = entity.getClass().getName();
     }
 
     public String getClassDelegatingFor() {
