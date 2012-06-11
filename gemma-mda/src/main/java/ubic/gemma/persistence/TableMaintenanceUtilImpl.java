@@ -62,10 +62,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
-    private static final String GENE2CS_REPOPULATE_QUERY = "INSERT INTO GENE2CS (GENE, CS, GTYPE, AD) "
-            + "SELECT DISTINCT gene.ID, cs.ID, gene.class, cs.ARRAY_DESIGN_FK "
+    private static final String GENE2CS_REPOPULATE_QUERY = "INSERT INTO GENE2CS (GENE, CS, AD) "
+            + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
             + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-            + " WHERE gene.CLASS = 'GeneImpl' and geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
+            + " WHERE geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
             + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
 
     private static Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );

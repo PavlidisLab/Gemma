@@ -105,10 +105,9 @@
 		</property>
 		<property name="parallelIndexExecutor">
 			<bean class="org.compass.gps.device.support.parallel.ConcurrentParallelIndexExecutor">
-				<constructor-arg type="int" value="2" />
+				<constructor-arg type="int" value="4" /> <!-- maxthreads -->
 			</bean>
 		</property>
-
 		<property name="fetchCount">
 			<value>200</value>
 		</property>
@@ -206,7 +205,8 @@
 		</property>
 	</bean>
 
-	<!-- Details of how indexing is done. See http://www.compass-project.org/docs/2.2.0/reference/html/core-settings.html -->
+	<!-- Details of how indexing is done. See http://www.compass-project.org/docs/2.2.0/reference/html/core-settings.html; however, 
+		not all config settings are listed there, and it is out of date for version 2.2 -->
 	<bean id="compassExpression" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>

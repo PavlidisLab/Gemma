@@ -14,7 +14,6 @@
  */
 package ubic.gemma.model.genome;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -393,6 +392,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util .Collection, java.util.Collection)
      */
+    @SuppressWarnings("deprecation")
     @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees ) {
@@ -725,7 +725,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         final String p2pClassName = getP2PClassName( givenG );
 
-        final Collection<Long> eeIds = getEEIds( ees );
+        final Collection<Long> eeIds = EntityUtils.getIds( ees );
 
         String queryString = getNativeBatchQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
                 interGeneOnly );
@@ -809,7 +809,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( eesToSearch.size() > 0 ) {
 
-            final Collection<Long> eeIds = getEEIds( eesToSearch );
+            final Collection<Long> eeIds = EntityUtils.getIds( eesToSearch );
 
             String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
 
@@ -1227,31 +1227,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * @param ees
-     * @return
-     */
-    private Collection<Long> getEEIds( Collection<? extends BioAssaySet> ees ) {
-        Collection<Long> eeIds = new ArrayList<Long>();
-        for ( BioAssaySet e : ees ) {
-            eeIds.add( e.getId() );
-        }
-        return eeIds;
-    }
-
-    /**
-     * For queries involving multiple genes as inputs. Query outputs:
-     * <ol >
-     * <li>output gene id</li>
-     * <li>output gene name</li>
-     * <li>output gene official name</li>
-     * <li>expression experiment
-     * <li>pvalue</li>
-     * <li>score</li>
-     * <li>query gene probe id</li>
-     * <li>output gene probe id</li>
-     * <li>output gene type (predicted etc)</li>
-     * <li>expression experiment name</li>
-     * </ol>
+     * For queries involving multiple genes as inputs.
      * 
      * @param p2pClassName
      * @param in
@@ -1268,14 +1244,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
 
-        // note that with current index scheme, you have to have EE ids
-        // specified.
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
             eeClause += ") AND ";
-        } else {
-            log.warn( "This query may run very slowly without EE restriction" );
         }
 
         String interGeneOnlyClause = "";
@@ -1302,34 +1274,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcIn.GENE as queryGeneId FROM GENE2CS gcIn STRAIGHT_JOIN "
                 + p2pClass
-                + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
+                + " coexp ON gcIn.CS=coexp."
                 + inKey
-                + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
-                + outKey
-                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
-                + " WHERE "
-                + eeClause
-                + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
+                + outKey + " WHERE " + eeClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
 
+        if ( log.isDebugEnabled() ) log.debug( query );
         return query;
     }
 
     /**
-     * Query outputs:
-     * <ol >
-     * <li>output gene id</li>
-     * <li>output gene name</li>
-     * <li>output gene official name</li>
-     * <li>expression experiment
-     * <li>pvalue</li>
-     * <li>score</li>
-     * <li>query gene probe id</li>
-     * <li>output gene probe id</li>
-     * <li>output gene type (predicted etc)</li>
-     * <li>expression experiment name</li>
-     * </ol>
-     * 
      * @param p2pClassName
      * @param in
      * @param out
@@ -1342,17 +1296,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
 
-        // note that with current index scheme, you have to have EE ids
-        // specified.
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
             eeClause += ") AND ";
-        } else {
-            log.warn( "This query may run very slowly without EE restriction" );
         }
-        // eeClause = " coexp.EXPRESSION_EXPERIMENT_FK = " +
-        // eeIds.iterator().next() + " AND ";
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
 
@@ -1366,21 +1314,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * 3 score
          * 4 csin
          * 5 csout
-         * 6 genetype
          * </pre>
          */
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut FROM GENE2CS gcIn STRAIGHT_JOIN "
                 + p2pClass
-                + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
+                + " coexp ON gcIn.CS=coexp."
                 + inKey
-                + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
                 + outKey
-                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
-                + " WHERE "
-                + eeClause
-                + " gcIn.GENE=:id ";
+                + " WHERE " + eeClause + " gcIn.GENE=:id ";
 
         // AND gcOut.GENE <> :id // Omit , see below!
 
@@ -1392,7 +1335,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * detect such crosshybridization problems later.
          */
 
-        // log.info( query );
+        if ( log.isDebugEnabled() ) log.debug( query );
         return query;
     }
 
@@ -1481,10 +1424,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * Fill in specificity information.
+     * <p>
+     * Performance notes: This seems to rarely take more than 1 sec.
      * 
-     * @param coexpressions @
-     *        <p>
-     *        Performance notes: This often takes 3-5 seconds. PP Feb 2010
+     * @param coexpressions
      */
     private void postProcessSpecificity( final CoexpressionCollectionValueObject coexpressions ) {
         // fill in information about the query gene
@@ -1499,8 +1442,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( "Specificity postprocess CS2GeneMap: " + timer.getTime() + "ms" );
         }
-        timer.stop();
-        timer.reset();
 
         coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
         coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );

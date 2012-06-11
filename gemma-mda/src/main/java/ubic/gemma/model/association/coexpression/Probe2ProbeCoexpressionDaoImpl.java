@@ -635,7 +635,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             batch.add( it.next() );
 
             if ( batch.size() > 0 && ( batch.size() == CHUNK_LIMIT || !it.hasNext() ) ) {
-                String queryString = "SELECT CS, GENE FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and "
+                String queryString = "SELECT CS, GENE FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and "
                         + " CS in (" + StringUtils.join( batch, "," ) + ")";
 
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
