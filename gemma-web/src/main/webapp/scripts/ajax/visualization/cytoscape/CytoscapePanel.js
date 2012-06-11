@@ -545,7 +545,7 @@ Ext.Panel, {
     	
     	if (showGraphSizeMenu){
     		
-    		bbarText.setText("Edges not involving query genes have been trimmed to a stringency of: ");
+    		bbarText.setText("Edges not involving query genes have been trimmed at stringency: ");
     		
     		if (trimmedValue == 0){
     			graphSizeButton.setText("No Trimming ");
@@ -617,7 +617,7 @@ Ext.Panel, {
     		if (graphSizeButton.isVisible()){        		
     			graphSizeButton.hide();
     		}    		
-    		bbarText.setText("Edges not involving query genes have been trimmed to a stringency of: "+trimmedValue);
+    		bbarText.setText("Edges not involving query genes have been trimmed at stringency: "+trimmedValue);
     	}
     	
     	this.getBottomToolbar().show();

@@ -82,7 +82,7 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: "Symbol:${id}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {
@@ -171,7 +171,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: "Symbol:${id}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {
