@@ -60,29 +60,11 @@
 		<property name="title">
 			<meta-data>title</meta-data>
 		</property>
-		<property name="publisher">
-			<meta-data>publisher</meta-data>
-		</property>
-		<property name="editor">
-			<meta-data>editor</meta-data>
-		</property>
-		<property name="volume">
-			<meta-data>volume</meta-data>
-		</property>
 		<property name="publication">
 			<meta-data>publication</meta-data>
 		</property>
 		<property name="abstractText">
 			<meta-data>abstract</meta-data>
-		</property>
-		<property name="citation">
-			<meta-data>citation</meta-data>
-		</property>
-		<property name="name">
-			<meta-data>name</meta-data>
-		</property>
-		<property name="description">
-			<meta-data>description</meta-data>
 		</property>
 	</class>
 	<class name="common.description.BibliographicReferenceImpl" alias="otherRelevantPublications" root="false">
@@ -93,29 +75,11 @@
 		<property name="title">
 			<meta-data>title</meta-data>
 		</property>
-		<property name="publisher">
-			<meta-data>publisher</meta-data>
-		</property>
-		<property name="editor">
-			<meta-data>editor</meta-data>
-		</property>
-		<property name="volume">
-			<meta-data>volume</meta-data>
-		</property>
 		<property name="publication">
 			<meta-data>publication</meta-data>
 		</property>
 		<property name="abstractText">
 			<meta-data>abstract</meta-data>
-		</property>
-		<property name="citation">
-			<meta-data>citation</meta-data>
-		</property>
-		<property name="name">
-			<meta-data>name</meta-data>
-		</property>
-		<property name="description">
-			<meta-data>description</meta-data>
 		</property>
 	</class>
 </compass-core-mapping>
