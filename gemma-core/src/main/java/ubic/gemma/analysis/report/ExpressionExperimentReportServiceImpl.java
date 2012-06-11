@@ -47,7 +47,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -144,7 +143,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
         int maxElements = 5000;
-        boolean eternal = true;
+        boolean eternal = false;
         boolean overFlowToDisk = false;
         int diskExpiryThreadIntervalSeconds = 600;
         int maxElementsOnDisk = 10000;
