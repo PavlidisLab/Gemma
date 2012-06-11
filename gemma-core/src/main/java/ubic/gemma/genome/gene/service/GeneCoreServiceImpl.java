@@ -16,7 +16,6 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -69,20 +68,20 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         details.setAliases( getAliasStrings( gene ) );
 
-        if( gene.getMultifunctionality() != null ){
+        if ( gene.getMultifunctionality() != null ) {
             details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
             details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
         }
-        
+
         Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         details.setGeneSets( this.getGeneSets( gene ) );
 
         details.setHomologues( getHomologues( gene ) );
-        
+
         details.setPhenotypes( this.getPhenotypes( gene ) );
-        
+
         /*
          * Look for the gene as an attribute in experiments.
          */
@@ -138,8 +137,8 @@ public class GeneCoreServiceImpl implements GeneCoreService {
     private Collection<CharacteristicValueObject> getPhenotypes( Gene gene ) {
         Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
         Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
-        for(PhenotypeAssociation pa : phenoAssocs){
-            cvos.addAll(CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ));
+        for ( PhenotypeAssociation pa : phenoAssocs ) {
+            cvos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
         }
         return cvos;
     }

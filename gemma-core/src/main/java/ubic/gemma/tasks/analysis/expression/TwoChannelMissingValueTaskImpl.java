@@ -22,8 +22,6 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;

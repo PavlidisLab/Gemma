@@ -547,8 +547,7 @@ public class DifferentialExpressionSearchController {
 
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
-        // FIXME problem: there can be multiple analyses, this method should return a collection
-        Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+        Map<Long, Collection<DifferentialExpressionAnalysis>> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigationIds( securityFilteredIds );
 
         if ( diffAnalyses.isEmpty() ) {
@@ -566,28 +565,31 @@ public class DifferentialExpressionSearchController {
 
         for ( Long id : diffAnalyses.keySet() ) {
 
-            DifferentialExpressionAnalysis analysis = diffAnalyses.get( id );
-            differentialExpressionAnalysisService.thaw( analysis );
+            Collection<DifferentialExpressionAnalysis> analyses = diffAnalyses.get( id );
 
-            Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-            for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
-                // FIXME includes factors making up interaction terms, but shouldn't
-                // matter, because they will be included as main effects too. If not, this will be wrong!
-                factors.addAll( fars.getExperimentalFactors() );
+            for ( DifferentialExpressionAnalysis analysis : analyses ) {
+                differentialExpressionAnalysisService.thaw( analysis );
+
+                Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+                for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
+                    // FIXME includes factors making up interaction terms, but shouldn't
+                    // matter, because they will be included as main effects too. If not, this will be wrong!
+                    factors.addAll( fars.getExperimentalFactors() );
+                }
+
+                filteredEeIds.add( id );
+                ExpressionExperimentValueObject eevo = eevoMap.get( id );
+                ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
+                eeefvo.setExpressionExperiment( eevo );
+                eeefvo.setNumFactors( factors.size() );
+                for ( ExperimentalFactor ef : factors ) {
+                    ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
+                            .configExperimentalFactorValueObject( ef );
+                    eeefvo.getExperimentalFactors().add( efvo );
+                }
+
+                result.add( eeefvo );
             }
-
-            filteredEeIds.add( id );
-            ExpressionExperimentValueObject eevo = eevoMap.get( id );
-            ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
-            eeefvo.setExpressionExperiment( eevo );
-            eeefvo.setNumFactors( factors.size() );
-            for ( ExperimentalFactor ef : factors ) {
-                ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
-                        .configExperimentalFactorValueObject( ef );
-                eeefvo.getExperimentalFactors().add( efvo );
-            }
-
-            result.add( eeefvo );
         }
         log.info( "Filtered experiments.  Returning factors for experiments with ids: "
                 + StringUtils.abbreviate( filteredEeIds.toString(), 100 ) );

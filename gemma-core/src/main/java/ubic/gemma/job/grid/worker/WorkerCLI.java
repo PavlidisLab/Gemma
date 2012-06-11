@@ -18,7 +18,6 @@
  */
 package ubic.gemma.job.grid.worker;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +30,6 @@ import java.util.concurrent.FutureTask;
 
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
-import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
 
 import org.apache.commons.cli.Option;
@@ -233,18 +231,18 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         if ( this.hasOption( "mmtx" ) ) {
             if ( !ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY ) ) {
-                ( ( ExpressionExperimentAnnotatorImpl ) this.getBean( "expressionExperimentAnnotator" ) ).init();
+                ( ( ExpressionExperimentAnnotatorImpl ) this.getBean( ExpressionExperimentAnnotator.class ) ).init();
             }
         }
 
         String workS = this.getOptionValue( "workers" );
         this.workerNames = workS.split( "," );
 
-        this.spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
+        this.spacesUtil = this.getBean( SpacesUtil.class );
         this.ctx = this.spacesUtil.addGemmaSpacesToApplicationContext();
 
         try {
-            this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+            this.template = this.getBean( GigaSpacesTemplate.class );
         } catch ( NoSuchBeanDefinitionException e ) {
             throw new RuntimeException( "You must have javaspaces enabled to use the worker cli" );
         }
@@ -338,8 +336,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         /*
          * Pick up the worker
          */
-        // TODO use Class.forName( workerName ) instead of raw name.
-        CustomDelegatingWorker worker = ( CustomDelegatingWorker ) this.getBean( workerName );
+        CustomDelegatingWorker worker = this.getBean( CustomDelegatingWorker.class );
 
         this.workers.add( worker );
 

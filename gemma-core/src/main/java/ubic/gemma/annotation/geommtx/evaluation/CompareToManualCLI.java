@@ -61,7 +61,7 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource; 
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.DC_11;
 
 /**
@@ -164,10 +164,10 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
     public void countBadURIs( Map<String, Set<String>> experiments ) {
 
-        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
+        OntologyService os = this.getBean( OntologyService.class );
 
-        BIRNLexFMANullsFilter nullFilter = new BIRNLexFMANullsFilter( os.getFmaOntologyService(), os
-                .getBirnLexOntologyService() );
+        BIRNLexFMANullsFilter nullFilter = new BIRNLexFMANullsFilter( os.getFmaOntologyService(),
+                os.getBirnLexOntologyService() );
         UninformativeFilter unFilter = new UninformativeFilter();
 
         int bad = 0;
@@ -522,7 +522,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         // print100Stats();
 
         // filterAndPrint( "/owl/DOID#", false );
-        //        
+        //
         // ParentFinder parentFinder = new ParentFinder();
         // try {
         // parentFinder.init();
@@ -530,14 +530,14 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         // e.printStackTrace();
         // }
         // mmtxURLs = parentFinder.expandToParents( mmtxURLs );
-        //        
+        //
         // System.out.println( "Children/leaves stats" );
         // printStats();
-        //        
+        //
         // mmtxURLs = parentFinder.reduceToLeaves( mmtxURLs );
         // System.out.println( "Leaves only" );
         // printStats();
-        //        
+        //
         // System.out.println( "Nulls: " + parentFinder.nullTerms );
 
         // for ( String dataset : originalMMTxIDs ) {
@@ -623,8 +623,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
     private Map<String, Set<String>> getHumanMappingsFromDisk() throws Exception {
         Map<String, Set<String>> result;
-        ObjectInputStream o = new ObjectInputStream( new FileInputStream( SetupParameters
-                .getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
+        ObjectInputStream o = new ObjectInputStream( new FileInputStream(
+                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
         result = ( Map<String, Set<String>> ) o.readObject();
         o.close();
 
@@ -634,7 +634,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
     private Map<String, Set<String>> getHumanMappingsFromServer() {
         Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
 
         int c = 0;
@@ -934,8 +934,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
     private void saveHumanMappingsToDisk() {
         log.info( "Saved mappings" );
         try {
-            ObjectOutputStream o = new ObjectOutputStream( new FileOutputStream( SetupParameters
-                    .getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
+            ObjectOutputStream o = new ObjectOutputStream( new FileOutputStream(
+                    SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
             o.writeObject( manualURLs );
             o.close();
 
@@ -952,7 +952,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
     @SuppressWarnings("unused")
     private void writeExperimentTitles( String f ) {
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
         Model model = ModelFactory.createDefaultModel();
 

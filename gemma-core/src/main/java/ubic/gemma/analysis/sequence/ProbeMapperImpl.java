@@ -28,8 +28,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
