@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -144,11 +145,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "Cannot create an Evidence not linked to a Gene" );
         }
 
+        StopWatch sw = new StopWatch();
+        sw.start();
+        log.info( "The create is being called for PhenotypeAssociation on geneNCBI: " + evidence.getGeneNCBI() );
+
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         if ( evidenceAlreadyInDatabase( evidence ) != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
+            log.info( "The evidence is already in the database: " + evidence.getGeneNCBI() );
             return validateEvidenceValueObject;
         }
 
@@ -160,6 +166,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // updates the gene in the cache
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
+
+        log.info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
 
         return validateEvidenceValueObject;
     }
@@ -1508,6 +1516,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypeAssociationsFiltered;
     }
 
+    // find Homologue Evidence for a gene
     private Collection<EvidenceValueObject> findHomologueEvidence( Long geneId, EvidenceFilter evidenceFilter ) {
 
         // Get the Gene object for finding homologues' evidence.
