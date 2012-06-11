@@ -245,8 +245,6 @@
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/gene</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/gene.lock
-				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
@@ -275,8 +273,6 @@
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/array</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/array.lock
-				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.transaction.isolation">lucene</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
