@@ -21,7 +21,7 @@ package ubic.gemma.loader.expression.simple;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -36,7 +36,7 @@ public interface ExperimentalDesignImporter {
      * @param is
      * @throws IOException
      */
-    @Transactional
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException;
 
     /**
@@ -44,7 +44,7 @@ public interface ExperimentalDesignImporter {
      * @param is
      * @param dryRun
      */
-    @Transactional
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException;
 
 }
