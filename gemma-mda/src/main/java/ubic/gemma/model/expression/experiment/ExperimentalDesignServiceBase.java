@@ -40,13 +40,7 @@ public abstract class ExperimentalDesignServiceBase implements
     @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign create(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        try {
-            return this.handleCreate( experimentalDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.create(ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( experimentalDesign );
     }
 
     /**
@@ -55,13 +49,7 @@ public abstract class ExperimentalDesignServiceBase implements
     @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        try {
-            return this.handleFind( experimentalDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.find(ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)' --> "
-                            + th, th );
-        }
+        return this.handleFind( experimentalDesign );
     }
 
     /**
@@ -69,13 +57,7 @@ public abstract class ExperimentalDesignServiceBase implements
      */
     @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( final java.lang.String name ) {
-        try {
-            return this.handleFindByName( name );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.findByName(java.lang.String name)' --> "
-                            + th, th );
-        }
+        return this.handleFindByName( name );
     }
 
     /**
@@ -84,13 +66,7 @@ public abstract class ExperimentalDesignServiceBase implements
     @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        try {
-            return this.handleFindOrCreate( experimentalDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( experimentalDesign );
     }
 
     /**
@@ -99,13 +75,7 @@ public abstract class ExperimentalDesignServiceBase implements
     @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
             final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        try {
-            return this.handleGetExpressionExperiment( experimentalDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)' --> "
-                            + th, th );
-        }
+        return this.handleGetExpressionExperiment( experimentalDesign );
     }
 
     /**
@@ -113,13 +83,7 @@ public abstract class ExperimentalDesignServiceBase implements
      */
     @Override
     public ubic.gemma.model.expression.experiment.ExperimentalDesign load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.handleLoad( id );
     }
 
     /**
@@ -127,13 +91,7 @@ public abstract class ExperimentalDesignServiceBase implements
      */
     @Override
     public java.util.Collection<ExperimentalDesign> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.loadAll()' --> "
-                            + th, th );
-        }
+        return this.handleLoadAll();
     }
 
     /**
@@ -149,13 +107,7 @@ public abstract class ExperimentalDesignServiceBase implements
      */
     @Override
     public void update( final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        try {
-            this.handleUpdate( experimentalDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalDesignService.update(ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( experimentalDesign );
     }
 
     /**
@@ -169,48 +121,45 @@ public abstract class ExperimentalDesignServiceBase implements
      * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
     protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
     protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFind(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFindByName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
     protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFindOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
     protected abstract ubic.gemma.model.expression.experiment.ExpressionExperiment handleGetExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection<ExperimentalDesign> handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExperimentalDesign> handleLoadAll();
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
 }

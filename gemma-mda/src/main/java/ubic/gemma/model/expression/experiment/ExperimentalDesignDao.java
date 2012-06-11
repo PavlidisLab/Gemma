@@ -27,24 +27,21 @@ public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( java.lang.String name );
+    public ExperimentalDesign findByName( java.lang.String name );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
 }
