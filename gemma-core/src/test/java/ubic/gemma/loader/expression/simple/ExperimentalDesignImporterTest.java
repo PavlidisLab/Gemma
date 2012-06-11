@@ -168,7 +168,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testParseFailedDryRun() throws Exception {
+    public final void testParseFailedDryRun() {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
 

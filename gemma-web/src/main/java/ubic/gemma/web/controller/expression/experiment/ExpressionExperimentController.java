@@ -51,11 +51,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
-import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
@@ -87,7 +84,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -327,10 +323,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private StatusService statusService;
-
-    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
-
-    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
 
     /**
      * Exposed for AJAX calls.
@@ -579,27 +571,28 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return result;
     }
 
-
     /**
-     * AJAX; get a collection of experiments that have had samples removed due to outliers 
-     * and experiment that have possible batch effects detected
+     * AJAX; get a collection of experiments that have had samples removed due to outliers and experiment that have
+     * possible batch effects detected
      * 
      * @param id Identifier for the experiment
      */
-    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues( ){
-        
-        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService.getExperimentsWithEvent( SampleRemovalEvent.class );
-        
-        //List<ExpressionExperimentValueObject> batchEffectEEs = expressionExperimentService.getExperimentsWithBatchEffect();
+    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
+
+        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService
+                .getExperimentsWithEvent( SampleRemovalEvent.class );
+
+        // List<ExpressionExperimentValueObject> batchEffectEEs =
+        // expressionExperimentService.getExperimentsWithBatchEffect();
         List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
-       
+
         HashSet<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
         ees.addAll( sampleRemovedEEs );
         ees.addAll( batchEffectEEs );
-        
+
         List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
-        
-        for(ExpressionExperimentValueObject ee : ees){
+
+        for ( ExpressionExperimentValueObject ee : ees ) {
             JSONObject record = new JSONObject();
             record.element( "id", ee.getId() );
             record.element( "shortName", ee.getShortName() );
@@ -608,14 +601,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
             record.element( "batchEffect", batchEffectEEs.contains( ee ) );
             jsonRecords.add( record );
         }
-        
-        JsonReaderResponse<JSONObject> returnVal = new JsonReaderResponse<JSONObject>(
-                jsonRecords);
-        
+
+        JsonReaderResponse<JSONObject> returnVal = new JsonReaderResponse<JSONObject>( jsonRecords );
+
         return returnVal;
-        
+
     }
-    
+
     /**
      * AJAX; Populate all the details.
      * 
@@ -1126,7 +1118,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return records;
     }
 
-    
     /**
      * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
      * 
@@ -1696,8 +1687,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
     
      */
     private String batchConfound( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.describeBatchConfound(ee);
-        if( result == null){
+        String result = expressionExperimentService.describeBatchConfound( ee );
+        if ( result == null ) {
             result = "";
         }
         return result;
@@ -1708,8 +1699,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return
      */
     private String batchEffect( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.describeBatchEffect(ee);
-        if( result == null){
+        String result = expressionExperimentService.describeBatchEffect( ee );
+        if ( result == null ) {
             result = "";
         }
         return result;
@@ -2084,7 +2075,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * /Gemma/expressionExperiment/downloadExpressionExperimentList.html
      */
     @RequestMapping("/downloadExpressionExperimentList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) throws Exception {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request )  {
 
         StopWatch watch = new StopWatch();
         watch.start();
