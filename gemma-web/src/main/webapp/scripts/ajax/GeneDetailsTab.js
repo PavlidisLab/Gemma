@@ -159,6 +159,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 						'<br><br></div>'
 					}, {
 						layout: 'form',
+						flex:1,
 						defaults: {
 							border: false
 						},
