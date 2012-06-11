@@ -389,6 +389,13 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             hidden: this.showAll
         });
+        var QClinkButton = new Ext.Button({
+            text: 'Experiment QC',
+            cls: 'x-toolbar-standardbutton',
+            handler: function(){
+                window.location = "/Gemma/expressionExperimentsWithQC.html";
+            }
+        });
         this.nowSubset = function(){
             subsetText.show();
             showAllButton.show();
@@ -402,7 +409,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         });
         Ext.apply(this, {
             store: pageStore,
-            tbar: [eeCombo,'->', subsetText, showAllButton, '-', editMine],
+            tbar: [eeCombo,'->', subsetText, showAllButton, '-', editMine, QClinkButton],
             bbar: mybbar
         });
         if (this.rowExpander) {
