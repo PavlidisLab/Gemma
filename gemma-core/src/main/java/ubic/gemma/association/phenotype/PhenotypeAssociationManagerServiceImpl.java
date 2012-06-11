@@ -193,47 +193,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
-		Gene gene = this.geneService.load( geneId );
-		
-		Collection<Gene> homologues = this.homologeneService.getHomologues( gene );    	    	
-		        
-		Collection<PhenotypeAssociation> homologuePhenotypeAssociations = null;
-		
-		for (Gene homologue : homologues) {
-			Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
-					.findPhenotypeAssociationForGeneId( homologue.getId() );
-			if (homologuePhenotypeAssociations == null) {
-				homologuePhenotypeAssociations = currHomologuePhenotypeAssociations;
-			}
-			homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
-		}
-		
-		Collection<EvidenceValueObject> homologueEvidenceValueObjects = this.convert2ValueObjects( homologuePhenotypeAssociations );
-		for (EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects) {
-			evidenceValueObject.setHomologueEvidence(true);
-		}
-		
-		evidenceValueObjects.addAll(homologueEvidenceValueObjects);
-                
+        evidenceValueObjects.addAll( findHomologueEvidence( geneId, null ) );
+
         // for all similar literature evidences combine them into 1 evidence without loosing information
         return groupCommonEvidences( evidenceValueObjects );
-    }
-
-    /**
-     * Return all evidence for a specific gene id with evidence flagged, indicating more information
-     * 
-     * @param geneId The Evidence id
-     * @param phenotypesValuesUri the chosen phenotypes
-     * @return The Gene we are interested in
-     */
-    @Override
-    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri ) {
-
-        Collection<EvidenceValueObject> evidenceValueObjects = findEvidenceByGeneId( geneId );
-
-        flagEvidence( evidenceValueObjects, phenotypesValuesUri );
-
-        return evidenceValueObjects;
     }
 
     /**
@@ -257,34 +220,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
-        // Get the Gene object for finding homologues' evidence.
-		Gene gene = this.geneService.load( geneId );
-		
-		Collection<Gene> homologues = this.homologeneService.getHomologues( gene );    	    	
-		        
-		Collection<PhenotypeAssociation> homologuePhenotypeAssociations = null;
-		
-		for (Gene homologue : homologues) {
-			Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
-					.findPhenotypeAssociationForGeneId( homologue.getId() );
-			if (homologuePhenotypeAssociations == null) {
-				homologuePhenotypeAssociations = currHomologuePhenotypeAssociations;
-			}
-			homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
-		}
-		
-        if ( evidenceFilter.isShowOnlyEditable() ) {
-        	homologuePhenotypeAssociations = filterPhenotypeAssociationsMyAnnotation( homologuePhenotypeAssociations );
-        }
+        // add all homologue evidence
+        evidenceValueObjects.addAll( findHomologueEvidence( geneId, evidenceFilter ) );
 
-		Collection<EvidenceValueObject> homologueEvidenceValueObjects = this.convert2ValueObjects( homologuePhenotypeAssociations );
-		for (EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects) {
-			evidenceValueObject.setHomologueEvidence(true);
-		}
-		
-		evidenceValueObjects.addAll(homologueEvidenceValueObjects);
-        
-        return groupCommonEvidences( evidenceValueObjects );
+        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = groupCommonEvidences( evidenceValueObjects );
+
+        flagEvidence( evidenceValueObjectsRegrouped, phenotypesValuesUri );
+
+        return evidenceValueObjectsRegrouped;
     }
 
     /**
@@ -1451,7 +1394,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** Literature Evidence that are very similar are grouped together into a new type called GroupEvidenceValueObject */
     private Collection<EvidenceValueObject> groupCommonEvidences( Collection<EvidenceValueObject> evidenceValueObjects ) {
 
-    	Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new TreeSet<EvidenceValueObject>();
+        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new TreeSet<EvidenceValueObject>();
 
         HashMap<String, Collection<LiteratureEvidenceValueObject>> commonEvidences = new HashMap<String, Collection<LiteratureEvidenceValueObject>>();
 
@@ -1503,13 +1446,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         key = key + evidence.getDescription();
         key = key + evidence.getGeneNCBI();
         key = key + evidence.getIsNegativeEvidence();
-        
+
         // When we display homologue's evidence, we don't show evidence code. So,
         // we don't use evidence code as part of the key for homologue's evidence.
-        if (!evidence.isHomologueEvidence()) {        
-        	key = key + evidence.getEvidenceCode();
+        if ( !evidence.isHomologueEvidence() ) {
+            key = key + evidence.getEvidenceCode();
         }
-        
+
         key = key + evidence.getEvidenceSource().getAccession();
 
         return key;
@@ -1563,6 +1506,35 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
         return phenotypeAssociationsFiltered;
+    }
+
+    private Collection<EvidenceValueObject> findHomologueEvidence( Long geneId, EvidenceFilter evidenceFilter ) {
+
+        // Get the Gene object for finding homologues' evidence.
+        Gene gene = this.geneService.load( geneId );
+
+        Collection<Gene> homologues = this.homologeneService.getHomologues( gene );
+
+        Collection<PhenotypeAssociation> homologuePhenotypeAssociations = new HashSet<PhenotypeAssociation>();
+
+        for ( Gene homologue : homologues ) {
+            Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
+                    .findPhenotypeAssociationForGeneId( homologue.getId() );
+            homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
+        }
+
+        if ( evidenceFilter != null && evidenceFilter.isShowOnlyEditable() ) {
+            homologuePhenotypeAssociations = filterPhenotypeAssociationsMyAnnotation( homologuePhenotypeAssociations );
+        }
+
+        Collection<EvidenceValueObject> homologueEvidenceValueObjects = this
+                .convert2ValueObjects( homologuePhenotypeAssociations );
+
+        for ( EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects ) {
+            evidenceValueObject.setHomologueEvidence( true );
+        }
+
+        return homologueEvidenceValueObjects;
     }
 
 }
