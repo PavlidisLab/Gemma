@@ -667,8 +667,8 @@ Ext.Panel, {
     
     getMatchingGeneIdsByText : function(text){
     	
-    	return Gemma.CoexValueObjectUtil.filterGeneResultsByText(text, this.coexpressionSearchData.cytoscapeResults.knownGeneResults);
-    	
+    	return Gemma.CoexValueObjectUtil.filterGeneResultsByTextForNodeIds(text, this.coexpressionSearchData.cytoscapeResults.knownGeneResults);
+    	   	
     },
     
     graphSizeMenuHandler: function(graphSize){

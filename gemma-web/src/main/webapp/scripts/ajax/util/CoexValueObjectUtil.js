@@ -290,7 +290,8 @@ Gemma.CoexValueObjectUtil = {
 
 	},
 
-	filterGeneResultsByText : function(text, knowngenes) {
+	//used by cytoscape panel to get gene node ids for highlighting
+	filterGeneResultsByTextForNodeIds : function(text, knowngenes) {
 
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		var genesMatchingSearch = [];
@@ -333,6 +334,25 @@ Gemma.CoexValueObjectUtil = {
 					genesMatchingSearch.push(queryGene.officialSymbol);
 				}
 
+			}
+
+		} // end for (<kglength)
+
+		return genesMatchingSearch;
+	},
+	
+	//used by coexpressionGrid to grab results for exporting
+	filterGeneResultsByText : function(text, knowngenes) {
+
+		var value = new RegExp(Ext.escapeRe(text), 'i');
+		var genesMatchingSearch = [];
+		
+		var kglength = knowngenes.length;
+		var i;
+		for (i = 0; i < kglength; i++) {
+			
+			if (value.test(knowngenes[i].foundGene.officialSymbol) || value.test(knowngenes[i].queryGene.officialSymbol) || value.test(knowngenes[i].foundGene.officialName) || value.test(knowngenes[i].queryGene.officialName)) {
+				genesMatchingSearch.push(knowngenes[i]);
 			}
 
 		} // end for (<kglength)

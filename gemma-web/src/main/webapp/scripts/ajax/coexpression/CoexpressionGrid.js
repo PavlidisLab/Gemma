@@ -437,16 +437,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             	this.stringencyChange();
 
             }, this);
-
-            /*//disable this for now because we are listening to the keyup event instead
-            this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
-            	
-            	if (e.getKey() == e.ENTER) {
-            		this.stringencyChange();
-            	}
-
-            }, this);
-            */
+            
 		}
 		
 	},
@@ -1165,8 +1156,24 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults, this.getTopToolbar().getComponent('stringencySpinner').getValue());
 			
 		}
-		else{		
-			filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.coexpressionSearchData.coexGridResults.knownGeneResults, this.getTopToolbar().getComponent('stringencySpinner').getValue());			
+		else{
+			
+			var combinedData = this.coexpressionSearchData.coexGridResults.knownGeneResults;
+			
+			if (this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults){
+				combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.coexGridResults.knownGeneResults,
+	        		this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults);
+			}		
+			
+			filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(combinedData, this.getTopToolbar().getComponent('stringencySpinner').getValue());			
+		}
+		
+		var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
+		
+		if (text.length>1){
+				
+			filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByText(text, filteredData);
+				
 		}
 
         
