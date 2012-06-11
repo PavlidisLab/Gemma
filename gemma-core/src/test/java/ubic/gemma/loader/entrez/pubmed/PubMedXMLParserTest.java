@@ -113,7 +113,9 @@ public class PubMedXMLParserTest extends TestCase {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
             assertNotNull( br.getAbstractText() );
-            assertTrue( br.getDescription().contains( "Retracted" ) );
+            assertEquals(
+                    "Retracted [In: Garey CE, Schwarzman AL, Rise ML, Seyfried TN. Nat Genet. 1995 Sep;11(1):104 PMID=7550304]",
+                    br.getDescription() );
 
             boolean ok = false;
             for ( PublicationType pt : br.getPublicationTypes() ) {

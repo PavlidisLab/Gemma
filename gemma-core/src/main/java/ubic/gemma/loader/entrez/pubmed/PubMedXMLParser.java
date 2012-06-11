@@ -51,6 +51,12 @@ import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.common.description.PublicationType;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 /**
  * Simple class to parse XML in the format defined by {@link http
  * ://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object is
@@ -705,12 +711,27 @@ public class PubMedXMLParser {
                     String reftypeName = ( ( Attr ) reftype ).getValue();
                     log.info( reftypeName );
                     if ( reftypeName.equals( "RetractionIn" ) ) {
-                        log.info( "Paper is retracted!" );
+
+                        try {
+                            XPathFactory xf = XPathFactory.newInstance();
+                            XPath xpath = xf.newXPath();
+                            XPathExpression xgds = xpath.compile( "RefSource/text()" );
+                            String ref = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
+
+                            xgds = xpath.compile( "PMID/text()" );
+                            String pmid = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
+
+                            String description = "Retracted [In: " + ref + " PMID=" + pmid + "]";
+                            bibRef.setDescription( description );
+                        } catch ( XPathExpressionException e ) {
+                            log.warn( "Error while trying to get details of the retraction: " + e.getMessage(), e );
+                            continue;
+                        }
+                        /*
+                         * Such papers also have <PublicationType>Retracted Publication</PublicationType>
+                         */
                     }
-                    bibRef.setDescription( "Retracted []" );
-                    /*
-                     * Such papers also have <PublicationType>Retracted Publication</PublicationType>
-                     */
+
                 }
 
             }
