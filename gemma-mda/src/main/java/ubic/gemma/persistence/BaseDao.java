@@ -19,12 +19,8 @@
 
 import java.util.Collection;
 
-import org.springframework.security.access.annotation.Secured;
-
 /**
  * Interface that supports basic CRUD operations.
- * 
- * Minimal method security requirements are annotated here. Super interfaces should secure methods further.
  * 
  * @author paul
  * @version $Id$
@@ -38,7 +34,6 @@ public interface BaseDao<T> {
 
     public T create( T entity );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<? extends T> load( Collection<Long> ids );
 
     public T load( Long id );
