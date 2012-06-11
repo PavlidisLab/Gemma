@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import cern.colt.matrix.DoubleMatrix2D;
 
@@ -74,8 +73,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     @Autowired
     private SVDServiceHelper svdService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#checkBatchEffectSeverity(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#checkBatchEffectSeverity
+     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public void checkBatchEffectSeverity( ExpressionExperiment ee ) {
@@ -102,8 +105,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#checkCorrectability(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#checkCorrectability(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee ) {
@@ -160,8 +167,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#getBatchFactor(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#getBatchFactor(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
@@ -176,8 +187,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         return batch;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     @Override
     public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee ) {
@@ -195,22 +210,29 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          */
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
+        processedExpressionDataVectorService.thaw( vectos );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
         return comBat( mat );
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.
+     * datastructure.matrix.ExpressionDataDoubleMatrix)
      */
     @Override
     public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat ) {
         return this.comBat( mat, true, null );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix, boolean, java.lang.Double)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService#comBat(ubic.gemma.
+     * datastructure.matrix.ExpressionDataDoubleMatrix, boolean, java.lang.Double)
      */
     @Override
     public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric,
