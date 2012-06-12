@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
+@Deprecated
 public class BioMaterialWrapper extends TableDecorator {
 
     /**

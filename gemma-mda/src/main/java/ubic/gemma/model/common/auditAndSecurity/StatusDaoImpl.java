@@ -22,8 +22,7 @@ import java.util.Date;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
-import org.hibernate.SessionFactory;
-import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.SessionFactory; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

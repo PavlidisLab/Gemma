@@ -61,8 +61,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
                 log.info( "Processing: " + bas );
 
-                bas = eeService.thawLite( ( ExpressionExperiment ) bas );
-
                 try {
                     boolean success = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
                     if ( success ) {

@@ -35,10 +35,10 @@ import ubic.gemma.util.ConfigUtils;
 /**
  * Tag to output a bibliographic reference .
  * 
- * @jsp.tag name="bibref" body-content="empty"
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class BibliographicReferenceTag extends TagSupport {
 
     /**
@@ -57,6 +57,7 @@ public class BibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -154,10 +155,11 @@ public class BibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.BodyTagSupport#doEndTag()
      */
     @Override
-    public int doEndTag() throws JspException {
+    public int doEndTag() {
         return EVAL_PAGE;
     }
 

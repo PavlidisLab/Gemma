@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -150,7 +151,8 @@ public class AssayViewTag extends TagSupport {
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
             Long count = arrayMaterialCount.get( design );
-            buf.append( "<th>" + count + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id="
+            buf.append( "<th>" + count
+                    + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id="
                     + design.getId() + "\" title=\"" + design.getName() + "\" >"
                     + ( design.getShortName() == null ? design.getName() : design.getShortName() ) + "</a></th>" );
         }
@@ -159,10 +161,10 @@ public class AssayViewTag extends TagSupport {
         // display bioMaterials and the corresponding bioAssays
         int count = 1;
 
-        Iterator iter = bioAssayMap.keySet().iterator();
-        ArrayList<BioMaterial> materials = new ArrayList<BioMaterial>();
+        Iterator<BioMaterial> iter = bioAssayMap.keySet().iterator();
+        List<BioMaterial> materials = new ArrayList<BioMaterial>();
         while ( iter.hasNext() ) {
-            materials.add( ( BioMaterial ) iter.next() );
+            materials.add( iter.next() );
         }
         Comparator<BioMaterial> comparator = new BioMaterialComparator();
         Collections.sort( materials, comparator );
@@ -196,9 +198,7 @@ public class AssayViewTag extends TagSupport {
                         String link = "<a title='" + StringUtils.join( tooltips.toArray(), "\n" )
                                 + "' href='/Gemma/bioAssay/showAllBioAssays.html?id="
                                 + StringUtils.join( ids.toArray(), "," ) + "'> (list) </a>";
-                        buf
-                                .append( "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount
-                                        + "</td>\n" );
+                        buf.append( "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
 
                     } else {
 

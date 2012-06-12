@@ -39,6 +39,7 @@ import ubic.gemma.web.util.LinkUtils;
  * @author joseph
  * @version $Id$
  */
+@Deprecated
 public class CompositeSequenceWrapper extends TableDecorator {
 
     static NumberFormat nf = NumberFormat.getNumberInstance();

@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  * @author keshav
  * @version $Id$
  */
+@Deprecated
 public class BioAssayWrapper extends TableDecorator {
 
     /**

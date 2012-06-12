@@ -11,10 +11,10 @@ import ubic.basecode.dataStructure.graph.DirectedGraph;
 /**
  * Tag to display a hierarchy of GO terms.
  * 
- * @jsp.tag name="geneOntology" body-content="empty"
  * @author Paul
  * @version $Id$
  */
+@Deprecated
 public class GeneOntologyTag extends TagSupport {
 
     DirectedGraph goGraph;
@@ -31,7 +31,6 @@ public class GeneOntologyTag extends TagSupport {
     }
 
     /**
-     * @jsp.attribute description="The graph of GO terms" required="true" rtexprvalue="true"
      * @param goGraph
      */
     public void setGoGraph( DirectedGraph goGraph ) {

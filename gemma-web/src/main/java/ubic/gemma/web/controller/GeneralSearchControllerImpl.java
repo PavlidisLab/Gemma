@@ -270,6 +270,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
+    @Deprecated
     @Override
     @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
@@ -332,20 +333,22 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         StopWatch timer = new StopWatch();
         timer.start();
         Collection vos = null;
-        for( Class<?> entityClass : results.keySet()){
+        for ( Class<?> entityClass : results.keySet() ) {
             List<SearchResult> classSearchResults = results.get( entityClass );
-            
+
             if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-                vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( classSearchResults ), false ),
+                vos = filterEE(
+                        expressionExperimentService.loadValueObjects( EntityUtils.getIds( classSearchResults ), false ),
                         settings );
-                
+
                 if ( !SecurityServiceImpl.isUserAdmin() ) {
                     auditableUtil.removeTroubledEes( vos );
                 }
-                
+
             } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-                vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( classSearchResults ) ), settings );
-                
+                vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( classSearchResults ) ),
+                        settings );
+
                 if ( !SecurityServiceImpl.isUserAdmin() ) {
                     auditableUtil.removeTroubledArrayDesigns( vos );
                 }
@@ -354,13 +357,14 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
                 vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( classSearchResults ) );
             } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-                vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( classSearchResults ) ) );
+                vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils
+                        .getIds( classSearchResults ) ) );
             } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
                 Collection<Characteristic> characs = new ArrayList<Characteristic>();
-                for(SearchResult sr : classSearchResults){
+                for ( SearchResult sr : classSearchResults ) {
                     // extra check
-                    if( Characteristic.class.isAssignableFrom(sr.getResultClass()) ){
-                        Characteristic ch = (Characteristic) sr.getResultObject();
+                    if ( Characteristic.class.isAssignableFrom( sr.getResultClass() ) ) {
+                        Characteristic ch = ( Characteristic ) sr.getResultObject();
                         characs.add( ch );
                     }
                 }
@@ -371,29 +375,31 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
                 vos = geneSetService.getValueObjects( EntityUtils.getIds( classSearchResults ) );
             } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-                Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
-                        .load( EntityUtils.getIds( classSearchResults ) ) );
+                Collection<ExpressionExperimentSet> eeSets = experimentSetService
+                        .validateForFrontEnd( experimentSetService.load( EntityUtils.getIds( classSearchResults ) ) );
                 vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
             } else {
-                throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
+                throw new UnsupportedOperationException( "Don't know how to make value objects for class="
+                        + entityClass );
             }
-                    // retained objects...
-        Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
-        
-        for ( Iterator<SearchResult> it = classSearchResults.iterator(); it.hasNext(); ) {
-            SearchResult sr = it.next();
-            if ( !idMap.containsKey( sr.getId() ) ) {
-                it.remove();
-                continue;
+            // retained objects...
+            Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
+
+            for ( Iterator<SearchResult> it = classSearchResults.iterator(); it.hasNext(); ) {
+                SearchResult sr = it.next();
+                if ( !idMap.containsKey( sr.getId() ) ) {
+                    it.remove();
+                    continue;
+                }
+                sr.setResultObject( idMap.get( sr.getId() ) );
             }
-            sr.setResultObject( idMap.get( sr.getId() ) );
         }
-        }
-        
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
         }
     }
+
     /**
      * @param entityClass
      * @param results
@@ -401,7 +407,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      *         same order as the entities.
      */
     @SuppressWarnings("unchecked")
-    private void fillValueObjects( Class entityClass, List<SearchResult> results, SearchSettings settings ) {
+    private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection vos = null;
@@ -422,9 +428,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             Collection<CompositeSequenceValueObject> css = new ArrayList<CompositeSequenceValueObject>();
-            for(SearchResult sr : results){
-                CompositeSequenceValueObject csvo = compositeSequenceService.convertToValueObject( (CompositeSequence) sr.getResultObject() );
-                css.add(csvo);
+            for ( SearchResult sr : results ) {
+                CompositeSequenceValueObject csvo = compositeSequenceService
+                        .convertToValueObject( ( CompositeSequence ) sr.getResultObject() );
+                css.add( csvo );
             }
             vos = css;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
@@ -433,15 +440,15 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             Collection<CharacteristicValueObject> cvos = new ArrayList<CharacteristicValueObject>();
-            for(SearchResult sr : results){
-                Characteristic ch = (Characteristic) sr.getResultObject();
-                cvos.add(new CharacteristicValueObject( ch ));
+            for ( SearchResult sr : results ) {
+                Characteristic ch = ( Characteristic ) sr.getResultObject();
+                cvos.add( new CharacteristicValueObject( ch ) );
             }
             vos = cvos;
         } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
             Collection<CharacteristicValueObject> cvos = new ArrayList<CharacteristicValueObject>();
-            for(SearchResult sr : results){
-                CharacteristicValueObject ch = (CharacteristicValueObject) sr.getResultObject();
+            for ( SearchResult sr : results ) {
+                CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
                 cvos.add( ch );
             }
             vos = cvos;

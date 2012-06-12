@@ -383,7 +383,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testUpdateSubsumingStatus() throws Exception {
+    public void testUpdateSubsumingStatus() {
         ArrayDesign subsumer = this.getTestPersistentArrayDesign( 10, false );
 
         ArrayDesign subsumee = this.getTestPersistentArrayDesign( 5, false );
@@ -395,7 +395,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testUpdateSubsumingStatusTrue() throws Exception {
+    public void testUpdateSubsumingStatusTrue() {
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( "subsuming_arraydesign" );
 

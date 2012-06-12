@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * @jsp.tag name="exception" body-content="empty"
  * @author pavlidis
  * @version $Id$
  */
@@ -49,7 +48,7 @@ public class ExceptionTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
-    public int doEndTag() throws JspException {
+    public int doEndTag() {
         return EVAL_PAGE;
     }
 
@@ -87,7 +86,6 @@ public class ExceptionTag extends TagSupport {
     }
 
     /**
-     * @jsp.attribute description="The exception" required="true" rtexprvalue="true"
      * @param exception
      */
     public void setException( Exception exception ) {
@@ -95,7 +93,6 @@ public class ExceptionTag extends TagSupport {
     }
 
     /**
-     * @jsp.attribute description="Should the full stack trace be displayed?" required="false" rtexprvalue="true"
      * @param showStackTrace the showStackTrace to set
      */
     public void setShowStackTrace( Boolean showStackTrace ) {

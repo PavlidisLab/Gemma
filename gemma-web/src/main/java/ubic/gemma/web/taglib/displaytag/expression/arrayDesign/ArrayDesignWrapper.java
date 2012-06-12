@@ -36,6 +36,7 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
  * @author joseph
  * @version $Id$
  */
+@Deprecated
 public class ArrayDesignWrapper extends TableDecorator {
 
     public String getColor() {

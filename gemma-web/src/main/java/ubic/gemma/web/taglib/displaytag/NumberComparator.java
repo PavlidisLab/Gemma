@@ -27,7 +27,7 @@ import java.util.Comparator;
  * @author jsantos
  * @version $Id$
  */
-public class NumberComparator implements Comparator {
+public class NumberComparator implements Comparator<Object> {
 
     /*
      * (non-Javadoc)
@@ -49,8 +49,8 @@ public class NumberComparator implements Comparator {
                 s1 = ( String ) arg0;
                 s2 = ( String ) arg1;
             } else {
-                Class c1 = arg0.getClass();
-                Class c2 = arg1.getClass();
+                Class<?> c1 = arg0.getClass();
+                Class<?> c2 = arg1.getClass();
 
                 s1 = c1.cast( arg0 ).toString();
                 s2 = c2.cast( arg1 ).toString();

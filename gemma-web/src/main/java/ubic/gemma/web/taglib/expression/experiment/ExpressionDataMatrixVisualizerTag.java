@@ -39,10 +39,11 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * @jsp.tag name="expressionDataMatrix" body-content="empty"
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private static final int MAX_GENE_NAME_CELL_LENGTH = 100;
@@ -122,14 +123,13 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
                 /* annotation table headings */
                 buf.append( "<td colspan='3' valign='bottom'>" );
-                buf
-                        .append( "<table border='0' cellpadding='0' cellspacing='0' >"
-                                + "<tbody style=\"height:"
-                                + IMAGE_HEADER_EM_HEIGHT
-                                + "em;\" ><tr><th valign='bottom' nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th>"
-                                + "<th valign='bottom' nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th>"
-                                + "<th valign='bottom' nowrap='nowrap' width='200'><span class='annotation'>Name</span></th>"
-                                + "</tr></tbody></table>" );
+                buf.append( "<table border='0' cellpadding='0' cellspacing='0' >"
+                        + "<tbody style=\"height:"
+                        + IMAGE_HEADER_EM_HEIGHT
+                        + "em;\" ><tr><th valign='bottom' nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th>"
+                        + "<th valign='bottom' nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th>"
+                        + "<th valign='bottom' nowrap='nowrap' width='200'><span class='annotation'>Name</span></th>"
+                        + "</tr></tbody></table>" );
                 buf.append( "</td>" );
                 buf.append( "</tr>" );
 

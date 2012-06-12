@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.TableMaintenanceUtilImpl;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.util.ConfigUtils;
 

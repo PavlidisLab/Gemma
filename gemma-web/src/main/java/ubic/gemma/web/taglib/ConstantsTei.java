@@ -33,8 +33,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.Constants;
 
 /**
- * Implementation of <code>TagExtraInfo</code> for the <b>constants</b> tag, identifying the scripting object(s) to
- * be made visible.
+ * Implementation of <code>TagExtraInfo</code> for the <b>constants</b> tag, identifying the scripting object(s) to be
+ * made visible.
  * 
  * @author Matt Raible
  * @version $Id$
@@ -57,7 +57,7 @@ public class ConstantsTei extends TagExtraInfo {
                 clazz = Constants.class.getName();
             }
 
-            Class c = Class.forName( clazz );
+            Class<?> c = Class.forName( clazz );
 
             // if no var specified, get all
             if ( data.getAttributeString( "var" ) == null ) {
@@ -70,9 +70,7 @@ public class ConstantsTei extends TagExtraInfo {
                 }
             } else {
                 String var = data.getAttributeString( "var" );
-                vars
-                        .add( new VariableInfo( c.getField( var ).getName(), "java.lang.String", true,
-                                VariableInfo.AT_END ) );
+                vars.add( new VariableInfo( c.getField( var ).getName(), "java.lang.String", true, VariableInfo.AT_END ) );
             }
         } catch ( Exception cnf ) {
             log.error( cnf.getMessage() );

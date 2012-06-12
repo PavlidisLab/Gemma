@@ -36,15 +36,13 @@ import ubic.gemma.util.LabelValue;
 
 /**
  * Tag for creating multiple &lt;select&gt; options for displaying a list of country names.
- * <p>
- * <b>NOTE</b> - This tag requires a Java2 (JDK 1.2 or later) platform.
- * </p>
  * 
  * @author Jens Fischer, Matt Raible
  * @author pavlidis
  * @version $Id$
- * @jsp.tag name="country" body-content="empty"
+ * @deprecated I don't think we use this anywhere.
  */
+@Deprecated
 public class CountryTag extends TagSupport {
     /**
      * 
@@ -106,7 +104,7 @@ public class CountryTag extends TagSupport {
         }
 
         Locale userLocale = pageContext.getRequest().getLocale();
-        List countries = this.buildCountryList( userLocale );
+        List<LabelValue> countries = this.buildCountryList( userLocale );
 
         if ( scope != null ) {
             if ( scope.equals( "page" ) ) {
@@ -129,8 +127,8 @@ public class CountryTag extends TagSupport {
                 sb.append( eval.evalString( "prompt", prompt ) + "</option>\n" );
             }
 
-            for ( Iterator i = countries.iterator(); i.hasNext(); ) {
-                LabelValue country = ( LabelValue ) i.next();
+            for ( Iterator<LabelValue> i = countries.iterator(); i.hasNext(); ) {
+                LabelValue country = i.next();
                 sb.append( "    <option value=\"" + country.getValue() + "\"" );
 
                 if ( ( selected != null ) && selected.equals( country.getValue() ) ) {
@@ -169,7 +167,7 @@ public class CountryTag extends TagSupport {
      * @param locale The Locale used to localize the country names.
      * @return List of LabelValues for all available countries.
      */
-    protected List buildCountryList( Locale locale ) {
+    protected List<LabelValue> buildCountryList( Locale locale ) {
         final String EMPTY = "";
         final Locale[] available = Locale.getAvailableLocales();
 

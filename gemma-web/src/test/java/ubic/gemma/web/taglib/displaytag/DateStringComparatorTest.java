@@ -26,7 +26,7 @@ import junit.framework.TestCase;
  */
 public class DateStringComparatorTest extends TestCase {
 
-    public void testCompare1() throws Exception {
+    public void testCompare1() {
 
         DateStringComparator d = new DateStringComparator();
         int a = d.compare( "<span title='2007-04-10 13:14:03.0'>2007-04-10</span>",

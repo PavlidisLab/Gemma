@@ -40,7 +40,7 @@ import ubic.gemma.loader.util.parser.FileFormatException;
  * @author pavlidis
  * @version $Id$
  */
-public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser {
+public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser<String> {
 
     /**
      * 
@@ -171,7 +171,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
     }
 
     @Override
-    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+    public void parse( InputStream inputStream, BlockingQueue<String> queue ) throws IOException {
         this.resultsKeys = queue;
         this.parse( inputStream );
     }

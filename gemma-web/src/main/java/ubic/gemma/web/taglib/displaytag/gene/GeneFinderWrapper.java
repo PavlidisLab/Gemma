@@ -90,29 +90,28 @@ public class GeneFinderWrapper extends TableDecorator {
         return g.getOfficialSymbol();
     }
 
-    @SuppressWarnings("unchecked")
     public String getMatchesView() {
         Gene object = ( Gene ) getCurrentRowObject();
-        Set<Gene> geneMatch = ( Set ) this.getPageContext().findAttribute( "geneMatch" );
-        Set<Gene> aliasMatch = ( Set ) this.getPageContext().findAttribute( "aliasMatch" );
-        Set<Gene> geneProductMatch = ( Set ) this.getPageContext().findAttribute( "geneProductMatch" );
-        Set<Gene> bioSequenceMatch = ( Set ) this.getPageContext().findAttribute( "bioSequenceMatch" );
+        Set<Gene> geneMatch = ( Set<Gene> ) this.getPageContext().findAttribute( "geneMatch" );
+        Set<Gene> aliasMatch = ( Set<Gene> ) this.getPageContext().findAttribute( "aliasMatch" );
+        Set<Gene> geneProductMatch = ( Set<Gene> ) this.getPageContext().findAttribute( "geneProductMatch" );
+        Set<Gene> bioSequenceMatch = ( Set<Gene> ) this.getPageContext().findAttribute( "bioSequenceMatch" );
         ArrayList<String> matches = new ArrayList<String>();
         if ( geneMatch.contains( object ) ) {
             matches.add( "Symbol" );
-            
+
         }
         if ( aliasMatch.contains( object ) ) {
             matches.add( "Alias" );
-            
+
         }
         if ( geneProductMatch.contains( object ) ) {
             matches.add( "GeneProduct" );
-            
+
         }
         if ( bioSequenceMatch.contains( object ) ) {
             matches.add( "BioSequence" );
-            
+
         }
         return StringUtils.join( matches.toArray(), "," );
     }

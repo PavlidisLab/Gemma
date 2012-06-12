@@ -129,7 +129,7 @@ public class LabelTag extends TagSupport {
         }
 
         Errors errors = requestContext.getErrors( formName, false );
-        List fes = null;
+        List<?> fes = null;
         String errorMsg = null;
         if ( errors != null ) {
             fes = errors.getFieldErrors( fieldName );
@@ -218,7 +218,7 @@ public class LabelTag extends TagSupport {
     /**
      * Extract the error messages from the given ObjectError list.
      */
-    private String getErrorMessages( List fes ) throws NoSuchMessageException {
+    private String getErrorMessages( List<?> fes ) throws NoSuchMessageException {
         StringBuffer message = new StringBuffer();
         for ( int i = 0; i < fes.size(); i++ ) {
             ObjectError error = ( ObjectError ) fes.get( i );

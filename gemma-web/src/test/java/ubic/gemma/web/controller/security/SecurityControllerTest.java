@@ -63,7 +63,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     private String userName;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         this.ee = super.getTestPersistentBasicExpressionExperiment();
         this.eeId = ee.getId();
         this.userName = randomName();
@@ -75,15 +75,15 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     }
 
     @Test
-    public void testGetInfo() throws Exception {
+    public void testGetInfo() {
         SecurityInfoValueObject securityInfo = securityController.getSecurityInfo( ed );
         assertNotNull( securityInfo );
         assertTrue( securityInfo.isPubliclyReadable() );
     }
 
     @Test
-    public void testRemoveUsersFromGroupDisallowed() throws Exception {
-        String[] userNames = {"administrator"};
+    public void testRemoveUsersFromGroupDisallowed() {
+        String[] userNames = { "administrator" };
         try {
             securityController.removeUsersFromGroup( userNames, "Administrators" );
 
@@ -99,7 +99,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     }
 
     @Test
-    public void testUpdatePermissions() throws Exception {
+    public void testUpdatePermissions() {
         String groupName = randomName();
         runAsUser( this.userName );
         securityService.createGroup( groupName );
@@ -118,8 +118,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
             userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 )
-                    + "@gmail.com", "key", new Date() ) );
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 }

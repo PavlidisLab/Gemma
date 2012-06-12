@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * 
  * @author joseph
  */
+@Deprecated
 public class ArrayDesignMapResultWrapper extends TableDecorator {
 
     public String getCompositeSequenceNameLink() {

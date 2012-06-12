@@ -27,8 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 /**
- * @jsp.tag name="contact" body-content="empty"
- * @author Kiran Keshav
+  * @author Kiran Keshav
  * @version $Id$
  */
 public class ContactTag extends TagSupport {
@@ -42,7 +41,6 @@ public class ContactTag extends TagSupport {
     private Contact contact;
 
     /**
-     * @jsp.attribute description="The contact" required="true" rtexprvalue="true"
      * @param contact
      */
     public void setContact( Contact contact ) {

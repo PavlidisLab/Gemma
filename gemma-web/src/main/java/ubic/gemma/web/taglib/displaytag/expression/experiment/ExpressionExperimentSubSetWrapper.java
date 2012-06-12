@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
  * @author joseph
  * @version $Id$
  */
+@Deprecated
 public class ExpressionExperimentSubSetWrapper extends TableDecorator {
 
     /**

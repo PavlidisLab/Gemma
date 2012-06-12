@@ -33,7 +33,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 
 /**
- * @jsp.tag name="citation" body-content="empty"
  * @author joseph
  * @version
  */
@@ -49,7 +48,6 @@ public class ShortBibliographicReferenceTag extends TagSupport {
     private BibliographicReference citation;
 
     /**
-     * @jsp.attribute description="BibliographicReference record for citation" required="true" rtexprvalue="true"
      * @param citation
      */
     public void setCitation( BibliographicReference citation ) {

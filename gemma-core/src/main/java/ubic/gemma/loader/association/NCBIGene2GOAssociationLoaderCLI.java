@@ -47,13 +47,14 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription(
-                "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
+        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
+                .withDescription( "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( pathOption );
     }
@@ -77,6 +78,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -88,7 +90,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
             return e;
         }
 
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        TaxonService taxonService = this.getBean( TaxonService.class );
 
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
 
@@ -119,7 +121,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
         }
         assert files.size() == 1;
         LocalFile gene2Gofile = files.iterator().next();
-        Gene2GOAssociationService ggoserv = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
+        Gene2GOAssociationService ggoserv = this.getBean( Gene2GOAssociationService.class );
         log.info( "Removing all old GO associations" );
         ggoserv.removeAll();
 

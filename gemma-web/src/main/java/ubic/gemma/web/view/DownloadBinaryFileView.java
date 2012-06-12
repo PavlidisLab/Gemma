@@ -43,12 +43,13 @@ public class DownloadBinaryFileView extends AbstractView {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.view.AbstractView#renderMergedOutputModel(java.util.Map,
      * javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
-    protected void renderMergedOutputModel( Map model, HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    protected void renderMergedOutputModel( Map<String, Object> model, HttpServletRequest request,
+            HttpServletResponse response ) throws Exception {
 
         String filePath = ( String ) model.get( PATH_PARAM );
         File f = new File( filePath );

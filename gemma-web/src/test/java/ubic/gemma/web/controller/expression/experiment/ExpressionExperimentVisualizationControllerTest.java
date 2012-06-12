@@ -55,8 +55,7 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
 
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
-        ExpressionExperimentService service = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
+        ExpressionExperimentService service = this.getBean( ExpressionExperimentService.class );
 
         String shortName = "GSE3434";
         ExpressionExperiment ee = service.findByShortName( shortName );

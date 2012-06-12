@@ -34,6 +34,7 @@ import ubic.gemma.util.AnchorTagUtil;
  * @author paul
  * @version $Id$
  */
+@Deprecated
 public class DiffExResultDecorator extends TableDecorator {
 
     public String getP() {
