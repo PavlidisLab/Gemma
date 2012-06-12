@@ -105,7 +105,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						dataIndex : "supportKey",
 						width : 70,
 						renderer : this.supportStyler.createDelegate(this),
-						tooltip : "# of Datasets that confirm coexpression",
+						tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,
 						sortable : true
 					}, {
 						id : 'gene2GeneProteinAssociationStringUrl',
@@ -157,7 +157,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						dataIndex : "supportKey",
 						width : 75,
 						renderer : this.supportStyler.createDelegate(this),
-						tooltip : "# of Datasets that confirm coexpression",
+						tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,
 						sortable : true
 					}, {
 						id : 'nodeDegree',

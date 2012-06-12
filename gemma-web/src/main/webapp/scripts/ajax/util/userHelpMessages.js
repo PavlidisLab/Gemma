@@ -194,7 +194,8 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	CoexpressionGrid :{
 		stringencySpinnerTT: "Add/remove genes with more/less dataset support that confirms coexpression",
-		myDataButtonTT: "Click to show/hide results containing only my data"
+		myDataButtonTT: "Click to show/hide results containing only my data",
+		supportColumnTT: "Number of data sets supporting coexpression. Green indicates positive correlations, red negative. Thus 5/27 means the coexpression was supported by 5 out of 27 tested data sets. Values in parentheses are after removal of potentially non-specifically hybridizing probes."
 	},
 	CytoscapePanel:{
 		extendNodeText:'Extend Selected Nodes',
