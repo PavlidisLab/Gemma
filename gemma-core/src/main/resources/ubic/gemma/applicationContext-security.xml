@@ -44,11 +44,11 @@
 
 	</s:http>
 
-	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.web.login.AjaxAuthenticationSuccessHandler">
+	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler">
 		<property name="alwaysUseDefaultTargetUrl" value="false"></property>
 	</bean>
 
-	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.web.login.AjaxAuthenticationFailureHandler">
+	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler">
 		<property name="defaultFailureUrl" value="/login.jsp"></property>
 	</bean>
 

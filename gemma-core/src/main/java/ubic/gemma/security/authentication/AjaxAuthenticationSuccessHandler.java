@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.web.login;
+package ubic.gemma.security.authentication;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ import ubic.gemma.util.JSONUtil;
  * 
  * if the request is not ajax-style then the default redirection takes place
  * 
- * configuration in applicationContext-security.xml
+ * this is in gemma-core because configuration takes place in applicationContext-security.xml
  * 
  * @author cmcdonald
  * @version $Id$
