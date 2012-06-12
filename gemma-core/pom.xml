@@ -69,10 +69,7 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<echo append="false"
-									file="${project.build.directory}/classes/version.properties">
-									gemma.version=${project.version} built
-									${maven.build.timestamp}</echo>
+								<echo append="false" file="${project.build.directory}/classes/version.properties">gemma.version=${project.version} built ${maven.build.timestamp}</echo>
 							</tasks>
 						</configuration>
 					</execution>
@@ -183,6 +180,7 @@
 			<version>1.2.0</version>
 		</dependency>
 		<dependency>
+		<!-- NO longer needed -->
 			<groupId>commons-dbutils</groupId>
 			<artifactId>commons-dbutils</artifactId>
 			<version>1.0</version>
@@ -393,7 +391,7 @@
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>1.8.0.10</version>
-		</dependency>            
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
