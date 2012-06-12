@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +40,7 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.TableMaintenenceUtil;
@@ -134,9 +136,16 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 continue;
             }
 
+            Map<BioAssaySet, Double> nd = geneService.getGeneCoexpressionNodeDegree( gene, ees );
+
+            for ( BioAssaySet bs : nd.keySet() ) {
+                assertTrue( nd.get( bs ) > 0.0 );
+            }
+
             log.info( coexps.size() + " hits for " + gene );
             for ( CoexpressionValueObject coex : coexps ) {
-                log.info( coex );
+                log.debug( coex );
+                assertNotNull( coex.getQueryGene() );
             }
             foundOne = true;
             break;
