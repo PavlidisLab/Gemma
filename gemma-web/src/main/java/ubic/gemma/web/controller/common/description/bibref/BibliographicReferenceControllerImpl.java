@@ -316,6 +316,10 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         // map sorted in natural order of the keys
         SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<CitationValueObject, Collection<ExpressionExperimentValueObject>>();
         for ( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet() ) {
+            if(entry.getValue().getTitle() == null || entry.getValue().getTitle().isEmpty() ||
+                    entry.getValue().getAuthorList() == null || entry.getValue().getAuthorList().isEmpty()){
+                continue;
+            }
             CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
             if ( !citationToEEs.containsKey( cvo ) ) {
                 citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
