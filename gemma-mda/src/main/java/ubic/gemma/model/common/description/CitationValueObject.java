@@ -215,7 +215,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
 
     @Override
     public int compareTo( CitationValueObject o ) {
-        return this.getCitation().compareTo( o.getCitation() );
+        return this.getCitation().toLowerCase().compareTo( o.getCitation().toLowerCase() );
     }
 
 }
