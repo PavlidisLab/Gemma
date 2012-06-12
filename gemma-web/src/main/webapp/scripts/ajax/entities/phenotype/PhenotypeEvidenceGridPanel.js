@@ -118,9 +118,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		MyRowExpander = Ext.extend(Ext.grid.RowExpander, {
 			getRowClass: function(record, index, rowParams, store) {
 				if (record.data.homologueEvidence) {	
-					rowParams.tstyle = 'color: gray;';
+					rowParams.tstyle += 'color: gray;';
 				} else {
-					rowParams.tstyle = 'color: black;';
+					rowParams.tstyle += 'color: black;';
 				}
 				
 				return this.superclass().getRowClass.call(this, record, index, rowParams, store);
