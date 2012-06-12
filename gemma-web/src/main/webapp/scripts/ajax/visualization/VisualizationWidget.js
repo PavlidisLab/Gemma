@@ -1011,6 +1011,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 					break;
 				}
 				if(factorCount === 0){
+					Ext.DomHelper.overwrite(this.body.id, '');
 					this.add({html:'No experimental design available.'});
 					this.collapse();
 				}else{
