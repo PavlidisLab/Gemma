@@ -52,6 +52,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
@@ -471,7 +472,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         /*
          * Typically this is being run for all data sets for a taxon, so this unconstrained query is okay.
          */
@@ -483,26 +485,34 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return null;
         }
 
-        List<?> r = this.getHibernateTemplate()
-                .findByNamedParam(
-                        /* Note the avg() ... group by operation here on the rank */
-                        "select pca.experimentAnalyzed, avg(p.nodeDegreeRank) from ProbeCoexpressionAnalysisImpl pca "
-                                + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps) "
-                                + "group by pca.experimentAnalyzed", new String[] { "ps", "ees" },
-                        new Object[] { probes, ees } );
+        Map<Long, BioAssaySet> eeidmap = EntityUtils.getIdMap( ees );
+        Map<Long, CompositeSequence> pidmap = EntityUtils.getIdMap( probes );
+
+        String queryString = "select pca.experimentAnalyzed.id, avg(p.nodeDegreeRank) from ProbeCoexpressionAnalysisImpl pca "
+                + "join pca.probesUsed p where pca.experimentAnalyzed.id in (:ees) and p.probe.id in (:ps) "
+                + "group by pca.experimentAnalyzed.id";
+
+        if ( log.isDebugEnabled() ) log.debug( NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+        /* Note the avg() ... group by operation here on the rank */
+        queryString, new String[] { "ps", "ees" }, new Object[] { pidmap.keySet(), eeidmap.keySet() } );
 
         Map<BioAssaySet, Double> result = new HashMap<BioAssaySet, Double>();
         for ( Object o : r ) {
             Object[] oa = ( Object[] ) o;
-            BioAssaySet ee = ( BioAssaySet ) oa[0];
+            Long ee = ( Long ) oa[0];
 
             // See query above: this is the mean for the probes for the gene.
             Double nodeDegreeRank = ( Double ) oa[1];
             if ( nodeDegreeRank == null ) continue; // should not happen!
 
-            result.put( ee, nodeDegreeRank );
+            result.put( eeidmap.get( ee ), nodeDegreeRank );
         }
-
+        if ( timer.getTime() > 1000 ) {
+            log.info( "getGeneCoexpressionNodeDegree " + gene + ": " + timer.getTime() + "ms; query was: "
+                    + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+        }
         return result;
 
     }
@@ -954,33 +964,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
-    // */
-    // @Override
-    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) {
-    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-    // + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
-    //
-    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    //
-    // }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-    // */
-    // @Override
-    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) {
-    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-    // + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
-    //
-    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    // }
 
     /*
      * (non-Javadoc)
