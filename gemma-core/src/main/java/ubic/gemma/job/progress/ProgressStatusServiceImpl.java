@@ -24,9 +24,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.TaskCommandValueObject;
 
 /**
  * This class exposes methods for AJAX calls.
@@ -76,8 +76,8 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
      * @see ubic.gemma.job.progress.ProgressStatusService#getCancelledTasks()
      */
     @Override
-    public Collection<TaskCommand> getCancelledTasks() {
-        return taskRunningService.getCancelledTasks();
+    public Collection<TaskCommandValueObject> getCancelledTasks() {
+        return TaskCommandValueObject.convert2ValueObjects(taskRunningService.getCancelledTasks());
     }
 
     /*
@@ -159,8 +159,8 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
      * @see ubic.gemma.job.progress.ProgressStatusService#getSubmittedTasks()
      */
     @Override
-    public Collection<TaskCommand> getSubmittedTasks() {
-        return taskRunningService.getSubmittedTasks();
+    public Collection<TaskCommandValueObject> getSubmittedTasks() {
+        return TaskCommandValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks());
     }
 
 }

@@ -20,8 +20,8 @@ import java.util.List;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskCommandValueObject;
 
 /**
  * @author paul
@@ -50,7 +50,7 @@ public interface ProgressStatusService {
      * @see ubic.gemma.job.TaskRunningServiceImpl#getCancelledTasks()
      */
     @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskCommand> getCancelledTasks();
+    public abstract Collection<TaskCommandValueObject> getCancelledTasks();
 
     /**
      * @return
@@ -79,6 +79,6 @@ public interface ProgressStatusService {
      * @see ubic.gemma.job.TaskRunningServiceImpl#getSubmittedTasks()
      */
     @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskCommand> getSubmittedTasks();
+    public abstract Collection<TaskCommandValueObject> getSubmittedTasks();
 
 }
