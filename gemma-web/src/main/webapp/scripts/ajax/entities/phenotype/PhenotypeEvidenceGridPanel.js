@@ -151,6 +151,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    }
 		}
 
+		var getGeneLink = this.getGeneLink;
+		
 		var evidenceStore = new Ext.data.Store({
 			proxy: this.evidenceStoreProxy == null ?
 						new Ext.data.DWRProxy({
@@ -279,12 +281,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								descriptionHtml += '<p><b>Note</b>: ' + record.description + '</p>';
 							}
 
-							if (record.homologueEvidence) {							
+							if (record.homologueEvidence) {
+								var geneLink = getGeneLink ?
+									getGeneLink(record.geneId) :
+									'/Gemma/gene/showGene.html?id=' + record.geneId;
+								
 								descriptionHtml += String.format("<p><b>*</b> Inferred from homology with the {0} gene {1} " +
-									"<a target='_blank' href='/Gemma/gene/showGene.html?id={2}' ext:qtip='Go to {1} Details (in new window)'>" +
+									"<a target='_blank' href='" + geneLink + "' ext:qtip='Go to {1} Details (in new window)'>" +
 										"<img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/>" + 
 									"</a></p>",
-								record.taxonCommonName, record.geneOfficialSymbol, record.geneId);
+								record.taxonCommonName, record.geneOfficialSymbol);
 							}
 							
 							return descriptionHtml;

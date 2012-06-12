@@ -416,9 +416,9 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	PhenotypePanel:{
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
-		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>, <b>geneStoreProxy</b>, <br />' +
-    			'<b>evidenceStoreProxy</b> and <b>geneColumnRenderer</b><br />' +
-    			' should not be set in config. Otherwise, all of them should be set.<br />' +
+		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>,<br />' +
+    			'<b>geneStoreProxy</b>, <b>evidenceStoreProxy</b> and <b>getGeneLink</b><br />' +
+    			'should not be set in config. Otherwise, all of them should be set.<br />' +
     			'',
     	modifyPhenotypeAssociationOutsideOfGemmaTitle: "Add new phenotype association", 
 		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='http://www.chibi.ubc.ca/Gemma/phenotypes.html'>Gemma website</a>.",

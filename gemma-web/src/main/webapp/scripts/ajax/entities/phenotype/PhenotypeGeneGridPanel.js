@@ -178,7 +178,17 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				header: "Symbol",
 				dataIndex: 'officialSymbol',
 				width: 65,
-				sortable: true
+	            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+	            	var geneLink = this.getGeneLink ?
+	            		this.getGeneLink(record.data.id) :
+	            		'/Gemma/gene/showGene.html?id=' + record.data.id;
+	            	
+					return String.format("{0} <a target='_blank' href='" + geneLink + "' ext:qtip='Go to {0} Details (in new window)'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a> ",
+						record.data.officialSymbol);
+	            		
+	            },
+				sortable: true,
+				scope: this
 			},{
 				header: "Name",
 				dataIndex: 'officialName',

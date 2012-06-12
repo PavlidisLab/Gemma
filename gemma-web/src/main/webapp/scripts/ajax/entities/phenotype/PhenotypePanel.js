@@ -11,14 +11,14 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 	phenotypeStoreProxy: null,
 	geneStoreProxy: null,
 	evidenceStoreProxy: null,
-	geneColumnRenderer: null, 
+	getGeneLink: null, 
 	// Configs that should be set if used outside of Gemma (END)
 	height: 600,
 	width: 760,
 	layout: 'border',        
     initComponent: function() {
-    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.evidenceStoreProxy && this.geneColumnRenderer) ||
-    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.evidenceStoreProxy && !this.geneColumnRenderer))) {
+    	if (!((this.phenotypeStoreProxy && this.geneStoreProxy && this.evidenceStoreProxy && this.getGeneLink) ||
+    	      (!this.phenotypeStoreProxy && !this.geneStoreProxy && !this.evidenceStoreProxy && !this.getGeneLink))) {
     		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	} else {
 			var currentPhenotypes = null;
@@ -56,6 +56,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				height: 300,
 				split: true,
 				geneStoreProxy: this.geneStoreProxy,
+				getGeneLink: this.getGeneLink,
 				listeners: {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
 						evidenceGrid.setCurrentData(currentFilters, selectedPhenotypes, selectedGene);
@@ -63,19 +64,12 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
         			}
 				}
 			});
-			geneGrid.getColumnModel().setRenderer(0,
-				this.geneColumnRenderer ?
-					this.geneColumnRenderer :
-					function(value, metadata, record, row, col, ds) {
-						return String.format("{1} <a target='_blank' href='/Gemma/gene/showGene.html?id={0}' ext:qtip='Go to {1} Details (in new window)'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a> ",
-							record.data.id, record.data.officialSymbol);
-					}
-			);
 			this.relayEvents(geneGrid, ['phenotypeAssociationChanged']);
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
 	    		region: 'center',
-				evidenceStoreProxy: this.evidenceStoreProxy	    		
+				evidenceStoreProxy: this.evidenceStoreProxy,	    		
+				getGeneLink: this.getGeneLink
 	    	});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
 
