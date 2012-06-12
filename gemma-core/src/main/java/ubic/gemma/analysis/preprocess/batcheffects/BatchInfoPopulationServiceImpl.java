@@ -150,8 +150,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         } catch ( Exception e ) {
 
             log.info( e, e );
-
-            this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
+            this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
 
             return false;
