@@ -154,7 +154,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
     public void testHandleGetGenesCompositeSequences() {
 
         TableMaintenenceUtil tu = this.getBean( TableMaintenenceUtil.class );
-        ( ( TableMaintenanceUtilImpl ) tu ).disableEmail();
+        tu.disableEmail();
         tu.updateGene2CsEntries();
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );

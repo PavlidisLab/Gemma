@@ -41,7 +41,6 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.TableMaintenanceUtilImpl;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -120,7 +119,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             assertNotNull( cp.getNodeDegreeRank() );
             assertNotNull( cp.getProbe() );
         }
-        ( ( TableMaintenanceUtilImpl ) tableMaintenenceUtil ).disableEmail();
+        tableMaintenenceUtil.disableEmail();
         tableMaintenenceUtil.updateGene2CsEntries();
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );

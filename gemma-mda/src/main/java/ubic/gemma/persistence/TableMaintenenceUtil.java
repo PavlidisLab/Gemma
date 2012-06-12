@@ -31,7 +31,11 @@ public interface TableMaintenenceUtil {
      * If necessary, update the GENE2CS table.
      */
     @Transactional
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public void updateGene2CsEntries();
+
+    // for tests only, to keep from getting emails.
+    @Secured({ "GROUP_ADMIN" })
+    public void disableEmail();
 
 }
