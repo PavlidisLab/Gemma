@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,9 +55,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired
     private StatusDao statusDao;
-
-    @Autowired
-    private SessionFactory sessionFactory;
 
     /*
      * (non-Javadoc)
@@ -142,13 +138,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
 
-        // FIXME: Temporary solution.
-        if ( !this.sessionFactory.getCurrentSession().contains( auditable ) ) {
-            // Re-attach if it is not already in current session
-            this.sessionFactory.getCurrentSession().update( auditable );
-        }
-
-        // TODO: Use AuditHelper?
         this.statusDao.update( auditable, auditEventType );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }

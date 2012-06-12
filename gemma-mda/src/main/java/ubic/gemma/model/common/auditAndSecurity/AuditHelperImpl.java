@@ -51,21 +51,14 @@ public class AuditHelperImpl implements AuditHelper {
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
 
-        try {
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            auditEvent.setAction( AuditAction.CREATE );
-            auditEvent.setNote( note );
-            auditEvent.setPerformer( user );
-            this.statusDao.update( auditable, null );
-            AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
-            return a;
-
-        } catch ( Throwable th ) {
-            throw new AuditTrailServiceException(
-                    "Error performing 'AuditTrailService.addUpdateEvent(Auditable auditable, String note)' --> " + th,
-                    th );
-        }
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.CREATE );
+        auditEvent.setNote( note );
+        auditEvent.setPerformer( user );
+        this.statusDao.update( auditable, null );
+        AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
+        return a;
 
     }
 

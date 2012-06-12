@@ -19,6 +19,7 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
@@ -38,29 +39,27 @@ public interface Gene2GeneCoexpressionService {
      */
 
     @Secured({ "GROUP_ADMIN" })
-    public java.util.Collection<Gene2GeneCoexpression> create(
-            java.util.Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
+    public Collection<Gene2GeneCoexpression> create( Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
 
     /**
      * @param Create the given gene2geneCoexpression object
      */
     @Secured({ "GROUP_ADMIN" })
-    public ubic.gemma.model.association.coexpression.Gene2GeneCoexpression create(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene );
+    public Gene2GeneCoexpression create( Gene2GeneCoexpression gene2gene );
 
     /**
      * @param the gene2geneCoexpression object to remove from the DB
      */
     @Secured({ "GROUP_ADMIN" })
-    public void delete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete );
+    public void delete( Gene2GeneCoexpression toDelete );
 
     /**
      * <p>
      * Returns a map of genes to coexpression results.
      * </p>
      */
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
-            java.util.Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
+    public Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships( Collection<Gene> genes,
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * This should typically only be called directly during analysis. The values can be more readily retrieved using the
@@ -76,8 +75,8 @@ public interface Gene2GeneCoexpressionService {
     /**
      * 
      */
-    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
-            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
+    public Collection<Gene2GeneCoexpression> findCoexpressionRelationships( Gene gene, int stringency, int maxResults,
+            GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * <p>
@@ -85,6 +84,6 @@ public interface Gene2GeneCoexpressionService {
      * </p>
      */
     public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
-            java.util.Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
+            Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }

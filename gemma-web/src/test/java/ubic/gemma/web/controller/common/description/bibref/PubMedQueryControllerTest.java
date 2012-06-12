@@ -46,7 +46,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
     private PubMedQueryController controller;
 
     @Test
-    public void testDisplayForm() throws Exception {
+    public void testDisplayForm() {
         assertEquals( "bibRefSearch", controller.getView() );
     }
 

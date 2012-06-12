@@ -100,9 +100,10 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditTrail );
         assertNotNull( auditable.getStatus() );
         assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
         assertTrue( auditable.getStatus().getTroubled() );
         assertFalse( auditable.getStatus().getValidated() );
-        assertEquals( size + 1, auditTrail.getEvents().size() );
+
         assertEquals( TroubleStatusFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
                 .getEventType().getClass() );
     }
@@ -130,10 +131,11 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getStatus() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getStatus().getLastUpdateDate() );
         assertFalse( auditable.getStatus().getTroubled() );
         assertTrue( auditable.getStatus().getValidated() );
-        assertEquals( size + 1, auditTrail.getEvents().size() );
+
         assertEquals( ValidatedFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
                 .getEventType().getClass() );
 
@@ -161,21 +163,22 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditEventType );
         assertTrue( auditEventType instanceof ValidatedFlagEvent );
     }
-    
-   @Test
-    public final void testGetEntitiesWithEvent(){
+
+    @Test
+    public final void testGetEntitiesWithEvent() {
         AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         Collection<AuditEvent> events = auditTrail.getEvents();
-        assertTrue(events.contains( ev ));
+        assertTrue( events.contains( ev ) );
         events = auditTrailService.getEvents( auditable );
-        assertTrue(events.contains( ev ));
-        
-        List<? extends Auditable> results = auditTrailService.getEntitiesWithEvent( ArrayDesign.class, SampleRemovalEvent.class );
+        assertTrue( events.contains( ev ) );
+
+        List<? extends Auditable> results = auditTrailService.getEntitiesWithEvent( ArrayDesign.class,
+                SampleRemovalEvent.class );
         assertTrue( results.contains( auditable ) );
-        
+
     }
 }

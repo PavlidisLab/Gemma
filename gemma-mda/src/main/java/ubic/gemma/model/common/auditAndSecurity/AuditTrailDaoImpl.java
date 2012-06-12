@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -53,9 +55,7 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
      * 
      */
     @Override
-    protected AuditEvent handleAddEvent( final Auditable auditable, final AuditEvent auditEvent ) {
-
-        Auditable aprime = ( Auditable ) this.getSession().get( auditable.getClass(), auditable.getId() );
+    protected AuditEvent handleAddEvent( Auditable auditable, final AuditEvent auditEvent ) {
 
         if ( auditEvent.getAction() == null ) {
             throw new IllegalArgumentException( "auditEvent was missing a required field" );
@@ -74,13 +74,14 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
          * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
          * defensive.
          */
-        if ( aprime.getAuditTrail() == null ) {
-            aprime.setAuditTrail( AuditTrail.Factory.newInstance() );
+        if ( auditable.getAuditTrail() == null ) {
+            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
         }
 
-        aprime.getAuditTrail().addEvent( auditEvent );
+        Hibernate.initialize( auditable.getAuditTrail() );
+        auditable.getAuditTrail().addEvent( auditEvent );
 
-        this.getHibernateTemplate().saveOrUpdate( aprime.getAuditTrail() );
+        this.getHibernateTemplate().saveOrUpdate( auditable.getAuditTrail() );
 
         return auditEvent;
     }
@@ -145,12 +146,10 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
                 + " inner join auditableEntity.auditTrail trail " + " inner join trail.events auditEvents "
                 + " inner join auditEvents.eventType et where et.class = " + eventCanonicalName;
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            result.addAll( queryObject.list() );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+
+        Query queryObject = super.getSession().createQuery( queryString );
+        result.addAll( queryObject.list() );
+
         return result;
     }
 

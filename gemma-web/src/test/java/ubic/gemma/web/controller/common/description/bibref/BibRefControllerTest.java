@@ -16,16 +16,20 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.common.description;
+package ubic.gemma.web.controller.common.description.bibref;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -33,6 +37,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController;
 
@@ -45,6 +51,12 @@ import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenc
  */
 public class BibRefControllerTest extends BaseSpringWebTest {
 
+    @Autowired
+    BibliographicReferenceController brc;
+
+    @Autowired
+    BibliographicReferenceService brs;
+
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;
 
@@ -55,8 +67,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
      */
     @Before
     public void setup() throws Exception {
-
-        BibliographicReferenceService brs = ( BibliographicReferenceService ) getBean( "bibliographicReferenceService" );
 
         assert brs != null;
 
@@ -100,7 +110,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             log.error( "Test skipped due to failure to connect to NIH" );
             return;
         }
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
         log.debug( "testing delete" );
 
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
@@ -110,6 +119,16 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         ModelAndView mav = brc.delete( req, new MockHttpServletResponse() );
         assertNotNull( mav );
         assertEquals( "bibRefView", mav.getViewName() );
+    }
+
+    @Test
+    public void testShowAllForExperiments() {
+        ModelAndView mv = brc.showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ),
+                ( HttpServletResponse ) null );
+        Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
+                .getModel().get( "citationToEEs" );
+        assertNotNull( citationToEEs );
+
     }
 
     /**
@@ -127,7 +146,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         String nonexistentpubmedid = "00000000";
         req.addParameter( "acc", nonexistentpubmedid );
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
         ModelAndView b = brc.delete( req, new MockHttpServletResponse() );
         assert b != null; // ?
@@ -150,7 +168,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             log.error( "Test skipped due to failure to connect to NIH" );
             return;
         }
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
         req = new MockHttpServletRequest( "POST", "/bibRef/bibRefView.html" );
         req.addParameter( "accession", "" + 1294000 );
 

@@ -10,7 +10,7 @@
             http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 
-	<!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository 
+	<!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository
 		or @Controller). We exclude ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
 	<context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.util.BeanNameGenerator">
 		<context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
@@ -43,6 +43,7 @@
 								<entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
 								<entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
 								<entry key="org.springframework.transaction.UnexpectedRollbackException" value="true" />
+								<entry key="org.springframework.dao.CannotAcquireLockException" value="true" />
 							</map>
 						</constructor-arg>
 					</bean>

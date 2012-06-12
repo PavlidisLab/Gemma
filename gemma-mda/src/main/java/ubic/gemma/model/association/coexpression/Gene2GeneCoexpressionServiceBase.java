@@ -18,9 +18,13 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService</code>,
@@ -38,14 +42,9 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
      */
     @Override
-    public java.util.Collection create( final java.util.Collection gene2geneCoexpressions ) {
-        try {
-            return this.handleCreate( gene2geneCoexpressions );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.create(java.util.Collection gene2geneCoexpressions)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Gene2GeneCoexpression> create(
+            final java.util.Collection<Gene2GeneCoexpression> gene2geneCoexpressions ) {
+        return this.handleCreate( gene2geneCoexpressions );
     }
 
     /**
@@ -54,13 +53,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     @Override
     public ubic.gemma.model.association.coexpression.Gene2GeneCoexpression create(
             final ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) {
-        try {
-            return this.handleCreate( gene2gene );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( gene2gene );
     }
 
     /**
@@ -68,13 +61,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      */
     @Override
     public void delete( final ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete ) {
-        try {
-            this.handleDelete( toDelete );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete)' --> "
-                            + th, th );
-        }
+        this.handleDelete( toDelete );
     }
 
     /**
@@ -82,15 +69,11 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      *      int, int)
      */
     @Override
-    public java.util.Map findCoexpressionRelationships( final java.util.Collection genes, final int stringency,
-            final int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
-        try {
-            return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findCoexpressionRelationships(java.util.Collection genes, int stringency, int maxResults)' --> "
-                            + th, th );
-        }
+    public Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
+            final java.util.Collection<Gene> genes, final int stringency, final int maxResults,
+            GeneCoexpressionAnalysis sourceAnalysis ) {
+        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis );
+
     }
 
     /**
@@ -98,15 +81,10 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      *      int, int)
      */
     @Override
-    public java.util.Collection findCoexpressionRelationships( final ubic.gemma.model.genome.Gene gene,
-            final int stringency, final int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
-        try {
-            return this.handleFindCoexpressionRelationships( gene, stringency, maxResults, sourceAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findCoexpressionRelationships(ubic.gemma.model.genome.Gene gene, int stringency, int maxResults)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
+            final ubic.gemma.model.genome.Gene gene, final int stringency, final int maxResults,
+            GeneCoexpressionAnalysis sourceAnalysis ) {
+        return this.handleFindCoexpressionRelationships( gene, stringency, maxResults, sourceAnalysis );
     }
 
     /**
@@ -114,15 +92,9 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      *      int)
      */
     @Override
-    public java.util.Map findInterCoexpressionRelationship( final java.util.Collection genes, final int stringency,
-            GeneCoexpressionAnalysis sourceAnalysis ) {
-        try {
-            return this.handleFindInterCoexpressionRelationship( genes, stringency, sourceAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findInterCoexpressionRelationship(java.util.Collection genes, int stringency)' --> "
-                            + th, th );
-        }
+    public Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
+            final Collection<Gene> genes, final int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
+        return this.handleFindInterCoexpressionRelationship( genes, stringency, sourceAnalysis );
     }
 
     /**
@@ -142,37 +114,35 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     /**
      * Performs the core logic for {@link #create(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleCreate( java.util.Collection gene2geneCoexpressions )
-            throws java.lang.Exception;
+    protected abstract Collection<Gene2GeneCoexpression> handleCreate(
+            Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
 
     /**
      * Performs the core logic for {@link #create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
      */
-    protected abstract ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) throws java.lang.Exception;
+    protected abstract Gene2GeneCoexpression handleCreate( Gene2GeneCoexpression gene2gene );
 
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
      */
-    protected abstract void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete )
-            throws java.lang.Exception;
+    protected abstract void handleDelete( Gene2GeneCoexpression toDelete );
 
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
      */
-    protected abstract java.util.Map handleFindCoexpressionRelationships( java.util.Collection genes, int stringency,
-            int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
+    protected abstract Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+            Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(ubic.gemma.model.genome.Gene, int, int)}
      */
-    protected abstract java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
+    protected abstract Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * Performs the core logic for {@link #findInterCoexpressionRelationship(java.util.Collection, int)}
      */
-    protected abstract java.util.Map handleFindInterCoexpressionRelationship( java.util.Collection genes,
-            int stringency, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
+    protected abstract Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationship(
+            java.util.Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }
