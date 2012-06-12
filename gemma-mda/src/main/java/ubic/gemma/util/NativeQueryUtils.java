@@ -18,11 +18,16 @@
  */
 package ubic.gemma.util;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.hql.QueryTranslator;
+import org.hibernate.hql.QueryTranslatorFactory;
+import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -99,6 +104,21 @@ public class NativeQueryUtils {
                 return queryObject.list();
             }
         } );
+    }
+
+    /**http://narcanti.keyboardsamurais.de/hibernate-hql-to-sql-translation.html
+     * @param hibernateTemplate
+     * @param hqlQueryText
+     * @return
+     */
+    public static String toSql( HibernateTemplate hibernateTemplate, String hqlQueryText ) {
+        final QueryTranslatorFactory translatorFactory = new ASTQueryTranslatorFactory();
+        final SessionFactoryImplementor factory = ( SessionFactoryImplementor ) hibernateTemplate.getSessionFactory();
+        final QueryTranslator translator = translatorFactory.createQueryTranslator( hqlQueryText, hqlQueryText,
+                Collections.EMPTY_MAP, factory );
+        translator.compile( Collections.EMPTY_MAP, false );
+        return translator.getSQLString();
+
     }
 
 }
