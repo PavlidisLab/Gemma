@@ -40,6 +40,10 @@ Gemma.CytoscapeSettings = {
     
     maxGeneIdsPerCoexVisQuery:200,
     
+    nodeTooltipText: "${id} (${officialName})<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+    
+    edgeTooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+    
     //e.g. dark colour is >dark value and <moderate value, darkest is <=0.2
     //darkest : most specificity, lightest: least specificity
     nodeDegreeValue:{
@@ -82,7 +86,7 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Symbol:${id}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: Gemma.CytoscapeSettings.nodeTooltipText,
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {
@@ -132,7 +136,7 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
         selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
     },
     edges: {
-        tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+        tooltipText: Gemma.CytoscapeSettings.edgeTooltipText,
         width: {
             defaultValue: 1,
             continuousMapper: {
@@ -171,7 +175,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
         backgroundColor: Gemma.CytoscapeSettings.backgroundColor
     },
     nodes: {
-        tooltipText: "Symbol:${id}<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+        tooltipText: Gemma.CytoscapeSettings.nodeTooltipText,
         shape: "ELLIPSE",
         borderWidth: {
             discreteMapper: {
@@ -246,7 +250,7 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
         selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
     },
     edges: {
-        tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+        tooltipText: Gemma.CytoscapeSettings.edgeTooltipText,
         width: {
             defaultValue: 1,
             continuousMapper: {
