@@ -821,7 +821,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         overallWatch.stop();
         if ( overallWatch.getTime() > 100 ) {
-            if ( log.isInfoEnabled() ) log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms" );
+            if ( log.isInfoEnabled() )
+                log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms for " + ees.size()
+                        + " EEs, found " + cachedResults.size() + " results in cache; must still search "
+                        + eesToSearch.size() );
         }
         overallWatch.reset();
         overallWatch.start();
@@ -851,7 +854,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             mergeCachedCoexpressionResults( coexpressions, cachedResults );
             overallWatch.stop();
             if ( overallWatch.getTime() > 100 ) {
-                log.info( "Merge cached: " + overallWatch.getTime() + "ms" );
+                log.info( "Merge " + cachedResults.size() + " cached results in: " + overallWatch.getTime() + "ms" );
             }
             overallWatch.reset();
             overallWatch.start();
@@ -1238,7 +1241,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += StringUtils.join( eeIds, "," );
             eeClause += ") AND ";
         }
 
@@ -1290,7 +1293,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += StringUtils.join( eeIds, "," );
             eeClause += ") AND ";
         }
 
@@ -1363,6 +1366,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * Merge in the cached results. The CVOs that are cached only contain results for a single expression experiment.
+     * 
+     * @param coexpressions
+     * @param cachedResults
      */
     private void mergeCachedCoexpressionResults( CoexpressionCollectionValueObject coexpressions,
             Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults ) {
@@ -1396,22 +1402,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        postProcessKnownGenes( coexpressions );
-
+        CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
+        knownGeneCoexpression.postProcess();
         watch.stop();
         Long elapsed = watch.getTime();
         coexpressions.setPostProcessTime( elapsed );
 
         if ( elapsed > 250 ) log.info( "Specificity check: " + elapsed + "ms." );
-    }
-
-    /**
-     * @param coexpressions
-     */
-    private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
-        if ( coexpressions.getNumKnownGenes() == 0 ) return;
-        CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
-        knownGeneCoexpression.postProcess();
     }
 
     /**

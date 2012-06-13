@@ -42,10 +42,7 @@ import ubic.gemma.util.ConfigUtils;
 /**
  * Configures the cache for data vectors.
  * <p>
- * Implementation note: This uses ehCache. I have decided to make one cache per expression experiment. The reason for
- * this is that having complex keys for cached Elements based on expression experiment AND gene makes it difficult to
- * invalidate the cache when an expression experiment's data changes. The drawback is that there are potentially
- * hundreds of caches; I don't know if there are any performance considerations there.
+ * Implementation note: This uses ehCache.
  * 
  * @author paul
  * @version $Id$
@@ -53,19 +50,21 @@ import ubic.gemma.util.ConfigUtils;
 @Component
 public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe2ProbeCoexpressionCache {
 
-    private static final String PROCESSED_DATA_VECTOR_CACHE_NAME_BASE = "Probe2ProbeCache";
-    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
-    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
-    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
-    private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
-    private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
+    private static final String CACHE_NAME_BASE = "Probe2ProbeCache";
+    private static final int CACHE_DEFAULT_MAX_ELEMENTS = 100000;
+    private static final int CACHE_DEFAULT_TIME_TO_LIVE = 10000;
+    private static final int CACHE_DEFAULT_TIME_TO_IDLE = 10000;
+    private static final boolean CACHE_DEFAULT_ETERNAL = true;
+    private static final boolean CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
     private Boolean enabled = true;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#isEnabled()
      */
     @Override
@@ -73,7 +72,9 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         return enabled;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#setEnabled(java.lang.Boolean)
      */
     @Override
@@ -83,8 +84,11 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
 
     private Cache cache;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#addToCache(ubic.gemma.model.genome.CoexpressionCacheValueObject)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#addToCache(ubic.gemma.model.genome.
+     * CoexpressionCacheValueObject)
      */
     @Override
     public void addToCache( CoexpressionCacheValueObject coExVOForCache ) {
@@ -101,7 +105,9 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache()
      */
     @Override
@@ -109,7 +115,9 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         cache.removeAll();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache(java.lang.Long)
      */
     @Override
@@ -122,8 +130,12 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         }
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#get(ubic.gemma.model.expression.experiment.BioAssaySet, ubic.gemma.model.genome.Gene)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#get(ubic.gemma.model.expression.experiment
+     * .BioAssaySet, ubic.gemma.model.genome.Gene)
      */
     @Override
     public Collection<CoexpressionCacheValueObject> get( BioAssaySet ee, Gene g ) {
@@ -147,22 +159,18 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
     @Override
     public void afterPropertiesSet() throws Exception {
         CacheManager cacheManager = cacheManagerFactory.getObject();
-        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
+        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements", CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive", CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle", CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL )
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal", CACHE_DEFAULT_ETERNAL )
                 && timeToLive == 0;
         boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", true );
         boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+                CACHE_DEFAULT_OVERFLOW_TO_DISK );
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
-        if ( !cacheManager.cacheExists( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE ) ) {
+        if ( !cacheManager.cacheExists( CACHE_NAME_BASE ) ) {
             /*
              * See TerracottaConfiguration.
              */
@@ -173,7 +181,7 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
 
             if ( terracottaEnabled ) {
 
-                CacheConfiguration config = new CacheConfiguration( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements );
+                CacheConfiguration config = new CacheConfiguration( CACHE_NAME_BASE, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
                 config.setOverflowToDisk( overFlowToDisk );
@@ -188,16 +196,15 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
                 this.cache = new Cache( config );
-                // this.cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
+                // this.cache = new Cache( CACHE_NAME_BASE, maxElements,
                 // MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
                 // diskPersistent, diskExpiryThreadIntervalSeconds, null, null, maxElementsOnDisk, 10,
                 // clearOnFlush, terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
                 // FIXME make it nonstop.
 
             } else {
-                this.cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
-                        MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
-                        diskPersistent, diskExpiryThreadIntervalSeconds, null );
+                this.cache = new Cache( CACHE_NAME_BASE, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                        null, eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
             }
             cacheManager.addCache( cache );
         }
@@ -205,7 +212,7 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
     }
 }
 
-class CacheKey implements Serializable{
+class CacheKey implements Serializable {
 
     /**
      * 

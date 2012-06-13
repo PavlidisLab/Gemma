@@ -61,7 +61,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
@@ -121,7 +121,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     /**
      */
     @Test
-    public void testHandleDeleteLinksExpressionExperiment() throws Exception {
+    public void testHandleDeleteLinksExpressionExperiment() {
         ppcs.deleteLinks( ee );
         Integer countLinks = ppcs.countLinks( ee );
         assertEquals( null, countLinks );

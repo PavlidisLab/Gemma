@@ -30,8 +30,7 @@ public class BlastAssociationServiceImpl extends ubic.gemma.model.genome.sequenc
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
      */
     @Override
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) throws java.lang.Exception {
+    protected BlastAssociation handleCreate( BlastAssociation blastAssociation ) {
         return this.getBlastAssociationDao().create( blastAssociation );
     }
 

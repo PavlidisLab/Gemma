@@ -331,7 +331,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
         if ( limit == 0 ) {
-            // when we expecte to be analyzing many query genes. Note that we pass in the full set of experiments, not
+            // when we expect to be analyzing many query genes. Note that we pass in the full set of experiments, not
             // just the ones in which the query gene was tested in.
             computeEesTestedInBatch( ees, coexpressionData );
         } else {
@@ -373,7 +373,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * For the genes that the query is coexpressed with; this retrieves the information for all the coexpressionData
      * passed in (no limit) - all of them have to be for the same query gene!
      * 
-     * @param ees, including ALL experiments that were intially started with, NOT just the ones that the query gene was
+     * @param ees, including ALL experiments that were initially started with, NOT just the ones that the query gene was
      *        tested in.
      * @param coexpressionData to check, the query gene must be the same for each of them.
      */
@@ -413,7 +413,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          * This is a potential bottleneck, because there are often >500 ees and >1000 cvos, and each EE tests >20000
          * genes. Therefore we try hard not to iterate over all the CVOEEs more than we need to. So this is coded very
          * carefully. Once the cache is warmed up, this still can take over 500ms to run (Feb 2010). The total number of
-         * loops _easily_ exceeds a million.
+         * loops _easily_ exceeds a million. (June 2012: this is rarely taking long enough to trigger the logging, after
+         * it gets warmed up)
          */
         int loopcount = 0; // for performance statistics
         for ( CoexpressionValueObject cvo : coexpressionData ) {
@@ -449,7 +450,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         if ( timer.getTime() > 100 ) {
             log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms; " + loopcount + " loops  " );
 
-            // provide a cache status update at the same time.
+            // provide a cache status update at the same time. Worried about memory. 1500 * 50000 = 75megabytes, so this
+            // shouldn't be a big deal.
             log.info( geneTestStatusByteCache.size() + " gene test status stored in cache, approx "
                     + ( geneTestStatusByteCache.get( queryGeneId ).length * geneTestStatusByteCache.size() )
                     + " bytes total" );

@@ -530,7 +530,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getTaxon(java.lang.Long)
+     * @deprecated
      */
+    @Deprecated
     @Override
     public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
 

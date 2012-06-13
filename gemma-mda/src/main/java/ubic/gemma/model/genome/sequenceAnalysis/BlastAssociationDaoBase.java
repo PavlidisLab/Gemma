@@ -93,9 +93,9 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
 
     @Override
     public java.util.Collection<? extends BlastAssociation> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationImpl.class );
-        return results;
+        return ( Collection<? extends BlastAssociation> ) results;
     }
 
     /**

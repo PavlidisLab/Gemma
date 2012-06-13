@@ -42,14 +42,14 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  * @version $Id$
  */
-public class ExpressioDataTestMatrix extends ExpressionDataDoubleMatrix {
+public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
 
-    public ExpressioDataTestMatrix() {
+    public ExpressionDataTestMatrix() {
         super();
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();

@@ -16,8 +16,6 @@ package ubic.gemma.analysis.expression.coexpression;
 
 import java.util.Collection;
 
-import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
@@ -29,16 +27,32 @@ import ubic.gemma.model.genome.Taxon;
  */
 public interface Gene2GenePopulationService {
 
+    /**
+     * @param expressionExperiments
+     * @param toUseGenes
+     * @param useDB
+     */
     public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
             boolean useDB );
 
+    /**
+     * @param expressionExperiments
+     * @param toUseGenes
+     * @param stringency
+     * @param analysisName
+     * @param useDB
+     */
     public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
             String analysisName, boolean useDB );
 
-    /*
-     * Defined here so that we can make it transactional.
+    /**
+     * @param expressionExperiments
+     * @param taxon
+     * @param toUseGenes
+     * @param analysisName
+     * @param stringency
+     * @return
      */
-    @Transactional
     public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
             Collection<Gene> toUseGenes, String analysisName, int stringency );
 

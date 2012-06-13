@@ -25,7 +25,7 @@ package ubic.gemma.model.genome;
 import java.util.Collection;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -50,7 +50,7 @@ public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLoc
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( physicalLocation, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( physicalLocation );
                 Hibernate.initialize( physicalLocation );
                 Hibernate.initialize( physicalLocation.getChromosome() );
                 Hibernate.initialize( physicalLocation.getChromosome().getTaxon() );
@@ -61,13 +61,10 @@ public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLoc
 
     }
 
-    
     @Override
     public Collection<? extends PhysicalLocation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate()
                 .findByNamedParam( "from PhysicalLocationImpl where id in (:ids)", "ids", ids );
     }
-
-   
 
 }

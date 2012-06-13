@@ -34,7 +34,7 @@ import org.junit.Test;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD;
-import ubic.gemma.datastructure.matrix.ExpressioDataTestMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
@@ -63,7 +63,7 @@ public class ExpressionDataSVDTest {
     @Before
     public void setUp() throws Exception {
 
-        testData = new ExpressioDataTestMatrix();
+        testData = new ExpressionDataTestMatrix();
         svd = new ExpressionDataSVD( testData, false );
 
     }

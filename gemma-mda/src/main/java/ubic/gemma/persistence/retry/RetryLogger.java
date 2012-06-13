@@ -49,7 +49,7 @@ public class RetryLogger extends RetryListenerSupport {
 
         if ( context.isExhaustedOnly() ) {
             log.error( "Retry attempts exhausted" );
-        } else if ( context.getRetryCount() > 0 ) {
+        } else if ( context.getRetryCount() > 0 && throwable == null ) {
             log.info( "Retry was successful! Attempts: " + context.getRetryCount() );
         }
 
@@ -64,11 +64,13 @@ public class RetryLogger extends RetryListenerSupport {
      */
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-        log.warn( "Retry attempt # "
-                + context.getRetryCount()
-                + " failed "
-                + ( throwable == null ? ""
-                        : ( "[ " + throwable.getClass().getName() + ": " + throwable.getMessage() + "]" ) ) );
+        if ( context.getRetryCount() > 0 ) {
+            log.warn( "Retry attempt # "
+                    + context.getRetryCount()
+                    + " failed "
+                    + ( throwable == null ? "" : ( "[ " + throwable.getClass().getName() + ": "
+                            + throwable.getMessage() + "]" ) ) );
+        }
         super.onError( context, callback, throwable );
     }
 

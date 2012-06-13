@@ -576,7 +576,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
                 analysis.setEnabled( true );
                 geneCoexpressionAnalysisService.update( analysis );
-
                 securityService.makePublic( analysis );
             }
 
@@ -773,7 +772,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         analysis = ( GeneCoexpressionAnalysisImpl ) persisterHelper.persist( analysis );
 
         securityService.makePrivate( analysis );
-        log.info( "Done" );
+        log.info( "Done setting up the analysis entity" );
         return analysis;
     }
 
