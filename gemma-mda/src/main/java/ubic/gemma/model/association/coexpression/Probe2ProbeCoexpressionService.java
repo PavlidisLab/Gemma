@@ -25,6 +25,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author paul
@@ -40,8 +41,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param expressionExperiment
      * @return number of coexpression links for the given experiments or null if the analysis has not been run
      */
-    public java.lang.Integer countLinks(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Integer countLinks( ExpressionExperiment expressionExperiment );
 
     /**
      * Adds a collection of probe2probeCoexpression objects at one time to the DB, in the order given.
@@ -68,7 +68,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param ee
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void deleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee );
+    public void deleteLinks( ExpressionExperiment ee );
 
     /***
      * Return a list of all ExpressionExperiments in which the given gene was tested for coexpression in, among the
@@ -83,7 +83,7 @@ public interface Probe2ProbeCoexpressionService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
+    public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( Gene gene,
             Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /***
@@ -147,18 +147,6 @@ public interface Probe2ProbeCoexpressionService {
     public Collection<ProbeLink> getProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
             boolean useWorkingTable );
-
-    /**
-     * Returns the top coexpressed links under a given threshold for a given experiment up to a given limit. If the
-     * limit is null then all results under the threshold will be returned.
-     * 
-     * @param ee
-     * @param threshold
-     * @param limit
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
 
     /**
      * Create a working table containing links by removing redundant and (optionally) non-specific probes from

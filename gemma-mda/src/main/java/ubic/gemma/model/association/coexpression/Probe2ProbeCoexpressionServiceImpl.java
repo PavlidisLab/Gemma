@@ -45,11 +45,6 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
-        return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
-    }
-
-    @Override
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon ) {
         return this.getProbe2ProbeCoexpressionDao()
@@ -57,7 +52,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) {
         Integer count = this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
         if ( count == 0
                 && this.getAuditEventDao().getLastEvent( expressionExperiment, LinkAnalysisEvent.class ) == null ) {
@@ -75,7 +70,8 @@ public class Probe2ProbeCoexpressionServiceImpl extends
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    protected Collection handleCreate( Collection p2pExpressions ) throws java.lang.Exception {
+    protected Collection<? extends Probe2ProbeCoexpression> handleCreate(
+            Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         return this.getProbe2ProbeCoexpressionDao().create( p2pExpressions );
     }
 
@@ -87,55 +83,51 @@ public class Probe2ProbeCoexpressionServiceImpl extends
      * .expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
+    protected void handleDeleteLinks( ExpressionExperiment ee ) {
         this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
 
     }
 
     @Override
-    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene gene, Collection expressionExperiments,
-            boolean filterNonSpecific ) throws Exception {
+    protected Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
         return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,
                 filterNonSpecific );
     }
 
     @Override
-    protected Map handleGetExpressionExperimentsLinkTestedIn( Gene geneA, Collection genesB,
-            Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+    protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
+            Collection<Long> genesB, Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
         return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( geneA, genesB,
                 expressionExperiments, filterNonSpecific );
     }
 
     @Override
-    protected Map handleGetExpressionExperimentsTestedIn( Collection genes, Collection expressionExperiments,
-            boolean filterNonSpecific ) throws Exception {
+    protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn( Collection<Long> genes,
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
         return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsTestedIn( genes, expressionExperiments,
                 filterNonSpecific );
     }
 
     @Override
-    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific )
-            throws Exception {
+    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific ) {
         return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
     }
 
     @Override
-    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
-            boolean cleaned ) throws Exception {
+    protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
+            String taxon, boolean cleaned ) {
         // cleaned: a temporary table is created.s
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
     }
- 
- 
 
     @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
-            throws Exception {
+    protected void handlePrepareForShuffling( Collection<BioAssaySet> ees, String taxon, boolean filterNonSpecific ) {
         this.getProbe2ProbeCoexpressionDao().prepareForShuffling( ees, taxon, filterNonSpecific );
     }
 
     @Override
-    protected void handleRemove( Collection links ) {
+    protected void handleRemove( Collection<? extends Probe2ProbeCoexpression> links ) {
         this.getProbe2ProbeCoexpressionDao().remove( links );
 
     }

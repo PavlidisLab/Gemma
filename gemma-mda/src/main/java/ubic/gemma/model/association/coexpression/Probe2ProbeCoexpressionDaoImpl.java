@@ -19,7 +19,6 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.math.BigInteger;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -79,62 +78,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
-    @Override
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
-
-        for ( String p2pClassName : p2pClassNames ) {
-
-            final String queryString = "SELECT p2p.firstVector, p2p.secondVector, p2p.score FROM "
-                    + getTableName( p2pClassName, false )
-                    + " as p2p where EXPRESSION_EXPERIMENT_FK = :eeid AND score <= :threshold order by p2p.score";
-
-            int oldmax = getHibernateTemplate().getMaxResults();
-            if ( limit != null ) getHibernateTemplate().setMaxResults( limit );
-
-            SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
-            queryObject.setMaxResults( 1 );
-            queryObject.setParameter( "eeid", ee.getId() );
-            queryObject.setParameter( "threshold", threshold );
-            List<?> results = queryObject.list();
-
-            // Was the right taxon or not?
-            if ( results.iterator().next() == null ) {
-                if ( limit != null ) {
-                    getHibernateTemplate().setMaxResults( oldmax );
-                }
-                continue;
-            }
-
-            Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-
-            for ( Object o : results ) {
-                Object[] oa = ( Object[] ) o;
-                Long firstProbeId = ( Long ) oa[0];
-                Long secondProbeId = ( Long ) oa[1];
-                Double score = ( Double ) oa[2];
-
-                ProbeLink link = new ProbeLink();
-
-                assert firstProbeId != null;
-                assert secondProbeId != null;
-
-                link.setFirstDesignElementId( firstProbeId );
-                link.setSecondDesignElementId( secondProbeId );
-                link.setScore( score );
-                links.add( link );
-
-            }
-
-            if ( limit != null ) {
-                getHibernateTemplate().setMaxResults( oldmax );
-            }
-
-            return links;
-
-        }
-        return null;
-    }
-
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
@@ -142,7 +85,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
      */
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends Probe2ProbeCoexpression> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Probe2ProbeCoexpression.remove - 'entities' can not be null" );
         }
@@ -152,7 +95,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         int batchSize = 5000;
 
-        Class clazz = entities.iterator().next().getClass();
+        Class<?> clazz = entities.iterator().next().getClass();
         String className = clazz.getSimpleName();
 
         Collection<Probe2ProbeCoexpression> batch = new HashSet<Probe2ProbeCoexpression>();
@@ -160,7 +103,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Query query = super.getSession().createQuery( "DELETE from " + className + " d where d in (:vals)" );
 
         int count = 0;
-        for ( Probe2ProbeCoexpression o : ( Collection<Probe2ProbeCoexpression> ) entities ) {
+        for ( Probe2ProbeCoexpression o : entities ) {
             batch.add( o );
             if ( batch.size() == batchSize ) {
                 count += batch.size();
@@ -222,7 +165,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * .experiment.ExpressionExperiment)
      */
     @Override
-    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) {
 
         for ( String p2pClassName : p2pClassNames ) {
 
@@ -232,7 +175,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "eeid", expressionExperiment.getId() );
-            List results = queryObject.list();
+            List<?> results = queryObject.list();
             /*
              * We divide by 2 because all links are stored twice
              */
@@ -278,7 +221,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected void handleDeleteLinks( final BioAssaySet ba ) throws Exception {
+    protected void handleDeleteLinks( final BioAssaySet ba ) {
 
         if ( ba == null ) {
             throw new IllegalArgumentException( "BioaAssaySet (experiment or experiment sub set) cannot be null" );
@@ -297,7 +240,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
                     + " p.experimentAnalyzed e where e = :ba";
-            List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ba", ba );
+            List<?> o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ba", ba );
             if ( o.size() > 0 ) {
                 analysis = ( ProbeCoexpressionAnalysis ) o.iterator().next();
             }
@@ -344,7 +287,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
-            Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
 
         if ( expressionExperiments == null || expressionExperiments.isEmpty() ) {
             log.warn( "No expression experiments entered" );
@@ -363,11 +306,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         // Locate analyses which use these probes, return the expression experiments
         String queryString = "select distinct e from ProbeCoexpressionAnalysisImpl pca inner join"
                 + " pca.experimentAnalyzed e inner join pca.probesUsed pu inner join pu.probe p where e in (:ees) and p in (:probes)";
-        List result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
+        List<?> result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
 
         assert result.size() <= expressionExperiments.size();
-        return result;
+        return ( Collection<BioAssaySet> ) result;
     }
 
     /*
@@ -379,8 +322,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @Override
     protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
-            Collection<Long> genesB, Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific )
-            throws Exception {
+            Collection<Long> genesB, Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -407,10 +349,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
      * (java.util.Collection, java.util.Collection, boolean)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn( final Collection<Long> genes,
-            Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific ) {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -431,7 +372,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             log.debug( cs2genes.size() + " probes for " + genes.size() + " genes to examined in "
                     + expressionExperiments.size() + " ees." );
 
-        List eesre = new ArrayList();
+        List<?> eesre = new ArrayList<Object>();
         StopWatch watch = new StopWatch();
         watch.start();
         for ( Collection<Long> csBatch : BatchIterator.batches( cs2genes.keySet(), 2000 ) ) {
@@ -489,7 +430,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
+    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -520,7 +461,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @Override
     protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
-            String taxon, boolean cleaned ) throws Exception {
+            String taxon, boolean cleaned ) {
         String tableName = getTableName( taxon, cleaned );
         Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
         return links;
@@ -534,12 +475,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * Collection, java.lang.String, boolean)
      */
     @Override
-    protected void handlePrepareForShuffling( Collection<ExpressionExperiment> ees, String taxon,
-            boolean filterNonSpecific ) throws Exception {
+    protected void handlePrepareForShuffling( Collection<BioAssaySet> ees, String taxon, boolean filterNonSpecific ) {
         String tableName = getTableName( taxon, true );
         createTable( tableName );
         int i = 1;
-        for ( Object ee : ees ) {
+        for ( BioAssaySet ee : ees ) {
+            if ( !( ee instanceof ExpressionExperiment ) ) {
+                throw new IllegalArgumentException( "Can only deal with ExpressionExperiments" );
+            }
             log.info( "Preparing simplified probe-level links for EE " + ( ( ExpressionExperiment ) ee ).getShortName()
                     + " (" + i++ + "/" + ees.size() + ")" );
             processRawLinksForExperiment( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
@@ -550,9 +493,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * Only used for experimental exploration of links, not used by regular applications.
      * 
      * @param tableName
-     * @throws Exception
      */
-    private void createTable( final String tableName ) throws Exception {
+    private void createTable( final String tableName ) {
         // guard against mistakes...
         if ( !tableName.startsWith( TMP_TABLE_PREFIX ) ) {
             throw new IllegalStateException( "Attempt to create table named " + tableName );
@@ -639,7 +581,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                         + " CS in (" + StringUtils.join( batch, "," ) + ")";
 
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                List results = queryObject.list();
+                List<?> results = queryObject.list();
                 for ( Object r : results ) {
                     Object[] or = ( Object[] ) r;
                     Long csid = ( ( BigInteger ) or[0] ).longValue();
@@ -671,8 +613,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param probeBIds
      * @param eeId
      * @param tableName
-     * @return links that are between the two sets of given probes, if any, within the given experiment.
-     * @throws Exception
+     * @return links that are between the two sets of given probes, if any, within the given experiment. @
      */
     private Collection<ProbeLink> getLinks( Collection<Long> probeAIds, Collection<Long> probeBIds, Long eeId,
             String tableName ) {
@@ -729,7 +670,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param expressionExperiment
      * @param tableName
      * @return
-     * @throws Exception
      */
     private Collection<ProbeLink> getLinks( final ExpressionExperiment expressionExperiment, String tableName ) {
         final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
@@ -810,11 +750,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * that are not mapped to 'known' genes.
      * 
      * @param ee
-     * @param taxon
-     * @throws Exception
+     * @param taxon @
      */
-    private void processRawLinksForExperiment( ExpressionExperiment ee, String taxon, boolean filterNonSpecific )
-            throws Exception {
+    private void processRawLinksForExperiment( ExpressionExperiment ee, String taxon, boolean filterNonSpecific ) {
         String tableName = getTableName( taxon, false );
         Collection<ProbeLink> links = getLinks( ee, tableName );
         Set<Long> csIds = new HashSet<Long>();
@@ -852,10 +790,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param links
      * @param ee
      * @param tableName
-     * @throws Exception
      */
     private void savedSimplifiedLinks( final Collection<ProbeLink> links, final ExpressionExperiment ee,
-            final String tableName ) throws Exception {
+            final String tableName ) {
         if ( links == null || links.size() == 0 ) return;
 
         final int CHUNK_LIMIT = 10000;
@@ -863,7 +800,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
 
             @Override
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+            public Object doInHibernate( Session session ) throws HibernateException {
                 Collection<String> chunk = new ArrayList<String>();
                 log.info( ee + ": Writing " + links.size() + " links into tables" );
                 int chunkNum = 0;

@@ -19,9 +19,11 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
@@ -35,86 +37,56 @@ public interface Probe2ProbeCoexpressionDao {
     public void remove( Probe2ProbeCoexpression link );
 
     /**
-     * <p>
      * Get the total number of probe2probe coexpression links for the given experiment.
-     * </p>
      */
-    public java.lang.Integer countLinks(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Integer countLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Removes the all the probe2probeCoexpression links for a given expression experiment
-     * </p>
      */
     public void deleteLinks( BioAssaySet bioAssaySet );
 
     /**
-     * <p>
      * Return a list of all BioAssaySets in which the given gene was tested for coexpression in, among the given
      * ExpressionExperiments. A gene was tested if any probe for that gene passed filtering criteria during analysis. It
      * is assumed that in the database there is only one analysis per ExpressionExperiment. The boolean parameter
      * filterNonSpecific can be used to exclude ExpressionExperiments in which the gene was detected by only probes
      * predicted to be non-specific for the gene.
-     * </p>
      */
-    public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
+    public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( Gene gene,
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
-     * <p>
      * Return a map of genes in genesB to all ExpressionExperiments in which the given set of pairs of genes was tested
      * for coexpression in, among the given ExpressionExperiments. A gene was tested if any probe for that gene passed
      * filtering criteria during analysis. It is assumed that in the database there is only one analysis per
      * ExpressionExperiment. The boolean parameter filterNonSpecific can be used to exclude ExpressionExperiments in
      * which one or both of the genes were detected by only probes predicted to be non-specific for the gene.
-     * </p>
      */
-    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
-            ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
-            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
+    public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn( Gene geneA,
+            Collection<Long> genesB, Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * 
      */
-    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
-            java.util.Collection<Long> geneIds, java.util.Collection<Long> experiments, boolean filterNonSpecific );
+    public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn( Collection<Long> geneIds,
+            Collection<? extends BioAssaySet> experiments, boolean filterNonSpecific );
 
     /**
-     * <p>
      * Retrieve all genes that were included in the link analysis for the experiment.
-     * </p>
      */
-    public java.util.Collection<Long> getGenesTestedBy(
-            ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment, boolean filterNonSpecific );
+    public Collection<Long> getGenesTestedBy( BioAssaySet expressionExperiment, boolean filterNonSpecific );
 
     /**
-     * <p>
-     * get the probe coexpression by using native sql query.
-     * </p>
+     * get probe coexpression by using native sql query.
      */
-    public java.util.Collection<ProbeLink> getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.String taxonCommonName, boolean useWorkingTable );
+    public Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment,
+            String taxonCommonName, boolean useWorkingTable );
 
     /**
-     * Returns the top coexpressed links under a given threshold for a given experiment up to a given limit. If the
-     * limit is null then all results under the threshold will be returned.
-     * 
-     * @param ee
-     * @param threshold
-     * @param limit
-     * @return
-     */
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
-
-    /**
-     * <p>
      * Create working table if links to use in shuffled-link experiments.
-     * </p>
      */
-    public void prepareForShuffling( java.util.Collection<ExpressionExperiment> ees, java.lang.String taxon,
-            boolean filterNonSpecific );
+    public void prepareForShuffling( Collection<BioAssaySet> ees, java.lang.String taxon, boolean filterNonSpecific );
 
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon );

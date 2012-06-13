@@ -26,6 +26,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>
@@ -42,14 +43,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public Integer countLinks( final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleCountLinks( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+    public Integer countLinks( final ExpressionExperiment expressionExperiment ) {
+        return this.handleCountLinks( expressionExperiment );
     }
 
     /**
@@ -58,13 +53,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     @Override
     public Collection<? extends Probe2ProbeCoexpression> create(
             final Collection<? extends Probe2ProbeCoexpression> links ) {
-        try {
-            return this.handleCreate( links );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.create(List links)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( links );
     }
 
     /**
@@ -72,13 +61,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      */
     @Override
     public void deleteLinks( final BioAssaySet bioAssaySet ) {
-        try {
-            this.handleDeleteLinks( bioAssaySet );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment ee)' --> "
-                            + th, th );
-        }
+        this.handleDeleteLinks( bioAssaySet );
     }
 
     /**
@@ -87,14 +70,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      */
     @Override
     public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene gene,
-            final Collection<BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
-        try {
-            return this.handleGetExpressionExperimentsLinkTestedIn( gene, expressionExperiments, filterNonSpecific );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene gene, Collection expressionExperiments, boolean filterNonSpecific)' --> "
-                            + th, th );
-        }
+            final Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
+        return this.handleGetExpressionExperimentsLinkTestedIn( gene, expressionExperiments, filterNonSpecific );
     }
 
     /**
@@ -104,15 +81,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     @Override
     public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
             final ubic.gemma.model.genome.Gene geneA, final Collection<Long> genesB,
-            final Collection<BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
-        try {
-            return this.handleGetExpressionExperimentsLinkTestedIn( geneA, genesB, expressionExperiments,
-                    filterNonSpecific );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene geneA, Collection genesB, Collection expressionExperiments, boolean filterNonSpecific)' --> "
-                            + th, th );
-        }
+            final Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
+        return this
+                .handleGetExpressionExperimentsLinkTestedIn( geneA, genesB, expressionExperiments, filterNonSpecific );
     }
 
     /**
@@ -120,15 +91,10 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      *      Collection, boolean)
      */
     @Override
-    public Map getExpressionExperimentsTestedIn( final Collection geneIds, final Collection experiments,
-            final boolean filterNonSpecific ) {
-        try {
-            return this.handleGetExpressionExperimentsTestedIn( geneIds, experiments, filterNonSpecific );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getExpressionExperimentsTestedIn(Collection geneIds, Collection experiments, boolean filterNonSpecific)' --> "
-                            + th, th );
-        }
+    public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn( final Collection<Long> geneIds,
+            final Collection<? extends BioAssaySet> experiments, final boolean filterNonSpecific ) {
+        return this.handleGetExpressionExperimentsTestedIn( geneIds, experiments, filterNonSpecific );
+
     }
 
     /**
@@ -139,13 +105,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     public Collection<Long> getGenesTestedBy(
             final ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment,
             final boolean filterNonSpecific ) {
-        try {
-            return this.handleGetGenesTestedBy( expressionExperiment, filterNonSpecific );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getGenesTestedBy(ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment, boolean filterNonSpecific)' --> "
-                            + th, th );
-        }
+        return this.handleGetGenesTestedBy( expressionExperiment, filterNonSpecific );
+
     }
 
     /**
@@ -153,16 +114,10 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      *      String, boolean)
      */
     @Override
-    public Collection getProbeCoExpression(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
+    public Collection<ProbeLink> getProbeCoExpression( final ExpressionExperiment expressionExperiment,
             final String taxonCommonName, final boolean useWorkingTable ) {
-        try {
-            return this.handleGetProbeCoExpression( expressionExperiment, taxonCommonName, useWorkingTable );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, String taxonCommonName, boolean useWorkingTable)' --> "
-                            + th, th );
-        }
+        return this.handleGetProbeCoExpression( expressionExperiment, taxonCommonName, useWorkingTable );
+
     }
 
     /**
@@ -181,15 +136,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      *      boolean)
      */
     @Override
-    public void prepareForShuffling( final Collection<ExpressionExperiment> ees, final String taxon,
+    public void prepareForShuffling( final Collection<BioAssaySet> ees, final String taxon,
             final boolean filterNonSpecific ) {
-        try {
-            this.handlePrepareForShuffling( ees, taxon, filterNonSpecific );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.prepareForShuffling(Collection ees, String taxon, boolean filterNonSpecific)' --> "
-                            + th, th );
-        }
+        this.handlePrepareForShuffling( ees, taxon, filterNonSpecific );
     }
 
     /**
@@ -209,7 +158,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.RelationshipDao#remove(Collection)
      */
     @Override
-    public void remove( Collection entities ) {
+    public void remove( Collection<? extends Probe2ProbeCoexpression> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Probe2ProbeCoexpression.remove - 'entities' can not be null" );
         }
@@ -220,7 +169,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#remove(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
      */
     @Override
-    public void remove( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression probe2ProbeCoexpression ) {
+    public void remove( Probe2ProbeCoexpression probe2ProbeCoexpression ) {
         if ( probe2ProbeCoexpression == null ) {
             throw new IllegalArgumentException(
                     "Probe2ProbeCoexpression.remove - 'probe2ProbeCoexpression' can not be null" );
@@ -231,7 +180,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(Collection)
      */
-    public void update( final Collection entities ) {
+    public void update( final Collection<? extends Probe2ProbeCoexpression> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Probe2ProbeCoexpression.update - 'entities' can not be null" );
         }
@@ -240,9 +189,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression ) entityIterator
-                                    .next() );
+                        for ( Iterator<? extends Probe2ProbeCoexpression> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -252,7 +201,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#update(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
      */
-    public void update( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression probe2ProbeCoexpression ) {
+    public void update( Probe2ProbeCoexpression probe2ProbeCoexpression ) {
         if ( probe2ProbeCoexpression == null ) {
             throw new IllegalArgumentException(
                     "Probe2ProbeCoexpression.update - 'probe2ProbeCoexpression' can not be null" );
@@ -263,62 +212,57 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * Performs the core logic for {@link #countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract Integer handleCountLinks(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) throws Exception;
+    protected abstract Integer handleCountLinks( ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for {@link #createDatabaseEntity(List)}
      */
     protected abstract Collection<? extends Probe2ProbeCoexpression> handleCreate(
-            Collection<? extends Probe2ProbeCoexpression> links ) throws Exception;
+            Collection<? extends Probe2ProbeCoexpression> links );
 
     /**
      * Performs the core logic for {@link #deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract void handleDeleteLinks( BioAssaySet bioAssaySet ) throws Exception;
+    protected abstract void handleDeleteLinks( BioAssaySet bioAssaySet );
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, Collection, boolean)}
      */
-    protected abstract Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn(
-            ubic.gemma.model.genome.Gene gene, Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific )
-            throws Exception;
+    protected abstract Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, Collection, Collection, boolean)}
      */
-    protected abstract Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn(
-            ubic.gemma.model.genome.Gene geneA, Collection<Long> genesB, Collection<BioAssaySet> expressionExperiments,
-            boolean filterNonSpecific ) throws Exception;
+    protected abstract Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
+            Collection<Long> genesB, Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * Performs the core logic for {@link #getExpressionExperimentsTestedIn(Collection, Collection, boolean)}
      */
     protected abstract Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn(
-            Collection<Long> geneIds, Collection<BioAssaySet> experiments, boolean filterNonSpecific ) throws Exception;
+            Collection<Long> geneIds, Collection<? extends BioAssaySet> experiments, boolean filterNonSpecific );
 
     /**
      * Performs the core logic for
      * {@link #getGenesTestedBy(ubic.gemma.model.expression.experiment.BioAssaySet, boolean)}
      */
-    protected abstract Collection<Long> handleGetGenesTestedBy(
-            ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment, boolean filterNonSpecific )
-            throws Exception;
+    protected abstract Collection<Long> handleGetGenesTestedBy( BioAssaySet expressionExperiment,
+            boolean filterNonSpecific );
 
     /**
      * Performs the core logic for
      * {@link #getProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment, String, boolean)}
      */
-    protected abstract Collection handleGetProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, String taxonCommonName,
-            boolean useWorkingTable ) throws Exception;
+    protected abstract Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
+            String taxonCommonName, boolean useWorkingTable );
 
     /**
      * Performs the core logic for {@link #prepareForShuffling(Collection, String, boolean)}
      */
-    protected abstract void handlePrepareForShuffling( Collection<ExpressionExperiment> ees, String taxon,
-            boolean filterNonSpecific ) throws Exception;
+    protected abstract void handlePrepareForShuffling( Collection<BioAssaySet> ees, String taxon,
+            boolean filterNonSpecific );
 
 }
