@@ -40,7 +40,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     @Autowired
-    AuditTrailDao auditTrailDao;
+    AuditTrailService auditTrailService;
 
     @Autowired
     ArrayDesignService arrayDesignService;
@@ -99,17 +99,14 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     public void testCreate() {
         log.info( "Creating audit trail" );
         assert auditTrail != null;
-        AuditTrail t = auditTrailDao.create( auditTrail );
+        AuditTrail t = auditTrailService.create( auditTrail );
         assertNotNull( t );
         assertNotNull( t.getId() );
     }
 
     @Test
-    public void testHandleAddEventAuditableAuditEvent() throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( "this is a test" );
-        auditEvent = auditTrailDao.addEvent( auditable, auditEvent );
+    public void testHandleAddEventAuditableAuditEvent() {
+        AuditEvent auditEvent = auditTrailService.addUpdateEvent( auditable, "this is a test" );
         assertNotNull( auditEvent.getId() );
         assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
 
