@@ -79,8 +79,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * Gene->ees tested in, in a faster access format - preordered by the ees. As for the genesTestedIn, this should not
      * be used in webapps.
      */
-    private Map<Long, Boolean[]> geneTestStatusCache = new HashMap<Long, Boolean[]>();
-
     private Map<Long, byte[]> geneTestStatusByteCache = new HashMap<Long, byte[]>();
 
     /*
@@ -403,14 +401,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         CoexpressionValueObject initializer = coexpressionData.iterator().next();
         Long queryGeneId = initializer.getQueryGene().getId();
 
-        Boolean[] queryGeneEETestStatus = getEETestedForGeneVector( queryGeneId, ees, eeIndexMap );
-
-        if ( queryGeneEETestStatus == null ) {
-            throw new IllegalStateException( "Query gene 'ees tested in' information was missing" );
-        }
-
-        geneTestStatusCache.put( queryGeneId, queryGeneEETestStatus );
-
         byte[] queryGeneEETestStatusBytes;
         if ( geneTestStatusByteCache.containsKey( queryGeneId ) ) {
             queryGeneEETestStatusBytes = geneTestStatusByteCache.get( queryGeneId );
@@ -457,46 +447,14 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         }
 
         if ( timer.getTime() > 100 ) {
-            log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms; " + loopcount + " loops" );
+            log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms; " + loopcount + " loops  " );
+
+            // provide a cache status update at the same time.
+            log.info( geneTestStatusByteCache.size() + " gene test status stored in cache, approx "
+                    + ( geneTestStatusByteCache.get( queryGeneId ).length * geneTestStatusByteCache.size() )
+                    + " bytes total" );
         }
 
-    }
-
-    /**
-     * Method for batch processing. Should not be used in a web application context.
-     * 
-     * @param geneId
-     * @param ees
-     * @param eeIndexMap Map of EE IDs to index in the 'eesTestingIn' where that EE is.
-     * @return boolean array of same length as ees, where true means the given gene was tested in that dataset.
-     */
-    private Boolean[] getEETestedForGeneVector( Long geneId, Collection<? extends BioAssaySet> ees,
-            Map<Long, Integer> eeIndexMap ) {
-        /*
-         * This condition is, pretty much only true once in practice. That's because the first time through populates
-         * genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
-         */
-        if ( !genesTestedIn.containsKey( geneId ) ) {
-            cacheEesGeneTestedIn( ees, eeIndexMap );
-        }
-        List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
-
-        assert eesTestingGene != null;
-
-        Boolean[] queryGeneEETestStatus = new Boolean[ees.size()];
-        int i = 0;
-        // note: we assume that this collection does not change iteration order.
-        for ( BioAssaySet ee : ees ) {
-            Long eeid = ee.getId();
-            Integer index = eeIndexMap.get( eeid );
-            Boolean geneTested = eesTestingGene.get( index );
-
-            assert geneTested != null : "Null for index=" + index + ", EEID=" + eeid + ", GENEID=" + geneId;
-
-            queryGeneEETestStatus[i] = geneTested;
-            i++;
-        }
-        return queryGeneEETestStatus;
     }
 
     /**

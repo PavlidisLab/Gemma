@@ -30,8 +30,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
  */
 @Service
-public class Gene2GeneCoexpressionServiceImpl extends
-        ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceBase {
+public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServiceBase {
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
@@ -49,8 +48,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
     @Override
-    protected ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) {
+    protected Gene2GeneCoexpression handleCreate( Gene2GeneCoexpression gene2gene ) {
         return this.getGene2GeneCoexpressionDao().create( gene2gene );
     }
 
@@ -88,8 +86,8 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      java.util.Collection)
      */
     @Override
-    protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships(
-            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
+    protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, stringency, maxResults,
                 sourceAnalysis );
     }
