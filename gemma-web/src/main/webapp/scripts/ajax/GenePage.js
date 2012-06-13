@@ -57,7 +57,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		
 		this.add(this.initCoexTab( geneId ));
 						
-		this.add(this.initPhenotypeTab());
+		this.add(this.initPhenotypeTab( geneId ));
 		
 		this.add({
 			title:'Gene Ontology Terms',
@@ -143,8 +143,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		});
 		return diffExGrid;
 	},
-	initPhenotypeTab : function(){
-		
+	initPhenotypeTab : function( geneId ){
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
 			itemId: 'phenotypes',
@@ -162,7 +161,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				var phenotypesHtml = '';
 				for (var i = 0; i < record.data.phenotypes.length; i++) {
 					phenotypesHtml += String.format('<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a><br />',
-						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, this.geneId);
+						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, geneId);
 				}					
 				return phenotypesHtml;
 			}
