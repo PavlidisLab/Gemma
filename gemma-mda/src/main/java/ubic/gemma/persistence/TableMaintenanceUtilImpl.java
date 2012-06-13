@@ -91,6 +91,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     /*
      * For use in tests.
      */
+    @Override
     public void disableEmail() {
         this.sendEmail = false;
     }

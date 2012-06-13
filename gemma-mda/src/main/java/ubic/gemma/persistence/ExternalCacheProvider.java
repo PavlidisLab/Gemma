@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
  * 
  * @author paul
  * @version $Id$
+ * @deprecated
  */
 @Deprecated
 @Component

@@ -137,7 +137,7 @@ public class CommonQueries {
 
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
 
-        String queryString = "SELECT DISTINCT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.addScalar( "csid", new LongType() );
         queryObject.addScalar( "geneId", new LongType() );
