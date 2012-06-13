@@ -1156,7 +1156,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             if ( queryGeneNodeDegree == null ) {
                 coexp.setQueryGeneNodeDegree( -1.0 );
             } else {
-                coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getRank() );
+                coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getRankNumLinks() );
             }
 
             GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( idMap.get( coexp.getFoundGene()
@@ -1164,7 +1164,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             if ( foundGeneNodeDegree == null ) {
                 coexp.setFoundGeneNodeDegree( -1.0 );
             } else {
-                coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getRank() );
+                coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getRankNumLinks() );
             }
         }
 
