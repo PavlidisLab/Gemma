@@ -39,44 +39,50 @@ public class RetryLogger extends RetryListenerSupport {
 
     private static Log log = LogFactory.getLog( RetryLogger.class );
 
+    /*
+     * Called after the final attempt (successful or not). (non-Javadoc)
+     * 
+     * @see org.springframework.retry.listener.RetryListenerSupport#close(org.springframework.retry.RetryContext,
+     * org.springframework.retry.RetryCallback, java.lang.Throwable)
+     */
     @Override
     public <T> void close( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-        log( context, throwable );
+
+        if ( context.isExhaustedOnly() ) {
+            log.error( "Retry attempts exhausted" );
+        } else if ( context.getRetryCount() > 0 ) {
+            log.info( "Retry was successful! Attempts: " + context.getRetryCount() );
+        }
+
         super.close( context, callback, throwable );
     }
 
+    /*
+     * Called after every unsuccessful attempt at a retry. (non-Javadoc)
+     * 
+     * @see org.springframework.retry.listener.RetryListenerSupport#onError(org.springframework.retry.RetryContext,
+     * org.springframework.retry.RetryCallback, java.lang.Throwable)
+     */
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
-        synchronized ( context ) {
-            log( context, throwable );
-        }
+        log.warn( "Retry attempt # "
+                + context.getRetryCount()
+                + " failed "
+                + ( throwable == null ? ""
+                        : ( "[ " + throwable.getClass().getName() + ": " + throwable.getMessage() + "]" ) ) );
         super.onError( context, callback, throwable );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.retry.listener.RetryListenerSupport#open(org.springframework.retry.RetryContext,
-     * org.springframework.retry.RetryCallback)
-     */
-    @Override
-    public <T> boolean open( RetryContext context, RetryCallback<T> callback ) {
-        log( context, null );
-        return super.open( context, callback );
-    }
+    // /*
+    // * (non-Javadoc) Called _before_ the first retry
+    // *
+    // * @see org.springframework.retry.listener.RetryListenerSupport#open(org.springframework.retry.RetryContext,
+    // * org.springframework.retry.RetryCallback)
+    // */
+    // @Override
+    // public <T> boolean open( RetryContext context, RetryCallback<T> callback ) {
+    // // log.warn( "Retry attempt opened" );
+    // return super.open( context, callback );
+    // }
 
-    private void log( RetryContext context, Throwable throwable ) {
-        if ( context.getRetryCount() > 0 ) {
-            log.warn( "Retry attempt: " + context.getRetryCount() + " [ Triggered by: "
-                    + context.getLastThrowable().getClass().getName() + ": " + context.getLastThrowable().getMessage()
-                    + "]" );
-
-            if ( throwable != null ) {
-                // only log it the first time.
-                if ( context.getRetryCount() == 1 ) {
-                    log.error( "ERROR DETAILS (logged first time only): " + ExceptionUtils.getStackTrace( throwable ) );
-                }
-            }
-        }
-    }
 }

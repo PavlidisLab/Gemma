@@ -124,9 +124,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
-        ExpressionExperiment tee = expressionExperimentService.thawLite( ee );
 
-        boolean needed = force || needToRun( tee );
+        boolean needed = force || needToRun( ee );
 
         if ( !needed ) {
             log.info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
@@ -135,20 +134,20 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         Collection<LocalFile> files = null;
         try {
-            files = fetchRawDataFiles( tee );
+            files = fetchRawDataFiles( ee );
 
             if ( files == null || files.isEmpty() ) {
-                this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationMissingEvent.class,
+                this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationMissingEvent.class,
                         "No files were found", "" );
                 return false;
             }
 
-            boolean success = getBatchDataFromRawFiles( tee, files ); // does audit as well.
+            boolean success = getBatchDataFromRawFiles( ee, files ); // does audit as well.
 
             return success;
+            // throw new RuntimeException();
 
         } catch ( Exception e ) {
-
             log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
@@ -186,6 +185,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
+        ee = expressionExperimentService.thaw( ee );
         Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
         removeExistingBatchFactor( ee );

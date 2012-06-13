@@ -538,10 +538,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( scaleType.equals( ScaleType.LOG2 ) ) {
             log.info( "Data is already on a log2 scale" );
         } else if ( scaleType.equals( ScaleType.LN ) ) {
-            log.info( "Converting from ln to log2" );
+            log.info( " **** Converting from ln to log2 **** " );
             MatrixStats.convertToLog2( namedMatrix, Math.E );
         } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            log.info( "Converting from log10 to log2" );
+            log.info( " **** Converting from log10 to log2 **** " );
             MatrixStats.convertToLog2( namedMatrix, 10 );
         } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
             log.info( " **** LOG TRANSFORMING **** " );

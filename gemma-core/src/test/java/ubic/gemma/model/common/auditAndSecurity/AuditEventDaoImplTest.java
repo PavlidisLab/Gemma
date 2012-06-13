@@ -46,7 +46,7 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
     private AuditEventService auditEventService;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "ffoo " + i );

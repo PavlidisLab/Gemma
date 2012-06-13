@@ -56,7 +56,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
     public void update( Auditable a, AuditEventType auditEventType ) {
 
         Hibernate.initialize( a );
-        this.getSession().buildLockRequest( LockOptions.NONE ).lock( a );
+        this.getSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() ); 
 
         Date now = new Date();
         if ( a.getStatus() == null ) {
