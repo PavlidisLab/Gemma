@@ -544,7 +544,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			loadGene: function(geneId) {
 		    	evidenceStore.reload({
 		    		params: {
-		    			'geneId': geneId
+						taxonCommonName: '',
+						showOnlyEditable: false,
+		    			geneId: geneId
 		    		}
 		    	});
 			},

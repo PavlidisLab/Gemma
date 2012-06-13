@@ -162,7 +162,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				var phenotypesHtml = '';
 				for (var i = 0; i < record.data.phenotypes.length; i++) {
 					phenotypesHtml += String.format('<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a><br />',
-						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, geneId);
+						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, this.geneId);
 				}					
 				return phenotypesHtml;
 			}
