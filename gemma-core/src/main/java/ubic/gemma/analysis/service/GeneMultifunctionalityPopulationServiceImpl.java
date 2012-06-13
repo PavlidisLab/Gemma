@@ -121,7 +121,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                     oldMf.setScore( updatedMf.getScore() );
                 }
             }
-
             geneService.update( g );
         }
 

@@ -62,7 +62,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         gene2GoService.removeAll();
         if ( testTaxon != null ) {
             Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );

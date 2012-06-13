@@ -88,6 +88,8 @@ public interface GeneService {
      */
     public Collection<Gene> findByAlias( String search );
 
+    public Collection<? extends Gene> findByEnsemblId( String exactString );
+
     /**
      * @param accession
      * @return
@@ -130,6 +132,8 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
+
+    public Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
     /**
      * Find the gene(s) nearest to the location.
@@ -211,18 +215,6 @@ public interface GeneService {
     public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene );
 
     /**
-     * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
-     * 
-     * @param genes
-     * @param ees
-     * @return
-     * @deprecated
-     */
-    @Deprecated
-    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees );
-
-    /**
      * Get dataset-by-dataset node degree information -- used to populate the tables for faster access methods. This
      * method is likely to be slow.
      * 
@@ -247,6 +239,12 @@ public interface GeneService {
     public PhysicalLocation getMaxPhysicalLength( Gene gene );
 
     /**
+     * @param geneId
+     * @return empty collection if no products
+     */
+    public Collection<GeneProductValueObject> getProducts( Long geneId );
+
+    /**
      * @param id
      * @return
      */
@@ -257,10 +255,20 @@ public interface GeneService {
      */
     public Collection<Gene> loadAll();
 
+    public GeneValueObject loadGenePhenotypes( Long geneId );
+
     /**
      * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
      */
     public Collection<Gene> loadKnownGenes( Taxon taxon );
+
+    /**
+     * Like loadKnownGenes, but excludes genes that don't have gene products.
+     * 
+     * @param taxon
+     * @return
+     */
+    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
 
     /**
      * Gets all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching
@@ -287,13 +295,13 @@ public interface GeneService {
      * @param ids
      * @return
      */
-    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
+    public GeneValueObject loadValueObject( Long id );
 
     /**
      * @param ids
      * @return
      */
-    public GeneValueObject loadValueObject( Long id );
+    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
      * @param genes
@@ -313,6 +321,13 @@ public interface GeneService {
     public Gene thaw( Gene gene );
 
     /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    public Gene thawAliases( Gene gene );
+
+    /**
      * @param genes
      * @see loadThawed as a way to avoid the load..thaw pattern.
      */
@@ -324,37 +339,10 @@ public interface GeneService {
     public Gene thawLite( Gene gene );
 
     /**
-     * Only thaw the Aliases, very light version
-     * 
-     * @param gene
-     */
-    public Gene thawAliases( Gene gene );
-
-    /**
      * @param gene
      */
     @Secured({ "GROUP_ADMIN" })
     /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
     public void update( Gene gene );
-
-    public Collection<? extends Gene> findByEnsemblId( String exactString );
-
-    /**
-     * Like loadKnownGenes, but excludes genes that don't have gene products.
-     * 
-     * @param taxon
-     * @return
-     */
-    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
-
-    /**
-     * @param geneId
-     * @return empty collection if no products
-     */
-    public Collection<GeneProductValueObject> getProducts( Long geneId );
-
-    public GeneValueObject loadGenePhenotypes( Long geneId );
-
-    public Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
 }
