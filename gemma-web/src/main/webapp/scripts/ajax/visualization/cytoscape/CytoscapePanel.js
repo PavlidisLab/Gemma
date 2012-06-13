@@ -394,31 +394,39 @@ Ext.Panel, {
 
     },
 
-    extendNodes: function (selectedNodesGeneIdArray) {
+    extendNodes: function (selectedNodes) {
 
         this.clearError();
+        
+        var selectedNodesGeneIdArray = [];
+        
+        var i;
+        
+        //eliminate selected query genes
+        for (i = 0; i < selectedNodes.length; i++) {                    
 
+            if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(selectedNodes[i]) === -1) {
+            	
+            	selectedNodesGeneIdArray.push(selectedNodes[i]);
+            	
+            }
+        }
+        
+        //if only query genes were selected
+        if (selectedNodes.length !=0 && selectedNodesGeneIdArray.length==0){
+        	Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoExtraSelectedForExtend);
+        	return;
+        }
+        
         if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
             if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length + selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             	
-            	var newQueryGeneSelected=false;
-                var i;
-                
-                for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {                    
-
-                    if (selectedNodesGeneIdArray.indexOf(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]) === -1) {
-                    	newQueryGeneSelected=true;
+                for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {
                     	selectedNodesGeneIdArray.push(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]);
-                    }
                 }
-            	
-                if (newQueryGeneSelected){
-                	this.searchWithSelectedNodes(selectedNodesGeneIdArray);                	
-                }
-                else {
-                	Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoExtraSelectedForExtend);
-                }
+                
+                this.searchWithSelectedNodes(selectedNodesGeneIdArray);
                 
             } else {
                 Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY), function (btn) {
