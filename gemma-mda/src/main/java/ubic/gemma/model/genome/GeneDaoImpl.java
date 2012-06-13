@@ -1568,6 +1568,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Session session ) {
         assert csIdChunk.size() > 0;
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         /*
          * Check the cache first.
          */
@@ -1584,6 +1587,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( neededCs.size() == 0 ) {
             return;
         }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Gene2Cs Cache check: " + timer.getTime() + "ms" );
+        }
+        timer.reset();
+        timer.start();
 
         String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
                 + StringUtils.join( neededCs, "," ) + ")";
@@ -1611,8 +1620,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             newitems.get( csid ).add( geneId );
         }
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Gene2Cs batch fetch " + newitems.size() + " elements: " + timer.getTime() + "ms" );
+        }
+        timer.reset();
+        timer.start();
+
         for ( Long csid : newitems.keySet() ) {
             gene2CsCache.put( new Element( csid, newitems.get( csid ) ) );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Gene2Cs cache fill " + newitems.size() + " elements: " + timer.getTime() + "ms" );
         }
 
     }

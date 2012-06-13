@@ -83,8 +83,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
 
     private Map<Long, byte[]> geneTestStatusByteCache = new HashMap<Long, byte[]>();
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.coexpression.ProbeLinkCoexpressionAnalyzer#linkAnalysis(java.util.Collection, java.util.Collection, int, boolean, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.coexpression.ProbeLinkCoexpressionAnalyzer#linkAnalysis(java.util.Collection,
+     * java.util.Collection, int, boolean, int)
      */
     @Override
     public Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
@@ -131,8 +134,12 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.expression.coexpression.ProbeLinkCoexpressionAnalyzer#linkAnalysis(ubic.gemma.model.genome.Gene, java.util.Collection, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.coexpression.ProbeLinkCoexpressionAnalyzer#linkAnalysis(ubic.gemma.model.genome
+     * .Gene, java.util.Collection, int, int)
      */
     @Override
     public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
@@ -546,6 +553,9 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         assert !ees.isEmpty();
         assert !eeIndexMap.isEmpty();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int count = 0;
         for ( BioAssaySet ee : ees ) {
             Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
 
@@ -568,6 +578,12 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 // flip to true since the gene was tested in the ee
                 genesTestedIn.get( geneId ).set( indexOfEEInAr, Boolean.TRUE );
             }
+
+            if ( ++count % 100 == 0 ) {
+                log.info( "Got EEs gene tested in map for " + count + " experiments ... " + timer.getTime()
+                        + "ms elapsed" );
+            }
+
         }
     }
 
