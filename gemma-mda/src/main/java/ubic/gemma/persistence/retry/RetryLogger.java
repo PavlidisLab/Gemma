@@ -19,7 +19,6 @@
 
 package ubic.gemma.persistence.retry;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.retry.RetryCallback;
@@ -72,17 +71,5 @@ public class RetryLogger extends RetryListenerSupport {
                         : ( "[ " + throwable.getClass().getName() + ": " + throwable.getMessage() + "]" ) ) );
         super.onError( context, callback, throwable );
     }
-
-    // /*
-    // * (non-Javadoc) Called _before_ the first retry
-    // *
-    // * @see org.springframework.retry.listener.RetryListenerSupport#open(org.springframework.retry.RetryContext,
-    // * org.springframework.retry.RetryCallback)
-    // */
-    // @Override
-    // public <T> boolean open( RetryContext context, RetryCallback<T> callback ) {
-    // // log.warn( "Retry attempt opened" );
-    // return super.open( context, callback );
-    // }
 
 }

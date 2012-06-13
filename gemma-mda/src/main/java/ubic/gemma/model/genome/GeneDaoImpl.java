@@ -21,7 +21,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -51,6 +58,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.CommonQueries;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.SequenceBinUtils;
@@ -73,10 +81,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static final int WINDOW_INCREMENT = 500;
 
-    /*
-     * FIXME use a regular ehcache so we can use timeouts.
-     */
-    private Map<Long, Collection<Long>> gene2CsCache = new ConcurrentHashMap<Long, Collection<Long>>();
+    @Autowired
+    private CacheManager cacheManager;
+
+    private String G2CS_CACHE_NAME = "Gene2CsCache";
+    private Cache gene2CsCache;
 
     @Autowired
     public GeneDaoImpl( SessionFactory sessionFactory ) {
@@ -1564,8 +1573,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          */
         Collection<Long> neededCs = new HashSet<Long>();
         for ( Long csid : csIdChunk ) {
-            if ( gene2CsCache.containsKey( csid ) && gene2CsCache.get( csid ) != null ) {
-                csId2geneIds.put( csid, gene2CsCache.get( csid ) );
+            Element element = gene2CsCache.get( csid );
+            if ( element != null ) {
+                csId2geneIds.put( csid, ( Collection<Long> ) element.getValue() );
             } else {
                 neededCs.add( csid );
             }
@@ -1584,19 +1594,68 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
+        Map<Long, Collection<Long>> newitems = new HashMap<Long, Collection<Long>>();
+
         while ( scroll.next() ) {
             Long csid = scroll.getLong( 0 );
             Long geneId = scroll.getLong( 1 );
             if ( !csId2geneIds.containsKey( csid ) ) {
                 csId2geneIds.put( csid, new HashSet<Long>() );
+
             }
+            if ( !newitems.containsKey( csid ) ) {
+                newitems.put( csid, new HashSet<Long>() );
+            }
+
             csId2geneIds.get( csid ).add( geneId );
+            newitems.get( csid ).add( geneId );
         }
 
+        for ( Long csid : newitems.keySet() ) {
+            gene2CsCache.put( new Element( csid, newitems.get( csid ) ) );
+        }
+
+    }
+
+    @Override
+    protected void initDao() throws Exception {
         /*
-         * FIXME this could be repetitive.
+         * Initialize the cache; if it already exists it will not be recreated.
          */
-        gene2CsCache.putAll( csId2geneIds );
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean diskPersistent = false;
+        int maxElements = 100000;
+        boolean eternal = false;
+        boolean overFlowToDisk = false;
+        int diskExpiryThreadIntervalSeconds = 600;
+        int maxElementsOnDisk = 0;
+        boolean terracottaCoherentReads = false;
+        boolean clearOnFlush = false;
+
+        if ( terracottaEnabled ) {
+            CacheConfiguration config = new CacheConfiguration( G2CS_CACHE_NAME, maxElements );
+            config.setStatistics( false );
+            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+            config.setOverflowToDisk( overFlowToDisk );
+            config.setEternal( eternal );
+            config.setTimeToIdleSeconds( 0 );
+            config.setMaxElementsOnDisk( maxElementsOnDisk );
+            config.addTerracotta( new TerracottaConfiguration() );
+            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+            config.clearOnFlush( clearOnFlush );
+            config.setTimeToLiveSeconds( 0 );
+            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            this.gene2CsCache = new Cache( config );
+        } else {
+            this.gene2CsCache = new Cache( G2CS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+        }
+
+        cacheManager.addCache( gene2CsCache );
+        this.gene2CsCache = cacheManager.getCache( G2CS_CACHE_NAME );
+
     }
 
     /**
