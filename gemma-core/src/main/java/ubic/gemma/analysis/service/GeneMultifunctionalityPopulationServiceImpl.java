@@ -104,6 +104,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
          * Persist the results.
          */
         log.info( "Saving multifunctionality for " + genes.size() + " genes" );
+        int i = 0;
         for ( Gene g : genes ) {
 
             if ( !mfs.containsKey( g ) ) {
@@ -122,7 +123,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                 }
             }
             geneService.update( g );
+            if ( ++i % 1000 == 0 ) {
+                log.info( "Updated " + i + " genes ..." );
+            }
         }
+        log.info( "Done" );
 
     }
 
