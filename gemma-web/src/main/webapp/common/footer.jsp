@@ -75,18 +75,3 @@
 	} catch (err) {
 	}
 </script>
-
-
-</c:if>
-
-<%-- Google chrome frame check -- pops up a window asking the user to install it. See http://code.google.com/chrome/chromeframe/developers_guide.html --%>
-<%-- <c:if test="${fn:contains(header['User-Agent'], 'MSIE')}">
-			<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
-<div id='placeholder'></div>
-			<script>
-	CFInstall.check( {
-		node : "placeholder",
-		destination : "http://www.google.com"
-	});
-</script>
-</c:if> --%>

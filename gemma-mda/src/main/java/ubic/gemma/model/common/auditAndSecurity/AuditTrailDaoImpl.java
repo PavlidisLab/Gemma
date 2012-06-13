@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Collection;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,15 +71,18 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
             auditEvent.setPerformer( user );
         }
 
-        /*
-         * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
-         * defensive.
-         */
+        Hibernate.initialize( auditable );
+
         if ( auditable.getAuditTrail() == null ) {
+            /*
+             * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
+             * defensive.
+             */
             auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+        } else if ( auditable.getAuditTrail().getId() != null ) {
+            this.getSession().buildLockRequest( LockOptions.NONE ).lock( auditable.getAuditTrail() );
         }
 
-        Hibernate.initialize( auditable.getAuditTrail() );
         auditable.getAuditTrail().addEvent( auditEvent );
 
         this.getHibernateTemplate().saveOrUpdate( auditable.getAuditTrail() );
