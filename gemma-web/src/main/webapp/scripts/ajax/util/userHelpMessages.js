@@ -223,7 +223,7 @@ Gemma.HelpText.WidgetDefaults = {
 		exportSVGWindowTitle: 'SVG data',
 		searchStatusTitle: 'Status of Search',
 		searchStatusTooMany: 'Too Many Genes Selected. Max number of selected genes is {0}',
-		searchStatusTooManyReduce: 'Too many Query Genes. A max of {0} query genes allowed. Click Yes to continue search with reduced query genes',
+		searchStatusTooManyReduce: 'Total number of visible query genes and selected genes exceeds max of {0}. Click Yes to continue search with reduced query genes',
 		searchStatusTooFew: 'No Genes Selected',
 		searchStatusNoExtraSelectedForExtend: 'You must select a non-query gene to extend',
 		searchStatusNoMoreResults: 'No more results found for this gene',

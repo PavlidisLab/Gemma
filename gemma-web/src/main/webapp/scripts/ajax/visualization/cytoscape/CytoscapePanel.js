@@ -402,10 +402,12 @@ Ext.Panel, {
         
         var i;
         
+        var visibleQueryGenesIdArray = this.restrictSelectedNodesByCurrentSettings(this.coexpressionSearchData.coexGridCoexCommand.geneIds);
+        
         //eliminate selected query genes
         for (i = 0; i < selectedNodes.length; i++) {                    
 
-            if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.indexOf(selectedNodes[i]) === -1) {
+            if (visibleQueryGenesIdArray.indexOf(selectedNodes[i]) === -1) {
             	
             	selectedNodesGeneIdArray.push(selectedNodes[i]);
             	
@@ -420,10 +422,10 @@ Ext.Panel, {
         
         if (selectedNodesGeneIdArray.length > 0 && selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-            if (this.coexpressionSearchData.coexGridCoexCommand.geneIds.length + selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
+            if (visibleQueryGenesIdArray.length + selectedNodesGeneIdArray.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             	
-                for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {
-                    	selectedNodesGeneIdArray.push(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]);
+                for (i = 0; i < visibleQueryGenesIdArray.length; i++) {
+                    	selectedNodesGeneIdArray.push(visibleQueryGenesIdArray[i]);
                 }
                 
                 this.searchWithSelectedNodes(selectedNodesGeneIdArray);
@@ -433,12 +435,12 @@ Ext.Panel, {
                     if (btn == 'yes') {
                     	
                         //ensure that selectedNodes includes the current query genes plus the newly selected genes and that the number of querygeneids is less than the max
-                        this.coexpressionSearchData.coexGridCoexCommand.geneIds = this.coexpressionSearchData.coexGridCoexCommand.geneIds.splice(this.coexpressionSearchData.coexGridCoexCommand.geneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodesGeneIdArray.length));                        
+                    	visibleQueryGenesIdArray = visibleQueryGenesIdArray.splice(visibleQueryGenesIdArray.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodesGeneIdArray.length));                        
                         var i;                        
-                        for (i = 0; i < this.coexpressionSearchData.coexGridCoexCommand.geneIds.length; i++) {                    
+                        for (i = 0; i < visibleQueryGenesIdArray.length; i++) {                    
 
-                            if (selectedNodesGeneIdArray.indexOf(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]) === -1) {                            	
-                            	selectedNodesGeneIdArray.push(this.coexpressionSearchData.coexGridCoexCommand.geneIds[i]);
+                            if (selectedNodesGeneIdArray.indexOf(visibleQueryGenesIdArray[i]) === -1) {                            	
+                            	selectedNodesGeneIdArray.push(visibleQueryGenesIdArray[i]);
                             }
                         }
                         
