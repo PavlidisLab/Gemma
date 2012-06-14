@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -38,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
@@ -56,6 +58,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
  * Tools for visualizing experimental designs. The idea is to generate a overview of the design that can be put over
@@ -72,10 +75,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private FactorValueService factorValueService;
+
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
-    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
+    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new ConcurrentHashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -83,11 +89,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
-    private Map<Long, BioAssayDimension> cachedThawedBioAssayDimensions = new HashMap<Long, BioAssayDimension>();
+    private Map<Long, BioAssayDimension> cachedThawedBioAssayDimensions = new ConcurrentHashMap<Long, BioAssayDimension>();
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment)
@@ -128,7 +133,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
@@ -210,7 +214,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.visualization.ExperimentalDesignVisualizationService#plotExperimentalDesign(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -260,7 +263,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortVectorDataByDesign(java.util.Collection)
      */
     @Override
@@ -368,7 +370,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortLayoutSamplesByFactor(java.util.Map)
      */
     @Override
@@ -382,7 +383,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         for ( ExpressionExperiment ee : layouts.keySet() ) {
 
             final LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
-            
+
             if ( layout == null || layout.size() == 0 ) {
                 log.warn( "Null or empty layout for ee: " + ee ); // does this happen?
                 continue;
@@ -395,13 +396,14 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
                 if ( !ExperimentalDesignUtils.isBatch( ef ) ) filteredFactors.add( ef );
             }
-            if ( filteredFactors.isEmpty() ){
-                if(sortedLayouts.containsKey( ee )){
-                    log.warn( "sortedLayouts already contained ee with ID = "+ee.getId()+". Value was map with # keys = "+sortedLayouts.get( ee ).keySet().size() );
+            if ( filteredFactors.isEmpty() ) {
+                if ( sortedLayouts.containsKey( ee ) ) {
+                    log.warn( "sortedLayouts already contained ee with ID = " + ee.getId()
+                            + ". Value was map with # keys = " + sortedLayouts.get( ee ).keySet().size() );
                 }
                 sortedLayouts.put( ee, sortedLayout );
                 continue; // batch was the only factor.
-            } 
+            }
 
             List<BioMaterial> bmList = new ArrayList<BioMaterial>();
             Map<BioMaterial, BioAssay> BMtoBA = new HashMap<BioMaterial, BioAssay>();
@@ -547,4 +549,37 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         writer.setCellSize( new Dimension( 18, 18 ) );
         writer.saveImage( matrix, outputfile.getAbsolutePath(), true, false, true );
     }
+
+    @Override
+    public void clearCaches() {
+        this.cachedLayouts.clear();
+        this.cachedThawedBioAssayDimensions.clear();
+    }
+
+    @Override
+    public void clearCaches( Long eeId ) {
+
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        this.clearCaches( ee );
+    }
+
+    @Override
+    public void clearCaches( ExpressionExperiment ee ) {
+        this.clearCachedLayouts( ee );
+        this.clearCachedBioAssayDimensions( ee );
+    }
+
+    private void clearCachedLayouts( ExpressionExperiment ee ) {
+        this.cachedLayouts.remove( ee );
+    }
+
+    private void clearCachedBioAssayDimensions( ExpressionExperiment ee ) {
+
+        Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( ee );
+        for ( BioAssayDimension bad : bds ) {
+            cachedThawedBioAssayDimensions.remove( bad.getId() );
+        }
+
+    }
+
 }

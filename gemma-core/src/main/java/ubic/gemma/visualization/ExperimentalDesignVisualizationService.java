@@ -56,4 +56,21 @@ public interface ExperimentalDesignVisualizationService {
     public abstract Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
 
+
+    /**
+     * removed the cached layouts and cached BioAssayDimensions for this experiment
+     * @param eeId
+     */
+    public void clearCaches( Long eeId );
+
+    /**
+     * removed the cached layouts and cached BioAssayDimensions for this experiment
+     * @param ee
+     */
+    public void clearCaches( ExpressionExperiment ee );
+
+    /**
+     * removed all cached layouts and cached BioAssayDimensions
+     */
+    public void clearCaches();
 }

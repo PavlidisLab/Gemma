@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -37,8 +38,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
 import ubic.gemma.expression.experiment.FactorValueDeletion;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
@@ -50,6 +49,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -64,6 +64,7 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -90,9 +91,12 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Autowired
     private ExperimentalDesignImporter experimentalDesignImporter = null;
-
+    
     @Autowired
     private ExperimentalDesignService experimentalDesignService = null;
+
+    @Autowired
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService = null;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService = null;
@@ -105,6 +109,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Autowired
     private FactorValueService factorValueService = null;
+
+    @Autowired
+    private ProcessedDataVectorCache processedDataVectorCache = null;
 
     @Autowired
     private SecurityService securityService = null;
@@ -624,6 +631,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 fv.getCharacteristics().add( c );
                 factorValueService.update( fv );
             }
+            
+            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+            processedDataVectorCache.clearCache( ee.getId() );
+            experimentalDesignVisualizationService.clearCaches();
 
         }
     }
@@ -750,6 +761,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         bm.getFactorValues().addAll( updatedFactorValues );
 
         bioMaterialService.update( bm );
+        
+        ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
+        processedDataVectorCache.clearCache( ee.getId() );
+        experimentalDesignVisualizationService.clearCaches();
     }
 
 }
