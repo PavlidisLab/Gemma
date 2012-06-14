@@ -18,7 +18,7 @@
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-web/src/main/resources"/>
 	<classpathentry excluding="**/empty.file" kind="src" output="build/Gemma/" path="gemma-web/src/main/webapp"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/java"/>
-	<classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.0/commons-dbutils-1.0.jar"/>
+	<!-- <classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.0/commons-dbutils-1.0.jar"/> -->
 	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/logging/commons-logging-1.1/apidocs/"/>
@@ -61,7 +61,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.7/commons-digester-1.7.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.4.4/ehcache-core-2.4.4.jar" sourcepath="/M2_REPO/net/sf/ehcache/ehcache-core/2.4.3/ehcache-core-2.4.3-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2.jar" sourcepath="/M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://ehcache.sourceforge.net/javadoc/"/>
 		</attributes>
@@ -117,7 +117,7 @@
 			<attribute name="javadoc_location" value="http://commons.apache.org/dbcp/apidocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/commons-fileupload/commons-fileupload/1.1/commons-fileupload-1.1.jar">
+	<classpathentry kind="var" path="M2_REPO/commons-fileupload/commons-fileupload/1.1/commons-fileupload-1.1.jar" sourcepath="/M2_REPO/commons-fileupload/commons-fileupload/1.1/commons-fileupload-1.1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/fileupload/apidocs/"/>
 		</attributes>
@@ -351,21 +351,21 @@
 	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-mapper-asl/1.7.1/jackson-mapper-asl-1.7.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-core-asl/1.7.1/jackson-core-asl-1.7.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-ehcache/3.6.7.Final/hibernate-ehcache-3.6.7.Final.jar" sourcepath="/M2_REPO/org/hibernate/hibernate-ehcache/3.6.7.Final/hibernate-ehcache-3.6.7.Final-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-terracotta/2.4.4/ehcache-terracotta-2.4.4.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/terracotta/terracotta-toolkit-1.3-runtime/3.2.0/terracotta-toolkit-1.3-runtime-3.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-terracotta/2.5.2/ehcache-terracotta-2.5.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/terracotta/terracotta-toolkit-1.5-runtime/4.2.0/terracotta-toolkit-1.5-runtime-4.2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-commons-annotations/3.2.0.Final/hibernate-commons-annotations-3.2.0.Final.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/javax/persistence/hibernate-jpa-2.0-api/1.0.1.Final/hibernate-jpa-2.0-api-1.0.1.Final.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v7.0 (2)">
+	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE-sources.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v7.0">
 		<attributes>
 			<attribute name="owner.project.facets" value="jst.web"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6">
 		<attributes>
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE-sources.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

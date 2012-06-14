@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
@@ -155,8 +156,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + "Perhaps you need to run vector merging following an array desing switch?" );
             }
 
-            ProcessedExpressionDataVector vec = ( ProcessedExpressionDataVector ) dvvo
-                    .toDesignElementDataVector( preferredMaskedDataQuantitationType );
+            ProcessedExpressionDataVector vec = ( ProcessedExpressionDataVector ) dvvo.toDesignElementDataVector( ee,
+                    preferredMaskedDataQuantitationType );
+
             expressionExperiment.getProcessedExpressionDataVectors().add( vec );
             seenDes.add( designElement );
             if ( ++i % 5000 == 0 ) {
@@ -1115,7 +1117,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Collection<DoubleVectorValueObject> newResults ) {
         Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<Long, Map<Gene, Collection<DoubleVectorValueObject>>>();
         for ( DoubleVectorValueObject v : newResults ) {
-            ExpressionExperiment e = v.getExpressionExperiment();
+            ExpressionExperimentValueObject e = v.getExpressionExperiment();
             if ( !mapForCache.containsKey( e.getId() ) ) {
                 mapForCache.put( e.getId(), new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }

@@ -32,6 +32,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 
@@ -64,7 +65,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     public DoubleVectorValueObject( DesignElementDataVector dedv ) {
         this( dedv, null );
     }
-    
+
     /**
      * @param dedv
      * @param genes
@@ -209,17 +210,13 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     }
 
-    /** 
-     */
-    public DesignElementDataVector toDesignElementDataVector() {
-        return toDesignElementDataVector( null );
-    }
-
     /**
      * @param updatedQuantitationType
+     * @param ee
      * @return
      */
-    public DesignElementDataVector toDesignElementDataVector( QuantitationType updatedQuantitationType ) {
+    public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee,
+            QuantitationType updatedQuantitationType ) {
         DesignElementDataVector result;
         if ( this.masked ) {
             result = ProcessedExpressionDataVector.Factory.newInstance();
@@ -228,7 +225,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         } else {
             result = RawExpressionDataVector.Factory.newInstance();
         }
-        result.setExpressionExperiment( this.expressionExperiment );
+        result.setExpressionExperiment( ee );
         result.setBioAssayDimension( this.bioAssayDimension );
         assert this.bioAssayDimension != null;
         assert this.bioAssayDimension.getBioAssays().size() > 0;

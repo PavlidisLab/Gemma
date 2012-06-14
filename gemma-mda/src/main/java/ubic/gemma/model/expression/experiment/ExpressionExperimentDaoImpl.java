@@ -1502,6 +1502,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return ees;
     }
 
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( eeId );
+        Collection<ExpressionExperimentValueObject> r = this.handleLoadValueObjects( ids, false );
+        if ( r.isEmpty() ) return null;
+        return r.iterator().next();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -1510,7 +1519,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids,
-            boolean maintainOrder ) throws Exception {
+            boolean maintainOrder ) {
 
         boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {

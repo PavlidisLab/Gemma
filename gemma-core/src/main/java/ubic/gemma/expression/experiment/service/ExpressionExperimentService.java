@@ -52,12 +52,6 @@ import ubic.gemma.util.monitor.Monitored;
 public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> browse( Integer start, Integer limit );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -89,6 +83,18 @@ public interface ExpressionExperimentService {
      * the method.
      */
     public void delete( Long id );
+
+    public String describeBatchConfound( ExpressionExperiment ee );
+
+    public String describeBatchEffect( ExpressionExperiment ee );
+
+    /**
+     * returns ids of search results
+     * 
+     * @param searchString
+     * @return collection of ids or an empty collection
+     */
+    public Collection<Long> filter( String searchString );
 
     /**
      * 
@@ -290,6 +296,11 @@ public interface ExpressionExperimentService {
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<QuantitationType> quantitationTypes );
 
+    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect();
+
+    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
+            Class<? extends AuditEventType> auditEventClass );
+
     /**
      * @param expressionExperiments
      * @return
@@ -440,15 +451,6 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadAll();
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
-
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingFactors();
 
@@ -457,9 +459,6 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
@@ -473,18 +472,6 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<ExpressionExperiment> loadMyExpressionExperiments();
-
-    /**
-     * Returns the {@link ExpressionExperiment}s owned by the {@link User} currently logged in. Note: this includes
-     * public and private entities. Important: This method will return all experiments if security is not enabled.
-     * <p>
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute. (in Gemma-core)
-     * 
-     * @return
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
-    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
 
     /**
      * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
@@ -504,6 +491,26 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadTroubled();
 
     /**
+     * Returns the {@link ExpressionExperiment}s owned by the {@link User} currently logged in. Note: this includes
+     * public and private entities. Important: This method will return all experiments if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     */
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
+    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
+
+    /**
+     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc)
+     * 
+     * @param id
+     * @return
+     */
+    public ExpressionExperimentValueObject loadValueObject( Long eeId );
+
+    /**
      * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc) TODO SECURE:
      * How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
@@ -512,6 +519,29 @@ public interface ExpressionExperimentService {
      * @return
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
+
+    /**
+     * Used when we are converting an experiment from one platform to another. Examples would be exon array or MPSS data
+     * sets. Does not take care of computing the processed data vectors, but it does clear them out.
+     * 
+     * @param ee
+     * @param ad
+     * @param vectors
+     * @return the updated Experiment
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
+            Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Used when we want to replace the vectors. Does not take care of computing the processed data vectors, but it does
+     * clear them out.
+     * 
+     * @param ee
+     * @param vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 
     /**
      * @param expressionExperiment
@@ -538,43 +568,22 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
 
-    /**
-     * returns ids of search results
-     * 
-     * @param searchString
-     * @return collection of ids or an empty collection
-     */
-    public Collection<Long> filter( String searchString );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit );
 
-    /**
-     * Used when we are converting an experiment from one platform to another. Examples would be exon array or MPSS data
-     * sets. Does not take care of computing the processed data vectors, but it does clear them out.
-     * 
-     * @param ee
-     * @param ad
-     * @param vectors
-     * @return the updated Experiment
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
-            Collection<RawExpressionDataVector> vectors );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
 
-    /**
-     * Used when we want to replace the vectors. Does not take care of computing the processed data vectors, but it does
-     * clear them out.
-     * 
-     * @param ee
-     * @param vectors
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
-    
-    public List<ExpressionExperimentValueObject> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
 
-    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect( );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
 
-    public String describeBatchEffect( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
-    public String describeBatchConfound( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
 }

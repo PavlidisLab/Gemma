@@ -190,7 +190,7 @@ public class VisualizationValueObject {
      */
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
-        setEE( dvvo.getExpressionExperiment() );
+        setEevo( dvvo.getExpressionExperiment() );
         GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
         profiles.add( profile );
     }
@@ -241,14 +241,6 @@ public class VisualizationValueObject {
         this.factorNames = factorNames2;
     }
 
-    public void setEE( ExpressionExperiment ee ) {
-        this.eevo = new ExpressionExperimentValueObject();
-        this.eevo.setId( ee.getId() );
-        this.eevo.setName( ee.getName() );
-        this.eevo.setShortName( ee.getShortName() );
-        this.eevo.setClazz( "ExpressionExperimentValueObject" );
-    }
-
     public void setEevo( ExpressionExperimentValueObject eevo ) {
         this.eevo = eevo;
     }
@@ -257,8 +249,8 @@ public class VisualizationValueObject {
     // Getters and Setters
     // ---------------------------------
 
-    public void setEEwithPvalue( ExpressionExperiment ee, Double minP ) {
-        setEE( ee );
+    public void setEEwithPvalue( ExpressionExperimentValueObject ee, Double minP ) {
+        setEevo( ee );
         this.eevo.setMinPvalue( minP );
     }
 

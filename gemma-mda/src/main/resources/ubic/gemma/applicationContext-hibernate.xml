@@ -42,7 +42,6 @@
 								<!-- FIXME we probably don't need all of these. -->
 								<entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
 								<entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
-								<entry key="org.springframework.transaction.UnexpectedRollbackException" value="true" />
 								<entry key="org.springframework.dao.CannotAcquireLockException" value="true" />
 							</map>
 						</constructor-arg>
@@ -179,14 +178,13 @@
 				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
 				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
 				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-				<!-- <prop key="hibernate.use_streams_for_binary">true</prop> --> <!-- I believe this is ignored unless passed in java -D... -->
 				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
 				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
 				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
 				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
 				</prop>
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
-				<!-- <prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop> -->
+				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
 				<prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
 				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>

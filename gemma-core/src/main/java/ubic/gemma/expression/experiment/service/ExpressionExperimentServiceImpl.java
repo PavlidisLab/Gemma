@@ -1257,4 +1257,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return null;
 
     }
+
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
+        return this.expressionExperimentDao.loadValueObject( eeId );
+    }
 }

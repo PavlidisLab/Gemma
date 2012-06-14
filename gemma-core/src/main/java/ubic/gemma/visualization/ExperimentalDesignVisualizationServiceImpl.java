@@ -57,6 +57,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -506,7 +507,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 log.debug( "DoubleVectorValueObject is null" );
                 continue;
             }
-            ExpressionExperiment ee = vec.getExpressionExperiment();
+            ExpressionExperimentValueObject ee = vec.getExpressionExperiment();
 
             if ( cachedLayouts.containsKey( ee.getId() ) ) {
                 continue;
@@ -543,10 +544,11 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             /*
              * The following is the really slow part if we don't use a cache.
              */
-            ee = expressionExperimentService.thawLiter( ee );
+            ExpressionExperiment actualee = expressionExperimentService.thawLiter( expressionExperimentService.load( ee
+                    .getId() ) );
             // plotExperimentalDesign( ee ); // debugging/testing
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
-                    ee, bioAssayDimension );
+                    actualee, bioAssayDimension );
             cachedLayouts.put( ee.getId(), experimentalDesignLayout );
 
         }

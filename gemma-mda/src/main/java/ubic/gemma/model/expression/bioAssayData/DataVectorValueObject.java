@@ -25,6 +25,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -46,7 +47,7 @@ public abstract class DataVectorValueObject implements Serializable {
     protected CompositeSequence designElement;
     protected BioAssayDimension bioAssayDimension;
     protected QuantitationType quantitationType;
-    protected ExpressionExperiment expressionExperiment;
+    protected ExpressionExperimentValueObject expressionExperiment;
     Collection<Gene> genes;
 
     public DataVectorValueObject() {
@@ -56,7 +57,7 @@ public abstract class DataVectorValueObject implements Serializable {
         this.bioAssayDimension = dedv.getBioAssayDimension();
         this.quantitationType = dedv.getQuantitationType();
         this.designElement = dedv.getDesignElement();
-        this.expressionExperiment = dedv.getExpressionExperiment();
+        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
         this.id = dedv.getId();
     }
 
@@ -85,7 +86,7 @@ public abstract class DataVectorValueObject implements Serializable {
         return designElement;
     }
 
-    public ExpressionExperiment getExpressionExperiment() {
+    public ExpressionExperimentValueObject getExpressionExperiment() {
         return expressionExperiment;
     }
 
@@ -120,7 +121,7 @@ public abstract class DataVectorValueObject implements Serializable {
         this.designElement = designElement;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 

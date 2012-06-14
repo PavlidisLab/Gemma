@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
@@ -190,7 +191,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
             vct.setRank( probeLoading.getLoadingRank().doubleValue() );
             vct.setBioAssayDimension( bioAssayDimension );
-            vct.setExpressionExperiment( ee );
+            vct.setExpressionExperiment( new ExpressionExperimentValueObject( ee ) );
             result.put( probeLoading, vct );
         }
 

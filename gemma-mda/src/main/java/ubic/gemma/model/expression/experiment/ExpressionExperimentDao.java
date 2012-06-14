@@ -40,6 +40,11 @@ import ubic.gemma.persistence.BrowsingDao;
 public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment>,
         BrowsingDao<ExpressionExperiment> {
 
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids );
+
     /**
      * 
      */
@@ -49,6 +54,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * 
      */
     public ExpressionExperiment find( ExpressionExperiment expressionExperiment );
+
+    public Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
      * There can be more than one if the experiment was split up.
@@ -111,9 +118,28 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment findByShortName( String shortName );
 
     /**
+     * @param taxon
+     * @param limit
+     * @return
+     */
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit );
+
+    /**
      * 
      */
     public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
+     * (limit < 0).
+     * 
+     * @param idsOfFetched
+     * @param limit
+     * @return
+     */
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
+
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
     /**
      * 
@@ -134,6 +160,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
 
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
+
+    /**
+     * @param firstPass
+     * @return
+     */
+    public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
     /**
      * Gets the AuditEvents of the specified expression experiment ids. This returns a map of id -> AuditEvent. If the
@@ -271,6 +303,32 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ubic.gemma.model.genome.Taxon getTaxon( BioAssaySet bioAssaySet );
 
     /**
+     * Includes ones which are untroubled and which don't have a troubled ArrayDesign.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Long> getUntroubled( Collection<Long> ids );
+
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
+
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
+
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+
+    public Collection<ExpressionExperiment> loadLackingFactors();
+
+    public Collection<ExpressionExperiment> loadLackingTags();
+
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
+
+    /**
+     * @param eeId
+     * @return
+     */
+    public ExpressionExperimentValueObject loadValueObject( Long eeId );
+
+    /**
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
@@ -289,57 +347,5 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
-     * (limit < 0).
-     * 
-     * @param idsOfFetched
-     * @param limit
-     * @return
-     */
-    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
-
-    public Collection<ExpressionExperiment> loadLackingFactors();
-
-    public Collection<ExpressionExperiment> loadLackingTags();
-
-    public Collection<ExpressionExperiment> findByAccession( String accession );
-
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
-            boolean descending, Collection<Long> ids );
-
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
-
-    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
-
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
-
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
-
-    /**
-     * Includes ones which are untroubled and which don't have a troubled ArrayDesign.
-     * 
-     * @param ids
-     * @return
-     */
-    public Collection<Long> getUntroubled( Collection<Long> ids );
-
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
-
-    /**
-     * @param taxon
-     * @param limit
-     * @return
-     */
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit );
-
-    /**
-     * @param firstPass
-     * @return
-     */
-    public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
 }

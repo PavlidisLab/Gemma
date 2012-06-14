@@ -25,7 +25,9 @@ import org.springframework.security.acls.model.Permission;
 
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Filter collections of DesignElementDataVectors or DataVectorValueObjects based on the permissions of the associated
@@ -62,8 +64,10 @@ public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends
             domainObject = ( ExpressionExperimentImpl ) ( ( DesignElementDataVector ) targetDomainObject )
                     .getExpressionExperiment();
         } else if ( targetDomainObject instanceof DataVectorValueObject ) {
-            domainObject = ( ExpressionExperimentImpl ) ( ( DataVectorValueObject ) targetDomainObject )
+            ExpressionExperimentValueObject expressionExperiment = ( ( DataVectorValueObject ) targetDomainObject )
                     .getExpressionExperiment();
+            domainObject = ( ExpressionExperimentImpl ) ExpressionExperiment.Factory.newInstance();
+            domainObject.setId( expressionExperiment.getId() );
         }
         return domainObject;
     }

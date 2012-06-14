@@ -205,19 +205,37 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
     private ArrayDesign checkArrayDesigns( ExpressionExperiment ee,
             Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay ) {
 
-        if ( array2BioAssay.size() == 0 ) {
-
-            /*
-             * I'm not sure this has ever been triggered.
-             */
-            log.info( ee.getBioAssays().size() + " bioassays associated with ee before cleanup." );
-            Collection<ArrayDesign> availableArrayDesigns = new HashSet<ArrayDesign>();
-            for ( Object convertedObject : this.convertedResult ) {
-                if ( convertedObject instanceof ArrayDesign ) {
-                    log.info( convertedObject );
-                    availableArrayDesigns.add( ( ArrayDesign ) convertedObject );
-                }
+        log.info( ee.getBioAssays().size() + " bioassays associated with ee before cleanup." );
+        Collection<ArrayDesign> availableArrayDesigns = new HashSet<ArrayDesign>();
+        for ( Object convertedObject : this.convertedResult ) {
+            ArrayDesign arrayDesign = null;
+            if ( convertedObject instanceof BioAssay ) {
+                arrayDesign = ( ( BioAssay ) convertedObject ).getArrayDesignUsed();
             }
+
+            if ( convertedObject instanceof ArrayDesign ) {
+                arrayDesign = ( ArrayDesign ) convertedObject;
+            }
+
+            if ( arrayDesign == null ) continue;
+
+            log.info( arrayDesign );
+
+            if ( StringUtils.isBlank( arrayDesign.getShortName() ) ) {
+                throw new IllegalStateException( "Array designs must have names" );
+            }
+
+            if ( arrayDesign.getPrimaryTaxon() == null ) {
+                /*
+                 * Should have gotten from the bioassays. We might be able to recover from this?
+                 */
+                throw new IllegalStateException( "Array design must have a primary taxon defined" );
+            }
+
+            availableArrayDesigns.add( arrayDesign );
+        }
+
+        if ( array2BioAssay.size() == 0 ) {
 
             if ( availableArrayDesigns.size() > 1 ) {
                 throw new IllegalStateException( "More than one platform without acceptable mapping to bioassays." );
