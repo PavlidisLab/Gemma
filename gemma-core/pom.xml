@@ -179,12 +179,12 @@
 			<artifactId>colt</artifactId>
 			<version>1.2.0</version>
 		</dependency>
-		<dependency>
-			<!-- NO longer needed -->
+		<!-- <dependency>
+			NO longer needed
 			<groupId>commons-dbutils</groupId>
 			<artifactId>commons-dbutils</artifactId>
 			<version>1.0</version>
-		</dependency>
+			</dependency> -->
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
