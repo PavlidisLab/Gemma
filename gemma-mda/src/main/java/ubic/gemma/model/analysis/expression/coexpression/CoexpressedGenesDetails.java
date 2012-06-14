@@ -246,8 +246,8 @@ public class CoexpressedGenesDetails {
          * Note that it is possible for the sum to be greater than the limit, as links can have both + and - correlation
          * support > threshold.
          */
-        assert revisedPosLinks <= limit;
-        assert revisedNegLinks <= limit;
+        assert revisedPosLinks <= limit : "Got " + revisedPosLinks + " pos links but limit was " + limit;
+        assert revisedNegLinks <= limit : "Got " + revisedNegLinks + " neg links but limit was " + limit;
 
     }
 

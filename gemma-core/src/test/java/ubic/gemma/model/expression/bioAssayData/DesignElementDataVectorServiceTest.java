@@ -76,12 +76,12 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
     GeneService geneService;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         dedv = RawExpressionDataVector.Factory.newInstance();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         try {
             if ( newee != null && newee.getId() != null ) {
                 expressionExperimentService.delete( newee );
@@ -112,8 +112,7 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
 
         newee = this.expressionExperimentService.thawLite( newee );
 
-        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
+        DesignElementDataVectorService dedvs = this.getBean( DesignElementDataVectorService.class );
 
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );

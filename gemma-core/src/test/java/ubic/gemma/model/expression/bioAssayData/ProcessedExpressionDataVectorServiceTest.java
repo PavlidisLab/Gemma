@@ -99,7 +99,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
      * .
      */
     @Test
-    public void testGetProcessedDataMatrices() throws Exception {
+    public void testGetProcessedDataMatrices() {
 
         if ( ees == null ) {
             log.error( "Test skipped because of failure to fetch data." );

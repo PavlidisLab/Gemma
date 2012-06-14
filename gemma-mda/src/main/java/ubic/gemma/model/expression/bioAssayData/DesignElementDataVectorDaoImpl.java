@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -61,41 +62,36 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @param queryString, which must have parameter list placeholder "cs" and may have parameter list "ees".
      * @return
      */
-    protected Map<T, Collection<Gene>> getVectorsForProbesInExperiments( Collection<ExpressionExperiment> ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene, final String queryString ) {
+    protected Map<T, Collection<Gene>> getVectorsForProbesInExperiments( Collection<Long> ees,
+            Map<Long, Collection<Gene>> cs2gene, final String queryString ) {
         Session session = super.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         Map<T, Collection<Gene>> dedv2genes = new HashMap<T, Collection<Gene>>();
         StopWatch timer = new StopWatch();
         timer.start();
-        try {
 
-            if ( ees != null && ees.size() > 0 ) {
-                queryObject.setParameterList( "ees", ees );
-            }
-
-            /*
-             * Might need to adjust this. This value just seems reasonable, but it isn't uncommon for it to be much
-             * larger. See bug 1866.
-             */
-            int batchSize = 100;
-            Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-            for ( CompositeSequence cs : cs2gene.keySet() ) {
-                batch.add( cs );
-                if ( batch.size() == batchSize ) {
-                    getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-                    batch.clear();
-                }
-            }
-
-            if ( batch.size() > 0 ) {
-                getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-            }
-            // Is this important?
-            // session.clear();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        if ( ees != null && ees.size() > 0 ) {
+            queryObject.setParameterList( "ees", ees );
         }
+
+        /*
+         * Might need to adjust this. This value just seems reasonable, but it isn't uncommon for it to be much larger.
+         * See bug 1866.
+         */
+        int batchSize = 100;
+        Collection<Long> batch = new HashSet<Long>();
+        for ( Long cs : cs2gene.keySet() ) {
+            batch.add( cs );
+            if ( batch.size() == batchSize ) {
+                getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
+        }
+
         timer.stop();
         if ( timer.getTime() > 50 ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
@@ -266,20 +262,21 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     /**
      * Fetch vectors for a batch of probes.
      * 
-     * @param cs2gene
+     * @param cs2gene (by ID)
      * @param queryObject
      * @param dedv2genes
      * @param batch
      */
-    private void getVectorsBatch( Map<CompositeSequence, Collection<Gene>> cs2gene, org.hibernate.Query queryObject,
-            Map<T, Collection<Gene>> dedv2genes, Collection<CompositeSequence> batch ) {
+    private void getVectorsBatch( Map<Long, Collection<Gene>> cs2gene, org.hibernate.Query queryObject,
+            Map<T, Collection<Gene>> dedv2genes, Collection<Long> batch ) {
         queryObject.setParameterList( "cs", batch );
-
+        queryObject.setFlushMode( FlushMode.MANUAL );
+        queryObject.setReadOnly( true );
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( results.next() ) {
             T dedv = ( T ) results.get( 0 );
-            CompositeSequence cs = ( CompositeSequence ) results.get( 1 );
+            Long cs = ( Long ) results.get( 1 );
             Collection<Gene> associatedGenes = cs2gene.get( cs );
             if ( !dedv2genes.containsKey( dedv ) ) {
                 dedv2genes.put( dedv, associatedGenes );
@@ -288,6 +285,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
                 mappedGenes.addAll( associatedGenes );
             }
         }
+
         results.close();
     }
 

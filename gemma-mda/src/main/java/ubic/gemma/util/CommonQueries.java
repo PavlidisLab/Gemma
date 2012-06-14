@@ -165,17 +165,17 @@ public class CommonQueries {
      * @param session
      * @return
      */
-    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes,
-            Collection<ArrayDesign> arrays, Session session ) {
+    public static Map<Long, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Collection<ArrayDesign> arrays,
+            Session session ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes) and cs.arrayDesign in (:ars) ";
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", genes );
@@ -183,7 +183,7 @@ public class CommonQueries {
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
-            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Long cs = ( Long ) results.get( 0 );
             Gene g = ( Gene ) results.get( 1 );
             if ( !cs2gene.containsKey( cs ) ) {
                 cs2gene.put( cs, new HashSet<Gene>() );
@@ -267,12 +267,11 @@ public class CommonQueries {
      * @return map of probes to all the genes 'detected' by those probes (including PARs and predicted genes, if these
      *         are in use). Probes that don't map to genes will have an empty gene collection.
      */
-    public static Map<CompositeSequence, Collection<Gene>> getFullCs2AllGeneMap( Collection<CompositeSequence> probes,
-            Session session ) {
-        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+    public static Map<Long, Collection<Gene>> getFullCs2AllGeneMap( Collection<Long> probes, Session session ) {
+        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
+        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
                 + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) ";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs.id in (:probes) ";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
     }
@@ -283,13 +282,12 @@ public class CommonQueries {
      * @return map of probes to all the genes 'detected' by those probes -- but excluding PARs and predicted genes.
      *         Probes that don't map to genes will have an empty gene collection.
      */
-    public static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
-            Session session ) {
-        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
+    public static Map<Long, Collection<Gene>> getFullCs2GeneMap( Collection<Long> probes, Session session ) {
+        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
 
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
                 + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class='GeneImpl'";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs.id in (:probes) and gene.class='GeneImpl'";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
     }
@@ -326,21 +324,21 @@ public class CommonQueries {
     // return cs2genes;
     // }
 
-    private static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
-            Session session, final String csQueryString ) {
+    private static Map<Long, Collection<Gene>> getFullCs2GeneMap( Collection<Long> probes, Session session,
+            final String csQueryString ) {
 
-        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
+        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
 
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "probes", probes );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
-            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Long cs = ( Long ) results.get( 0 );
             Gene g = ( Gene ) results.get( 1 );
             if ( !cs2gene.containsKey( cs ) ) {
                 cs2gene.put( cs, new HashSet<Gene>() );
@@ -351,7 +349,7 @@ public class CommonQueries {
         /*
          * This shouldn't be necessary if we do the correct outer join, should it?
          */
-        for ( CompositeSequence cs : probes ) {
+        for ( Long cs : probes ) {
             if ( !cs2gene.containsKey( cs ) ) {
                 cs2gene.put( cs, new HashSet<Gene>() );
             }

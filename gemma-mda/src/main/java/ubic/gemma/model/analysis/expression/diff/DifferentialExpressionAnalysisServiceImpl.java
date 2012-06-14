@@ -122,33 +122,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends
      */
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByName( String name ) {
-        Collection<DifferentialExpressionAnalysis> results = this.getDifferentialExpressionAnalysisDao().findByName(
-                name );
-        //
-        // DifferentialExpressionAnalysis mostRecent = null;
-        //
-        // // If there is more than one (against the rules at the moment) find the most recent one that matches. Perhaps
-        // // the best way is to use the audit trail but would have to thaw
-        // // them.
-        // // Instead of thawing the audit trail just use the analysis with the largest ID as we don't update analysis
-        // // currently so
-        // // the same results should be returned.
-        //
-        // for ( Object obj : results ) {
-        // DifferentialExpressionAnalysis ana = ( DifferentialExpressionAnalysis ) obj;
-        //
-        // if ( ana.getName().equalsIgnoreCase( name ) ) return ana;
-        //
-        // if ( mostRecent == null ) {
-        // mostRecent = ana;
-        // continue;
-        // }
-        //
-        // if ( ana.getId() > mostRecent.getId() ) mostRecent = ana;
-        // }
-        //
-        // return mostRecent;
-        return results;
+        return this.getDifferentialExpressionAnalysisDao().findByName( name );
     }
 
     @Override

@@ -23,19 +23,19 @@ import java.util.Collection;
 import ubic.gemma.model.analysis.AnalysisDaoImpl;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Base DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis</code>.
+ * <code>DifferentialExpressionAnalysis</code>.
  * 
- * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis
+ * @see DifferentialExpressionAnalysis
  */
 public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoImpl<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int,
-     *      java.util.Collection)
+     * @see DifferentialExpressionAnalysisDao#create(int, java.util.Collection)
      */
     @Override
     public java.util.Collection<? extends DifferentialExpressionAnalysis> create(
@@ -59,13 +59,12 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int transform,
-     *      ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     * @see DifferentialExpressionAnalysisDao#create(int transform, DifferentialExpressionAnalysis)
      */
     @Override
     public DifferentialExpressionAnalysis create(
 
-    final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         if ( differentialExpressionAnalysis == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysis.create - 'differentialExpressionAnalysis' can not be null" );
@@ -75,17 +74,17 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#find(ubic.gemma.model.genome.Gene,
+     * @see DifferentialExpressionAnalysisDao#find(Gene,
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
     @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<DifferentialExpressionAnalysis> find( final Gene gene,
             final ExpressionAnalysisResultSet resultSet, final double threshold ) {
         return this.handleFind( gene, resultSet, threshold );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByInvestigationIds(java.util.Collection)
+     * @see DifferentialExpressionAnalysisDao#findByInvestigationIds(java.util.Collection)
      */
     @Override
     public java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
@@ -94,10 +93,10 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
+     * @see DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(Gene)
      */
     @Override
-    public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( final Gene gene ) {
         return this.handleFindExperimentsWithAnalyses( gene );
     }
 
@@ -108,7 +107,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#load(int, java.lang.Long)
+     * @see DifferentialExpressionAnalysisDao#load(int, java.lang.Long)
      */
 
     @Override
@@ -116,24 +115,23 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
         if ( id == null ) {
             throw new IllegalArgumentException( "DifferentialExpressionAnalysis.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.class, id );
-        return ( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis ) entity;
+        final Object entity = this.getHibernateTemplate().get( DifferentialExpressionAnalysisImpl.class, id );
+        return ( DifferentialExpressionAnalysis ) entity;
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#loadAll(int)
+     * @see DifferentialExpressionAnalysisDao#loadAll(int)
      */
 
     @Override
     public java.util.Collection<? extends DifferentialExpressionAnalysis> loadAll() {
         final java.util.Collection<? extends DifferentialExpressionAnalysis> results = this.getHibernateTemplate()
-                .loadAll( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.class );
+                .loadAll( DifferentialExpressionAnalysisImpl.class );
         return results;
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#remove(java.lang.Long)
+     * @see DifferentialExpressionAnalysisDao#remove(java.lang.Long)
      */
 
     @Override
@@ -141,7 +139,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
         if ( id == null ) {
             throw new IllegalArgumentException( "DifferentialExpressionAnalysis.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis entity = this.load( id );
+        DifferentialExpressionAnalysis entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -160,11 +158,10 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     * @see DifferentialExpressionAnalysisDao#remove(DifferentialExpressionAnalysis)
      */
     @Override
-    public void remove(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    public void remove( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         if ( differentialExpressionAnalysis == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysis.remove - 'differentialExpressionAnalysis' can not be null" );
@@ -173,7 +170,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#thaw(java.util.Collection)
+     * @see DifferentialExpressionAnalysisDao#thaw(java.util.Collection)
      */
     @Override
     public void thaw( final java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
@@ -181,11 +178,10 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     * @see DifferentialExpressionAnalysisDao#thaw(DifferentialExpressionAnalysis)
      */
     @Override
-    public void thaw(
-            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    public void thaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         this.handleThaw( differentialExpressionAnalysis );
     }
 
@@ -213,11 +209,10 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     * @see DifferentialExpressionAnalysisDao#update(DifferentialExpressionAnalysis)
      */
     @Override
-    public void update(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    public void update( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         if ( differentialExpressionAnalysis == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysis.update - 'differentialExpressionAnalysis' can not be null" );
@@ -227,10 +222,10 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
 
     /**
      * Performs the core logic for
-     * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
+     * {@link #find(Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
-    protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind(
-            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold );
+    protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind( Gene gene,
+            ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
@@ -239,10 +234,9 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
             java.util.Collection<Long> investigationIds );
 
     /**
-     * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
+     * Performs the core logic for {@link #findExperimentsWithAnalyses(Gene)}
      */
-    protected abstract java.util.Collection<BioAssaySet> handleFindExperimentsWithAnalyses(
-            ubic.gemma.model.genome.Gene gene );
+    protected abstract java.util.Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene );
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
@@ -250,10 +244,8 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
     protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
-     * Performs the core logic for
-     * {@link #thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
+     * Performs the core logic for {@link #thaw(DifferentialExpressionAnalysis)}
      */
-    protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    protected abstract void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
 }
