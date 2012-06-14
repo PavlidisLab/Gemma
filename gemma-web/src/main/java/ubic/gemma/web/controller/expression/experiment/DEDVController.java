@@ -52,7 +52,6 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -197,16 +196,11 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes, false );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
-        // don't include batch because it isn't biologically relevant
-        layouts = removeBatchLayouts( layouts );
-
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
-                                                                                               // GSE11859
-
+        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
         watch.stop();
         Long time = watch.getTime();
 
@@ -244,7 +238,7 @@ public class DEDVController {
 
         if ( topLoadedVectors == null ) return null;
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values );
@@ -286,7 +280,7 @@ public class DEDVController {
         watch = new StopWatch();
         watch.start();
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
@@ -294,8 +288,6 @@ public class DEDVController {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for 1 EE" + " in " + time
                     + " ms (times <100ms not reported)." );
         }
-        // don't include batch because it isn't biologically relevant
-        layouts = removeBatchLayouts( layouts );
 
         layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
                                                                                                // GSE11859
@@ -367,7 +359,7 @@ public class DEDVController {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getShortName() + " and "
                     + gene.getOfficialSymbol() + " gene in " + time + " ms (times <100ms not reported)." );
         }
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
@@ -377,8 +369,6 @@ public class DEDVController {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for 1 EE" + " in " + time
                     + " ms (times <100ms not reported)." );
         }
-        // don't include batch because it isn't biologically relevant
-        layouts = removeBatchLayouts( layouts );
 
         layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
                                                                                                // GSE11859
@@ -402,37 +392,6 @@ public class DEDVController {
 
         return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, layouts );
 
-    }
-
-    /**
-     * Removes data from layouts for batch factor.
-     * 
-     * @param layouts
-     * @return filtered layouts
-     */
-    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> removeBatchLayouts(
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> paramLayouts ) {
-
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>(
-                paramLayouts );
-        // don't include batch because it isn't biologically relevant
-
-        for ( ExpressionExperiment ee2 : layouts.keySet() ) {
-            if ( layouts.get( ee2 ) != null && layouts.get( ee2 ).keySet() != null ) {
-                for ( BioAssay bioAssay : layouts.get( ee2 ).keySet() ) {
-                    if ( layouts.get( ee2 ).get( bioAssay ) != null
-                            && layouts.get( ee2 ).get( bioAssay ).keySet() != null ) {
-                        for ( ExperimentalFactor ef : layouts.get( ee2 ).get( bioAssay ).keySet() ) {
-                            if ( ExperimentalDesignUtils.isBatch( ef ) ) {
-                                layouts.get( ee2 ).get( bioAssay ).remove( ef );
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return layouts;
     }
 
     /**
@@ -460,8 +419,8 @@ public class DEDVController {
 
         List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold, 50 );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( dedvs );
 
         return makeVisCollection( dedvs, null, null, layouts );
 
@@ -516,7 +475,7 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
@@ -527,9 +486,6 @@ public class DEDVController {
                     + time + " ms (times <100ms not reported)." );
         }
         layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required?
-
-        // don't include batch because it isn't biologically relevant
-        layouts = removeBatchLayouts( layouts );
 
         watch.stop();
         time = watch.getTime();
@@ -566,8 +522,8 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes, false );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -1020,14 +976,12 @@ public class DEDVController {
      * @param layouts
      */
     private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
-
-        // DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example.
+            Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         for ( DoubleVectorValueObject vec : vectors ) {
             List<String> sampleNames = new ArrayList<String>();
-            if ( layouts != null && layouts.get( vec.getExpressionExperiment() ) != null ) {
-                for ( BioAssay ba : layouts.get( vec.getExpressionExperiment() ).keySet() ) {
+            if ( layouts != null && layouts.get( vec.getExpressionExperiment().getId() ) != null ) {
+                for ( BioAssay ba : layouts.get( vec.getExpressionExperiment().getId() ).keySet() ) {
                     sampleNames.add( ba.getName() ); // fIXME
 
                 }
@@ -1276,7 +1230,7 @@ public class DEDVController {
      */
     private VisualizationValueObject[] makeDiffVisCollection( Collection<DoubleVectorValueObject> dedvs,
             List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+            Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -1455,7 +1409,7 @@ public class DEDVController {
      */
     private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs,
             Collection<Gene> genes, Map<Long, Collection<Long>> validatedProbes,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+            Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         StopWatch timer = new StopWatch();
         timer.start();

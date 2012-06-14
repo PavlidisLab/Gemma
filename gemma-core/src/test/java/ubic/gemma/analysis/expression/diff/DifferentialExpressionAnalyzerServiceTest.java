@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.junit.Before;
@@ -49,6 +50,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * @author keshav, paul
@@ -64,6 +66,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
+
+    @Autowired
+    ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
 
     @Autowired
     ExpressionDataFileService expressionDataFileService;
@@ -147,6 +152,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         // / delete the analysis
         int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
         assertTrue( numDeleted > 0 );
+
+        // this is kind of thrown in here
+        LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = experimentalDesignVisualizationService
+                .getExperimentalDesignLayout( ee );
+        assertEquals( 12, layout.size() );
     }
 
     /**
