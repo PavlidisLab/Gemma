@@ -246,8 +246,7 @@ public class DEDVController {
     }
 
     /**
-     * AJAX exposed method private DifferentialExpressionAnalysisResultService
-     * differentialExpressionAnalysisResultService;
+     * AJAX exposed method
      * 
      * @param eeIds FIXME accomodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
      *        don't get the slice.
@@ -325,12 +324,9 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        // TODO this throws an error if the user selects an experiment they don't have permission to see
-        // this can happen through the diff expr. table on the gene page
-        // (ex: grin1 mouse, dataset="kottmann")
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
-        if ( ee == null ) return null;
+        if ( ee == null ) return null; // access denied, etc.
 
         if ( threshold == null ) {
             log.warn( "Threshold was null, using default" );
@@ -1413,26 +1409,26 @@ public class DEDVController {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<ExpressionExperiment, List<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, List<DoubleVectorValueObject>>();
+        Map<Long, List<DoubleVectorValueObject>> vvoMap = new HashMap<Long, List<DoubleVectorValueObject>>();
         // Organize by expression experiment
         if ( dedvs == null || dedvs.isEmpty() ) return new VisualizationValueObject[1];
 
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee ) ) {
-                vvoMap.put( ee, new ArrayList<DoubleVectorValueObject>() );
+                vvoMap.put( ee.getId(), new ArrayList<DoubleVectorValueObject>() );
             }
-            vvoMap.get( ee ).add( dvvo );
+            vvoMap.get( ee.getId() ).add( dvvo );
         }
 
         VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
-        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+        for ( Long ee : vvoMap.keySet() ) {
 
             Collection<Long> validatedProbeList = null;
             if ( validatedProbes != null ) {
-                validatedProbeList = validatedProbes.get( ee.getId() );
+                validatedProbeList = validatedProbes.get( ee );
             }
             Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
 
