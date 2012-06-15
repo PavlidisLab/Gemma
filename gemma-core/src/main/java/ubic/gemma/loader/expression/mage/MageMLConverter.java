@@ -227,9 +227,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
             if ( arrayDesign.getPrimaryTaxon() == null ) {
                 /*
-                 * Should have gotten from the bioassays. We might be able to recover from this?
+                 * FIXME Should have gotten from the bioassays. We might be able to recover from this?
                  */
-                throw new IllegalStateException( "Array design must have a primary taxon defined" );
+                // throw new IllegalStateException( "Array design must have a primary taxon defined" );
             }
 
             availableArrayDesigns.add( arrayDesign );
