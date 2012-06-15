@@ -846,8 +846,8 @@
 			<dwr:exclude method="technologyType" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommand">
-			<dwr:exclude method="securityContext" />
+		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommandValueObject">
+			
 		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
