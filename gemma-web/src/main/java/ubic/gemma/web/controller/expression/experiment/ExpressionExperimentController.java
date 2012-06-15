@@ -1687,7 +1687,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     
      */
     private String batchConfound( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.describeBatchConfound( ee );
+        String result = expressionExperimentService.getBatchConfound( ee );
         if ( result == null ) {
             result = "";
         }
@@ -1699,7 +1699,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return
      */
     private String batchEffect( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.describeBatchEffect( ee );
+        String result = expressionExperimentService.getBatchEffect( ee );
         if ( result == null ) {
             result = "";
         }

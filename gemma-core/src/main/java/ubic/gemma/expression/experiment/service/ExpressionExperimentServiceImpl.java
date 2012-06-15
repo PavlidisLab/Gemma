@@ -1217,7 +1217,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                 ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment ee : entities ) {
-            if ( this.describeBatchEffect( ee ) == null ) {
+            if ( this.getBatchEffect( ee ) == null ) {
                 toRemove.add( ee );
             }
         }
@@ -1230,7 +1230,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @return String msg describing confound if it is present, null otherwise
      */
     @Override
-    public String describeBatchConfound( ExpressionExperiment ee ) {
+    public String getBatchConfound( ExpressionExperiment ee ) {
         Collection<BatchConfoundValueObject> confounds;
         try {
             confounds = BatchConfound.test( ee );
@@ -1254,7 +1254,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @return String msg describing effect if it is present, null otherwise
      */
     @Override
-    public String describeBatchEffect( ExpressionExperiment ee ) {
+    public String getBatchEffect( ExpressionExperiment ee ) {
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );

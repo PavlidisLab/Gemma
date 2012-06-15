@@ -85,9 +85,9 @@ public interface ExpressionExperimentService {
      */
     public void delete( Long id );
 
-    public String describeBatchConfound( ExpressionExperiment ee );
+    public String getBatchConfound( ExpressionExperiment ee );
 
-    public String describeBatchEffect( ExpressionExperiment ee );
+    public String getBatchEffect( ExpressionExperiment ee );
 
     /**
      * returns ids of search results
