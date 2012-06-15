@@ -1062,13 +1062,12 @@ public class DEDVController {
     }
 
     /**
-     * Get the factor values we'll use for grouping the columns of the vectors. Uses factors and factor values from
-     * layouts
+     * Prepare vvo for display on front end. Uses factors and factor values from layouts 
      * 
      * @param vvo Note: This will be modified! It will be updated with the factorNames and factorValuesToNames
-     * @param layouts
+     * @param eeLayouts
      */
-    private void getFactorValues( VisualizationValueObject vvo,
+    public void prepareFactorsForFrontEndDisplay( VisualizationValueObject vvo,
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> eeLayouts ) {
 
         if ( eeLayouts == null || eeLayouts.isEmpty() ) {
@@ -1314,7 +1313,7 @@ public class DEDVController {
             if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( vvoMap.get( ee2P.getEEId() ) ) ) {
                 LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( vvoMap
                         .get( ee2P.getEEId() ) );
-                getFactorValues( vvo, layout );
+                this.prepareFactorsForFrontEndDisplay( vvo, layout );
             }
 
             /*
@@ -1447,7 +1446,7 @@ public class DEDVController {
                 if ( vectors.size() > 0 && layouts != null && !layouts.isEmpty() && layouts.containsKey( ee ) ) {
                     // Set up the experimental designinfo so we can show it above the graph.
                     LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
-                    getFactorValues( vvo, layout );
+                    this.prepareFactorsForFrontEndDisplay( vvo, layout );
                 }
             }
 
