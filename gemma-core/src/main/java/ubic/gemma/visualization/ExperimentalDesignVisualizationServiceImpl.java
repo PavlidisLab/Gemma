@@ -99,8 +99,8 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     public LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
             ExpressionExperiment e ) {
 
-        if ( cachedLayouts.containsKey( e ) ) {
-            return cachedLayouts.get( e );
+        if ( cachedLayouts.containsKey( e.getId() ) ) {
+            return cachedLayouts.get( e.getId() );
         }
 
         Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( e );
@@ -389,7 +389,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             }
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
 
-            Collection<ExperimentalFactor> filteredFactors = extractFactors( sortedLayout, false );
+            Collection<ExperimentalFactor> filteredFactors = extractFactors( layout, false );
 
             if ( filteredFactors.isEmpty() ) {
                 if ( sortedLayouts.containsKey( ee ) ) {
@@ -576,21 +576,25 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     @Override
     public void clearCaches( Long eeId ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        this.clearCaches( ee );
+        this.clearCachedLayouts( eeId );
+        this.clearCachedBioAssayDimensions( eeId );
     }
 
     @Override
     public void clearCaches( ExpressionExperiment ee ) {
-        this.clearCachedLayouts( ee );
+        this.clearCachedLayouts( ee.getId() );
         this.clearCachedBioAssayDimensions( ee );
     }
 
-    private void clearCachedLayouts( ExpressionExperiment ee ) {
-        this.cachedLayouts.remove( ee );
+    private void clearCachedLayouts( Long eeId ) {
+        this.cachedLayouts.remove( eeId );
     }
 
+    private void clearCachedBioAssayDimensions( Long eeId ) {
+
+        this.clearCachedBioAssayDimensions( expressionExperimentService.load( eeId ) );
+        
+    }
     private void clearCachedBioAssayDimensions( ExpressionExperiment ee ) {
 
         Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( ee );
