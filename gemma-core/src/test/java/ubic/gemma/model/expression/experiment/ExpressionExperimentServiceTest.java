@@ -191,6 +191,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         ExperimentalDesign design = eeFull.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        assertNotNull( ef );
         ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
         assertNotNull( eeFound );
         assertEquals( eeFound.getId(), eeFull.getId() );
