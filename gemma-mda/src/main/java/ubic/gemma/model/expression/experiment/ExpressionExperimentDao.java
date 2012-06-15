@@ -82,11 +82,21 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * rank (percentile)
      */
     public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, Double rank );
-
+    
+    /**
+     * 
+     */
+    public ExpressionExperiment findByFactor( ExperimentalFactor factor );
+    
     /**
      * 
      */
     public ExpressionExperiment findByFactorValue( FactorValue factorValue );
+
+    /**
+     * 
+     */
+    public ExpressionExperiment findByFactorValue(  Long factorValueId );
 
     /**
      * 

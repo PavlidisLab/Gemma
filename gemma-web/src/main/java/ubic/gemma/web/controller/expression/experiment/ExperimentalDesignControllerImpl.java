@@ -150,6 +150,21 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
 
     }
+    
+    /**
+     * clear entries in caches relevant to experimental design for the experiment passed in. 
+     * The caches cleared are the processedDataVectorCache and the caches held in 
+     * ExperimentalDesignVisualizationService
+     * @param ee
+     */
+    private void clearDesignCaches( ExpressionExperiment ee ){
+        
+        if( ee == null ) return;
+        log.info( "Clearning design caches for experiment: "+ee.toString() );
+        
+        processedDataVectorCache.clearCache( ee.getId() );
+        experimentalDesignVisualizationService.clearCaches( ee );
+    }
 
     /* (non-Javadoc)
      * @see ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#createExperimentalFactor(ubic.gemma.web.remote.EntityDelegator, ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject)
@@ -174,6 +189,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ed.getExperimentalFactors().add( ef );
 
         experimentalDesignService.update( ed );
+
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+        this.clearDesignCaches( ee );
     }
 
     /* (non-Javadoc)
@@ -245,6 +263,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         
         Collection<ExperimentalFactor> toDelete = experimentalFactorService.load( efCol );
 
+        for ( ExperimentalFactor ef : toDelete) {
+            ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
+            this.clearDesignCaches( ee );
+        }
+        
         delete( toDelete );
 
     }
@@ -330,7 +353,16 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null ) return;
         Collection<Long> fvCol = new LinkedList<Long>();
         Collections.addAll( fvCol, fvIds );
+        
+        for(Long fvId : fvCol){
+            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
+            this.clearDesignCaches( ee );
+        }
+        
         factorValueDeletion.deleteFactorValues( fvCol );
+        
+        
+        
     }
 
     /* (non-Javadoc)
@@ -538,6 +570,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             experimentalFactorService.update( ef );
 
+            ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
+            this.clearDesignCaches( ee );
+
             /*
              * TODO: we might want to update the Category on the matching FactorValues (that use the original category).
              * The following code should do this, but is commented out until we evaluate the implications. See bug 1676.
@@ -633,8 +668,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             }
             
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-            processedDataVectorCache.clearCache( ee.getId() );
-            experimentalDesignVisualizationService.clearCaches();
+            this.clearDesignCaches( ee );
 
         }
     }
@@ -763,8 +797,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         bioMaterialService.update( bm );
         
         ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        processedDataVectorCache.clearCache( ee.getId() );
-        experimentalDesignVisualizationService.clearCaches();
+        this.clearDesignCaches( ee );
     }
 
 }

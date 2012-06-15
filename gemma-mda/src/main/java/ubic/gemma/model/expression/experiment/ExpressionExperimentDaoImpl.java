@@ -752,16 +752,44 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.load( eeIds );
 
     }
-
+    
+    @Override
+    protected ExpressionExperiment handleFindByFactor( ExperimentalFactor ef ) {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
+                + "inner join ed.experimentalFactors ef where ef = :ef ";
+        
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ef", ef );
+        
+        if ( results.size() == 0 ) {
+            log.info( "There is no expression experiment that has factor = " + ef );
+            return null;
+        }
+        return ( ExpressionExperiment ) results.iterator().next();
+    }
+    
     @Override
     protected ExpressionExperiment handleFindByFactorValue( FactorValue fv ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
                 + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv = :fv ";
-
+        
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "fv", fv );
-
+        
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has factorValue = " + fv );
+            return null;
+        }
+        return ( ExpressionExperiment ) results.iterator().next();
+    }
+
+    @Override
+    protected ExpressionExperiment handleFindByFactorValue( Long factorValueId ) {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
+                + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
+
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "fvId", factorValueId);
+
+        if ( results.size() == 0 ) {
+            log.info( "There is no expression experiment that has factorValue = " + factorValueId );
             return null;
         }
         return ( ExpressionExperiment ) results.iterator().next();

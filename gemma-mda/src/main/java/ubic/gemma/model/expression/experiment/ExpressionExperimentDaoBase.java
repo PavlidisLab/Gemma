@@ -166,7 +166,21 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                             + th, th );
         }
     }
-
+    
+    /**
+     * @see ExpressionExperimentDao#findByFactor(ExperimentalFactor)
+     */
+    @Override
+    public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
+        try {
+            return this.handleFindByFactor( factor );
+        } catch ( Throwable th ) {
+            throw new RuntimeException(
+                    "Error performing 'ExpressionExperimentDao.findByFactor( ExperimentalFactor factor )' --> " + th,
+                    th );
+        }
+    }
+    
     /**
      * @see ExpressionExperimentDao#findByFactorValue(FactorValue)
      */
@@ -177,6 +191,20 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.findByFactorValue(FactorValue factorValue)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentDao#findByFactorValue(FactorValue)
+     */
+    @Override
+    public ExpressionExperiment findByFactorValue( final  Long factorValueId ) {
+        try {
+            return this.handleFindByFactorValue( factorValueId );
+        } catch ( Throwable th ) {
+            throw new RuntimeException(
+                    "Error performing 'ExpressionExperimentDao.findByFactorValue( Long factorValueId )' --> " + th,
                     th );
         }
     }
@@ -862,11 +890,21 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     protected abstract Collection<ExpressionExperiment> handleFindByExpressedGene( ubic.gemma.model.genome.Gene gene,
             Double rank ) throws Exception;
+    
+    /**
+     * Performs the core logic for {@link #findByFactor(ExperimentalFactor)}
+     */
+    protected abstract ExpressionExperiment handleFindByFactor( ExperimentalFactor factor) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByFactorValue(FactorValue)}
      */
     protected abstract ExpressionExperiment handleFindByFactorValue( FactorValue factorValue ) throws Exception;
+
+    /**
+     * Performs the core logic for {@link #findByFactorValue(FactorValue)}
+     */
+    protected abstract ExpressionExperiment handleFindByFactorValue( Long factorValueId ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByFactorValues(Collection)}

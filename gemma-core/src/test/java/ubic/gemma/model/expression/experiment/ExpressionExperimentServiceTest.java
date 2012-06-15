@@ -56,6 +56,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     ExpressionExperiment ee = null;
+    ExpressionExperiment eeFull = null;
     ExternalDatabase ed;
     String accession;
     String contactName;
@@ -81,6 +82,9 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
             expressionExperimentService.update( ee );
             ee = expressionExperimentService.thaw( ee );
+            
+
+            eeFull = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
 
             persisted = true;
         } else {
@@ -180,6 +184,42 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( ids, false );
         assertNotNull( list );
         assertEquals( 1, list.size() );
+    }
+
+    @Test
+    public void testFindByFactor() throws Exception {
+        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), eeFull.getId() );
+
+    }
+
+    @Test
+    public void testFindByFactorValue() throws Exception {
+        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), eeFull.getId() );
+
+    }
+
+    @Test
+    public void testFindByFactorValueId() throws Exception {
+        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        assertNotNull( fv.getId() );
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), eeFull.getId() );
+
     }
 
 }

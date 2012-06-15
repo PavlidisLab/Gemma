@@ -304,11 +304,27 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
+     * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
+     */
+    @Override
+    public ExpressionExperiment findByFactor( final ExperimentalFactor factor) {
+        return this.expressionExperimentDao.findByFactor( factor );
+    }
+    
+    /**
      * @see ExpressionExperimentService#findByFactorValue(FactorValue)
      */
     @Override
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
         return this.expressionExperimentDao.findByFactorValue( factorValue );
+    }
+    
+    /**
+     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
+     */
+    @Override
+    public ExpressionExperiment findByFactorValue( final  Long factorValueId  ) {
+        return this.expressionExperimentDao.findByFactorValue( factorValueId );
     }
 
     /**
