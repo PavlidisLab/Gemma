@@ -444,7 +444,7 @@
 					<groupId>javax.xml.stream</groupId>
 					<artifactId>stax-api</artifactId>
 				</exclusion>
-			</cions>
+			</exclusions>
 		</dependency>
 		<!-- Jersey + Spring -->
 		<dependency>
