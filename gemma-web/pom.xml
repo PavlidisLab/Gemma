@@ -439,6 +439,13 @@
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-json</artifactId>
 			<version>1.8</version>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.xml.stream</groupId>
+					<artifactId>stax-api</artifactId>
+					<version>1.0-2</version>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- Jersey + Spring -->
 		<dependency>
