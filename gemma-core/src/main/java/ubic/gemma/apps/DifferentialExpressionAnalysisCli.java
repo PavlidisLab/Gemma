@@ -154,7 +154,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     @Override
     protected Exception doWork( String[] args ) {
-
         Exception err = processCommandLine( "Differential Expression Analysis", args );
         if ( err != null ) {
             return err;
@@ -194,6 +193,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     @Override
     protected void processOptions() {
         super.processOptions();
+        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
 
         if ( hasOption( "type" ) ) {
 
