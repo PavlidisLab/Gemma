@@ -40,13 +40,8 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
             final ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
-        try {
-            return this.handleCreate( expressionExperimentSubSet );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( expressionExperimentSubSet );
+
     }
 
     /**
@@ -54,13 +49,8 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
      */
     @Override
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.handleLoad( id );
+
     }
 
     /**
@@ -68,13 +58,8 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
      */
     @Override
     public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.loadAll()' --> "
-                            + th, th );
-        }
+        return this.handleLoadAll();
+
     }
 
     /**
@@ -96,18 +81,16 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
      * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)}
      */
     protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
-            throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection handleLoadAll();
 
 }

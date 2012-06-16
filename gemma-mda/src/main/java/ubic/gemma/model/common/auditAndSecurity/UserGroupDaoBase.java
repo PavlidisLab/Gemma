@@ -55,10 +55,9 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
                 } );
         return entities;
     }
-    
-    
+
     @Override
-    public Collection<? extends UserGroup > load( Collection<Long> ids ) {
+    public Collection<? extends UserGroup> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from UserGroupImpl where id in (:ids)", "ids", ids );
     }
 
@@ -71,8 +70,8 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
         }
-          this.getHibernateTemplate().save( userGroup );
-          return userGroup;
+        this.getHibernateTemplate().save( userGroup );
+        return userGroup;
     }
 
     /**
@@ -89,7 +88,7 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findByUserGroupName(int, java.lang.String,
      *      java.lang.String)
      */
-    
+
     public UserGroup findByUserGroupName( final java.lang.String queryString, final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -127,7 +126,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#loadAll(int)
      */
 
-    
     @Override
     public java.util.Collection<UserGroup> loadAll() {
         final Collection results = this.getHibernateTemplate().loadAll(
@@ -141,11 +139,11 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      */
 
     @Override
-    public void remove( java.lang.Long id ) {
+    public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserGroup.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.auditAndSecurity.UserGroup entity = this.load( id );
+        UserGroup entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

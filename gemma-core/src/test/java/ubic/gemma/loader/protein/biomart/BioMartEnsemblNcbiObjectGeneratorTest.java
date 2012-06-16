@@ -49,7 +49,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest  {
     File taxonBiomartFile = null;
     
     @Before
-    public void setUp() throws Exception {      
+    public void setUp()  {      
       biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator(  );       
       taxon = Taxon.Factory.newInstance(  );
       taxon.setIsGenesUsable( true );

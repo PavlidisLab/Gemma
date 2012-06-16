@@ -26,7 +26,7 @@ import junit.framework.TestCase;
  */
 public class MeshServiceTest extends TestCase {
 
-    public void testFind() throws Exception {
+    public void testFind()  {
         // TEST DISABLED.
         // OntologyTerm term = MeshService.find( "Genome, Human" );
         // assertNotNull( term );
@@ -35,7 +35,7 @@ public class MeshServiceTest extends TestCase {
         return;
     }
 
-    public void testGetParents() throws Exception {
+    public void testGetParents()   {
       //  OntologyTerm term = MeshService.find( "Thermography" );
      //   assertNotNull( term );
      //   Collection<OntologyTerm> parents = MeshService.getParents( term );

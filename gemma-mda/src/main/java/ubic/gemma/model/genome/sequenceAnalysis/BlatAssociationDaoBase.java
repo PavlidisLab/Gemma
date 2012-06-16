@@ -92,11 +92,8 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#loadAll(int)
      */
     @Override
-    public java.util.Collection<BlatAssociation> loadAll() {
-        final java.util.Collection<? extends BlatAssociation> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl.class );
-
-        return ( Collection<BlatAssociation> ) results;
+    public java.util.Collection<? extends BlatAssociation> loadAll() {
+        return this.getHibernateTemplate().loadAll( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl.class );
     }
 
     /**

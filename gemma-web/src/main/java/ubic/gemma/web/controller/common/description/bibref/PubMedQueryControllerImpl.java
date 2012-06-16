@@ -35,11 +35,9 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.controller.BaseController;
 
 /**
- * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
- * 
- * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
- * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
- * arrays instead.
+ * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma. Note: do not use parameterized
+ * collections as parameters for ajax methods in this class! Type information is lost during proxy creation so DWR can't
+ * figure out what type of collection the method should take. See bug 2756. Use arrays instead.
  * 
  * @author pavlidis
  * @version $Id$
@@ -52,7 +50,9 @@ public class PubMedQueryControllerImpl extends BaseController implements PubMedQ
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#getView()
      */
     @Override
@@ -64,16 +64,14 @@ public class PubMedQueryControllerImpl extends BaseController implements PubMedQ
     /*
      * (non-Javadoc)
      * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.HttpServletRequest, ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand, org.springframework.validation.BindingResult, org.springframework.web.bind.support.SessionStatus)
+     * @see ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.
+     * HttpServletRequest, ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand,
+     * org.springframework.validation.BindingResult, org.springframework.web.bind.support.SessionStatus)
      */
     @Override
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView onSubmit( HttpServletRequest request, PubMedSearchCommand command, BindingResult result,
-            SessionStatus status ) throws Exception {
+            SessionStatus status ) {
 
         // in the future we can search in other ways.
         String accession = command.getAccession();

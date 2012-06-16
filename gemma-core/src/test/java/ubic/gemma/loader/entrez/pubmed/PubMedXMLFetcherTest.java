@@ -36,7 +36,7 @@ public class PubMedXMLFetcherTest extends TestCase {
     private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
     PubMedXMLFetcher pmf;
 
-    public final void testRetrieveByHTTP() throws Exception {
+    public final void testRetrieveByHTTP() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
 
@@ -79,7 +79,7 @@ public class PubMedXMLFetcherTest extends TestCase {
         }
     }
 
-    public final void testRetrieveByHTTPNotFound() throws Exception {
+    public final void testRetrieveByHTTPNotFound() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
             assertNull( br );

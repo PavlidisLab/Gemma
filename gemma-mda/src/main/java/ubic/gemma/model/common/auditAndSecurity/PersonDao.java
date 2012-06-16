@@ -24,124 +24,13 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
 public interface PersonDao extends BaseDao<Person> {
-    /**
-     * 
-     */
+
     public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person );
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFirstAndLastName( int transform, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(boolean, java.lang.String, java.lang.String)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByFirstAndLastName(int, java.lang.String name, java.lang.String
-     * secondName)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFirstAndLastName( int transform, String queryString,
-            java.lang.String name, java.lang.String secondName );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Person> findByFirstAndLastName( java.lang.String name, java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByFirstAndLastName(java.lang.String, java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFirstAndLastName( String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFullName( int transform, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(boolean, java.lang.String, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByFullName(int, java.lang.String name, java.lang.String secondName)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFullName( int transform, String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * 
-     */
     public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String secondName );
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByFullName(java.lang.String, java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByFullName( String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Person> findByLastName( int transform, java.lang.String lastName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByLastName(int, java.lang.String lastName)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByLastName( int transform, String queryString, java.lang.String lastName );
-
-    /**
-     * 
-     */
     public java.util.Collection<Person> findByLastName( java.lang.String lastName );
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByLastName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Person> findByLastName( String queryString, java.lang.String lastName );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person );
+    public Person findOrCreate( Person person );
 
 }

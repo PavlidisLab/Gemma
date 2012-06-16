@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -27,16 +29,15 @@ import org.springframework.security.access.annotation.Secured;
 public interface BlatAssociationService {
 
     @Secured({ "GROUP_USER" })
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+    public BlatAssociation create( BlatAssociation blatAssociation );
 
     public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
 
-    public void thaw( java.util.Collection<BlatAssociation> blatAssociations );
+    public void thaw( Collection<BlatAssociation> blatAssociations );
 
-    public void thaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+    public void thaw( BlatAssociation blatAssociation );
 
     @Secured({ "GROUP_USER" })
     public void update( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );

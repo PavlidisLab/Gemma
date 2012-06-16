@@ -19,57 +19,44 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
- * <p>
  * Spring Service base class for
- * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService</code>, provides access
- * to all services and entities referenced by this service.
- * </p>
+ * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService</code>, provides access to all
+ * services and entities referenced by this service.
  * 
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService
+ * @version $Id$
  */
-public abstract class DifferentialExpressionResultServiceBase implements
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService {
+public abstract class DifferentialExpressionResultServiceBase implements DifferentialExpressionResultService {
 
     @Autowired
-    private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
+    private DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
 
     @Autowired
-    private ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(java.util.Collection)
      */
     @Override
-    public java.util.Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            final java.util.Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) {
-        try {
-            return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors(java.util.Collection differentialExpressionAnalysisResults)' --> "
-                            + th, th );
-        }
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            final Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
+        return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
     @Override
-    public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
-            final ProbeAnalysisResult differentialExpressionAnalysisResult ) {
-        try {
-            return this.handleGetExperimentalFactors( differentialExpressionAnalysisResult );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult)' --> "
-                            + th, th );
-        }
+    public Collection<ExperimentalFactor> getExperimentalFactors(
+            final DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
+        return this.handleGetExperimentalFactors( differentialExpressionAnalysisResult );
     }
 
     /**
@@ -93,13 +80,8 @@ public abstract class DifferentialExpressionResultServiceBase implements
      */
     @Override
     public void thaw( final ExpressionAnalysisResultSet resultSet ) {
-        try {
-            this.handleThaw( resultSet );
-        } catch ( Throwable th ) {
-            throw new DifferentialExpressionResultServiceException(
-                    "Error performing 'diff.DifferentialExpressionAnalysisResultService.thaw(ExpressionAnalysisResultSet resultSet)' --> "
-                            + th, th );
-        }
+        this.handleThaw( resultSet );
+
     }
 
     /**
@@ -119,19 +101,18 @@ public abstract class DifferentialExpressionResultServiceBase implements
     /**
      * Performs the core logic for {@link #getExperimentalFactors(java.util.Collection)}
      */
-    protected abstract java.util.Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
-            java.util.Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults )
-            throws java.lang.Exception;
+    protected abstract Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
 
     /**
      * Performs the core logic for {@link #getExperimentalFactors(diff.DifferentialExpressionAnalysisResult)}
      */
     protected abstract java.util.Collection<ExperimentalFactor> handleGetExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult ) throws java.lang.Exception;
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**
      * Performs the core logic for {@link #thaw(ExpressionAnalysisResultSet)}
      */
-    protected abstract void handleThaw( ExpressionAnalysisResultSet resultSet ) throws java.lang.Exception;
+    protected abstract void handleThaw( ExpressionAnalysisResultSet resultSet );
 
 }

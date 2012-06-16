@@ -197,7 +197,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testFetchAndLoadGSE9048() throws Exception {
+    public void testFetchAndLoadGSE9048() {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
@@ -237,7 +237,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * For bug 2312 - qts getting dropped.
      */
     @Test
-    public void testFetchAndLoadGSE18707() throws Exception {
+    public void testFetchAndLoadGSE18707() {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
@@ -271,7 +271,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testFetchAndLoadGSE5949() throws Exception {
+    public void testFetchAndLoadGSE5949() {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path

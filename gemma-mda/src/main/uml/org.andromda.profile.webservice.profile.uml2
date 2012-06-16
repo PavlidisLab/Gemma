@@ -1,82 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527483875_483206_35" name="webservice" metamodelReference="_11_5_e240333_1154527483875_483206_35_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_OdvjJbWSEeG5iuJIZxhlaw" source="attributes">
-    <details xmi:id="_OdvjJrWSEeG5iuJIZxhlaw" key="version" value="0"/>
+  <eAnnotations xmi:id="_LwpCT7Z3EeGvfubr7cm1qQ" source="attributes">
+    <details xmi:id="_LwpCULZ3EeGvfubr7cm1qQ" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_OdvjJ7WSEeG5iuJIZxhlaw" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_OdvjKLWSEeG5iuJIZxhlaw" name="webservice_0" nsURI="http:///webservice_0_Odlx8bWSEeG5iuJIZxhlaw.profile.uml2" nsPrefix="webservice_0">
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_OdvjKbWSEeG5iuJIZxhlaw" name="webservice__WebServiceStyle">
-        <eAnnotations xmi:id="_OdvjKrWSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_OdvjK7WSEeG5iuJIZxhlaw" key="documentation" value="Represents the style of the web service."/>
+  <eAnnotations xmi:id="_LwpCUbZ3EeGvfubr7cm1qQ" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_LwpCUrZ3EeGvfubr7cm1qQ" name="webservice_0" nsURI="http:///webservice_0_LwblELZ3EeGvfubr7cm1qQ.profile.uml2" nsPrefix="webservice_0">
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_LwpCU7Z3EeGvfubr7cm1qQ" name="webservice__WebServiceStyle">
+        <eAnnotations xmi:id="_LwpCVLZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_LwpCVbZ3EeGvfubr7cm1qQ" key="documentation" value="Represents the style of the web service."/>
         </eAnnotations>
-        <eLiterals xmi:id="_OdvjLLWSEeG5iuJIZxhlaw" name="default">
-          <eAnnotations xmi:id="_OdvjLbWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_11_6_e240333_1161092978828_427416_2"/>
+        <eLiterals xmi:id="_LwpCVrZ3EeGvfubr7cm1qQ" name="default">
+          <eAnnotations xmi:id="_LwpCV7Z3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_11_6_e240333_1161092978828_427416_2"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjLrWSEeG5iuJIZxhlaw" name="wrapped" value="1">
-          <eAnnotations xmi:id="_OdvjL7WSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_488961_3"/>
+        <eLiterals xmi:id="_LwpCWLZ3EeGvfubr7cm1qQ" name="wrapped" value="1">
+          <eAnnotations xmi:id="_LwpCWbZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_488961_3"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjMLWSEeG5iuJIZxhlaw" name="document" value="2">
-          <eAnnotations xmi:id="_OdvjMbWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_630370_4"/>
+        <eLiterals xmi:id="_LwpCWrZ3EeGvfubr7cm1qQ" name="document" value="2">
+          <eAnnotations xmi:id="_LwpCW7Z3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_630370_4"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjMrWSEeG5iuJIZxhlaw" name="rpc" value="3">
-          <eAnnotations xmi:id="_OdvjM7WSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_330336_5"/>
+        <eLiterals xmi:id="_LwpCXLZ3EeGvfubr7cm1qQ" name="rpc" value="3">
+          <eAnnotations xmi:id="_LwpCXbZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_330336_5"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_OdvjNLWSEeG5iuJIZxhlaw" name="webservice__WebServiceProvider">
-        <eAnnotations xmi:id="_OdvjNbWSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_OdvjNrWSEeG5iuJIZxhlaw" key="documentation" value="Represents the provider of the web service."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_LwpCXrZ3EeGvfubr7cm1qQ" name="webservice__WebServiceProvider">
+        <eAnnotations xmi:id="_LwpCX7Z3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_LwpCYLZ3EeGvfubr7cm1qQ" key="documentation" value="Represents the provider of the web service."/>
         </eAnnotations>
-        <eLiterals xmi:id="_OdvjN7WSEeG5iuJIZxhlaw" name="default">
-          <eAnnotations xmi:id="_OdvjOLWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_11_6_e240333_1161092973671_409042_1"/>
+        <eLiterals xmi:id="_LwpCYbZ3EeGvfubr7cm1qQ" name="default">
+          <eAnnotations xmi:id="_LwpCYrZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_11_6_e240333_1161092973671_409042_1"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjObWSEeG5iuJIZxhlaw" name="RPC" value="1">
-          <eAnnotations xmi:id="_OdvjOrWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_319948_7"/>
+        <eLiterals xmi:id="_LwpCY7Z3EeGvfubr7cm1qQ" name="RPC" value="1">
+          <eAnnotations xmi:id="_LwpCZLZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_319948_7"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjO7WSEeG5iuJIZxhlaw" name="EJB" value="2">
-          <eAnnotations xmi:id="_OdvjPLWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_791334_8"/>
+        <eLiterals xmi:id="_LwpCZbZ3EeGvfubr7cm1qQ" name="EJB" value="2">
+          <eAnnotations xmi:id="_LwpCZrZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_791334_8"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_OdvjPbWSEeG5iuJIZxhlaw" name="webservice__WebServiceUse">
-        <eAnnotations xmi:id="_OdvjPrWSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_OdvjP7WSEeG5iuJIZxhlaw" key="documentation" value="Represents the use of the web service."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_LwpCZ7Z3EeGvfubr7cm1qQ" name="webservice__WebServiceUse">
+        <eAnnotations xmi:id="_LwpCaLZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_LwpCabZ3EeGvfubr7cm1qQ" key="documentation" value="Represents the use of the web service."/>
         </eAnnotations>
-        <eLiterals xmi:id="_OdvjQLWSEeG5iuJIZxhlaw" name="default">
-          <eAnnotations xmi:id="_OdvjQbWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_11_6_e240333_1161092980453_498870_3"/>
+        <eLiterals xmi:id="_LwpCarZ3EeGvfubr7cm1qQ" name="default">
+          <eAnnotations xmi:id="_LwpCa7Z3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_11_6_e240333_1161092980453_498870_3"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjQrWSEeG5iuJIZxhlaw" name="literal" value="1">
-          <eAnnotations xmi:id="_OdvjQ7WSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_412593_14"/>
+        <eLiterals xmi:id="_LwpCbLZ3EeGvfubr7cm1qQ" name="literal" value="1">
+          <eAnnotations xmi:id="_LwpCbbZ3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_412593_14"/>
         </eLiterals>
-        <eLiterals xmi:id="_OdvjRLWSEeG5iuJIZxhlaw" name="encoded" value="2">
-          <eAnnotations xmi:id="_OdvjRbWSEeG5iuJIZxhlaw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_434482_15"/>
+        <eLiterals xmi:id="_LwpCbrZ3EeGvfubr7cm1qQ" name="encoded" value="2">
+          <eAnnotations xmi:id="_LwpCb7Z3EeGvfubr7cm1qQ" source="enumerationLiteral" references="_9_0_1fe00f9_1119337599234_434482_15"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_OdvjRrWSEeG5iuJIZxhlaw" name="webservice__WebService">
-        <eAnnotations xmi:id="_OdvjR7WSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_OdvjSLWSEeG5iuJIZxhlaw" key="documentation" value="Represents a web service, this is usually used in combination with the &lt;&lt;Service>> stereotype because of the fact the service stereotype indicates a service implementation (like Spring, or Session EJBs must be generated)."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_LwpCcLZ3EeGvfubr7cm1qQ" name="webservice__WebService">
+        <eAnnotations xmi:id="_LwpCcbZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_LwpCcrZ3EeGvfubr7cm1qQ" key="documentation" value="Represents a web service, this is usually used in combination with the &lt;&lt;Service>> stereotype because of the fact the service stereotype indicates a service implementation (like Spring, or Session EJBs must be generated)."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_OdvjSbWSEeG5iuJIZxhlaw" source="stereotype" references="_9_0_1fe00f9_1119337599234_292426_17"/>
+        <eAnnotations xmi:id="_LwpCc7Z3EeGvfubr7cm1qQ" source="stereotype" references="_9_0_1fe00f9_1119337599234_292426_17"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_OdvjSrWSEeG5iuJIZxhlaw" name="webservice__WebServiceOperation">
-        <eAnnotations xmi:id="_OdvjS7WSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_OdvjTLWSEeG5iuJIZxhlaw" key="documentation" value="Indicates a web service operation: this allows us to expose only certain operations on a given &lt;&lt;Service>> whereas the &lt;&lt;WebService>> stereotype exposed service and all its operations as a webservice.  &#xA;&#xA;For example, a service sometimes may contain other operations that will not be exposed externally as a web service, if an operation is stereotyped with this, then only those operations will be exposed."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_LwpCdLZ3EeGvfubr7cm1qQ" name="webservice__WebServiceOperation">
+        <eAnnotations xmi:id="_LwpCdbZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_LwpCdrZ3EeGvfubr7cm1qQ" key="documentation" value="Indicates a web service operation: this allows us to expose only certain operations on a given &lt;&lt;Service>> whereas the &lt;&lt;WebService>> stereotype exposed service and all its operations as a webservice.  &#xA;&#xA;For example, a service sometimes may contain other operations that will not be exposed externally as a web service, if an operation is stereotyped with this, then only those operations will be exposed."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_OdvjTbWSEeG5iuJIZxhlaw" source="stereotype" references="_9_0_1fe00f9_1119337599234_736026_12"/>
+        <eAnnotations xmi:id="_LwpCd7Z3EeGvfubr7cm1qQ" source="stereotype" references="_9_0_1fe00f9_1119337599234_736026_12"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_OdvjTrWSEeG5iuJIZxhlaw" name="webservice__WebServiceNature">
-        <eAnnotations xmi:id="_OdvjT7WSEeG5iuJIZxhlaw" source="stereotype" references="_11_6_e240333_1161093334421_208771_121"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_OdvjULWSEeG5iuJIZxhlaw" name="_andromdawebserviceprovider" ordered="false" lowerBound="1" eType="_OdvjNLWSEeG5iuJIZxhlaw">
-          <eAnnotations xmi:id="_OdvjUbWSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_OdvjUrWSEeG5iuJIZxhlaw" key="documentation" value="Denotes the provider for the web service: can be 'EJB' or 'RPC'."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_LwpCeLZ3EeGvfubr7cm1qQ" name="webservice__WebServiceNature">
+        <eAnnotations xmi:id="_LwpCebZ3EeGvfubr7cm1qQ" source="stereotype" references="_11_6_e240333_1161093334421_208771_121"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_LwpCerZ3EeGvfubr7cm1qQ" name="_andromdawebserviceprovider" ordered="false" lowerBound="1" eType="_LwpCXrZ3EeGvfubr7cm1qQ">
+          <eAnnotations xmi:id="_LwpCe7Z3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_LwpCfLZ3EeGvfubr7cm1qQ" key="documentation" value="Denotes the provider for the web service: can be 'EJB' or 'RPC'."/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_OdvjU7WSEeG5iuJIZxhlaw" name="_andromdawebservicestyle" ordered="false" lowerBound="1" eType="_OdvjKbWSEeG5iuJIZxhlaw">
-          <eAnnotations xmi:id="_OdvjVLWSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_OdvjVbWSEeG5iuJIZxhlaw" key="documentation" value="The style of the web service, can be 'rpc', 'document', or 'wrapped''."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_LwpCfbZ3EeGvfubr7cm1qQ" name="_andromdawebservicestyle" ordered="false" lowerBound="1" eType="_LwpCU7Z3EeGvfubr7cm1qQ">
+          <eAnnotations xmi:id="_LwpCfrZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_LwpCf7Z3EeGvfubr7cm1qQ" key="documentation" value="The style of the web service, can be 'rpc', 'document', or 'wrapped''."/>
           </eAnnotations>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_OdvjVrWSEeG5iuJIZxhlaw" name="_andromdawebserviceuse" ordered="false" lowerBound="1" eType="_OdvjPbWSEeG5iuJIZxhlaw">
-          <eAnnotations xmi:id="_OdvjV7WSEeG5iuJIZxhlaw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_OdvjWLWSEeG5iuJIZxhlaw" key="documentation" value="Denotes the use of the web service: can be 'literal' or 'encoded'."/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_LwpCgLZ3EeGvfubr7cm1qQ" name="_andromdawebserviceuse" ordered="false" lowerBound="1" eType="_LwpCZ7Z3EeGvfubr7cm1qQ">
+          <eAnnotations xmi:id="_LwpCgbZ3EeGvfubr7cm1qQ" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_LwpCgrZ3EeGvfubr7cm1qQ" key="documentation" value="Denotes the use of the web service: can be 'literal' or 'encoded'."/>
           </eAnnotations>
         </eStructuralFeatures>
       </eClassifiers>
@@ -116,13 +116,13 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527475765_949590_12"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527475765_428421_20" memberEnd="_11_5_e240333_1154527475765_980292_22 _11_5_e240333_1154527475765_479668_21">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527475765_428421_20" memberEnd="_11_5_e240333_1154527475765_479668_21 _11_5_e240333_1154527475765_980292_22">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527475765_980292_22" name="extension_WebServiceOperation" visibility="private" type="_9_0_1fe00f9_1119337599234_736026_12" association="_11_5_e240333_1154527475765_428421_20" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527475765_280895_24" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527475765_280785_23"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161093374312_859311_132" memberEnd="_11_6_e240333_1161093374312_847618_134 _11_6_e240333_1161093374312_879328_133">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161093374312_859311_132" memberEnd="_11_6_e240333_1161093374312_879328_133 _11_6_e240333_1161093374312_847618_134">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_6_e240333_1161093374312_847618_134" name="extension_WebServiceNature" visibility="private" type="_11_6_e240333_1161093334421_208771_121" association="_11_6_e240333_1161093374312_859311_132" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_6_e240333_1161093374312_148133_136" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161093374312_124652_135"/>

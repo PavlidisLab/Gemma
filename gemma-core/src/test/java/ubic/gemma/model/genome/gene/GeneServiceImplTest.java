@@ -54,7 +54,7 @@ public class GeneServiceImplTest extends TestCase {
     Collection<Gene> justRabble = new HashSet<Gene>();
 
     @Override
-    protected void setUp() throws Exception {
+    protected void setUp() {
 
         geneDaoMock = createMock( GeneDao.class );
         svc = new GeneServiceImpl();
@@ -233,7 +233,7 @@ public class GeneServiceImplTest extends TestCase {
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    protected void tearDown() {
         justRab.clear();
         justRabble.clear();
         allThree.clear();

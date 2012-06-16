@@ -115,16 +115,21 @@ public class GeneController extends BaseController {
         return geneCoreService.loadGeneDetails( geneId );
     }
 
-    /** used to show gene info in the phenotype tab */
-    public Collection<EvidenceValueObject> loadGeneEvidence( String taxonCommonName,
-    		boolean showOnlyEditable, Long geneId, String[] phenotypeValueUris ) {
+    /**
+     * used to show gene info in the phenotype tab
+     */
+    public Collection<EvidenceValueObject> loadGeneEvidence( String taxonCommonName, boolean showOnlyEditable,
+            Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId(
                 geneId,
                 phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
-                        .asList( phenotypeValueUris ) ),
-                new EvidenceFilter(taxonCommonName, showOnlyEditable));
+                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonCommonName, showOnlyEditable ) );
     }
 
+    /**
+     * @param geneId
+     * @return
+     */
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         return geneService.loadGenePhenotypes( geneId );
     }
@@ -369,7 +374,7 @@ public class GeneController extends BaseController {
      * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by /Gemma/gene/downloadGeneList.html
      */
     @RequestMapping("/downloadGeneList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) throws Exception {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();

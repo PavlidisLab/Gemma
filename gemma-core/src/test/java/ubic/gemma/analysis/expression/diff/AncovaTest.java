@@ -32,9 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -87,9 +86,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             assertEquals( 1, factors.size() );
 
-            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            for ( DifferentialExpressionAnalysisResult probeAnalysisResult : resultSet.getResults() ) {
 
-                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
                 CompositeSequence probe = probeAnalysisResult.getProbe();
                 Double pvalue = probeAnalysisResult.getPvalue();
 
@@ -187,7 +185,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
                 CompositeSequence probe = probeAnalysisResult.getProbe();
                 Double pvalue = probeAnalysisResult.getPvalue();
 
@@ -303,7 +301,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
                 CompositeSequence probe = probeAnalysisResult.getProbe();
                 Double pvalue = probeAnalysisResult.getPvalue();
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
@@ -394,7 +392,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
                 CompositeSequence probe = probeAnalysisResult.getProbe();
                 Double pvalue = probeAnalysisResult.getPvalue();
 

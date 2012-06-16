@@ -69,7 +69,7 @@ public class QuantileNormalizerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         tester = null;
     }
 

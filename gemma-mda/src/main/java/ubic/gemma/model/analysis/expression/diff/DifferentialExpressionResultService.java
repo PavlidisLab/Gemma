@@ -25,7 +25,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -46,29 +46,31 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Collection<BioAssaySet> experimentsAnalyzed,
-            double threshold, Integer limit );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find(
+            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
-     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
+     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
+     * {@link ExpressionExperiment}.
      * 
      * @param gene
-     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
+     * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
+     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
+     * {@link ExpressionExperiment}.
      * 
      * @param gene
      * @param experimentsAnalyzed
-     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
+     * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
             Collection<BioAssaySet> experimentsAnalyzed );
 
     /**
@@ -80,8 +82,8 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
             Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
@@ -92,22 +94,23 @@ public interface DifferentialExpressionResultService {
      * @param limit
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene, double threshold,
-            Integer limit );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+            double threshold, Integer limit );
 
-    
-    public List<Double> findGeneInResultSet(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
-    
+    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit );
+
     /**
-     * 
-     * @param gene
-     * @param resultSet
+     * @param resultSets
+     * @param genes
+     * @param adUsed
      * @param limit
      * @return
      */
-    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
-    
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed );
+
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
      * 
@@ -115,50 +118,48 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExperimentalFactor> getExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult );
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     public ExpressionAnalysisResultSet loadAnalysisResult( Long analysisResultId );
 
-    public void thaw( Collection<ProbeAnalysisResult> results );
+    public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionAnalysisResultSet resultSet );
 
-    public void thaw( ProbeAnalysisResult result );
+    public void thaw( DifferentialExpressionAnalysisResult result );
 
     /**
      * Does not thaw the collection of probes (just the factor information)
      * 
      * @param resultSet
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thawLite( ExpressionAnalysisResultSet resultSet );
-    
-    
-    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
 
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
-            Integer maxResultsToReturn, Integer minNumberOfResults );    
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
+            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
 
 }

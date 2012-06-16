@@ -30,7 +30,7 @@ import org.springframework.stereotype.Repository;
  * @see ubic.gemma.model.common.measurement.Measurement
  */
 @Repository
-public class MeasurementDaoImpl extends ubic.gemma.model.common.measurement.MeasurementDaoBase {
+public class MeasurementDaoImpl extends MeasurementDaoBase {
 
     @Autowired
     public MeasurementDaoImpl( SessionFactory sessionFactory ) {

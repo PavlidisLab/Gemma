@@ -29,7 +29,6 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -85,9 +84,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
                 for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
                     Hibernate.initialize( result );
-                    if ( result instanceof ProbeAnalysisResult ) {
-                        Hibernate.initialize( ( ( ProbeAnalysisResult ) result ).getProbe() );
-                    }
+
+                    Hibernate.initialize( result.getProbe() );
+
                 }
                 return null;
             }

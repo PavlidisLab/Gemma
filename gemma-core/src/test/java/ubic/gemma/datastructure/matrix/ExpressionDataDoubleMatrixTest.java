@@ -295,7 +295,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testMatrixConversionGSE432() throws Exception {
+    public void testMatrixConversionGSE432()  {
 
         try {
             String path = ConfigUtils.getString( "gemma.home" );
@@ -321,7 +321,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         try {
             if ( ee != null && ee.getId() != null ) {
                 expressionExperimentService.delete( ee );

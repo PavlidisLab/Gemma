@@ -61,7 +61,7 @@ public class GetAnnotationMatrixCLI extends AbstractSpringAwareCLI {
         StringToStringSetMap result = new StringToStringSetMap();
         StringToStringSetMap URIresult = new StringToStringSetMap();
 
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
         ParentFinder parentFinder = new ParentFinder();
         try {

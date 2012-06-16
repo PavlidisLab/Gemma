@@ -38,13 +38,13 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
     GeneService geneService;
 
     @Test
-    public void testIsHuman() throws Exception {
+    public void testIsHuman() {
         Taxon humanTax = taxonService.findByCommonName( "human" );
         assertTrue( TaxonUtility.isHuman( humanTax ) );
     }
 
     @Test
-    public void testIsMouse() throws Exception {
+    public void testIsMouse() {
 
         Taxon mouseTax = taxonService.findByCommonName( "mouse" );
         assertTrue( TaxonUtility.isMouse( mouseTax ) );
@@ -52,7 +52,7 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testIsRat() throws Exception {
+    public void testIsRat() {
 
         Taxon ratTax = taxonService.findByCommonName( "rat" );
         assertTrue( TaxonUtility.isRat( ratTax ) );

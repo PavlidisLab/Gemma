@@ -63,7 +63,7 @@ public class HomePageController {
     }
 
     @RequestMapping(WebConstants.HOME_PAGE)
-    public ModelAndView showHomePage() throws Exception {
+    public ModelAndView showHomePage() {
 
         /*
          * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
@@ -87,9 +87,9 @@ public class HomePageController {
                     public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
                         int cf = e1.getValue().compareTo( e2.getValue() );
                         if ( cf == 0 ) {
-                            try{
+                            try {
                                 cf = e1.getKey().getCommonName().compareTo( e2.getKey().getCommonName() );
-                            }catch(Exception e){
+                            } catch ( Exception e ) {
                                 cf = 1;
                             }
                         }

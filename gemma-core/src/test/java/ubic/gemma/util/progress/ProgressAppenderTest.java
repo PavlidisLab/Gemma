@@ -19,7 +19,7 @@
 package ubic.gemma.util.progress;
 
 import java.util.Enumeration;
- 
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -56,7 +56,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         String loggerName = "ubic.gemma";
         log4jLogger = LogManager.exists( loggerName );
@@ -89,13 +89,13 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
     @After
-    public void teardown() throws Exception {
+    public void teardown() {
         ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
     }
 
     @Test
-    public void testProgressLogging() throws Exception {
+    public void testProgressLogging() {
 
         String expectedValue = "la de da";
         log.info( expectedValue );

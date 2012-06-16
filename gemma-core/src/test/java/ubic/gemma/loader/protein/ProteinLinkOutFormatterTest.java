@@ -34,56 +34,55 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  * @version $Id$
  */
 public class ProteinLinkOutFormatterTest {
-    
-    private ProteinLinkOutFormatter formatter= null;
+
+    private ProteinLinkOutFormatter formatter = null;
     DatabaseEntry entry = DatabaseEntry.Factory.newInstance();
-    private static String accession =  "9606.ENSP00000293813%0D9606.ENSP00000360616";
-    private static String url =  "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifier";
-    private static String baseFormattedUrl = url.concat("s=").concat(accession);
-    
+    private static String accession = "9606.ENSP00000293813%0D9606.ENSP00000360616";
+    private static String url = "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifier";
+    private static String baseFormattedUrl = url.concat( "s=" ).concat( accession );
+
     @Before
-    public void setUp() throws Exception {        
-        formatter = new ProteinLinkOutFormatter();      
-        entry.setUri( url + "=" );       
+    public void setUp() {
+        formatter = new ProteinLinkOutFormatter();
+        entry.setUri( url + "=" );
         entry.setAccession( accession );
     }
-   
+
     /**
      * Test that a base url for string can be appended with a parameter to lower confidence
-     * */
+     */
     @Test
     public void testGetStringProteinProteinInteractionLinkFormatted() {
-        String urlForString = formatter.getStringProteinProteinInteractionLinkGemmaDefault( entry );    
-        String defaultUrl = (baseFormattedUrl.concat("&required_score=150"));
-        assertEquals(defaultUrl, urlForString);
+        String urlForString = formatter.getStringProteinProteinInteractionLinkGemmaDefault( entry );
+        String defaultUrl = ( baseFormattedUrl.concat( "&required_score=150" ) );
+        assertEquals( defaultUrl, urlForString );
     }
-    
-    
+
     /**
      * Test that a url for string can be further customised
      */
     @Test
     public void testGetStringProteinProteinInteractionLinkDefault() {
         String urlForString = formatter.getStringProteinProteinInteractionLinkFormatted( entry, "20", "420" );
-        String defaultUrl = (baseFormattedUrl.concat( "&limit=20" ).concat("&required_score=420"));
-        assertEquals(defaultUrl, urlForString);   
+        String defaultUrl = ( baseFormattedUrl.concat( "&limit=20" ).concat( "&required_score=420" ) );
+        assertEquals( defaultUrl, urlForString );
     }
-    
+
     /**
      * Test given a byte array can be mapped to evidence codes
      */
     @Test
     public void testGetEvidenceDisplayText() {
-        byte[] bytes = new byte[]{0,0,0,0,1,0,1};
+        byte[] bytes = new byte[] { 0, 0, 0, 0, 1, 0, 1 };
         try {
             String evidenceText = formatter.getEvidenceDisplayText( bytes );
-            assertEquals("Experimental:TextMining",evidenceText );
-            
-        } catch ( Exception e ) {           
+            assertEquals( "Experimental:TextMining", evidenceText );
+
+        } catch ( Exception e ) {
             e.printStackTrace();
             fail();
         }
-        
+
     }
 
 }

@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -26,15 +29,15 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  * 
  * @see ubic.gemma.model.common.description.VocabCharacteristic
  */
-public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.common.description.VocabCharacteristicDao {
+public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport implements VocabCharacteristicDao {
 
     /**
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int, java.util.Collection)
      */
 
     @Override
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends VocabCharacteristic> create(
+            final java.util.Collection<? extends VocabCharacteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.create - 'entities' can not be null" );
         }
@@ -43,8 +46,9 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends VocabCharacteristic> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -69,70 +73,47 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByParentClass(java.lang.Class)
      */
     @Override
-    public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
-        try {
-            return this.handleFindByParentClass( parentClass );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByParentClass(java.lang.Class parentClass)' --> "
-                            + th, th );
-        }
+    public java.util.Map<Characteristic, Object> findByParentClass( final java.lang.Class<?> parentClass ) {
+        return this.handleFindByParentClass( parentClass );
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.lang.String)
      */
     @Override
-    public java.util.Collection findByUri( final java.lang.String searchString ) {
-        try {
-            return this.handleFindByUri( searchString );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.lang.String searchString)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
+
+        return this.handleFindByUri( searchString );
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection)
      */
     @Override
-    public java.util.Collection findByUri( final java.util.Collection uris ) {
-        try {
-            return this.handleFindByUri( uris );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.util.Collection uris)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Characteristic> findByUri( final java.util.Collection<String> uris ) {
+        return this.handleFindByUri( uris );
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.lang.String)
      */
     @Override
-    public java.util.Collection findByValue( final java.lang.String search ) {
-        try {
-            return this.handleFindByValue( search );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByValue(java.lang.String search)' --> "
-                            + th, th );
-        }
+    public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
+        return this.handleFindByValue( search );
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#getParents(java.lang.Class, java.util.Collection)
      */
     @Override
-    public java.util.Map getParents( final java.lang.Class parentClass, final java.util.Collection characteristics ) {
-        try {
-            return this.handleGetParents( parentClass, characteristics );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.getParents(java.lang.Class parentClass, java.util.Collection characteristics)' --> "
-                            + th, th );
-        }
+    public Map<Characteristic, Object> getParents( final java.lang.Class<?> parentClass,
+            final java.util.Collection<Characteristic> characteristics ) {
+        return this.handleGetParents( parentClass, characteristics );
+
     }
 
     /**
@@ -153,11 +134,12 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll(int)
      */
 
+    @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends VocabCharacteristic> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.VocabCharacteristicImpl.class );
-        return results;
+        return ( Collection<? extends VocabCharacteristic> ) results;
     }
 
     /**
@@ -180,7 +162,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends VocabCharacteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.remove - 'entities' can not be null" );
         }
@@ -203,7 +185,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends VocabCharacteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.update - 'entities' can not be null" );
         }
@@ -212,8 +194,9 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends VocabCharacteristic> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -234,27 +217,27 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
     /**
      * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
      */
-    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass ) throws java.lang.Exception;
+    protected abstract java.util.Map<Characteristic, Object> handleFindByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByUri( java.lang.String searchString ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString );
 
     /**
      * Performs the core logic for {@link #findByUri(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleFindByUri( java.util.Collection uris ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris );
 
     /**
      * Performs the core logic for {@link #findByValue(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #getParents(java.lang.Class, java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetParents( java.lang.Class parentClass, java.util.Collection characteristics )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<Characteristic, Object> handleGetParents( java.lang.Class<?> parentClass,
+            java.util.Collection<Characteristic> characteristics );
 
 }

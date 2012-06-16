@@ -28,6 +28,7 @@ import java.util.Collection;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -43,16 +44,19 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
     ExpressionExperiment ee;
 
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
      */
     @After
-    public void teardown() throws Exception {
-        ExpressionExperimentService service = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
+    public void teardown() {
+
         if ( ee != null && ee.getId() != null ) {
-            service.delete( ee );
+            expressionExperimentService.delete( ee );
         }
 
     }
@@ -90,11 +94,11 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
             if ( object instanceof ExpressionExperiment ) {
                 ee = ( ExpressionExperiment ) object;
                 ee.setName( RandomStringUtils.randomAlphabetic( 20 ) + "expressionExperiment" );
-                
+
                 /*
                  * FIXME the array design ends up having a null primaryTaxon.
                  */
-                
+
                 ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );

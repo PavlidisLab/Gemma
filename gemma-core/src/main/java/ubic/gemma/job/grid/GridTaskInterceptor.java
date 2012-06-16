@@ -18,11 +18,8 @@
  */
 package ubic.gemma.job.grid;
 
-import java.rmi.RemoteException;
-
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
-import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -100,7 +97,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
         NotifyDelegator jobStartNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener(
                 new RemoteEventListener() {
                     @Override
-                    public void notify( RemoteEvent arg0 ) throws UnknownEventException, RemoteException {
+                    public void notify( RemoteEvent arg0 ) {
                         log.debug( "got start" );
                         command.setStartTime();
                     }

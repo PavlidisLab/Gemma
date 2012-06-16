@@ -702,30 +702,17 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             final Collection<ExpressionExperiment> expressionExperiments ) {
-        try {
-            return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getSampleRemovalEvents(Collection expressionExperiments)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
     }
 
     /**
      * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
-    @Override
-    @Deprecated
+    @Override 
     public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
             final Integer limit ) {
-        try {
-            return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
     }
 
     /**
@@ -733,13 +720,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.expressionExperimentDao.getSubSets( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getSubSets(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getSubSets( expressionExperiment );
     }
 
     /**
@@ -747,13 +728,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
-        try {
-            return this.expressionExperimentDao.getTaxon( bioAssaySet );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getTaxon(java.lang.Long ExpressionExperimentID)' --> "
-                            + th, th );
-        }
+        return this.expressionExperimentDao.getTaxon( bioAssaySet );
     }
 
     @Override
@@ -781,12 +756,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public ExpressionExperiment load( final java.lang.Long id ) {
-        try {
-            return this.expressionExperimentDao.load( id );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.load(java.lang.Long id)' --> " + th, th );
-        }
+        return this.expressionExperimentDao.load( id );
     }
 
     /**
@@ -794,12 +764,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Collection<ExpressionExperiment> loadAll() {
-        try {
-            return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.loadAll()' --> " + th, th );
-        }
+        return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
     }
 
     @Override
@@ -839,12 +804,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {
-        try {
-            return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.loadMultiple(Collection ids)' --> " + th, th );
-        }
+        return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
     }
 
     @Override
@@ -1149,7 +1109,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             filteredIds.add( ee.getId() );
         }
 
-        /* now load the value objects for the filterd ids */
+        /* now load the value objects for the filtered ids */
         return this.loadValueObjects( filteredIds, false );
 
     }

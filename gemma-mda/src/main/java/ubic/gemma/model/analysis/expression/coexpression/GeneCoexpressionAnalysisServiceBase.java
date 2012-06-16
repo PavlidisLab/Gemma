@@ -44,13 +44,8 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     @Override
     public ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
-        try {
-            return this.handleCreate( analysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( analysis );
+
     }
 
     /**
@@ -59,13 +54,8 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     @Override
     public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
-        try {
-            return this.handleGetDatasetsAnalyzed( analysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
+        return this.handleGetDatasetsAnalyzed( analysis );
+
     }
 
     /**
@@ -74,13 +64,8 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     @Override
     public int getNumDatasetsAnalyzed(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis ) {
-        try {
-            return this.handleGetNumDatasetsAnalyzed( analysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
+        return this.handleGetNumDatasetsAnalyzed( analysis );
+
     }
 
     /**
@@ -97,13 +82,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     @Override
     public void thaw(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
-        try {
-            this.handleThaw( geneCoexpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis)' --> "
-                            + th, th );
-        }
+        this.handleThaw( geneCoexpressionAnalysis );
     }
 
     /**
@@ -112,13 +91,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
     @Override
     public void update(
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
-        try {
-            this.handleUpdate( geneCoExpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( geneCoExpressionAnalysis );
     }
 
     /**
@@ -133,39 +106,34 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
      * {@link #create(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
     protected abstract ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis handleCreate(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
      * Performs the core logic for
      * {@link #getDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleGetDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
      * Performs the core logic for
      * {@link #getNumDatasetsAnalyzed(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
     protected abstract int handleGetNumDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
      * Performs the core logic for
      * {@link #thaw(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
     protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis );
 
     /**
      * Performs the core logic for
      * {@link #update(ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)}
      */
     protected abstract void handleUpdate(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis )
-            throws java.lang.Exception;
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis );
 
 }

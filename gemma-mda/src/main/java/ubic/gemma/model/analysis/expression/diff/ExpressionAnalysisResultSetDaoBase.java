@@ -49,8 +49,9 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ExpressionAnalysisResultSet ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends ExpressionAnalysisResultSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }

@@ -41,10 +41,12 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     @Autowired
     private ExpressionExperimentService svc;
 
+    @Autowired
+    BioAssayService bioAssayService;
+
     @Test
-    public final void testRemove() throws Exception {
+    public final void testRemove()   {
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
-        BioAssayService bas = ( BioAssayService ) this.getBean( "bioAssayService" );
         List<Long> ids = new ArrayList<Long>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             ids.add( ba.getId() );
@@ -56,7 +58,7 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
         // sure bioassays are gone.
         for ( Long id : ids ) {
-            BioAssay ba = bas.load( id );
+            BioAssay ba = bioAssayService.load( id );
             assertNull( ba );
         }
     }

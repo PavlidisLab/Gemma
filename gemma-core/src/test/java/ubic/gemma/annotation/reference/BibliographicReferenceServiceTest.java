@@ -48,7 +48,7 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
      * Call to create should persist the BibliographicReference and DatabaseEntry (cascade=all).
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         testBibRef = BibliographicReference.Factory.newInstance();
 
@@ -65,7 +65,7 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testfind() throws Exception {
+    public final void testfind() {
         BibliographicReference result = this.bibliographicReferenceService.find( testBibRef );
         assertNotNull( result );
     }

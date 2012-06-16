@@ -81,9 +81,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         return entities;
     }
 
-    /**
-     * @see ExpressionExperimentDao#create(int transform, ExpressionExperiment)
-     */
     @Override
     public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
@@ -93,10 +90,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         return expressionExperiment;
     }
 
-    /**
-     * @see ExpressionExperimentDao#expressionExperimentValueObjectToEntity(ExpressionExperimentValueObject,
-     *      ExpressionExperiment)
-     */
     public void expressionExperimentValueObjectToEntity( ExpressionExperimentValueObject source,
             ExpressionExperiment target, boolean copyIfNull ) {
         if ( copyIfNull || source.getSource() != null ) {
@@ -110,63 +103,30 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         }
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByBibliographicReference(Long)
-     */
     @Override
     public Collection<ExpressionExperiment> findByBibliographicReference( final Long bibRefID ) {
-        try {
-            return this.handleFindByBibliographicReference( bibRefID );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByBibliographicReference(Long bibRefID)' --> " + th,
-                    th );
-        }
+        return this.handleFindByBibliographicReference( bibRefID );
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
     @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
-        try {
-            return this.handleFindByBioMaterial( bm );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial bm)' --> "
-                            + th, th );
-        }
+        return this.handleFindByBioMaterial( bm );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByBioMaterials(Collection)
-     */
     @Override
     public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
-        try {
-            return this.handleFindByBioMaterials( bioMaterials );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByBioMaterials(Collection bioMaterials)' --> " + th,
-                    th );
-        }
+        return this.handleFindByBioMaterials( bioMaterials );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByExpressedGene(ubic.gemma.model.genome.Gene, Double)
-     */
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( final ubic.gemma.model.genome.Gene gene,
             final Double rank ) {
-        try {
-            return this.handleFindByExpressedGene( gene, rank );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByExpressedGene(ubic.gemma.model.genome.Gene gene, Double rank)' --> "
-                            + th, th );
-        }
+        return this.handleFindByExpressedGene( gene, rank );
+
     }
-    
+
     /**
      * @see ExpressionExperimentDao#findByFactor(ExperimentalFactor)
      */
@@ -180,66 +140,29 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                     th );
         }
     }
-    
-    /**
-     * @see ExpressionExperimentDao#findByFactorValue(FactorValue)
-     */
+
+    @Override
+    public ExpressionExperiment findByFactorValue( final Long factorValueId ) {
+        return this.handleFindByFactorValue( factorValueId );
+    }
+
     @Override
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
-        try {
-            return this.handleFindByFactorValue( factorValue );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByFactorValue(FactorValue factorValue)' --> " + th,
-                    th );
-        }
+        return this.handleFindByFactorValue( factorValue );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByFactorValue(FactorValue)
-     */
-    @Override
-    public ExpressionExperiment findByFactorValue( final  Long factorValueId ) {
-        try {
-            return this.handleFindByFactorValue( factorValueId );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByFactorValue( Long factorValueId )' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByFactorValues(Collection)
-     */
     @Override
     public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
-        try {
-            return this.handleFindByFactorValues( factorValues );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByFactorValues(Collection factorValues)' --> " + th,
-                    th );
-        }
+        return this.handleFindByFactorValues( factorValues );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByGene(ubic.gemma.model.genome.Gene)
-     */
     @Override
     public Collection<ExpressionExperiment> findByGene( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindByGene( gene );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
-    }
+        return this.handleFindByGene( gene );
 
-    /**
-     * @see ExpressionExperimentDao#findByInvestigator(int, String, Contact)
-     */
+    }
 
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> findByInvestigator( final String queryString, final Contact investigator ) {
@@ -253,10 +176,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         return ( Collection<ExpressionExperiment> ) results;
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByInvestigator(int, Contact)
-     */
-
     @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
         return this
@@ -265,17 +184,10 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                         investigator );
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByName(int, String)
-     */
     @Override
     public ExpressionExperiment findByName( final String name ) {
         return this.findByName( "from ExpressionExperimentImpl a where a.name=:name", name );
     }
-
-    /**
-     * @see ExpressionExperimentDao#findByName(int, String, String)
-     */
 
     public ExpressionExperiment findByName( final String queryString, final String name ) {
         List<String> argNames = new ArrayList<String>();
@@ -297,44 +209,22 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         return result;
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByParentTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleFindByParentTaxon( taxon );
+
     }
 
-    /*
-     * 
-     */
     @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
-        try {
-            return this.handleFindByQuantitationType( quantitationType );
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'ExpressionExperimentDao.findByQuantitationType  --> " + th,
-                    th );
-        }
+        return this.handleFindByQuantitationType( quantitationType );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByShortName(int, String)
-     */
     @Override
     public ExpressionExperiment findByShortName( final String shortName ) {
         return this.findByShortName( "from ExpressionExperimentImpl a where a.shortName=:shortName", shortName );
     }
-
-    /**
-     * @see ExpressionExperimentDao#findByShortName(int, String, String)
-     */
 
     public ExpressionExperiment findByShortName( final String queryString, final String shortName ) {
         List<String> argNames = new ArrayList<String>();
@@ -356,187 +246,80 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         return result;
     }
 
-    /**
-     * @see ExpressionExperimentDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleFindByTaxon( taxon );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getAnnotationCounts(Collection)
-     */
     @Override
     public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
-        try {
-            return this.handleGetAnnotationCounts( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getAnnotationCounts(Collection ids)' --> " + th, th );
-        }
+        return this.handleGetAnnotationCounts( ids );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getArrayDesignAuditEvents(Collection)
-     */
-    @Override
-    @Deprecated
-    public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( final Collection<Long> ids ) {
-        try {
-            return this.handleGetArrayDesignAuditEvents( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getArrayDesignAuditEvents(Collection ids)' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see ExpressionExperimentDao#getAuditEvents(Collection)
-     */
     @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( final Collection<Long> ids ) {
-        try {
-            return this.handleGetAuditEvents( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getAuditEvents(Collection ids)' --> " + th, th );
-        }
+        return this.handleGetAuditEvents( ids );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getBioAssayCountById(long)
-     */
     @Override
     public Integer getBioAssayCountById( final long id ) {
-        try {
-            return this.handleGetBioAssayCountById( id );
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'ExpressionExperimentDao.getBioAssayCountById(long id)' --> "
-                    + th, th );
-        }
+        return this.handleGetBioAssayCountById( id );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getBioMaterialCount(ExpressionExperiment)
-     */
     @Override
     public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetBioMaterialCount( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getBioMaterialCount(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleGetBioMaterialCount( expressionExperiment );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getDesignElementDataVectorCountById(long)
-     */
     @Override
     public Integer getDesignElementDataVectorCountById( final long id ) {
-        try {
-            return this.handleGetDesignElementDataVectorCountById( id );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getDesignElementDataVectorCountById(long id)' --> " + th,
-                    th );
-        }
+        return this.handleGetDesignElementDataVectorCountById( id );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getDesignElementDataVectors(Collection,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
     @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<CompositeSequence> designElements,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        try {
-            return this.handleGetDesignElementDataVectors( designElements, quantitationType );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getDesignElementDataVectors(Collection designElements, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
-        }
+        return this.handleGetDesignElementDataVectors( designElements, quantitationType );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getDesignElementDataVectors(Collection)
-     */
     @Override
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             final Collection<QuantitationType> quantitationTypes ) {
-        try {
-            return this.handleGetDesignElementDataVectors( quantitationTypes );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getDesignElementDataVectors(Collection quantitationTypes)' --> "
-                            + th, th );
-        }
+        return this.handleGetDesignElementDataVectors( quantitationTypes );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getLastArrayDesignUpdate(Collection, Class)
-     */
     @Override
     public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
-        try {
-            return this.handleGetLastArrayDesignUpdate( expressionExperiments );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getLastArrayDesignUpdate(Collection expressionExperiments, Class type)' --> "
-                            + th, th );
-        }
+        return this.handleGetLastArrayDesignUpdate( expressionExperiments );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getLastArrayDesignUpdate(ExpressionExperiment, Class)
-     */
     @Override
     public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
-        try {
-            return this.handleGetLastArrayDesignUpdate( ee );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getLastArrayDesignUpdate(ExpressionExperiment ee, Class eventType)' --> "
-                            + th, th );
-        }
+        return this.handleGetLastArrayDesignUpdate( ee );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getMaskedPreferredQuantitationType(ExpressionExperiment)
-     */
     @Override
     public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
             final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetMaskedPreferredQuantitationType( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getMaskedPreferredQuantitationType(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleGetMaskedPreferredQuantitationType( expressionExperiment );
+
     }
 
-    /**
-     * @see ExpressionExperimentDao#getPerTaxonCount()
-     */
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-        try {
-            return this.handleGetPerTaxonCount();
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'ExpressionExperimentDao.getPerTaxonCount()' --> " + th, th );
-        }
+        return this.handleGetPerTaxonCount();
+
     }
 
     /**
@@ -544,12 +327,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
-        try {
-            return this.handleGetPopulatedFactorCounts( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getPopulatedFactorCounts(Collection ids)' --> " + th, th );
-        }
+        return this.handleGetPopulatedFactorCounts( ids );
+
     }
 
     /**
@@ -557,13 +336,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
-        try {
-            return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> "
-                            + th, th );
-        }
+        return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
+
     }
 
     /**
@@ -571,13 +345,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getPreferredDesignElementDataVectorCount(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
+
     }
 
     /**
@@ -585,12 +354,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
-        try {
-            return this.handleGetQuantitationTypeCountById( Id );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getQuantitationTypeCountById(Long Id)' --> " + th, th );
-        }
+        return this.handleGetQuantitationTypeCountById( Id );
+
     }
 
     /**
@@ -598,13 +363,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetQuantitationTypes( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getQuantitationTypes(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+
+        return this.handleGetQuantitationTypes( expressionExperiment );
+
     }
 
     /**
@@ -614,13 +375,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetQuantitationTypes( expressionExperiment, arrayDesign );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getQuantitationTypes(ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
+        return this.handleGetQuantitationTypes( expressionExperiment, arrayDesign );
+
     }
 
     /**
@@ -630,13 +386,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             final Collection<ExpressionExperiment> expressionExperiments ) {
 
-        try {
-            return this.handleGetSampleRemovalEvents( expressionExperiments );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getSampleRemovalEvents(Collection expressionExperiments)' --> "
-                            + th, th );
-        }
+        return this.handleGetSampleRemovalEvents( expressionExperiments );
+
     }
 
     /**
@@ -646,13 +397,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     @Override
     public Collection<DesignElementDataVector> getSamplingOfVectors(
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, final Integer limit ) {
-        try {
-            return this.handleGetSamplingOfVectors( quantitationType, limit );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, Integer limit)' --> "
-                            + th, th );
-        }
+        return this.handleGetSamplingOfVectors( quantitationType, limit );
+
     }
 
     /**
@@ -660,13 +406,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetSubSets( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getSubSets(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleGetSubSets( expressionExperiment );
+
     }
 
     /**
@@ -674,12 +415,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public ubic.gemma.model.genome.Taxon getTaxon( final BioAssaySet ee ) {
-        try {
-            return this.handleGetTaxon( ee );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getTaxon(Long ExpressionExperimentID)' --> " + th, th );
-        }
+        return this.handleGetTaxon( ee );
+
     }
 
     /**
@@ -700,11 +437,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public Collection<ExpressionExperiment> load( final Collection<Long> ids ) {
-        try {
-            return this.handleLoad( ids );
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'ExpressionExperimentDao.load(Collection ids)' --> " + th, th );
-        }
+        return this.handleLoad( ids );
+
     }
 
     /**
@@ -724,12 +458,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
-        try {
-            return this.handleLoadValueObjects( ids, maintainOrder );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.loadValueObjects(Collection ids)' --> " + th, th );
-        }
+        return this.handleLoadValueObjects( ids, maintainOrder );
+
     }
 
     /**
@@ -775,13 +505,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleThaw( expressionExperiment, true );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.thaw(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleThaw( expressionExperiment, true );
+
     }
 
     /**
@@ -789,24 +514,14 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     @Override
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleThaw( expressionExperiment, false );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.thawBioAssays(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleThaw( expressionExperiment, false );
+
     }
 
     @Override
     public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleThawLiter( expressionExperiment, false );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.thawBioAssays(ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
+        return this.handleThawLiter( expressionExperiment, false );
+
     }
 
     /**
@@ -865,104 +580,97 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract Integer handleCountAll() throws Exception;
+    protected abstract Integer handleCountAll();
 
     /**
      * Performs the core logic for {@link #findByBibliographicReference(Long)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByBibliographicReference( Long bibRefID )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByBibliographicReference( Long bibRefID );
 
     /**
      * Performs the core logic for {@link #findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)}
      */
     protected abstract ExpressionExperiment handleFindByBioMaterial(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bm ) throws Exception;
+            ubic.gemma.model.expression.biomaterial.BioMaterial bm );
 
     /**
      * Performs the core logic for {@link #findByBioMaterials(Collection)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
      * Performs the core logic for {@link #findByExpressedGene(ubic.gemma.model.genome.Gene, Double)}
      */
     protected abstract Collection<ExpressionExperiment> handleFindByExpressedGene( ubic.gemma.model.genome.Gene gene,
-            Double rank ) throws Exception;
-    
+            Double rank );
+
     /**
      * Performs the core logic for {@link #findByFactor(ExperimentalFactor)}
      */
-    protected abstract ExpressionExperiment handleFindByFactor( ExperimentalFactor factor) throws Exception;
+    protected abstract ExpressionExperiment handleFindByFactor( ExperimentalFactor factor );
 
     /**
      * Performs the core logic for {@link #findByFactorValue(FactorValue)}
      */
-    protected abstract ExpressionExperiment handleFindByFactorValue( FactorValue factorValue ) throws Exception;
+    protected abstract ExpressionExperiment handleFindByFactorValue( FactorValue factorValue );
 
     /**
      * Performs the core logic for {@link #findByFactorValue(FactorValue)}
      */
-    protected abstract ExpressionExperiment handleFindByFactorValue( Long factorValueId ) throws Exception;
+    protected abstract ExpressionExperiment handleFindByFactorValue( Long factorValueId );
 
     /**
      * Performs the core logic for {@link #findByFactorValues(Collection)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByFactorValues( Collection<FactorValue> factorValues )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByFactorValues( Collection<FactorValue> factorValues );
 
     /**
      * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByGene( ubic.gemma.model.genome.Gene gene )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
 
-    protected abstract ExpressionExperiment handleFindByQuantitationType( QuantitationType quantitationType )
-            throws Exception;
+    protected abstract ExpressionExperiment handleFindByQuantitationType( QuantitationType quantitationType );
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * Performs the core logic for {@link #getAnnotationCounts(Collection)}
      */
-    protected abstract Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getArrayDesignAuditEvents(Collection)}
      */
     protected abstract Map<Long, Map<Long, Collection<AuditEvent>>> handleGetArrayDesignAuditEvents(
-            Collection<Long> ids ) throws Exception;
+            Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getAuditEvents(Collection)}
      */
-    protected abstract Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getBioAssayCountById(long)}
      */
-    protected abstract Integer handleGetBioAssayCountById( long id ) throws Exception;
+    protected abstract Integer handleGetBioAssayCountById( long id );
 
     /**
      * Performs the core logic for {@link #getBioMaterialCount(ExpressionExperiment)}
      */
-    protected abstract Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception;
+    protected abstract Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getDesignElementDataVectorCountById(long)}
      */
-    protected abstract Integer handleGetDesignElementDataVectorCountById( long id ) throws Exception;
+    protected abstract Integer handleGetDesignElementDataVectorCountById( long id );
 
     /**
      * Performs the core logic for
@@ -970,101 +678,97 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     protected abstract Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
             Collection<CompositeSequence> designElements,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws Exception;
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * Performs the core logic for {@link #getDesignElementDataVectors(Collection)}
      */
     protected abstract Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<QuantitationType> quantitationTypes ) throws Exception;
+            Collection<QuantitationType> quantitationTypes );
 
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(Collection, Class)}
      */
     protected abstract Map<Long, Date> handleGetLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments ) throws Exception;
+            Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(ExpressionExperiment, Class)}
      */
-    protected abstract Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception;
+    protected abstract Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee );
 
     /**
      * Performs the core logic for {@link #getMaskedPreferredQuantitationType(ExpressionExperiment)}
      */
     protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleGetMaskedPreferredQuantitationType(
-            ExpressionExperiment expressionExperiment ) throws Exception;
+            ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getPerTaxonCount()}
      */
-    protected abstract Map<Taxon, Long> handleGetPerTaxonCount() throws Exception;
+    protected abstract Map<Taxon, Long> handleGetPerTaxonCount();
 
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
-    protected abstract Map<Long, Integer> handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Integer> handleGetPopulatedFactorCounts( Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
      */
-    protected abstract Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids )
-            throws Exception;
+    protected abstract Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}
      */
-    protected abstract Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
-            throws Exception;
+    protected abstract Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getQuantitationTypeCountById(Long)}
      */
-    protected abstract Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id ) throws Exception;
+    protected abstract Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id );
 
     /**
      * Performs the core logic for {@link #getQuantitationTypes(ExpressionExperiment)}
      */
     protected abstract Collection<QuantitationType> handleGetQuantitationTypes(
-            ExpressionExperiment expressionExperiment ) throws Exception;
+            ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for
      * {@link #getQuantitationTypes(ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract Collection<QuantitationType> handleGetQuantitationTypes(
-            ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws Exception;
+            ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * Performs the core logic for {@link #getSampleRemovalEvents(Collection)}
      */
     protected abstract Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
-            Collection<ExpressionExperiment> expressionExperiments ) throws Exception;
+            Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * Performs the core logic for
      * {@link #getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType, Integer)}
      */
     protected abstract Collection<DesignElementDataVector> handleGetSamplingOfVectors(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, Integer limit )
-            throws Exception;
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, Integer limit );
 
     /**
      * Performs the core logic for {@link #getSubSets(ExpressionExperiment)}
      */
     protected abstract Collection<ExpressionExperimentSubSet> handleGetSubSets(
-            ExpressionExperiment expressionExperiment ) throws Exception;
+            ExpressionExperiment expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getTaxon(BioAssaySet)}
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( BioAssaySet ee ) throws Exception;
+    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( BioAssaySet ee );
 
     /**
      * Performs the core logic for {@link #load(Collection)}
      */
-    protected abstract Collection<ExpressionExperiment> handleLoad( Collection<Long> ids ) throws Exception;
+    protected abstract Collection<ExpressionExperiment> handleLoad( Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #loadValueObjects(Collection, boolean)}
@@ -1072,15 +776,14 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     protected abstract Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids,
-            boolean maintainOrder ) throws Exception;
+            boolean maintainOrder );
 
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */
-    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
-            throws Exception;
+    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors );
 
     protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment,
-            boolean thawVectors ) throws Exception;
+            boolean thawVectors );
 
 }

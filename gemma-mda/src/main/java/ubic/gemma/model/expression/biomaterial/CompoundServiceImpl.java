@@ -33,7 +33,7 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#createDatabaseEntity(ubic.gemma.model.expression.biomaterial.Compound)
      */
     protected ubic.gemma.model.expression.biomaterial.Compound handleCreate(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
+            ubic.gemma.model.expression.biomaterial.Compound compound ) {
         return this.getCompoundDao().create( compound );
     }
 

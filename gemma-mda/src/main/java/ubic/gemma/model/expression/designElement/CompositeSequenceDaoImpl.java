@@ -122,7 +122,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
-        // TODO make this use the full arraydesign
+        // TODO make this use the full array design
         // business key.
         queryObject.createCriteria( "arrayDesign" ).add(
                 Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
@@ -202,7 +202,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     }
 
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         final String query = "select count(*) from CompositeSequenceImpl";
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( query );
@@ -221,7 +221,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * .biosequence.BioSequence)
      */
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+    protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
@@ -243,7 +243,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
      */
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) throws Exception {
+    protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
@@ -259,8 +259,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     }
 
     @Override
-    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection<CompositeSequence> compositeSequences )
-            throws Exception {
+    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection<CompositeSequence> compositeSequences ) {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
 
         int BATCH_SIZE = 2000;
@@ -390,7 +389,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * .designElement.CompositeSequence)
      */
     @Override
-    protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
+    protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) {
         final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
 
@@ -449,7 +448,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) throws Exception {
+    protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -485,8 +484,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
-    protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences, Integer limit )
-            throws Exception {
+    protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences, Integer limit ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
 
         Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<CompositeSequence>();
@@ -541,8 +539,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
-    protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
-            throws Exception {
+    protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
         if ( compositeSequence == null || compositeSequence.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -572,7 +569,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
     @Override
-    protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) throws Exception {
+    protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) {
 
         if ( ids == null || ids.size() == 0 ) {
             return new HashSet<CompositeSequence>();

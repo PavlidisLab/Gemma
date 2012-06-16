@@ -44,7 +44,7 @@ public class BioMartEnsemblNcbiFetcherTest {
     BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
     }
 
@@ -53,7 +53,7 @@ public class BioMartEnsemblNcbiFetcherTest {
      * {@link ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiFetcher#getEnsemblNcibidata()}.
      */
     @Test
-    public void testGetEnsemblNcibidata() throws Exception {
+    public void testGetEnsemblNcibidata() {
 
         try {
             File ratBiomartFile = biomartEnsemblNcbiFetcher.fetchFileForProteinQuery( "rnorvegicus" );

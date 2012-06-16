@@ -47,7 +47,7 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
      * Expected result: null exception
      */
     @Test
-    public void testCheckBiologicalReplicates() throws Exception {
+    public void testCheckBiologicalReplicates() {
         boolean result = DifferentialExpressionAnalysisUtil.checkBiologicalReplicates( expressionExperiment,
                 expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
         assertTrue( result );

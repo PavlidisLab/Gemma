@@ -121,32 +121,32 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
              * These beans are defined in Spring XML.
              */
             if ( this.indexG ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "Gene index" );
+                rebuildIndex( this.getBean( "geneGps" , CompassGpsInterfaceDevice.class), "Gene index" );
             }
             if ( this.indexEE ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ),
+                rebuildIndex( this.getBean( "expressionGps" , CompassGpsInterfaceDevice.class),
                         "Expression Experiment index" );
             }
             if ( this.indexAD ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ), "Array Design index" );
+                rebuildIndex( this.getBean( "arrayGps", CompassGpsInterfaceDevice.class ), "Array Design index" );
             }
             if ( this.indexB ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "bibliographicGps" ),
+                rebuildIndex( this.getBean( "bibliographicGps" , CompassGpsInterfaceDevice.class),
                         "Bibliographic Reference Index" );
             }
             if ( this.indexP ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "probeGps" ), "Probe Reference Index" );
+                rebuildIndex( this.getBean( "probeGps", CompassGpsInterfaceDevice.class ), "Probe Reference Index" );
             }
             if ( this.indexQ ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "biosequenceGps" ), "BioSequence Index" );
+                rebuildIndex( this.getBean( "biosequenceGps", CompassGpsInterfaceDevice.class ), "BioSequence Index" );
             }
 
             if ( this.indexY ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "experimentSetGps" ), "Experiment set Index" );
+                rebuildIndex( this.getBean( "experimentSetGps" , CompassGpsInterfaceDevice.class), "Experiment set Index" );
             }
 
             if ( this.indexX ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneSetGps" ), "Gene set Index" );
+                rebuildIndex( this.getBean( "geneSetGps" , CompassGpsInterfaceDevice.class), "Gene set Index" );
             }
         } catch ( Exception e ) {
             log.error( e );

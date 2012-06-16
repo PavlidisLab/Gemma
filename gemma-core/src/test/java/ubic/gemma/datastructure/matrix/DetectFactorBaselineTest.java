@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class DetectFactorBaselineTest {
 
     @Test
-    public void testIsBaselineA() throws Exception {
+    public void testIsBaselineA() {
 
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
@@ -43,7 +43,7 @@ public class DetectFactorBaselineTest {
     }
 
     @Test
-    public void testIsBaselineB() throws Exception {
+    public void testIsBaselineB() {
 
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );
@@ -58,7 +58,7 @@ public class DetectFactorBaselineTest {
     }
 
     @Test
-    public void testIsNotBaselineA() throws Exception {
+    public void testIsNotBaselineA() {
 
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setValue( "fv" );

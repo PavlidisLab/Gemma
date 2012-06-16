@@ -40,7 +40,7 @@ public class SampleCoexpressionMatrixServiceTest extends BaseSpringContextTest {
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService

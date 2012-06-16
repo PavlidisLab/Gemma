@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -33,7 +35,8 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.genome.PhysicalLocationDao#create(int, java.util.Collection)
      */
     @Override
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends PhysicalLocation> create(
+            final java.util.Collection<? extends PhysicalLocation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.create - 'entities' can not be null" );
         }
@@ -42,8 +45,9 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.genome.PhysicalLocation ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends PhysicalLocation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -78,11 +82,12 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#loadAll(int)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<PhysicalLocation> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.PhysicalLocationImpl.class );
-        return results;
+        return ( Collection<PhysicalLocation> ) results;
     }
 
     /**
@@ -103,7 +108,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.genome.ChromosomeLocationDao#remove(java.util.Collection)
      */
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends PhysicalLocation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.remove - 'entities' can not be null" );
         }
@@ -125,7 +130,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.genome.ChromosomeLocationDao#update(java.util.Collection)
      */
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends PhysicalLocation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.update - 'entities' can not be null" );
         }
@@ -134,8 +139,9 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.genome.PhysicalLocation ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends PhysicalLocation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

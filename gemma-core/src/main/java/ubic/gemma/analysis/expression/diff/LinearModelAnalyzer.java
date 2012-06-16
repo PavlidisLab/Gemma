@@ -67,7 +67,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -500,7 +499,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Add interaction terms
          */
-        boolean hasInteractionTerms = config.getInteractionsToInclude()!= null 
+        boolean hasInteractionTerms = config.getInteractionsToInclude() != null
                 && !config.getInteractionsToInclude().isEmpty();
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
@@ -579,12 +578,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             if ( corrP == null ) continue;
 
             int numGenes = 0;
-            if ( r instanceof ProbeAnalysisResult ) {
-                CompositeSequence probe = ( ( ProbeAnalysisResult ) r ).getProbe();
-                if ( probeToGeneMap.containsKey( probe ) ) {
-                    Collection<Gene> genes = probeToGeneMap.get( probe );
-                    numGenes = genes.size();
-                }
+
+            CompositeSequence probe = r.getProbe();
+            if ( probeToGeneMap.containsKey( probe ) ) {
+                Collection<Gene> genes = probeToGeneMap.get( probe );
+                numGenes = genes.size();
             }
 
             Collection<ContrastResult> crs = r.getContrasts();
@@ -781,7 +779,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 }
 
                 Double overallPValue = null;
-                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                DifferentialExpressionAnalysisResult probeAnalysisResult = DifferentialExpressionAnalysisResult.Factory
+                        .newInstance();
                 probeAnalysisResult.setProbe( el );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
@@ -1020,7 +1019,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         Collection<Gene> gs = new HashSet<Gene>();
         for ( DifferentialExpressionAnalysisResult d : resultList ) {
-            CompositeSequence probe = ( ( ProbeAnalysisResult ) d ).getProbe();
+            CompositeSequence probe = d.getProbe();
             if ( probeToGeneMap.containsKey( probe ) ) {
                 gs.addAll( probeToGeneMap.get( probe ) );
             }
@@ -1040,7 +1039,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         for ( List<DifferentialExpressionAnalysisResult> resultList : resultLists.values() ) {
             for ( DifferentialExpressionAnalysisResult d : resultList ) {
-                CompositeSequence probe = ( ( ProbeAnalysisResult ) d ).getProbe();
+                CompositeSequence probe = d.getProbe();
                 result.put( probe, new HashSet<Gene>() );
             }
         }
@@ -1164,7 +1163,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param tstats
      * @param coeffs
      */
-    private void makeContrast( ProbeAnalysisResult probeAnalysisResult,
+    private void makeContrast( DifferentialExpressionAnalysisResult probeAnalysisResult,
             Collection<ExperimentalFactor> experimentalFactors, String term, String factorName, Double contrastPvalue,
             Map<String, Double> tstats, Map<String, Double> coeffs ) {
 

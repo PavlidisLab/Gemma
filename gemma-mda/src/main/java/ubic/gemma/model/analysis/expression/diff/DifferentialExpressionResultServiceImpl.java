@@ -25,7 +25,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -39,25 +39,26 @@ import ubic.gemma.model.genome.Gene;
 @Service
 public class DifferentialExpressionResultServiceImpl extends DifferentialExpressionResultServiceBase {
 
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             Collection<BioAssaySet> experimentsAnalyzed, double threshold ) {
         return this.getDifferentialExpressionResultDao().find( experimentsAnalyzed, threshold, null );
     }
 
     @Override
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( experimentsAnalyzed, threshold, limit );
 
     }
 
     @Override
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene ) {
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene ) {
         return this.getDifferentialExpressionResultDao().find( gene );
     }
 
     @Override
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene, Collection<BioAssaySet> experimentsAnalyzed ) {
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene,
+            Collection<BioAssaySet> experimentsAnalyzed ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed );
     }
 
@@ -65,13 +66,13 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      * 
      */
     @Override
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             Gene gene, Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed, threshold, limit );
     }
 
     @Override
-    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene, double threshold, Integer limit ) {
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
@@ -81,23 +82,23 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
         return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#
+     * findDifferentialExpressionAnalysisResultIdsInResultSet(java.util.Collection, java.util.Collection,
+     * java.util.Collection)
+     */
     @Override
-    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId,
-            Collection<Long> geneIds, Collection<Long> adUsed ) {
-        return this.getDifferentialExpressionResultDao().findProbeAnalysisResultIdsInResultSet( resultSetId, geneIds,
-                adUsed );
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed ) {
+        return this.getDifferentialExpressionResultDao().findDifferentialExpressionAnalysisResultIdsInResultSet(
+                resultSetIds, geneIds, adUsed );
     }
 
-    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold ) {
-        return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, null );
-
-    }
-
     @Override
-    public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+    public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
-
         return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, limit );
     }
 
@@ -107,12 +108,12 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public void thaw( ProbeAnalysisResult result ) {
+    public void thaw( DifferentialExpressionAnalysisResult result ) {
         this.getDifferentialExpressionResultDao().thaw( result );
     }
 
     @Override
-    public void thaw( Collection<ProbeAnalysisResult> results ) {
+    public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
         this.getDifferentialExpressionResultDao().thaw( results );
     }
 
@@ -125,25 +126,25 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     /*
      * (non-Javadoc)
      * 
-     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#
+     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceBase#
      * handleGetExperimentalFactors(java.util.Collection)
      */
     @Override
-    protected Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
-            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) {
+    protected Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
         return this.getDifferentialExpressionResultDao().getExperimentalFactors( differentialExpressionAnalysisResults );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#
+     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceBase#
      * handleGetExperimentalFactors
      * (ubic.gemma.model.expression.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
     @Override
     protected Collection<ExperimentalFactor> handleGetExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult ) {
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
         return this.getDifferentialExpressionResultDao().getExperimentalFactors( differentialExpressionAnalysisResult );
     }
 
@@ -159,8 +160,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
-            Integer maxResultsToReturn, Integer minNumberOfResults ) {
+    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
+            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
         return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
                 minNumberOfResults );
     }

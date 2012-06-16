@@ -65,7 +65,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private LiteratureEvidenceValueObject litEvidence = null;
 
     @Before
-    public void setup() throws SecurityException, NoSuchMethodException {
+    public void setup() {
         // make a test gene
         // makeGene( this.geneNCBI );
         // mock the ontology

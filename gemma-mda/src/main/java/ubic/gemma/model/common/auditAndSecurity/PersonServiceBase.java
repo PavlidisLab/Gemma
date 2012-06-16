@@ -39,13 +39,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     @Override
     public ubic.gemma.model.common.auditAndSecurity.Person create(
             final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        try {
-            return this.handleCreate( person );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.PersonServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.PersonService.create(ubic.gemma.model.common.auditAndSecurity.Person person)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( person );
+
     }
 
     /**
@@ -53,13 +48,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      */
     @Override
     public java.util.Collection findByFullName( final java.lang.String name, final java.lang.String lastName ) {
-        try {
-            return this.handleFindByFullName( name, lastName );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.PersonServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.PersonService.findByFullName(java.lang.String name, java.lang.String lastName)' --> "
-                            + th, th );
-        }
+        return this.handleFindByFullName( name, lastName );
+
     }
 
     /**
@@ -68,13 +58,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     @Override
     public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
             final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        try {
-            return this.handleFindOrCreate( person );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.PersonServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.PersonService.findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person person)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( person );
+
     }
 
     /**
@@ -82,12 +67,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      */
     @Override
     public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.PersonServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.PersonService.loadAll()' --> " + th, th );
-        }
+        return this.handleLoadAll();
+
     }
 
     /**
@@ -95,13 +76,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      */
     @Override
     public void remove( final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        try {
-            this.handleRemove( person );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.PersonServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.PersonService.remove(ubic.gemma.model.common.auditAndSecurity.Person person)' --> "
-                            + th, th );
-        }
+        this.handleRemove( person );
+
     }
 
     /**
@@ -122,29 +98,27 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * Performs the core logic for {@link #create(ubic.gemma.model.common.auditAndSecurity.Person)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.Person handleCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person ) throws java.lang.Exception;
+            ubic.gemma.model.common.auditAndSecurity.Person person );
 
     /**
      * Performs the core logic for {@link #findByFullName(java.lang.String, java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByFullName( java.lang.String name, java.lang.String lastName )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection handleFindByFullName( java.lang.String name, java.lang.String lastName );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.Person handleFindOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person ) throws java.lang.Exception;
+            ubic.gemma.model.common.auditAndSecurity.Person person );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection handleLoadAll();
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Person)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Person person )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Person person );
 
 }

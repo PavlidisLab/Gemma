@@ -35,7 +35,7 @@ public class ProgressDataTest {
     protected ProgressData pd;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         pd = new ProgressData( "12344", 1, "test", false );
 
@@ -81,7 +81,7 @@ public class ProgressDataTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         pd = null;
     }
 

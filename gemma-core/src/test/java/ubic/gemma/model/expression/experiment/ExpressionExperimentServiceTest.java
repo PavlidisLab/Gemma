@@ -66,7 +66,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
      * @exception Exception
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         if ( !persisted ) {
             ee = this.getTestPersistentCompleteExpressionExperiment( false );
@@ -82,7 +82,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
             expressionExperimentService.update( ee );
             ee = expressionExperimentService.thaw( ee );
-            
 
             eeFull = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
 
@@ -93,7 +92,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testFindByAccession() throws Exception {
+    public final void testFindByAccession() {
         DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
         accessionEntry.setAccession( accession );
 
@@ -103,9 +102,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testGetByTaxon() throws Exception {
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
+    public void testGetByTaxon() {
+        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
@@ -116,7 +114,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testGetDesignElementDataVectorsByQt() throws Exception {
+    public final void testGetDesignElementDataVectorsByQt() {
         QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         quantitationTypes.add( quantitationType );
@@ -127,29 +125,29 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testGetPerTaxonCount() throws Exception {
+    public final void testGetPerTaxonCount() {
         Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
         assertNotNull( counts );
     }
 
     @Test
-    public final void testGetQuantitationTypes() throws Exception {
+    public final void testGetQuantitationTypes() {
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
     }
 
     @Test
-    public final void testGetQuantitationTypesForArrayDesign() throws Exception {
+    public final void testGetQuantitationTypesForArrayDesign() {
         ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee, ad );
         assertEquals( 2, types.size() );
     }
 
     /**
-     * @throws Exception
+     * @
      */
     @Test
-    public final void testgetRawExpressionDataVectors() throws Exception {
+    public final void testgetRawExpressionDataVectors() {
         ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
         Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
         QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
@@ -177,7 +175,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testLoadValueObjects() throws Exception {
+    public final void testLoadValueObjects() {
         Collection<Long> ids = new HashSet<Long>();
         Long id = ee.getId();
         ids.add( id );
@@ -187,7 +185,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByFactor() throws Exception {
+    public void testFindByFactor() {
         ExperimentalDesign design = eeFull.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -199,7 +197,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByFactorValue() throws Exception {
+    public void testFindByFactorValue() {
         ExperimentalDesign design = eeFull.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -211,7 +209,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByFactorValueId() throws Exception {
+    public void testFindByFactorValueId() {
         ExperimentalDesign design = eeFull.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();

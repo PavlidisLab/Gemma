@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Map;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -31,7 +33,7 @@ public interface VocabCharacteristicDao extends BaseDao<VocabCharacteristic> {
      * parent objects.
      * </p>
      */
-    public java.util.Map findByParentClass( java.lang.Class parentClass );
+    public Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * 
@@ -41,7 +43,7 @@ public interface VocabCharacteristicDao extends BaseDao<VocabCharacteristic> {
     /**
      * 
      */
-    public java.util.Collection<Characteristic> findByUri( java.util.Collection uris );
+    public java.util.Collection<Characteristic> findByUri( java.util.Collection<String> uris );
 
     /**
      * <p>
@@ -55,5 +57,6 @@ public interface VocabCharacteristicDao extends BaseDao<VocabCharacteristic> {
      * Returns a map of the specified characteristics to their parent objects.
      * </p>
      */
-    public java.util.Map getParents( java.lang.Class parentClass, java.util.Collection<Characteristic> characteristics );
+    public java.util.Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
+            java.util.Collection<Characteristic> characteristics );
 }

@@ -75,7 +75,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                 populateCommandObject( command );
 
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-                
+
                 if ( stream == null ) {
                     throw new IllegalStateException( "Could not read from file " + file );
                 }
@@ -92,24 +92,25 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
                 // In theory we could do the link analysis right away. However, when a data set has new array designs,
                 // we
-                // won't be ready yet.                
-                
+                // won't be ready yet.
+
                 ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setTaskId( result.getId() );
                 eeUploadResponse.setError( false );
-                
+
                 return new TaskResult( command, eeUploadResponse );
-            } catch ( IOException e ) {                
-                //log.info( "There was an error opening an uploaded file:" + e.getMessage() );                
-                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();                
+            } catch ( IOException e ) {
+                // log.info( "There was an error opening an uploaded file:" + e.getMessage() );
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setError( true );
-                eeUploadResponse.setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
+                eeUploadResponse
+                        .setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
                 return new TaskResult( command, eeUploadResponse );
-            } catch (Exception e){
-                //log.warn( "There was an error submitting your dataset, exception:" + e.toString() );                
-                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();                
+            } catch ( Exception e ) {
+                // log.warn( "There was an error submitting your dataset, exception:" + e.toString() );
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setError( true );
-                eeUploadResponse.setErrorMessage(  e.getMessage() );
+                eeUploadResponse.setErrorMessage( e.getMessage() );
                 return new TaskResult( command, eeUploadResponse );
             }
         }
@@ -185,7 +186,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
      * @param ed
      * @return the taskid
      */
-    public String load( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
+    public String load( SimpleExpressionExperimentLoadCommand ed ) {
         ed.setValidateOnly( false );
         return this.run( ed );
     }
@@ -295,10 +296,10 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         } catch ( IOException e ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch (IllegalArgumentException e){
+        } catch ( IllegalArgumentException e ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch (Exception e){
+        } catch ( Exception e ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "Error Validating: " + e.getMessage() );
         }

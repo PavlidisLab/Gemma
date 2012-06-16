@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.genome.gene;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
@@ -103,12 +105,13 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testGetCompositeSequenceCountById() throws Exception {
+    public void testGetCompositeSequenceCountById() {
 
         // get geneService
         GeneService geneService = this.getBean( GeneService.class );
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
+        assertTrue( !geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
 
         long count = geneService.getCompositeSequenceCountById( g.getId() );
@@ -116,12 +119,13 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testGetCompositeSequencesById() throws Exception {
+    public void testGetCompositeSequencesById() {
 
         // get geneService
         GeneService geneService = this.getBean( GeneService.class );
         // get a gene to get the id
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
+        assertTrue( !geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
 
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
@@ -131,13 +135,13 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
 
     @Test
-    public void testGetGenesByTaxon() throws Exception {
+    public void testGetGenesByTaxon() {
         // get geneService
         GeneService geneService = this.getBean( GeneService.class );
 
         Taxon taxon = taxonService.findByCommonName( "human" );
         Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
-        assert ( geneCollection.size() != 0 );
+        assert ( !geneCollection.isEmpty() );
 
     }
 }

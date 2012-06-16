@@ -18,181 +18,132 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.LocalFileService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>LocalFileService</code>, provides access to all services and entities referenced
+ * by this service.
  * </p>
  * 
- * @see ubic.gemma.model.common.description.LocalFileService
+ * @see LocalFileService
  */
-public abstract class LocalFileServiceBase implements ubic.gemma.model.common.description.LocalFileService {
+public abstract class LocalFileServiceBase implements LocalFileService {
 
     @Autowired
-    private ubic.gemma.model.common.description.LocalFileDao localFileDao;
+    private LocalFileDao localFileDao;
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#copyFile(ubic.gemma.model.common.description.LocalFile,
-     *      ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#copyFile(LocalFile, LocalFile)
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile copyFile(
-            final ubic.gemma.model.common.description.LocalFile sourceFile,
-            final ubic.gemma.model.common.description.LocalFile targetFile ) {
-        try {
-            return this.handleCopyFile( sourceFile, targetFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.copyFile(ubic.gemma.model.common.description.LocalFile sourceFile, ubic.gemma.model.common.description.LocalFile targetFile)' --> "
-                            + th, th );
-        }
+    public LocalFile copyFile( final LocalFile sourceFile, final LocalFile targetFile ) throws IOException {
+        return this.handleCopyFile( sourceFile, targetFile );
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#deleteFile(LocalFile)
      */
     @Override
-    public void deleteFile( final ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
-            this.handleDeleteFile( localFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.deleteFile(ubic.gemma.model.common.description.LocalFile localFile)' --> "
-                            + th, th );
-        }
+    public void deleteFile( final LocalFile localFile ) throws IOException {
+        this.handleDeleteFile( localFile );
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#find(ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#find(LocalFile)
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile find(
-            final ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
-            return this.handleFind( localFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.find(ubic.gemma.model.common.description.LocalFile localFile)' --> "
-                            + th, th );
-        }
+    public LocalFile find( final LocalFile localFile ) {
+        return this.handleFind( localFile );
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#findByPath(java.lang.String)
+     * @see LocalFileService#findByPath(java.lang.String)
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile findByPath( final java.lang.String path ) {
-        try {
-            return this.handleFindByPath( path );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.findByPath(java.lang.String path)' --> "
-                            + th, th );
-        }
+    public LocalFile findByPath( final java.lang.String path ) {
+        return this.handleFindByPath( path );
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#findOrCreate(ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#findOrCreate(LocalFile)
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile findOrCreate(
-            final ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
-            return this.handleFindOrCreate( localFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.findOrCreate(ubic.gemma.model.common.description.LocalFile localFile)' --> "
-                            + th, th );
-        }
+    public LocalFile findOrCreate( final LocalFile localFile ) {
+        return this.handleFindOrCreate( localFile );
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#save(ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#save(LocalFile)
      */
     @Override
-    public ubic.gemma.model.common.description.LocalFile save(
-            final ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
-            return this.handleSave( localFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.save(ubic.gemma.model.common.description.LocalFile localFile)' --> "
-                            + th, th );
-        }
+    public LocalFile save( final LocalFile localFile ) {
+        return this.handleSave( localFile );
+
     }
 
     /**
      * Sets the reference to <code>localFile</code>'s DAO.
      */
-    public void setLocalFileDao( ubic.gemma.model.common.description.LocalFileDao localFileDao ) {
+    public void setLocalFileDao( LocalFileDao localFileDao ) {
         this.localFileDao = localFileDao;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#update(ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#update(LocalFile)
      */
     @Override
-    public void update( final ubic.gemma.model.common.description.LocalFile localFile ) {
-        try {
-            this.handleUpdate( localFile );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.LocalFileServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.LocalFileService.update(ubic.gemma.model.common.description.LocalFile localFile)' --> "
-                            + th, th );
-        }
+    public void update( final LocalFile localFile ) {
+        this.handleUpdate( localFile );
     }
 
     /**
      * Gets the reference to <code>localFile</code>'s DAO.
      */
-    protected ubic.gemma.model.common.description.LocalFileDao getLocalFileDao() {
+    protected LocalFileDao getLocalFileDao() {
         return this.localFileDao;
     }
 
     /**
-     * Performs the core logic for
-     * {@link #copyFile(ubic.gemma.model.common.description.LocalFile, ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #copyFile(LocalFile, LocalFile)}
      */
-    protected abstract ubic.gemma.model.common.description.LocalFile handleCopyFile(
-            ubic.gemma.model.common.description.LocalFile sourceFile,
-            ubic.gemma.model.common.description.LocalFile targetFile ) throws java.lang.Exception;
+    protected abstract LocalFile handleCopyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException;
 
     /**
-     * Performs the core logic for {@link #deleteFile(ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #deleteFile(LocalFile)}
      */
-    protected abstract void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile )
-            throws java.lang.Exception;
+    protected abstract void handleDeleteFile( LocalFile localFile ) throws IOException;
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #find(LocalFile)}
      */
-    protected abstract ubic.gemma.model.common.description.LocalFile handleFind(
-            ubic.gemma.model.common.description.LocalFile localFile ) throws java.lang.Exception;
+    protected abstract LocalFile handleFind( LocalFile localFile );
 
     /**
      * Performs the core logic for {@link #findByPath(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.common.description.LocalFile handleFindByPath( java.lang.String path )
-            throws java.lang.Exception;
+    protected abstract LocalFile handleFindByPath( java.lang.String path );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #findOrCreate(LocalFile)}
      */
-    protected abstract ubic.gemma.model.common.description.LocalFile handleFindOrCreate(
-            ubic.gemma.model.common.description.LocalFile localFile ) throws java.lang.Exception;
+    protected abstract LocalFile handleFindOrCreate( LocalFile localFile );
 
     /**
-     * Performs the core logic for {@link #save(ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #save(LocalFile)}
      */
-    protected abstract ubic.gemma.model.common.description.LocalFile handleSave(
-            ubic.gemma.model.common.description.LocalFile localFile ) throws java.lang.Exception;
+    protected abstract LocalFile handleSave( LocalFile localFile );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.LocalFile)}
+     * Performs the core logic for {@link #update(LocalFile)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.LocalFile localFile )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( LocalFile localFile );
 
 }

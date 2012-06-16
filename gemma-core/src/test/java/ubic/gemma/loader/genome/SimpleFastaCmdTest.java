@@ -38,7 +38,7 @@ public class SimpleFastaCmdTest extends TestCase {
     private static final String TESTBLASTDB = "testblastdb";
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultiple() throws Exception {
+    public void testGetMultiple() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -54,7 +54,7 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultipleAcc() throws Exception {
+    public void testGetMultipleAcc() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -69,7 +69,7 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( 2, bs.size() );
     }
 
-    public void testGetMultipleAccSomeNotFound() throws Exception {
+    public void testGetMultipleAccSomeNotFound() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -86,7 +86,7 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( 2, bs.size() );
     }
 
-    public void testGetSingle() throws Exception {
+    public void testGetSingle() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -102,7 +102,7 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
-    public void testGetSingleAcc() throws Exception {
+    public void testGetSingleAcc() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -119,7 +119,7 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
-    public void testGetSingleAccNotFound() throws Exception {
+    public void testGetSingleAccNotFound() {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }

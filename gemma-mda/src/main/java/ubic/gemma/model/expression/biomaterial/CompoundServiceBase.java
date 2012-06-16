@@ -22,111 +22,85 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.biomaterial.CompoundService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>CompoundService</code>, provides access to all services and entities referenced
+ * by this service.
  * </p>
  * 
- * @see ubic.gemma.model.expression.biomaterial.CompoundService
+ * @see CompoundService
  */
-public abstract class CompoundServiceBase implements ubic.gemma.model.expression.biomaterial.CompoundService {
+public abstract class CompoundServiceBase implements CompoundService {
 
     @Autowired
-    private ubic.gemma.model.expression.biomaterial.CompoundDao compoundDao;
+    private CompoundDao compoundDao;
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#find(Compound)
      */
     @Override
-    public ubic.gemma.model.expression.biomaterial.Compound find(
-            final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        try {
-            return this.handleFind( compound );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.CompoundServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.CompoundService.find(ubic.gemma.model.expression.biomaterial.Compound compound)' --> "
-                            + th, th );
-        }
+    public Compound find( final Compound compound ) {
+        return this.handleFind( compound );
+
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#findOrCreate(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#findOrCreate(Compound)
      */
     @Override
-    public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
-            final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        try {
-            return this.handleFindOrCreate( compound );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.CompoundServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.CompoundService.findOrCreate(ubic.gemma.model.expression.biomaterial.Compound compound)' --> "
-                            + th, th );
-        }
+    public Compound findOrCreate( final Compound compound ) {
+        return this.handleFindOrCreate( compound );
+
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#remove(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#remove(Compound)
      */
     @Override
-    public void remove( final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        try {
-            this.handleRemove( compound );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.CompoundServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.CompoundService.remove(ubic.gemma.model.expression.biomaterial.Compound compound)' --> "
-                            + th, th );
-        }
+    public void remove( final Compound compound ) {
+        this.handleRemove( compound );
+
     }
 
     /**
      * Sets the reference to <code>compound</code>'s DAO.
      */
-    public void setCompoundDao( ubic.gemma.model.expression.biomaterial.CompoundDao compoundDao ) {
+    public void setCompoundDao( CompoundDao compoundDao ) {
         this.compoundDao = compoundDao;
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#update(Compound)
      */
     @Override
-    public void update( final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        try {
-            this.handleUpdate( compound );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.CompoundServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.CompoundService.update(ubic.gemma.model.expression.biomaterial.Compound compound)' --> "
-                            + th, th );
-        }
+    public void update( final Compound compound ) {
+        this.handleUpdate( compound );
+
     }
 
     /**
      * Gets the reference to <code>compound</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.biomaterial.CompoundDao getCompoundDao() {
+    protected CompoundDao getCompoundDao() {
         return this.compoundDao;
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.expression.biomaterial.Compound)}
+     * Performs the core logic for {@link #find(Compound)}
      */
-    protected abstract ubic.gemma.model.expression.biomaterial.Compound handleFind(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception;
+    protected abstract Compound handleFind( Compound compound );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.biomaterial.Compound)}
+     * Performs the core logic for {@link #findOrCreate(Compound)}
      */
-    protected abstract ubic.gemma.model.expression.biomaterial.Compound handleFindOrCreate(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception;
+    protected abstract Compound handleFindOrCreate( Compound compound );
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.biomaterial.Compound)}
+     * Performs the core logic for {@link #remove(Compound)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.expression.biomaterial.Compound compound )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( Compound compound );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.biomaterial.Compound)}
+     * Performs the core logic for {@link #update(Compound)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.biomaterial.Compound compound )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( Compound compound );
 
 }

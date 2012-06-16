@@ -427,14 +427,14 @@ public interface ExpressionExperimentService {
     /**
      * Retrieve some of the vectors for the given expressionExperiment and quantitation type. Used for peeking at the
      * data without retrieving the whole data set.
+     * <p>
+     * To view processed data vectors, you should use ProcessedExpressionDataVectorService.getProcessedVectors instead.
      * 
      * @param quantitationType
      * @param limit
      * @return
-     * @deprecated Use ProcessedExpressionDataVectorService.getProcessedVectors instead.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    @Deprecated
     public Collection<DesignElementDataVector> getSamplingOfVectors(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
 

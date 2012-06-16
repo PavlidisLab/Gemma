@@ -32,7 +32,6 @@ import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -87,7 +86,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         boolean found = false;
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
             if ( f.equals( super.experimentalFactorB ) && probe.getName().equals( "probe_1" ) ) {

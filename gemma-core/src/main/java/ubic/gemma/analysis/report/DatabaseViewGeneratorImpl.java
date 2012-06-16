@@ -36,11 +36,10 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -348,16 +347,10 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             log.warn( "Missing results for " + ee + " skipping to next. " );
                             continue;
                         }
-                        if ( !( dear instanceof ProbeAnalysisResult ) ) {
-                            log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
-                                    + dear.getClass() + " with id: " + dear.getId() );
-                            continue;
-                        }
 
                         if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
 
-                        String formatted = formatDiffExResult( ee, ( ProbeAnalysisResult ) dear, factorName, factorURI,
-                                baselineDescription );
+                        String formatted = formatDiffExResult( ee, dear, factorName, factorURI, baselineDescription );
 
                         if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
 
@@ -375,8 +368,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
      * @param probeAnalysisResult
      * @return
      */
-    private String formatDiffExResult( ExpressionExperiment ee, ProbeAnalysisResult probeAnalysisResult,
-            String factorName, String factorURI, String baselineDescription ) {
+    private String formatDiffExResult( ExpressionExperiment ee,
+            DifferentialExpressionAnalysisResult probeAnalysisResult, String factorName, String factorURI,
+            String baselineDescription ) {
 
         CompositeSequence cs = probeAnalysisResult.getProbe();
 

@@ -94,7 +94,7 @@ public class TwoColorArrayLoessNormalizerTest {
      * @see TestCase#setUp()
      */
     @Before
-    public final void setUp() throws Exception {
+    public final void setUp() {
         connected = false;
         try {
             normalizer = new TwoColorArrayLoessNormalizer();
@@ -109,7 +109,7 @@ public class TwoColorArrayLoessNormalizerTest {
      * @see TestCase#tearDown()
      */
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if ( connected ) normalizer.cleanup();
         normalizer = null;
     }

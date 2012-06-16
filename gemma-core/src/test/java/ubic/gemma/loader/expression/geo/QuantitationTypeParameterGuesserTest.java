@@ -50,10 +50,10 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     QuantitationType qt;
 
     /**
-     * @throws Exception
+     * @
      */
     @Test
-    public void testAbsCall() throws Exception {
+    public void testAbsCall() {
         String a = "ABS CALL";
         String b = "the call in an absolute analysis that indicates if the transcript was present (P), absent (A), marginal (M), or reverse present (RP)";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
@@ -61,7 +61,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testareaCall() throws Exception {
+    public void testareaCall() {
         String a = "AREA";
         String b = "Number of pixels used to calculate a feature's intensity";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
@@ -69,7 +69,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testbackground() throws Exception {
+    public void testbackground() {
         String a = "B635_MEDIAN";
         String b = "median Cy5 feature background intensity";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() );
@@ -77,7 +77,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testbackgroundB() throws Exception {
+    public void testbackgroundB() {
         String a = "CH1_BKD_+2SD";
         String b = "Percent of feature pixels that were greater than two standard deviations of the background over the background signal";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() )
@@ -87,7 +87,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testbkdst() throws Exception {
+    public void testbkdst() {
         String a = "CH2_BKD_ SD";
         String b = "NChannel 2 background standard deviation";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
@@ -100,7 +100,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
      * .
      */
     @Test
-    public void testGuessQuantitationTypeParameters() throws Exception {
+    public void testGuessQuantitationTypeParameters() {
         String name = "CH1_MEAN";
         String description = "CH1 Mean Intensity";
         qt.setName( name );
@@ -113,7 +113,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testPercent() throws Exception {
+    public void testPercent() {
         String a = "%_>_B532+1SD";
         String b = "percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #2 (532 nm, Cy3)";
 
@@ -121,7 +121,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( "got " + s, ScaleType.PERCENT, s );
     }
 
-    public void testPixels() throws Exception {
+    public void testPixels() {
         String a = "B Pixels";
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), null );
@@ -129,7 +129,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testPrimitiveType() throws Exception {
+    public void testPrimitiveType() {
         String a = "VALUE";
         String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 1.0 );
@@ -137,7 +137,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testPrimitiveTypeDoubleWrong() throws Exception {
+    public void testPrimitiveTypeDoubleWrong() {
         String a = "VALUE";
         String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "a" );
@@ -145,7 +145,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testPrimitiveTypeInteger() throws Exception {
+    public void testPrimitiveTypeInteger() {
         String a = "B Pixels";
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 12232 );
@@ -153,7 +153,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testPrimitiveTypeIntegerWrong() throws Exception {
+    public void testPrimitiveTypeIntegerWrong() {
         String a = "B Pixels";
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(),
@@ -162,7 +162,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testRatio() throws Exception {
+    public void testRatio() {
         String a = "RAT1_MEAN";
         String b = "ratio of CH1D_MEAN to CH2D_MEAN";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
@@ -170,15 +170,16 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
     }
 
     @Test
-    public void testBadRatio() throws Exception {
+    public void testBadRatio() {
         String a = "VALUE";
         String b = "Log2 ratio (CH_1 Median-CH1_B/CH2_Median-CH2_B)";
-        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "null" );
+        PrimitiveType s = QuantitationTypeParameterGuesser
+                .guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "null" );
         assertEquals( "got " + s, PrimitiveType.DOUBLE, s );
     }
 
     /**
-     * @throws Exception
+     * @
      */
     @Test
     public void testTortureQuantitationTypes() throws Exception {

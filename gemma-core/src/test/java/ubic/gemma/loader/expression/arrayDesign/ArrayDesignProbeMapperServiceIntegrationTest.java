@@ -44,7 +44,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     ArrayDesignSequenceAlignmentService aligner;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         blat = new Blat();
     }
 
@@ -54,7 +54,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
      * .
      */
     @Test
-    public final void testProcessArrayDesign() throws Exception {
+    public final void testProcessArrayDesign() {
         if ( !fastaCmdExecutableExists() ) return;
         if ( ad == null ) return;
 

@@ -80,7 +80,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * .biosequence.BioSequence)
      */
     @Override
-    protected Collection handleFindByBioSequence( BioSequence bioSequence ) {
+    protected Collection<BlatResult> handleFindByBioSequence( BioSequence bioSequence ) {
         return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
 
@@ -90,8 +90,8 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) {
-        return this.getBlatResultDao().load( ids );
+    protected Collection<BlatResult> handleLoad( Collection<Long> ids ) {
+        return ( Collection<BlatResult> ) this.getBlatResultDao().load( ids );
     }
 
     /**

@@ -42,7 +42,7 @@ public class HttpFetcherTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.loader.loaderutils.HttpFetcher.fetch(String)'
      */
-    public void testFetch() throws Exception {
+    public void testFetch() {
         HttpFetcher hf = new HttpFetcher();
 
         try {
@@ -62,6 +62,7 @@ public class HttpFetcherTest extends TestCase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#tearDown()
      */
     @Override

@@ -34,7 +34,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
  * @see ubic.gemma.model.common.description.VocabCharacteristic
  */
 @Repository
-public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.description.VocabCharacteristicDaoBase {
+public class VocabCharacteristicDaoImpl extends VocabCharacteristicDaoBase {
 
     private static final int BATCH_SIZE = 1000;
 
@@ -51,10 +51,11 @@ public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.descript
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
-    protected Map handleFindByParentClass( Class parentClass ) throws Exception {
+    protected Map handleFindByParentClass( Class<?> parentClass ) {
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
@@ -73,16 +74,17 @@ public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.descript
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @Override
-    protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
+    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<String>();
         Collection<Characteristic> results = new HashSet<Characteristic>();
         final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
 
-        for ( String uri : ( Collection<String> ) uris ) {
+        for ( String uri : uris ) {
             batch.add( uri );
             if ( batch.size() >= batchSize ) {
                 results.addAll( getHibernateTemplate().findByNamedParam( queryString, "uris", batch ) );
@@ -97,34 +99,38 @@ public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.descript
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
     @Override
-    protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
+    protected Collection<Characteristic> handleFindByUri( String searchString ) {
         final String queryString = "select char from VocabCharacteristicImpl as char where  char.valueUri = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", searchString );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
-    protected Collection handleFindByValue( String search ) throws Exception {
+    protected Collection<Characteristic> handleFindByValue( String search ) {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
      * java.util.Collection)
      */
     @Override
-    protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
+    protected Map<Characteristic, Object> handleGetParents( Class<?> parentClass,
+            Collection<Characteristic> characteristics ) {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
-        for ( Characteristic c : ( Collection<Characteristic> ) characteristics ) {
+        for ( Characteristic c : characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
                 batchGetParents( parentClass, batch, charToParent );

@@ -43,7 +43,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
     @Override
     protected ubic.gemma.model.common.description.LocalFile handleCopyFile(
             ubic.gemma.model.common.description.LocalFile sourceFile,
-            ubic.gemma.model.common.description.LocalFile targetFile ) throws java.lang.Exception {
+            ubic.gemma.model.common.description.LocalFile targetFile ) throws IOException {
         File src = sourceFile.asFile();
         if ( src == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
 
@@ -74,8 +74,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
      * @see ubic.gemma.model.common.description.LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
      */
     @Override
-    protected void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile )
-            throws java.lang.Exception {
+    protected void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile ) throws IOException {
 
         if ( localFile == null ) return;
         File file = localFile.asFile();

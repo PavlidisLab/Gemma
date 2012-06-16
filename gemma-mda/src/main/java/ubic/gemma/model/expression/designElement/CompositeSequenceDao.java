@@ -18,7 +18,12 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -38,8 +43,7 @@ public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> findByBioSequence(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
 
     /**
      * 
@@ -49,18 +53,17 @@ public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Collection<CompositeSequence> findByName( java.lang.String name );
+    public Collection<CompositeSequence> findByName( java.lang.String name );
 
     /**
      * 
@@ -78,40 +81,35 @@ public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
      * Given a collection of composite sequences returns a map of the given composite sequences to a collection of genes
      * </p>
      */
-    public java.util.Map getGenes( java.util.Collection<CompositeSequence> compositeSequences );
+    public java.util.Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences );
 
     /**
-     * <p>
      * given a composite sequence returns a collection of genes
-     * </p>
      */
     public java.util.Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
     /**
-     * <p>
-     * Returns a map of CompositeSequences to PhysicalLocation to BlatAssociations at each location.
-     * </p>
+     * Returns a map of CompositeSequences to BlatAssociations .
      */
-    public java.util.Map getGenesWithSpecificity( java.util.Collection<CompositeSequence> compositeSequences );
+    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
+            java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * 
      */
-    public java.util.Collection getRawSummary( java.util.Collection<CompositeSequence> compositeSequences,
-            java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
 
     /**
      * 
      */
-    public java.util.Collection getRawSummary( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, java.lang.Integer numResults );
 
     /**
      * <p>
      * See ArrayDesignDao.getRawCompositeSequenceSummary.
      * </p>
      */
-    public java.util.Collection getRawSummary( CompositeSequence compositeSequence, java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, java.lang.Integer numResults );
 
     /**
      * 

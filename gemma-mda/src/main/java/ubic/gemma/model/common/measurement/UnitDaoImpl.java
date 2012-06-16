@@ -37,7 +37,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
     public UnitDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
- 
+
     @Override
     public Unit find( Unit unit ) {
         try {
@@ -46,7 +46,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
 
             Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), unit );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -65,6 +65,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.measurement.UnitDao#findOrCreate(ubic.gemma.model.common.measurement.Unit)
      */
     @Override

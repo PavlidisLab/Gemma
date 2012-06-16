@@ -46,7 +46,7 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
      * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public void setup() throws Exception {
+    public void setup()  {
 
         for ( int i = 0; i < 20; i++ ) {
             this.bs = this.getTestPersistentBioSequence();

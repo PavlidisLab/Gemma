@@ -49,7 +49,7 @@ public class UserServiceImplTest {
      * @see TestCase#setUp()
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         userDaoMock = createMock( UserDao.class );
         userService.userDao = userDaoMock;
 

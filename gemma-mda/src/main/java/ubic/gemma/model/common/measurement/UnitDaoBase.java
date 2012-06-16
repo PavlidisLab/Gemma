@@ -34,8 +34,8 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<? extends Unit> create( final int transform,
-            final java.util.Collection<? extends Unit> entities ) {
+    @Override
+    public java.util.Collection<? extends Unit> create( final java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.create - 'entities' can not be null" );
         }
@@ -46,7 +46,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Unit> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            create( transform, entityIterator.next() );
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -54,74 +54,42 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
         return entities;
     }
 
-    
     @Override
-    public Collection<? extends Unit > load( Collection<Long> ids ) {
+    public Collection<? extends Unit> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from UnitImpl where id in (:ids)", "ids", ids );
     }
-    
+
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(int transform, ubic.gemma.model.common.measurement.Unit)
      */
-    public Unit create( final int transform, final ubic.gemma.model.common.measurement.Unit unit ) {
+    @Override
+    public Unit create( final Unit unit ) {
         if ( unit == null ) {
             throw new IllegalArgumentException( "Unit.create - 'unit' can not be null" );
         }
         this.getHibernateTemplate().save( unit );
-        return ( Unit ) this.transformEntity( transform, unit );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
-     */
-    
-    @Override
-    public java.util.Collection<? extends Unit> create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.UnitDao#create(ubic.gemma.model.common.measurement.Unit)
-     */
-    @Override
-    public ubic.gemma.model.common.measurement.Unit create( ubic.gemma.model.common.measurement.Unit unit ) {
-        return this.create( TRANSFORM_NONE, unit );
+        return unit;
     }
 
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#load(int, java.lang.Long)
      */
-    public Unit load( final int transform, final java.lang.Long id ) {
+    @Override
+    public Unit load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Unit.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.common.measurement.UnitImpl.class, id );
-        return ( Unit ) transformEntity( transform, ( ubic.gemma.model.common.measurement.Unit ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.UnitDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.measurement.Unit load( java.lang.Long id ) {
-        return this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
-     */
-    @Override
-    public java.util.Collection<? extends Unit> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( Unit ) entity;
     }
 
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll(int)
      */
-    public java.util.Collection<? extends Unit> loadAll( final int transform ) {
+    @Override
+    public java.util.Collection<? extends Unit> loadAll() {
         final java.util.Collection<? extends Unit> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.measurement.UnitImpl.class );
-        this.transformEntities( transform, results );
         return results;
     }
 
@@ -192,50 +160,6 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
             throw new IllegalArgumentException( "Unit.update - 'unit' can not be null" );
         }
         this.getHibernateTemplate().update( unit );
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.measurement.Unit)} method. This method does not instantiate a
-     * new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.measurement.UnitDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.measurement.Unit)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection<? extends Unit> entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.measurement.UnitDao</code>, please note that the {@link #TRANSFORM_NONE} constant
-     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
-     * {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.common.measurement.UnitDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.common.measurement.Unit entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
     }
 
 }

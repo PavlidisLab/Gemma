@@ -81,10 +81,10 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private AclService aclService;
-    
+
     @Autowired
-    private UserManager userManager; 
-    
+    private UserManager userManager;
+
     @Autowired
     private MutableAclService mutableAclService;
 
@@ -96,7 +96,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         // admin
         this.arrayDesign = ArrayDesign.Factory.newInstance();
@@ -124,7 +124,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.arrayDesign.setCompositeSequences( col );
 
         this.arrayDesign = this.arrayDesignService.findOrCreate( this.arrayDesign );
-        
+
     }
 
     @Test

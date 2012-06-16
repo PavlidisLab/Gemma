@@ -29,37 +29,19 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity
      * .Person)
      */
     @Override
-    protected Person handleCreate( Person person ) throws Exception {
+    protected Person handleCreate( Person person ) {
         return this.getPersonDao().create( person );
     }
 
     @Override
-    protected Collection handleFindByFullName( String name, String lastName ) throws Exception {
+    protected Collection handleFindByFullName( String name, String lastName ) {
         return this.getPersonDao().findByFullName( name, lastName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findByName(java.lang.String, java.lang.String,
-     *      java.lang.String)
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.Person handleFindByName( java.lang.String firstName,
-            java.lang.String lastName, java.lang.String middleName ) throws java.lang.Exception {
-        Collection results = this.getPersonDao().findByFullName( firstName, lastName, middleName );
-        Person result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( "More than one instance of '"
-                    + ubic.gemma.model.common.auditAndSecurity.Contact.class.getName()
-                    + "' was found when executing query" );
-
-        } else if ( results.size() == 1 ) {
-            result = ( ubic.gemma.model.common.auditAndSecurity.Person ) results.iterator().next();
-        }
-        return result;
     }
 
     /**
@@ -67,41 +49,43 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
      *      java.lang.String)
      */
     @Override
-    protected Person handleFindOrCreate( Person person ) throws Exception {
+    protected Person handleFindOrCreate( Person person ) {
         return this.getPersonDao().findOrCreate( person );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleLoadAll()
      */
     @Override
-    protected Collection<Person> handleLoadAll() throws Exception {
+    protected Collection<Person> handleLoadAll() {
         return ( Collection<Person> ) this.getPersonDao().loadAll();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
      * java.lang.String, java.lang.String)
      */
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity
      * .Person)
      */
     @Override
-    protected void handleRemove( Person person ) throws Exception {
+    protected void handleRemove( Person person ) {
         this.getPersonDao().remove( person );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#removePerson(ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
-            throws java.lang.Exception {
+    protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         this.getPersonDao().remove( person );
     }
 

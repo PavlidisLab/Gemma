@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 
  * @see ubic.gemma.model.common.description.ExternalDatabaseService
  */
-public abstract class ExternalDatabaseServiceBase   implements
+public abstract class ExternalDatabaseServiceBase implements
         ubic.gemma.model.common.description.ExternalDatabaseService {
 
     @Autowired
@@ -39,13 +39,8 @@ public abstract class ExternalDatabaseServiceBase   implements
      */
     @Override
     public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String name ) {
-        try {
-            return this.handleFind( name );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.find(java.lang.String name)' --> "
-                            + th, th );
-        }
+        return this.handleFind( name );
+
     }
 
     /**
@@ -54,41 +49,26 @@ public abstract class ExternalDatabaseServiceBase   implements
     @Override
     public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
             final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        try {
-            return this.handleFindOrCreate( externalDatabase );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.findOrCreate(ubic.gemma.model.common.description.ExternalDatabase externalDatabase)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( externalDatabase );
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#loadAll()
      */
     @Override
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.loadAll()' --> "
-                            + th, th );
-        }
+    public java.util.Collection<ExternalDatabase> loadAll() {
+        return this.handleLoadAll();
+
     }
 
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#remove(ubic.gemma.model.common.description.ExternalDatabase)
      */
     @Override
-    public void remove( final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        try {
-            this.handleRemove( externalDatabase );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.remove(ubic.gemma.model.common.description.ExternalDatabase externalDatabase)' --> "
-                            + th, th );
-        }
+    public void remove( final ExternalDatabase externalDatabase ) {
+        this.handleRemove( externalDatabase );
+
     }
 
     /**
@@ -108,24 +88,21 @@ public abstract class ExternalDatabaseServiceBase   implements
     /**
      * Performs the core logic for {@link #find(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFind( java.lang.String name )
-            throws java.lang.Exception;
+    protected abstract ExternalDatabase handleFind( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)}
      */
-    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFindOrCreate(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) throws java.lang.Exception;
+    protected abstract ExternalDatabase handleFindOrCreate( ExternalDatabase externalDatabase );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExternalDatabase> handleLoadAll();
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.ExternalDatabase)}
+     * Performs the core logic for {@link #remove(ExternalDatabase)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( ExternalDatabase externalDatabase );
 
 }

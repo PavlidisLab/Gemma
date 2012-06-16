@@ -127,7 +127,7 @@ public class OntologyIndexerTest {
     }
 
     @Test
-    public final void testPersistanceFail() throws Exception {
+    public final void testPersistanceFail() {
         OntologyIndexer.eraseIndex( ONTNAME_FOR_TESTS );
         try {
             OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );

@@ -73,8 +73,8 @@ public class GemmaClassicHomePageController {
     }
 
     @RequestMapping(WebConstants.CLASSIC_HOME_PAGE)
-    public ModelAndView showHomePage() throws Exception {
-        
+    public ModelAndView showHomePage() {
+
         /*
          * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
          * functionality here without considering that.

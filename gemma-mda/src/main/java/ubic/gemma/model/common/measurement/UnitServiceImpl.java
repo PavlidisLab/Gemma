@@ -96,8 +96,8 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
     @Override
-    public Collection loadAll() {
-        return unitDao.loadAll();
+    public Collection<Unit> loadAll() {
+        return ( Collection<Unit> ) unitDao.loadAll();
     }
 
     /**

@@ -34,7 +34,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
-
 /**
  * TODO Document Me
  * 
@@ -46,18 +45,18 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     private Gene g1 = null;
     private Taxon tax1 = null;
     private GeneSet gset = null;
-    
+
     @Autowired
     GeneSetService geneSetService;
-    
+
     @Autowired
     UserManager userManager;
 
     @Autowired
     GeneSetValueObjectHelper geneSetValueObjectHelper;
-    
+
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         g1 = this.getTestPeristentGene();
         tax1 = this.getTaxon( "human" );
@@ -73,48 +72,49 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
 
         gset = geneSetService.create( gset );
     }
-    
+
     @Test
     public void testConvertToValueObject() {
 
         Long id = gset.getId();
         assertNotNull( id );
-        
+
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gset );
-                
-        assertEquals( gset.getId(), gsvo.getId());
+
+        assertEquals( gset.getId(), gsvo.getId() );
         assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
-        // the method for setting the taxon Id uses a db call with the geneSet's id 
+        // the method for setting the taxon Id uses a db call with the geneSet's id
         // assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
-        
 
-   /*     geneSetService.remove( gset );
-
-        assertNull( geneSetService.load( id ) );*/
+        /*
+         * geneSetService.remove( gset );
+         * 
+         * assertNull( geneSetService.load( id ) );
+         */
 
     }
-    
+
     @Test
     public void testConvertToLightValueObject() {
 
         Long id = gset.getId();
         assertNotNull( id );
-        
+
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToLightValueObject( gset );
-        
+
         assertNull( gsvo.getGeneIds() );
-                
-        assertEquals( gset.getId(), gsvo.getId());
+
+        assertEquals( gset.getId(), gsvo.getId() );
         assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
 
-        // the method for setting the taxon Id uses a db call with the geneSet's id 
+        // the method for setting the taxon Id uses a db call with the geneSet's id
         // assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
-        
+
         /*
-        geneSetService.remove( gset );
-        assertNull( geneSetService.load( id ) );*/
+         * geneSetService.remove( gset ); assertNull( geneSetService.load( id ) );
+         */
 
     }
 }

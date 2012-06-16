@@ -184,7 +184,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         stringBiomartGene2GeneProteinAssociationLoader = new StringProteinInteractionLoader();
         stringBiomartGene2GeneProteinAssociationLoader.setPersisterHelper( super.persisterHelper );
@@ -248,7 +248,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
      * Tests that two taxons can be processed at same time.
      */
     @Test
-    public void testDoLoadRemoteBiomartFileLocalStringFileMultipleTaxon() throws Exception {
+    public void testDoLoadRemoteBiomartFileLocalStringFileMultipleTaxon() {
         String testPPis = "/data/loader/protein/string/protein.links.multitaxon.txt";
         URL testPPisURL = this.getClass().getResource( testPPis );
 
@@ -297,7 +297,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
      * Test given a local string file and remote biomart file for one taxon can be processed
      */
     @Test
-    public void testDoLoadRemoteBiomartFileLocalStringFileOneTaxon() throws Exception {
+    public void testDoLoadRemoteBiomartFileLocalStringFileOneTaxon() {
 
         // test pass in files so do not trigger fetcher
         // but make sure they get

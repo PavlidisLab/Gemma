@@ -66,7 +66,7 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
     ExpressionExperiment ee;
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if ( ee != null ) {
             try {
                 ees.delete( ee );
@@ -75,15 +75,15 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
             }
         }
     }
- 
+
     @Test
     public void testFetchAndLoadSuperSeries() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE11897SuperSeriesShort" ) );
         try {
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE11897", false, true, false, false,
-                    true, false );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE11897", false, true, false, false, true, false );
             assertEquals( 1, results.size() );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -97,7 +97,7 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
      * 
      * @throws Exception
      */
-    @Test 
+    @Test
     public void testFetchAndLoadSuperSeriesB() throws Exception {
 
         String path = getTestFileBasePath();
@@ -121,8 +121,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
         Collection<ArrayDesign> others = new HashSet<ArrayDesign>();
         others.add( ( ArrayDesign ) arrayDesignsUsed.toArray()[1] );
 
-        ArrayDesign merged = adms.merge( ( ArrayDesign ) arrayDesignsUsed.toArray()[0], others, RandomStringUtils
-                .randomAlphabetic( 5 ), RandomStringUtils.randomAlphabetic( 5 ), false );
+        ArrayDesign merged = adms.merge( ( ArrayDesign ) arrayDesignsUsed.toArray()[0], others,
+                RandomStringUtils.randomAlphabetic( 5 ), RandomStringUtils.randomAlphabetic( 5 ), false );
 
         eepss.switchExperimentToArrayDesign( ee, merged );
 

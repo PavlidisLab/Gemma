@@ -29,7 +29,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
- 
+
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -54,10 +54,11 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
-    public void onSetUpInTransaction() throws Exception {
+    public void onSetUpInTransaction() {
 
         this.enabled = false;
 

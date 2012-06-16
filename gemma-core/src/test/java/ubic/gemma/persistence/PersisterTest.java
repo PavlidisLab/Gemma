@@ -37,7 +37,7 @@ public class PersisterTest extends BaseSpringContextTest {
      */
     @Test
     @Transactional
-    public void testPersistNewArrayDesign() throws Exception {
+    public void testPersistNewArrayDesign() {
         ArrayDesign ad = super.getTestPersistentArrayDesign( 20, true, false, true );
         assertNotNull( ad.getId() );
     }

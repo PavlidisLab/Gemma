@@ -38,13 +38,8 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
      */
     @Override
     public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.countAll()' --> " + th,
-                    th );
-        }
+        return this.handleCountAll();
+
     }
 
     /**
@@ -53,13 +48,8 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     @Override
     public ubic.gemma.model.common.description.DatabaseEntry find(
             final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        try {
-            return this.handleFind( databaseEntry );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.find(ubic.gemma.model.common.description.DatabaseEntry databaseEntry)' --> "
-                            + th, th );
-        }
+        return this.handleFind( databaseEntry );
+
     }
 
     /**
@@ -67,13 +57,8 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
      */
     @Override
     public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        try {
-            this.handleRemove( databaseEntry );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.remove(ubic.gemma.model.common.description.DatabaseEntry databaseEntry)' --> "
-                            + th, th );
-        }
+        this.handleRemove( databaseEntry );
+
     }
 
     /**
@@ -88,13 +73,8 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
      */
     @Override
     public void update( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        try {
-            this.handleUpdate( databaseEntry );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.update(ubic.gemma.model.common.description.DatabaseEntry databaseEntry)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( databaseEntry );
+
     }
 
     /**
@@ -107,24 +87,22 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+    protected abstract java.lang.Integer handleCountAll();
 
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.common.description.DatabaseEntry)}
      */
     protected abstract ubic.gemma.model.common.description.DatabaseEntry handleFind(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception;
+            ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
 }

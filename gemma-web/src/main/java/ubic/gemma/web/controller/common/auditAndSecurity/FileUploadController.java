@@ -82,8 +82,7 @@ public class FileUploadController extends AbstractController {
      * , javax.servlet.http.HttpServletResponse)
      */
     @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response ) {
 
         /*
          * At this point, the DispatcherServlet has already dealt with the multipart file via the

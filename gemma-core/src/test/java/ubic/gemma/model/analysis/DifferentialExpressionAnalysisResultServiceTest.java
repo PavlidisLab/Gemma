@@ -30,9 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -79,7 +78,7 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
         Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
 
-        ProbeAnalysisResult r = ( ProbeAnalysisResult ) results.iterator().next();
+        DifferentialExpressionAnalysisResult r = results.iterator().next();
 
         Collection<ExperimentalFactor> factors = analysisResultService.getExperimentalFactors( r );
         log.info( "Num factors: " + factors.size() );
@@ -114,19 +113,19 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
         Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
         Iterator<DifferentialExpressionAnalysisResult> iter = results.iterator();
 
-        Collection<ProbeAnalysisResult> testResults = new HashSet<ProbeAnalysisResult>();
+        Collection<DifferentialExpressionAnalysisResult> testResults = new HashSet<DifferentialExpressionAnalysisResult>();
         int testResultsSize = 3;
 
         for ( int i = 0; i < testResultsSize; i++ ) {
-            testResults.add( ( ProbeAnalysisResult ) iter.next() );
+            testResults.add( iter.next() );
         }
 
-        Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = analysisResultService
+        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = analysisResultService
                 .getExperimentalFactors( testResults );
 
-        Collection<ProbeAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
+        Collection<DifferentialExpressionAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
 
-        for ( ProbeAnalysisResult d : diffResultKeys ) {
+        for ( DifferentialExpressionAnalysisResult d : diffResultKeys ) {
 
             Collection<ExperimentalFactor> factors = factorsByResultMap.get( d );
 

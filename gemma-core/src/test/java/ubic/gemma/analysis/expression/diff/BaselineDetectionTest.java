@@ -122,7 +122,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testFetchAndLoadGSE18162() throws Exception {
+    public void testFetchAndLoadGSE18162() {
 
         Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort.getBaselineLevels( ee
                 .getExperimentalDesign().getExperimentalFactors() );

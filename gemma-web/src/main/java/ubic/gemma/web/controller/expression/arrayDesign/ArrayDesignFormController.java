@@ -70,8 +70,7 @@ public class ArrayDesignFormController extends BaseFormController {
         ArrayDesign existing = arrayDesignService.load( ad.getId() );
 
         if ( existing == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No such platform with id="
-                    + ad.getId() ) );
+            errors.addError( new ObjectError( command.toString(), null, null, "No such platform with id=" + ad.getId() ) );
             return processFormSubmission( request, response, command, errors );
         }
 
@@ -154,8 +153,9 @@ public class ArrayDesignFormController extends BaseFormController {
                 + request.getParameter( "id" ) ) );
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    protected Map referenceData( HttpServletRequest request ) throws Exception {
+    protected Map referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
         mapping.put( "technologyTypes", new ArrayList<String>( TechnologyType.literals() ) );
         return mapping;

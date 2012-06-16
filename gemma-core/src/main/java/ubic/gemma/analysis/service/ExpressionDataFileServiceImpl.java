@@ -40,7 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component; 
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -54,7 +54,6 @@ import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
@@ -656,16 +655,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         // Dump the probe data in the sorted order of the 1st column that we orginally sorted
         for ( DifferentialExpressionAnalysisResult sortedResult : sortedFirstColumnOfResults ) {
 
-            if ( sortedResult instanceof ProbeAnalysisResult ) {
-                CompositeSequence cs = ( ( ProbeAnalysisResult ) sortedResult ).getProbe();
-                StringBuilder sb = probe2String.get( cs.getId() );
-                if ( sb == null ) {
-                    log.warn( "Unable to find probe " + cs.getId() + " in map" );
-                    break;
-                }
-                buf.append( sb );
-                buf.append( "\n" );
+            CompositeSequence cs = sortedResult.getProbe();
+            StringBuilder sb = probe2String.get( cs.getId() );
+            if ( sb == null ) {
+                log.warn( "Unable to find probe " + cs.getId() + " in map" );
+                break;
             }
+            buf.append( sb );
+            buf.append( "\n" );
+
         }
     }
 
@@ -702,40 +700,35 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
             StringBuilder probeBuffer = new StringBuilder();
 
-            if ( dear instanceof ProbeAnalysisResult ) {
-                CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+            CompositeSequence cs = dear.getProbe();
 
-                // Make a hashmap so we can organize the data by probe with factors as colums
-                // Need to cache the information untill we have it organized in the correct format to write
-                Long csid = cs.getId();
-                if ( probe2String.containsKey( csid ) ) {
-                    probeBuffer = probe2String.get( csid );
-                } else {// no entry for probe yet
-                    probeBuffer.append( cs.getName() );
-                    if ( geneAnnotations.containsKey( csid ) ) {
-                        String[] annotationStrings = geneAnnotations.get( csid );
-                        probeBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
+            // Make a hashmap so we can organize the data by probe with factors as colums
+            // Need to cache the information untill we have it organized in the correct format to write
+            Long csid = cs.getId();
+            if ( probe2String.containsKey( csid ) ) {
+                probeBuffer = probe2String.get( csid );
+            } else {// no entry for probe yet
+                probeBuffer.append( cs.getName() );
+                if ( geneAnnotations.containsKey( csid ) ) {
+                    String[] annotationStrings = geneAnnotations.get( csid );
+                    probeBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
 
-                        // leaving out Gemma ID, which is annotationStrings[3]
-                        if ( annotationStrings.length > 4 ) {
-                            // ncbi id.
-                            probeBuffer.append( "\t" + annotationStrings[4] );
-                        }
+                    // leaving out Gemma ID, which is annotationStrings[3]
+                    if ( annotationStrings.length > 4 ) {
+                        // ncbi id.
+                        probeBuffer.append( "\t" + annotationStrings[4] );
                     }
-
-                    probe2String.put( csid, probeBuffer );
                 }
 
-                Double correctedPvalue = dear.getCorrectedPvalue();
-                Double pvalue = dear.getPvalue();
-
-                String formattedCP = correctedPvalue == null ? "" : String.format( DECIMAL_FORMAT, correctedPvalue );
-                String formattedP = pvalue == null ? "" : String.format( DECIMAL_FORMAT, pvalue );
-                probeBuffer.append( "\t" + formattedCP + "\t" + formattedP );
-            } else {
-                log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
-                        + dear.getClass() + " with id: " + dear.getId() );
+                probe2String.put( csid, probeBuffer );
             }
+
+            Double correctedPvalue = dear.getCorrectedPvalue();
+            Double pvalue = dear.getPvalue();
+
+            String formattedCP = correctedPvalue == null ? "" : String.format( DECIMAL_FORMAT, correctedPvalue );
+            String formattedP = pvalue == null ? "" : String.format( DECIMAL_FORMAT, pvalue );
+            probeBuffer.append( "\t" + formattedCP + "\t" + formattedP );
 
         } // ears.getResults loop
         return sortedFirstColumnOfResults;
@@ -745,8 +738,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param probeAnalysisResult
      * @return
      */
-    private String formatDiffExResult( ExpressionExperiment ee, ProbeAnalysisResult probeAnalysisResult,
-            String factorName, String factorURI, String baselineDescription ) {
+    private String formatDiffExResult( ExpressionExperiment ee,
+            DifferentialExpressionAnalysisResult probeAnalysisResult, String factorName, String factorURI,
+            String baselineDescription ) {
 
         CompositeSequence cs = probeAnalysisResult.getProbe();
 
@@ -1028,53 +1022,49 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
             StringBuilder rowBuffer = new StringBuilder();
 
-            if ( dear instanceof ProbeAnalysisResult ) {
-                CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+            CompositeSequence cs = dear.getProbe();
 
-                // Make a hashmap so we can organize the data by probe with factors as columns
-                // Need to cache the information until we have it organized in the correct format to write
-                Long csid = cs.getId();
-                if ( probe2String.containsKey( csid ) ) {
-                    rowBuffer = probe2String.get( csid );
-                } else {// no entry for probe yet
-                    rowBuffer.append( cs.getName() );
-                    if ( geneAnnotations.containsKey( csid ) ) {
-                        String[] annotationStrings = geneAnnotations.get( csid );
-                        rowBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
+            // Make a hashmap so we can organize the data by probe with factors as columns
+            // Need to cache the information until we have it organized in the correct format to write
+            Long csid = cs.getId();
+            if ( probe2String.containsKey( csid ) ) {
+                rowBuffer = probe2String.get( csid );
+            } else {// no entry for probe yet
+                rowBuffer.append( cs.getName() );
+                if ( geneAnnotations.containsKey( csid ) ) {
+                    String[] annotationStrings = geneAnnotations.get( csid );
+                    rowBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
 
-                        // leaving out Gemma ID, which is annotationStrings[3]
-                        if ( annotationStrings.length > 4 ) {
-                            // ncbi id.
-                            rowBuffer.append( "\t" + annotationStrings[4] );
-                        }
+                    // leaving out Gemma ID, which is annotationStrings[3]
+                    if ( annotationStrings.length > 4 ) {
+                        // ncbi id.
+                        rowBuffer.append( "\t" + annotationStrings[4] );
                     }
-
-                    probe2String.put( csid, rowBuffer );
                 }
 
-                Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
-                // I don't think we can expect them in the same order.
-                for ( ContrastResult contrast : dear.getContrasts() ) {
-                    Double foldChange = contrast.getLogFoldChange();
-                    Double pValue = contrast.getPvalue();
-                    String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
-                    String formattedFoldChange = foldChange == null ? "" : String.format( DECIMAL_FORMAT, foldChange );
-                    String contrastData = "\t" + formattedFoldChange + "\t" + formattedPvalue;
-                    factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
-                }
-
-                // Get them in the right order.
-                for ( Long factorValueId : factorValueIdOrder ) {
-                    String s = factorValueIdToData.get( factorValueId );
-                    if ( s == null ) s = "";
-                    rowBuffer.append( s );
-                }
-
-                buf.append( rowBuffer.toString() + '\n' );
-            } else {
-                log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
-                        + dear.getClass() + " with id: " + dear.getId() );
+                probe2String.put( csid, rowBuffer );
             }
+
+            Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
+            // I don't think we can expect them in the same order.
+            for ( ContrastResult contrast : dear.getContrasts() ) {
+                Double foldChange = contrast.getLogFoldChange();
+                Double pValue = contrast.getPvalue();
+                String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
+                String formattedFoldChange = foldChange == null ? "" : String.format( DECIMAL_FORMAT, foldChange );
+                String contrastData = "\t" + formattedFoldChange + "\t" + formattedPvalue;
+                factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
+            }
+
+            // Get them in the right order.
+            for ( Long factorValueId : factorValueIdOrder ) {
+                String s = factorValueIdToData.get( factorValueId );
+                if ( s == null ) s = "";
+                rowBuffer.append( s );
+            }
+
+            buf.append( rowBuffer.toString() + '\n' );
+
         } // ears.getResults loop
         return buf.toString();
     }

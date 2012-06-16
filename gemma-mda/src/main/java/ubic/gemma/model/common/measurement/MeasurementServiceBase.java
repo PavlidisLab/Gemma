@@ -31,34 +31,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class MeasurementServiceBase implements ubic.gemma.model.common.measurement.MeasurementService {
 
     @Autowired
-    private ubic.gemma.model.common.measurement.MeasurementDao measurementDao;
+    private MeasurementDao measurementDao;
 
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
      */
     @Override
-    public ubic.gemma.model.common.measurement.Measurement create(
-            final ubic.gemma.model.common.measurement.Measurement measurement ) {
-        try {
-            return this.handleCreate( measurement );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.measurement.MeasurementServiceException(
-                    "Error performing 'ubic.gemma.model.common.measurement.MeasurementService.create(ubic.gemma.model.common.measurement.Measurement measurement)' --> "
-                            + th, th );
-        }
+    public Measurement create( final Measurement measurement ) {
+        return this.handleCreate( measurement );
+
     }
 
     /**
      * Sets the reference to <code>measurement</code>'s DAO.
      */
-    public void setMeasurementDao( ubic.gemma.model.common.measurement.MeasurementDao measurementDao ) {
+    public void setMeasurementDao( MeasurementDao measurementDao ) {
         this.measurementDao = measurementDao;
     }
 
     /**
      * Gets the reference to <code>measurement</code>'s DAO.
      */
-    protected ubic.gemma.model.common.measurement.MeasurementDao getMeasurementDao() {
+    protected MeasurementDao getMeasurementDao() {
         return this.measurementDao;
     }
 
@@ -66,6 +60,6 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
      * Performs the core logic for {@link #create(ubic.gemma.model.common.measurement.Measurement)}
      */
     protected abstract ubic.gemma.model.common.measurement.Measurement handleCreate(
-            ubic.gemma.model.common.measurement.Measurement measurement ) throws java.lang.Exception;
+            ubic.gemma.model.common.measurement.Measurement measurement );
 
 }

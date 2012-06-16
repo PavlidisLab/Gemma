@@ -55,9 +55,9 @@ import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -807,14 +807,14 @@ public class DEDVController {
         Collection<BioAssaySet> ees = new ArrayList<BioAssaySet>();
         ees.add( analyzedSet );
 
-        List<ProbeAnalysisResult> ee2probeResults = differentialExpressionResultService.findInResultSet( ar, threshold,
-                MAX_RESULTS_TO_RETURN, minNumberOfResults );
+        List<DifferentialExpressionAnalysisResult> ee2probeResults = differentialExpressionResultService
+                .findInResultSet( ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
 
         if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return new ArrayList<DoubleVectorValueObject>();
 
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
         Map<CompositeSequence, Double> pvalues = new HashMap<CompositeSequence, Double>();
-        for ( ProbeAnalysisResult par : ee2probeResults ) {
+        for ( DifferentialExpressionAnalysisResult par : ee2probeResults ) {
             probes.add( par.getProbe() );
             pvalues.put( par.getProbe(), par.getPvalue() );
         }

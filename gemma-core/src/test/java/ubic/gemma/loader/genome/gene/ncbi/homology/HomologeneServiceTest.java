@@ -33,7 +33,7 @@ public class HomologeneServiceTest extends TestCase {
 
     private HomologeneServiceImpl hgs;
 
-    public final void testGetHomologues() throws Exception {
+    public final void testGetHomologues() {
         long id = 34;
         Collection<Long> homologenes = hgs.getHomologues( id );
         assertNotNull( homologenes );

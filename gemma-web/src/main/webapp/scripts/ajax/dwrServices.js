@@ -292,7 +292,7 @@ DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizati
 }
 DifferentialExpressionSearchController.geneConditionSearch = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'geneConditionSearch', p0, p1, p2, p3, p4, callback);
+			'geneConditionSearch', p0, p1, p2, p3, p4, callback); // FIXME not used?
 }
 
 DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, p3, p4, callback) {

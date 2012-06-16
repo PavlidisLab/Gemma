@@ -116,12 +116,12 @@ public abstract class EvidenceLoaderCLI extends AbstractSpringAwareCLI {
     /** load services and verify that Ontology are loaded */
     protected synchronized void loadServices() throws Exception {
 
-        this.phenotypeAssociationService = ( PhenotypeAssociationManagerService ) this
-                .getBean( "phenotypeAssociationManagerService" );
+        this.phenotypeAssociationService = this
+                .getBean( PhenotypeAssociationManagerService.class );
 
-        this.geneService = ( GeneService ) this.getBean( "geneService" );
+        this.geneService = this.getBean( GeneService.class);
 
-        this.ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
+        this.ontologyService = this.getBean(OntologyService.class);
 
         this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
         this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();

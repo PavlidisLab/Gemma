@@ -46,7 +46,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
     private BioMaterialService bioMaterialService;
 
     @Test
-    public void testDelete() throws Exception {
+    public void testDelete() {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 

@@ -21,10 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.ContactService</code>, provides access
  * to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.common.auditAndSecurity.ContactService
  */
@@ -39,13 +37,7 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     @Override
     public ubic.gemma.model.common.auditAndSecurity.Contact find(
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        try {
-            return this.handleFind( contact );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.find(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
-                            + th, th );
-        }
+        return this.handleFind( contact );
     }
 
     /**
@@ -54,13 +46,8 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     @Override
     public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        try {
-            return this.handleFindOrCreate( contact );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( contact );
+
     }
 
     /**
@@ -68,13 +55,8 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
      */
     @Override
     public void remove( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        try {
-            this.handleRemove( contact );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.remove(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
-                            + th, th );
-        }
+        this.handleRemove( contact );
+
     }
 
     /**
@@ -89,13 +71,8 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
      */
     @Override
     public void update( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        try {
-            this.handleUpdate( contact );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.update(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( contact );
+
     }
 
     /**
@@ -109,24 +86,22 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
      * Performs the core logic for {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFindOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Contact)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.common.auditAndSecurity.Contact)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
 }

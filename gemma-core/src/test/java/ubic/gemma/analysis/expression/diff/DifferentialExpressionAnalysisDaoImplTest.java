@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -52,13 +52,6 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     private GeneDao geneDao = null;
 
     private String officialSymbol = "ACAA1";
-
-    /**
-     * @param differentialExpressionResultDao the differentialExpressionResultDao to set
-     */
-    public void setDifferentialExpressionResultDao( DifferentialExpressionResultDao differentialExpressionResultDao ) {
-        this.differentialExpressionResultDao = differentialExpressionResultDao;
-    }
 
     /**
      * 
@@ -98,7 +91,8 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
 
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
 
-            Map<BioAssaySet, List<ProbeAnalysisResult>> results = differentialExpressionResultDao.find( g, experiments );
+            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultDao
+                    .find( g, experiments );
 
             for ( BioAssaySet e : results.keySet() ) {
 
@@ -107,7 +101,7 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
 
                 assertNotNull( results );
 
-                for ( ProbeAnalysisResult r : results.get( e ) ) {
+                for ( DifferentialExpressionAnalysisResult r : results.get( e ) ) {
                     double pval = r.getPvalue();
                     log.debug( "pval: " + pval );
                 }

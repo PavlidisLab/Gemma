@@ -91,7 +91,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     private SessionFactory sessionFactory;
 
     @Test
-    public void testAuditCreateAndDeleteExpressionExperiment() throws Exception {
+    public void testAuditCreateAndDeleteExpressionExperiment() {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true );
 
         Collection<Long> trailIds = new HashSet<Long>();
@@ -247,7 +247,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSimpleAuditFindOrCreate() throws Exception {
+    public void testSimpleAuditFindOrCreate() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );

@@ -418,7 +418,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if ( rc != null && rc.isConnected() && rc instanceof RServeClient ) ( ( RServeClient ) rc ).disconnect();
     }
 

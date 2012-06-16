@@ -241,12 +241,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * 
      * @param name
      * @return
-     * @deprecated Use the newer getBean(Class) method.
      */
-    @Deprecated
-    protected Object getBean( String name ) {
+    protected <T> T getBean( String name, Class<T> t ) {
         try {
-            return this.applicationContext.getBean( name );
+            return this.applicationContext.getBean( name, t );
         } catch ( BeansException e ) {
             throw new RuntimeException( e );
         } catch ( Exception e ) {

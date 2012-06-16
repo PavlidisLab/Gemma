@@ -40,7 +40,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -187,11 +187,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                         for ( DifferentialExpressionAnalysisResult der : ders ) {
                             session.buildLockRequest( LockOptions.NONE ).lock( der );
                             Hibernate.initialize( der );
-                            if ( der instanceof ProbeAnalysisResult ) {
-                                ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
-                                CompositeSequence cs = par.getProbe();
-                                Hibernate.initialize( cs );
-                            }
+
+                            CompositeSequence cs = der.getProbe();
+                            Hibernate.initialize( cs );
+
                         }
                     }
 

@@ -30,9 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -89,7 +88,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
 
             Double pvalue = probeAnalysisResult.getPvalue();
@@ -166,7 +165,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
             // Double stat = probeAnalysisResult.getEffectSize();

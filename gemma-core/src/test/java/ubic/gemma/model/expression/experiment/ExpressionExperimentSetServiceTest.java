@@ -34,7 +34,6 @@ import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.genome.Taxon;
@@ -75,7 +74,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentSet eeSet = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         // need persistent entities so that experiment's taxon can be
         // queried from database during methods being tested
@@ -111,7 +110,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         expressionExperimentService.delete( eeMouse.getId() );
 
         // getting "access is denied" error here, even with this.runAsAdmin()
-        //expressionExperimentSetService.delete( eeSet );
+        // expressionExperimentSetService.delete( eeSet );
     }
 
     @Test
@@ -142,7 +141,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    @Test(expected = ExpressionExperimentSetServiceException.class)
+    @Test(expected = Exception.class)
     public void testAddingExperimentOfWrongTaxonUpdate() {
         Collection<BioAssaySet> newMembers = new LinkedList<BioAssaySet>();
         newMembers.add( ee1 );

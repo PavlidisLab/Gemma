@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +31,25 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
 @Repository
-public class ExpressionExperimentSubSetDaoImpl extends
-        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDaoBase {
+public class ExpressionExperimentSubSetDaoImpl extends ExpressionExperimentSubSetDaoBase {
 
     @Autowired
     public ExpressionExperimentSubSetDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
+        try {
+            Criteria queryObject = super.getSession().createCriteria( ExpressionExperimentSubSet.class );
+
+            BusinessKey.checkKey( entity );
+
+            BusinessKey.createQueryObject( queryObject, entity );
+            return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     @Override
@@ -50,17 +65,9 @@ public class ExpressionExperimentSubSetDaoImpl extends
     }
 
     @Override
-    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( ExpressionExperimentSubSet.class );
-
-            BusinessKey.checkKey( entity );
-
-            BusinessKey.createQueryObject( queryObject, entity );
-            return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+    public Collection<? extends ExpressionExperimentSubSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSubSetImpl where id in (:ids)",
+                "ids", ids );
     }
 
 }

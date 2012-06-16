@@ -64,7 +64,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID ) {
 
@@ -97,7 +96,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
@@ -109,7 +107,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
 
@@ -143,7 +140,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** delete all evidences from a specific external database */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 

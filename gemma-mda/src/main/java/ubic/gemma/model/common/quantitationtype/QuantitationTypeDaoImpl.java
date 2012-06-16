@@ -48,7 +48,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
 
         BusinessKey.addRestrictions( queryObject, quantitationType );
 
-        java.util.List results = queryObject.list();
+        java.util.List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {

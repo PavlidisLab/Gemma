@@ -27,9 +27,7 @@ import java.util.Collection;
  * @param <T>
  */
 public interface BaseDao<T> {
-
-    public final static int TRANSFORM_NONE = 0;
-
+    
     public Collection<? extends T> create( Collection<? extends T> entities );
 
     public T create( T entity );

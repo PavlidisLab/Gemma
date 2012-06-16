@@ -39,13 +39,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     @Override
     public ubic.gemma.model.expression.experiment.FactorValue create(
             final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            return this.handleCreate( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.create(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( factorValue );
+
     }
 
     /**
@@ -53,13 +48,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      */
     @Override
     public void delete( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            this.handleDelete( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.delete(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
+        this.handleDelete( factorValue );
+
     }
 
     /**
@@ -68,13 +58,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     @Override
     public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
             final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            return this.handleFindOrCreate( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
+        return this.handleFindOrCreate( factorValue );
+
     }
 
     /**
@@ -82,13 +67,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      */
     @Override
     public ubic.gemma.model.expression.experiment.FactorValue load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.load(java.lang.Long id)' "
-                            + "id = " + id + "; --> " + th, th );
-        }
+        return this.handleLoad( id );
+
     }
 
     /**
@@ -96,13 +76,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      */
     @Override
     public java.util.Collection<FactorValue> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.loadAll()' --> " + th,
-                    th );
-        }
+        return this.handleLoadAll();
+
     }
 
     /**
@@ -117,13 +92,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      */
     @Override
     public void update( final java.util.Collection<FactorValue> factorValues ) {
-        try {
-            this.handleUpdate( factorValues );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.update(java.util.Collection factorValues)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( factorValues );
+
     }
 
     /**
@@ -131,13 +101,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      */
     @Override
     public void update( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            this.handleUpdate( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.update(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
+        this.handleUpdate( factorValue );
+
     }
 
     /**
@@ -151,40 +116,37 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
      * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.FactorValue)}
      */
     protected abstract ubic.gemma.model.expression.experiment.FactorValue handleCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.expression.experiment.FactorValue)}
      */
-    protected abstract void handleDelete( ubic.gemma.model.expression.experiment.FactorValue factorValue )
-            throws java.lang.Exception;
+    protected abstract void handleDelete( ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)}
      */
     protected abstract ubic.gemma.model.expression.experiment.FactorValue handleFindOrCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection<FactorValue> handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<FactorValue> handleLoadAll();
 
     /**
      * Performs the core logic for {@link #update(java.util.Collection)}
      */
-    protected abstract void handleUpdate( java.util.Collection<FactorValue> factorValues ) throws java.lang.Exception;
+    protected abstract void handleUpdate( java.util.Collection<FactorValue> factorValues );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.FactorValue)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.FactorValue factorValue )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
 }

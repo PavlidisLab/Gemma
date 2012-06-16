@@ -45,7 +45,7 @@ public class DatasetCombinerTest {
     Collection<GeoDataset> gds;
 
     @Test
-    public void testFindGSE267() throws Exception {
+    public void testFindGSE267() {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
         assertEquals( 0, result.size() );
     }

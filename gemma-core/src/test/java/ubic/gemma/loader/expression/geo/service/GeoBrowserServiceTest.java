@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -35,10 +36,11 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
+    @Autowired
+    GeoBrowserService gbs;
 
     @Test
     public final void testGetDetails() throws Exception {
-        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
 
         try {
             String details = gbs.getDetails( "GSE15904" );
@@ -76,7 +78,6 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     @Test
     public final void testGetRecentRecords() throws Exception {
-        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
 
         try {
             List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 10, 10 );
@@ -127,8 +128,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testToggleUsability() throws Exception {
-        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
+    public final void testToggleUsability() {
 
         boolean oneWay = gbs.toggleUsability( "GSE15904" );
 

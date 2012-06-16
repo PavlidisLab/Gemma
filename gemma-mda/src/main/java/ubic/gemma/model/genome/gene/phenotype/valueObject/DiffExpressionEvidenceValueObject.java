@@ -23,7 +23,12 @@ import java.util.SortedSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 
-//TODO stgeorgn
+/**
+ * TODO Document Me
+ * 
+ * @author stgeorgn
+ * @version $Id$
+ */
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
     // TODO need to populate this as an valueObject...

@@ -35,7 +35,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -199,7 +198,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
              * Test values here are computed in R, using anova(lm(unlist(expData["205969_at",])~Treatment*Sex )) etc.
              */
             for ( DifferentialExpressionAnalysisResult r : results ) {
-                CompositeSequence probe = ( ( ProbeAnalysisResult ) r ).getProbe();
+                CompositeSequence probe = r.getProbe();
                 Double pvalue = r.getPvalue();
                 if ( probe.getName().equals( "205969_at" ) ) {
                     if ( sexFactor ) {

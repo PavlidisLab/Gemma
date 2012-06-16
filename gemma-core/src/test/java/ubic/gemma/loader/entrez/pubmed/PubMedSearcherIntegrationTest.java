@@ -32,7 +32,7 @@ public class PubMedSearcherIntegrationTest extends AbstractCLITestCase {
     /**
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
-    public final void testMain() throws Exception {
+    public final void testMain() {
 
         Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
         if ( result != null ) {

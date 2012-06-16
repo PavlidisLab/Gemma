@@ -148,19 +148,19 @@ public class CompositeSequenceController extends BaseController {
      * @return
      */
     public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator csd ) {
-    	log.debug("Started proccessing AJAX call: getGeneMappingSummary");
+        log.debug( "Started proccessing AJAX call: getGeneMappingSummary" );
         if ( csd == null || csd.getId() == null ) {
             return new HashSet<GeneMappingSummary>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
         compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
 
-    	log.debug("Finished proccessing AJAX call: getGeneMappingSummary");        
+        log.debug( "Finished proccessing AJAX call: getGeneMappingSummary" );
         return this.getGeneMappingSummary( cs );
     }
 
     @InitBinder
-    public void initBinder( WebDataBinder binder ) throws Exception {
+    public void initBinder( WebDataBinder binder ) {
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
@@ -275,7 +275,7 @@ public class CompositeSequenceController extends BaseController {
                  * Make a dummy blat result
                  */
                 blatResult = new BlatResultValueObject();
-                blatResult.setQuerySequence( BioSequenceValueObject.fromEntity(biologicalCharacteristic) );
+                blatResult.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
                 blatResult.setId( biologicalCharacteristic.getId() );
             }
 
@@ -289,7 +289,7 @@ public class CompositeSequenceController extends BaseController {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence(compositeSequenceService.convertToValueObject( cs ));
+                summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
                 results.put( blatResult, summary );
             }
 
@@ -302,7 +302,7 @@ public class CompositeSequenceController extends BaseController {
             GeneMappingSummary summary = new GeneMappingSummary();
             summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
             BlatResultValueObject newInstance = new BlatResultValueObject();
-            newInstance.setQuerySequence( BioSequenceValueObject.fromEntity(biologicalCharacteristic) );
+            newInstance.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
             newInstance.setId( -1L );
             summary.setBlatResult( newInstance );
             results.put( newInstance, summary );

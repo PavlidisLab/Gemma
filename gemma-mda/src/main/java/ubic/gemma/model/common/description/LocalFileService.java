@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
@@ -31,46 +32,46 @@ public interface LocalFileService {
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    public LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    public LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException;
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void deleteFile( LocalFile localFile );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void deleteFile( LocalFile localFile ) throws IOException;
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public LocalFile find( LocalFile localFile );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public LocalFile findByPath( java.lang.String path );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public LocalFile findOrCreate( LocalFile localFile );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public LocalFile save( LocalFile localFile );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( LocalFile localFile );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<LocalFile> loadAll();
 
 }

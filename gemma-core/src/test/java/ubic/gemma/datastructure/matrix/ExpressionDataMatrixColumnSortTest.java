@@ -49,7 +49,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     ExperimentalFactorService experimentalFactorService;
 
     @Test
-    public void testOrderByExperimentalDesignB() throws Exception {
+    public void testOrderByExperimentalDesignB() {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
 

@@ -47,8 +47,9 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends ExternalDatabase> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -80,11 +81,11 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
      */
 
     @Override
-    public java.util.Collection findByLocalDbInstallName( final java.lang.String localInstallDBName ) {
-        return this.findByLocalDbInstallName(
-
-        "from ExternalDatabaseImpl externalDatabase where externalDatabase.localInstallDbName=:localInstallDBName ",
-                localInstallDBName );
+    public java.util.Collection<ExternalDatabase> findByLocalDbInstallName( final java.lang.String localInstallDBName ) {
+        return this
+                .findByLocalDbInstallName(
+                        "from ExternalDatabaseImpl externalDatabase where externalDatabase.localInstallDbName=:localInstallDBName ",
+                        localInstallDBName );
     }
 
     /**
@@ -92,15 +93,16 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
      *      java.lang.String)
      */
 
-    public java.util.Collection findByLocalDbInstallName( final java.lang.String queryString,
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<ExternalDatabase> findByLocalDbInstallName( final java.lang.String queryString,
             final java.lang.String localInstallDBName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( localInstallDBName );
         argNames.add( "localInstallDBName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
+        return ( Collection<ExternalDatabase> ) results;
     }
 
     /**
@@ -121,8 +123,8 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<?> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {

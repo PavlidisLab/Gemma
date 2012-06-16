@@ -22,7 +22,7 @@ package ubic.gemma.model.analysis.expression.diff;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  * @version $Id$
  */
-public abstract class DifferentialExpressionAnalysisResultImpl extends
+public class DifferentialExpressionAnalysisResultImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,6 +46,11 @@ public abstract class DifferentialExpressionAnalysisResultImpl extends
          * equivalent to "bin >=2"
          */
         this.setCorrectedPValueBin( getBin( correctedPvalue ) );
+    }
+
+    @Override
+    public String toString() {
+        return this.getProbe() + " p=" + String.format( "%g", this.getPvalue() );
     }
 
 }

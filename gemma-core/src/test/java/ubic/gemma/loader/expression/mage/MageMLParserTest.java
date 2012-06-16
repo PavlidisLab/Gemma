@@ -60,7 +60,7 @@ public class MageMLParserTest extends AbstractMageTest {
     ZipInputStream istAffyGiantBioSequencePackage;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         mlp = new MageMLParser();
     }
 

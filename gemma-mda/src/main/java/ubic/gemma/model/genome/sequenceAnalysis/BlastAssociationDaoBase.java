@@ -93,9 +93,9 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
 
     @Override
     public java.util.Collection<? extends BlastAssociation> loadAll() {
-        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<? extends BlastAssociation> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationImpl.class );
-        return ( Collection<? extends BlastAssociation> ) results;
+        return results;
     }
 
     /**
@@ -138,7 +138,7 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends BlastAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlastAssociation.update - 'entities' can not be null" );
         }
@@ -147,8 +147,9 @@ public abstract class BlastAssociationDaoBase extends HibernateDaoSupport implem
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends BlastAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

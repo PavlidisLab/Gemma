@@ -67,7 +67,7 @@ public class CharacteristicPropertyConverter extends BeanConverter {
 
         try {
             Object bean;
-            Map tokens = extractInboundTokens( paramType, value );
+            Map<?, ?> tokens = extractInboundTokens( paramType, value );
 
             if ( instanceType != null ) {
 
@@ -88,11 +88,11 @@ public class CharacteristicPropertyConverter extends BeanConverter {
                 inctx.addConverted( iv, paramType, bean );
             }
 
-            Map properties = getPropertyMapFromObject( bean, false, true );
+            Map<?, ?> properties = getPropertyMapFromObject( bean, false, true );
 
             // Loop through the properties passed in
-            for ( Iterator it = tokens.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = ( Map.Entry ) it.next();
+            for ( Iterator<?> it = tokens.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) it.next();
                 String key = ( String ) entry.getKey();
                 String val = ( String ) entry.getValue();
 
@@ -107,7 +107,7 @@ public class CharacteristicPropertyConverter extends BeanConverter {
                     log.debug( "- The property may be excluded using include or exclude rules." );
 
                     StringBuffer all = new StringBuffer();
-                    for ( Iterator pit = properties.keySet().iterator(); pit.hasNext(); ) {
+                    for ( Iterator<?> pit = properties.keySet().iterator(); pit.hasNext(); ) {
                         all.append( pit.next() );
                         if ( pit.hasNext() ) {
                             all.append( ',' );
@@ -117,7 +117,7 @@ public class CharacteristicPropertyConverter extends BeanConverter {
                     continue;
                 }
 
-                Class propType = property.getPropertyType();
+                Class<?> propType = property.getPropertyType();
 
                 String[] split = ParseUtil.splitInbound( val );
                 String splitValue = split[LocalUtil.INBOUND_INDEX_VALUE];

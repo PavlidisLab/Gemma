@@ -34,7 +34,7 @@ public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Test
-    public final void testFind() throws Exception {
+    public final void testFind() {
 
         ExpressionExperiment ee = super.testHelper.getTestPersistentBasicExpressionExperiment();
 

@@ -65,7 +65,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     private ExpressionExperimentSet eeSet = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );
@@ -83,7 +83,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         eeSet = expressionExperimentSetService.create( eeSet );
 
     }
-    
+
     @After
     public void tearDown() {
 
@@ -91,9 +91,9 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         expressionExperimentService.delete( ee.getId() );
 
         // getting "access is denied" error here, even with this.runAsAdmin()
-        //expressionExperimentSetService.delete( eeSet );
+        // expressionExperimentSetService.delete( eeSet );
     }
-    
+
     @Test
     public void testConvertToValueObject() {
 
@@ -138,23 +138,23 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         DatabaseBackedExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
                 .convertToValueObject( eeSet );
-        
+
         // create entity from VO
         ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );
-        
+
         // check that entity is valid
         expressionExperimentSetService.update( remadeEE );
-        
+
         assertEquals( eeSet.getId(), remadeEE.getId() );
         assertEquals( eeSet.getExperiments().size(), remadeEE.getExperiments().size() );
-        
+
         // check that experiment members are the same
         Set<Object> set1 = new HashSet<Object>();
-        set1.addAll(eeSet.getExperiments());
+        set1.addAll( eeSet.getExperiments() );
         Set<Object> set2 = new HashSet<Object>();
-        set2.addAll(remadeEE.getExperiments());
-        set1.equals(set2);
-        
+        set2.addAll( remadeEE.getExperiments() );
+        set1.equals( set2 );
+
         assertEquals( eeSet.getName(), remadeEE.getName() );
         assertEquals( eeSet.getDescription(), remadeEE.getDescription() );
         assertEquals( eeSet.getStatus(), remadeEE.getStatus() );

@@ -57,31 +57,31 @@ public class ProbeMapperTest extends TestCase {
     private boolean hasMousegp = true;
     private boolean hasHumangp = true;
 
-    public void testComputeSpecificityA() throws Exception {
+    public void testComputeSpecificityA() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
         assertEquals( expected, actual, 0.0001 );
     }
 
-    public void testComputeSpecificityB() throws Exception {
+    public void testComputeSpecificityB() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 200 / 750.0;
         assertEquals( expected, actual, 0.0001 );
     }
 
-    public void testComputeSpecificityC() throws Exception {
+    public void testComputeSpecificityC() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 50 / 750.0;
         assertEquals( expected, actual, 0.0001 );
     }
 
-    public void testComputeSpecificityD() throws Exception {
+    public void testComputeSpecificityD() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
         assertEquals( expected, actual, 0.0001 );
     }
 
-    // public void testLocateAcembly() throws Exception {
+    // public void testLocateAcembly() {
     // if ( !hasHumangp ) {
     // log.warn( "Skipping test because hg18 could not be configured" );
     // return;
@@ -97,7 +97,7 @@ public class ProbeMapperTest extends TestCase {
      * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
      * 73,461,405-73,480,144)
      */
-    public void testLocateGene() throws Exception {
+    public void testLocateGene() {
         if ( !hasHumangp ) {
             log.warn( "Skipping test because  human db could not be configured" );
             return;
@@ -113,7 +113,7 @@ public class ProbeMapperTest extends TestCase {
      * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
      * strand works.
      */
-    public void testLocateGeneOnWrongStrand() throws Exception {
+    public void testLocateGeneOnWrongStrand() {
         if ( !hasHumangp ) {
             log.warn( "Skipping test because  human db could not be configured" );
             return;
@@ -126,9 +126,9 @@ public class ProbeMapperTest extends TestCase {
     }
 
     /**
-     * @throws Exception
+     * @
      */
-    public void testLocateMiRNA() throws Exception {
+    public void testLocateMiRNA() {
         if ( !hasHumangp ) {
             log.warn( "Skipping test because  human db could not be configured" );
             return;
@@ -141,7 +141,7 @@ public class ProbeMapperTest extends TestCase {
         assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011, hg19.
     }
 
-    public void testProcessBlatResults() throws Exception {
+    public void testProcessBlatResults() {
         if ( !hasMousegp ) {
             log.warn( "Skipping test because mm could not be configured" );
             return;
@@ -159,12 +159,12 @@ public class ProbeMapperTest extends TestCase {
 
     }
 
-    public void testIntronIssues() throws Exception {
+    public void testIntronIssues() {
         if ( !hasHumangp ) {
             log.warn( "Skipping test because hg could not be configured" );
             return;
         }
-       
+
         ProbeMapperConfig config = new ProbeMapperConfig();
         Collection<BlatAssociation> results = humangp.findAssociations( "chr1", 145517370L, 145518088L,
                 "145517370,145518070", "18,18", null, ThreePrimeDistanceMethod.RIGHT, config );
@@ -226,11 +226,6 @@ public class ProbeMapperTest extends TestCase {
                 throw e;
             }
         }
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

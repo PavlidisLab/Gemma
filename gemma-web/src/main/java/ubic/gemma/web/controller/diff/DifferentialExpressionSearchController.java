@@ -39,28 +39,18 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.search.GeneSetSearch;
-import ubic.gemma.search.SearchResult;
-import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService;
@@ -77,7 +67,7 @@ public class DifferentialExpressionSearchController {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
 
-    private static final double DEFAULT_THRESHOLD = 0.01;
+    // private static final double DEFAULT_THRESHOLD = 0.01;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
@@ -97,26 +87,35 @@ public class DifferentialExpressionSearchController {
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private SearchService searchService;
-
-    @Autowired
-    private GeneSetSearch geneSetSearch;
-
-    @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
     private DifferentialExpressionGeneConditionSearchService geneConditionSearchService;
 
+    /**
+     * @param taskId
+     * @return
+     */
     public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
         return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
     }
 
+    /**
+     * @param taskId
+     * @return
+     */
     public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(
             String taskId ) {
         return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
     }
 
+    /**
+     * AJAX
+     * 
+     * @param taxonId
+     * @param datasetValueObjects
+     * @param geneValueObjects
+     * @param geneSessionGroupQueries
+     * @param experimentSessionGroupQueries
+     * @return
+     */
     public String scheduleDiffExpSearchTask( Long taxonId,
             Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
             Collection<GeneSetValueObject> geneValueObjects, List<String> geneSessionGroupQueries,
@@ -147,214 +146,6 @@ public class DifferentialExpressionSearchController {
         String taskId = geneConditionSearchService.scheduleDiffExpSearchTask( genes, experiments, geneGroupNames,
                 datasetGroupNames );
         return taskId;
-    }
-
-    // public DifferentialExpressionGenesConditionsValueObject geneConditionSearch (
-    // Long taxonId,
-    // Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
-    // Collection<GeneSetValueObject> geneValueObjects,
-    // List<String> geneSessionGroupQueries,
-    // List<String> experimentSessionGroupQueries ) {
-    //
-    // log.info("Starting gene x condition search...");
-    // org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("geneConditionSearch");
-    // watch.start("Loading "+ datasetValueObjects.size() +" experiment sets.");
-    // // Load experiments
-    // List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
-    // List<String> datasetGroupNames = new ArrayList<String>();
-    // for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
-    // if ( eevo != null ) {
-    // experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
-    // datasetGroupNames.add( eevo.getName() );
-    // }
-    // }
-    //
-    // watch.stop();
-    // watch.start("Loading "+ geneValueObjects.size() +" gene sets.");
-    // // updates param
-    // //recreateSessionBoundEEGroupsFromBookmark( experimentSessionGroupQueries, experiments, datasetGroupNames );
-    //
-    // // Load genes
-    // List<List<Gene>> genes = new ArrayList<List<Gene>>();
-    // List<String> geneGroupNames = new ArrayList<String>();
-    //
-    // for ( GeneSetValueObject gsvo : geneValueObjects ) {
-    // if ( gsvo != null ) {
-    // geneGroupNames.add( gsvo.getName() );
-    // genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
-    // }
-    // }
-    //
-    // // note: this method makes changes to params
-    // // recreateSessionBoundGeneGroupsFromBookmark( geneSessionGroupQueries, genes, geneNames, geneFullNames, geneIds,
-    // // geneGroupNames );
-    //
-    // watch.stop();
-    // watch.start("Pupulate heatmap object.");
-    // DifferentialExpressionGenesConditionsValueObject result =
-    // geneConditionSearchService.createGenesConditionsValueObject( genes, experiments, geneGroupNames,
-    // datasetGroupNames );
-    // watch.stop();
-    //
-    // log.info( watch.prettyPrint() );
-    //
-    // return result;
-    // }
-
-    /**
-     * Session-bound gene groups are encoded in bookmarkable URLs as the query that made them (minus modifications) here
-     * we're "recreating" these groups (session-bound groups aren't actually created) Makes changes to params
-     * 
-     * @param geneSessionGroupQueries
-     * @param genes
-     * @param geneNames
-     * @param geneFullNames
-     * @param geneIds
-     * @param geneGroupNames
-     */
-    private void recreateSessionBoundGeneGroupsFromBookmark( List<String> geneSessionGroupQueries,
-            List<List<Gene>> genes, List<List<String>> geneNames, List<List<String>> geneFullNames,
-            List<List<Long>> geneIds, List<String> geneGroupNames ) {
-        List<Gene> genesInsideSet;
-        List<String> geneNamesInsideSet;
-        List<String> geneFullNamesInsideSet;
-        List<Long> geneIdsInsideSet;
-
-        for ( String query : geneSessionGroupQueries ) {
-            if ( query.contains( ";" ) && query.contains( ":" ) ) {
-                String[] param = query.split( ";" );
-                // get the taxon value
-                String tax = param[0].split( ":" )[1];
-                Taxon taxon = null;
-                try {
-                    taxon = taxonService.load( new Long( tax ) );
-                } catch ( NumberFormatException nfe ) {
-                    throw new NumberFormatException(
-                            "Taxon id in URL is invlaid. Cannot perform search. Taxon id was: " + tax );
-                }
-                // get the query
-                String term = param[1].split( ":" )[1];
-                genesInsideSet = new ArrayList<Gene>();
-                geneNamesInsideSet = new ArrayList<String>();
-                geneFullNamesInsideSet = new ArrayList<String>();
-                geneIdsInsideSet = new ArrayList<Long>();
-
-                if ( term.matches( "^GO_\\d+" ) ) {
-                    GeneSet goSet = this.geneSetSearch.findByGoId( term, taxon );
-                    if ( goSet != null ) {
-                        Gene gene = null;
-                        for ( GeneSetMember gsm : goSet.getMembers() ) {
-                            gene = gsm.getGene();
-                            genesInsideSet.add( gene );
-                            geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                            geneFullNamesInsideSet.add( gene.getOfficialName() );
-                            geneIdsInsideSet.add( gene.getId() );
-                        }
-                        geneGroupNames.add( term );
-                    } else {
-                        log.warn( "Could not find GO group to match " + term );
-                    }
-
-                } else {
-                    SearchSettings settings = new SearchSettings( term );
-                    settings.noSearches();
-                    settings.setGeneralSearch( true ); // add a general search, needed for finding GO groups
-                    settings.setSearchGenes( true ); // add searching for genes
-                    settings.setSearchGeneSets( true ); // add searching for geneSets
-                    settings.setTaxon( taxon ); // this doesn't work yet
-
-                    Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
-                    List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
-                    List<SearchResult> geneSearchResults = results.get( Gene.class );
-
-                    Gene gene = null;
-                    for ( SearchResult sr : geneSearchResults ) {
-                        gene = ( Gene ) sr.getResultObject();
-                        genesInsideSet.add( gene );
-                        geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                        geneFullNamesInsideSet.add( gene.getOfficialName() );
-                        geneIdsInsideSet.add( gene.getId() );
-                    }
-                    GeneSet geneSet = null;
-                    for ( SearchResult sr : geneSetSearchResults ) {
-                        geneSet = ( GeneSet ) sr.getResultObject();
-                        for ( GeneSetMember gsm : geneSet.getMembers() ) {
-                            if ( !genesInsideSet.contains( gsm.getGene() ) ) {
-                                genesInsideSet.add( gsm.getGene() );
-                                geneNamesInsideSet.add( gsm.getGene().getOfficialSymbol() );
-                                geneFullNamesInsideSet.add( gsm.getGene().getOfficialName() );
-                                geneIdsInsideSet.add( gsm.getGene().getId() );
-                            }
-                        }
-                    }
-                    geneGroupNames.add( "All " + taxon.getCommonName() + " results for '" + term + "'" );
-                }
-                genes.add( genesInsideSet );
-                geneNames.add( geneNamesInsideSet );
-                geneFullNames.add( geneFullNamesInsideSet );
-                geneIds.add( geneIdsInsideSet );
-            }
-
-        }
-    }
-
-    /**
-     * session-bound experiment groups are encoded in bookmarkable URLs as the query that made them (minus
-     * modifications) here we're "recreating" these groups (session-bound groups aren't actually created) Makes changes
-     * to params
-     * 
-     * @param experimentSessionGroupQueries
-     * @param experiments
-     * @param datasetGroupNames
-     */
-    private void recreateSessionBoundEEGroupsFromBookmark( List<String> experimentSessionGroupQueries,
-            List<Collection<BioAssaySet>> experiments, List<String> datasetGroupNames ) {
-
-        for ( String query : experimentSessionGroupQueries ) {
-            if ( query.contains( ";" ) && query.contains( ":" ) ) {
-                String[] param = query.split( ";" );
-                // get the taxon value
-                String tax = param[0].split( ":" )[1];
-                Taxon taxon = null;
-                try {
-                    taxon = taxonService.load( new Long( tax ) );
-                } catch ( NumberFormatException nfe ) {
-                    throw new NumberFormatException(
-                            "Taxon id in URL is invlaid. Cannot perform search. Taxon id was: " + tax );
-                }
-                // get the query
-                String term = param[1].split( ":" )[1];
-                List<BioAssaySet> experimentsInGroup = new ArrayList<BioAssaySet>();
-
-                SearchSettings settings = SearchSettings.expressionExperimentSearch( term );
-                settings.setGeneralSearch( true ); // add a general search
-                settings.setSearchExperimentSets( true ); // add searching for experimentSets
-                settings.setTaxon( taxon );
-
-                Map<Class<?>, List<SearchResult>> srs = searchService.search( settings );
-                List<SearchResult> eeSearchResults = srs.get( ExpressionExperiment.class );
-                List<SearchResult> eeSetSearchResults = srs.get( ExpressionExperimentSet.class );
-
-                ExpressionExperiment ee = null;
-                ExpressionExperimentSet eeSet = null;
-                for ( SearchResult sr : eeSearchResults ) {
-                    ee = ( ExpressionExperiment ) sr.getResultObject();
-                    experimentsInGroup.add( ee );
-                }
-                for ( SearchResult sr : eeSetSearchResults ) {
-                    eeSet = ( ExpressionExperimentSet ) sr.getResultObject();
-                    // don't want duplicates in list
-                    experimentsInGroup.removeAll( eeSet.getExperiments() );
-                    experimentsInGroup.addAll( eeSet.getExperiments() );
-                }
-                if ( !experimentsInGroup.isEmpty() ) {
-                    experiments.add( experimentsInGroup );
-                    datasetGroupNames.add( "All " + taxon.getCommonName() + " results for '" + term + "'" );
-                }
-
-            }
-
-        }
     }
 
     /**
@@ -630,34 +421,35 @@ public class DifferentialExpressionSearchController {
         this.geneService = geneService;
     }
 
-    /**
-     * @param fs
-     * @return
-     */
-    private Collection<DiffExpressionSelectedFactorCommand> extractFactorInfo( String fs ) {
-        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new HashSet<DiffExpressionSelectedFactorCommand>();
-        try {
-            if ( fs != null ) {
-                String[] fss = fs.split( "," );
-                for ( String fm : fss ) {
-                    String[] m = fm.split( "\\." );
-                    if ( m.length != 2 ) {
-                        continue;
-                    }
-                    String eeIdStr = m[0];
-                    String efIdStr = m[1];
-
-                    Long eeId = Long.parseLong( eeIdStr );
-                    Long efId = Long.parseLong( efIdStr );
-                    DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
-                    selectedFactors.add( dsfc );
-                }
-            }
-        } catch ( NumberFormatException e ) {
-            log.warn( "Error parsing factor info" );
-        }
-        return selectedFactors;
-    }
+    // /**
+    // * @param fs
+    // * @return
+    // */
+    // private Collection<DiffExpressionSelectedFactorCommand> extractFactorInfo( String fs ) {
+    // Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new
+    // HashSet<DiffExpressionSelectedFactorCommand>();
+    // try {
+    // if ( fs != null ) {
+    // String[] fss = fs.split( "," );
+    // for ( String fm : fss ) {
+    // String[] m = fm.split( "\\." );
+    // if ( m.length != 2 ) {
+    // continue;
+    // }
+    // String eeIdStr = m[0];
+    // String efIdStr = m[1];
+    //
+    // Long eeId = Long.parseLong( eeIdStr );
+    // Long efId = Long.parseLong( efIdStr );
+    // DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
+    // selectedFactors.add( dsfc );
+    // }
+    // }
+    // } catch ( NumberFormatException e ) {
+    // log.warn( "Error parsing factor info" );
+    // }
+    // return selectedFactors;
+    // }
 
     /**
      * Returns the results of the meta-analysis.
@@ -721,25 +513,26 @@ public class DifferentialExpressionSearchController {
         return mavo;
     }
 
-    /*
-     * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
-     */
-    private String getFactorValueString( FactorValue fv ) {
-        if ( fv == null ) return "null";
-
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            String fvString = "";
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                fvString += c.getValue() + " ";
-            }
-            return fvString;
-        } else if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-            return fv.getValue();
-        } else
-            return "absent ";
-    }
+    // /*
+    // * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first
+    // place.
+    // */
+    // private String getFactorValueString( FactorValue fv ) {
+    // if ( fv == null ) return "null";
+    //
+    // if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+    // String fvString = "";
+    // for ( Characteristic c : fv.getCharacteristics() ) {
+    // fvString += c.getValue() + " ";
+    // }
+    // return fvString;
+    // } else if ( fv.getMeasurement() != null ) {
+    // return fv.getMeasurement().getValue();
+    // } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+    // return fv.getValue();
+    // } else
+    // return "absent ";
+    // }
 
     /**
      * @param ids

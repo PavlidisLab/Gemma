@@ -161,14 +161,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      */
     public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
 
-    /**
-     * @param ids
-     * @return
-     * @deprecated not used.
-     */
-    @Deprecated
-    public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
-
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
     /**
@@ -297,13 +289,10 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public Collection<DesignElementDataVector> getSamplingOfVectors(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, Integer limit );
+    public Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType, Integer limit );
 
     /**
-     * <p>
      * Return any ExpressionExperimentSubSets the given Experiment might have.
-     * </p>
      */
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 

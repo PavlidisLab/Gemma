@@ -24,9 +24,9 @@ import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
@@ -35,7 +35,9 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  */
 @Repository
-public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisResult> {
+public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
+
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
@@ -45,27 +47,27 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
      * @param threshold
      * @return
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed,
             double threshold, Integer limit );
 
     /**
-     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link BioAssaySet}.
+     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
      * 
      * @param gene
-     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
+     * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene );
 
     /**
-     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link BioAssaySet}.
+     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
      * 
      * @param gene
      * @param experimentsAnalyzed
-     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
+     * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed );
 
@@ -78,10 +80,25 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
      * @param threshold
      * @return
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed,
             double threshold, Integer limit );
+
+    /**
+     * @param resultSetIds
+     * @param geneIds
+     * @param adUsed
+     * @return map of resultsetId to map of gene to DiffExprGeneSearchResult
+     */
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed );
+
+    public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit );
+
+    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
+            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -90,36 +107,37 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
      * @param threshold
      * @return
      */
-    public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+    public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
-    
-    public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
-
-    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
-    
-    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
-    
-    /**
-     * 
-     */
-    public Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            java.util.Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults );
 
     /**
      * 
      */
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult );
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
-    @Override
-    public ProbeAnalysisResult load (Long id); 
-    
+    /**
+     * 
+     */
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            java.util.Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
+
+    /**
+     * @param ids
+     * @return
+     */
     public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids );
-    
-    public void thaw( final ProbeAnalysisResult result );
 
-    public void thaw( Collection<ProbeAnalysisResult> results );
-      
+    /**
+     * @param results
+     */
+    public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
+
+    /**
+     * @param result
+     */
+    public void thaw( final DifferentialExpressionAnalysisResult result );
+
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
      * 
@@ -128,11 +146,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
      * @param limit
      * @return
      */
-    java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+    java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit );
-
-
-    public List<ProbeAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold, Integer maxResultsToReturn,
-            Integer minNumberOfResults );
 
 }

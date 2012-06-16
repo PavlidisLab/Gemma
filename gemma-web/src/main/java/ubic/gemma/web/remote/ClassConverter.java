@@ -31,7 +31,7 @@ public class ClassConverter extends StringConverter {
 
     @Override
     public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
-        return super.convertOutbound( ( ( Class ) data ).getSimpleName(), outctx );
+        return super.convertOutbound( ( ( Class<?> ) data ).getSimpleName(), outctx );
     }
 
 }

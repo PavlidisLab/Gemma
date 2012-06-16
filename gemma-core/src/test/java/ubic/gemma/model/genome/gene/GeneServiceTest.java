@@ -46,6 +46,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class GeneServiceTest extends BaseSpringContextTest {
 
     @Autowired
+    ExternalDatabaseService edbs;
+
+    @Autowired
     private GeneService geneDao = null;
 
     @Test
@@ -125,7 +128,6 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindByAccessionNcbiWithSource() {
-        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
 
         Gene gene = Gene.Factory.newInstance();
 
@@ -151,7 +153,6 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindByAccessionOther() {
-        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
 
         Gene gene = Gene.Factory.newInstance();
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );

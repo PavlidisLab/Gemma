@@ -37,8 +37,8 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<? extends Person> create( final int transform,
-            final java.util.Collection<? extends Person> entities ) {
+    @Override
+    public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.create - 'entities' can not be null" );
         }
@@ -49,17 +49,16 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            create( transform, entityIterator.next() );
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
     }
-    
-    
+
     @Override
-    public Collection<? extends Person > load( Collection<Long> ids ) {
+    public Collection<? extends Person> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
     }
 
@@ -67,91 +66,21 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    public Person create( final int transform, final ubic.gemma.model.common.auditAndSecurity.Person person ) {
+    @Override
+    public Person create( final Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.create - 'person' can not be null" );
         }
         this.getHibernateTemplate().save( person );
-        return ( Person ) this.transformEntity( transform, person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(java.util.Collection)
-     */
-
-    @Override
-    public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    @Override
-    public Person create( ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return this.create( TRANSFORM_NONE, person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(int, java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByFirstAndLastName( final int transform, final java.lang.String name,
-            final java.lang.String secondName ) {
-        return this
-                .findByFirstAndLastName(
-                        transform,
-                        "from ubic.gemma.model.common.auditAndSecurity.Person as person where person.name = :name and person.secondName = :secondName",
-                        name, secondName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(int, java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
-    
-    @Override
-    public java.util.Collection<Person> findByFirstAndLastName( final int transform,
-            final java.lang.String queryString, final java.lang.String name, final java.lang.String secondName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        args.add( secondName );
-        argNames.add( "secondName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByFirstAndLastName( java.lang.String name, java.lang.String secondName ) {
-        return this.findByFirstAndLastName( TRANSFORM_NONE, name, secondName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByFirstAndLastName( final java.lang.String queryString,
-            final java.lang.String name, final java.lang.String secondName ) {
-        return this.findByFirstAndLastName( TRANSFORM_NONE, queryString, name, secondName );
+        return person;
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(int, java.lang.String, java.lang.String)
      */
     @Override
-    public java.util.Collection<Person> findByFullName( final int transform, final java.lang.String name,
-            final java.lang.String secondName ) {
-        return this.findByFullName( transform,
+    public java.util.Collection<Person> findByFullName( final java.lang.String name, final java.lang.String secondName ) {
+        return this.findByFullName(
                 "from PersonImpl p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
                 name, secondName );
     }
@@ -160,9 +89,8 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(int, java.lang.String, java.lang.String,
      *      java.lang.String)
      */
-    
-    @Override
-    public java.util.Collection<Person> findByFullName( final int transform, final java.lang.String queryString,
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Person> findByFullName( final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -170,36 +98,17 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
         argNames.add( "name" );
         args.add( secondName );
         argNames.add( "secondName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(java.lang.String, java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String secondName ) {
-        return this.findByFullName( TRANSFORM_NONE, name, secondName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(java.lang.String, java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByFullName( final java.lang.String queryString,
-            final java.lang.String name, final java.lang.String secondName ) {
-        return this.findByFullName( TRANSFORM_NONE, queryString, name, secondName );
+        return ( Collection<Person> ) results;
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(int, java.lang.String)
      */
     @Override
-    public java.util.Collection<Person> findByLastName( final int transform, final java.lang.String lastName ) {
-        return this.findByLastName( transform,
+    public java.util.Collection<Person> findByLastName( final java.lang.String lastName ) {
+        return this.findByLastName(
                 "from ubic.gemma.model.common.auditAndSecurity.Person as person where person.lastName = :lastName",
                 lastName );
     }
@@ -207,76 +116,40 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(int, java.lang.String, java.lang.String)
      */
-    
-    @Override
-    public java.util.Collection<Person> findByLastName( final int transform, final java.lang.String queryString,
-            final java.lang.String lastName ) {
+
+    @SuppressWarnings("unchecked")
+    public Collection<Person> findByLastName( final java.lang.String queryString, final java.lang.String lastName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( lastName );
         argNames.add( "lastName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByLastName( java.lang.String lastName ) {
-        return this.findByLastName( TRANSFORM_NONE, lastName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(java.lang.String, java.lang.String)
-     */
-    @Override
-    public java.util.Collection<Person> findByLastName( final java.lang.String queryString,
-            final java.lang.String lastName ) {
-        return this.findByLastName( TRANSFORM_NONE, queryString, lastName );
+        return ( Collection<Person> ) results;
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#load(int, java.lang.Long)
      */
 
-    public Person load( final int transform, final java.lang.Long id ) {
+    @Override
+    public Person load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Person.load - 'id' can not be null" );
         }
         final Person entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.common.auditAndSecurity.PersonImpl.class, id );
-        return ( Person ) transformEntity( transform, entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#load(java.lang.Long)
-     */
-
-    @Override
-    public Person load( java.lang.Long id ) {
-        return this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#loadAll()
-     */
-    @Override
-    public java.util.Collection<? extends Person> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return entity;
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#loadAll(int)
      */
 
-    
-    public java.util.Collection<? extends Person> loadAll( final int transform ) {
+    @Override
+    public java.util.Collection<? extends Person> loadAll() {
         final java.util.Collection<? extends Person> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.PersonImpl.class );
-        this.transformEntities( transform, results );
         return results;
     }
 
@@ -350,51 +223,6 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "Person.update - 'person' can not be null" );
         }
         this.getHibernateTemplate().update( person );
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.Person)} method. This method does not
-     * instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.auditAndSecurity.PersonDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    protected void transformEntities( final int transform, final java.util.Collection<? extends Person> entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.auditAndSecurity.PersonDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.common.auditAndSecurity.PersonDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform, final Object entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
     }
 
 }

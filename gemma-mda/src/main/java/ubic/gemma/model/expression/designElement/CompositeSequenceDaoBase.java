@@ -41,13 +41,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
      */
     @Override
     public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.countAll()' --> "
-                            + th, th );
-        }
+        return this.handleCountAll();
+
     }
 
     /**
@@ -93,13 +88,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Collection<CompositeSequence> findByBioSequence(
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        try {
-            return this.handleFindByBioSequence( bioSequence );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
-        }
+        return this.handleFindByBioSequence( bioSequence );
+
     }
 
     /**
@@ -107,13 +97,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
      */
     @Override
     public java.util.Collection<CompositeSequence> findByBioSequenceName( final java.lang.String name ) {
-        try {
-            return this.handleFindByBioSequenceName( name );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.findByBioSequenceName(java.lang.String name)' --> "
-                            + th, th );
-        }
+        return this.handleFindByBioSequenceName( name );
+
     }
 
     /**
@@ -308,18 +293,10 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#loadAll()
-     */
-    @Override
-    public java.util.Collection<CompositeSequence> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#loadAll(int)
      */
 
-    public java.util.Collection<CompositeSequence> loadAll( final int transform ) {
+    public java.util.Collection<CompositeSequence> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.designElement.CompositeSequenceImpl.class );
         return results;
@@ -414,71 +391,65 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+    protected abstract java.lang.Integer handleCountAll();
 
     /**
      * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
     protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequence(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * Performs the core logic for {@link #findByBioSequenceName(java.lang.String)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequenceName( java.lang.String name )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequenceName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #getGenes(java.util.Collection)}
      */
     protected abstract java.util.Map<CompositeSequence, Collection<Gene>> handleGetGenes(
-            java.util.Collection<CompositeSequence> compositeSequences ) throws java.lang.Exception;
+            java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * Performs the core logic for {@link #getGenes(ubic.gemma.model.expression.designElement.CompositeSequence)}
      */
     protected abstract java.util.Collection<Gene> handleGetGenes(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception;
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
      * Performs the core logic for {@link #getGenesWithSpecificity(java.util.Collection)}
      */
     protected abstract java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
-            java.util.Collection<CompositeSequence> compositeSequences ) throws java.lang.Exception;
+            java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * Performs the core logic for {@link #getRawSummary(java.util.Collection, java.lang.Integer)}
      */
     protected abstract java.util.Collection<Object[]> handleGetRawSummary(
-            java.util.Collection<CompositeSequence> compositeSequences, java.lang.Integer numResults )
-            throws java.lang.Exception;
+            java.util.Collection<CompositeSequence> compositeSequences, java.lang.Integer numResults );
 
     /**
      * Performs the core logic for
      * {@link #getRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.Integer)}
      */
     protected abstract java.util.Collection<Object[]> handleGetRawSummary(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.Integer numResults )
-            throws java.lang.Exception;
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.Integer numResults );
 
     /**
      * Performs the core logic for
      * {@link #getRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence, java.lang.Integer)}
      */
     protected abstract java.util.Collection<Object[]> handleGetRawSummary(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, java.lang.Integer numResults )
-            throws java.lang.Exception;
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, java.lang.Integer numResults );
 
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleLoad( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<CompositeSequence> handleLoad( java.util.Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<CompositeSequence> compositeSequences )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<CompositeSequence> compositeSequences );
 
 }

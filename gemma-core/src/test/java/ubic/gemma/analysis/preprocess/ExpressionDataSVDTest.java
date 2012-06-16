@@ -61,7 +61,7 @@ public class ExpressionDataSVDTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         testData = new ExpressionDataTestMatrix();
         svd = new ExpressionDataSVD( testData, false );
@@ -203,14 +203,14 @@ public class ExpressionDataSVDTest {
     }
 
     @Test
-    public void testUMatrixAsExpressionData() throws Exception {
+    public void testUMatrixAsExpressionData() {
         svd = new ExpressionDataSVD( testData, true );
         ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
         assertNotNull( matrixAsExpressionData );
     }
 
     @Test
-    public void testUMatrixAsExpressionDataUnnormalized() throws Exception {
+    public void testUMatrixAsExpressionDataUnnormalized() {
         try {
             svd.uMatrixAsExpressionData();
             fail( "Should have gotten an exception" );
@@ -220,7 +220,7 @@ public class ExpressionDataSVDTest {
     }
 
     @Test
-    public void testWinnow() throws Exception {
+    public void testWinnow() {
         ExpressionDataDoubleMatrix winnow = svd.winnow( 0.5 );
         assertEquals( 100, winnow.rows() );
     }

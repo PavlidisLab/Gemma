@@ -46,7 +46,7 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
     static boolean setupDone = false;
 
     @Before
-    public void setup() throws Exception {
+    public void setup()   {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 

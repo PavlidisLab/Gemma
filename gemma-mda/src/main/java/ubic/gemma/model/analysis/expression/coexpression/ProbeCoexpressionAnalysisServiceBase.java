@@ -42,13 +42,8 @@ public abstract class ProbeCoexpressionAnalysisServiceBase extends
     @Override
     public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis create(
             final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
-        try {
-            return this.handleCreate( probeCoexpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( probeCoexpressionAnalysis );
+
     }
 
     /**
@@ -70,8 +65,6 @@ public abstract class ProbeCoexpressionAnalysisServiceBase extends
      * Performs the core logic for
      * {@link #create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)}
      */
-    protected abstract ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis handleCreate(
-            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis )
-            throws java.lang.Exception;
+    protected abstract ProbeCoexpressionAnalysis handleCreate( ProbeCoexpressionAnalysis probeCoexpressionAnalysis );
 
 }

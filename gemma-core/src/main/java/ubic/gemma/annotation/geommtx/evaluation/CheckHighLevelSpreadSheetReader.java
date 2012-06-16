@@ -42,7 +42,7 @@ public class CheckHighLevelSpreadSheetReader {
     /**
      * @param args
      */
-    public static void main( String[] args ) throws Exception {
+    public static void main( String[] args ) {
         CheckHighLevelSpreadSheetReader test = new CheckHighLevelSpreadSheetReader();
 
         Map<String, Set<String>> acceptedAnnotations = test.getAcceptedAnnotations();

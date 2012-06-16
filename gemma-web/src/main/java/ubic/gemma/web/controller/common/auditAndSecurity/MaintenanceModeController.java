@@ -50,14 +50,21 @@ public class MaintenanceModeController {
         return "admin/maintenanceMode";
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * @param stop
+     * @param start
+     * @param request
+     * @return
+     * @throws Exception
+     */
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
-        
-        Map<String, Object> config = ( Map<String, Object> ) request.getSession().getServletContext().getAttribute( Constants.CONFIG );
 
-        //check that the user is admin!
-        
+        Map<String, Object> config = ( Map<String, Object> ) request.getSession().getServletContext()
+                .getAttribute( Constants.CONFIG );
+
+        // check that the user is admin!
+
         boolean isAdmin = SecurityServiceImpl.isUserAdmin();
 
         if ( !isAdmin ) {

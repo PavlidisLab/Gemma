@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2007-2012 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,11 +76,15 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
 
-/** High Level Service used to add Candidate Gene Management System capabilities */
+/**
+ * High Level Service used to add Candidate Gene Management System capabilities
+ * 
+ * @author nicolas
+ * @version $Id$
+ */
 @Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
-    @Autowired
     private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     @Autowired

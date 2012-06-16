@@ -47,7 +47,8 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
-    public java.util.Collection findByBioSequence( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public java.util.Collection<BlatResult> findByBioSequence(
+            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.handleFindByBioSequence( bioSequence );
 
     }
@@ -56,7 +57,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.util.Collection)
      */
     @Override
-    public java.util.Collection load( final java.util.Collection ids ) {
+    public java.util.Collection<BlatResult> load( final java.util.Collection<Long> ids ) {
         return this.handleLoad( ids );
 
     }
@@ -65,7 +66,7 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
-    public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
+    public void remove( final BlatResult blatResult ) {
         this.handleRemove( blatResult );
 
     }
@@ -89,26 +90,25 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     /**
      * Gets the reference to <code>blatResult</code>'s DAO.
      */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao getBlatResultDao() {
+    protected BlatResultDao getBlatResultDao() {
         return this.blatResultDao;
     }
 
     /**
      * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    protected abstract BlatResult handleCreate( BlatResult blatResult );
 
     /**
      * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract java.util.Collection handleFindByBioSequence(
+    protected abstract java.util.Collection<BlatResult> handleFindByBioSequence(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoad( java.util.Collection<Long> ids );
+    protected abstract java.util.Collection<BlatResult> handleLoad( java.util.Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}

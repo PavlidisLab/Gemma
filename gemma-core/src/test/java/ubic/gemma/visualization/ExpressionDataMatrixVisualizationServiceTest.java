@@ -75,7 +75,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         ByteArrayConverter bac = new ByteArrayConverter();
 

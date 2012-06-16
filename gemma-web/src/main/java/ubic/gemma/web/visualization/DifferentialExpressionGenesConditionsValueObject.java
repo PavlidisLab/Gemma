@@ -23,6 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TODO Document Me
+ * 
+ * @author Anton
+ * @version $Id$
+ */
 public class DifferentialExpressionGenesConditionsValueObject {
 
     public class Condition {
@@ -226,7 +232,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
         public int direction;
         public int numberOfProbes;
         public int numberOfProbesDiffExpressed;
-        
 
         public int getNumberOfProbes() {
             return numberOfProbes;
@@ -292,14 +297,15 @@ public class DifferentialExpressionGenesConditionsValueObject {
         }
     }
 
-    public void addCell( Long geneId, String conditionId, double pValue, double foldChange, int numProbes, int numProbesDiffExpressed ) {
+    public void addCell( Long geneId, String conditionId, double pValue, double foldChange, int numProbes,
+            int numProbesDiffExpressed ) {
         Cell cell = new Cell();
         cell.isProbeMissing = false;
         cell.pValue = pValue;
         cell.logFoldChange = foldChange;
         cell.numberOfProbes = numProbes;
         cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
-        
+
         addCell( geneId, conditionId, cell );
     }
 

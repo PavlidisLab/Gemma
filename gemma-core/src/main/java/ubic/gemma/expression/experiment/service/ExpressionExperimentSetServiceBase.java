@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
@@ -38,21 +37,12 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     public ExpressionExperimentSet create( final ExpressionExperimentSet expressionExperimentSet ) {
-        try {
-            return this.handleCreate( expressionExperimentSet );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet)' --> "
-                            + th, th );
-        }
+        return this.handleCreate( expressionExperimentSet );
     }
 
     /**
@@ -60,26 +50,19 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
      */
     @Override
     public void delete( final ExpressionExperimentSet expressionExperimentSet ) {
-        try {
-
-            if ( expressionExperimentSet == null ) {
-                throw new IllegalArgumentException( "Cannot delete null set" );
-            }
-            Long id = expressionExperimentSet.getId();
-            if ( id == null || id < 0 ) {
-                throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
-            }
-            if ( getAnalyses( expressionExperimentSet ).size() > 0 ) {
-                throw new IllegalArgumentException(
-                        "Sorry, can't delete this set, it is associated with active analyses." );
-            }
-
-            this.handleDelete( expressionExperimentSet );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet)' --> "
-                            + th, th );
+        if ( expressionExperimentSet == null ) {
+            throw new IllegalArgumentException( "Cannot delete null set" );
         }
+        Long id = expressionExperimentSet.getId();
+        if ( id == null || id < 0 ) {
+            throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
+        }
+        if ( getAnalyses( expressionExperimentSet ).size() > 0 ) {
+            throw new IllegalArgumentException( "Sorry, can't delete this set, it is associated with active analyses." );
+        }
+
+        this.handleDelete( expressionExperimentSet );
+
     }
 
     /**
@@ -87,13 +70,8 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
      */
     @Override
     public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
-        try {
-            return this.handleFindByName( name );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName(java.lang.String name)' --> "
-                            + th, th );
-        }
+        return this.handleFindByName( name );
+
     }
 
     /**
@@ -102,13 +80,8 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     @Override
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
-        try {
-            return this.handleGetAnalyses( expressionExperimentSet );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet)' --> "
-                            + th, th );
-        }
+        return this.handleGetAnalyses( expressionExperimentSet );
+
     }
 
     /**
@@ -116,13 +89,8 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
      */
     @Override
     public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+        return this.handleLoad( id );
+
     }
 
     /**
@@ -130,13 +98,8 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
      */
     @Override
     public java.util.Collection<ExpressionExperimentSet> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll()' --> "
-                            + th, th );
-        }
+        return this.handleLoadAll();
+
     }
 
     /**
@@ -145,13 +108,8 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     @Override
     public java.util.Collection<ExpressionExperimentSet> loadUserSets(
             final ubic.gemma.model.common.auditAndSecurity.User user ) {
-        try {
-            return this.handleLoadUserSets( user );
-        } catch ( Throwable th ) {
-            throw new ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadUserSets(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
-                            + th, th );
-        }
+        return this.handleLoadUserSets( user );
+
     }
 
     /**
@@ -172,45 +130,42 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     /**
      * Performs the core logic for {@link #create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
-    protected abstract ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception;
+    protected abstract ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
-    protected abstract void handleDelete( ExpressionExperimentSet expressionExperimentSet ) throws java.lang.Exception;
+    protected abstract void handleDelete( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
     protected abstract java.util.Collection<ExpressionAnalysis> handleGetAnalyses(
-            ExpressionExperimentSet expressionExperimentSet ) throws java.lang.Exception;
+            ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ExpressionExperimentSet handleLoad( java.lang.Long id ) throws java.lang.Exception;
+    protected abstract ExpressionExperimentSet handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadAll();
 
     /**
      * Performs the core logic for {@link #loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)}
      */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadUserSets( User user )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadUserSets( User user );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
-    protected abstract void handleUpdate( ExpressionExperimentSet expressionExperimentSet ) throws java.lang.Exception;
+    protected abstract void handleUpdate( ExpressionExperimentSet expressionExperimentSet );
 
 }

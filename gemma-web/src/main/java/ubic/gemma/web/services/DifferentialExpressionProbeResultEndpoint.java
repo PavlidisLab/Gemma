@@ -36,7 +36,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -169,14 +169,14 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            Map<BioAssaySet, List<ProbeAnalysisResult>> results = differentialExpressionResultService.find( gene,
+            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService.find( gene,
                     bioAssaySets, Double.parseDouble( threshold ), null );
 
             for ( BioAssaySet ee : results.keySet() ) {
-                // main call to the DifferentialExpressionAnalysisService to retrieve ProbeAnalysisResultSet collection
-                Collection<ProbeAnalysisResult> parCol = results.get( ee );
+                // main call to the DifferentialExpressionAnalysisService to retrieve DifferentialExpressionAnalysisResultSet collection
+                Collection<DifferentialExpressionAnalysisResult> parCol = results.get( ee );
 
-                // check that a ProbeAnalysisResult is not null
+                // check that a DifferentialExpressionAnalysisResult is not null
                 if ( parCol == null || parCol.isEmpty() ) {
                     log.error( "No probe analysis results can be found for gene: " + gene.getOfficialSymbol()
                             + " & experiment: " + ee );
@@ -195,10 +195,10 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
     }
 
     private void buildXMLResponse( Document document, Element responseElement, String gene, String ee,
-            Collection<ProbeAnalysisResult> parCol ) throws Exception {
+            Collection<DifferentialExpressionAnalysisResult> parCol ) throws Exception {
 
         if ( parCol != null ) {
-            for ( ProbeAnalysisResult par : parCol ) {
+            for ( DifferentialExpressionAnalysisResult par : parCol ) {
                 // gene id output
                 Element e1 = document.createElement( "gene_id" );
                 e1.appendChild( document.createTextNode( gene ) );

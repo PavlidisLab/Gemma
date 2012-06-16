@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -43,22 +42,17 @@ public class ExpressionAnalysisResultSetImpl extends ExpressionAnalysisResultSet
         for ( DifferentialExpressionAnalysisResult dear : this.getResults() ) {
             int count = 0;
 
-            if ( dear instanceof ProbeAnalysisResult ) {
-                CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
-                buf.append( cs.getName() + "\t" );
-                for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
-                    Gene g = bs2gp.getGeneProduct().getGene();
-                    if ( g instanceof GeneImpl ) {
-                        buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + "," );
-                        count++;
-                    }
+            CompositeSequence cs = dear.getProbe();
+            buf.append( cs.getName() + "\t" );
+            for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
+                Gene g = bs2gp.getGeneProduct().getGene();
+                if ( g instanceof GeneImpl ) {
+                    buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + "," );
+                    count++;
                 }
-                if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
-                buf.append( "\t" );
-
-            } else {
-                buf.append( "missing probe details \t" );
             }
+            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+            buf.append( "\t" );
 
             count = 0;
             for ( ExperimentalFactor ef : this.getExperimentalFactors() ) {

@@ -47,13 +47,8 @@ public class BioAssayServiceImpl implements BioAssayService {
     @Override
     public void addBioMaterialAssociation( final BioAssay bioAssay,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        try {
-            this.handleAddBioMaterialAssociation( bioAssay, bioMaterial );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException(
-                    "Error performing 'BioAssayService.addBioMaterialAssociation(BioAssay bioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
-                            + th, th );
-        }
+        this.handleAddBioMaterialAssociation( bioAssay, bioMaterial );
+
     }
 
     /**
@@ -61,11 +56,7 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.countAll()' --> " + th, th );
-        }
+        return this.handleCountAll();
     }
 
     /*
@@ -83,12 +74,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
-        try {
-            return this.handleFindBioAssayDimensions( bioAssay );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException(
-                    "Error performing 'BioAssayService.findBioAssayDimensions(BioAssay bioAssay)' --> " + th, th );
-        }
+        return this.handleFindBioAssayDimensions( bioAssay );
+
     }
 
     @Override
@@ -101,12 +88,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public BioAssay findOrCreate( final BioAssay bioAssay ) {
-        try {
-            return this.handleFindOrCreate( bioAssay );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException(
-                    "Error performing 'BioAssayService.findOrCreate(BioAssay bioAssay)' --> " + th, th );
-        }
+        return this.handleFindOrCreate( bioAssay );
+
     }
 
     /**
@@ -114,12 +97,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public BioAssay load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.load(java.lang.Long id)' --> " + th,
-                    th );
-        }
+        return this.handleLoad( id );
+
     }
 
     /**
@@ -127,11 +106,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public java.util.Collection<BioAssay> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.loadAll()' --> " + th, th );
-        }
+        return this.handleLoadAll();
+
     }
 
     /**
@@ -139,12 +115,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public void remove( final BioAssay bioAssay ) {
-        try {
-            this.handleRemove( bioAssay );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.remove(BioAssay bioAssay)' --> "
-                    + th, th );
-        }
+        this.handleRemove( bioAssay );
+
     }
 
     /**
@@ -152,13 +124,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public void removeBioMaterialAssociation( final BioAssay bioAssay, final BioMaterial bioMaterial ) {
-        try {
-            this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException(
-                    "Error performing 'BioAssayService.removeBioMaterialAssociation(BioAssay bioAssay, BioMaterial bioMaterial)' --> "
-                            + th, th );
-        }
+        this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
+
     }
 
     /**
@@ -180,12 +147,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public void thaw( final BioAssay bioAssay ) {
-        try {
-            this.handleThaw( bioAssay );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.thaw(BioAssay bioAssay)' --> " + th,
-                    th );
-        }
+        this.handleThaw( bioAssay );
+
     }
 
     /*
@@ -203,12 +166,8 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     @Override
     public void update( final BioAssay bioAssay ) {
-        try {
-            this.handleUpdate( bioAssay );
-        } catch ( Throwable th ) {
-            throw new BioAssayServiceException( "Error performing 'BioAssayService.update(BioAssay bioAssay)' --> "
-                    + th, th );
-        }
+        this.handleUpdate( bioAssay );
+
     }
 
     /**

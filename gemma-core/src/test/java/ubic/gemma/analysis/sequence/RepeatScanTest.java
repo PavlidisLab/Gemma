@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class RepeatScanTest extends TestCase {
 
-    public final void testFraction() throws Exception {
+    public final void testFraction() {
         BioSequence b = BioSequence.Factory.newInstance();
         b.setSequence( "AAAaaaaAAAAaaa" );
         RepeatScan r = new RepeatScan();

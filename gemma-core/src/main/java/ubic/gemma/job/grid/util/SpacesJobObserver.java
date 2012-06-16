@@ -18,12 +18,9 @@
  */
 package ubic.gemma.job.grid.util;
 
-import java.rmi.RemoteException;
-
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
-import net.jini.core.event.UnknownEventException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -31,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.job.progress.ProgressManager;
+import ubic.gemma.job.progress.grid.SpacesProgressAppender;
 import ubic.gemma.util.ConfigUtils;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
@@ -72,7 +70,7 @@ public class SpacesJobObserver implements RemoteEventListener {
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     @Override
-    public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
+    public void notify( RemoteEvent remoteEvent ) {
 
         if ( remoteEvent instanceof EntryArrivedRemoteEvent ) {
 

@@ -20,18 +20,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.sun.jersey.api.NotFoundException;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -40,79 +36,78 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import com.sun.jersey.api.NotFoundException;
+
 /**
  * Simple web service to return sample annotations for curated dataset.
  * 
  * @author anton
- *
  */
 @Component
 @Path("/eedesign")
 public class EEDesignWebService {
-            
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    
-     
+
     @GET
     @Path("/findByShortName/{shortName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String,Map<String,String>> getAnnotations( @PathParam("shortName") String shortName, @Context HttpServletResponse servletResponse ) {
-        
-        Map<String,Map<String,String>> result = new HashMap<String,Map<String,String>>();
-        
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );        
-        if (experiment == null) throw new NotFoundException("Dataset not found.");
+    public Map<String, Map<String, String>> getAnnotations( @PathParam("shortName") String shortName ) {
 
-        for (BioAssay bioAssay : experiment.getBioAssays()) {
-            
+        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
+
+        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
+        if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
+
+        for ( BioAssay bioAssay : experiment.getBioAssays() ) {
+
             String accession = bioAssay.getAccession().getAccession();
-            
-            for (BioMaterial bioMaterial : bioAssay.getSamplesUsed()) {                    
-            
-                Map<String,String> annotations = new HashMap<String,String>();
 
-                for (FactorValue factorValue : bioMaterial.getFactorValues()) {                    
-                    if (factorValue.getExperimentalFactor().getName().equals( "batch" )) {
+            for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
+
+                Map<String, String> annotations = new HashMap<String, String>();
+
+                for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
+                    if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
                         // skip batch
                     } else {
-                        annotations.put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );                        
-                    }                
+                        annotations.put( factorValue.getExperimentalFactor().getName(),
+                                getFactorValueString( factorValue ) );
+                    }
                 }
-                result.put( accession, annotations );                
-            }                
+                result.put( accession, annotations );
+            }
         }
-        
+
         return result;
     }
-        
+
     @GET
     @Path("/getAllDatasetNames")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAllDatasetNames ( @Context HttpServletResponse servletResponse ) {
-        
-        List<String> result = new LinkedList<String>();
-                
-        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();                
-        if (experiments == null) throw new NotFoundException("No datasets were found.");
+    public List<String> getAllDatasetNames() {
 
-        for (ExpressionExperiment experiment : experiments) {
+        List<String> result = new LinkedList<String>();
+
+        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
+        if ( experiments == null ) throw new NotFoundException( "No datasets were found." );
+
+        for ( ExpressionExperiment experiment : experiments ) {
             result.add( experiment.getShortName() );
-        
+
         }
-                
+
         return result;
     }
-    
-    
-    
+
     private String getFactorValueString( FactorValue fv ) {
         if ( fv == null ) return "null";
 
         if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
             String fvString = "";
-            for (Characteristic c : fv.getCharacteristics()) {
-                fvString += c.getValue() + " ";                
+            for ( Characteristic c : fv.getCharacteristics() ) {
+                fvString += c.getValue() + " ";
             }
             return fvString;
         } else if ( fv.getMeasurement() != null ) {

@@ -204,7 +204,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param id of experiment
      */
     @RequestMapping("/expressionExperiment/outliers.html")
-    public ModelAndView identifyOutliers( Long id ) throws Exception {
+    public ModelAndView identifyOutliers( Long id ) {
 
         if ( id == null ) {
             log.warn( "No id!" );
