@@ -22,7 +22,7 @@ import java.util.Date;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
-import org.hibernate.SessionFactory; 
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -56,13 +56,13 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
     public void update( Auditable a, AuditEventType auditEventType ) {
 
         Hibernate.initialize( a );
-        this.getSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() ); 
 
         Date now = new Date();
         if ( a.getStatus() == null ) {
             a.setStatus( create() );
         } else {
             Hibernate.initialize( a.getStatus() );
+            this.getSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
             a.getStatus().setLastUpdateDate( now );
             this.update( a.getStatus() );
         }
