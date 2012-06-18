@@ -64,7 +64,7 @@ public class JSONView implements View {
      * javax.servlet.http.HttpServletResponse)
      */
     @Override
-    public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
+    public void render( Map<String, ?> map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
 
         JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( this.docType );
