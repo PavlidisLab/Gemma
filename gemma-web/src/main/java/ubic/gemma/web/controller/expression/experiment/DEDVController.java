@@ -902,8 +902,8 @@ public class DEDVController {
             Gene coexpressedGene, Collection<DoubleVectorValueObject> dedvs ) {
         StopWatch watch = new StopWatch();
         watch.start();
-        Map<ExpressionExperimentValueObject, Collection<Long>> coexpressedEE2ProbeIds = new HashMap<ExpressionExperimentValueObject, Collection<Long>>();
-        Map<ExpressionExperimentValueObject, Collection<Long>> queryEE2ProbeIds = new HashMap<ExpressionExperimentValueObject, Collection<Long>>();
+        Map<Long, Collection<Long>> coexpressedEE2ProbeIds = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> queryEE2ProbeIds = new HashMap<Long, Collection<Long>>();
 
         /*
          * Get the probes for the vectors, organize by ee.
@@ -911,15 +911,15 @@ public class DEDVController {
         for ( DoubleVectorValueObject dedv : dedvs ) {
             ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
             if ( dedv.getGenes().contains( queryGene ) ) {
-                if ( !queryEE2ProbeIds.containsKey( ee ) ) {
-                    queryEE2ProbeIds.put( ee, new HashSet<Long>() );
+                if ( !queryEE2ProbeIds.containsKey( ee.getId() ) ) {
+                    queryEE2ProbeIds.put( ee.getId(), new HashSet<Long>() );
                 }
-                queryEE2ProbeIds.get( ee ).add( dedv.getDesignElement().getId() );
+                queryEE2ProbeIds.get( ee.getId() ).add( dedv.getDesignElement().getId() );
             } else if ( dedv.getGenes().contains( coexpressedGene ) ) {
-                if ( !coexpressedEE2ProbeIds.containsKey( ee ) ) {
-                    coexpressedEE2ProbeIds.put( ee, new HashSet<Long>() );
+                if ( !coexpressedEE2ProbeIds.containsKey( ee.getId() ) ) {
+                    coexpressedEE2ProbeIds.put( ee.getId(), new HashSet<Long>() );
                 }
-                coexpressedEE2ProbeIds.get( ee ).add( dedv.getDesignElement().getId() );
+                coexpressedEE2ProbeIds.get( ee.getId() ).add( dedv.getDesignElement().getId() );
             } else {
                 log.error( "Dedv doesn't belong to coexpressed or query gene. QueryGene= " + queryGene
                         + "CoexpressedGene= " + coexpressedGene + "DEDV " + dedv.getId() + " has genes: "
@@ -930,8 +930,8 @@ public class DEDVController {
         Map<Long, Collection<Long>> validatedProbes = new HashMap<Long, Collection<Long>>();
         for ( ExpressionExperiment ee : ees ) {
 
-            Collection<Long> queryProbeIds = queryEE2ProbeIds.get( ee );
-            Collection<Long> coexpressedProbeIds = coexpressedEE2ProbeIds.get( ee );
+            Collection<Long> queryProbeIds = queryEE2ProbeIds.get( ee.getId() );
+            Collection<Long> coexpressedProbeIds = coexpressedEE2ProbeIds.get( ee.getId() );
 
             if ( queryProbeIds == null || queryProbeIds.isEmpty() ) {
                 log.warn( "Unexpectedly no probes for " + queryGene + " in " + ee );
@@ -1119,7 +1119,8 @@ public class DEDVController {
                  * ExpressionExperiment, BioAssayDimension)
                  */
                 valueOrId = pair.getValue();
-                if ( valueOrId == null ) {
+                if ( valueOrId == null || factor.getType() == null
+                        || ( factor.getType() == FactorType.CATEGORICAL && factor.getFactorValues().isEmpty() ) ) {
                     factorsMissingValues.add( factor.getName() );
                     continue;
                 }
@@ -1131,7 +1132,8 @@ public class DEDVController {
                 } else {
                     FactorValue facVal = factorValueService.load( new Long( Math.round( valueOrId ) ) );
                     if ( facVal == null ) {
-                        log.warn( "Failed to load factorValue with id = " + valueOrId + ". Load returned null. " );
+                        log.warn( "Failed to load factorValue with id = " + valueOrId + 
+                                ". Load returned null. Experiment is: " + vvo.getEevo().toString() );
                         factorsMissingValues.add( factor.getName() );
                         continue;
                     }

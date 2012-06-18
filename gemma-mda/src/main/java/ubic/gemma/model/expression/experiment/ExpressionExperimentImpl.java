@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.proxy.HibernateProxyHelper;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  * @author paul
@@ -34,7 +36,9 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
     @Override
     public boolean equals( Object object ) {
         if ( object == null ) return false;
-        if ( !this.getClass().equals( object.getClass() ) ) {
+        if ( !this.getClass().equals( object.getClass() )
+                && !HibernateProxyHelper.getClassWithoutInitializingProxy( this.getClass() ).equals(
+                        HibernateProxyHelper.getClassWithoutInitializingProxy( object.getClass() ) ) ) {
             return false;
         }
         ExpressionExperiment that = ( ExpressionExperiment ) object;
