@@ -20,6 +20,7 @@ package ubic.gemma.web.remote;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.directwebremoting.convert.BeanConverter;
@@ -46,18 +47,18 @@ public class DoublePointConverter extends BeanConverter {
         if ( !( data instanceof DoublePoint ) ) return super.convertOutbound( data, outctx );
 
         // Where we collect out converted children
-        Map ovs = new TreeMap();
+        Map<String, OutboundVariable> ovs = new TreeMap<String, OutboundVariable>();
 
-        // We need to do this before collecing the children to save recurrsion
+        // We need to do this before collecting the children to save recursion
         ObjectOutboundVariable ov = new ObjectOutboundVariable( outctx );
         outctx.put( data, ov );
 
         try {
-            Map properties = getPropertyMapFromObject( data, true, false );
-            for ( Iterator it = properties.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = ( Map.Entry ) it.next();
-                String name = ( String ) entry.getKey();
-                Property property = ( Property ) entry.getValue();
+            Map<String, Property> properties = getPropertyMapFromObject( data, true, false );
+            for ( Iterator<Entry<String, Property>> it = properties.entrySet().iterator(); it.hasNext(); ) {
+                Entry<String, Property> entry = it.next();
+                String name = entry.getKey();
+                Property property = entry.getValue();
 
                 Object value = property.getValue( data );
                 OutboundVariable nested;

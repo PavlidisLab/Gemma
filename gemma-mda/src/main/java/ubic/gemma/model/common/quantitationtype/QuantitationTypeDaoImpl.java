@@ -48,7 +48,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
 
         BusinessKey.addRestrictions( queryObject, quantitationType );
 
-        java.util.List<?> results = queryObject.list();
+        java.util.List<QuantitationType> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -83,12 +83,11 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
     /**
      * @param results
      */
-    private void debug( Collection results ) {
+    private void debug( Collection<QuantitationType> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple QuantitationTypes found matching query:\n" );
-        for ( Object object : results ) {
-            QuantitationType entity = ( QuantitationType ) object;
-            sb.append( entity + "\n" );
+        for ( QuantitationType object : results ) {
+            sb.append( object + "\n" );
         }
         log.error( sb.toString() );
     }

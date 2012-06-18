@@ -48,12 +48,12 @@ public class OntologyTermConverter extends BeanConverter {
         // Where we collect out converted children
         Map<String, OutboundVariable> ovs = new TreeMap<String, OutboundVariable>();
 
-        // We need to do this before collecing the children to save recursion
+        // We need to do this before collecting the children to save recursion
         ObjectOutboundVariable ov = new ObjectOutboundVariable( outctx );
         outctx.put( data, ov );
 
         try {
-            Map properties = getPropertyMapFromObject( data, true, false );
+            Map<String, Property> properties = getPropertyMapFromObject( data, true, false );
             props: for ( Iterator<Map.Entry<String, Property>> it = properties.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Property> entry = it.next();
                 String name = entry.getKey();
@@ -67,7 +67,7 @@ public class OntologyTermConverter extends BeanConverter {
                 if ( data instanceof OntologyTerm && value instanceof Collection ) {// Look for loops in the class
                     // restrictions of the ontology term
                     OntologyTerm term = ( OntologyTerm ) data;
-                    for ( Object o : ( Collection ) value ) {
+                    for ( Object o : ( Collection<?> ) value ) {
 
                         if ( o instanceof OntologyClassRestriction ) {
 

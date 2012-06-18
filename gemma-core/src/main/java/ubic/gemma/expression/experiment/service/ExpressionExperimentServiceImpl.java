@@ -307,10 +307,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
      */
     @Override
-    public ExpressionExperiment findByFactor( final ExperimentalFactor factor) {
+    public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
         return this.expressionExperimentDao.findByFactor( factor );
     }
-    
+
     /**
      * @see ExpressionExperimentService#findByFactorValue(FactorValue)
      */
@@ -318,12 +318,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
         return this.expressionExperimentDao.findByFactorValue( factorValue );
     }
-    
+
     /**
      * @see ExpressionExperimentService#findByFactorValue(FactorValue)
      */
     @Override
-    public ExpressionExperiment findByFactorValue( final  Long factorValueId  ) {
+    public ExpressionExperiment findByFactorValue( final Long factorValueId ) {
         return this.expressionExperimentDao.findByFactorValue( factorValueId );
     }
 
@@ -709,7 +709,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
-    @Override 
+    @Override
     public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
             final Integer limit ) {
         return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
@@ -1237,5 +1237,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
         return this.expressionExperimentDao.loadValueObject( eeId );
+    }
+
+    @Override
+    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
+        return this.expressionExperimentDao.getProcessedExpressionVectorCount( experiments );
     }
 }

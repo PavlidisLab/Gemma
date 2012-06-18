@@ -154,21 +154,20 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByFactor( ExperimentalFactor factor );
-    
+
     /**
      * @param factorValue
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByFactorValue( FactorValue factorValue );
-    
+
     /**
      * @param factorValue
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByFactorValue( Long factorValueId );
-    
 
     /**
      * @param factorValues
@@ -601,5 +600,7 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
+
+    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
 
 }

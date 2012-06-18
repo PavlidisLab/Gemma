@@ -30,6 +30,7 @@ import ubic.gemma.model.common.Auditable;
 @Component
 public class AuditHelperImpl implements AuditHelper {
 
+    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( AuditHelperImpl.class );
 
     @Autowired

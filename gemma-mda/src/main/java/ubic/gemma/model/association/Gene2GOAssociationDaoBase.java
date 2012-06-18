@@ -86,8 +86,9 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( gene2GOAssociation );
         argNames.add( "gene2GOAssociation" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<? extends Gene2GOAssociation> results = new java.util.LinkedHashSet<Gene2GOAssociation>( this
+                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
+                        args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -147,7 +148,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public java.util.Collection<Gene> findByGOTerm( final java.util.Collection goTerms,
+    public java.util.Collection<Gene> findByGOTerm( final java.util.Collection<String> goTerms,
             final ubic.gemma.model.genome.Taxon taxon ) {
         return this.handleFindByGOTerm( goTerms, taxon );
 
@@ -158,15 +159,16 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
 
-    public Object findOrCreate( final java.lang.String queryString,
+    public Gene2GOAssociation findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( gene2GOAssociation );
         argNames.add( "gene2GOAssociation" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
+        java.util.Set<? extends Gene2GOAssociation> results = new java.util.LinkedHashSet<Gene2GOAssociation>( this
+                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
+                        args.toArray() ) );
+        Gene2GOAssociation result = null;
 
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -186,7 +188,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
 
     @Override
     public Gene2GOAssociation findOrCreate( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( Gene2GOAssociation ) this
+        return this
                 .findOrCreate(
 
                         "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
@@ -319,7 +321,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * Performs the core logic for {@link #findByGOTerm(java.util.Collection, ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection<Gene> handleFindByGOTerm( java.util.Collection goTerms,
+    protected abstract java.util.Collection<Gene> handleFindByGOTerm( java.util.Collection<String> goTerms,
             ubic.gemma.model.genome.Taxon taxon );
 
     /**

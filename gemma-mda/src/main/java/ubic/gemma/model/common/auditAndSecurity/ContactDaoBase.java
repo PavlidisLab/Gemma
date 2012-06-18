@@ -56,7 +56,6 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
-    
     @Override
     public Collection<? extends Contact> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ContactImpl where id in (:ids)", "ids", ids );
@@ -86,14 +85,14 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#findByEmail(int, java.lang.String, java.lang.String)
      */
-    
+
     public Contact findByEmail( final java.lang.String queryString, final java.lang.String email ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( email );
         argNames.add( "email" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<? extends Contact> results = new java.util.LinkedHashSet<Contact>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(

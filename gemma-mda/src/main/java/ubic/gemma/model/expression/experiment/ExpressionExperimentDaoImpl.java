@@ -205,6 +205,22 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByTaxon(ubic.gemma.model.genome.Taxon,
+     * int)
+     */
+    @Override
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setMaxResults( limit );
+        return tpl.findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByUpdatedLimit(java.util.Collection,
      * java.lang.Integer)
      */
@@ -221,6 +237,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         q.setMaxResults( limit );
         return q.list();
 
+    }
+
+    @Override
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+        Session s = this.getSession();
+        String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate desc ";
+        Query q = s.createQuery( queryString );
+        q.setMaxResults( limit );
+        return q.list();
     }
 
     /*
@@ -292,6 +317,29 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedExpressionVectorCount(java.util.Collection
+     * )
+     */
+    @Override
+    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
+        final String queryString = "select v.expressionExperiment.id, count(v) from ProcessedExpressionDataVectorImpl v "
+                + " where v.expressionExperiment.id in (:ee) group by v.expressionExperiment.id";
+
+        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", EntityUtils.getIds( experiments ) );
+        Map<Long, Integer> res = new HashMap<Long, Integer>();
+        for ( Object o : result ) {
+            Object[] oa = ( Object[] ) o;
+            Long eeid = ( Long ) oa[0];
+            Integer count = ( ( Long ) oa[1] ).intValue();
+            res.put( eeid, count );
+        }
+        return res;
+    }
+
     @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
         Collection<Long> batch = new HashSet<Long>();
@@ -338,15 +386,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return result;
     }
 
-    @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
-        Session s = this.getSession();
-        String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate desc ";
-        Query q = s.createQuery( queryString );
-        q.setMaxResults( limit );
-        return q.list();
-    }
-
     /*
      * Override to take advantage of query cache. (non-Javadoc)
      * 
@@ -390,6 +429,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
+        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample ";
+        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
+
+        Query query = this.getSession().createQuery( qs + where );
+        query.setParameter( "taxon", taxon );
+        return query.list();
+    }
+
+    @Override
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
         String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample ";
@@ -405,17 +455,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             qs += where + " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
         Query query = this.getSession().createQuery( qs );
-        query.setParameter( "taxon", taxon );
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
-        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample ";
-        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
-
-        Query query = this.getSession().createQuery( qs + where );
         query.setParameter( "taxon", taxon );
         return query.list();
     }
@@ -473,6 +512,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Query query = this.getSession().createQuery( qs );
         query.setParameterList( "ids", ids );
         return query.list();
+    }
+
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( eeId );
+        Collection<ExpressionExperimentValueObject> r = this.handleLoadValueObjects( ids, false );
+        if ( r.isEmpty() ) return null;
+        return r.iterator().next();
     }
 
     /*
@@ -752,47 +800,48 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.load( eeIds );
 
     }
-    
+
     @Override
     protected ExpressionExperiment handleFindByFactor( ExperimentalFactor ef ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
                 + "inner join ed.experimentalFactors ef where ef = :ef ";
-        
+
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ef", ef );
-        
+
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has factor = " + ef );
             return null;
         }
         return ( ExpressionExperiment ) results.iterator().next();
     }
-    
+
+    /**
+     * @param fv
+     * @return
+     */
     @Override
     protected ExpressionExperiment handleFindByFactorValue( FactorValue fv ) {
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
-                + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv = :fv ";
-        
-        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "fv", fv );
-        
-        if ( results.size() == 0 ) {
-            log.info( "There is no expression experiment that has factorValue = " + fv );
-            return null;
-        }
-        return ( ExpressionExperiment ) results.iterator().next();
+        return handleFindByFactorValue( fv.getId() );
     }
 
+    /**
+     * @param factorValueId
+     * @return
+     */
     @Override
     protected ExpressionExperiment handleFindByFactorValue( Long factorValueId ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
                 + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
 
-        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "fvId", factorValueId);
+        List<ExpressionExperiment> results = getHibernateTemplate().findByNamedParam( queryString, "fvId",
+                factorValueId );
 
         if ( results.size() == 0 ) {
-            log.info( "There is no expression experiment that has factorValue = " + factorValueId );
+            log.info( "There is no expression experiment that has factorValue ID= " + factorValueId );
             return null;
         }
-        return ( ExpressionExperiment ) results.iterator().next();
+
+        return results.get( 0 );
     }
 
     /*
@@ -914,22 +963,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByTaxon(ubic.gemma.model.genome.Taxon,
-     * int)
-     */
-    @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
-        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-        tpl.setMaxResults( limit );
-        return tpl.findByNamedParam( queryString, "taxon", taxon );
     }
 
     /*
@@ -1108,6 +1141,26 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util
+     * .Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @Override
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
+            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        if ( designElements == null || designElements.size() == 0 ) return new HashSet<DesignElementDataVector>();
+
+        assert quantitationType.getId() != null;
+
+        final String queryString = "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
+                + " where de in (:des) and dev.quantitationType = :qt";
+        return getHibernateTemplate().findByNamedParam( queryString, new String[] { "des", "qt" },
+                new Object[] { designElements, quantitationType } );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
@@ -1136,26 +1189,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         return ( Collection<DesignElementDataVector> ) results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util
-     * .Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
-        if ( designElements == null || designElements.size() == 0 ) return new HashSet<DesignElementDataVector>();
-
-        assert quantitationType.getId() != null;
-
-        final String queryString = "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
-                + " where de in (:des) and dev.quantitationType = :qt";
-        return getHibernateTemplate().findByNamedParam( queryString, new String[] { "des", "qt" },
-                new Object[] { designElements, quantitationType } );
     }
 
     /*
@@ -1524,15 +1557,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
         return ees;
-    }
-
-    @Override
-    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( eeId );
-        Collection<ExpressionExperimentValueObject> r = this.handleLoadValueObjects( ids, false );
-        if ( r.isEmpty() ) return null;
-        return r.iterator().next();
     }
 
     /*

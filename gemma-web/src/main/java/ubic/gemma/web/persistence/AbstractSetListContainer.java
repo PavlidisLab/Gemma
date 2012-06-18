@@ -167,13 +167,13 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     }
 
-    public List<GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
+    public List<? extends GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
 
         return allSessionBoundGroups;
 
     }
 
-    public List<GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
+    public List<? extends GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
 
         return sessionBoundModifiedGroups;
 

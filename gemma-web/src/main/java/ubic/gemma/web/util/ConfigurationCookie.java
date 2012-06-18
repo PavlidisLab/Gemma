@@ -162,7 +162,7 @@ public class ConfigurationCookie extends Cookie {
      * @return
      * @see org.apache.commons.configuration.AbstractConfiguration#getList(java.lang.String)
      */
-    public List getList( String key ) {
+    public List<?> getList( String key ) {
         return this.configuration.getList( key );
     }
 
@@ -206,7 +206,7 @@ public class ConfigurationCookie extends Cookie {
      * @return
      * @see org.apache.commons.configuration.AbstractFileConfiguration#getKeys()
      */
-    public Iterator getKeys() {
+    public Iterator<String> getKeys() {
         return this.configuration.getKeys();
     }
 

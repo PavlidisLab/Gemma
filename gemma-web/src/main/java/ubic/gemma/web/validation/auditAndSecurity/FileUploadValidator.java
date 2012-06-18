@@ -39,7 +39,7 @@ public class FileUploadValidator implements Validator {
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
     @Override
-    public boolean supports( Class clazz ) {
+    public boolean supports( Class<?> clazz ) {
         return FileUpload.class.isAssignableFrom( clazz );
     }
 

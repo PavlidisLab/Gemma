@@ -63,15 +63,15 @@ public class VisualizeDataSetApp {
 
         VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
 
-        DoubleMatrix matrix = null;
+        DoubleMatrix<String, String> matrix = null;
         try {
             matrix = visualizeDataSet.parseData( true );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        visualizeDataSet.showDataMatrix( "A heat map", new MatrixDisplay( colorMatrix ) );
+        ColorMatrix<String, String> colorMatrix = ColorMatrix.newInstance( matrix );
+        visualizeDataSet.showDataMatrix( "A heat map", MatrixDisplay.newInstance( colorMatrix ) );
 
         List<double[]> data = new ArrayList<double[]>();
 
@@ -118,7 +118,7 @@ public class VisualizeDataSetApp {
      * @param title
      * @param matrixDisplay
      */
-    public void showDataMatrix( String title, MatrixDisplay matrixDisplay ) {
+    public void showDataMatrix( String title, MatrixDisplay<String, String> matrixDisplay ) {
 
         JFrame frame = createGui( title );
         frame.add( matrixDisplay );
@@ -198,9 +198,9 @@ public class VisualizeDataSetApp {
             numProfiles = DEFAULT_MAX_SIZE;
         }
 
-        Iterator iter = dataCol.iterator();
+        Iterator<double[]> iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            XYSeries series = getSeries( j, ( double[] ) iter.next() );
+            XYSeries series = getSeries( j, iter.next() );
             PolarPlot plot = ( PolarPlot ) chart.getPlot();
             plot.setDataset( new XYSeriesCollection( series ) );
         }
@@ -214,7 +214,7 @@ public class VisualizeDataSetApp {
      * @param iter
      * @return
      */
-    private XYSeries getSeries( Comparable key, double[] data ) {
+    private XYSeries getSeries( Comparable<Integer> key, double[] data ) {
         XYSeries series = new XYSeries( key, true, true );
         for ( int i = 0; i < data.length; i++ ) {
             series.add( i, data[i] );
@@ -227,7 +227,7 @@ public class VisualizeDataSetApp {
      * @return
      * @throws IOException
      */
-    private DoubleMatrix parseData( boolean headerExists ) throws IOException {
+    private DoubleMatrix<String, String> parseData( boolean headerExists ) throws IOException {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );
         if ( is == null ) throw new RuntimeException( "could not load data" );
         DoubleMatrixReader reader = new DoubleMatrixReader();

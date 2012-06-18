@@ -33,7 +33,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
  * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet
  */
 public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao {
+        ExpressionAnalysisResultSetDao {
 
     /**
      * @see ExpressionAnalysisResultSetDao#create(int, java.util.Collection)

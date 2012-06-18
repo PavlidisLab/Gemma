@@ -19,16 +19,12 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -48,20 +44,15 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-                for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-                    Hibernate.initialize( factor );
-                }
+        Session session = this.getSession();
 
-                Hibernate.initialize( resultSet.getAnalysis() );
-                Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
+        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
+            Hibernate.initialize( factor );
+        }
 
-                return null;
-            }
-        } );
+        Hibernate.initialize( resultSet.getAnalysis() );
+        Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
 
     }
 
@@ -70,27 +61,22 @@ public class ExpressionAnalysisResultSetDaoImpl extends
      */
     @Override
     protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
+        Session session = this.getSession();
 
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-                for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-                    Hibernate.initialize( factor );
-                }
+        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
+            Hibernate.initialize( factor );
+        }
 
-                Hibernate.initialize( resultSet.getAnalysis() );
-                Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
+        Hibernate.initialize( resultSet.getAnalysis() );
+        Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
 
-                for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-                    Hibernate.initialize( result );
+        for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
+            Hibernate.initialize( result );
 
-                    Hibernate.initialize( result.getProbe() );
+            Hibernate.initialize( result.getProbe() );
 
-                }
-                return null;
-            }
-        } );
+        }
 
     }
 }

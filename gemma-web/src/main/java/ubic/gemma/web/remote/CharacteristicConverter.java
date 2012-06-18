@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +37,9 @@ import org.directwebremoting.extend.Property;
 import org.directwebremoting.extend.TypeHintContext;
 import org.directwebremoting.util.LocalUtil;
 import org.directwebremoting.util.Messages;
+
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 
 /**
  * @author kelsey
@@ -67,7 +71,7 @@ public class CharacteristicConverter extends BeanConverter {
         value = value.substring( 1, value.length() - 1 );
 
         try {
-            Map tokens = extractInboundTokens( paramType, value );
+            Map<String, String> tokens = extractInboundTokens( paramType, value );
 
             Object bean;
             if ( instanceType != null ) {
@@ -75,9 +79,9 @@ public class CharacteristicConverter extends BeanConverter {
                 log.info( instanceType );
 
                 if ( tokens.containsKey( "valueUri" ) )
-                    bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
+                    bean = VocabCharacteristic.Factory.newInstance();
                 else
-                    bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
+                    bean = Characteristic.Factory.newInstance();
 
                 inctx.addConverted( iv, instanceType, bean );
             } else {
@@ -89,16 +93,16 @@ public class CharacteristicConverter extends BeanConverter {
                 inctx.addConverted( iv, paramType, bean );
             }
 
-            Map properties = getPropertyMapFromObject( bean, false, true );
+            Map<String, Property> properties = getPropertyMapFromObject( bean, false, true );
 
             // Loop through the properties passed in
 
-            for ( Iterator it = tokens.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = ( Map.Entry ) it.next();
-                String key = ( String ) entry.getKey();
-                String val = ( String ) entry.getValue();
+            for ( Iterator<Entry<String, String>> it = tokens.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, String> entry = it.next();
+                String key = entry.getKey();
+                String val = entry.getValue();
 
-                Property property = ( Property ) properties.get( key );
+                Property property = properties.get( key );
                 if ( property == null ) {
                     log.warn( "Missing java bean property to match javascript property: " + key
                             + ". For causes see debug level logs:" );
@@ -109,7 +113,7 @@ public class CharacteristicConverter extends BeanConverter {
                     log.debug( "- The property may be excluded using include or exclude rules." );
 
                     StringBuffer all = new StringBuffer();
-                    for ( Iterator pit = properties.keySet().iterator(); pit.hasNext(); ) {
+                    for ( Iterator<String> pit = properties.keySet().iterator(); pit.hasNext(); ) {
                         all.append( pit.next() );
                         if ( pit.hasNext() ) {
                             all.append( ',' );
@@ -119,7 +123,7 @@ public class CharacteristicConverter extends BeanConverter {
                     continue;
                 }
 
-                Class propType = property.getPropertyType();
+                Class<?> propType = property.getPropertyType();
 
                 String[] split = ParseUtil.splitInbound( val );
                 String splitValue = split[LocalUtil.INBOUND_INDEX_VALUE];

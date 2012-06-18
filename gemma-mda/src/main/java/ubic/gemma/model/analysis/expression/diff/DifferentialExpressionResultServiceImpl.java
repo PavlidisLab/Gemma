@@ -123,6 +123,11 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     }
 
+    @Override
+    public void update( ExpressionAnalysisResultSet resultSet ) {
+        this.getExpressionAnalysisResultSetDao().update( resultSet );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -164,6 +169,12 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
             Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
         return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
                 minNumberOfResults );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
+        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
+                .load( ids );
     }
 
 }

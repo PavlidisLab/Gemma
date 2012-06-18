@@ -40,7 +40,7 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     }
 
     @Override
-    protected Collection handleFindByFullName( String name, String lastName ) {
+    protected Collection<Person> handleFindByFullName( String name, String lastName ) {
         return this.getPersonDao().findByFullName( name, lastName );
     }
 

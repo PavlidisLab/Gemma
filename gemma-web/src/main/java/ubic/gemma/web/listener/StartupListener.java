@@ -189,7 +189,7 @@ public class StartupListener extends ContextLoaderListener {
          * Locate all the dependency jar files in the webapp's lib directory.
          */
         File sourceLibdir = null;
-        for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
+        for ( Enumeration<?> e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
             String key = ( String ) e.nextElement();
             // Looking for something like org.apache.catalina.jsp_classpath.
             // FIXME: will this work with other engines? Can we use java.class.path instead?

@@ -102,11 +102,13 @@ public interface DifferentialExpressionResultService {
             Collection<Long> arrayDesignIds, Integer limit );
 
     /**
+     * Retrieve differential expression results in bulk. This is an important method for the differential expression
+     * interfaces.
+     * 
      * @param resultSets
      * @param genes
      * @param adUsed
-     * @param limit
-     * @return
+     * @return map of resultset IDs to map of gene id to differential expression results.
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
             Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed );
@@ -140,9 +142,8 @@ public interface DifferentialExpressionResultService {
 
     public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 
-    /**
-     * 
-     */
+    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionAnalysisResultSet resultSet );
 
@@ -156,10 +157,15 @@ public interface DifferentialExpressionResultService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thawLite( ExpressionAnalysisResultSet resultSet );
 
+    // FIXME not used?
     public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
             Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
+
+    // this is here for 'cleanup' purposes, usually we would consider these immutable.
+    @Secured({ "GROUP_ADMIN" })
+    public void update( ExpressionAnalysisResultSet resultSet );
 
 }

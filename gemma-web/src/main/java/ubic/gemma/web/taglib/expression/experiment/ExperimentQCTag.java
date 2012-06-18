@@ -42,6 +42,7 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasPvalueDist = false;
 
+    @SuppressWarnings("unused")
     private boolean hasNodeDegreeDist = false;
 
     private int numFactors = 2;
@@ -126,7 +127,7 @@ public class ExperimentQCTag extends TagSupport {
         }
         return SKIP_BODY;
     }
-    
+
     public String getQChtml() {
         StringBuilder buf = new StringBuilder();
 
@@ -156,27 +157,25 @@ public class ExperimentQCTag extends TagSupport {
             int width = 400;
             int height = 400;
             String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&forceShowLabels=1";
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
-                            + "onClick=\"popupImage('"
-                            + bigImageUrl
-                            + "',"
-                            + width
-                            + ","
-                            + height
-                            + ")"
-                            + ";return 1\"; "
-                            + "title=\"Assay correlations (bright=higher); click for larger version\" >"
-                            + "<img src=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
-                            + this.eeid
-                            + "&size=1\" alt='Image unavailable' width='"
-                            + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX
-                            + "' height='"
-                            + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
+                    + "onClick=\"popupImage('"
+                    + bigImageUrl
+                    + "',"
+                    + width
+                    + ","
+                    + height
+                    + ")"
+                    + ";return 1\"; "
+                    + "title=\"Assay correlations (bright=higher); click for larger version\" >"
+                    + "<img src=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
+                    + this.eeid
+                    + "&size=1\" alt='Image unavailable' width='"
+                    + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX
+                    + "' height='"
+                    + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
-            buf
-                    .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
-                            + this.eeid + "&text=1\">Get data</a></li>" );
+            buf.append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
+                    + this.eeid + "&text=1\">Get data</a></li>" );
 
             buf.append( "</ul></td>" );
         } else {
@@ -184,9 +183,8 @@ public class ExperimentQCTag extends TagSupport {
         }
 
         if ( hasPCA ) {
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"/Gemma/expressionExperiment/pcaScree.html?id="
-                            + this.eeid + "\" />" );
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"/Gemma/expressionExperiment/pcaScree.html?id="
+                    + this.eeid + "\" />" );
             buf.append( "<br/>" );
             for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
                 // id : 'ee-details-panel - declared in ExpressionExperimentPage.js
@@ -202,9 +200,8 @@ public class ExperimentQCTag extends TagSupport {
                 buf.append( linkText + "&nbsp;" );
             }
 
-            buf
-                    .append( "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/eigenGenes.html?eeid="
-                            + this.eeid + "\">Get data</a></span>" );
+            buf.append( "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/eigenGenes.html?eeid="
+                    + this.eeid + "\">Get data</a></span>" );
 
             buf.append( "</td>" );
             /*
@@ -215,17 +212,16 @@ public class ExperimentQCTag extends TagSupport {
             int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors;
             int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * NUM_PCS_TO_DISPLAY;
 
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
-                            + "<a style='cursor:pointer' onClick=\"popupImage('"
-                            + detailsUrl
-                            + "',"
-                            + width
-                            + ","
-                            + height
-                            + ");return 1\" >"
-                            + "<img title='Correlations of PCs with experimental factors, click for details' src=\"/Gemma/expressionExperiment/pcaFactors.html?id="
-                            + this.eeid + "\" /></a></td>" );
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
+                    + "<a style='cursor:pointer' onClick=\"popupImage('"
+                    + detailsUrl
+                    + "',"
+                    + width
+                    + ","
+                    + height
+                    + ");return 1\" >"
+                    + "<img title='Correlations of PCs with experimental factors, click for details' src=\"/Gemma/expressionExperiment/pcaFactors.html?id="
+                    + this.eeid + "\" /></a></td>" );
 
         } else {
             /*
@@ -245,17 +241,15 @@ public class ExperimentQCTag extends TagSupport {
         // }
 
         if ( hasCorrDist ) {
-            buf
-                    .append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
-                            + this.eeid + "\" /></td>" );
+            buf.append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
+                    + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
         }
 
         if ( hasPvalueDist ) {
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Differential expression value distribution' src=\"/Gemma/expressionExperiment/visualizePvalueDist.html?id="
-                            + this.eeid + "\" /></td>" );
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Differential expression value distribution' src=\"/Gemma/expressionExperiment/visualizePvalueDist.html?id="
+                    + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
         }

@@ -56,6 +56,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         public Integer numberOfProbesOnArray;
         public String id;
         public boolean isSelected = false;
+        public Integer numberOfGenesTested;
 
         public boolean getIsSelected() {
             return this.isSelected;

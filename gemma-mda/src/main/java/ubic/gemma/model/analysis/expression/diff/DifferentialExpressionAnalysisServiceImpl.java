@@ -27,7 +27,6 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -64,7 +63,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
     }
 
@@ -203,6 +202,18 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     public void update( ExpressionAnalysisResultSet a ) {
         this.getExpressionAnalysisResultSetDao().update( a );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getAnalyses(java.util.Collection)
+     */
+    @Override
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+            Collection<? extends BioAssaySet> expressionExperiments ) {
+        return this.getDifferentialExpressionAnalysisDao().getAnalyses( expressionExperiments );
     }
 
 }

@@ -43,29 +43,26 @@ public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDa
 
     @Override
     public Protocol find( Protocol protocol ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( Protocol.class );
-            queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
+        Criteria queryObject = super.getSession().createCriteria( Protocol.class );
+        queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
 
-            if ( protocol.getDescription() != null )
-                queryObject.add( Restrictions.eq( "description", protocol.getDescription() ) );
+        if ( protocol.getDescription() != null )
+            queryObject.add( Restrictions.eq( "description", protocol.getDescription() ) );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + ubic.gemma.model.common.protocol.Protocol.class.getName()
-                                    + "' was found when executing query" );
+        java.util.List<Protocol> results = queryObject.list();
+        Protocol result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + ubic.gemma.model.common.protocol.Protocol.class.getName()
+                                + "' was found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( Protocol ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return result;
+
     }
 
     @Override

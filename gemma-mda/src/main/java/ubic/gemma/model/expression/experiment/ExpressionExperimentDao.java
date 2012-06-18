@@ -347,4 +347,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
 
     public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
 
+    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
+
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -37,8 +39,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#create(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     @Override
-    public ubic.gemma.model.common.auditAndSecurity.Person create(
-            final ubic.gemma.model.common.auditAndSecurity.Person person ) {
+    public Person create( final Person person ) {
         return this.handleCreate( person );
 
     }
@@ -47,7 +48,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findByFullName(java.lang.String, java.lang.String)
      */
     @Override
-    public java.util.Collection findByFullName( final java.lang.String name, final java.lang.String lastName ) {
+    public Collection<Person> findByFullName( final java.lang.String name, final java.lang.String lastName ) {
         return this.handleFindByFullName( name, lastName );
 
     }
@@ -66,7 +67,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#loadAll()
      */
     @Override
-    public java.util.Collection loadAll() {
+    public java.util.Collection<Person> loadAll() {
         return this.handleLoadAll();
 
     }
@@ -103,7 +104,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * Performs the core logic for {@link #findByFullName(java.lang.String, java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByFullName( java.lang.String name, java.lang.String lastName );
+    protected abstract java.util.Collection<Person> handleFindByFullName( java.lang.String name,
+            java.lang.String lastName );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}
@@ -114,7 +116,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll();
+    protected abstract java.util.Collection<Person> handleLoadAll();
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Person)}

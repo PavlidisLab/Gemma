@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjuster {
+public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjuster<String, String> {
 
     private ArrayDesign arrayDesign = null;
     private AffyBatch ab = null;
@@ -52,7 +52,8 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      */
     @Override
-    public DoubleMatrix adjust( DoubleMatrix signal, DoubleMatrix background ) {
+    public DoubleMatrix<String, String> adjust( DoubleMatrix<String, String> signal,
+            DoubleMatrix<String, String> background ) {
         log.debug( "Background correcting..." );
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
@@ -62,7 +63,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
         log.info( "Done with background correction" );
 
-        DoubleMatrix resultObject = rc.retrieveMatrix( "m" );
+        DoubleMatrix<String, String> resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
         rc.remove( abName );

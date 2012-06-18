@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.auditAndSecurity.Contact;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -45,8 +47,9 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ExpressionExperimentSubSet ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends ExpressionExperimentSubSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -73,13 +76,13 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
      *      java.lang.String, ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    public java.util.Collection findByInvestigator( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
+    public java.util.Collection<ExpressionExperimentSubSet> findByInvestigator( final java.lang.String queryString,
+            final Contact investigator ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( investigator );
         argNames.add( "investigator" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<ExpressionExperimentSubSet> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
         return results;
     }
@@ -90,10 +93,10 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
      */
 
     @Override
-    public java.util.Collection findByInvestigator( final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
+    public java.util.Collection<ExpressionExperimentSubSet> findByInvestigator( final Contact investigator ) {
         return this
                 .findByInvestigator(
-                        "from InvestigationImpl i inner join Contact c on c in elements(i.investigators) or c == i.owner where c == :investigator",
+                        "from ExpressionExperimentSubSetImpl i inner join Contact c on c in elements(i.investigators) or c == i.owner where c == :investigator",
                         investigator );
     }
 
@@ -115,10 +118,12 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#loadAll(int)
      */
 
+    @SuppressWarnings("unchecked")
+    @Override
     public java.util.Collection<ExpressionExperimentSubSet> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<? extends ExpressionExperimentSubSet> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl.class );
-        return results;
+        return ( Collection<ExpressionExperimentSubSet> ) results;
     }
 
     /**
@@ -141,7 +146,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends ExpressionExperimentSubSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.remove - 'entities' can not be null" );
         }
@@ -165,7 +170,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends ExpressionExperimentSubSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.update - 'entities' can not be null" );
         }
@@ -174,9 +179,9 @@ public abstract class ExpressionExperimentSubSetDaoBase extends BioAssaySetDaoIm
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) entityIterator
-                                    .next() );
+                        for ( java.util.Iterator<? extends ExpressionExperimentSubSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

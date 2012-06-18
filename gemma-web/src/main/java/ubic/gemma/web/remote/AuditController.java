@@ -33,7 +33,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,19 +51,19 @@ public class AuditController {
     private static Log log = LogFactory.getLog( AuditController.class.getName() );
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    AuditEventService auditEventService;
+    private AuditEventService auditEventService;
 
     @Autowired
-    AuditTrailService auditTrailService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    GeneService geneService;
+    private GeneService geneService;
 
     /**
      * AJAX

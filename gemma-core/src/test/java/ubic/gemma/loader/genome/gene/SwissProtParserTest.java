@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import junit.framework.TestCase;
-import ubic.gemma.loader.util.parser.Parser;
 
 /**
  * @author pavlidis
@@ -35,10 +34,10 @@ public class SwissProtParserTest extends TestCase {
         InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/gene/uniprot_sprot_human.sample.dat" );
         assertNotNull( is );
-        Parser p = new SwissProtParser();
+        SwissProtParser p = new SwissProtParser();
         p.parse( is );
         is.close();
-        Collection results = p.getResults();
+        Collection<?> results = p.getResults();
 
         /*
          * Parser not fully implemented, doesn't return anything.

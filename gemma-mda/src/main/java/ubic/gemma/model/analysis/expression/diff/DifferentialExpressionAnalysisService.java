@@ -23,17 +23,16 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.analysis.AnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author kelsey
  * @version $Id$
  */
-public interface DifferentialExpressionAnalysisService extends
-        ubic.gemma.model.analysis.AnalysisService<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
      * @param par
@@ -98,7 +97,14 @@ public interface DifferentialExpressionAnalysisService extends
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
+
+    /**
+     * @param expressionExperiments
+     * @return quite deeply thawed analyses (not the results themselves, but metadata)
+     */
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+            Collection<? extends BioAssaySet> expressionExperiments );
 
     /**
      * @param resultSetIds

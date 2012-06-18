@@ -42,8 +42,9 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( JobInfo ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends JobInfo> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -137,8 +138,9 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( JobInfo ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends JobInfo> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

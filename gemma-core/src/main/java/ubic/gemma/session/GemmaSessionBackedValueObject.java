@@ -44,7 +44,7 @@ public interface GemmaSessionBackedValueObject {
     public void setId( Long id );
 
     /**
-     * FIXME should this not override Object.equals()?
+     * FIXME should this not override Object.equals()? HashCode?
      * 
      * @param ervo
      * @return

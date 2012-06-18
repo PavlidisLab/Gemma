@@ -560,21 +560,6 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                         "select a from AuditEventImpl a fetch all properties join fetch a.performer fetch all properties where a = :ae ",
                         "ae", auditEvent ).iterator().next();
 
-        // this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-        // public Object doInHibernate( Session session ) throws HibernateException {
-        // /*
-        // * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
-        // * associated with the session.
-        // */
-        // if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
-        // session.lock( auditEvent, LockMode.NONE );
-        // }
-        // Hibernate.initialize( auditEvent );
-        // Hibernate.initialize( auditEvent.getPerformer() );
-        // return null;
-        // }
-        // } );
-
     }
 
     /**

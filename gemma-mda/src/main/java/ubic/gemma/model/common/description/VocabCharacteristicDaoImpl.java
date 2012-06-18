@@ -55,7 +55,7 @@ public class VocabCharacteristicDaoImpl extends VocabCharacteristicDaoBase {
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
-    protected Map handleFindByParentClass( Class<?> parentClass ) {
+    protected Map<Characteristic, Object> handleFindByParentClass( Class<?> parentClass ) {
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";

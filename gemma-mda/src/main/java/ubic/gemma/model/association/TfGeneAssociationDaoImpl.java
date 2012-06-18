@@ -48,8 +48,9 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.association.TfGeneAssociation ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -71,7 +72,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
      * 
      * @see ubic.gemma.model.association.TfGeneAssociationDao#findByTargetGene(ubic.gemma.model.genome.Gene) Example
      * that exercises this for pazar: /Gemma/searchCoexpression.html?g=546099,570546&s=3&t=2&q&an=All mouse
-     */ 
+     */
     @Override
     public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
         return this
@@ -80,7 +81,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
                         "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.secondGene = :g",
                         "g", gene );
     }
- 
+
     @Override
     public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
         return this
@@ -89,7 +90,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
                         "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.firstGene = :g",
                         "g", tf );
     }
- 
+
     @Override
     public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
         return this
@@ -109,10 +110,9 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
         return ( ubic.gemma.model.association.PazarAssociation ) entity;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<? extends TfGeneAssociation> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<? extends TfGeneAssociation> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.TfGeneAssociation.class );
 
         return results;
@@ -155,14 +155,15 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
 
     @Override
     public void update( Collection<? extends TfGeneAssociation> entities ) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            update( entityIterator.next() );
+        }
     }
 
     @Override
     public void update( TfGeneAssociation entity ) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        this.getHibernateTemplate().update( entity );
     }
 
 }

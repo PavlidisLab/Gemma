@@ -57,8 +57,9 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.common.description.DatabaseEntry ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends DatabaseEntry> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -89,8 +90,9 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( databaseEntry );
         argNames.add( "databaseEntry" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<? extends DatabaseEntry> results = new java.util.LinkedHashSet<DatabaseEntry>( this
+                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
+                        args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -173,7 +175,7 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
      */
     @Override
     public java.util.Collection<? extends DatabaseEntry> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+        final java.util.Collection<? extends DatabaseEntry> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.DatabaseEntryImpl.class );
 
         return results;
@@ -228,8 +230,9 @@ public abstract class DatabaseEntryDaoBase extends org.springframework.orm.hiber
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.description.DatabaseEntry ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends DatabaseEntry> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

@@ -46,7 +46,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
 
         Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
         queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
-        java.util.List results = queryObject.list();
+        java.util.List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {

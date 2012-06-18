@@ -84,7 +84,7 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
 
                 if ( returnedObject instanceof Map ) {
                     map = ( Map<? extends Object, Object> ) returnedObject;
-                    filterer = new MapFilterer( map );
+                    filterer = new MapFilterer<Object>( ( Map<Object, Object> ) map );
                 } else {
                     throw new AuthorizationServiceException( "A Map was required as the "
                             + "returnedObject, but the returnedObject was: " + returnedObject );
@@ -105,7 +105,7 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
                      * If the key is not a securable, it's okay; if it is we need explicit permission
                      */
                     boolean isSecurable = Securable.class.isAssignableFrom( domainObject.getClass() );
-                    
+
                     hasPermission = !isSecurable || hasPermission( authentication, domainObject );
 
                     /*

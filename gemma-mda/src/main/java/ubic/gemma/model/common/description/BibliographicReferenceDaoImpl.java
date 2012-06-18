@@ -201,7 +201,8 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     // Note that almost the same method is also available from the EEservice
     @Override
-    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
+            BibliographicReference bibliographicReference ) {
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
                 + " where ee.primaryPublication = :bib OR (eeO = :bib) ";
 
@@ -209,8 +210,9 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     }
 
     @Override
-    protected Collection<BibliographicReference> handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getHibernateTemplate().findByNamedParam( "from BibliographicReferenceImpl b where b.id in :bib", "bib", ids );
+    protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BibliographicReferenceImpl b where b.id in :bib",
+                "bib", ids );
     }
 
     /*

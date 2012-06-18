@@ -123,8 +123,9 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set<?> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<? extends ExternalDatabase> results = new java.util.LinkedHashSet<ExternalDatabase>( this
+                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
+                        args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -157,8 +158,8 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
      */
 
     @Override
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends ExternalDatabase> loadAll() {
+        final java.util.Collection<? extends ExternalDatabase> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.ExternalDatabaseImpl.class );
         return results;
     }
@@ -183,7 +184,7 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends ExternalDatabase> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExternalDatabase.remove - 'entities' can not be null" );
         }
@@ -206,7 +207,7 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends ExternalDatabase> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExternalDatabase.update - 'entities' can not be null" );
         }
@@ -215,8 +216,9 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends ExternalDatabase> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

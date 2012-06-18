@@ -36,7 +36,7 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
      * @see GeneHomologyDao#create(int, Collection)
      */
     @Override
-    public Collection create( final Collection entities ) {
+    public Collection<? extends GeneHomology> create( final Collection<? extends GeneHomology> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneHomology.create - 'entities' can not be null" );
         }
@@ -45,8 +45,9 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( GeneHomology ) entityIterator.next() );
+                        for ( Iterator<? extends GeneHomology> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -87,8 +88,8 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
      * @see GeneHomologyDao#loadAll(int)
      */
     @Override
-    public Collection loadAll() {
-        final Collection results = this.getHibernateTemplate().loadAll( GeneHomologyImpl.class );
+    public Collection<? extends GeneHomology> loadAll() {
+        final Collection<? extends GeneHomology> results = this.getHibernateTemplate().loadAll( GeneHomologyImpl.class );
 
         return results;
     }
@@ -111,7 +112,7 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
      * @see RelationshipDao#remove(Collection)
      */
     @Override
-    public void remove( Collection entities ) {
+    public void remove( Collection<? extends GeneHomology> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneHomology.remove - 'entities' can not be null" );
         }
@@ -133,7 +134,7 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
      * @see RelationshipDao#update(Collection)
      */
     @Override
-    public void update( final Collection entities ) {
+    public void update( final Collection<? extends GeneHomology> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneHomology.update - 'entities' can not be null" );
         }
@@ -142,8 +143,9 @@ public abstract class GeneHomologyDaoBase extends HibernateDaoSupport implements
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( GeneHomology ) entityIterator.next() );
+                        for ( Iterator<? extends GeneHomology> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

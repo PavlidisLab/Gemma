@@ -937,11 +937,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws IOException
      * @throws FileNotFoundException
      */
-    @SuppressWarnings("unchecked")
-    private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
-            ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
+    private <T> void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
+            ExpressionDataMatrix<T> expressionDataMatrix ) throws IOException, FileNotFoundException {
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
+        MatrixWriter<T> matrixWriter = new MatrixWriter<T>();
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
         writer.flush();
         writer.close();
@@ -959,7 +958,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         this.designElementDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
+        MatrixWriter matrixWriter = new MatrixWriter<Object>();
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
     }
 
@@ -971,11 +970,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws FileNotFoundException
      */
     @SuppressWarnings("unchecked")
-    private void writeMatrix( File file, Map<Long, String[]> geneAnnotations, ExpressionDataMatrix expressionDataMatrix )
-            throws IOException, FileNotFoundException {
+    private <T> void writeMatrix( File file, Map<Long, String[]> geneAnnotations,
+            ExpressionDataMatrix<T> expressionDataMatrix ) throws IOException, FileNotFoundException {
 
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
+        MatrixWriter matrixWriter = new MatrixWriter<T>();
         matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();
         writer.close();

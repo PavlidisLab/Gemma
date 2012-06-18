@@ -332,7 +332,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection vos = null;
+        Collection<?> vos = null;
         for ( Class<?> entityClass : results.keySet() ) {
             List<SearchResult> classSearchResults = results.get( entityClass );
 
@@ -342,7 +342,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                         settings );
 
                 if ( !SecurityServiceImpl.isUserAdmin() ) {
-                    auditableUtil.removeTroubledEes( vos );
+                    auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
                 }
 
             } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
@@ -350,7 +350,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                         settings );
 
                 if ( !SecurityServiceImpl.isUserAdmin() ) {
-                    auditableUtil.removeTroubledArrayDesigns( vos );
+                    auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
                 }
             } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
                 return;
@@ -410,21 +410,21 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection vos = null;
+        Collection<?> vos = null;
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
             vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
                     settings );
 
             if ( !SecurityServiceImpl.isUserAdmin() ) {
-                auditableUtil.removeTroubledEes( vos );
+                auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
             }
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
             vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
 
             if ( !SecurityServiceImpl.isUserAdmin() ) {
-                auditableUtil.removeTroubledArrayDesigns( vos );
+                auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             Collection<CompositeSequenceValueObject> css = new ArrayList<CompositeSequenceValueObject>();
@@ -520,8 +520,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * @param mapping
      */
-    @SuppressWarnings("unchecked")
-    private void populateTaxonReferenceData( Map mapping ) {
+    private void populateTaxonReferenceData( Map<String, List<? extends Object>> mapping ) {
         List<Taxon> taxa = new ArrayList<Taxon>();
         for ( Taxon taxon : taxonService.loadAll() ) {
             taxa.add( taxon );

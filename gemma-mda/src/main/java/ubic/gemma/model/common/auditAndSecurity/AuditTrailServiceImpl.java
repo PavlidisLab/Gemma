@@ -45,6 +45,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl
 @Service
 public class AuditTrailServiceImpl implements AuditTrailService {
 
+    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
 
     @Autowired

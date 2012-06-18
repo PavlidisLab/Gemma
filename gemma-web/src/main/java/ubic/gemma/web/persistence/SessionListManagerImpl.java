@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject; 
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
 
 /**
@@ -86,8 +86,8 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List ) geneSetList.getAllSessionBoundGroups();
+        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+                .getAllSessionBoundGroups();
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
@@ -115,8 +115,8 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List ) geneSetList.getSessionBoundModifiedGroups();
+        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+                .getSessionBoundModifiedGroups();
 
         return castedCollection;
     }
@@ -131,8 +131,8 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List ) geneSetList.getSessionBoundModifiedGroups();
+        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+                .getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
@@ -215,7 +215,8 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids, false );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService
+                .loadValueObjects( eeids, false );
         expressionExperimentReportService.getReportInformation( result );
         return result;
     }
@@ -309,8 +310,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets() {
 
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getAllSessionBoundGroups();
 
         return castedCollection;
@@ -325,8 +325,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets() {
 
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getSessionBoundModifiedGroups();
 
         return castedCollection;
@@ -341,10 +340,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId ) {
 
-        // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
-        // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified

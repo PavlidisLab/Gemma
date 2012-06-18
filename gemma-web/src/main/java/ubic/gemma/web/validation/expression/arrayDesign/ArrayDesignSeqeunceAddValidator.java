@@ -29,7 +29,6 @@ import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCo
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="arrayDesignSequenceAddValidator"
  */
 public class ArrayDesignSeqeunceAddValidator implements Validator {
 
@@ -39,7 +38,7 @@ public class ArrayDesignSeqeunceAddValidator implements Validator {
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
     @Override
-    public boolean supports( Class clazz ) {
+    public boolean supports( Class<?> clazz ) {
         return ArrayDesignSequenceAddCommand.class.isAssignableFrom( clazz );
     }
 

@@ -89,7 +89,6 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     private Log log = LogFactory.getLog( this.getClass() );
-
     private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.experimentAnalyzed e  "
@@ -131,13 +130,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             + " order by dear.CORRECTED_P_VALUE_BIN DESC";
 
     /*
-     * This is a key query: get all results for a set of genes.
+     * This is a key query: get all results for a set of genes in a set of resultssets (basically, experiments)
      */
     private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT g2s.GENE, dear.CORRECTED_P_VALUE_BIN, dear.ID,"
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK"
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s "
             + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
-            + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) "; //
+            + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) "; 
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -462,14 +461,16 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         timer.start();
         for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetIds, RS_BATCH_SIZE ) ) {
 
-            log.info( "Starting batch of resultsets: "
-                    + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
+            if ( log.isDebugEnabled() )
+                log.debug( "Starting batch of resultsets: "
+                        + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
 
             for ( Collection<Long> geneBatch : new BatchIterator<Long>( geneIds, GENE_BATCH_SIZE ) ) {
 
-                log.info( "Starting batch of genes: "
-                        + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 100 ) );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Starting batch of genes: "
+                            + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 100 ) );
 
                 queryObject.setParameterList( "gene_ids", geneBatch );
 
@@ -493,7 +494,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 }
 
                 if ( timer.getTime() > 1000 ) {
-                    log.info( "Fetching ProbeResults for batch " + timer.getTime() + " ms : geneIds="
+                    log.info( "Fetching DiffEx for batch " + timer.getTime() + " ms : geneIds="
                             + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 50 ) + " result set="
                             + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 50 ) + " adused="
                             + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) + " took : " );
@@ -508,6 +509,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#findGeneInResultSets(ubic.gemma.model
+     * .genome.Gene, ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet, java.util.Collection,
+     * java.lang.Integer)
+     */
     @Override
     public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit ) {
@@ -660,11 +669,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         return this.getHibernateTemplate().get( DifferentialExpressionAnalysisResultImpl.class, id );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#loadAll()
+     */
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#loadMultiple(java.util.Collection)
+     */
     @Override
     public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids ) {
         final String queryString = "select dea from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
@@ -709,23 +728,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
+        Session session = this.getSession();
+        for ( DifferentialExpressionAnalysisResult result : results ) {
+            session.buildLockRequest( LockOptions.NONE ).lock( result );
+            Hibernate.initialize( result );
+            CompositeSequence cs = result.getProbe();
+            Hibernate.initialize( cs );
+        }
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( DifferentialExpressionAnalysisResult result : results ) {
-                    session.buildLockRequest( LockOptions.NONE ).lock( result );
-                    Hibernate.initialize( result );
-
-                    CompositeSequence cs = result.getProbe();
-                    Hibernate.initialize( cs );
-                }
-
-                return null;
-            }
-        } );
     }
 
     /*
@@ -737,28 +747,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
+        Session session = this.getSession();
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        session.buildLockRequest( LockOptions.NONE ).lock( result );
+        Hibernate.initialize( result );
 
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( result );
-                Hibernate.initialize( result );
+        CompositeSequence cs = result.getProbe();
+        Hibernate.initialize( cs );
 
-                CompositeSequence cs = result.getProbe();
-                Hibernate.initialize( cs );
+        Collection<ContrastResult> contrasts = result.getContrasts();
+        for ( ContrastResult contrast : contrasts ) {
+            FactorValue f = contrast.getFactorValue();
+            Hibernate.initialize( f );
+            f.getIsBaseline();
+        }
 
-                Collection<ContrastResult> contrasts = result.getContrasts();
-                for ( ContrastResult contrast : contrasts ) {
-                    FactorValue f = contrast.getFactorValue();
-                    Hibernate.initialize( f );
-                    f.getIsBaseline();
-                }
-
-                return null;
-            }
-        } );
     }
 
     /*

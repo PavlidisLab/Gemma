@@ -35,7 +35,7 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int, java.util.Collection)
      */
     @Override
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends GeneAlias> create( final java.util.Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.create - 'entities' can not be null" );
         }
@@ -44,8 +44,9 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<?> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends GeneAlias> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -63,6 +64,11 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
         }
         this.getHibernateTemplate().save( geneAlias );
         return geneAlias;
+    }
+
+    @Override
+    public Collection<? extends GeneAlias> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from GeneAliasImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -106,7 +112,7 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(java.util.Collection)
      */
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.remove - 'entities' can not be null" );
         }
@@ -128,7 +134,7 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(java.util.Collection)
      */
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.update - 'entities' can not be null" );
         }

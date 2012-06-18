@@ -94,8 +94,8 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<UserGroup> results = new java.util.LinkedHashSet<UserGroup>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -127,8 +127,8 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
      */
 
     @Override
-    public java.util.Collection<UserGroup> loadAll() {
-        final Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends UserGroup> loadAll() {
+        final Collection<? extends UserGroup> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.class );
 
         return results;

@@ -426,10 +426,10 @@ public class Blat {
     /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
      */
+    @SuppressWarnings("unused")
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
-            Socket socket = new Socket( host, port );
-
+            new Socket( host, port );
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {

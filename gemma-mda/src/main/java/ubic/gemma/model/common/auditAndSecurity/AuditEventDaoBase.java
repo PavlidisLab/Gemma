@@ -44,8 +44,8 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
         }
-        
-        for (AuditEvent auditEvent : entities ) {
+
+        for ( AuditEvent auditEvent : entities ) {
             create( auditEvent );
         }
         return entities;
@@ -157,11 +157,8 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      */
 
     @Override
-    @SuppressWarnings("unchecked")
     public java.util.Collection<? extends AuditEvent> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class );
-        return results;
+        return this.getHibernateTemplate().loadAll( ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class );
     }
 
     /**

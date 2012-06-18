@@ -48,8 +48,9 @@ public class GeneSetMemberDaoImpl extends HibernateDaoSupport implements GeneSet
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( GeneSetMember ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends GeneSetMember> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -129,8 +130,9 @@ public class GeneSetMemberDaoImpl extends HibernateDaoSupport implements GeneSet
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( GeneSetMember ) entityIterator.next() );
+                        for ( Iterator<? extends GeneSetMember> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

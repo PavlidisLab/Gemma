@@ -32,22 +32,22 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysis
@@ -107,37 +107,124 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return count.intValue();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByFactor(ubic.gemma.model.expression
+     * .experiment.ExperimentalFactor)
+     */
     @Override
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct a from DifferentialExpressionAnalysisImpl a join a.resultSets rs left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ",
-                        "ef", ef );
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct a from DifferentialExpressionAnalysisImpl a join a.resultSets rs"
+                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ", "ef", ef );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
+     */
     @Override
     public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from DifferentialExpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
+    /**
+     * @param investigation
+     * @return
+     */
+    private Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed=:expressionExperiment ";
         results.addAll( this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", investigation ) );
 
         /*
-         * Deal with the analyses of subsets.
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
          */
-        results.addAll( this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a join eess.sourceExperiment see "
-                                + " join a.experimentAnalyzed ee where see=:expressionExperiment and eess=ee",
-                        "expressionExperiment", investigation ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam(
+                "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a"
+                        + " join eess.sourceExperiment see "
+                        + " join a.experimentAnalyzed eeanalyzed where see.id=:ee and eess=eeanalyzed", "ee",
+                investigation.getId() ) );
 
         return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalyses(java.util.Collection)
+     */
+    @Override
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+            Collection<? extends BioAssaySet> experiments ) {
+        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> result = new HashMap<BioAssaySet, Collection<DifferentialExpressionAnalysis>>();
+
+        /*
+         * FIXME In these queries, we use left joins for things that were added to the system 'recently' and might be
+         * null. We can replace these with inner joins when they are all populated.
+         */
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a inner join fetch a.resultSets res "
+                + "left outer join fetch res.baselineGroup"
+                + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
+                + "left outer join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
+
+        List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate().findByNamedParam( query, "ees",
+                EntityUtils.getIds( experiments ) );
+        int count = 0;
+        for ( DifferentialExpressionAnalysis a : r1 ) {
+            if ( !result.containsKey( a.getExperimentAnalyzed() ) ) {
+                result.put( a.getExperimentAnalyzed(), new HashSet<DifferentialExpressionAnalysis>() );
+            }
+            result.get( a.getExperimentAnalyzed() ).add( a );
+            count++;
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetch " + count + "analyses for " + result.size() + " experiments: " + timer.getTime() + "ms" );
+            log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), query ) );
+        }
+
+        /*
+         * Deal with the analyses of subsets of the experiments given being analyzed; but we keep things organized by
+         * the source experiment. Maybe that is confusing.
+         */
+        String q2 = "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a "
+                + " inner join fetch a.resultSets res left outer join fetch res.baselineGroup "
+                + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues"
+                + " left outer join fetch res.hitListSizes  "
+                + " join eess.sourceExperiment see join a.experimentAnalyzed ee  where eess=ee and see.id in (:ees) ";
+        List<DifferentialExpressionAnalysis> r2 = this.getHibernateTemplate().findByNamedParam( q2, "ees",
+                EntityUtils.getIds( experiments ) );
+
+        if ( !r2.isEmpty() ) {
+            count = 0;
+            for ( DifferentialExpressionAnalysis a : r2 ) {
+                BioAssaySet experimentAnalyzed = a.getExperimentAnalyzed();
+                if ( !result.containsKey( experimentAnalyzed ) ) {
+                    result.put( experimentAnalyzed, new HashSet<DifferentialExpressionAnalysis>() );
+                }
+
+                assert experimentAnalyzed instanceof ExpressionExperimentSubSet;
+
+                result.get( ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment() ).add( a );
+                count++;
+            }
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Fetch " + count + "analyses for " + result.size() + " experiment subsets: "
+                        + timer.getTime() + "ms" );
+                log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
+            }
+        }
+
+        return result;
 
     }
 
@@ -147,7 +234,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @Override
-    public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+    protected void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
             DifferentialExpressionAnalysis dea = ea;
             doThaw( dea, false );
@@ -155,51 +242,48 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     }
 
     @Override
-    public void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         this.doThaw( differentialExpressionAnalysis, false );
     }
 
+    /**
+     * @param differentialExpressionAnalysis
+     * @param deep
+     */
     protected void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis, final boolean deep ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
+        Session session = this.getSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
+        Hibernate.initialize( differentialExpressionAnalysis );
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
 
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
-                Hibernate.initialize( differentialExpressionAnalysis );
+        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
+            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
+        }
 
-                Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
+        Hibernate.initialize( ears );
+        for ( ExpressionAnalysisResultSet ear : ears ) {
+            session.buildLockRequest( LockOptions.NONE ).lock( ear );
+            Hibernate.initialize( ear );
 
-                if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
-                    Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
-                }
+            if ( deep ) { // not used.
+                Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
+                Hibernate.initialize( ders );
+                for ( DifferentialExpressionAnalysisResult der : ders ) {
+                    session.buildLockRequest( LockOptions.NONE ).lock( der );
+                    Hibernate.initialize( der );
 
-                Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
-                Hibernate.initialize( ears );
-                for ( ExpressionAnalysisResultSet ear : ears ) {
-                    session.buildLockRequest( LockOptions.NONE ).lock( ear );
-                    Hibernate.initialize( ear );
-
-                    if ( deep ) { // not used.
-                        Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-                        Hibernate.initialize( ders );
-                        for ( DifferentialExpressionAnalysisResult der : ders ) {
-                            session.buildLockRequest( LockOptions.NONE ).lock( der );
-                            Hibernate.initialize( der );
-
-                            CompositeSequence cs = der.getProbe();
-                            Hibernate.initialize( cs );
-
-                        }
-                    }
-
-                    Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
+                    CompositeSequence cs = der.getProbe();
+                    Hibernate.initialize( cs );
 
                 }
-                return null;
             }
-        } );
+
+            Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
+
+        }
+
     }
 
     /*
@@ -216,7 +300,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 + "   inner join a.experimentAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
                 + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
-                + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet and r.correctedPvalue < :threshold";
+                + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet"
+                + " and r.correctedPvalue < :threshold";
 
         String[] paramNames = { "gene", "resultSet", "threshold" };
         Object[] objectValues = { gene, resultSet, threshold };
@@ -400,7 +485,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
+        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r "
+                + "join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
 
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { par, threshold };
@@ -428,7 +514,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
+        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r"
+                + " join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
 
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { par, threshold };

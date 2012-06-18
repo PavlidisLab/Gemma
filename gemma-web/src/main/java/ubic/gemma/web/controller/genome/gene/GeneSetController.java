@@ -398,13 +398,13 @@ public class GeneSetController {
      * @return
      */
     @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
-    public ModelAndView showGeneSet( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showGeneSet( HttpServletRequest request ) {
 
         ModelAndView mav = new ModelAndView( "geneSet.detail" );
 
         // if this is slow, we can get rid of it
         // checking the id here rather than in the js widget gives better error feedback
-        // though it doesn mean we load the set twice
+        // though it doesn't mean we load the set twice
         GeneSetValueObject geneSet = getGeneSetFromRequest( request );
         mav.addObject( "geneSetId", geneSet.getId() );
         mav.addObject( "geneSetName", geneSet.getName() );

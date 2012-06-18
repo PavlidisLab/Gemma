@@ -30,7 +30,7 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
     /**
      * 
      */
-    public java.util.Collection<T> findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
+    public java.util.Collection<T> findByInvestigation( Investigation investigation );
 
     /**
      * <p>
@@ -43,7 +43,6 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      */
     public java.util.Map<Investigation, Collection<T>> findByInvestigations(
             java.util.Collection<Investigation> investigations );
- 
 
     /**
      * <p>
@@ -51,8 +50,6 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      * </p>
      */
     public java.util.Collection<T> findByName( java.lang.String name );
-
-   
 
     /**
      * 

@@ -24,6 +24,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.http.Cookie;
@@ -56,7 +57,7 @@ public class RequestUtil {
     public static String getRequestParameters( HttpServletRequest aRequest ) {
         // set the ALGORIGTHM as defined for the application
         // ALGORITHM = (String) aRequest.getAttribute(Constants.ENC_ALGORITHM);
-        Map m = aRequest.getParameterMap();
+        Map<String, Object> m = aRequest.getParameterMap();
 
         return createQueryStringFromMap( m, "&" ).toString();
     }
@@ -68,13 +69,13 @@ public class RequestUtil {
      * @param ampersand String to use for ampersands (e.g. "&" or "&amp;" )
      * @return query string (with no leading "?")
      */
-    public static StringBuffer createQueryStringFromMap( Map m, String ampersand ) {
+    public static StringBuffer createQueryStringFromMap( Map<String, Object> m, String ampersand ) {
         StringBuffer aReturn = new StringBuffer( "" );
-        Set aEntryS = m.entrySet();
-        Iterator aEntryI = aEntryS.iterator();
+        Set<Entry<String, Object>> aEntryS = m.entrySet();
+        Iterator<Entry<String, Object>> aEntryI = aEntryS.iterator();
 
         while ( aEntryI.hasNext() ) {
-            Map.Entry aEntry = ( Map.Entry ) aEntryI.next();
+            Entry<String, Object> aEntry = aEntryI.next();
             Object o = aEntry.getValue();
 
             if ( o == null ) {
@@ -129,11 +130,11 @@ public class RequestUtil {
             return;
         }
 
-        Enumeration e = aRequest.getAttributeNames();
+        Enumeration<String> e = aRequest.getAttributeNames();
         Map<String, Object> map = new HashMap<String, Object>();
 
         while ( e.hasMoreElements() ) {
-            String name = ( String ) e.nextElement();
+            String name = e.nextElement();
             map.put( name, aRequest.getAttribute( name ) );
         }
 
@@ -146,16 +147,16 @@ public class RequestUtil {
      * @param aRequest DOCUMENT ME!
      */
     public static void reclaimRequestAttributes( HttpServletRequest aRequest ) {
-        Map map = ( Map ) aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS );
+        Map<String, Object> map = ( Map<String, Object> ) aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS );
 
         if ( map == null ) {
             return;
         }
 
-        Iterator itr = map.keySet().iterator();
+        Iterator<String> itr = map.keySet().iterator();
 
         while ( itr.hasNext() ) {
-            String name = ( String ) itr.next();
+            String name = itr.next();
             aRequest.setAttribute( name, map.get( name ) );
         }
 

@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class ExpressionDataMatrixRowSort {
 
-    public static List<ExpressionDataMatrixRowElement> probeNameOrder( ExpressionDataMatrix expressionDataMatrix ) {
+    public static <T> List<ExpressionDataMatrixRowElement> probeNameOrder( ExpressionDataMatrix<T> expressionDataMatrix ) {
         List<ExpressionDataMatrixRowElement> unsortedEls = expressionDataMatrix.getRowElements();
         List<ExpressionDataMatrixRowElement> copy = new ArrayList<ExpressionDataMatrixRowElement>();
         for ( ExpressionDataMatrixRowElement el : unsortedEls ) {

@@ -95,7 +95,7 @@ public abstract class ByAssociationFilteringProvider<T extends Securable, A> ext
 
                 boolean wasSingleton = false;
                 if ( returnedObject instanceof Collection ) {
-                    Collection collection = ( Collection<A> ) returnedObject;
+                    Collection<A> collection = ( Collection<A> ) returnedObject;
                     filterer = new CollectionFilterer<A>( collection );
                 } else if ( returnedObject.getClass().isArray() ) {
                     A[] array = ( A[] ) returnedObject;

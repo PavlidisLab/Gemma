@@ -178,13 +178,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      */
     @Override
     public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
-        try {
-            return this.handleGetAllExperimentLinkedReferences();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.getAllExperimentLinkedReferences()' --> "
-                            + th, th );
-        }
+        return this.handleGetAllExperimentLinkedReferences();
     }
 
     /**
@@ -193,13 +187,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     @Override
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        try {
-            return this.handleGetRelatedExperiments( bibliographicReference );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
-                            + th, th );
-        }
+        return this.handleGetRelatedExperiments( bibliographicReference );
     }
 
     /**
@@ -319,21 +307,18 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
-    protected abstract java.util.Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
-            throws java.lang.Exception;
+    protected abstract java.util.Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences();
 
     /**
      * Performs the core logic for
      * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids );
 
 }

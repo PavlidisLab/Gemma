@@ -20,62 +20,12 @@ package ubic.gemma.model.genome.gene;
 
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneAlias
  */
 @Repository
-public interface GeneAliasDao {
-
-    /**
-     * Creates a new instance of ubic.gemma.model.genome.gene.GeneAlias and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.genome.gene.GeneAlias instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.gene.GeneAlias and adds it to the persistent store.
-     */
-    public ubic.gemma.model.genome.gene.GeneAlias create( ubic.gemma.model.genome.gene.GeneAlias geneAlias );
-
-    /**
-     * Loads an instance of ubic.gemma.model.genome.gene.GeneAlias from the persistent store.
-     */
-    public ubic.gemma.model.genome.gene.GeneAlias load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.gene.GeneAlias}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.gene.GeneAlias having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.gene.GeneAlias from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.gene.GeneAlias geneAlias );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>geneAlias</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.gene.GeneAlias geneAlias );
+public interface GeneAliasDao extends BaseDao<GeneAlias> {
 
 }

@@ -125,7 +125,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     @Test
     public void testGetCompositeSequencesForArrayDesign() throws Exception {
 
-        Collection col = compositeSequenceService.findByName( compositeSequenceName1 );
+        Collection<CompositeSequence> col = compositeSequenceService.findByName( compositeSequenceName1 );
 
         assertTrue( "User should have been able to get the composite sequences", col.size() > 0 );
 

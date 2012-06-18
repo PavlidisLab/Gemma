@@ -82,7 +82,7 @@ public class AclAfterInvocationMapValueFilteringProvider extends AbstractAclProv
 
                 if ( returnedObject instanceof Map ) {
                     Map<? extends Object, Object> map = ( Map<? extends Object, Object> ) returnedObject;
-                    filterer = new MapValueFilterer( map );
+                    filterer = new MapFilterer<Object>( ( Map<Object, Object> ) map );
                 } else {
                     throw new AuthorizationServiceException( "A Map was required as the "
                             + "returnedObject, but the returnedObject was: " + returnedObject );

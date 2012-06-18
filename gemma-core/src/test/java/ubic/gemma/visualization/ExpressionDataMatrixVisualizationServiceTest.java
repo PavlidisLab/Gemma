@@ -176,7 +176,8 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
     @Test
     public void testCreateHeatMap() {
 
-        MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
+        MatrixDisplay<String, String> display = expressionDataMatrixVisualizationService
+                .createHeatMap( expressionDataMatrix );
 
         assertNotNull( display );
 
@@ -188,7 +189,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
     @Test
     public void testNormalizeExpressionDataDoubleMatrixByRowMean() {
 
-        ExpressionDataMatrix normalizedExpressonDataMatrix = expressionDataMatrixVisualizationService
+        ExpressionDataMatrix<?> normalizedExpressonDataMatrix = expressionDataMatrixVisualizationService
                 .standardizeExpressionDataDoubleMatrix( expressionDataMatrix, null );
 
         assertEquals( normalizedExpressonDataMatrix.columns(), expressionDataMatrix.columns() );

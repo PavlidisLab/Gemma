@@ -77,14 +77,14 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
      * .ExpressionDataMatrix)
      */
     @Override
-    public MatrixDisplay createHeatMap( ExpressionDataMatrix<Double> expressionDataMatrix ) {
+    public MatrixDisplay<String, String> createHeatMap( ExpressionDataMatrix<Double> expressionDataMatrix ) {
 
         if ( expressionDataMatrix == null )
             throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrix" );
 
-        ColorMatrix colorMatrix = createColorMatrix( expressionDataMatrix );
+        ColorMatrix<String, String> colorMatrix = createColorMatrix( expressionDataMatrix );
 
-        MatrixDisplay display = new MatrixDisplay( colorMatrix );
+        MatrixDisplay<String, String> display = new MatrixDisplay<String, String>( colorMatrix );
         display.setMaxColumnLength( 20 );
 
         display.setCellSize( new Dimension( IMAGE_CELL_SIZE, 10 ) );
@@ -110,9 +110,9 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
         }
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
-        Iterator iter = dataCol.iterator();
+        Iterator<double[]> iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            double[] data = ( double[] ) iter.next();
+            double[] data = iter.next();
             XYSeries series = new XYSeries( j, true, true );
             for ( int i = 0; i < data.length; i++ ) {
                 series.add( i, data[i] );
@@ -131,7 +131,7 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
      * @param expressionDataMatrix
      * @return ColorMatrix
      */
-    private ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+    private ColorMatrix<String, String> createColorMatrix( ExpressionDataMatrix<Double> expressionDataMatrix ) {
 
         Collection<BioAssay> colElements = new LinkedHashSet<BioAssay>();
 
@@ -144,7 +144,7 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
 
         double[][] data = new double[expressionDataMatrix.rows()][];
         for ( int i = 0; i < expressionDataMatrix.rows(); i++ ) {
-            Double[] row = ( Double[] ) expressionDataMatrix.getRow( i );
+            Double[] row = expressionDataMatrix.getRow( i );
 
             // Put the columns in the designated ordering.
             double[] rtmp = ArrayUtils.toPrimitive( row );
@@ -172,8 +172,8 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
      * @param colElements
      * @return ColorMatrix
      */
-    private ColorMatrix createColorMatrix( double[][] data, List<ExpressionDataMatrixRowElement> rowElements,
-            Collection<BioAssay> colElements ) {
+    private ColorMatrix<String, String> createColorMatrix( double[][] data,
+            List<ExpressionDataMatrixRowElement> rowElements, Collection<BioAssay> colElements ) {
 
         assert rowElements != null && colElements != null : "Labels cannot be set";
 
@@ -198,7 +198,7 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
 
         matrix.setColumnNames( colLabels );
 
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
+        ColorMatrix<String, String> colorMatrix = ColorMatrix.newInstance( matrix );
 
         colorMatrix.standardize();
 

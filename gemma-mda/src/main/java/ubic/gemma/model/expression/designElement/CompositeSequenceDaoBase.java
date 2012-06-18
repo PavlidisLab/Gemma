@@ -123,7 +123,7 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<CompositeSequence> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
         return results;
     }
@@ -141,8 +141,9 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
         argNames.add( "arrayDesign" );
         args.add( name );
         argNames.add( "name" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<CompositeSequence> results = new java.util.LinkedHashSet<CompositeSequence>( this
+                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
+                        args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -176,13 +177,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Map<CompositeSequence, Collection<Gene>> getGenes(
             final java.util.Collection<CompositeSequence> compositeSequences ) {
-        try {
-            return this.handleGetGenes( compositeSequences );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getGenes(java.util.Collection compositeSequences)' --> "
-                            + th, th );
-        }
+        return this.handleGetGenes( compositeSequences );
+
     }
 
     /**
@@ -191,13 +187,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Collection<Gene> getGenes(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
-        try {
-            return this.handleGetGenes( compositeSequence );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getGenes(ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence)' --> "
-                            + th, th );
-        }
+        return this.handleGetGenes( compositeSequence );
+
     }
 
     /**
@@ -206,13 +197,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             final java.util.Collection<CompositeSequence> compositeSequences ) {
-        try {
-            return this.handleGetGenesWithSpecificity( compositeSequences );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getGenesWithSpecificity(java.util.Collection compositeSequences)' --> "
-                            + th, th );
-        }
+        return this.handleGetGenesWithSpecificity( compositeSequences );
+
     }
 
     /**
@@ -222,13 +208,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Collection<Object[]> getRawSummary(
             final java.util.Collection<CompositeSequence> compositeSequences, final java.lang.Integer numResults ) {
-        try {
-            return this.handleGetRawSummary( compositeSequences, numResults );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getRawSummary(java.util.Collection compositeSequences, java.lang.Integer numResults)' --> "
-                            + th, th );
-        }
+        return this.handleGetRawSummary( compositeSequences, numResults );
+
     }
 
     /**
@@ -238,13 +219,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     @Override
     public java.util.Collection<Object[]> getRawSummary(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, final java.lang.Integer numResults ) {
-        try {
-            return this.handleGetRawSummary( arrayDesign, numResults );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.Integer numResults)' --> "
-                            + th, th );
-        }
+        return this.handleGetRawSummary( arrayDesign, numResults );
+
     }
 
     /**
@@ -255,13 +231,8 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
     public java.util.Collection<Object[]> getRawSummary(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence,
             final java.lang.Integer numResults ) {
-        try {
-            return this.handleGetRawSummary( compositeSequence, numResults );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.getRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, java.lang.Integer numResults)' --> "
-                            + th, th );
-        }
+        return this.handleGetRawSummary( compositeSequence, numResults );
+
     }
 
     /**
@@ -283,23 +254,19 @@ public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport imple
      */
     @Override
     public java.util.Collection<CompositeSequence> load( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoad( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.CompositeSequenceDao.load(java.util.Collection ids)' --> "
-                            + th, th );
-        }
+
+        return this.handleLoad( ids );
+
     }
 
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#loadAll(int)
      */
 
-    public java.util.Collection<CompositeSequence> loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @Override
+    public java.util.Collection<? extends CompositeSequence> loadAll() {
+        return this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.designElement.CompositeSequenceImpl.class );
-        return results;
     }
 
     /**

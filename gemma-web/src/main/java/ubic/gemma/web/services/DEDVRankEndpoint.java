@@ -87,7 +87,6 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -127,7 +126,8 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
                 + " and method: " + methodString );
 
         // main call to expressionDataMatrixService to obtain rank results
-        DenseDoubleMatrix rankMatrix = expressionDataMatrixService.getRankMatrix( geneInput, eeInput, method );
+        DenseDoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService.getRankMatrix(
+                geneInput, eeInput, method );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint

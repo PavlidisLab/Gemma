@@ -28,7 +28,7 @@ import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimen
  * This custom validator is needed because the fields in this command object aren't simple java objects (int, String).
  * 
  * @author pavlidis
- * @version $Id$ 
+ * @version $Id$
  * @deprecated as we aren't using spring mvc really for this (ext + ajax instead)
  */
 @Deprecated
@@ -36,15 +36,17 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
     @Override
-    public boolean supports( Class clazz ) {
+    public boolean supports( Class<?> clazz ) {
         return SimpleExpressionExperimentLoadCommand.class.isAssignableFrom( clazz );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
     @Override

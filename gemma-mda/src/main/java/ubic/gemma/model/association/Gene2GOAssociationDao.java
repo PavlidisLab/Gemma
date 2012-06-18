@@ -54,10 +54,10 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     /**
      * <p>
-     * Given a collection of GO Objects returns a colllection of genes that have any of the given goterms
+     * Given a collection of GO Objects returns a collection of genes that have any of the given goterms
      * </p>
      */
-    public Collection<Gene> findByGOTerm( Collection goTerms, Taxon taxon );
+    public Collection<Gene> findByGOTerm( Collection<String> goTerms, Taxon taxon );
 
     /**
      * 

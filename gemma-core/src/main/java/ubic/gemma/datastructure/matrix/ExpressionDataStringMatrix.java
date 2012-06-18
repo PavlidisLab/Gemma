@@ -44,7 +44,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     private static Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
 
-    private StringMatrix matrix;
+    private StringMatrix<Integer, Integer> matrix;
 
     @SuppressWarnings("unused")
     public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
@@ -114,10 +114,10 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     @Override
-    public String[][] getColumns( List bioAssays ) {
+    public String[][] getColumns( List<BioAssay> bioAssays ) {
         String[][] res = new String[bioAssays.size()][];
         for ( int i = 0; i < bioAssays.size(); i++ ) {
-            res[i] = this.getColumn( ( BioAssay ) bioAssays.get( i ) );
+            res[i] = this.getColumn( bioAssays.get( i ) );
         }
         return res;
     }
@@ -173,7 +173,8 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         this.matrix = createMatrix( vectors, maxSize );
     }
 
-    private StringMatrix createMatrix( Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
+    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
+            int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 

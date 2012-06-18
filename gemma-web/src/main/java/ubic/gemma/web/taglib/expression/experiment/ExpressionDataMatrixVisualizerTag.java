@@ -60,7 +60,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
+    private ExpressionDataMatrix<?> expressionDataMatrix = null;
 
     private Map<CompositeSequence, Collection<Gene>> genes;
 
@@ -68,7 +68,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      * @jsp.attribute description="The object to visualize." required="true" rtexprvalue="true"
      * @param expressionDataMatrix
      */
-    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+    public void setExpressionDataMatrix( ExpressionDataMatrix<?> expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
     }
 
@@ -164,7 +164,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private void addProbeColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
-            buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
+            buf.append( "<span " + ">" );
             CompositeSequence designElement = rowElements.get( i ).getDesignElement();
             buf.append( "<a href=\"/" + Constants.APP_NAME + PROBE_VIEW_URL + designElement.getId() + "\">"
                     + designElement.getName() + "</a></span><br />\n" );
@@ -182,7 +182,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
             CompositeSequence compositeSequence = rowElements.get( i ).getDesignElement();
-            buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
+            buf.append( "<span " + ">" );
             if ( genes == null || !genes.containsKey( compositeSequence ) ) {
                 buf.append( "</span><br />" );
                 continue;
@@ -241,7 +241,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
             CompositeSequence compositeSequence = rowElements.get( i ).getDesignElement();
-            buf.append( "<span " + alternateRowStyle( i, 200 ) + ">" );
+            buf.append( "<span " + ">" );
             if ( genes == null || !genes.containsKey( compositeSequence ) ) {
                 buf.append( "</span><br />" );
                 continue;
@@ -280,15 +280,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             buf.append( "</span><br />" );
         }
         buf.append( "</td>" );
-    }
-
-    private String alternateRowStyle( int i, int width ) {
-        if ( i % 2 == 0 ) {
-            // FIXME this doesn't work as desired.
-            // return "style=\"width:" + width + "px;background-color:#eee;\"";
-            return "";
-        }
-        return "";
     }
 
     /*

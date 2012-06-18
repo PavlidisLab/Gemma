@@ -26,8 +26,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 
 /**
- * TODO Document Me
- * 
  * @author paul
  * @version $Id$
  */
@@ -156,7 +154,7 @@ public class GeoBrowserServiceParseTest {
         expect( ees.findByShortName( "GSE4595" ) ).andReturn( null );
         // expect( ads.thawLite( null ) ).andReturn( null );
         replay( ads );
-        String details = serv.formatDetails( response );
+        serv.formatDetails( response );
 
     }
 

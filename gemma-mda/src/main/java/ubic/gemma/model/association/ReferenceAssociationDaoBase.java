@@ -24,10 +24,8 @@ import java.util.Iterator;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ReferenceAssociation</code>.
- * </p>
  * 
  * @see ReferenceAssociation
  */
@@ -37,7 +35,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      * @see ReferenceAssociationDao#create(int, Collection)
      */
     @Override
-    public Collection create( final Collection entities ) {
+    public Collection<? extends ReferenceAssociation> create( final Collection<? extends ReferenceAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'entities' can not be null" );
         }
@@ -46,8 +44,9 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ReferenceAssociation ) entityIterator.next() );
+                        for ( Iterator<? extends ReferenceAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -91,10 +90,8 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      */
 
     @Override
-    public Collection loadAll() {
-        final Collection results = this.getHibernateTemplate().loadAll( ReferenceAssociationImpl.class );
-
-        return results;
+    public Collection<? extends ReferenceAssociation> loadAll() {
+        return this.getHibernateTemplate().loadAll( ReferenceAssociationImpl.class );
     }
 
     /**
@@ -117,7 +114,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      */
 
     @Override
-    public void remove( Collection entities ) {
+    public void remove( Collection<? extends ReferenceAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
         }
@@ -140,7 +137,7 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
      */
 
     @Override
-    public void update( final Collection entities ) {
+    public void update( final Collection<? extends ReferenceAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'entities' can not be null" );
         }
@@ -149,8 +146,9 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ReferenceAssociation ) entityIterator.next() );
+                        for ( Iterator<? extends ReferenceAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

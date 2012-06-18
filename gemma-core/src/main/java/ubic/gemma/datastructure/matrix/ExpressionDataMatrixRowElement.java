@@ -33,7 +33,7 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
 
     private Integer index;
 
-    public ExpressionDataMatrixRowElement( ExpressionDataMatrix matrix, int i ) {
+    public ExpressionDataMatrixRowElement( ExpressionDataMatrix<?> matrix, int i ) {
         this.index = i;
         this.designElement = matrix.getDesignElementForRow( i );
     }

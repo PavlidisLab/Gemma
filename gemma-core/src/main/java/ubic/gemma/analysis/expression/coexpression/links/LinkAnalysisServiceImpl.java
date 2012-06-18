@@ -153,7 +153,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -215,9 +215,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                     + " rows" );
         }
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
-        
+
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-        
+
         setUpForAnalysis( t, la, dataVectors, datamatrix );
 
         la.analyze();
@@ -230,8 +230,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         return la;
 
     }
-    
-    
+
     /**
      * Get data that will be used by analysis. We have to fetch/thaw all parts of EE that will be used later since
      * analysis part doesn't have an open hibernate session.
@@ -241,15 +240,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @return
      */
     @Override
-    @Transactional(readOnly=true)
-    public ExpressionExperiment loadDataForAnalysis (Long eeId) {
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadDataForAnalysis( Long eeId ) {
         ExpressionExperiment ee = eeService.load( eeId );
 
         log.info( "Fetching expression data ... " + ee );
 
         Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
         processedExpressionDataVectorService.thaw( dataVectors );
-        return ee;            
+        return ee;
     }
 
     /**
@@ -261,14 +260,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @return
      */
     @Override
-    public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig) {
+    public LinkAnalysis doAnalysis( ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,
+            FilterConfig filterConfig ) {
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
 
         try {
-            
+
             Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-            
+
             ExpressionDataDoubleMatrix dataMatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
                     dataVectors );
 
@@ -277,8 +277,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 throw new InsufficientProbesException( "No rows left after filtering" );
             } else if ( dataMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
                 throw new InsufficientProbesException( "To few rows (" + dataMatrix.rows()
-                        + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                        + " rows" );
+                        + "), data sets are not analyzed unless they have at least "
+                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
             }
 
             dataMatrix = this.normalize( dataMatrix, linkAnalysisConfig );
@@ -296,7 +296,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 return null;
             }
 
-            
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
@@ -304,10 +303,10 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
             throw new RuntimeException( e );
         }
-        
-        return la;        
+
+        return la;
     }
-    
+
     /**
      * Save the analysis data.
      * 
@@ -317,15 +316,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param filterConfig
      */
     @Override
-    public void saveResults (ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig, FilterConfig filterConfig) {
-        try {            
-            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();            
+    public void saveResults( ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig,
+            FilterConfig filterConfig ) {
+        try {
+            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
             Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
 
             if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
 
                 saveLinks( p2v, la );
-                
+
                 audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
 
             } else if ( linkAnalysisConfig.isTextOut() ) {
@@ -342,17 +342,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
 
             log.info( "Done with processing of " + ee );
-            
+
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
                 logFailure( ee, e );
             }
             throw new RuntimeException( e );
-        }        
-        
+        }
+
     }
-    
 
     /**
      * @param ee
@@ -396,6 +395,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
+        ee = eeService.thawLite( ee );
         auditTrailService.addUpdateEvent( ee, eventType, note, true );
     }
 
@@ -855,7 +855,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         la.setDataMatrix( eeDoubleMatrix );
 
         if ( ee != null ) {
-            la.setTaxon( eeService.getTaxon( ee  ) );
+            la.setTaxon( eeService.getTaxon( ee ) );
             la.setExpressionExperiment( ee );
         }
 

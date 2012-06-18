@@ -17,7 +17,7 @@ import ubic.basecode.dataStructure.graph.DirectedGraph;
 @Deprecated
 public class GeneOntologyTag extends TagSupport {
 
-    DirectedGraph goGraph;
+    DirectedGraph<?, ?> goGraph;
 
     /**
      * 
@@ -33,7 +33,7 @@ public class GeneOntologyTag extends TagSupport {
     /**
      * @param goGraph
      */
-    public void setGoGraph( DirectedGraph goGraph ) {
+    public void setGoGraph( DirectedGraph<?, ?> goGraph ) {
         this.goGraph = goGraph;
     }
 

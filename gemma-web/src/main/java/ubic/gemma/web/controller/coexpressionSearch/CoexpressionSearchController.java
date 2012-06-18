@@ -54,8 +54,6 @@ public class CoexpressionSearchController {
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
-    private static final int DEFAULT_STRINGENCY = 2;
-
     private static final int DEFAULT_MAX_GENES_PER_QUERY = 20;
     
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;

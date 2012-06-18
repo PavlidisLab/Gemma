@@ -638,6 +638,7 @@ public class MgedOntologyHelper {
         /**
          * @param depth
          */
+        @SuppressWarnings("unused")
         public void print( int depth ) {
             System.out.print( makeIndent( depth ) + name );
             if ( !parents.isEmpty() ) {
@@ -686,10 +687,6 @@ public class MgedOntologyHelper {
                     System.out.println( " of type " + property.typeInfo.getName() );
                 }
             }
-        }
-
-        public void setName( String v ) {
-            name = v;
         }
 
         private String makeIndent( int depth ) {

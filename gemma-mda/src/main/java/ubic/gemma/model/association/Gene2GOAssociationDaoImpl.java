@@ -161,22 +161,20 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGOTerm( Collection goTerms, Taxon taxon ) {
-        Collection<String> goIDs = new HashSet<String>();
-        if ( goTerms.size() == 0 ) return goIDs;
+    protected Collection<Gene> handleFindByGOTerm( Collection<String> goTerms, Taxon taxon ) {
+
+        if ( goTerms.size() == 0 ) return new HashSet<Gene>();
 
         final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss"
                 + "  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon";
 
-        // need to turn the collection of goTerms into a collection of GOId's
-        for ( Object obj : goTerms ) {
-            VocabCharacteristic oe = ( VocabCharacteristic ) obj;
-            goIDs.add( oe.getValueUri() );
-        }
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "goIDs", "taxon" },
-                new Object[] { goIDs, taxon } );
+                new Object[] { goTerms, taxon } );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleRemoveAll()
+     */
     @Override
     protected void handleRemoveAll() {
         // this does not delete the associated vocabCharacteristics, though it is fast.

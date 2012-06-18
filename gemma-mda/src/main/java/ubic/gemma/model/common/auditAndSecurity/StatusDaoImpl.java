@@ -23,6 +23,8 @@ import java.util.Date;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.HibernateProxyHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +57,8 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
     @Override
     public void update( Auditable a, AuditEventType auditEventType ) {
 
-        Hibernate.initialize( a );
+        // note that according to the docs, HibernateProxyHelper is being "phased out".
+        a = ( Auditable ) this.getSession().get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
 
         Date now = new Date();
         if ( a.getStatus() == null ) {

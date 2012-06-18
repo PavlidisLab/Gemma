@@ -57,7 +57,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#loadAll()
      */
     @Override
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExpressionExperimentSubSet> loadAll() {
         return this.handleLoadAll();
 
     }
@@ -91,6 +91,6 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll();
+    protected abstract java.util.Collection<ExpressionExperimentSubSet> handleLoadAll();
 
 }

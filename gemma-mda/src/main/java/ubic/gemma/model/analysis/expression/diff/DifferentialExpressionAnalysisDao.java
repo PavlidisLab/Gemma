@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.analysis.AnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -87,7 +88,13 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     /**
      * 
      */
-    public void thaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    /**
+     * @param expressionExperiments
+     * @return
+     */
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+            Collection<? extends BioAssaySet> expressionExperiments );
 
 }
