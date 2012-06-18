@@ -175,6 +175,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( !securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
                 log.warn( "Experiment is not owned by current user, skipping: " + ee );
+                continue;
             }
 
             processExperiment( ( ExpressionExperiment ) ee );
