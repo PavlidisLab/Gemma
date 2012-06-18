@@ -205,10 +205,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
 
-        evidenceValueObjects.addAll( findHomologueEvidence( geneId, null ) );
-
-        // for all similar literature evidences combine them into 1 evidence without loosing information
-        return groupCommonEvidences( evidenceValueObjects );
+        return evidenceValueObjects;
     }
 
     /**
