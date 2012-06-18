@@ -52,6 +52,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.7</version>
 				<executions>
 					<execution>
 						<id>add-source</id>
@@ -65,13 +66,6 @@
 							</sources>
 						</configuration>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.5</version>
-				<executions>
 					<execution>
 						<phase>compile</phase>
 						<goals>
@@ -212,23 +206,19 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.0</version>
+				<version>1.7</version>
 				<configuration>
 					<tasks>
 						<echo message="******* Building DDL file *******" />
-						<taskdef name="schemaexport"
-							classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
 							<classpath>
 								<path refid="maven.dependency.classpath" />
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true"
-							drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql"
-							properties="${basedir}/src/main/resources/hibernate.properties">
-							<fileset dir="target/generated-sources/resources"
-								includes="**/*.hbm.xml" />
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
 				</configuration>
@@ -377,7 +367,7 @@
 			</activation>
 			<build>
 				<plugins>
-					<!-- todo when maven fixes bugs in properties/activation, put andromda 
+					<!-- todo when maven fixes bugs in properties/activation, put andromda
 						here. -->
 				</plugins>
 			</build>

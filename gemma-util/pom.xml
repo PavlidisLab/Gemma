@@ -34,7 +34,7 @@
 			</testResource>
 		</testResources>
 		<directory>target</directory>
-		<finalName>${project.artifactId}-${version}</finalName>
+		<finalName>${project.artifactId}-${project.version}</finalName>
 	</build>
 	<dependencies>
 		<dependency>
