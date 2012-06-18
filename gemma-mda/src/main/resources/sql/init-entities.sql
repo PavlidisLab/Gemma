@@ -125,9 +125,9 @@ create table GENE2CS (
 	GENE BIGINT not null, 
 	CS BIGINT not null, 
 	AD BIGINT not null,
-	INDEX USING HASH (GENE),
-	INDEX USING HASH (CS),
-	INDEX USING HASH (AD)
+	INDEX gene2csgeneindex (GENE),
+	INDEX gene2cscsindex (CS),
+	INDEX gene2csgeneadindex (AD, GENE)
 );
 
 -- denormalize probe2probe coexpressions
