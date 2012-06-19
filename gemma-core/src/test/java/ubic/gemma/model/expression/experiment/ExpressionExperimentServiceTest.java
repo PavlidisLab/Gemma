@@ -187,15 +187,10 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
         assertNotNull( ef );
-//        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
-        ExpressionExperiment eeFound = expressionExperimentService.load( ee.getId() );
-        assertNotNull( eeFound );
-        eeFound = expressionExperimentService.findByShortName( ee.getShortName() );
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
         assertNotNull( eeFound );
         assertEquals( eeFound.getId(), ee.getId() );
-
     }
-
     
     @Test
     public void testFindByFactorValue() {
