@@ -113,7 +113,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         this.add(this.makeDesignTab(experimentDetails));
         
         // VISUALISATION TAB
-        this.add(this.makeVisualisationTab(experimentDetails));
+        this.add(this.makeVisualisationTab(experimentDetails, isAdmin));
         
         // DIAGNOSTICS TAB
         this.add(this.makeDiagnosticsTab(experimentDetails, isAdmin));
@@ -184,7 +184,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             }
         };
     },
-    makeVisualisationTab: function(experimentDetails){
+    makeVisualisationTab: function(experimentDetails, isAdmin){
         var eeId = this.eeId;
     	var title = "Data for a 'random' sampling of probes";
         var downloadLink = '';
@@ -203,8 +203,14 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
                 eeId: eeId,
                 visPanel: viz,
-                taxonId: experimentDetails.parentTaxonId
+                taxonId: experimentDetails.parentTaxonId,
+                showRefresh: ( isAdmin || this.editable )
             });
+        geneTBar.on('refreshVisualisation', function(){
+        	viz.loadFromParam({
+                params: [[eeId], geneList]
+            });
+        });
         return {
             items: viz,
             itemId: 'visualize',

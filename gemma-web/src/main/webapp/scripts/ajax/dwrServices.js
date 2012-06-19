@@ -370,6 +370,10 @@ ExperimentalDesignController.updateFactorValueCharacteristics = function(p0, cal
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'updateFactorValueCharacteristics', p0, callback);
 }
+ExperimentalDesignController.clearDesignCaches = function(p0, callback ) {
+	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
+			'clearDesignCaches', p0, callback);
+}
 // ====================================================================================
 if (ExpressionDataFileUploadController == null)
 	var ExpressionDataFileUploadController = {};

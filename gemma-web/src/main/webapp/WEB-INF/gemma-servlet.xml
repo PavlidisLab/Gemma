@@ -509,6 +509,7 @@
 			<dwr:include method="updateFactorValueCharacteristics" />
 			<dwr:include method="getBioMaterials" />
 			<dwr:include method="updateBioMaterials" />
+			<dwr:include method="clearDesignCaches" />
 		</dwr:remote>
 	</bean>
 

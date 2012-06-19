@@ -152,6 +152,28 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
     
     /**
+     * AJAX
+     * clear entries in caches relevant to experimental design for the experiment passed in. 
+     * The caches cleared are the processedDataVectorCache and the caches held in 
+     * ExperimentalDesignVisualizationService
+     * @param eeId
+     * @return msg if error occurred or empty string if successful
+     */
+    @Override
+    public String clearDesignCaches( Long eeId ){
+        
+        if( eeId == null ) return "parameter was null";
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if( ee == null ) return "you do not have permission to view this experiment.";
+        
+        log.info( "Clearning design caches for experiment: "+ee.toString() );
+        
+        processedDataVectorCache.clearCache( eeId );
+        experimentalDesignVisualizationService.clearCaches( ee );
+        return "";
+    }
+    
+    /**
      * clear entries in caches relevant to experimental design for the experiment passed in. 
      * The caches cleared are the processedDataVectorCache and the caches held in 
      * ExperimentalDesignVisualizationService

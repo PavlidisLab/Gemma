@@ -146,4 +146,6 @@ public interface ExperimentalDesignController {
      */
     public abstract void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos );
 
+    public String clearDesignCaches( Long eeId );
+
 }
