@@ -280,6 +280,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.troubleDetails = troubleDetails;
     }
 
+    @Override
+    public String toString(){
+        return this.getShortName()+" (id = "+this.getId()+")";
+    }
     /**
      * @param sampleRemovedFlags
      */
