@@ -205,7 +205,7 @@ public interface SecurityService {
 
     /**
      * @param s
-     * @return
+     * @return true if the owner is the same as the current authenticated user. Special case: if the owner is an administrator, and the uc
      */
     public abstract boolean isOwnedByCurrentUser( Securable s );
 

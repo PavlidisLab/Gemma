@@ -153,7 +153,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
-    
+
     @Autowired
     private UserManager userManager;
 
@@ -356,7 +356,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         this.userManager.createGroup( groupName, auths );
         addUserToGroup( userManager.getCurrentUsername(), groupName );
-        
+
         // make sure all current and future members of the group will be able to see the group
         UserGroup group = userService.findGroupByName( groupName );
         if ( group != null ) { // really shouldn't be null
@@ -701,17 +701,43 @@ public class SecurityServiceImpl implements SecurityService {
             if ( owner == null ) return false;
 
             if ( owner instanceof PrincipalSid ) {
-                return ( ( PrincipalSid ) owner ).getPrincipal().equals( userManager.getCurrentUsername() );
+                String ownerName = ( ( PrincipalSid ) owner ).getPrincipal();
+
+                if ( ownerName.equals( userManager.getCurrentUsername() ) ) {
+                    return true;
+                }
+
+                /*
+                 * Special case: if the owner is an administrator, and we're an administrator, we are considered the
+                 * owner. Note that the intention is that usually the owner would be a GrantedAuthority (see last case,
+                 * below), not a Principal, but this hasn't always been instituted.
+                 */
+                if ( isUserAdmin() ) {
+                    Collection<GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
+                            .getAuthorities();
+                    for ( GrantedAuthority grantedAuthority : authorities ) {
+                        if ( grantedAuthority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
             }
 
             /*
              * Special case: if we're the administrator, and the owner of the data is GROUP_ADMIN, we are considered the
              * owner.
              */
-            return owner instanceof GrantedAuthoritySid
+            if ( owner instanceof GrantedAuthoritySid
                     && isUserAdmin()
                     && ( ( GrantedAuthoritySid ) owner ).getGrantedAuthority().equals(
-                            AuthorityConstants.ADMIN_GROUP_AUTHORITY );
+                            AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+
+            return false;
 
         } catch ( NotFoundException nfe ) {
             return false;
