@@ -68,6 +68,20 @@ import ubic.gemma.persistence.Persister;
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
+    /**
+     * Defines the different types of analyses our linear modeling framework supports:
+     * <ul>
+     * <li>GENERICLM - genric linear regression (interactions are omitted, but this could change)
+     * <li>OSTTEST - one sample t-test
+     * <li>OWA - one-way anova
+     * <li>TTEST - two sample t-test
+     * <li>TWA - two way anova with interaction
+     * <li>TWANI - two-way anova with no interaction
+     * </ul>
+     * 
+     * @author Paul
+     * @version $Id$
+     */
     public enum AnalysisType {
         GENERICLM, OSTTEST /* one-sample */, OWA /* one-way anova */, TTEST, TWA /* with interactions */, TWANI /*
                                                                                                                  * no

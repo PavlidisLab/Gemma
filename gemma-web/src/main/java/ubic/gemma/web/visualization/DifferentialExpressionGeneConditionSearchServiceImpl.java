@@ -92,39 +92,51 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
     }
 
+    /**
+     * Encapulsates the search for differential expression results, for a set of genes and experiments (which can be
+     * grouped)
+     */
     private class DifferentialExpressionSearchTask implements
             Callable<DifferentialExpressionGenesConditionsValueObject> {
-        // private Log log = LogFactory.getLog( DifferentialExpressionSearchTask.class.getName() );
-        private List<List<Gene>> genes;
-        private List<Collection<ExpressionExperiment>> experiments;
+        private static final double THRESHOLD_QVALUE_FOR_HITLISTS = 0.01;
+        private List<List<Gene>> geneGroups;
+        private List<Collection<ExpressionExperiment>> experimentGroups;
         private List<String> geneGroupNames;
         private List<String> experimentGroupNames;
 
         private String taskProgressStage = "Search query submitted...";
         private double taskProgressPercent = 0.0;
 
-        public DifferentialExpressionSearchTask( List<List<Gene>> genes,
-                List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
+        /**
+         * @param geneGroups - the sets of genes to query
+         * @param experimentGroups - the sets of experiments to query
+         * @param geneGroupNames - metadata
+         * @param experimentGroupNames
+         */
+        public DifferentialExpressionSearchTask( List<List<Gene>> geneGroups,
+                List<Collection<ExpressionExperiment>> experimentGroups, List<String> geneGroupNames,
                 List<String> experimentGroupNames ) {
 
-            this.genes = genes;
-            this.experiments = experiments;
+            assert !geneGroups.isEmpty() && !geneGroups.get( 0 ).isEmpty();
+            assert !experimentGroups.isEmpty() && !experimentGroups.get( 0 ).isEmpty();
+            assert geneGroups.size() == geneGroupNames.size();
+            assert experimentGroups.size() == experimentGroupNames.size();
+
+            this.geneGroups = geneGroups;
+            this.experimentGroups = experimentGroups;
             this.geneGroupNames = geneGroupNames;
             this.experimentGroupNames = experimentGroupNames;
 
         }
 
         /*
-         * (non-Javadoc)
+         * Does all the actual work of the query. (non-Javadoc)
          * 
          * @see java.util.concurrent.Callable#call()
          */
         @Override
         public DifferentialExpressionGenesConditionsValueObject call() {
-            StopWatch watch = new StopWatch( "createGenesConditionsValueObject" );
-            watch.start();
 
-            // Order of calls matters (for now). Can be made more robust if needed.
             DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();
 
             addGenesToSearchResultValueObject( searchResult );
@@ -133,8 +145,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
 
-            watch.stop();
-            log.info( watch.prettyPrint() );
             return searchResult;
         }
 
@@ -148,7 +158,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
-         * Get information on the conditions to be searched. This is not part of the query for the results themselves.
+         * Get information on the conditions to be searched. This is not part of the query for the results themselves,
+         * but uses the database to get metadata/summaries about the analyses that will be used.
          * 
          * @param searchResult
          * @return
@@ -157,18 +168,18 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
             StopWatch watch = new StopWatch( "addConditionsToSearchResultValueObject" );
-            watch.start( "add conditions to search result value object" );
+            watch.start( "Add conditions to search result value object" );
             List<ExpressionAnalysisResultSet> usedResultSets = new LinkedList<ExpressionAnalysisResultSet>();
 
             int experimentGroupIndex = 0;
-            for ( Collection<ExpressionExperiment> experimentGroup : experiments ) {
+            for ( Collection<ExpressionExperiment> experimentGroup : experimentGroups ) {
 
                 String stage = "Loading " + experimentGroupNames.get( experimentGroupIndex ) + " experiments...";
                 double progress = 0.0;
                 double progressStep = 100.0 / experimentGroup.size();
                 this.setTaskProgress( stage, progress );
 
-                // important that this be fast.
+                // database hit: important that this be fast.
                 Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> analyses = differentialExpressionAnalysisService
                         .getAnalyses( experimentGroup );
 
@@ -181,21 +192,20 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                     ExpressionExperiment experiment = ( ExpressionExperiment ) bas;
 
-                    List<DifferentialExpressionAnalysis> filteredAnalyses = filterAnalyses( analyses.get( experiment ) );
+                    Collection<DifferentialExpressionAnalysis> analysesForExperiment = analyses.get( experiment );
 
-                    for ( DifferentialExpressionAnalysis analysis : filteredAnalyses ) {
+                    for ( DifferentialExpressionAnalysis analysis : analysesForExperiment ) {
 
                         List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
                         usedResultSets.addAll( resultSets );
 
                         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
-                            if ( resultSet.getHitListSizes() == null ) {
-                                // We have some data that hasn't been updated to the newer model.
-                                continue experiment;
-                            }
+                            // this is taken care of by the filterResultSets
+                            assert resultSet.getHitListSizes() != null;
+                            assert resultSet.getExperimentalFactors().size() == 1;
 
-                            ExperimentalFactor factor = filterFactors( resultSet.getExperimentalFactors() );
+                            ExperimentalFactor factor = resultSet.getExperimentalFactors().iterator().next();
                             Collection<FactorValue> factorValues = filterFactorValues( factor.getFactorValues(),
                                     resultSet.getBaselineGroup().getId() );
 
@@ -222,7 +232,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                                             + " hit list sizes for result set=" + resultSet.getId() );
 
                                 for ( HitListSize h : resultSet.getHitListSizes() ) {
-                                    if ( h.getThresholdQvalue() == 0.01 ) {
+                                    if ( h.getThresholdQvalue() == THRESHOLD_QVALUE_FOR_HITLISTS ) {
                                         if ( h.getDirection().equals( Direction.DOWN ) ) {
                                             down = h.getNumberOfProbes();
                                         } else if ( h.getDirection().equals( Direction.UP ) ) {
@@ -234,9 +244,12 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                                 }
 
                                 if ( total == -1 ) {
-                                    // FIXME this is not necessary if the HitLists are populated.
-                                    total = differentialExpressionAnalysisService.countProbesMeetingThreshold(
-                                            resultSet, 0.5 );
+                                    // Sorry, this is too slow and the hitlists should be filled in.
+                                    // total = differentialExpressionAnalysisService.countProbesMeetingThreshold(
+                                    // resultSet, 0.5 );
+                                    log.warn( bas + ": Error: No hit list sizes for resultSet with ID="
+                                            + resultSet.getId() );
+                                    continue;
                                 }
 
                                 condition.numberDiffExpressedProbes = total;
@@ -259,7 +272,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                                 if ( condition.numberOfProbesOnArray == null
                                         || condition.numberDiffExpressedProbes == null ) {
                                     log.error( bas
-                                            + ": Error:Null counts for # diff ex probe or # probes on array, Skipping" );
+                                            + ": Error: Null counts for # diff ex probe or # probes on array, Skipping" );
                                     continue experiment;
                                 } else if ( condition.numberOfProbesOnArray < condition.numberDiffExpressedProbes ) {
                                     log.error( bas
@@ -271,6 +284,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                             }
                         }
                     }
+
                     progress += progressStep;
                     this.setTaskProgress( stage, progress );
 
@@ -279,7 +293,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             }
 
             watch.stop();
-            if ( watch.getTotalTimeMillis() > 1000 ) {
+            if ( watch.getTotalTimeMillis() > 500 ) {
                 // This does not include getting the actual diff ex results.
                 log.info( "Get information on conditions/analyses: " + watch.getTotalTimeMillis() );
             }
@@ -287,11 +301,13 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
+         * No database calls here, just organization.
+         * 
          * @param searchResult
          */
         private void addGenesToSearchResultValueObject( DifferentialExpressionGenesConditionsValueObject searchResult ) {
             int geneGroupIndex = 0;
-            for ( List<Gene> geneGroup : genes ) {
+            for ( List<Gene> geneGroup : geneGroups ) {
                 String geneGroupName = geneGroupNames.get( geneGroupIndex );
 
                 String stage = "Loading " + geneGroupName + " genes...";
@@ -316,6 +332,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
+         * The actual business of fetching the differential expression results.
+         * 
          * @param resultSets
          * @param geneIds
          * @param arrayDesignsUsed
@@ -397,6 +415,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
+         * Staging for getting the diff ex results.
+         * 
          * @param resultSets
          * @param geneIds
          * @param searchResult
@@ -407,38 +427,19 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
 
+            StopWatch timer = new StopWatch();
+            timer.start();
+            // DATABASE CALL HERE, but should be quite fast.
             for ( ExpressionAnalysisResultSet rs : resultSets ) {
                 arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( rs.getAnalysis().getExperimentAnalyzed() ) );
+            }
+            timer.stop();
+            if ( timer.getTotalTimeMillis() > 100 ) {
+                log.info( "Fetch array designs used: " + timer.getTotalTimeMillis() + "ms" );
             }
 
             fillBatchOfHeatmapCells( resultSets, geneIds, arrayDesignsUsed, searchResult );
 
-        }
-
-        /**
-         * @param analyses
-         * @return
-         */
-        private List<DifferentialExpressionAnalysis> filterAnalyses( Collection<DifferentialExpressionAnalysis> analyses ) {
-            List<DifferentialExpressionAnalysis> filteredAnalyses = new LinkedList<DifferentialExpressionAnalysis>();
-
-            for ( DifferentialExpressionAnalysis analysis : analyses ) {
-                if ( analysis == null ) continue; // skip if analysis was not run. FIXME is this possible?
-
-                filteredAnalyses.add( analysis );
-            }
-
-            return filteredAnalyses;
-        }
-
-        /**
-         * @param factors
-         * @return
-         */
-        private ExperimentalFactor filterFactors( Collection<ExperimentalFactor> factors ) {
-            // There should be only one factor.
-            ExperimentalFactor factor = factors.iterator().next();
-            return factor;
         }
 
         /**
@@ -459,6 +460,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
+         * Remove resultSets that are not usable for one reason or another (e.g., intearctions, batch effects)
+         * 
          * @param resultSets
          * @return
          */
@@ -466,13 +469,23 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> filteredResultSets = new LinkedList<ExpressionAnalysisResultSet>();
 
             for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
                 // Skip interactions.
                 if ( resultSet.getExperimentalFactors().size() != 1 ) continue;
+
                 // Skip batch effect ones.
                 if ( isBatch( resultSet ) ) continue;
+
                 // Skip if baseline is not specified.
                 if ( resultSet.getBaselineGroup() == null ) {
-                    log.error( "Possible Data Issue: resultSet.getBaselineGroup() returned null for result set wit ID="
+                    log.error( "Possible Data Issue: resultSet.getBaselineGroup() returned null for result set with ID="
+                            + resultSet.getId() );
+                    continue;
+                }
+
+                // must have hitlists populated (old analyses)
+                if ( resultSet.getHitListSizes() == null ) {
+                    log.warn( "Possible data issue: resultSet.getHitListSizes() returned null for result set with ID="
                             + resultSet.getId() );
                     continue;
                 }

@@ -166,16 +166,16 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> result = new HashMap<BioAssaySet, Collection<DifferentialExpressionAnalysis>>();
 
         /*
-         * FIXME In these queries, we use left joins for things that were added to the system 'recently' and might be
-         * null. We can replace these with inner joins when they are all populated.
+         * In these queries, we used left joins for things that were added to the system 'recently' and might have been
+         * null, namely baselineGroup and hitListSizes. But this should no longer be the case.
          */
 
         StopWatch timer = new StopWatch();
         timer.start();
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a inner join fetch a.resultSets res "
-                + "left outer join fetch res.baselineGroup"
+                + "inner join fetch res.baselineGroup"
                 + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
-                + "left outer join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
+                + "inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
 
         List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate().findByNamedParam( query, "ees",
                 EntityUtils.getIds( experiments ) );
@@ -197,9 +197,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
          * the source experiment. Maybe that is confusing.
          */
         String q2 = "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a "
-                + " inner join fetch a.resultSets res left outer join fetch res.baselineGroup "
+                + " inner join fetch a.resultSets res inner join fetch res.baselineGroup "
                 + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues"
-                + " left outer join fetch res.hitListSizes  "
+                + " inner join fetch res.hitListSizes  "
                 + " join eess.sourceExperiment see join a.experimentAnalyzed ee  where eess=ee and see.id in (:ees) ";
         List<DifferentialExpressionAnalysis> r2 = this.getHibernateTemplate().findByNamedParam( q2, "ees",
                 EntityUtils.getIds( experiments ) );

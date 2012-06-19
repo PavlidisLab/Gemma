@@ -56,16 +56,6 @@ public interface DiffExAnalyzer {
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
-    /**
-     * Perform an analysis using the specified factor(s), introduced in the order given.
-     * 
-     * @param expressionExperiment
-     * @param experimentalFactors
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor... experimentalFactors );
-
     /***
      * Allows entry of modified data matrices into the workflow
      * 
@@ -77,9 +67,20 @@ public interface DiffExAnalyzer {
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 
+    /**
+     * @param matrix
+     * @param config
+     * @param retainScale
+     * @return
+     */
     public abstract ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
             DifferentialExpressionAnalysisConfig config, boolean retainScale );
 
+    /**
+     * @param factors
+     * @param quantitationType
+     * @return
+     */
     public abstract ExperimentalFactor determineInterceptFactor( Collection<ExperimentalFactor> factors,
             QuantitationType quantitationType );
 

@@ -118,8 +118,15 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
         log.info( "Analysis will be done using " + factors.size() + " factors in a " + analyzer.toString() );
 
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setAnalysisType( analyzer );
+        if ( analyzer.equals( AnalysisType.TWA ) ) {
+            config.getInteractionsToInclude().add( factors );
+        }
+
         Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
-                .run( expressionExperiment, factors );
+                .run( expressionExperiment, config );
 
         return analyses;
 

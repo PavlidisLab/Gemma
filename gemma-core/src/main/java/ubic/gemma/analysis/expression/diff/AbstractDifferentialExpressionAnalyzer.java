@@ -90,17 +90,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * 
      * @see
      * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
-     * , ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
-    @Override
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor... experimentalFactors );
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
      * , ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix,
      * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */

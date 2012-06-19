@@ -245,21 +245,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor... experimentalFactors ) {
-
-        return this.run( expressionExperiment, Arrays.asList( experimentalFactors ) );
-
-    }
-
     /**
      * @param expressionExperiment
      * @param dmatrix
