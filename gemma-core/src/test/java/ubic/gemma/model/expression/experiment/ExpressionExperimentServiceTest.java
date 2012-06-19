@@ -84,7 +84,9 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ee = expressionExperimentService.thaw( ee );
 
             eeFull = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
-
+            eeFull.setName( EE_NAME+"_2" );
+            expressionExperimentService.update( eeFull );
+            
             persisted = true;
         } else {
             log.debug( "Skipping making new ee for test" );
