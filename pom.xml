@@ -22,8 +22,8 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@otto.pavlab.chibi.ubc.ca:/space/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
+		<connection>scm:cvs:ext:@otto.pavlab.chibi.ubc.ca:/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@otto.pavlab.chibi.ubc.ca:/cvs:Gemma</developerConnection>
 		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.11-SNAPSHOT</version>
+			<version>1.0.11</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -512,6 +512,13 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh-external</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+		</extensions>
 	</build>
 	<repositories>
 		<repository>
@@ -730,18 +737,18 @@
 		<site>
 			<id>website</id>
 			<url>
-				scp://krusty.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
+				scpexe://otto.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
 			</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://krusty.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scpexe://otto.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://krusty.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scpexe://otto.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>
