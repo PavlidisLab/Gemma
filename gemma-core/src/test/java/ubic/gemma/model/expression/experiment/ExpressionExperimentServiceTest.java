@@ -56,7 +56,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     ExpressionExperiment ee = null;
-    ExpressionExperiment eeFull = null;
     ExternalDatabase ed;
     String accession;
     String contactName;
@@ -82,10 +81,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
             expressionExperimentService.update( ee );
             ee = expressionExperimentService.thaw( ee );
-
-            eeFull = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
-            eeFull.setName( EE_NAME+"_2" );
-            expressionExperimentService.update( eeFull );
             
             persisted = true;
         } else {
@@ -188,41 +183,42 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindByFactor() {
-        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
         assertNotNull( ef );
 //        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
-        ExpressionExperiment eeFound = expressionExperimentService.load( eeFull.getId() );
+        ExpressionExperiment eeFound = expressionExperimentService.load( ee.getId() );
         assertNotNull( eeFound );
-        eeFound = expressionExperimentService.findByShortName( eeFull.getShortName() );
+        eeFound = expressionExperimentService.findByShortName( ee.getShortName() );
         assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), eeFull.getId() );
+        assertEquals( eeFound.getId(), ee.getId() );
 
     }
 
+    
     @Test
     public void testFindByFactorValue() {
-        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
         FactorValue fv = ef.getFactorValues().iterator().next();
         ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv );
         assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), eeFull.getId() );
+        assertEquals( eeFound.getId(), ee.getId() );
 
     }
 
     @Test
     public void testFindByFactorValueId() {
-        ExperimentalDesign design = eeFull.getExperimentalDesign();
+        ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
         FactorValue fv = ef.getFactorValues().iterator().next();
         assertNotNull( fv.getId() );
         ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
         assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), eeFull.getId() );
+        assertEquals( eeFound.getId(), ee.getId() );
 
     }
 
