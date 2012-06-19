@@ -760,11 +760,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
          * If a set matches exactly, we just reuse it. Otherwise we create a new one.
          */
         if ( eeSet == null ) {
-            eeSet = ExpressionExperimentSet.Factory.newInstance();
-            eeSet.setTaxon( taxon );
-            eeSet.setName( analysisName );
-            eeSet.setDescription( "Automatically generated for " + expressionExperiments.size() + " EEs" );
-            eeSet.setExperiments( expressionExperiments );
+            eeSet = expressionExperimentSetService.initAutomaticallyGeneratedExperimentSet( expressionExperiments, taxon, analysisName );
         }
 
         analysis.setExpressionExperimentSetAnalyzed( eeSet );

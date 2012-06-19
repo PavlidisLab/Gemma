@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author paul
@@ -36,6 +37,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  */
 public interface ExpressionExperimentSetService {
 
+
+    public static String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
+    
     /**
      * 
      */
@@ -246,4 +250,9 @@ public interface ExpressionExperimentSetService {
     public Collection<Long> findIds( BioAssaySet bioAssaySet );
 
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds( Collection<Long> ids );
+
+    public boolean isAutomaticallyGenerated( String experimentSetDescription );
+
+    public ExpressionExperimentSet initAutomaticallyGeneratedExperimentSet( Collection<BioAssaySet> expressionExperiments,
+            Taxon taxon, String setName );
 }
