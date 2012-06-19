@@ -265,7 +265,7 @@ Gemma.HelpText.WidgetDefaults = {
 			multiple: 'Visualize {0} genes'
 		},
 		StatusText: {
-			random: 'Visualizing 20 \'random\' genes.',
+			random: 'Visualizing 20 \'random\' probes.',
 			one: 'Visualizing selected gene.',
 			multiple: 'Visualizing selected genes. Note that not all genes are necessarily in the data set.',
 			geneMatchCount: 'Found data for {0} of {1} genes.'
