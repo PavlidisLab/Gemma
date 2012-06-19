@@ -92,12 +92,13 @@ abstract public class CommonPersister extends AbstractPersister {
     @Autowired
     protected QuantitationTypeDao quantitationTypeDao;
 
+    // FIXME should use an expiring cache (but this is probably not a big deal)
     protected Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<Object, ExternalDatabase>();
 
     @Autowired
     protected UnitDao unitDao;
 
-    // FIXME not thread safe.
+    // FIXME should use an expiring cache (not a huge amount of data)
     Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<Object, QuantitationType>();
 
     /*

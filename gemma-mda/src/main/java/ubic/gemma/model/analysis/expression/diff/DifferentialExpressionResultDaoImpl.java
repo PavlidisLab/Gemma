@@ -136,7 +136,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK"
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s "
             + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
-            + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) "; 
+            + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) ";
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -494,10 +494,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 }
 
                 if ( timer.getTime() > 1000 ) {
-                    log.info( "Fetching DiffEx for batch " + timer.getTime() + " ms : geneIds="
+                    log.info( "Fetching DiffEx for batch took " + timer.getTime() + " ms : geneIds="
                             + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 50 ) + " result set="
                             + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 50 ) + " adused="
-                            + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) + " took : " );
+                            + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) );
                     timer.reset();
                     timer.start();
                 }

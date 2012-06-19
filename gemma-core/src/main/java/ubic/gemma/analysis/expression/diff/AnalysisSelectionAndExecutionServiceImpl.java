@@ -116,7 +116,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        log.info( "Analysis will be done using " + analyzer.getClass().getSimpleName() );
+        log.info( "Analysis will be done using " + factors.size() + " factors in a " + analyzer.toString() );
 
         Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
                 .run( expressionExperiment, factors );

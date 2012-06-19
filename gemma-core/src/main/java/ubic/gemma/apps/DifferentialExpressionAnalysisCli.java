@@ -81,7 +81,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Whether batch factors should be included (if they exist)
      */
-    protected boolean ignoreBatch = false;
+    protected boolean ignoreBatch = true;
 
     /*
      * (non-Javadoc)
@@ -138,8 +138,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         Option ignoreBatchOption = OptionBuilder
                 .withDescription(
-                        "If a 'batch' factor is available, ignore it. Otherwise, batch information can/will be included in the analysis." )
-                .create( "ignorebatch" );
+                        "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
+                .create( "usebatch" );
 
         super.addOption( ignoreBatchOption );
 
@@ -209,8 +209,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
         }
 
-        if ( hasOption( "ignorebatch" ) ) {
-            this.ignoreBatch = true;
+        if ( hasOption( "usebatch" ) ) {
+            this.ignoreBatch = false;
         }
 
         if ( hasOption( "factors" ) ) {

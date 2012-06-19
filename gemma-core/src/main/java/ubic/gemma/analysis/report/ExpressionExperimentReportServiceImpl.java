@@ -823,9 +823,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
         eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
+        
+        // this report is the one that goes stale, see bug 2308
         eeVo.setDifferentialExpressionAnalyses( getDiffExpressedProbes( tempEe, CUT_OFF ) );
-        Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
 
+        Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
         eeVo.setCoexpressionLinkCount( numLinks );
 
         Date timestamp = new Date( System.currentTimeMillis() );

@@ -143,7 +143,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          */
         public synchronized TaskProgress getTaskProgress() {
             // I think this is safe only because String is immutable
-            // and double is copied by value. FIXME
+            // and double is copied by value. FIXME ????
             return new TaskProgress( this.taskProgressStage, this.taskProgressPercent );
         }
 
@@ -184,7 +184,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     List<DifferentialExpressionAnalysis> filteredAnalyses = filterAnalyses( analyses.get( experiment ) );
 
                     for ( DifferentialExpressionAnalysis analysis : filteredAnalyses ) {
-                        // differentialExpressionAnalysisService.thaw( analysis );
 
                         List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
                         usedResultSets.addAll( resultSets );
@@ -253,17 +252,19 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                                 condition.factorCategory = ( factor.getCategory() == null ) ? "null" : factor
                                         .getCategory().getCategory();
 
+                                /*
+                                 * SANITY CHECKS these fields should be filled in. If not, we are going to skip the
+                                 * results.
+                                 */
                                 if ( condition.numberOfProbesOnArray == null
                                         || condition.numberDiffExpressedProbes == null ) {
                                     log.error( bas
-                                            + ": Error :Null counts for # diff ex probe or # probes on array, skipping: "
-                                            + factorValue );
-                                    continue;
+                                            + ": Error:Null counts for # diff ex probe or # probes on array, Skipping" );
+                                    continue experiment;
                                 } else if ( condition.numberOfProbesOnArray < condition.numberDiffExpressedProbes ) {
                                     log.error( bas
-                                            + ": Error: More diff expressed probes than probes on array. Skipping: "
-                                            + factorValue );
-                                    continue;
+                                            + ": Error: More diff expressed probes than probes on array. Skipping." );
+                                    continue experiment;
                                 }
 
                                 searchResult.addCondition( condition );
@@ -347,9 +348,12 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     probeAnalysisResultIds.add( r.getDifferentialExpressionAnalysisResultId() );
                 }
 
-                // FIXME don't fetch if not needed
+                // FIXME don't fetch if not needed. But this is quite fast, per cycle
+                // log.info( "Get the results we need from one result set: " + probeAnalysisResultIds.size() +
+                // " to get." );
                 Map<Long, DifferentialExpressionAnalysisResult> probeAnalysisResults = EntityUtils
                         .getIdMap( differentialExpressionResultService.load( probeAnalysisResultIds ) );
+                // log.info( "done" );
 
                 for ( Long geneId : geneIds ) {
                     Long probeResultId = null;
@@ -362,7 +366,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                     Double pValue = deaResult.getCorrectedPvalue();
                     if ( pValue == null ) {
-                        // FIXME is ths a magic number? Possibly we should treat such missing values as missing, not 1.0
+                        // FIXME is this a magic number? Possibly we should treat such missing values as missing, not
+                        // 1.0
                         pValue = 1.0;
                     }
                     if ( pValue.doubleValue() == 0.0 ) {
@@ -387,6 +392,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                 }
             }
+            watch.stop();
             log.info( watch.prettyPrint() );
         }
 

@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -74,6 +75,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Supports the creation and location of 'flat file' versions of data in the system, for download by users. Files are
@@ -182,7 +184,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-            Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
+            Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
             writeMatrix( f, geneAnnotations, matrix );
             return f;
         } catch ( IOException e ) {
@@ -211,7 +213,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
-            Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
+            Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
             if ( vectors.size() == 0 ) {
                 log.warn( "No vectors for " + type );
@@ -890,6 +892,33 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     /**
+     * @param ads
+     * @return
+     */
+    private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
+        Map<CompositeSequence, String[]> annots = new HashMap<CompositeSequence, String[]>();
+        for ( ArrayDesign arrayDesign : ads ) {
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
+
+            Map<Long, CompositeSequence> csidmap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
+
+            Map<Long, String[]> geneAnnots = ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign );
+
+            for ( Entry<Long, String[]> e : geneAnnots.entrySet() ) {
+
+                if ( !csidmap.containsKey( e.getKey() ) ) {
+                    continue;
+                }
+
+                annots.put( csidmap.get( e.getKey() ), e.getValue() );
+
+            }
+
+        }
+        return annots;
+    }
+
+    /**
      * @param type
      * @return
      * @throws IOException
@@ -937,10 +966,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private <T> void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
-            ExpressionDataMatrix<T> expressionDataMatrix ) throws IOException, FileNotFoundException {
+    private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
+            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException, FileNotFoundException {
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter<T> matrixWriter = new MatrixWriter<T>();
+        MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
         writer.flush();
         writer.close();
@@ -958,7 +987,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         this.designElementDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter<Object>();
+        MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
     }
 
@@ -969,12 +998,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws IOException
      * @throws FileNotFoundException
      */
-    @SuppressWarnings("unchecked")
-    private <T> void writeMatrix( File file, Map<Long, String[]> geneAnnotations,
-            ExpressionDataMatrix<T> expressionDataMatrix ) throws IOException, FileNotFoundException {
+    private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
+            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException, FileNotFoundException {
 
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter<T>();
+        MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();
         writer.close();
@@ -988,7 +1016,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws IOException
      */
     private void writeVectors( File file, PrimitiveType representation,
-            Collection<? extends DesignElementDataVector> vectors, Map<Long, String[]> geneAnnotations )
+            Collection<? extends DesignElementDataVector> vectors, Map<CompositeSequence, String[]> geneAnnotations )
             throws IOException {
         this.designElementDataVectorService.thaw( vectors );
 
