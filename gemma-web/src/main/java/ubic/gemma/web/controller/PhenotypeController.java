@@ -57,14 +57,14 @@ public class PhenotypeController extends BaseController {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
 
         if ( throwable instanceof AccessDeniedException ) {
-            if ( userManager.loggedIn() ) {
+            if ( this.userManager.loggedIn() ) {
                 validateEvidenceValueObject.setAccessDenied( true );
             } else {
                 validateEvidenceValueObject.setUserNotLoggedIn( true );
             }
         } else {
             // If type of throwable is not known, log it.
-            log.error( throwable.getMessage() );
+            this.log.error( throwable.getMessage() );
         }
 
         return validateEvidenceValueObject;
@@ -81,7 +81,7 @@ public class PhenotypeController extends BaseController {
     }
 
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName, boolean showOnlyEditable ) {
-        return phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonCommonName,
+        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonCommonName,
                 showOnlyEditable ) );
     }
 
@@ -93,7 +93,7 @@ public class PhenotypeController extends BaseController {
      */
     public Collection<GeneValueObject> findCandidateGenes( String taxonCommonName, boolean showOnlyEditable,
             String[] phenotypes ) {
-        return phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonCommonName,
+        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonCommonName,
                 showOnlyEditable ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
     }
 
@@ -105,7 +105,7 @@ public class PhenotypeController extends BaseController {
      * @return Collection of phenotypes
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) {
-        return phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
+        return this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
     }
 
     /**
@@ -115,15 +115,11 @@ public class PhenotypeController extends BaseController {
      * @return bibliographic reference with the given pubmed id
      */
     public Collection<BibliographicReferenceValueObject> findBibliographicReference( String pubMedId, Long evidenceId ) {
-        BibliographicReferenceValueObject valueObject = phenotypeAssociationManagerService.findBibliographicReference(
+        BibliographicReferenceValueObject valueObject = this.phenotypeAssociationManagerService.findBibliographicReference(
                 pubMedId, evidenceId );
 
-        ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>( 1 ); // Contain
-                                                                                                                           // at
-                                                                                                                           // most
-                                                                                                                           // 1
-                                                                                                                           // element.
-
+        // Contain at most 1 element.
+        ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>( 1 );
         if ( valueObject != null ) {
             valueObjects.add( valueObject );
         }
@@ -137,18 +133,18 @@ public class PhenotypeController extends BaseController {
      * @return Collection<CharacteristicValueObject>
      */
     public Collection<CharacteristicValueObject> findExperimentMgedCategory() {
-        return phenotypeAssociationManagerService.findExperimentMgedCategory();
+        return this.phenotypeAssociationManagerService.findExperimentMgedCategory();
     }
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
-        return phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri, taxonId );
+        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri, taxonId );
     }
 
     public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
-            validateEvidenceValueObject = phenotypeAssociationManagerService.validateEvidence( evidenceValueObject );
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService.validateEvidence( evidenceValueObject );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
@@ -160,9 +156,9 @@ public class PhenotypeController extends BaseController {
 
         try {
             if ( evidenceValueObject.getId() == null ) { // if the form is a "create evidence" form
-                validateEvidenceValueObject = phenotypeAssociationManagerService.create( evidenceValueObject );
+                validateEvidenceValueObject = this.phenotypeAssociationManagerService.create( evidenceValueObject );
             } else { // if the form is an "edit evidence" form
-                validateEvidenceValueObject = phenotypeAssociationManagerService.update( evidenceValueObject );
+                validateEvidenceValueObject = this.phenotypeAssociationManagerService.update( evidenceValueObject );
             }
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
@@ -174,7 +170,7 @@ public class PhenotypeController extends BaseController {
     public ValidateEvidenceValueObject removePhenotypeAssociation( Long evidenceId ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
-            validateEvidenceValueObject = phenotypeAssociationManagerService.remove( evidenceId );
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService.remove( evidenceId );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
