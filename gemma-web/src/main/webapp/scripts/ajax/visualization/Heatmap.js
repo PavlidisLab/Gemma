@@ -331,18 +331,39 @@ var Heatmap = function() {
 						height: factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM 
 					});
 					labelDiv = Ext.get(id);
-					
+
 					ctx = constructCanvas($(labelDiv), heatmapWidth + 10 + labelWidth, factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM);
 					var x = 0;
 					var y = 0;
 					// store row/column info for hover text
 					var factorValueByLocation = []; //[row][column]
 					// over-column boxes
+
 					for ( j = 0; j < conditionLabels.length; j++) {
 						for ( factorCategory in conditionLabels[j]) {
+
 							var factorValueArr = conditionLabels[j][factorCategory];
 							var value = factorValueArr[0];
 							var colour = factorValueArr[1];
+							
+							var adjacentColumnsDrawnAsOne = 0;
+							
+							if (increment > 1) {
+								var colours = [colour];
+								// take the mode of adjacent columns.
+								for (var k = 1; k < increment && j < conditionLabels.length - 1; k++) {
+									
+									var factorValueArr = conditionLabels[j+k][factorCategory];
+									var value = factorValueArr[0];
+									var colour = factorValueArr[1];
+									colours.push(colour);
+									adjacentColumnsDrawnAsOne++;
+									
+								}
+								colour = mode(colours);
+							}
+							
+							
 							ctx.fillStyle = colour;
 							ctx.fillRect(x, y, boxWidth, PER_CONDITION_LABEL_HEIGHT);
 							factorValueByLocation[y/PER_CONDITION_LABEL_HEIGHT] = [];
@@ -351,12 +372,13 @@ var Heatmap = function() {
 						}
 						x += boxWidth;
 						y = 0;
+						j += adjacentColumnsDrawnAsOne;
 					}
 					// end of line labels
 					ctx.fillStyle = "#000000";
 					ctx.font = Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1) + "px sans-serif";
 					ctx.textAlign = "left";
-					ctx.translate(boxWidth*conditionLabels.length + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
+					ctx.translate(boxWidth*conditionLabels.length/increment + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
 					x = 0;
 					y = 0;
 					for ( factorCategory in conditionLabelKey) {
@@ -383,7 +405,6 @@ var Heatmap = function() {
 		 */
 			var offsety = 0;
 			for ( i = 0; i < vectorObjs.length; i++) {
-			
 				var d = vectorObjs[i].data; // points.
 				var offsetx = 0;
 				for ( j = 0; j < d.length; j++) {
@@ -699,3 +720,25 @@ var Heatmap = function() {
 		}
 	};
 }();
+
+function mode(array)
+{
+    if(array.length == 0)
+        return null;
+    var modeMap = {};
+    var maxEl = array[0], maxCount = 1;
+    for(var i = 0; i < array.length; i++)
+    {
+        var el = array[i];
+        if(modeMap[el] == null)
+                modeMap[el] = 1;
+        else
+                modeMap[el]++;  
+        if(modeMap[el] > maxCount)
+        {
+                maxEl = el;
+                maxCount = modeMap[el];
+        }
+    }
+    return maxEl;
+}
