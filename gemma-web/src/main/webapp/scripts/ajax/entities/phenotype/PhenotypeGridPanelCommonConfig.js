@@ -12,7 +12,6 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 		var clickedSelections = [];
 
 		var phenotypeStoreProxy = null;
-		var phenotypeStoreReader = null;
     	
 		var generateGeneCountHTML = function(width, geneCountText) {
 			return '<span style="float: right; text-align: right; width: ' + width + 'px;">' + geneCountText + '</span>';
@@ -55,25 +54,19 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			    	showOnlyEditable: false
 				};
 			},
-			getStoreReader: function() {
-				if (phenotypeStoreReader == null) {
-					phenotypeStoreReader = new Ext.data.JsonReader({
-						idProperty: "urlId",
-						fields: [
-							'urlId',
-							{ name: 'value', sortType: Ext.data.SortTypes.asUCString },
-							'valueUri',
-							'publicGeneCount',
-							'privateGeneCount',
-					     	'_id',       // for phenotype tree only
-					     	'_parent',   // for phenotype tree only
-					     	'_is_leaf',  // for phenotype tree only
-							'dbPhenotype',                                              // for phenotype list only
-					     	{ name: 'isChecked', sortDir: 'DESC', defaultValue: false } // for phenotype list only
-				     	]
-					});
-				}
-				return phenotypeStoreReader;
+			getStoreReaderFields: function() {
+				return [
+					'urlId',
+					{ name: 'value', sortType: Ext.data.SortTypes.asUCString },
+					'valueUri',
+					'publicGeneCount',
+					'privateGeneCount',
+			     	'_id',       // for phenotype tree only
+			     	'_parent',   // for phenotype tree only
+			     	'_is_leaf',  // for phenotype tree only
+					'dbPhenotype',                                              // for phenotype list only
+			     	{ name: 'isChecked', sortDir: 'DESC', defaultValue: false } // for phenotype list only
+		     	];
 			},
 			getHideHandler: function(gridPanel) {
 				// false NOT to bypass the conditional checks and events described in deselectRow
@@ -100,11 +93,13 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 					
 					clickedSelections = newSelections;
 				    for (var i = 0; i < clickedSelections.length; i++) {
-				        selectedPhenotypes.push({
-							urlId: clickedSelections[i].get('urlId'),
-				        	value: clickedSelections[i].get('value'),
-				        	valueUri: clickedSelections[i].get('valueUri')
-				        });
+						var isUniquePhenotype = true;
+						for (var j = 0; isUniquePhenotype && j < selectedPhenotypes.length; j++) {
+							isUniquePhenotype = (selectedPhenotypes[j].urlId !== clickedSelections[i].data.urlId);
+						}
+						if (isUniquePhenotype) {
+							selectedPhenotypes.push(Ext.apply({}, clickedSelections[i].data));
+						}
 					}
 					gridPanel.fireEvent('phenotypeSelectionChange', selectedPhenotypes);						
 				}

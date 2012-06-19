@@ -30,7 +30,7 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
         this.urlId = treeCharacteristicValueObject.getUrlId();
-        this._id = treeCharacteristicValueObject.get_id();
+        this._id = treeCharacteristicValueObject.get_id() + parent;
         this._parent = parent;
         this._is_leaf = treeCharacteristicValueObject.is_is_leaf();
         this.value = treeCharacteristicValueObject.getValue();

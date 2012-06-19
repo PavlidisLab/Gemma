@@ -1478,7 +1478,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             simpleTreeValueObjects.add( simpleTreeValueObject );
 
             for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-                convertToFlatTree( simpleTreeValueObjects, tree, treeCharacteristicValueObject.get_id() );
+            	convertToFlatTree( simpleTreeValueObjects, tree, simpleTreeValueObject.get_id() );
             }
         }
     }

@@ -95,7 +95,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				phenotypeGrid.fireEvent('phenotypeSelectionChange', selectedPhenotypes);
 			}
 
-			var selectRecordsOnLoad = function(gridPanel, recordIds, callback) {
+			var selectRecordsOnLoad = function(gridPanel, fieldName, recordIds, callback) {
 				gridPanel.getStore().on('load', 
 					function(store, records, options) {
 						if (recordIds.length > 0) {				
@@ -105,7 +105,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 							var firstRowIndex;
 			            	
 					        for (var i = 0; i < recordIds.length; i++) {
-					        	var currRowIndex = store.indexOfId(recordIds[i]);
+								var currRowIndex = store.findExact(fieldName, recordIds[i]);
 					        	if (i === 0) {
 					        		firstRowIndex = currRowIndex; 
 					        	}
@@ -139,14 +139,14 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					}
 					var phenotypeActiveTabGrid = phenotypeTabPanel.getActiveTab();
 
-					selectRecordsOnLoad(phenotypeActiveTabGrid, currentPhenotypeUrlIds,
+					selectRecordsOnLoad(phenotypeActiveTabGrid, 'urlId', currentPhenotypeUrlIds,
 						function() {
 							fireEventOnPhenotypeSelectionChange(phenotypeActiveTabGrid);
 						});
 
 					if (currentGene != null) {
 						// geneGrid's store will be loaded after phenotypeGrid's original rows are selected later on.
-						selectRecordsOnLoad(geneGrid, [ currentGene.id ]);
+						selectRecordsOnLoad(geneGrid, 'id', [ currentGene.id ]);
 					}
 				}
 		
@@ -190,13 +190,13 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			if (Ext.get("phenotypeUrlId") != null && Ext.get("phenotypeUrlId").getValue() != "") {
 				var phenotypeActiveTabGrid = phenotypeTabPanel.getActiveTab();
 				
-				selectRecordsOnLoad(phenotypeActiveTabGrid, [ Ext.get("phenotypeUrlId").getValue() ],
+				selectRecordsOnLoad(phenotypeActiveTabGrid, 'urlId', [ Ext.get("phenotypeUrlId").getValue() ],
 					function() {
 						fireEventOnPhenotypeSelectionChange(phenotypeActiveTabGrid);
 					});
 
 				if (Ext.get("geneId") != null && Ext.get("geneId").getValue() != "") {
-					selectRecordsOnLoad(geneGrid, [ parseInt(Ext.get("geneId").getValue()) ]);
+					selectRecordsOnLoad(geneGrid, 'id', [ parseInt(Ext.get("geneId").getValue()) ]);
 				}
 			}
     	}

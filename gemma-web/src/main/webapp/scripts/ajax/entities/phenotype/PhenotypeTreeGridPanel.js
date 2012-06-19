@@ -21,27 +21,100 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 		var DISABLED_CLASS = 'x-item-disabled';
 	 	var PHENOTYPE_COLUMN_INDEX = 1;
 	 	
-		var currentSearchedCellRowIndex = -1;
-				
+		var currentSearchedCellRowIndices = [];	 	
+
+		var setRowLookSelected = function(index, isLookSelected) {
+			var view = this.getView();
+			if (isLookSelected) {
+				if (this.getSelectionModel().isSelected(index)) {
+					this.getSelectionModel().deselectRow(index);
+				}
+	
+				view.addRowClass(index, DISABLED_CLASS);
+				view.addRowClass(index, view.selectedRowClass);
+			} else {
+				view.removeRowClass(index, DISABLED_CLASS);
+				view.removeRowClass(index, view.selectedRowClass);
+			} 
+		}.createDelegate(this);
+
+		var isAncestorSelected = function(record) {
+			var ancestors = this.getStore().getNodeAncestors(record);
+			var isSelected = false;
+			for (var i = 0; !isSelected && i < ancestors.length; i++) {
+				isSelected = this.getSelectionModel().isSelected(ancestors[i]); 
+			}
+			
+			return isSelected;
+		}.createDelegate(this);
+
+		var findSamePhenotypeIndices = function(urlId) {
+			var allIndices = [];
+			var index = this.getStore().findExact('urlId', urlId, 0);
+			
+			while (index >= 0) {
+				allIndices.push(index);
+				index = this.getStore().findExact('urlId', urlId, index + 1);
+			}
+			
+			return allIndices;
+		}.createDelegate(this);
+
 		var setDescendantRowsLookSelected = function(parentRecord, isLookSelected) {
 			var childrenRecords = this.getStore().getNodeChildren(parentRecord);
 			var view = this.getView();
 		
 			for (var i = 0; i < childrenRecords.length; i++) {
-				if (isLookSelected) {
-					if (this.getSelectionModel().isSelected(this.getStore().indexOf(childrenRecords[i]))) {
-						this.getSelectionModel().deselectRow(this.getStore().indexOf(childrenRecords[i]));
+				var currIndex = this.getStore().indexOf(childrenRecords[i]);
+				
+				var samePhenotypeIndices = findSamePhenotypeIndices(childrenRecords[i].data.urlId);
+
+				var shouldChangeRowLookSelected = true;
+				// When we deselect rows that look selected, if ancestor rows 
+				// have been selected, we should not change selection states. 
+				if (!isLookSelected) {
+					for (var j = 0; shouldChangeRowLookSelected && j < samePhenotypeIndices.length; j++) {
+						shouldChangeRowLookSelected = !isAncestorSelected(this.getStore().getAt(samePhenotypeIndices[j]));
 					}
-		
-					view.addRowClass(this.getStore().indexOf(childrenRecords[i]), DISABLED_CLASS);
-					view.addRowClass(this.getStore().indexOf(childrenRecords[i]), view.selectedRowClass);
-				} else {
-					view.removeRowClass(this.getStore().indexOf(childrenRecords[i]), DISABLED_CLASS);
-					view.removeRowClass(this.getStore().indexOf(childrenRecords[i]), view.selectedRowClass);
-				} 
+				}
+				if (shouldChangeRowLookSelected) {
+					for (var j = 0; j < samePhenotypeIndices.length; j++) {
+						setRowLookSelected(samePhenotypeIndices[j], isLookSelected);
+					}
+					
+					setRowLookSelected(currIndex, isLookSelected);
+				}
 				
 				if (this.getStore().hasChildNodes(childrenRecords[i])) {
 					setDescendantRowsLookSelected(childrenRecords[i], isLookSelected);
+				}
+			}
+		}.createDelegate(this);
+
+		// This variable is only used by the function following it. When selectRow and
+		// deselectRow are called, events will be fired and the function will be called
+		// in event listeners. So, this variable is used to indicate if we are selecting
+		// rows that have the same phenotype.
+		var isSelectingSamePhenotypes = false;
+		var setSamePhenotypeRowsSelected = function(urlId, currentRowIndex, isSelected) {
+			if (!isSelectingSamePhenotypes) {
+				var samePhenotypeIndices = findSamePhenotypeIndices(urlId);
+
+				for (var i = 0; i < samePhenotypeIndices.length; i++) {
+					if (i == 0) {
+						isSelectingSamePhenotypes = true;
+					}
+					if (samePhenotypeIndices[i] != currentRowIndex) {
+						if (isSelected) {
+							// true to keep existing selections
+							this.getSelectionModel().selectRow(samePhenotypeIndices[i], true);
+						} else {
+							this.getSelectionModel().deselectRow(samePhenotypeIndices[i]);
+						}
+					}
+					if (i == samePhenotypeIndices.length - 1) {
+						isSelectingSamePhenotypes = false;
+					}
 				}
 			}
 		}.createDelegate(this);
@@ -51,20 +124,15 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 			header: '', // remove the "select all" checkbox on the header 
 		    listeners: {
 				beforerowselect : function (selectionModel, rowIndex, keep, record) {
-					var ancestors = this.getStore().getNodeAncestors(record);
-					var isAncestorSelected = false;
-					for (var i = 0; !isAncestorSelected && i < ancestors.length; i++) {
-						isAncestorSelected = selectionModel.isSelected(ancestors[i]); 
-					}
-					
-					// If ancestor is selected, don't allow children to be selected.
-					return !isAncestorSelected;
+					return !Ext.get(this.getView().getRow(rowIndex)).hasClass(DISABLED_CLASS);					
 				},
 				rowdeselect: function(selectionModel, rowIndex, record) {
 					setDescendantRowsLookSelected(record, false);
+					setSamePhenotypeRowsSelected(record.data.urlId, rowIndex, false);
 				},
 				rowselect: function(selectionModel, rowIndex, record) {
 					setDescendantRowsLookSelected(record, true);
+					setSamePhenotypeRowsSelected(record.data.urlId, rowIndex, true);
 				},
 				scope: this
 		    }
@@ -97,18 +165,22 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 			select: function(comboBox, record, index) {
 				applyPhenotypeSearch();
 			},
+			blur: function(comboBox) {
+				applyPhenotypeSearch();
+			},
 			scope: this
 		});
-
+		
 		var applyPhenotypeSearch = function() {
-				if (currentSearchedCellRowIndex >= 0) {
-					this.getView().onCellDeselect(currentSearchedCellRowIndex, PHENOTYPE_COLUMN_INDEX);
-				}
-				currentSearchedCellRowIndex = this.getStore().findExact('urlId', phenotypeSearchComboBox.getValue(), 0);
-				if (currentSearchedCellRowIndex >= 0) {
-					this.getView().onCellSelect(currentSearchedCellRowIndex, PHENOTYPE_COLUMN_INDEX);
-					this.getView().ensureVisible(currentSearchedCellRowIndex, PHENOTYPE_COLUMN_INDEX, false); // false for hscroll
-				}
+			for (var i = 0; i < currentSearchedCellRowIndices.length; i++) {
+				this.getView().onCellDeselect(currentSearchedCellRowIndices[i], PHENOTYPE_COLUMN_INDEX);
+			}
+			
+			currentSearchedCellRowIndices = findSamePhenotypeIndices(phenotypeSearchComboBox.getValue());
+			for (var i = 0; i < currentSearchedCellRowIndices.length; i++) {
+				this.getView().onCellSelect(currentSearchedCellRowIndices[i], PHENOTYPE_COLUMN_INDEX);
+				this.getView().ensureVisible(currentSearchedCellRowIndices[i], PHENOTYPE_COLUMN_INDEX, false); // false for hscroll
+			}						
 		}.createDelegate(this);
 
 		var commonConfig = new Gemma.PhenotypeGridPanelCommonConfig();
@@ -116,9 +188,14 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.ux.maximgb.tg.AdjacencyListStore({
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
-baseParams: commonConfig.getBaseParams(), 
-				reader: commonConfig.getStoreReader(),					
-				autoLoad: this.storeAutoLoad}),
+				baseParams: commonConfig.getBaseParams(),
+				reader: new Ext.data.JsonReader({
+				 	// Use _id instead of urlId so that we can have duplicate phenotype values in the tree.
+					idProperty: '_id',
+					fields: commonConfig.getStoreReaderFields()
+				}),
+				autoLoad: this.storeAutoLoad
+			}),
 			columns:[
 				checkboxSelectionModel,
 				commonConfig.getPhenotypeValueColumn({ id: 'value' }), // for using maximgb's GridPanel
@@ -184,13 +261,13 @@ baseParams: commonConfig.getBaseParams(),
 				phenotypeSearchComboBox.getStore().loadData(phenotypeSearchComboBoxData);
 				
 				if (phenotypeSearchComboBox.getValue() !== '') {
-					currentSearchedCellRowIndex = -1;
+					currentSearchedCellRowIndices = [];
 					
 					applyPhenotypeSearch();
 					
-					// If previously selected cell cannot be found, we assume that
-					// the previously phenotype is private. So, clear the search field.
-					if (currentSearchedCellRowIndex < 0) {
+					// If previously selected cells cannot be found, we assume that
+					// previously selected phenotypes are private. So, clear the search field.
+					if (currentSearchedCellRowIndices.length <= 0) {
 						phenotypeSearchComboBox.setValue('');
 					}
 				}
