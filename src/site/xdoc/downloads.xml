@@ -7,18 +7,18 @@
 		<section name="Gemma current version">
 			<p>
 				For details see the
-				<a href="http://chibi.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.5.txt">release notes</a>
+				<a href="http://chibi.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.7.txt">release notes</a>
 				.
 			</p>
 			<subsection name="Binaries">
 				<ul>
 					<li>
-						<a href="http://chibi.ubc.ca/Gemma/resources/dist/Gemma-1.5.war">Gemma-1.5.war</a>
+						<a href="http://chibi.ubc.ca/Gemma/resources/dist/Gemma-1.7.war">Gemma-1.7.war</a>
 						- The Gemma web application.
 					</li>
 					<li>
-						<a href="http://chibi.ubc.ca/Gemma/resources/dist/gemmaCli-1.5.jar">
-							gemmaCli-1.5.jar
+						<a href="http://chibi.ubc.ca/Gemma/resources/dist/gemmaCli-1.7.jar">
+							gemmaCli-1.7.jar
 						</a>
 						- The Gemma command line tool package.
 					</li>														
@@ -32,13 +32,13 @@
 			<subsection name="Source Code">
 				<ul>
 					<li>
-						<a href="http://chibi.ubc.ca/Gemma/resources/dist/gemma-1.5-src.zip">
+						<a href="http://chibi.ubc.ca/Gemma/resources/dist/gemma-1.7-src.zip">
 							gemma-1.5-src.zip
 						</a>
 					</li>
 					<li>
-						<a href="http://chibi.ubc.ca/Gemma/resources/dist/basecode-1.0.9-src.zip">
-							baseCode-1.0.9-src.zip
+						<a href="http://chibi.ubc.ca/Gemma/resources/dist/basecode-1.0.11-src.zip">
+							baseCode-1.0.11-src.zip
 						</a>
 						- BaseCode is a set of code used by multiple projects in our lab. More details about basecode
 						are
@@ -47,12 +47,7 @@
 					</li>
 				</ul>
 			</subsection>
-			<subsection name="Data">
-				<p>
-					Data downloads are currently available through the various pages within the Gemma webapp. Bulk
-					views of data from Gemma are available on request.
-				</p>
-			</subsection>
+		
 			<subsection name="Older versions">
 				<p>
 					Older versions will be available in the

@@ -21,7 +21,6 @@
 			<item name="baseCode" href="http://chibi.ubc.ca/faculty/pavlidis/basecode/" />
 			<item name="Documentation" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma" />
 			<item name="FAQ" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/FAQ" />
-			<item name="Credits" href="thanks.html" />
 		</menu>
 		<menu ref="modules" collapse="false" />
 		<menu ref="reports" collapse="false" />
