@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
@@ -449,8 +450,9 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 .createSQLQuery( fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery );
         queryObject.setParameterList( "ad_ids", adUsed );
 
-        int RS_BATCH_SIZE = 100;
-        int GENE_BATCH_SIZE = 20;
+        // temporary like this.
+        int RS_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.resultset.batchsize", 1 ); // best use of index?
+        int GENE_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.gene.batchsize", 100 );
         // queryObject.setFetchSize( RS_BATCH_SIZE * GENE_BATCH_SIZE );
         queryObject.setReadOnly( true );
         // queryObject.setCacheable( true );
@@ -491,7 +493,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
                     processDiffExResultHit( results.get( resultSetId ), resultSetId, geneId, probeAnalysisId,
                             goodPvalue.get( resultSetId ), pValueBin );
-                }
+                } // over genes.
 
                 if ( timer.getTime() > 1000 ) {
                     log.info( "Fetching DiffEx for batch took " + timer.getTime() + " ms : geneIds="
@@ -504,6 +506,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
             }
 
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetching DiffEx for batch took " + timer.getTime() + " ms : geneIds="
+                    + StringUtils.abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
+                    + StringUtils.abbreviate( StringUtils.join( resultSetIds, "," ), 50 ) + " adused="
+                    + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) );
         }
 
         return results;
