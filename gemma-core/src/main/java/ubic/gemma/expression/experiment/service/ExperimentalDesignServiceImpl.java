@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.experiment;
+package ubic.gemma.expression.experiment.service;
 
 import java.util.Collection;
 
@@ -25,18 +25,19 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService
+ * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService
  */
 @Service
-public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase {
+public class ExperimentalDesignServiceImpl extends ubic.gemma.expression.experiment.service.ExperimentalDesignServiceBase {
 
     @Autowired
     private ExperimentalDesignVisualizationService experimentalDesignVisualizationService = null;
@@ -94,7 +95,7 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
+     * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#getExperimentalDesigns()
      */
     @Override
     protected java.util.Collection<ExperimentalDesign> handleLoadAll() {

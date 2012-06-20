@@ -5,9 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 
 /**
  * Handles delegation of report generation (to the space, or run locally)
