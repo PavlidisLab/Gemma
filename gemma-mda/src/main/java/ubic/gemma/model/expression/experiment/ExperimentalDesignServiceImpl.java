@@ -20,7 +20,14 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
+import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * @author pavlidis
@@ -31,6 +38,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase {
 
+    @Autowired
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService = null;
+    
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService = null;
+    
+    @Autowired
+    private ProcessedDataVectorCache processedDataVectorCache = null;
+
+
+    private Log log = LogFactory.getLog( ExperimentalDesignServiceImpl.class.getName() );
+    
     /*
      * (non-Javadoc)
      * 
@@ -85,6 +104,58 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
     @Override
     protected void handleUpdate( ExperimentalDesign experimentalDesign ) {
         this.getExperimentalDesignDao().update( experimentalDesign );
+    }
+    
+    
+    /**
+     * Clear entries in caches relevant to experimental design for the experiment passed in. 
+     * The caches cleared are the processedDataVectorCache and the caches held in 
+     * ExperimentalDesignVisualizationService
+     * @param eeId
+     * @return msg if error occurred or empty string if successful
+     */
+    @Override
+    public String clearDesignCaches( Long eeId ){
+
+        if( eeId == null ) return "parameter was null";
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if( ee == null ) return "you do not have permission to view this experiment.";
+        
+        log.info( "Clearing design caches for experiment: "+ee.toString() );
+        
+        processedDataVectorCache.clearCache( eeId );
+        experimentalDesignVisualizationService.clearCaches( ee );
+        return "";
+    }
+    
+    /**
+     * Clear entries in caches relevant to experimental design for the experiment passed in. 
+     * The caches cleared are the processedDataVectorCache and the caches held in 
+     * ExperimentalDesignVisualizationService
+     * @param ee
+     */
+    @Override
+    public void clearDesignCaches( ExpressionExperiment ee ){
+        
+        if( ee == null ) return;
+        log.info( "Clearing design caches for experiment: "+ee.toString() );
+        
+        processedDataVectorCache.clearCache( ee.getId() );
+        experimentalDesignVisualizationService.clearCaches( ee );
+    }
+    
+    /**
+     * Clear all entries in caches relevant to experimental design. 
+     * The caches cleared are the processedDataVectorCache and the caches held in 
+     * ExperimentalDesignVisualizationService
+     */
+    @Override
+    public void clearDesignCaches( ){
+        
+        log.info( "Clearing all design caches." );
+        
+        processedDataVectorCache.clearCache();
+        experimentalDesignVisualizationService.clearCaches();
     }
 
 }

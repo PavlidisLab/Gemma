@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 
 /**
  * Handles delegation of report generation (to the space, or run locally)
@@ -22,6 +23,8 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
+    private ExperimentalDesignService experimentalDesignService;
 
     /*
      * (non-Javadoc)
@@ -36,8 +39,10 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
 
         if ( command.doAll() ) {
             expressionExperimentReportService.generateSummaryObjects();
+            experimentalDesignService.clearDesignCaches();
         } else if ( command.getExpressionExperiment() != null ) {
             expressionExperimentReportService.generateSummary( command.getExpressionExperiment().getId() );
+            experimentalDesignService.clearDesignCaches( command.getExpressionExperiment() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

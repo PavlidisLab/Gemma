@@ -75,7 +75,12 @@ public interface ExperimentalDesignService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExperimentalDesign experimentalDesign );
-    
+
+    public String clearDesignCaches( Long eeId );
+
+    public void clearDesignCaches( ExpressionExperiment ee );
+
+    public void clearDesignCaches();
     
 
 }
