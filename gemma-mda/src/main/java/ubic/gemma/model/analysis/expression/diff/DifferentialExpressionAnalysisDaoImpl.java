@@ -42,6 +42,7 @@ import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -208,13 +209,17 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             count = 0;
             for ( DifferentialExpressionAnalysis a : r2 ) {
                 BioAssaySet experimentAnalyzed = a.getExperimentAnalyzed();
-                if ( !result.containsKey( experimentAnalyzed ) ) {
-                    result.put( experimentAnalyzed, new HashSet<DifferentialExpressionAnalysis>() );
-                }
 
                 assert experimentAnalyzed instanceof ExpressionExperimentSubSet;
 
-                result.get( ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment() ).add( a );
+                ExpressionExperiment sourceExperiment = ( ( ExpressionExperimentSubSet ) experimentAnalyzed )
+                        .getSourceExperiment();
+
+                if ( !result.containsKey( sourceExperiment ) ) {
+                    result.put( sourceExperiment, new HashSet<DifferentialExpressionAnalysis>() );
+                }
+
+                result.get( sourceExperiment ).add( a );
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
