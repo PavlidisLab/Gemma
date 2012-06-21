@@ -582,7 +582,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 					}
 				});
 				tipDefinitions.push({
-					element: this.visualizationPanel.fixedWidthCol.pnlMiniControl.showFoldChangeToggle,
+					element: this.visualizationPanel.fixedWidthCol.pnlControlAndLabels.pnlMiniControl.showFoldChangeToggle,
 					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeTitle,
 					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeText,
 					tipConfig: {

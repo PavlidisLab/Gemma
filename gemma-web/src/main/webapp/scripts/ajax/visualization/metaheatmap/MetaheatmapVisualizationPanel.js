@@ -48,112 +48,129 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				},
 				items: [{
 					xtype : 'panel',
-					ref : 'pnlMiniControl',
+					ref: 'pnlControlAndLabels',
+					layout: 'border',
 					autoScroll : true,
 					// html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
 					//   '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
 					border : false,
-					defaults: {
-						border: false,
-						style:'margin-left:10px;margin-top:5px;'
-					},
-					items: [{
-						xtype: 'label',
-						text: 'Column zoom'
-					}, {
-						xtype: 'slider',
-						ref: 'sldHorizontalZoom',
-						width: 80,
-						height: 20,
-						value: Gemma.Metaheatmap.defaultConditionZoom,
-						increment: 1,
-						minValue: 2,
-						maxValue: 15,
-						listeners: {
-							changecomplete: function(slider, newValue, thumb){
-								this.redraw();
-							//this.fireEvent("horizontal_zoom_change", newValue);
-							},
-							scope: this
-						}
-					}, {
-						xtype: 'label',
-						text: 'Row zoom'
-					}, {
-						xtype: 'slider',
-						ref: 'sldVerticalZoom',
-						//vertical : true,
-						width: 80,
-						height: 20,
-						value: Gemma.Metaheatmap.defaultGeneZoom,
-						increment: 1,
-						minValue: 2,
-						maxValue: 15,
-						listeners: {
-							changecomplete: function(slider, newValue, thumb){
-								this.redraw();
-							//this.fireEvent("vertical_zoom_change", newValue);
-							},
-							scope: this
-						}
-					}, {
-						xtype: 'button',
-						text: 'Dock popup',
-						disabled : false,
-						hidden : false,
-						enableToggle: true,
-						width: 95,
-						toggleHandler: function(btn, toggle){
-							if (toggle) {
-								this.hoverWindow.isDocked = true;
-								this.hoverWindow.setTitle('Docked popup: click & drag to move');
-								//this.hoverWindow.setPagePosition ( 800, 100);
-								btn.setText("Undock popup");
-							} else {
-								this.hoverWindow.isDocked = false;
-								this.hoverWindow.setTitle('');
-								
-								btn.setText("Dock popup");
-							}
-						},
-						scope: this
-					}, {
-						xtype: 'button',
-						ref: 'showFoldChangeToggle',
-						text: 'Hide p-value',
-						width: 95,
-						handler: function(btn, e){
-							this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
+					items: [
+					        {
+								ref : 'pnlMiniControl',
+					        	xtype : 'panel',
+					        	region:'center',
+								defaults: {
+									style:'margin-left:10px;margin-top:5px;'
+								},
+								border: false,
+								width: 85,
+					        	height: 100,
+					        	items: [
+					        	        {
+					        	        	xtype: 'label',
+					        	        	text: 'Column zoom',
+					        	        }, {
+					        	        	xtype: 'slider',
+					        	        	ref: 'sldHorizontalZoom',
+					        	        	width: 80,
+					        	        	height: 20,
+					        	        	value: Gemma.Metaheatmap.defaultConditionZoom,
+					        	        	increment: 1,
+					        	        	minValue: 2,
+					        	        	maxValue: 15,
+					        	        	listeners: {
+					        	        	changecomplete: function(slider, newValue, thumb){
+					        	        		this.redraw();
+					        	           },
+					        	           scope: this
+					        	        }
+					        	        }, {
+					        	        	xtype: 'label',
+					        	        	text: 'Row zoom',
+					        	        }, {
+					        	        	xtype: 'slider',
+					        	        	ref: 'sldVerticalZoom',
+					        	        	width: 80,
+					        	        	height: 20,
+					        	        	value: Gemma.Metaheatmap.defaultGeneZoom,
+					        	        	increment: 1,
+					        	        	minValue: 2,
+					        	        	maxValue: 15,
+					        	        	listeners: {
+					        	        		changecomplete: function(slider, newValue, thumb){
+					        	        	this.redraw();
+					        	        },
+					        	        scope: this
+					        	        }
+					        	        }, {
+					        	        	xtype: 'button',
+					        	        	text: 'Dock popup',
+					        	        	disabled : false,
+					        	        	hidden : false,
+					        	        	enableToggle: true,
+					        	        	width: 95,	
+					        	        	toggleHandler: function(btn, toggle){
+					        	        	if (toggle) {
+					        	        		this.hoverWindow.isDocked = true;
+					        	        		this.hoverWindow.setTitle('Docked popup: click & drag to move');
+					        	        		//	this.hoverWindow.setPagePosition ( 800, 100);
+					        	        		btn.setText("Undock popup");
+					        	        	} else {
+					        	        		this.hoverWindow.isDocked = false;
+					        	        		this.hoverWindow.setTitle('');								
+					        	        		btn.setText("Dock popup");
+					        	        	}
+					        	        },
+					        	        scope: this
+					        	        }, {
+					        	        	xtype: 'button',
+					        	        	ref: 'showFoldChangeToggle',
+					        	        	text: 'Hide p-value',
+					        	        	width: 95,
+					        	        	y: 100,
+					        	        	handler: function(btn, e){
+					        	        	this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
 							
-							if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
-								btn.setText("Hide p-value");
-//								if (this.isLegendShown) {
-//									this.variableWidthCol.colorLegendFoldChange.hide();
-//									this.variableWidthCol.colorLegendPvalue.show();
-//								}
-							} else {
-								btn.setText("Show p-value");
-//								if (this.isLegendShown) {
-//									this.variableWidthCol.colorLegendFoldChange.show();
-//									this.variableWidthCol.colorLegendPvalue.hide();
-//								}
-							}
-							this.variableWidthCol.boxHeatmap.draw();
-						},
-						scope: this
-					}, {
-						xtype: 'button',
-						text: 'Flip axes',
-						disabled : true,
-						hidden : true,
-						width: 80,
-						handler: function(btn, e){
-							this.flipLabels();
-							this.redraw();
-						},
-						scope: this
+					        	        	if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
+					        	        		btn.setText("Hide p-value");
+					        	        	} else {
+					        	        		btn.setText("Show p-value");
+					        	        	}
+					        	        	this.variableWidthCol.boxHeatmap.draw();
+					        	        },
+					        	        scope: this
+					        	        }, {
+					        	        	xtype: 'button',
+					        	        	text: 'Flip axes',
+					        	        	disabled : true,
+					        	        	hidden : true,
+					        	        	width: 80,
+					        	        	handler: function(btn, e){
+					        	        		this.flipLabels();
+					        	        		this.redraw();
+					        	        },
+					        	        scope: this
+					        	        }]
+					},
+										        	        
+					{
+						autoEl : 'canvas',
+						ref: 'metaValuesSideLabels',
+						xtype  : 'box',
+			        	region:'east',
+						border: false,
+						width : 15
+					},				
+					{
+						autoEl : 'canvas',
+						xtype  : 'box',
+						region:'south',
+						ref: 'metaValuesTopLabels',
+						border: false,
+						height: 15
 					}]
-				}, {
+				},				
+				{
 					xtype: 'Metaheatmap.LabelBox',
 					ref: 'boxSideLabels',
 					border: false,
@@ -270,10 +287,40 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	 * update size of top left control panel so that side labels line up with data rows 
 	 */
 	updatePnlMiniControlSize: function(){
-		// update size of top left control panel so that gene labels line up with data rows 
+		// Update size of top left control panel so that gene labels line up with data rows. 
 		var topPadding = 0; // TODO get actual top padding from somewhere
-		// need "Math.max(140, ...)" so that panel doesn't disappear when all columns are filtered out
-		this.fixedWidthCol.pnlMiniControl.setHeight(Math.max(140, this.variableWidthCol.boxTopLabels.getHeight()) + topPadding);
+		// Need "Math.max(140, ...)" so that panel doesn't disappear when all columns are filtered out
+		this.fixedWidthCol.pnlControlAndLabels.setHeight(Math.max(140, this.variableWidthCol.boxTopLabels.getHeight()) + topPadding);
+				
+		// Redraw meta p-value and enrichment labels.
+		var metaPvalueLabel = this.fixedWidthCol.pnlControlAndLabels.metaValuesSideLabels;
+		var enrichmentLabel = this.fixedWidthCol.pnlControlAndLabels.metaValuesTopLabels;
+		
+		
+		metaPvalueLabel.ctx = Gemma.Metaheatmap.Utils.getCanvasContext (metaPvalueLabel.el.dom);
+		CanvasTextFunctions.enable (metaPvalueLabel.ctx);
+
+		enrichmentLabel.ctx = Gemma.Metaheatmap.Utils.getCanvasContext (enrichmentLabel.el.dom);
+		CanvasTextFunctions.enable (enrichmentLabel.ctx);
+		
+		metaPvalueLabel.ctx.canvas.width  = metaPvalueLabel.getWidth();
+		metaPvalueLabel.ctx.canvas.height = metaPvalueLabel.getHeight();			
+		metaPvalueLabel.ctx.clearRect (0, 0, metaPvalueLabel.ctx.canvas.width, metaPvalueLabel.ctx.canvas.height);
+		
+		enrichmentLabel.ctx.canvas.width  = enrichmentLabel.getWidth();
+		enrichmentLabel.ctx.canvas.height = enrichmentLabel.getHeight();			
+		enrichmentLabel.ctx.clearRect (0, 0, enrichmentLabel.ctx.canvas.width, enrichmentLabel.ctx.canvas.height);
+		
+		var x = enrichmentLabel.getWidth() - 93;
+		var y = 10;
+		enrichmentLabel.ctx.strokeStyle = 'black';
+		enrichmentLabel.ctx.drawText ('', 12, x, y, "enrichment"); 
+
+		x = 10;
+		y = metaPvalueLabel.getHeight() - 3;
+		metaPvalueLabel.ctx.strokeStyle = 'black';
+		metaPvalueLabel.ctx.drawRotatedText (x, y, 270, 12, 'black', "meta p-value"); 
+
 	},
 	
 	redraw : function (wasHeatmapChanged) {
@@ -282,18 +329,18 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		}
 		
   	    if (this.variableWidthCol.boxHeatmap.isGeneOnTop) {
-      	    this.conditionTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldVerticalZoom.getValue());
-      	    this.geneTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldHorizontalZoom.getValue());
+      	    this.conditionTree.applyZoom (this.fixedWidthCol.pnlControlAndLabels.pnlMiniControl.sldVerticalZoom.getValue());
+      	    this.geneTree.applyZoom (this.fixedWidthCol.pnlControlAndLabels.pnlMiniControl.sldHorizontalZoom.getValue());
   	    } else {
-  	    	this.conditionTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldHorizontalZoom.getValue());
-  	    	this.geneTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldVerticalZoom.getValue());
+  	    	this.conditionTree.applyZoom (this.fixedWidthCol.pnlControlAndLabels.pnlMiniControl.sldHorizontalZoom.getValue());
+  	    	this.geneTree.applyZoom (this.fixedWidthCol.pnlControlAndLabels.pnlMiniControl.sldVerticalZoom.getValue());
   	    }
   	    
 		this.fixedWidthCol.boxSideLabels.resizeAndPosition();
 		this.variableWidthCol.boxTopLabels.resizeAndPosition();
 		this.variableWidthCol.boxHeatmap.resizeAndPosition();
 		
-		// update size of top left control panel so that gene labels line up with data rows 
+		// Update size of top left control panel so that gene labels line up with data rows 
 		this.updatePnlMiniControlSize();
 		
 		this.doLayout();
@@ -533,7 +580,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					numberOfProbesDiffExpressed : item.numberOfProbesDiffExpressed,
 					
 					pvalue : (item.isProbeMissing)?'No data':item.pValue,
-					foldChange : (item.isProbeMissing)?'No data': Math.round(item.foldChange*100)/100
+					foldChange : (item.isProbeMissing || item.foldChange==0) ? 'No data': Math.ceil(item.foldChange*100)/100
 			};
 		}
 		return msg;
@@ -573,8 +620,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	
 	onRender: function() {
 		Gemma.Metaheatmap.VisualizationPanel.superclass.onRender.apply ( this, arguments );
-
-		//this.hoverWindow = new Gemma.Metaheatmap.HoverWindow();
 		
 		this.addEvents ('gene_zoom_change', 'condition_zoom_change');
 		
