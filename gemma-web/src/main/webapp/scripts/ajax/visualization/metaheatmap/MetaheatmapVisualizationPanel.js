@@ -447,7 +447,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	// Some gene/condition scores depend on what is currently visible: % of
 	// missing values, inverse of p values sum
 	// Other scores are not affected by it: specificity
-	// TODO: this needs to be rethought! i didn't think it through well enough
 	updateVisibleScores : function () {
 		var i, j;
 		// Calculate visible scores for conditons
@@ -486,6 +485,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		for (j = 0; j < this.geneTree.items.length; j++) {
 			gene = this.geneTree.items[j];			
 			var pValues = [];
+			var alreadySeenFactor = [];
 			numProbesMissing = 0;
 			for (i = 0; i < this.conditionTree.items.length; i++) {
 				condition = this.conditionTree.items[i];
@@ -494,14 +494,15 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					if (cell.isProbeMissing)  {
 						numProbesMissing++;
 					} else {
-						pValues.push(cell.pValue);
-						//sumPvalue += 1 - cell.pValue;						
+						// We get p-value per condition(factor value vs baseline)  We have to keep only one p-value per factor.
+						if (typeof alreadySeenFactor[condition.factorId] === "undefined") {
+							pValues.push( cell.pValue );
+							alreadySeenFactor[condition.factorId] = true;
+						}
 					}
 				}				
 			}
-			//gene.inverseSumPvalue = sumPvalue / (this.conditionTree.items.length - numProbesMissing);
-			gene.inverseSumPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
-			gene.metaPvalue = gene.inverseSumPvalue;
+			gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
 			gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;
 			
 			gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue (gene.metaPvalue);
