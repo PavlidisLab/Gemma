@@ -146,10 +146,12 @@
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/UserProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
+
 				<value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml</value>

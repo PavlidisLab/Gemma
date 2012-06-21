@@ -43,6 +43,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateAccessor;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -1506,15 +1507,19 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     protected Taxon handleGetTaxon( BioAssaySet ee ) {
 
+        HibernateTemplate tp = new HibernateTemplate( this.getSessionFactory() );
+        tp.setMaxResults( 1 );
+        tp.setFlushMode( HibernateAccessor.FLUSH_NEVER );
+
         if ( ee instanceof ExpressionExperiment ) {
             String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
-                    + "inner join EE.bioAssays as BA  inner join BA.samplesUsed as SU where EE  = :ee";
-            List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+                    + "inner join EE.bioAssays as BA inner join BA.samplesUsed as SU where EE = :ee";
+            List<?> list = tp.findByNamedParam( queryString, "ee", ee );
             if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
             String queryString = "select su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
-                    + " inner join ee.bioAssays as BA  inner join BA.samplesUsed as su where eess = :ee";
-            List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+                    + " inner join ee.bioAssays as BA inner join BA.samplesUsed as su where eess = :ee";
+            List<?> list = tp.findByNamedParam( queryString, "ee", ee );
             if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
         } else {
             throw new UnsupportedOperationException( "Can't get taxon of BioAssaySet of class "
@@ -1599,7 +1604,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " s.lastUpdateDate, " // 15
                 + " AD.status, " // 16
                 + " s.troubled, " // 17
-                + " s.validated " // 18
+                + " s.validated, " // 18
+                + " count(distinct SU) " // 19
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1651,6 +1657,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
             v.setTroubled( ( ( Boolean ) res[17] ) );
+
             if ( ( ( Boolean ) res[17] ) ) {
                 if ( ( ( Boolean ) res[18] ) ) {
                     v.setTroubleDetails( "Error: May not actually be troubled, as it is also 'validated'" );
@@ -1668,6 +1675,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setClazz( ( String ) res[13] );
             v.setExperimentalDesign( ( Long ) res[14] );
             v.setDateLastUpdated( ( ( Date ) res[15] ) );
+            v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
             // System.out.println(res[16]);
             vo.put( eeId, v );
         }

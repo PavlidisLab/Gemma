@@ -1,4 +1,5 @@
--- Add some indices that are not included in the generated gemma-ddl.sql.
+-- Add some indices that are not included in the generated gemma-ddl.sql. Some of these are very important to performance
+-- $Id$
 alter table BIO_SEQUENCE add index name (NAME);
 alter table ALTERNATE_NAME add index name (NAME);
 alter table INVESTIGATION add index name (NAME);
@@ -22,12 +23,14 @@ alter table CHARACTERISTIC ADD INDEX category (CATEGORY);
 alter table CHARACTERISTIC ADD INDEX valueUri (VALUE_URI);
 alter table CHARACTERISTIC ADD INDEX categoryUri (CATEGORY_URI);
 alter table GENE_SET ADD INDEX name (NAME);
-alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT ADD INDEX corrpvalbin (CORRECTED_P_VALUE_BIN);
--- alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT ADD INDEX resultSetProbes (EXPRESSION_ANALYSIS_RESULT_SET_FK,PROBE_FK);
-alter table HIT_LIST_SIZE ADD INDEX direction (DIRECTION);
+alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT ADD INDEX resultSetProbes (EXPRESSION_ANALYSIS_RESULT_SET_FK,PROBE_FK);
 alter table TAXON ADD INDEX taxonncbiid (NCBI_ID);
 alter table TAXON ADD INDEX taxonsecondncbiid (SECONDARY_NCBI_ID);
 alter table TAXON ADD INDEX taxoncommonname (COMMON_NAME);
 alter table TAXON ADD INDEX taxonscientificname (SCIENTIFIC_NAME);
 alter table LOCAL_FILE ADD INDEX REMOTE_URL (REMOTE_U_R_L);
 alter table CONTACT add INDEX fullname (NAME, LAST_NAME);
+
+-- candidates for removal
+alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT ADD INDEX corrpvalbin (CORRECTED_P_VALUE_BIN);
+alter table HIT_LIST_SIZE ADD INDEX direction (DIRECTION);

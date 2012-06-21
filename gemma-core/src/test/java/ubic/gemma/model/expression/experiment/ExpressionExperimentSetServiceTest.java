@@ -19,8 +19,9 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -100,8 +101,9 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         eeSet.setTaxon( tax1 );
 
         eeSet = expressionExperimentSetService.create( eeSet );
-        
-        eeSetAutoGen = expressionExperimentSetService.initAutomaticallyGeneratedExperimentSet( ees, tax1, "autoGenTest" );
+
+        eeSetAutoGen = expressionExperimentSetService
+                .initAutomaticallyGeneratedExperimentSet( ees, tax1, "autoGenTest" );
         eeSetAutoGen = expressionExperimentSetService.create( eeSetAutoGen );
 
     }
@@ -165,23 +167,23 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         expressionExperimentSetService.updateDatabaseEntityMembers( eeSet.getId(), newMemberIds );
     }
 
-    @Test
-    public void testUpdateDatabaseEntity() {
-
-        // try to add an experiment of wrong taxon, should fail
-    }
-
-    @Test
-    public void testUpdateDatabaseEntityMembers() {
-
-        // try to add an experiment of wrong taxon, should fail
-    }
-    
+    //
+    // @Test
+    // public void testUpdateDatabaseEntity() {
+    //
+    // // try to add an experiment of wrong taxon, should fail
+    // }
+    //
+    // @Test
+    // public void testUpdateDatabaseEntityMembers() {
+    //
+    // // try to add an experiment of wrong taxon, should fail
+    // }
 
     @Test
     public void testIsAutomaticallyGenerated() {
-        assertTrue(expressionExperimentSetService.isAutomaticallyGenerated( eeSetAutoGen.getDescription() ));
-        assertFalse(expressionExperimentSetService.isAutomaticallyGenerated( eeSet.getDescription() ));
-        
+        assertTrue( expressionExperimentSetService.isAutomaticallyGenerated( eeSetAutoGen.getDescription() ) );
+        assertFalse( expressionExperimentSetService.isAutomaticallyGenerated( eeSet.getDescription() ) );
+
     }
 }

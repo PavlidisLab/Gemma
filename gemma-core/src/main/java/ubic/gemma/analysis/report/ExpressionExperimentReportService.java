@@ -24,8 +24,6 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -36,6 +34,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * @version $Id$
  */
 public interface ExpressionExperimentReportService {
+
+    /**
+     * Invalidate the cached 'report' for the experiment with the given id. If it is not cached nothing happens.
+     * 
+     * @param id
+     */
+    public void evictFromCache( Long id );
 
     /**
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
@@ -60,21 +65,6 @@ public interface ExpressionExperimentReportService {
     public abstract Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
 
     /**
-     * retrieves a collection of cached value objects containing summary information
-     * 
-     * @return a collection of cached value objects
-     */
-    public abstract Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
-
-    /**
-     * @param vos
-     * @return
-     */
-    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
-
-    public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees );
-
-    /**
      * @param vos
      */
     public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
@@ -83,6 +73,19 @@ public interface ExpressionExperimentReportService {
      * @param vos
      * @return
      */
+    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
+
+    /**
+     * @param vos
+     * @return
+     */
     public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
+
+    /**
+     * retrieves a collection of cached value objects containing summary information
+     * 
+     * @return a collection of cached value objects
+     */
+    public abstract Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
 }

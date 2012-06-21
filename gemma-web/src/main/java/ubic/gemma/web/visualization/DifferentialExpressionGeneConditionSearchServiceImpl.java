@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.visualization;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,18 +45,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
+import ubic.gemma.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -98,7 +98,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
      */
     private class DifferentialExpressionSearchTask implements
             Callable<DifferentialExpressionGenesConditionsValueObject> {
-        private static final double THRESHOLD_QVALUE_FOR_HITLISTS = 0.01;
         private List<List<Gene>> geneGroups;
         private List<Collection<ExpressionExperiment>> experimentGroups;
         private List<String> geneGroupNames;
@@ -144,7 +143,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( searchResult );
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
-
+            log.info( "--------------------------------" );
+            log.info( searchResult );
+            log.info( "..................................." );
             return searchResult;
         }
 
@@ -159,10 +160,11 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
         /**
          * Get information on the conditions to be searched. This is not part of the query for the results themselves,
-         * but uses the database to get metadata/summaries about the analyses that will be used.
+         * but uses the database to get metadata/summaries about the analyses that will be used. Initializes the
+         * searchResult value object.
          * 
-         * @param searchResult
-         * @return
+         * @param searchResult to be initialized
+         * @return lsit of the resultSets that should be queried.
          */
         private List<ExpressionAnalysisResultSet> addConditionsToSearchResultValueObject(
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
@@ -172,6 +174,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> usedResultSets = new LinkedList<ExpressionAnalysisResultSet>();
 
             int experimentGroupIndex = 0;
+            int i = 0;
             for ( Collection<ExpressionExperiment> experimentGroup : experimentGroups ) {
 
                 String stage = "Loading " + experimentGroupNames.get( experimentGroupIndex ) + " experiments...";
@@ -192,12 +195,17 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                     ExpressionExperiment experiment = ( ExpressionExperiment ) bas;
 
-                    Collection<DifferentialExpressionAnalysis> analysesForExperiment = analyses.get( experiment );
+                    Collection<DifferentialExpressionAnalysis> analysesForExperiment = filterAnalyses( analyses
+                            .get( experiment ) );
 
                     for ( DifferentialExpressionAnalysis analysis : analysesForExperiment ) {
 
                         List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
                         usedResultSets.addAll( resultSets );
+
+                        if ( resultSets.isEmpty() ) {
+                            log.info( "No resultSets usable for " + experiment.getShortName() );
+                        }
 
                         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
@@ -211,39 +219,17 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                             for ( FactorValue factorValue : factorValues ) {
 
-                                Condition condition = searchResult.new Condition();
+                                Condition condition = searchResult.new Condition( experiment, analysis, resultSet,
+                                        factorValue );
 
-                                // FIXME is this a magic string?
-                                condition.id = "rs:" + resultSet.getId() + "fv:" + factorValue.getId();
-                                condition.experimentGroupName = experimentGroupNames.get( experimentGroupIndex );
-                                condition.experimentGroupIndex = experimentGroupIndex;
-                                condition.numberOfProbesOnArray = resultSet.getNumberOfProbesTested();
-                                condition.numberOfGenesTested = resultSet.getNumberOfGenesTested(); // FIXME USE THIS
+                                condition.setExperimentGroupName( experimentGroupNames.get( experimentGroupIndex ) );
+                                condition.setExperimentGroupIndex( experimentGroupIndex );
 
-                                condition.datasetShortName = experiment.getShortName();
-                                condition.datasetName = experiment.getName();
-                                condition.datasetId = experiment.getId();
-                                condition.analysisId = analysis.getId();
-                                condition.resultSetId = resultSet.getId();
-
-                                int up = -1, down = -1, total = -1;
-                                if ( log.isDebugEnabled() )
-                                    log.debug( "Got " + resultSet.getHitListSizes().size()
-                                            + " hit list sizes for result set=" + resultSet.getId() );
-
-                                for ( HitListSize h : resultSet.getHitListSizes() ) {
-                                    if ( h.getThresholdQvalue() == THRESHOLD_QVALUE_FOR_HITLISTS ) {
-                                        if ( h.getDirection().equals( Direction.DOWN ) ) {
-                                            down = h.getNumberOfProbes();
-                                        } else if ( h.getDirection().equals( Direction.UP ) ) {
-                                            up = h.getNumberOfProbes();
-                                        } else if ( h.getDirection().equals( Direction.EITHER ) ) {
-                                            total = h.getNumberOfProbes();
-                                        }
-                                    }
-                                }
-
-                                if ( total == -1 ) {
+                                /*
+                                 * SANITY CHECKS these fields should be filled in. If not, we are going to skip the
+                                 * results.
+                                 */
+                                if ( condition.getNumberDiffExpressedProbes() == -1 ) {
                                     // Sorry, this is too slow and the hitlists should be filled in.
                                     // total = differentialExpressionAnalysisService.countProbesMeetingThreshold(
                                     // resultSet, 0.5 );
@@ -251,36 +237,20 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                                             + resultSet.getId() );
                                     continue;
                                 }
-
-                                condition.numberDiffExpressedProbes = total;
-                                condition.numberDiffExpressedProbesUp = up;
-                                condition.numberDiffExpressedProbesDown = down;
-                                condition.baselineFactorValueId = resultSet.getBaselineGroup().getId();
-                                condition.baselineFactorValue = getFactorValueString( resultSet.getBaselineGroup() );
-                                condition.factorName = factor.getName();
-                                condition.contrastFactorValue = getFactorValueString( factorValue );
-                                condition.factorDescription = factor.getDescription();
-                                condition.factorId = factor.getId();
-                                /* FIXME can we use 'None' instead of 'null'? Is this a magic string? */
-                                condition.factorCategory = ( factor.getCategory() == null ) ? "null" : factor
-                                        .getCategory().getCategory();
-
-                                /*
-                                 * SANITY CHECKS these fields should be filled in. If not, we are going to skip the
-                                 * results.
-                                 */
-                                if ( condition.numberOfProbesOnArray == null
-                                        || condition.numberDiffExpressedProbes == null ) {
+                                if ( condition.getNumberOfProbesOnArray() == null
+                                        || condition.getNumberDiffExpressedProbes() == null ) {
                                     log.error( bas
                                             + ": Error: Null counts for # diff ex probe or # probes on array, Skipping" );
                                     continue experiment;
-                                } else if ( condition.numberOfProbesOnArray < condition.numberDiffExpressedProbes ) {
+                                } else if ( condition.getNumberOfProbesOnArray() < condition
+                                        .getNumberDiffExpressedProbes() ) {
                                     log.error( bas
                                             + ": Error: More diff expressed probes than probes on array. Skipping." );
                                     continue experiment;
                                 }
 
                                 searchResult.addCondition( condition );
+                                i++;
                             }
                         }
                     }
@@ -293,11 +263,55 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             }
 
             watch.stop();
-            if ( watch.getTotalTimeMillis() > 500 ) {
+            if ( watch.getTotalTimeMillis() > 100 ) {
                 // This does not include getting the actual diff ex results.
-                log.info( "Get information on conditions/analyses: " + watch.getTotalTimeMillis() );
+                log.info( "Get information on conditions/analyses for " + i + " items: " + watch.getTotalTimeMillis()
+                        + "ms" );
             }
+
             return usedResultSets;
+        }
+
+        /**
+         * If there are multiple analyses, pick the ones that "don't overlap" (see implementation for details, evolving)
+         * 
+         * @param collection
+         * @return a collection with either 0 or a small number of non-conflicting analyses.
+         */
+        private Collection<DifferentialExpressionAnalysis> filterAnalyses(
+                Collection<DifferentialExpressionAnalysis> analyses ) {
+            if ( analyses.size() == 1 ) return analyses;
+
+            Collection<DifferentialExpressionAnalysis> filtered = new HashSet<DifferentialExpressionAnalysis>();
+
+            for ( DifferentialExpressionAnalysis analysis : analyses ) {
+                FactorValue subsetFactorValue = analysis.getSubsetFactorValue();
+                if ( subsetFactorValue != null ) {
+                    log.info( "Subsetted analysis skipped: " + analysis );
+                    /*
+                     * For now let's skip these. We might actually want to favor them but that will require a bit more
+                     * work.
+                     */
+                    continue;
+                }
+
+                // thinking of some complicated way to decide...
+
+                /*
+                 * - avoid ones that include interaction? - avoid ones that use the same factor(s) as another
+                 */
+
+                // Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
+                // List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
+                // for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                // factorsUsed.addAll( rs.getExperimentalFactors() );
+                // }
+                filtered.add( analysis );
+
+            }
+
+            return filtered;
+
         }
 
         /**
@@ -327,8 +341,25 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             }
         }
 
-        private String constructConditionId( long resultSetId, long factorValueId ) {
-            return "rs:" + resultSetId + "fv:" + factorValueId;
+        /**
+         * Gets all the diff ex results, flattening out the relation with resultset and gene (the objs still have this
+         * information in them)
+         * 
+         * @param resultSetToGeneResults
+         * @return
+         */
+        private Collection<DiffExprGeneSearchResult> aggregateAcrossResultSets(
+                Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults ) {
+            int i = 0;
+            Collection<DiffExprGeneSearchResult> aggregatedResults = new HashSet<DiffExprGeneSearchResult>();
+            for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
+                Collection<DiffExprGeneSearchResult> values = resultSetEntry.getValue().values();
+                i += resultSetEntry.getValue().size();
+                aggregatedResults.addAll( values );
+            }
+
+            assert i == aggregatedResults.size();
+            return aggregatedResults;
         }
 
         /**
@@ -337,13 +368,13 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          * @param resultSets
          * @param geneIds
          * @param arrayDesignsUsed
-         * @param searchResult
+         * @param searchResult holds the results
          */
         private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
                 Collection<ArrayDesign> arrayDesignsUsed, DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
             StopWatch watch = new StopWatch( "Fill diff ex heatmap cells" );
-            watch.start( "DB query for hits" );
+            watch.start( "DB query for diff ex results" );
 
             // Main query for results.
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults = differentialExpressionResultService
@@ -353,63 +384,12 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             Map<Long, ExpressionAnalysisResultSet> resultSetMap = EntityUtils.getIdMap( resultSets );
 
-            watch.start( "Processing results from DB query" );
-            for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
+            Collection<DiffExprGeneSearchResult> aggregatedResults = aggregateAcrossResultSets( resultSetToGeneResults );
+            watch.start( "Processing " + aggregatedResults.size() + " results from DB query" );
 
-                Map<Long, DiffExprGeneSearchResult> geneToProbeResult = resultSetEntry.getValue();
+            Map<Long, DifferentialExpressionAnalysisResult> detailedResults = getDetailsForContrasts( aggregatedResults );
 
-                ExpressionAnalysisResultSet resultSet = resultSetMap.get( resultSetEntry.getKey() );
-                assert resultSet != null;
-
-                List<Long> probeAnalysisResultIds = new LinkedList<Long>();
-                for ( DiffExprGeneSearchResult r : geneToProbeResult.values() ) {
-                    probeAnalysisResultIds.add( r.getDifferentialExpressionAnalysisResultId() );
-                }
-
-                // FIXME don't fetch if not needed. But this is quite fast, per cycle
-                // log.info( "Get the results we need from one result set: " + probeAnalysisResultIds.size() +
-                // " to get." );
-                Map<Long, DifferentialExpressionAnalysisResult> probeAnalysisResults = EntityUtils
-                        .getIdMap( differentialExpressionResultService.load( probeAnalysisResultIds ) );
-                // log.info( "done" );
-
-                for ( Long geneId : geneIds ) {
-                    Long probeResultId = null;
-
-                    if ( geneToProbeResult.get( geneId ) != null ) {
-                        probeResultId = geneToProbeResult.get( geneId ).getDifferentialExpressionAnalysisResultId();
-                    }
-                    DifferentialExpressionAnalysisResult deaResult = probeAnalysisResults.get( probeResultId );
-                    if ( deaResult == null ) continue;
-
-                    Double pValue = deaResult.getCorrectedPvalue();
-                    if ( pValue == null ) {
-                        // FIXME is this a magic number? Possibly we should treat such missing values as missing, not
-                        // 1.0
-                        pValue = 1.0;
-                    }
-                    if ( pValue.doubleValue() == 0.0 ) {
-                        // FIXME is this a magic number?
-                        pValue = 0.000000001; // 1e-9
-                    }
-
-                    int numberOfProbes = geneToProbeResult.get( geneId ).getNumberOfProbes();
-
-                    int numberOfProbesDiffExpressed = geneToProbeResult.get( geneId ).getNumberOfProbesDiffExpressed();
-
-                    markCellsBlack( resultSet, geneId, searchResult, pValue, numberOfProbes,
-                            numberOfProbesDiffExpressed );
-
-                    for ( ContrastResult cr : deaResult.getContrasts() ) {
-                        FactorValue factorValue = cr.getFactorValue();
-                        assert factorValue != null : "Null factor value for contrast with id" + cr.getId();
-                        String conditionId = constructConditionId( resultSet.getId(), factorValue.getId() );
-                        searchResult.addCell( geneId, conditionId, pValue, cr.getLogFoldChange(), numberOfProbes,
-                                numberOfProbesDiffExpressed );
-                    }
-
-                }
-            }
+            processHits( searchResult, resultSetToGeneResults, resultSetMap, detailedResults );
             watch.stop();
             log.info( watch.prettyPrint() );
         }
@@ -417,9 +397,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         /**
          * Staging for getting the diff ex results.
          * 
-         * @param resultSets
-         * @param geneIds
-         * @param searchResult
+         * @param resultSets to be searched
+         * @param geneIds to be searched
+         * @param searchResult holds the results
          */
         private void fillHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
@@ -431,6 +411,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             timer.start();
             // DATABASE CALL HERE, but should be quite fast.
             for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                // TODO indexing this by resultset could be useful to further reduce query size, but not sure it is
+                // worth it
                 arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( rs.getAnalysis().getExperimentAnalyzed() ) );
             }
             timer.stop();
@@ -451,7 +433,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<FactorValue> filteredFactorValues = new LinkedList<FactorValue>();
 
             for ( FactorValue factorValue : factorValues ) {
-                if ( factorValue.getId() == baselineFactorValueId ) continue; // Skip baseline
+                if ( factorValue.getId().equals( baselineFactorValueId ) ) continue; // Skip baseline
 
                 filteredFactorValues.add( factorValue );
             }
@@ -508,25 +490,46 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             return ids;
         }
 
-        /*
-         * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first
-         * place.
+        /**
+         * Retrieve the details (contrasts) for results which meet the criterion. (PVALUE_CONTRAST_SELECT_THRESHOLD)
+         * 
+         * @param geneToProbeResult
+         * @return
          */
-        private String getFactorValueString( FactorValue fv ) {
-            if ( fv == null ) return "null"; // FIXME is this a magic string?
+        private Map<Long, DifferentialExpressionAnalysisResult> getDetailsForContrasts(
+                Collection<DiffExprGeneSearchResult> diffExResults ) {
 
-            if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-                String fvString = "";
-                for ( Characteristic c : fv.getCharacteristics() ) {
-                    fvString += c.getValue() + " ";
+            StopWatch timer = new StopWatch();
+            timer.start();
+            List<Long> resultsWithContrasts = new ArrayList<Long>();
+            for ( DiffExprGeneSearchResult r : diffExResults ) {
+                if ( r.getResultId() == null ) {
+                    // it is a dummy result. It means there is no result for this gene in this resultset.
+                    continue;
                 }
-                return fvString;
-            } else if ( fv.getMeasurement() != null ) {
-                return fv.getMeasurement().getValue();
-            } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-                return fv.getValue();
-            } else
-                return "absent "; // FIXME is this a magic string?
+
+                // Here I am trying to avoid fetching them when there is no hope. FIXME make sure this is reasonable.
+                if ( r.getCorrectedPvalue() == null
+                        || r.getCorrectedPvalue() > LinearModelAnalyzer.PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                    // Then it won't have contrasts; no need to fetch.
+                    continue;
+                }
+
+                resultsWithContrasts.add( r.getResultId() );
+            }
+
+            Map<Long, DifferentialExpressionAnalysisResult> detailedResults = new HashMap<Long, DifferentialExpressionAnalysisResult>();
+            if ( !resultsWithContrasts.isEmpty() ) {
+                detailedResults = EntityUtils
+                        .getIdMap( differentialExpressionResultService.load( resultsWithContrasts ) );
+            }
+
+            timer.stop();
+            if ( timer.getTotalTimeMillis() > 1 ) {
+                log.info( "Fetch contrasts for " + resultsWithContrasts.size() + " results: "
+                        + timer.getTotalTimeMillis() + "ms" );
+            }
+            return detailedResults;
         }
 
         /**
@@ -558,23 +561,95 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          * @param resultSet
          * @param geneId
          * @param searchResult
-         * @param pValue
+         * @param pValue should not be null.
          * @param numProbes
          * @param numProbesDiffExpressed
          */
         private void markCellsBlack( ExpressionAnalysisResultSet resultSet, Long geneId,
-                DifferentialExpressionGenesConditionsValueObject searchResult, double pValue, int numProbes,
+                DifferentialExpressionGenesConditionsValueObject searchResult, Double pValue, int numProbes,
                 int numProbesDiffExpressed ) {
 
             /*
              * Note that if the resultSet has more than one experimental factor, it is an interaction term.
              */
+            assert resultSet.getExperimentalFactors().size() == 1 : "Should not have been passed an interaction term";
 
             ExperimentalFactor experimentalFactor = resultSet.getExperimentalFactors().iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
             for ( FactorValue factorValue : factorValues ) {
-                String conditionId = constructConditionId( resultSet.getId(), factorValue.getId() );
+                String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
+                        resultSet.getId(), factorValue.getId() );
                 searchResult.addBlackCell( geneId, conditionId, pValue, numProbes, numProbesDiffExpressed );
+            }
+        }
+
+        /**
+         * @param searchResult
+         * @param resultSetToGeneResults
+         * @param resultSetMap
+         * @param detailedResults
+         */
+        private void processHits( DifferentialExpressionGenesConditionsValueObject searchResult,
+                Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults,
+                Map<Long, ExpressionAnalysisResultSet> resultSetMap,
+                Map<Long, DifferentialExpressionAnalysisResult> detailedResults ) {
+
+            for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
+
+                Map<Long, DiffExprGeneSearchResult> geneToProbeResult = resultSetEntry.getValue();
+
+                ExpressionAnalysisResultSet resultSet = resultSetMap.get( resultSetEntry.getKey() );
+                assert resultSet != null;
+
+                processHitsForResultSet( searchResult, detailedResults, geneToProbeResult, resultSet );
+            }
+
+        }
+
+        /**
+         * @param searchResult
+         * @param detailedResults
+         * @param geneToProbeResult
+         * @param resultSet
+         */
+        private void processHitsForResultSet( DifferentialExpressionGenesConditionsValueObject searchResult,
+                Map<Long, DifferentialExpressionAnalysisResult> detailedResults,
+                Map<Long, DiffExprGeneSearchResult> geneToProbeResult, ExpressionAnalysisResultSet resultSet ) {
+            for ( Long geneId : geneToProbeResult.keySet() ) {
+                DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
+
+                Double correctedPvalue = diffExprGeneSearchResult.getCorrectedPvalue();
+
+                // this means we got a 'dummy' value, indicating missing data.
+                if ( correctedPvalue == null ) continue;
+
+                // FIXME arbitrary fixing (meant to deal with zeros)
+                if ( correctedPvalue < 1e-10 ) {
+                    correctedPvalue = 1e-10; // this was 1e-9, and only used for zero.
+                }
+
+                int numberOfProbes = diffExprGeneSearchResult.getNumberOfProbes();
+                int numberOfProbesDiffExpressed = diffExprGeneSearchResult.getNumberOfProbesDiffExpressed();
+
+                markCellsBlack( resultSet, geneId, searchResult, correctedPvalue, numberOfProbes,
+                        numberOfProbesDiffExpressed );
+
+                Long probeResultId = diffExprGeneSearchResult.getResultId();
+                if ( !detailedResults.containsKey( probeResultId ) ) {
+                    continue;
+                }
+
+                DifferentialExpressionAnalysisResult deaResult = detailedResults.get( probeResultId );
+
+                for ( ContrastResult cr : deaResult.getContrasts() ) {
+                    FactorValue factorValue = cr.getFactorValue();
+                    assert factorValue != null : "Null factor value for contrast with id=" + cr.getId();
+                    String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
+                            resultSet.getId(), factorValue.getId() );
+                    searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(), numberOfProbes,
+                            numberOfProbesDiffExpressed );
+                }
+
             }
         }
 

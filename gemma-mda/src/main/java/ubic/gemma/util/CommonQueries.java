@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -66,6 +67,8 @@ public class CommonQueries {
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "ees", ees );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
 
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {
@@ -98,6 +101,9 @@ public class CommonQueries {
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
         queryObject.setParameter( "ee", ee );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
         List<?> list = queryObject.list();
         /*
          * Thaw the TT.
@@ -123,6 +129,8 @@ public class CommonQueries {
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setParameter( "gene", gene );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
         return queryObject.list();
     }
 
@@ -161,6 +169,42 @@ public class CommonQueries {
 
     /**
      * @param genes
+     * @param arrayDesigns
+     * @param session
+     * @return
+     */
+    public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Collection<Long> arrayDesigns,
+            Session session ) {
+
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds) and g.AD in (:ads)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+        queryObject.setParameterList( "ads", arrayDesigns );
+        queryObject.setParameterList( "geneIds", genes );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            Long csid = results.getLong( 0 );
+            Long geneId = results.getLong( 1 );
+
+            if ( !cs2genes.containsKey( csid ) ) {
+                cs2genes.put( csid, new HashSet<Long>() );
+            }
+            cs2genes.get( csid ).add( geneId );
+        }
+        results.close();
+
+        return cs2genes;
+
+    }
+
+    /**
+     * @param genes
      * @param arrays restrict to probes on these arrays only
      * @param session
      * @return
@@ -180,6 +224,8 @@ public class CommonQueries {
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", genes );
         queryObject.setParameterList( "ars", arrays );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -217,6 +263,8 @@ public class CommonQueries {
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", genes );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -335,6 +383,8 @@ public class CommonQueries {
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "probes", probes );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {

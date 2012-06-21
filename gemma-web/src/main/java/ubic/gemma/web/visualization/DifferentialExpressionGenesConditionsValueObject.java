@@ -23,59 +23,145 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.Direction;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
+
 /**
- * TODO Document Me
+ * Represents a complete set of data for a differential expression query over a set of genes x conditions (resultSets x
+ * contrasts).
  * 
  * @author Anton
  * @version $Id$
  */
 public class DifferentialExpressionGenesConditionsValueObject {
+    // The details of the result for a gene x condition combination.
+    public class Cell {
+        public boolean isProbeMissing;
+        public Double visualizationValue;
+        public Double pValue = null; // important!
+        public Double logFoldChange = 0.0;
+        public Integer direction = 0;
+        public Integer numberOfProbes = 0;
+        public Integer numberOfProbesDiffExpressed = 0;
 
+        public int getDirection() {
+            return direction;
+        }
+
+        public Boolean getIsProbeMissing() {
+            return isProbeMissing;
+        }
+
+        public Double getLogFoldChange() {
+            return logFoldChange;
+        }
+
+        public Integer getNumberOfProbes() {
+            return numberOfProbes;
+        }
+
+        public Integer getNumberOfProbesDiffExpressed() {
+            return numberOfProbesDiffExpressed;
+        }
+
+        public Double getpValue() {
+            return pValue;
+        }
+
+        public Double getVisualizationValue() {
+            return visualizationValue;
+        }
+
+    }
+
+    // Represents one column in the differential expression view; one contrast in a resultset in an experiment.
     public class Condition {
-        public long contrastId;
-        public String baselineFactorValue;
-        public String contrastFactorValue;
-        public long resultSetId;
-        public long analysisId;
-        public String analysisType;
-        public String experimentId;
-        public String experimentName;
-        public String datasetName;
-        public Long datasetId;
-        public Integer numberDiffExpressedProbes;
-        public Integer numberDiffExpressedProbesUp;
-        public Integer numberDiffExpressedProbesDown;
-        public Long baselineFactorValueId;
-        public String factorName;
-        public String factorDescription;
-        public Long factorId;
-        public String factorCategory;
-        public String experimentGroupName;
-        public int experimentGroupIndex;
-        public String datasetShortName;
-        public Integer numberOfProbesOnArray;
+        private String baselineFactorValue;
+        private String contrastFactorValue;
+        private Long resultSetId;
+        private Long analysisId;
+        private String analysisType;
+        private String experimentId;
+        private String experimentName;
+        private String datasetName;
+        private Long datasetId;
+        private Integer numberDiffExpressedProbes = -1;
+        private Integer numberDiffExpressedProbesUp = -1;
+        private Integer numberDiffExpressedProbesDown = -1;
+        private Long baselineFactorValueId;
+        private String factorName;
+        private String factorDescription;
+        private Long factorId;
+        private String factorCategory;
+        private String experimentGroupName;
+        private int experimentGroupIndex;
+        private String datasetShortName;
+        private Integer numberOfProbesOnArray;
+
+        public Long getFactorValueId() {
+            return factorValueId;
+        }
+
         public String id;
         public boolean isSelected = false;
         public Integer numberOfGenesTested;
+        private Long factorValueId;
 
-        public boolean getIsSelected() {
-            return this.isSelected;
+        public Condition( ExpressionExperiment experiment, DifferentialExpressionAnalysis analysis,
+                ExpressionAnalysisResultSet resultSet, FactorValue factorValue ) {
+            this( resultSet.getId(), factorValue.getId() );
+            numberOfProbesOnArray = resultSet.getNumberOfProbesTested();
+            numberOfGenesTested = resultSet.getNumberOfGenesTested(); // FIXME USE THIS
+            ExperimentalFactor factor = factorValue.getExperimentalFactor();
+            datasetShortName = experiment.getShortName();
+            datasetName = experiment.getName();
+            datasetId = experiment.getId();
+            analysisId = analysis.getId();
+            baselineFactorValueId = resultSet.getBaselineGroup().getId();
+            factorName = factor.getName();
+            contrastFactorValue = getFactorValueString( factorValue );
+            baselineFactorValue = getFactorValueString( resultSet.getBaselineGroup() );
+            factorDescription = factor.getDescription();
+            factorId = factor.getId();
+            /* FIXME can we use 'None' instead of 'null'? Is this a magic string? */
+            factorCategory = ( factor.getCategory() == null ) ? "null" : factor.getCategory().getCategory();
+
+            for ( HitListSize h : resultSet.getHitListSizes() ) {
+                if ( h.getThresholdQvalue() == THRESHOLD_QVALUE_FOR_HITLISTS ) {
+                    if ( h.getDirection().equals( Direction.DOWN ) ) {
+                        numberDiffExpressedProbesDown = h.getNumberOfProbes();
+                    } else if ( h.getDirection().equals( Direction.UP ) ) {
+                        numberDiffExpressedProbesUp = h.getNumberOfProbes();
+                    } else if ( h.getDirection().equals( Direction.EITHER ) ) {
+                        numberDiffExpressedProbes = h.getNumberOfProbes();
+                    }
+                }
+            }
         }
 
-        public long getContrastId() {
-            return contrastId;
+        public Condition( Long resultSetId, Long factorValueId ) {
+            this.resultSetId = resultSetId;
+            this.factorValueId = factorValueId;
+            this.id = constructConditionId( resultSetId, factorValueId );
         }
 
-        public String getBaselineFactorValue() {
-            return baselineFactorValue;
-        }
-
-        public String getContrastFactorValue() {
-            return contrastFactorValue;
-        }
-
-        public long getResultSetId() {
-            return resultSetId;
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) return true;
+            if ( obj == null ) return false;
+            if ( getClass() != obj.getClass() ) return false;
+            Condition other = ( Condition ) obj;
+            if ( !getOuterType().equals( other.getOuterType() ) ) return false;
+            if ( id == null ) {
+                if ( other.id != null ) return false;
+            } else if ( !id.equals( other.id ) ) return false;
+            return true;
         }
 
         public long getAnalysisId() {
@@ -86,6 +172,38 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return analysisType;
         }
 
+        public String getBaselineFactorValue() {
+            return baselineFactorValue;
+        }
+
+        public Long getBaselineFactorValueId() {
+            return baselineFactorValueId;
+        }
+
+        public String getContrastFactorValue() {
+            return contrastFactorValue;
+        }
+
+        public Long getDatasetId() {
+            return datasetId;
+        }
+
+        public String getDatasetName() {
+            return datasetName;
+        }
+
+        public String getDatasetShortName() {
+            return datasetShortName;
+        }
+
+        public int getExperimentGroupIndex() {
+            return experimentGroupIndex;
+        }
+
+        public String getExperimentGroupName() {
+            return experimentGroupName;
+        }
+
         public String getExperimentId() {
             return experimentId;
         }
@@ -94,32 +212,8 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return experimentName;
         }
 
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public Long getDatasetId() {
-            return datasetId;
-        }
-
-        public Integer getNumberDiffExpressedProbes() {
-            return numberDiffExpressedProbes;
-        }
-
-        public Integer getNumberDiffExpressedProbesUp() {
-            return numberDiffExpressedProbesUp;
-        }
-
-        public Integer getNumberDiffExpressedProbesDown() {
-            return numberDiffExpressedProbesDown;
-        }
-
-        public Long getBaselineFactorValueId() {
-            return baselineFactorValueId;
-        }
-
-        public String getFactorName() {
-            return factorName;
+        public String getFactorCategory() {
+            return factorCategory;
         }
 
         public String getFactorDescription() {
@@ -130,32 +224,84 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return factorId;
         }
 
-        public String getFactorCategory() {
-            return factorCategory;
-        }
-
-        public String getExperimentGroupName() {
-            return experimentGroupName;
-        }
-
-        public int getExperimentGroupIndex() {
-            return experimentGroupIndex;
-        }
-
-        public String getDatasetShortName() {
-            return datasetShortName;
-        }
-
-        public Integer getNumberOfProbesOnArray() {
-            return numberOfProbesOnArray;
+        public String getFactorName() {
+            return factorName;
         }
 
         public String getId() {
             return id;
         }
 
+        public boolean getIsSelected() {
+            return this.isSelected;
+        }
+
+        public Integer getNumberDiffExpressedProbes() {
+            return numberDiffExpressedProbes;
+        }
+
+        public Integer getNumberDiffExpressedProbesDown() {
+            return numberDiffExpressedProbesDown;
+        }
+
+        public Integer getNumberDiffExpressedProbesUp() {
+            return numberDiffExpressedProbesUp;
+        }
+
+        public Integer getNumberOfProbesOnArray() {
+            return numberOfProbesOnArray;
+        }
+
+        public long getResultSetId() {
+            return resultSetId;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+            return result;
+        }
+
+        /*
+         * Helper method to get factor values. TODO: Fix FactorValue class to return correct factor value in the first
+         * place.
+         */
+        private String getFactorValueString( FactorValue fv ) {
+            if ( fv == null ) return "null"; // FIXME is this a magic string?
+
+            if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+                String fvString = "";
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    fvString += c.getValue() + " ";
+                }
+                return fvString;
+            } else if ( fv.getMeasurement() != null ) {
+                return fv.getMeasurement().getValue();
+            } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+                return fv.getValue();
+            } else {
+                return "absent "; // FIXME is this a magic string?
+            }
+        }
+
+        private DifferentialExpressionGenesConditionsValueObject getOuterType() {
+            return DifferentialExpressionGenesConditionsValueObject.this;
+        }
+
+        void setExperimentGroupName( String experimentGroupName ) {
+            this.experimentGroupName = experimentGroupName;
+        }
+
+        public void setExperimentGroupIndex( int experimentGroupIndex ) {
+            this.experimentGroupIndex = experimentGroupIndex;
+        }
+
     }
 
+    // A Gene Value object specialized to hold differential expression results.
     public class Gene {
         public long id;
         public String name;
@@ -165,139 +311,150 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private String groupName;
         public boolean isSelected = false;
 
-        public boolean getIsSelected() {
-            return this.isSelected;
-        }
-
         public Gene( long id, String name, String fullName ) {
             this.id = id;
             this.name = name;
             this.fullName = fullName;
         }
 
-        public long getId() {
-            return id;
-        }
-
-        public void setId( long id ) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName( String name ) {
-            this.name = name;
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) return true;
+            if ( obj == null ) return false;
+            if ( getClass() != obj.getClass() ) return false;
+            Gene other = ( Gene ) obj;
+            if ( !getOuterType().equals( other.getOuterType() ) ) return false;
+            if ( id != other.id ) return false;
+            return true;
         }
 
         public String getFullName() {
             return fullName;
         }
 
-        public void setFullName( String fullName ) {
-            this.fullName = fullName;
-        }
-
-        public double getSpecificityScore() {
-            return specificityScore;
-        }
-
-        public void setSpecificityScore( double specificityScore ) {
-            this.specificityScore = specificityScore;
-        }
-
         public int getGroupIndex() {
             return groupIndex;
-        }
-
-        public void setGroupIndex( int groupIndex ) {
-            this.groupIndex = groupIndex;
         }
 
         public String getGroupName() {
             return groupName;
         }
 
+        public long getId() {
+            return id;
+        }
+
+        public boolean getIsSelected() {
+            return this.isSelected;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getSpecificityScore() {
+            return specificityScore;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
+            return result;
+        }
+
+        public void setFullName( String fullName ) {
+            this.fullName = fullName;
+        }
+
+        public void setGroupIndex( int groupIndex ) {
+            this.groupIndex = groupIndex;
+        }
+
         public void setGroupName( String groupName ) {
             this.groupName = groupName;
         }
 
-    }
-
-    public class Cell {
-        public boolean isProbeMissing;
-        public double visualizationValue;
-        public double pValue;
-        public double logFoldChange;
-        public int direction;
-        public int numberOfProbes;
-        public int numberOfProbesDiffExpressed;
-
-        public int getNumberOfProbes() {
-            return numberOfProbes;
+        public void setId( long id ) {
+            this.id = id;
         }
 
-        public int getNumberOfProbesDiffExpressed() {
-            return numberOfProbesDiffExpressed;
+        public void setName( String name ) {
+            this.name = name;
         }
 
-        public boolean getIsProbeMissing() {
-            return isProbeMissing;
+        public void setSpecificityScore( double specificityScore ) {
+            this.specificityScore = specificityScore;
         }
 
-        public double getVisualizationValue() {
-            return visualizationValue;
-        }
-
-        public double getpValue() {
-            return pValue;
-        }
-
-        public double getLogFoldChange() {
-            return logFoldChange;
-        }
-
-        public int getDirection() {
-            return direction;
+        private DifferentialExpressionGenesConditionsValueObject getOuterType() {
+            return DifferentialExpressionGenesConditionsValueObject.this;
         }
 
     }
 
+    public static final double THRESHOLD_QVALUE_FOR_HITLISTS = 0.05;
+
+    public static String constructConditionId( long resultSetId, long factorValueId ) {
+        return "rs:" + resultSetId + "fv:" + factorValueId;
+    }
+
+    /*
+     * Map of Condition IDs to map of Genes to the Cell holding the information for the results for that Gene x
+     * Condition combination.
+     */
     private Map<String, Map<Long, Cell>> cellData;
+
+    /*
+     * The Condition dimension
+     */
     private List<Condition> conditions;
+
+    /*
+     * The Gene dimension
+     */
     private List<Gene> genes;
 
+    /**
+     * 
+     */
     public DifferentialExpressionGenesConditionsValueObject() {
         cellData = new HashMap<String, Map<Long, Cell>>();
         conditions = new ArrayList<Condition>();
         genes = new ArrayList<Gene>();
     }
 
-    public Map<String, Map<Long, Cell>> getCellData() {
-        return cellData;
+    /**
+     * @param geneId
+     * @param conditionId
+     * @param pValue
+     * @param numProbes
+     * @param numProbesDiffExpressed
+     */
+    public void addBlackCell( Long geneId, String conditionId, double pValue, int numProbes, int numProbesDiffExpressed ) {
+        Cell cell = new Cell();
+        cell.isProbeMissing = false;
+        cell.pValue = pValue;
+        cell.visualizationValue = 0.0;
+        cell.logFoldChange = 0.0;
+        cell.numberOfProbes = numProbes;
+        cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
+
+        addCell( geneId, conditionId, cell );
     }
 
-    public List<Condition> getConditions() {
-        return conditions;
-    }
-
-    public List<Gene> getGenes() {
-        return genes;
-    }
-
-    public void addGene( Gene gene ) {
-        genes.add( gene );
-    }
-
-    public void addCondition( Condition condition ) {
-        conditions.add( condition );
-        // // Start with a column of missing values.
-        for ( Gene gene : this.genes ) {
-            this.addProbeMissingCell( gene.getId(), condition.getId() );
-        }
-    }
-
+    /**
+     * Set the details of the data for one Cell.
+     * 
+     * @param geneId
+     * @param conditionId
+     * @param pValue
+     * @param foldChange
+     * @param numProbes
+     * @param numProbesDiffExpressed
+     */
     public void addCell( Long geneId, String conditionId, double pValue, double foldChange, int numProbes,
             int numProbesDiffExpressed ) {
         Cell cell = new Cell();
@@ -310,25 +467,74 @@ public class DifferentialExpressionGenesConditionsValueObject {
         addCell( geneId, conditionId, cell );
     }
 
-    public void addProbeMissingCell( Long geneId, String conditionId ) {
-        Cell cell = new Cell();
-        cell.isProbeMissing = true;
-
-        addCell( geneId, conditionId, cell );
+    /**
+     * Initialize the column of cells for the given Condition, treating them as missing values.
+     * 
+     * @param condition
+     */
+    public void addCondition( Condition condition ) {
+        conditions.add( condition );
+        // // Start with a column of missing values.
+        for ( Gene gene : this.genes ) {
+            this.addProbeMissingCell( gene.getId(), condition.getId() );
+        }
     }
 
-    public void addBlackCell( Long geneId, String conditionId, double pValue, int numProbes, int numProbesDiffExpressed ) {
-        Cell cell = new Cell();
-        cell.isProbeMissing = false;
-        cell.pValue = pValue;
-        cell.visualizationValue = 0;
-        cell.logFoldChange = 0;
-        cell.numberOfProbes = numProbes;
-        cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
-
-        addCell( geneId, conditionId, cell );
+    /**
+     * @param gene
+     */
+    public void addGene( Gene gene ) {
+        genes.add( gene );
     }
 
+    /**
+     * @return
+     */
+    public Map<String, Map<Long, Cell>> getCellData() {
+        return cellData;
+    }
+
+    /**
+     * @return
+     */
+    public List<Condition> getConditions() {
+        return conditions;
+    }
+
+    /**
+     * @return
+     */
+    public List<Gene> getGenes() {
+        return genes;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( "\nCorner" );
+
+        for ( Condition c : conditions ) {
+            buf.append( "\t" + c.getId() );
+        }
+        buf.append( "\n" );
+
+        for ( Gene g : genes ) {
+            buf.append( g.getName() );
+            for ( Condition c : conditions ) {
+                buf.append( String.format( "\t%.2f", cellData.get( c.getId() ).get( g.getId() ).getpValue() ) );
+            }
+            buf.append( "\n" );
+        }
+
+        return buf.toString();
+    }
+
+    /**
+     * @param geneId
+     * @param conditionId
+     * @param cell
+     */
     private void addCell( Long geneId, String conditionId, Cell cell ) {
         Map<Long, Cell> geneToCellMap = cellData.get( conditionId );
         if ( geneToCellMap == null ) {
@@ -336,6 +542,16 @@ public class DifferentialExpressionGenesConditionsValueObject {
         }
         geneToCellMap.put( geneId, cell );
         cellData.put( conditionId, geneToCellMap );
+    }
+
+    /**
+     * @param geneId
+     * @param conditionId
+     */
+    private void addProbeMissingCell( Long geneId, String conditionId ) {
+        Cell cell = new Cell();
+        cell.isProbeMissing = true;
+        addCell( geneId, conditionId, cell );
     }
 
 }

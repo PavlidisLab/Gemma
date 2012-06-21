@@ -71,7 +71,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     // FIXME figure out the taxon instead of this iteration.
     private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
-            "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
+            "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" , "UserProbeCoExpressionImpl"};
 
     @Autowired
     public Probe2ProbeCoexpressionDaoImpl( SessionFactory sessionFactory ) {
@@ -731,7 +731,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private String getTableName( String key, boolean tmpTable ) {
         String tableName = "";
 
-        if ( key.equalsIgnoreCase( "human" ) || key.toUpperCase().startsWith( "HUMAN" ) ) {
+        if ( key.equalsIgnoreCase( "user" ) || key.toUpperCase().startsWith( "USER" ) ) {
+            tableName = "USER_PROBE_CO_EXPRESSION";
+        } else if ( key.equalsIgnoreCase( "human" ) || key.toUpperCase().startsWith( "HUMAN" ) ) {
             tableName = "HUMAN_PROBE_CO_EXPRESSION";
         } else if ( key.equalsIgnoreCase( "mouse" ) || key.toUpperCase().startsWith( "MOUSE" ) ) {
             tableName = "MOUSE_PROBE_CO_EXPRESSION";

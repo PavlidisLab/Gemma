@@ -50,12 +50,14 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -70,7 +72,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -92,6 +93,10 @@ import ubic.gemma.util.EntityUtils;
 @Component
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
     private static final double CUT_OFF = 0.05;
+
+    // if we should save the 'reports'. We avoid doing this now because it causes things to be out of sync.
+    private static final boolean SERIALIZE_TO_DISK = false;
+
     @Autowired
     private AuditEventService auditEventService;
 
@@ -451,9 +456,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
-
                 eeVo.setDateCached( cacheVo.getDateCached() );
-
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
 
                 if ( eeVo.getDateCreated() == null ) {
@@ -560,11 +563,23 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 desvo.setAnalysisId( analysis.getId() );
                 desvo.setFactorIds( EntityUtils.getIds( par.getExperimentalFactors() ) );
 
+                for ( HitListSize hitList : par.getHitListSizes() ) {
+                    if ( hitList.getThresholdQvalue().equals( threshold ) ) {
+
+                        if ( hitList.getDirection().equals( Direction.UP ) ) {
+                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
+                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
+                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
+                        }
+
+                    }
+                }
+
                 if ( par.getBaselineGroup() != null ) {
                     desvo.setBaselineGroup( new FactorValueValueObject( par.getBaselineGroup() ) );
                 }
-
-                populateHitListSizes( threshold, par, desvo );
 
                 avo.getResultSets().add( desvo );
 
@@ -573,28 +588,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             summaries.add( avo );
         }
         return summaries;
-    }
-
-    /**
-     * @param threshold
-     * @param par
-     * @param desvo
-     * @deprecated since the counts are available in the ResultSet->HitListSize.
-     */
-    @Deprecated
-    private void populateHitListSizes( double threshold, ExpressionAnalysisResultSet par,
-            DifferentialExpressionSummaryValueObject desvo ) {
-
-        Integer probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold( par,
-                threshold );
-        desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
-        Integer upregulatedCount = differentialExpressionAnalysisService.countUpregulated( par, threshold );
-        Integer downregulatedCount = differentialExpressionAnalysisService.countDownregulated( par, threshold );
-
-        desvo.setUpregulatedCount( upregulatedCount );
-        desvo.setDownregulatedCount( downregulatedCount );
-
-        log.debug( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
     }
 
     /*
@@ -608,48 +601,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
-     * Read information about troubled events for the set of given EEs. These are read from the audit trail.
-     * 
      * @param ees
-     * @param type
+     * @param types
      * @return
-     * @deprecated use getStatus().getTroubled() instead.
      */
-    @Override
-    @Deprecated
-    public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees ) {
-        return getEvents( ees, TroubleStatusFlagEvent.class );
-    }
-
-    /**
-     * Read information about an particular type of event for the set of given EEs. These are read from the audit trail.
-     * 
-     * @param ees
-     * @param type
-     * @return
-     * @deprecated not needed
-     */
-    @Deprecated
-    private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, Class<? extends AuditEventType> type ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
-
-        Map<? extends Auditable, AuditEvent> events = null;
-
-        events = auditEventService.getLastEvent( ees, type );
-
-        for ( Auditable a : events.keySet() ) {
-            result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Retrieved " + type.getSimpleName() + " in " + timer.getTime() + "ms" );
-        }
-        return result;
-    }
-
     private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
             Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
 
@@ -704,6 +659,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#evictFromCache(java.lang.Long)
+     */
+    @Override
+    public void evictFromCache( Long id ) {
+        this.statsCache.remove( id );
+    }
+
     /**
      * @return the serialized value objects (either from the disk store or from the in-memory cache).
      */
@@ -725,6 +690,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             File f = new File( getReportPath( id ) );
 
             if ( !f.exists() ) {
+                /*
+                 * Migration to the 'new way'.
+                 */
+                ExpressionExperimentValueObject valueObject = generateSummary( id );
+                eeValueObjects.add( valueObject );
+                statsCache.put( new Element( id, valueObject ) );
                 continue;
             }
 
@@ -805,6 +776,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         int count = 0;
         for ( ExpressionExperimentValueObject object : vos ) {
             updateStats( object );
+
+            // IF we want to save it.
+            if ( SERIALIZE_TO_DISK ) {
+                saveValueObject( object );
+            }
+
             if ( ++count % 10 == 0 ) {
                 log.info( "Processed " + count + " reports." );
             }
@@ -819,22 +796,22 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     private void updateStats( ExpressionExperimentValueObject eeVo ) {
         assert eeVo.getId() != null;
+
+        // wish we didn't need to do this, since we already got the value object.
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
-        eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
+        // FIXME this is probably slow, so precompute and store somewhere
         eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
-        
-        // this report is the one that goes stale, see bug 2308
+
+        // this report is the one that goes stale, see bug 2308; get these stats from the
         eeVo.setDifferentialExpressionAnalyses( getDiffExpressedProbes( tempEe, CUT_OFF ) );
 
+        // FIXME get this from the ProbeCoexpressionAnalysis
         Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
         eeVo.setCoexpressionLinkCount( numLinks );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-
-        saveValueObject( eeVo );
-
         assert eeVo.getDateCreated() != null;
         assert eeVo.getDateLastUpdated() != null;
 

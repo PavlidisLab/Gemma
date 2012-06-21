@@ -58,6 +58,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
@@ -65,7 +66,9 @@ import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
+import ubic.gemma.model.association.coexpression.UserProbeCoExpression;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
@@ -81,6 +84,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
+import ubic.gemma.security.SecurityServiceImpl;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -153,6 +158,85 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+
+    /**
+     * Perform the analysis. No hibernate session is used. This step is purely computational.
+     * 
+     * @param ee
+     * @param linkAnalysisConfig
+     * @param filterConfig
+     * @return
+     */
+    @Override
+    public LinkAnalysis doAnalysis( ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,
+            FilterConfig filterConfig ) {
+        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
+        la.clear();
+
+        try {
+
+            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+
+            ExpressionDataDoubleMatrix dataMatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                    dataVectors );
+
+            if ( dataMatrix.rows() == 0 ) {
+                log.info( "No rows left after filtering" );
+                throw new InsufficientProbesException( "No rows left after filtering" );
+            } else if ( dataMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientProbesException( "To few rows (" + dataMatrix.rows()
+                        + "), data sets are not analyzed unless they have at least "
+                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
+            }
+
+            dataMatrix = this.normalize( dataMatrix, linkAnalysisConfig );
+
+            /*
+             * Link analysis section.
+             */
+            log.info( "Starting link analysis... " + ee );
+            setUpForAnalysis( ee, la, dataVectors, dataMatrix );
+            addAnalysisObj( ee, dataMatrix, filterConfig, linkAnalysisConfig, la );
+            la.analyze();
+
+            if ( Thread.currentThread().isInterrupted() ) {
+                log.info( "Cancelled." );
+                return null;
+            }
+
+        } catch ( Exception e ) {
+
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
+            }
+            throw new RuntimeException( e );
+        }
+
+        return la;
+    }
+
+    /**
+     * Get data that will be used by analysis. We have to fetch/thaw all parts of EE that will be used later since
+     * analysis part doesn't have an open hibernate session.
+     * 
+     * @param eeId
+     * @param linkAnalysisConfig
+     * @return
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadDataForAnalysis( Long eeId ) {
+        ExpressionExperiment ee = eeService.load( eeId );
+
+        log.info( "Fetching expression data ... " + ee );
+
+        Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
+        processedExpressionDataVectorService.thaw( dataVectors );
+        return ee;
+    }
 
     /*
      * (non-Javadoc)
@@ -229,82 +313,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
         return la;
 
-    }
-
-    /**
-     * Get data that will be used by analysis. We have to fetch/thaw all parts of EE that will be used later since
-     * analysis part doesn't have an open hibernate session.
-     * 
-     * @param eeId
-     * @param linkAnalysisConfig
-     * @return
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment loadDataForAnalysis( Long eeId ) {
-        ExpressionExperiment ee = eeService.load( eeId );
-
-        log.info( "Fetching expression data ... " + ee );
-
-        Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-        processedExpressionDataVectorService.thaw( dataVectors );
-        return ee;
-    }
-
-    /**
-     * Perform the analysis. No hibernate session is used. This step is purely computational.
-     * 
-     * @param ee
-     * @param linkAnalysisConfig
-     * @param filterConfig
-     * @return
-     */
-    @Override
-    public LinkAnalysis doAnalysis( ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,
-            FilterConfig filterConfig ) {
-        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
-        la.clear();
-
-        try {
-
-            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-
-            ExpressionDataDoubleMatrix dataMatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                    dataVectors );
-
-            if ( dataMatrix.rows() == 0 ) {
-                log.info( "No rows left after filtering" );
-                throw new InsufficientProbesException( "No rows left after filtering" );
-            } else if ( dataMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( "To few rows (" + dataMatrix.rows()
-                        + "), data sets are not analyzed unless they have at least "
-                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-            }
-
-            dataMatrix = this.normalize( dataMatrix, linkAnalysisConfig );
-
-            /*
-             * Link analysis section.
-             */
-            log.info( "Starting link analysis... " + ee );
-            setUpForAnalysis( ee, la, dataVectors, dataMatrix );
-            addAnalysisObj( ee, dataMatrix, filterConfig, linkAnalysisConfig, la );
-            la.analyze();
-
-            if ( Thread.currentThread().isInterrupted() ) {
-                log.info( "Cancelled." );
-                return null;
-            }
-
-        } catch ( Exception e ) {
-
-            if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
-            }
-            throw new RuntimeException( e );
-        }
-
-        return la;
     }
 
     /**
@@ -762,7 +770,11 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         watch.stop();
         log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + watch.getTime() / 1000.0 );
+
     }
+
+    @Autowired
+    UserManager userManager;
 
     /**
      * @param p2v
@@ -778,7 +790,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         Taxon taxon = la.getTaxon();
         Creator c;
-        if ( TaxonUtility.isMouse( taxon ) ) {
+
+        User user = userManager.getCurrentUser();
+
+        if ( user == null ) {
+            throw new IllegalStateException( "Can't run link analysis anonymously" );
+        } else if ( !SecurityServiceImpl.isUserAdmin() ) {
+            log.info( "Creating coexpression analysis for user's data" );
+            c = new Creator( UserProbeCoExpression.Factory.class, la.getExpressionExperiment() );
+        } else if ( TaxonUtility.isMouse( taxon ) ) {
             c = new Creator( MouseProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         } else if ( TaxonUtility.isRat( taxon ) ) {
             c = new Creator( RatProbeCoExpression.Factory.class, la.getExpressionExperiment() );
@@ -839,6 +859,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             this.ppService.create( p2plinkBatch );
             p2plinkBatch.clear();
         }
+
+        /*
+         * Update the meta-data about the analysis.
+         */
+        ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
+        assert analysisObj.getId() != null;
+        analysisObj.setNumberOfElementsAnalyzed( la.getDataMatrix().rows() );
+        analysisObj.setNumberOfLinks( links.size() - skippedDueToDegree );
+        probeCoexpressionAnalysisService.update( analysisObj );
+
     }
 
     /**

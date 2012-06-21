@@ -49,45 +49,19 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.ConfigUtils;
 
 /**
+ * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
+ * working with DifferentialExpressionResults).
+ * 
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult
  */
 @Repository
 public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionResultDaoBase {
-
-    public static class DiffExprGeneSearchResult {
-        private long analysisResultId;
-        private int numberOfProbes = 0;
-        private int numberOfProbesDiffExpressed = 0;
-
-        public long getDifferentialExpressionAnalysisResultId() {
-            return analysisResultId;
-        }
-
-        public int getNumberOfProbes() {
-            return numberOfProbes;
-        }
-
-        public int getNumberOfProbesDiffExpressed() {
-            return numberOfProbesDiffExpressed;
-        }
-
-        public void setDifferentialExpressionAnalysisResultId( long DifferentialExpressionAnalysisResultId ) {
-            this.analysisResultId = DifferentialExpressionAnalysisResultId;
-        }
-
-        public void setNumberOfProbes( int numberOfProbes ) {
-            this.numberOfProbes = numberOfProbes;
-        }
-
-        public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
-            this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
-        }
-    }
 
     private Log log = LogFactory.getLog( this.getClass() );
     private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
@@ -133,11 +107,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     /*
      * This is a key query: get all results for a set of genes in a set of resultssets (basically, experiments)
      */
-    private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT g2s.GENE, dear.CORRECTED_P_VALUE_BIN, dear.ID,"
-            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK"
-            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s "
-            + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
-            + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) ";
+    // private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery =
+    // "SELECT g2s.GENE, dear.CORRECTED_P_VALUE_BIN, dear.ID,"
+    // + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE, dear.SCORE "
+    // + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s "
+    // + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
+    // + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) ";
+    private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT dear.PROBE_FK, dear.ID,"
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE  "
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
+            + " dear.PROBE_FK IN (:probe_ids) ";
+
+    private static final Double CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX = 0.05;
+
+    @Autowired
+    private DifferentialExpressionResultCache differentialExpressionResultCache;
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -430,7 +414,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     /*
-     * (non-Javadoc)
+     * Key method for getting diff ex results 'in bulk' (non-Javadoc)
      * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#
      * findDifferentialExpressionAnalysisResultIdsInResultSet(java.lang.Long, java.util.Collection,
@@ -438,81 +422,136 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
-            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed ) {
-
+            final Collection<Long> resultSetIds, final Collection<Long> geneIds, Collection<Long> adUsed ) {
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
-
-        Map<Long, Map<Long, Integer>> goodPvalue = new HashMap<Long, Map<Long, Integer>>();
 
         Session session = super.getSession();
 
+        Map<Long, Collection<Long>> foundInCache = fillFromCache( results, resultSetIds, geneIds );
+
+        if ( !foundInCache.isEmpty() ) {
+            log.info( "Results for " + foundInCache.size() + " resultsets found in cache" );
+        } else {
+            log.info( "No results were in the cache" );
+        }
+
+        Collection<Long> resultSetsNeeded = stripUnneededResultSets( foundInCache, resultSetIds, geneIds );
+
+        // Are we finished?
+        if ( resultSetsNeeded.isEmpty() ) {
+            log.info( "All results were in the cache." );
+            return results;
+        }
+
+        log.info( foundInCache.size() + "/" + resultSetIds.size() + " resultsSets were already cached" );
+
+        assert !resultSetsNeeded.isEmpty();
+
         org.hibernate.SQLQuery queryObject = session
                 .createSQLQuery( fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery );
-        queryObject.setParameterList( "ad_ids", adUsed );
 
-        // temporary like this.
-        int RS_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.resultset.batchsize", 1 ); // best use of index?
+        /*
+         * Get the probes using the CommonQueries gene2cs. Otherwise we (in effect) end up doing this over and over
+         * again. This could be further stratified by resultset x arraydesign, since many probes are irrelevant for a
+         * given resultset.
+         */
+        Map<Long, Collection<Long>> cs2GeneIdMap = CommonQueries.getCs2GeneIdMap( geneIds, adUsed, session );
+
+        // TODO temporary like this - fix it so we don't get it multiple times.
+        int RS_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.resultset.batchsize", 1 );
         int GENE_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.gene.batchsize", 100 );
-        // queryObject.setFetchSize( RS_BATCH_SIZE * GENE_BATCH_SIZE );
+        /*
+         * Note that batching resultsets is not effective as the queryplanner cannot use the index.
+         */
         queryObject.setReadOnly( true );
-        // queryObject.setCacheable( true );
-        // queryObject.setCacheRegion( "diffExResultQueryCache" );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetIds, RS_BATCH_SIZE ) ) {
+        int i = 1;
+        int j = 0;
+
+        HashMap<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
+
+        for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, RS_BATCH_SIZE ) ) {
 
             if ( log.isDebugEnabled() )
                 log.debug( "Starting batch of resultsets: "
                         + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
 
-            for ( Collection<Long> geneBatch : new BatchIterator<Long>( geneIds, GENE_BATCH_SIZE ) ) {
+            for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), GENE_BATCH_SIZE ) ) {
 
                 if ( log.isDebugEnabled() )
-                    log.debug( "Starting batch of genes: "
-                            + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 100 ) );
+                    log.debug( "Starting batch of probes: "
+                            + StringUtils.abbreviate( StringUtils.join( probeBatch, "," ), 100 ) );
 
-                queryObject.setParameterList( "gene_ids", geneBatch );
+                // queryObject.setParameterList( "gene_ids", geneBatch );
+                queryObject.setParameterList( "probe_ids", probeBatch );
 
                 List<?> queryResult = queryObject.list();
 
                 // Get probe result with the best pValue, in the give result set.
                 for ( Object o : queryResult ) {
                     Object[] row = ( Object[] ) o;
-                    Long geneId = ( ( BigInteger ) row[0] ).longValue();
-                    Integer pValueBin = ( Integer ) row[1];
-                    Long probeAnalysisId = ( ( BigInteger ) row[2] ).longValue();
-                    Long resultSetId = ( ( BigInteger ) row[3] ).longValue();
+                    Long probeId = ( ( BigInteger ) row[0] ).longValue();
+                    Long resultId = ( ( BigInteger ) row[1] ).longValue();
+                    Long resultSetId = ( ( BigInteger ) row[2] ).longValue();
+                    Double correctedPvalue = ( Double ) row[3];
 
-                    if ( !goodPvalue.containsKey( resultSetId ) ) {
-                        goodPvalue.put( resultSetId, new HashMap<Long, Integer>() );
-                        results.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
+                    if ( correctedPvalue == null ) continue;
+
+                    if ( !resultsFromDb.containsKey( resultSetId ) ) {
+                        resultsFromDb.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
                     }
 
-                    processDiffExResultHit( results.get( resultSetId ), resultSetId, geneId, probeAnalysisId,
-                            goodPvalue.get( resultSetId ), pValueBin );
-                } // over genes.
+                    assert cs2GeneIdMap.containsKey( probeId );
 
-                if ( timer.getTime() > 1000 ) {
-                    log.info( "Fetching DiffEx for batch took " + timer.getTime() + " ms : geneIds="
-                            + StringUtils.abbreviate( StringUtils.join( geneBatch, "," ), 50 ) + " result set="
-                            + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 50 ) + " adused="
-                            + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) );
-                    timer.reset();
-                    timer.start();
+                    for ( Long geneId : cs2GeneIdMap.get( probeId ) ) {
+                        /*
+                         * FIXME We might want to skip probes that have more than one gene.
+                         */
+                        processDiffExResultHit( resultsFromDb.get( resultSetId ), resultSetId, geneId, resultId,
+                                correctedPvalue );
+                    }
+
+                    if ( log.isDebugEnabled() )
+                        log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval="
+                                + String.format( "%.2g", correctedPvalue ) );
+                    j++;
                 }
 
-            }
+                if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
+                    log.info( "Fetched DiffEx for " + i + " 'batches'; " + j + " results so far; took "
+                            + timer.getTime() + " ms : probeIds="
+                            + StringUtils.abbreviate( StringUtils.join( probeBatch, "," ), 50 ) + " result set="
+                            + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 50 ) );
+                    timer.reset();
+                    timer.start();
+                    i = 0;
+                }
 
+                i++;
+            }// over probes.
         }
 
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Fetching DiffEx for batch took " + timer.getTime() + " ms : geneIds="
+        if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
+            log.info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds="
                     + StringUtils.abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
-                    + StringUtils.abbreviate( StringUtils.join( resultSetIds, "," ), 50 ) + " adused="
+                    + StringUtils.abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) + " adused="
                     + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) );
+        }
+
+        addToCache( resultsFromDb, resultSetsNeeded, geneIds );
+
+        // Add the DB results to the cached results.
+        for ( Long resultSetId : resultsFromDb.keySet() ) {
+            Map<Long, DiffExprGeneSearchResult> geneResults = resultsFromDb.get( resultSetId );
+            if ( results.containsKey( resultSetId ) ) {
+                results.get( resultSetId ).putAll( geneResults );
+            } else {
+                results.put( resultSetId, geneResults );
+            }
         }
 
         return results;
@@ -694,37 +733,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#loadMultiple(java.util.Collection)
      */
     @Override
-    public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids ) {
-        final String queryString = "select dea from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
+    public Collection<? extends DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
+        final String queryString = "from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
 
-        Map<Long, DifferentialExpressionAnalysisResult> probeResults = new HashMap<Long, DifferentialExpressionAnalysisResult>();
+        Collection<? extends DifferentialExpressionAnalysisResult> probeResults = new HashSet<DifferentialExpressionAnalysisResult>();
 
-        if ( ids.size() == 0 ) {
+        if ( ids.isEmpty() ) {
             return probeResults;
         }
 
-        int BATCH_SIZE = 100;
+        int BATCH_SIZE = 500;
 
-        Collection<Long> batch = new HashSet<Long>();
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
 
-        for ( Long probeResultId : ids ) {
-            batch.add( probeResultId );
-            if ( batch.size() == BATCH_SIZE ) {
-                Collection<DifferentialExpressionAnalysisResult> batchResults = getHibernateTemplate()
-                        .findByNamedParam( queryString, "ids", batch );
-                for ( DifferentialExpressionAnalysisResult par : batchResults ) {
-                    probeResults.put( par.getId(), par );
-                }
-                batch.clear();
-            }
-        }
+            probeResults.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
 
-        if ( batch.size() > 0 ) {
-            Collection<DifferentialExpressionAnalysisResult> batchResults = getHibernateTemplate().findByNamedParam(
-                    queryString, "ids", batch );
-            for ( DifferentialExpressionAnalysisResult par : batchResults ) {
-                probeResults.put( par.getId(), par );
-            }
         }
 
         return probeResults;
@@ -843,46 +866,144 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     /**
-     * @param results
+     * This is to be called after a query for diff ex results is finished for a set of resultSets and genes. It assumes
+     * that if a gene is missing from the results, there are none for that resultSet for that gene. It then stores a
+     * dummy entry.
+     * 
+     * @param results - which might be empty.
+     * @param resultSetids - the ones which we searched for in the database. Put in dummy results if we have to.
+     * @param geneIds2
+     */
+    private void addToCache( Map<Long, Map<Long, DiffExprGeneSearchResult>> results, Collection<Long> resultSetids,
+            Collection<Long> geneIds ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int i = 0;
+        for ( Long resultSetId : resultSetids ) {
+            Map<Long, DiffExprGeneSearchResult> resultSetResults = results.get( resultSetId );
+
+            for ( Long geneId : geneIds ) {
+
+                if ( resultSetResults != null && resultSetResults.containsKey( geneId ) ) {
+                    this.differentialExpressionResultCache.addToCache( resultSetResults.get( geneId ) );
+                } else {
+                    // put in a dummy, so we don't bother searching for it later.
+                    this.differentialExpressionResultCache.addToCache( new DiffExprGeneSearchResult( resultSetId,
+                            geneId ) );
+                }
+                i++;
+            }
+        }
+
+        if ( timer.getTime() > 10 ) {
+            log.info( "Add " + i + " results to cache: " + timer.getTime() + "ms" );
+        }
+    }
+
+    /**
+     * @param resultSetIds
+     * @param geneIds
+     * @return
+     */
+    private Map<Long, Collection<Long>> fillFromCache( Map<Long, Map<Long, DiffExprGeneSearchResult>> results,
+            Collection<Long> resultSetIds, Collection<Long> geneIds ) {
+
+        Map<Long, Collection<Long>> foundInCache = new HashMap<Long, Collection<Long>>();
+
+        boolean useCache = true;
+
+        if ( !useCache ) {
+            log.warn( "Cache is disabled" );
+            return foundInCache;
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        for ( Long r : resultSetIds ) {
+
+            Collection<DiffExprGeneSearchResult> cached = differentialExpressionResultCache.get( r, geneIds );
+
+            if ( cached.isEmpty() ) continue;
+
+            foundInCache.put( r, new HashSet<Long>() );
+
+            for ( DiffExprGeneSearchResult result : cached ) {
+                if ( !results.containsKey( r ) ) {
+                    results.put( r, new HashMap<Long, DiffExprGeneSearchResult>() );
+                }
+
+                results.get( r ).put( result.getGeneId(), result );
+                foundInCache.get( r ).add( result.getGeneId() );
+            }
+
+        }
+
+        if ( timer.getTime() > 100 ) {
+            log.info( "Fill results from cache: " + timer.getTime() + "ms" );
+        }
+
+        return foundInCache;
+
+    }
+
+    /**
+     * @param results map of gene id to result.
      * @param resultSetId
      * @param geneId
      * @param probeAnalysisId
-     * @param goodPvalue
-     * @param pValueBin
+     * @param correctedPvalue
      */
     private void processDiffExResultHit( Map<Long, DiffExprGeneSearchResult> results, Long resultSetId, Long geneId,
-            Long probeAnalysisId, Map<Long, Integer> goodPvalue, Integer pValueBin ) {
-        // Count diff expressed probes per gene.
-        if ( results.get( geneId.longValue() ) != null ) {
-            DiffExprGeneSearchResult r = results.get( geneId.longValue() );
+            Long probeAnalysisId, Double correctedPvalue ) {
+
+        assert correctedPvalue != null;
+        DiffExprGeneSearchResult r = results.get( geneId );
+
+        if ( r == null ) { // first encounter
+            r = new DiffExprGeneSearchResult( resultSetId, geneId );
+            r.setResultId( probeAnalysisId );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-            if ( pValueBin != null && pValueBin > 0 ) {
+            if ( correctedPvalue < CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+                // FIXME is this the intention?
                 r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
             }
-        }
-
-        if ( goodPvalue.get( geneId.longValue() ) == null ) { // first encounter
-            goodPvalue.put( geneId.longValue(), pValueBin );
-
-            DiffExprGeneSearchResult r = new DiffExprGeneSearchResult();
-            r.setDifferentialExpressionAnalysisResultId( probeAnalysisId.longValue() );
+            r.setCorrectedPvalue( correctedPvalue );
+            results.put( geneId, r );
+        } else if ( r.getCorrectedPvalue() > correctedPvalue ) {
+            // replace
+            r.setResultId( probeAnalysisId.longValue() ); // note this changes the hashcode of r.
+            r.setCorrectedPvalue( correctedPvalue );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
-            if ( pValueBin != null && pValueBin > 0 ) {
-                r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
-            }
-
-            results.put( geneId.longValue(), r );
-        } else {
-            // found a better pvalue for the gene in this result set.
-            if ( pValueBin != null && goodPvalue.get( geneId.longValue() ) < pValueBin ) {
-                // replace
-                goodPvalue.put( geneId.longValue(), pValueBin );
-
-                DiffExprGeneSearchResult r = results.get( geneId.longValue() );
-                r.setDifferentialExpressionAnalysisResultId( probeAnalysisId.longValue() );
-                // results.put( geneId.longValue(), r ); // why was this commented out?
-            }
+            r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
         }
+    }
+
+    /**
+     * Identify resultSets that are still need to be queried. Those would be the ones which don't have information for
+     * all the genes requested in the cache. Note that those results could be 'dummies' that are represent missing
+     * results.
+     * 
+     * @param foundInCache
+     * @param resultSetIds
+     * @param geneIds
+     * @return
+     */
+    private Collection<Long> stripUnneededResultSets( Map<Long, Collection<Long>> foundInCache,
+            Collection<Long> resultSetIds, Collection<Long> geneIds ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<Long> needToQuery = new HashSet<Long>();
+        for ( Long resultSetId : resultSetIds ) {
+            if ( !foundInCache.containsKey( resultSetId ) || !foundInCache.get( resultSetId ).containsAll( geneIds ) ) {
+                needToQuery.add( resultSetId );
+            }
+
+        }
+        if ( timer.getTime() > 1 ) {
+            log.info( "Checking cache results: " + timer.getTime() + "ms; " + needToQuery.size()
+                    + " result sets must be queried" );
+        }
+        return needToQuery;
     }
 
 }

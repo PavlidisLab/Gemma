@@ -105,7 +105,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Threshold below which contrasts will be stored for a given Result.
      */
-    private static final double PVALUE_CONTRAST_SELECT_THRESHOLD = ConfigUtils
+    public static final double PVALUE_CONTRAST_SELECT_THRESHOLD = ConfigUtils
             .getDouble( "gemma.linearmodels.pvaluethresh" );
 
     private static final boolean USE_R = ConfigUtils.getBoolean( "gemma.linearmodels.useR" );
@@ -893,7 +893,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 return ScaleType.LN;
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
                 throw new UnsupportedOperationException(
-                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
+                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
+                                + "and make sure the data is expressed in terms of log2 or un-logged data  ("
+                                + quantitationType + ")" );
             }
         }
 
@@ -907,7 +909,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
         }
 
-        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base" );
+        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base (" + quantitationType
+                + ")" );
 
     }
 

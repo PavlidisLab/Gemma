@@ -30,6 +30,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DifferentialExpressionAnalysisRemoveTaskCommand extends DifferentialExpressionAnalysisTaskCommand {
 
+    private static final long serialVersionUID = -6881129987842634598L;
+
     public DifferentialExpressionAnalysis getToRemove() {
         return toRemove;
     }

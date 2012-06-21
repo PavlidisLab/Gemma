@@ -83,6 +83,8 @@ public class EntityUtils {
     }
 
     /**
+     * Given a set of entities, create a map of their ids to the entities.
+     * 
      * @param entities
      * @return
      */

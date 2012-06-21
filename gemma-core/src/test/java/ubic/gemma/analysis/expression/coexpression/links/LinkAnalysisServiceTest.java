@@ -40,6 +40,7 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -74,7 +75,12 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Before
     public void setup() {
         super.setTestCollectionSize( 100 );
+
+        ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
     }
+
+    ExpressionExperiment ee;
 
     @After
     public void tearDown() {
@@ -82,29 +88,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testProcess() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-        linkAnalysisConfig.setCdfCut( 0.1 );
-        linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
-        linkAnalysisConfig.setProbeDegreeThreshold( 25 );
-        LinkAnalysis result = linkAnalysisService.process( ee.getId(), filterConfig, linkAnalysisConfig );
-
-        Collection<CoexpressionProbe> probesUsed = result.getAnalysisObj().getProbesUsed();
-        assertEquals( 132, probesUsed.size() );
-
-        for ( CoexpressionProbe cp : probesUsed ) {
-            assertNotNull( cp.getNodeDegree() );
-            assertNotNull( cp.getNodeDegreeRank() );
-            assertNotNull( cp.getProbe() );
-        }
-
-    }
-
-    @Test
     public void testLoadAnalyzeSaveAndCoexpSearch() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         linkAnalysisConfig.setCdfCut( 0.1 );
         linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
@@ -113,8 +97,11 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         LinkAnalysis la = linkAnalysisService.doAnalysis( eeTemp, linkAnalysisConfig, filterConfig );
         linkAnalysisService.saveResults( eeTemp, la, linkAnalysisConfig, filterConfig );
 
-        Collection<CoexpressionProbe> probesUsed = la.getAnalysisObj().getProbesUsed();
+        ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
+        Collection<CoexpressionProbe> probesUsed = analysisObj.getProbesUsed();
         assertEquals( 132, probesUsed.size() );
+        assertEquals( analysisObj.getNumberOfElementsAnalyzed().intValue(), probesUsed.size() );
+        assertTrue( analysisObj.getNumberOfLinks().intValue() > 0 );
 
         for ( CoexpressionProbe cp : probesUsed ) {
             assertNotNull( cp.getNodeDegree() );

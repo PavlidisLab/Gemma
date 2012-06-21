@@ -1339,7 +1339,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getP2PClassName( Gene givenG ) {
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+        if ( false ) // TODO - provide means of determining if we should use the 'UserProbeCoExpressionImpl'
+            return "UserProbeCoExpressionImpl";
+        else if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
             return "HumanProbeCoExpressionImpl";
         else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
             return "MouseProbeCoExpressionImpl";
@@ -1354,7 +1356,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getP2PTableNameForClassName( String className ) {
-        if ( className.equals( "HumanProbeCoExpressionImpl" ) )
+        if ( className.equals( "UserProbeCoExpressionImpl" ) ) {
+            return "USER_PROBE_CO_EXPRESSION";
+        } else if ( className.equals( "HumanProbeCoExpressionImpl" ) )
             return "HUMAN_PROBE_CO_EXPRESSION";
         else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
             return "MOUSE_PROBE_CO_EXPRESSION";

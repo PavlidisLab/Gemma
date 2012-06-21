@@ -189,9 +189,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             count++;
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "Fetch " + count + "analyses for " + result.size() + " experiments: " + timer.getTime() + "ms" );
+            log.info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime() + "ms" );
             log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), query ) );
         }
+        timer.reset();
+        timer.start();
 
         /*
          * Deal with the analyses of subsets of the experiments given being analyzed; but we keep things organized by
@@ -223,7 +225,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
-                log.info( "Fetch " + count + "analyses for " + result.size() + " experiment subsets: "
+                log.info( "Fetch " + count + " analyses for " + result.size() + " experiment subsets: "
                         + timer.getTime() + "ms" );
                 log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
             }
