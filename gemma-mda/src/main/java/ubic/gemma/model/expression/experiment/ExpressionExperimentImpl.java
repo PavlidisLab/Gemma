@@ -36,16 +36,17 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
     @Override
     public boolean equals( Object object ) {
         if ( object == null ) return false;
-        if ( !this.getClass().equals( object.getClass() )
-                && !HibernateProxyHelper.getClassWithoutInitializingProxy( this.getClass() ).equals(
+        if ( this.getClass().equals( object.getClass() )
+                || HibernateProxyHelper.getClassWithoutInitializingProxy( this.getClass() ).equals(
                         HibernateProxyHelper.getClassWithoutInitializingProxy( object.getClass() ) ) ) {
+
+            ExpressionExperiment that = ( ExpressionExperiment ) object;
+            if ( this.getId() != null && that.getId() != null ) {
+                return this.getId().equals( that.getId() );
+            } else if ( this.getShortName() != null && that.getShortName() != null ) {
+                return this.getShortName().equals( that.getShortName() );
+            }
             return false;
-        }
-        ExpressionExperiment that = ( ExpressionExperiment ) object;
-        if ( this.getId() != null && that.getId() != null ) {
-            return this.getId().equals( that.getId() );
-        } else if ( this.getShortName() != null && that.getShortName() != null ) {
-            return this.getShortName().equals( that.getShortName() );
         }
         return false;
     }
