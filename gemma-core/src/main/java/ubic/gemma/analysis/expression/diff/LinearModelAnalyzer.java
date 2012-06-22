@@ -1330,8 +1330,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             factorsUsed.addAll( label2Factors.get( fName ) );
 
             FactorValue baselineGroup = null;
-            if ( !oneSampleTtest && factorsUsed.size() == 1 /* interaction */) {
-                baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
+            if ( !oneSampleTtest && factorsUsed.size() == 1 /* not interaction */) {
+                ExperimentalFactor factor = factorsUsed.iterator().next();
+                assert baselineConditions.containsKey( factor );
+                baselineGroup = baselineConditions.get( factor );
+                log.info( "Baseline group = " + baselineGroup );
             }
 
             Collection<HitListSize> hitListSizes = computeHitListSizes( results, probeToGeneMap );

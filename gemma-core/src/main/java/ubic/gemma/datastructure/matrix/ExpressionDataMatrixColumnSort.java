@@ -67,16 +67,30 @@ public class ExpressionDataMatrixColumnSort {
         controlGroupTerms.add( "control_group" );
         controlGroupTerms.add( "wild_type" );
         controlGroupTerms.add( "wild type" );
+
         controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
                                                                                              // saline.
         controlGroupTerms.add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
+
         controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
                 .toLowerCase() ); // control_group, old.
-        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201"
-                .toLowerCase() ); // control_group,
-        // new
-        // version.
 
+        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201"
+                .toLowerCase() ); // control_group, new version.(retired)
+
+        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001"
+                .toLowerCase() ); // " normal control_group", (retired)
+
+        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000025".toLowerCase() );// - reference substance
+                                                                                            // role
+
+        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000220".toLowerCase() );// - reference subject role
+
+        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000825".toLowerCase() ); // - to be treated with
+                                                                                             // placebo
+
+        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000143".toLowerCase() );// - baseline participant
+                                                                                            // role
     }
 
     /**
@@ -91,15 +105,25 @@ public class ExpressionDataMatrixColumnSort {
         Map<ExperimentalFactor, FactorValue> result = new HashMap<ExperimentalFactor, FactorValue>();
 
         for ( ExperimentalFactor factor : factors ) {
+
+            assert !factor.getFactorValues().isEmpty();
+
             for ( FactorValue fv : factor.getFactorValues() ) {
                 if ( isBaselineCondition( fv ) ) {
                     if ( result.containsKey( factor ) ) {
                         log.warn( "A second potential baseline was found for " + factor + ": " + fv );
                         continue;
                     }
+                    log.info( "Baseline chosen: " + fv );
                     result.put( factor, fv );
                     continue;
                 }
+            }
+
+            if ( !result.containsKey( factor ) ) {
+                FactorValue fv = factor.getFactorValues().iterator().next();
+                log.info( "Falling back on choosing baseline arbitrarily: " + fv );
+                result.put( factor, fv );
             }
         }
 

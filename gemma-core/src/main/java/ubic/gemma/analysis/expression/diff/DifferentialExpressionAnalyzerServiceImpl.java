@@ -112,6 +112,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private Persister persisterHelper = null;
 
+    private static final int MAX_FACTORS_FOR_AUTO_ANALYSIS = 3;
+
     /*
      * (non-Javadoc)
      * 
@@ -262,20 +264,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * 
      * @see
      * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
      * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection,
      * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
      */
@@ -283,6 +271,20 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
+        return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
     }
 
     /*
@@ -299,36 +301,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
         return expressionAnalyses;
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
-                    expressionExperiment, config );
-
-            for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-                deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
-            }
-
-            return persistAnalyses( expressionExperiment, diffExpressionAnalyses );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment,
-                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
-            throw new RuntimeException( e );
-        }
-    }
-
-    private static final int MAX_FACTORS_FOR_AUTO_ANALYSIS = 3;
 
     /*
      * (non-Javadoc)
@@ -410,19 +382,32 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     }
 
-    /**
-     * @param expressionExperiment
-     * @param diffExpressionAnalyses
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
-    private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
-        for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
-            results.add( persistentAnalysis );
+    @Override
+    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
+        try {
+            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
+                    expressionExperiment, config );
+
+            for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
+                deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+            }
+
+            return persistAnalyses( expressionExperiment, diffExpressionAnalyses );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment,
+                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                    ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
         }
-        return results;
     }
 
     /*
@@ -607,6 +592,16 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
+     * Avoid getting file names with spaces etc.
+     * 
+     * @param ee
+     * @return
+     */
+    private String cleanShortName( ExpressionExperiment ee ) {
+        return ee.getShortName().replaceAll( "[\\s\'\";,]", "_" );
+    }
+
+    /**
      * Remove old files which will otherwise be cruft.
      * 
      * @param ee
@@ -646,6 +641,21 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 log.warn( "Could not delete: " + oldf );
             }
         }
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param diffExpressionAnalyses
+     * @return
+     */
+    private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
+            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+        for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
+            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
+            results.add( persistentAnalysis );
+        }
+        return results;
     }
 
     /**
@@ -691,16 +701,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
         FileTools.createDir( dir.toString() );
         return dir;
-    }
-
-    /**
-     * Avoid getting file names with spaces etc.
-     * 
-     * @param ee
-     * @return
-     */
-    private String cleanShortName( ExpressionExperiment ee ) {
-        return ee.getShortName().replaceAll( "[\\s\'\";,]", "_" );
     }
 
     /**
