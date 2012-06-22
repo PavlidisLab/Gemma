@@ -125,16 +125,16 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					        	        }, {
 					        	        	xtype: 'button',
 					        	        	ref: 'showFoldChangeToggle',
-					        	        	text: 'Hide p-value',
+					        	        	text: 'Hide q-value',
 					        	        	width: 95,
 					        	        	y: 100,
 					        	        	handler: function(btn, e){
 					        	        	this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
 							
 					        	        	if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
-					        	        		btn.setText("Hide p-value");
+					        	        		btn.setText("Hide q-value");
 					        	        	} else {
-					        	        		btn.setText("Show p-value");
+					        	        		btn.setText("Show q-value");
 					        	        	}
 					        	        	this.variableWidthCol.boxHeatmap.draw();
 					        	        },
@@ -213,7 +213,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					ref: 'colorLegend',
 					x: 200,
 					y: 0,
-					title: 'Fold change & p-value',
+					title: 'Fold change & q-value',
 					cellSize: 14,
 					
 					foldChangeLabels: ["Down, >2 fold", "Down, <2 fold", "Up, <2 fold", "Up, >2 fold"],
