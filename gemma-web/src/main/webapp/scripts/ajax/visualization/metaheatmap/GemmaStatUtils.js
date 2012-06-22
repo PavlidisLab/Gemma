@@ -19,7 +19,11 @@ GemmaStatUtils.Constants.BIG_INVERSE = 2.22044604925031308085e-16;
  * @return double upper tail
  */
 GemmaStatUtils.computeMetaPvalue = function (pValues) {
-        var metaPvalue = 0.0;
+	if (pValues.length == 0) {
+		return 1.0;
+	}
+	
+	var metaPvalue = 0.0;
         for (var i = 0; i < pValues.length; i++ ) {
         	metaPvalue += Math.log( pValues[i] );
         }
