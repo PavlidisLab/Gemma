@@ -409,6 +409,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     config.getFactorsToInclude().addAll( factors );
                     results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
 
+                } else {
+                    results = this.differentialExpressionAnalyzerService
+                            .runDifferentialExpressionAnalyses( ee, factors );
                 }
 
             }
