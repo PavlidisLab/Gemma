@@ -375,7 +375,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
             // sanity check...
             for ( ExperimentalFactor experimentalFactor : efsToUse ) {
-                if ( !experimentalFactor.getExperimentalDesign().equals( expressionExperiment.getExperimentalDesign() ) ) {
+                if ( !experimentalFactor.getExperimentalDesign().getId()
+                        .equals( expressionExperiment.getExperimentalDesign().getId() ) ) {
                     throw new IllegalArgumentException( "Factors must come from the experiment provided" );
                 }
             }

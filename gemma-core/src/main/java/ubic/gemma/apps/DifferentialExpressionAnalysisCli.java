@@ -28,11 +28,14 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -83,6 +86,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     protected boolean ignoreBatch = true;
 
+    /**
+     * If there are too many factors, try to do the analysis the way it was done before ('redo')
+     */
+    private boolean tryToCopyOld = false;
+
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     /*
      * (non-Javadoc)
      * 
@@ -131,8 +141,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .hasArg()
                 .withDescription(
                         "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                                + "Choices are : TWA (two-way anova), TWIA (two-way ANOVA with interactions), OWA (one-way ANOVA), TTEST" )
-                .create( "type" );
+                                + "Choices are : TWA (two-way anova with interaction), "
+                                + "TWANI (two-way ANOVA without interactions), OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
+                                + " GENERICLM (generic LM, no interactions)" ).create( "type" );
 
         super.addOption( analysisType );
 
@@ -144,6 +155,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addOption( ignoreBatchOption );
 
         super.addOption( "nodb", false, "Output only to STDOUT instead of database" );
+
+        super.addOption( "redo", false, "If using automatic analysis, and there are more than 3 factors available, "
+                + "try to base the analysis on a previous analysis. Only works if there is just one old analysis." );
 
     }
 
@@ -195,7 +209,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     protected void processOptions() {
         super.processOptions();
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
-
+        differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
         if ( hasOption( "type" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {
@@ -212,6 +226,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         if ( hasOption( "usebatch" ) ) {
             this.ignoreBatch = false;
         }
+
+        this.tryToCopyOld = hasOption( "redo" );
 
         if ( hasOption( "factors" ) ) {
 
@@ -301,7 +317,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param ee
      */
     protected void processExperiment( ExpressionExperiment ee ) {
-        Collection<DifferentialExpressionAnalysis> results;
+        Collection<DifferentialExpressionAnalysis> results = null;
         try {
 
             ee = this.eeService.thawLite( ee );
@@ -346,7 +362,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         }
                     }
                 } else {
-
                     factorsToUse.addAll( experimentalFactors );
                 }
 
@@ -355,12 +370,47 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 }
 
                 if ( factorsToUse.size() > 3 ) {
-                    throw new RuntimeException( "Experiment has too many factors to run automatically: "
-                            + ee.getShortName() );
+
+                    if ( !tryToCopyOld ) {
+                        throw new RuntimeException(
+                                "Experiment has too many factors to run automatically: "
+                                        + ee.getShortName()
+                                        + "; try using the -redo flag to base it on an old analysis, or select factors with the ." );
+                    }
+                    Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
+                            .findByInvestigation( ee );
+
+                    if ( oldAnalyses.size() > 1 ) {
+                        throw new RuntimeException( "Experiment has too many factors to run automatically: "
+                                + ee.getShortName()
+                                + " and there is more than one old analysis on which to base the new one" );
+                    }
+
+                    DifferentialExpressionAnalysis copyMe = oldAnalyses.iterator().next();
+                    differentialExpressionAnalysisService.thaw( copyMe );
+
+                    log.info( "Will base analysis on old one: " + copyMe );
+                    DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+                    if ( copyMe.getSubsetFactorValue() != null ) {
+                        config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
+                    }
+
+                    Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
+                    for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                        Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
+                        factors.addAll( oldfactors );
+
+                        if ( oldfactors.size() == 2 ) {
+                            config.getInteractionsToInclude().add( oldfactors );
+                        }
+
+                    }
+                    config.getFactorsToInclude().addAll( factors );
+                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+
                 }
 
-                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
-                        factorsToUse );
             }
 
             if ( results == null ) {
