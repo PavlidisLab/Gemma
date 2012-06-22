@@ -466,7 +466,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					} else {
 						if (cell.pValue !== null) {
 							numProbesInSet += cell.numberOfProbes;
-							if (cell.pValue < 0.5) {
+							if (cell.pValue < 0.5) { //TODO: Centralize all threshold values used in Gemma.
 								numOverThresholdInSet += cell.numberOfProbesDiffExpressed;
 							}
 						}
@@ -539,7 +539,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					geneSymbol   : item.name,
 					geneId 		 : item.id,
 					geneFullName : item.fullName,
-					geneMetaPvalue :  item.metaPvalue,
+					geneMetaPvalue : ( item.metaPvalue == 2.0 ) ? "NA" : item.metaPvalue
 			};
 		} else if (type === 'condition') {
 			var specificity = Gemma.Metaheatmap.Utils.formatPercent(item.numberDiffExpressedProbes, item.numberOfProbesOnArray, 2);

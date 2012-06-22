@@ -20,7 +20,8 @@ GemmaStatUtils.Constants.BIG_INVERSE = 2.22044604925031308085e-16;
  */
 GemmaStatUtils.computeMetaPvalue = function (pValues) {
 	if (pValues.length == 0) {
-		return 1.0;
+		return 2.0; //FIXME: for value 2.0 I display 'NA' to the user.
+		// FIXME: proper fix would be using a pair (display value, sort value) so that sort doesn't trip on strings and these values are ranked low.
 	}
 	
 	var metaPvalue = 0.0;
