@@ -127,7 +127,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
         Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort.getBaselineLevels( ee
                 .getExperimentalDesign().getExperimentalFactors() );
 
-        assertEquals( 1, baselineLevels.size() ); // the batch does not get a baseline. IF we change that then we change
+        assertEquals( 2, baselineLevels.size() ); // the batch DOES get a baseline. IF we change that then we change
                                                   // this test.
         for ( ExperimentalFactor ef : baselineLevels.keySet() ) {
             FactorValue fv = baselineLevels.get( ef );
