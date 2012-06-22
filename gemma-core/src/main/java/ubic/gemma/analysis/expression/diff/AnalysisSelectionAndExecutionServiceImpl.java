@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -270,6 +271,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             return AnalysisType.GENERICLM;
         }
 
+        assert !efsToUse.isEmpty();
+
         if ( efsToUse.size() == 1 ) {
 
             ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
@@ -363,9 +366,13 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
      */
     private Collection<ExperimentalFactor> getFactorsToUse( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        Collection<ExperimentalFactor> efsToUse = null;
+        Collection<ExperimentalFactor> efsToUse = new HashSet<ExperimentalFactor>();
         if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
-            efsToUse = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+            efsToUse.addAll( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+            if ( efsToUse.isEmpty() ) {
+                throw new IllegalStateException(
+                        "No factors given, nor in the experiment's design. Cannot execute differential expression analysis." );
+            }
         } else {
             efsToUse = experimentalFactors;
             if ( efsToUse.isEmpty() ) {

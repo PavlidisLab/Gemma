@@ -341,6 +341,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 /*
                  * Manual selection of factors
                  */
+                log.info( "Using " + factors.size() + "factors provided as arguments" );
                 if ( this.type != null ) {
                     results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
                             factors, type );
@@ -397,21 +398,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     }
 
                     Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
+                    Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
                     for ( ExpressionAnalysisResultSet rs : resultSets ) {
                         Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
-                        factors.addAll( oldfactors );
+                        factorsFromOldExp.addAll( oldfactors );
 
                         if ( oldfactors.size() == 2 ) {
                             config.getInteractionsToInclude().add( oldfactors );
                         }
 
                     }
-                    config.getFactorsToInclude().addAll( factors );
+                    if ( factorsFromOldExp.isEmpty() ) {
+                        throw new IllegalStateException( "Old analysis didn't have any factors" );
+                    }
+                    config.getFactorsToInclude().addAll( factorsFromOldExp );
                     results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
 
                 } else {
-                    results = this.differentialExpressionAnalyzerService
-                            .runDifferentialExpressionAnalyses( ee, factors );
+                    assert !factorsToUse.isEmpty();
+                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
+                            factorsToUse );
                 }
 
             }
