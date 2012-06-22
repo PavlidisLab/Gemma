@@ -351,7 +351,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      		cls 	: 'x-btn-icon',
 			      		tooltip : 'Click here for documentation on how to use this visualizer.',
 			      		handler : function() {
-			      		  window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/download/attachments/26706691/diffExprVizImageDoc_b.png'); 
+			      		  window.open('http://gemma-chibi-doc.sites.olt.ubc.ca/documentation/search-page/#GemmaQuickGuide-DifferentialExpressionView'); 
 			      	  	},
 			      	  	scope	: this		      	 
 			        }

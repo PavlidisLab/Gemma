@@ -170,15 +170,15 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 				items: [
 				{
 					text: 'About Gemma',
-					href : "/Gemma/static/about.html",
+					href : "http://gemma-chibi-doc.sites.olt.ubc.ca",
 					tooltip:"Gemma overview and general help"
 				},{
 					text: 'Help and Documentation',
-					href : "/Gemma/static/help.html",
+					href : "http://gemma-chibi-doc.sites.olt.ubc.ca/documentation/",
 					tooltip:"Gemma overview and general help"
 				}, {
 					text: 'Updates',
-					href : "http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news",
+					href : "http://gemma-chibi-doc.sites.olt.ubc.ca/category/news/",
 					tooltip: "View recent data and software updates"
 				}, {
 					text: 'Expression Experiment QC',

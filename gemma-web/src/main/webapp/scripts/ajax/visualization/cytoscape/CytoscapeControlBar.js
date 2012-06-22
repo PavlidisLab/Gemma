@@ -146,18 +146,10 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 xtype: 'button',
                 text: '<b>Help</b>',
                 tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.widgetHelpTT,
-                handler: function () {
-                    var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
-                    var win = new Ext.Window({
-                        title: 'Help',
-                        height: 720,
-                        plain: true,
-                        html: htmlString,
-                        autoScroll: true
-                    });
-                    win.show();
-                },
-                scope: this
+	      		handler : function() {
+	      		  window.open('http://gemma-chibi-doc.sites.olt.ubc.ca/documentation/search-page/#GemmaQuickGuide-CoexpressionView'); 
+	      	  	},
+	      	  	scope	: this		      	 
             }, '->', '-',
             {
                 xtype: 'button',
