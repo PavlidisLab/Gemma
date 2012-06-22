@@ -29,9 +29,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -198,6 +200,13 @@ public class SearchServiceImpl implements SearchService {
      * How many term children can stay in memory
      */
     private static final int ONTOLOGY_INFO_CACHE_SIZE = 15000;
+    
+    /**
+     * If fewer than this number of experiments are returned from the a search of experiment characteristics,
+     * then search for experiments indirectly as well (ex: by finding bioMatierials tagged with 
+     * the characteristicsand getting the experiments associated with them ).
+     */
+    private static final int SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS = 100;
 
     Analyzer analyzer = new StandardAnalyzer();
 
@@ -714,19 +723,37 @@ public class SearchServiceImpl implements SearchService {
         return searchResults;
     }
 
-    /**
+   /**
      * @param settings
      */
     private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {
+
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
-        Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
-        classesToSearch.add( ExpressionExperiment.class );
-        classesToSearch.add( BioMaterial.class );
-        classesToSearch.add( FactorValue.class );
-        classesToSearch.add( Treatment.class );
+        Collection<Class<?>> classToSearch = new ArrayList<Class<?>>( 1 );
+        Queue<Class<?>> orderedClassesToSearch = new LinkedList<Class<?>>();
+        orderedClassesToSearch.add( ExpressionExperiment.class );
+        orderedClassesToSearch.add( FactorValue.class );
+        orderedClassesToSearch.add( BioMaterial.class );
+        orderedClassesToSearch.add( Treatment.class );
 
-        Collection<SearchResult> characterSearchResults = ontologySearchAnnotatedObject( classesToSearch, settings );
+        Collection<SearchResult> characterSearchResults = new HashSet<SearchResult>();
+
+        while ( characterSearchResults.size() < SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS
+                && !orderedClassesToSearch.isEmpty() ) {
+            classToSearch.clear();
+            classToSearch.add( orderedClassesToSearch.poll() );
+            Collection<SearchResult> classResults = ontologySearchAnnotatedObject( classToSearch, settings );
+            characterSearchResults.addAll( classResults );
+
+            String msg = "Found " + classResults.size() + " " + classToSearch.iterator().next().getSimpleName()
+                    + " results from characteristic search.";
+            if ( characterSearchResults.size() >= SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS ) {
+                msg += " Total found > " + SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS
+                        + ", will not search for more entities.";
+            }
+            log.info( msg );
+        }
 
         StopWatch watch = new StopWatch();
         watch.start();
