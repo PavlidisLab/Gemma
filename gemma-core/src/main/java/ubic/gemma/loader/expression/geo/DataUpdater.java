@@ -31,6 +31,7 @@ import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -215,13 +216,8 @@ public class DataUpdater {
      * @param arrayDesign
      */
     private void audit( ExpressionExperiment ee, String note ) {
-        // AuditEventType eventType = DataVectorUpdateEvent.Factory.newInstance();
-
-        /*
-         * This is temporary until we have a more specific event type.
-         */
-        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note, "DataVectorUpdateEventImpl placeholder" );
+        AuditEventType eventType = DataReplacedEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**

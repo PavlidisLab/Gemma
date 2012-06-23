@@ -87,7 +87,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         FilterConfig fCon = new FilterConfig();

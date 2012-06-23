@@ -183,7 +183,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
 
         List<SearchResult> eesSR = new ArrayList<SearchResult>();
-        if( results.get( ExpressionExperimentSet.class ) != null ){
+        if ( results.get( ExpressionExperimentSet.class ) != null ) {
             eesSR.addAll( results.get( ExpressionExperimentSet.class ) );
         }
         Map<Long, Boolean> isSetOwnedByUser = new HashMap<Long, Boolean>();
@@ -236,8 +236,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 .convertSearchResults2SearchResultDisplayObjects( eesSR );
 
         /*
-         * THIS SHOULD BE TAKEN CARE OF BY CALL TO 'expressionExperimentSetService.isValidForFrontEnd' BUT THIS NEEDS TO
-         * BE VERIFIED
+         * FIXME THIS SHOULD BE TAKEN CARE OF BY CALL TO 'expressionExperimentSetService.isValidForFrontEnd' BUT THIS
+         * NEEDS TO BE VERIFIED
          * 
          * // when searching for an experiment by short name, one or more experiment set(s) is(are) also returned // ex:
          * searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member // to fix this, if 1 ee is

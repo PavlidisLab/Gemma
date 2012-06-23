@@ -210,6 +210,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     Collection<DifferentialExpressionAnalysis> analysesForExperiment = filterAnalyses( analyses
                             .get( experiment ) );
 
+                    if ( analysesForExperiment.isEmpty() ) {
+                        continue;
+                    }
+
                     for ( DifferentialExpressionAnalysis analysis : analysesForExperiment ) {
 
                         List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
@@ -292,44 +296,68 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          */
         private Collection<DifferentialExpressionAnalysis> filterAnalyses(
                 Collection<DifferentialExpressionAnalysis> analyses ) {
+
+            // easy case.
             if ( analyses.size() == 1 ) return analyses;
 
             Collection<DifferentialExpressionAnalysis> filtered = new HashSet<DifferentialExpressionAnalysis>();
 
+            ExperimentalFactor subsetFactor = null;
+            Map<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>> analysisFactorsUsed = new HashMap<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>>();
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
 
+                // take the first subsetted analysis we see.
                 if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
-                    /*
-                     * For now let's skip these. We might actually want to favor them but that will require a bit more
-                     * work.
-                     */
-                    log.info( "Subsetted analysis skipped: " + analysis.getExperimentAnalyzed().getName() );
-                    continue;
+                    differentialExpressionAnalysisService.thaw( analysis ); // NOTE necessary, but possibly slows things down
+
+                    if ( subsetFactor != null
+                            && subsetFactor.equals( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
+                        filtered.add( analysis );
+                    } else {
+                        filtered.add( analysis );
+                    }
+                    subsetFactor = analysis.getSubsetFactorValue().getExperimentalFactor();
+                } else {
+
+                    List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
+                    Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
+                    for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                        if ( isBatch( rs ) ) continue;
+                        Collection<ExperimentalFactor> facts = rs.getExperimentalFactors();
+                        for ( ExperimentalFactor f : facts ) {
+                            if ( ExperimentalDesignUtils.isBatch( f ) ) continue;
+                            factorsUsed.add( f );
+                        }
+                    }
+                    if ( factorsUsed.isEmpty() ) continue;
+                    analysisFactorsUsed.put( analysis, factorsUsed );
                 }
+            }
 
-                FactorValue subsetFactorValue = analysis.getSubsetFactorValue(); // NOTE proxy.
-                if ( subsetFactorValue != null ) {
-                    log.info( "Subsetted analysis skipped: " + analysis.getExperimentAnalyzed().getName() );
-                    /*
-                     * For now let's skip these. We might actually want to favor them but that will require a bit more
-                     * work.
-                     */
-                    continue;
+            /*
+             * If we got a subset analysis, just use it.
+             */
+            if ( !filtered.isEmpty() ) {
+                log.info( "Using subsetted analyses for " + analyses.iterator().next().getExperimentAnalyzed() );
+                return filtered;
+            }
+
+            if ( analysisFactorsUsed.isEmpty() ) {
+                log.info( "No analyses were usable for " + analyses.iterator().next().getExperimentAnalyzed() );
+                return filtered;
+            }
+
+            /*
+             * Look for the analysis that has the most factors. We might change this to pick more than one if they use
+             * different factors, but this would be pretty rare.
+             */
+            assert !analysisFactorsUsed.isEmpty();
+            DifferentialExpressionAnalysis best = null;
+            for ( DifferentialExpressionAnalysis candidate : analysisFactorsUsed.keySet() ) {
+                if ( best == null
+                        || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
+                    best = candidate;
                 }
-
-                // thinking of some complicated way to decide...
-
-                /*
-                 * - avoid ones that include interaction? - avoid ones that use the same factor(s) as another
-                 */
-
-                // Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
-                // List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
-                // for ( ExpressionAnalysisResultSet rs : resultSets ) {
-                // factorsUsed.addAll( rs.getExperimentalFactors() );
-                // }
-                filtered.add( analysis );
-
             }
 
             return filtered;
@@ -396,22 +424,22 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          * 
          * @param resultSets
          * @param geneIds
-         * @param arrayDesignsUsed
          * @param searchResult holds the results
          */
-        private void fillBatchOfHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
-                Collection<ArrayDesign> arrayDesignsUsed, DifferentialExpressionGenesConditionsValueObject searchResult ) {
+        private void fillBatchOfHeatmapCells(
+                Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, List<Long> geneIds,
+                DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
             StopWatch watch = new StopWatch( "Fill diff ex heatmap cells" );
             watch.start( "DB query for diff ex results" );
 
             // Main query for results.
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults = differentialExpressionResultService
-                    .findDifferentialExpressionAnalysisResultIdsInResultSet( EntityUtils.getIds( resultSets ), geneIds,
-                            getADIds( arrayDesignsUsed ) );
+                    .findDifferentialExpressionAnalysisResultIdsInResultSet( resultSetIdsToArrayDesignsUsed, geneIds );
             watch.stop();
 
-            Map<Long, ExpressionAnalysisResultSet> resultSetMap = EntityUtils.getIdMap( resultSets );
+            Map<Long, ExpressionAnalysisResultSet> resultSetMap = EntityUtils.getIdMap( resultSetIdsToArrayDesignsUsed
+                    .keySet() );
 
             Collection<DiffExprGeneSearchResult> aggregatedResults = aggregateAcrossResultSets( resultSetToGeneResults );
             watch.start( "Processing " + aggregatedResults.size() + " results from DB query" );
@@ -434,7 +462,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
             this.setTaskProgress( "Processing request...", 10 );
 
-            Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed = new HashMap<ExpressionAnalysisResultSet, Collection<Long>>();
 
             StopWatch timer = new StopWatch();
             timer.start();
@@ -442,14 +470,16 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             for ( ExpressionAnalysisResultSet rs : resultSets ) {
                 // TODO indexing this by resultset could be useful to further reduce query size, but not sure it is
                 // worth it
-                arrayDesignsUsed.addAll( eeService.getArrayDesignsUsed( rs.getAnalysis().getExperimentAnalyzed() ) );
+                resultSetIdsToArrayDesignsUsed
+                        .put( rs, EntityUtils.getIds( eeService.getArrayDesignsUsed( rs.getAnalysis()
+                                .getExperimentAnalyzed() ) ) );
             }
             timer.stop();
             if ( timer.getTotalTimeMillis() > 100 ) {
                 log.info( "Fetch array designs used: " + timer.getTotalTimeMillis() + "ms" );
             }
 
-            fillBatchOfHeatmapCells( resultSets, geneIds, arrayDesignsUsed, searchResult );
+            fillBatchOfHeatmapCells( resultSetIdsToArrayDesignsUsed, geneIds, searchResult );
 
         }
 
@@ -494,7 +524,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     continue;
                 }
 
-                // must have hitlists populated 
+                // must have hitlists populated
                 if ( resultSet.getHitListSizes() == null ) {
                     log.warn( "Possible data issue: resultSet.getHitListSizes() returned null for result set with ID="
                             + resultSet.getId() );
@@ -658,7 +688,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                 // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.
                 if ( correctedPvalue < TINY_QVALUE ) {
-                    correctedPvalue = TINY_QVALUE; 
+                    correctedPvalue = TINY_QVALUE;
                 }
 
                 if ( uncorrectedPvalue < TINY_PVALUE ) {

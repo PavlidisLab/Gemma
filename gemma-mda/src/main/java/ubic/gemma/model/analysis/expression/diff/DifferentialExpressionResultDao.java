@@ -82,13 +82,12 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
             Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
-     * @param resultSetIds
+     * @param resultSets2arrayDesigns
      * @param geneIds
-     * @param adUsed
      * @return map of resultsetId to map of gene to DiffExprGeneSearchResult
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
-            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed );
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
 
     public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit );
@@ -117,8 +116,6 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      */
     public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             java.util.Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
-
-  
 
     /**
      * @param results

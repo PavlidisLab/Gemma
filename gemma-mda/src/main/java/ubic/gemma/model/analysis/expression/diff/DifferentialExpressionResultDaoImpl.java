@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -422,12 +423,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
-            final Collection<Long> resultSetIds, final Collection<Long> geneIds, Collection<Long> adUsed ) {
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
         Session session = super.getSession();
 
-        Map<Long, Collection<Long>> foundInCache = fillFromCache( results, resultSetIds, geneIds );
+        Map<Long, ExpressionAnalysisResultSet> resultSetIds = EntityUtils.getIdMap( resultSetIdsToArrayDesignsUsed
+                .keySet() );
+        Map<Long, Collection<Long>> foundInCache = fillFromCache( results, resultSetIds.keySet(), geneIds );
 
         if ( !foundInCache.isEmpty() ) {
             log.info( "Results for " + foundInCache.size() + " resultsets found in cache" );
@@ -435,7 +438,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             log.info( "No results were in the cache" );
         }
 
-        Collection<Long> resultSetsNeeded = stripUnneededResultSets( foundInCache, resultSetIds, geneIds );
+        Collection<Long> resultSetsNeeded = stripUnneededResultSets( foundInCache, resultSetIds.keySet(), geneIds );
 
         // Are we finished?
         if ( resultSetsNeeded.isEmpty() ) {
@@ -455,7 +458,6 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
          * again. This could be further stratified by resultset x arraydesign, since many probes are irrelevant for a
          * given resultset.
          */
-        Map<Long, Collection<Long>> cs2GeneIdMap = CommonQueries.getCs2GeneIdMap( geneIds, adUsed, session );
 
         // TODO temporary like this - fix it so we don't get it multiple times.
         int RS_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.resultset.batchsize", 1 );
@@ -478,6 +480,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             if ( log.isDebugEnabled() )
                 log.debug( "Starting batch of resultsets: "
                         + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
+
+            Map<Long, Collection<Long>> cs2GeneIdMap = getProbesForGenesInResultSetBatch( session, geneIds,
+                    resultSetIds, resultSetIdsToArrayDesignsUsed, resultSetIdBatch );
+
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
 
             for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), GENE_BATCH_SIZE ) ) {
@@ -539,8 +545,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
             log.info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds="
                     + StringUtils.abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
-                    + StringUtils.abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) + " adused="
-                    + StringUtils.abbreviate( StringUtils.join( adUsed, "," ), 50 ) );
+                    + StringUtils.abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
         }
 
         addToCache( resultsFromDb, resultSetsNeeded, geneIds );
@@ -711,26 +716,6 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoBase#load(java.lang.Long)
-     */
-    @Override
-    public DifferentialExpressionAnalysisResult load( Long id ) {
-        return this.getHibernateTemplate().get( DifferentialExpressionAnalysisResultImpl.class, id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#loadAll()
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysisResult> loadAll() {
-        throw new UnsupportedOperationException( "Sorry, that would be nuts" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#loadMultiple(java.util.Collection)
      */
     @Override
@@ -752,6 +737,26 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         }
 
         return probeResults;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoBase#load(java.lang.Long)
+     */
+    @Override
+    public DifferentialExpressionAnalysisResult load( Long id ) {
+        return this.getHibernateTemplate().get( DifferentialExpressionAnalysisResultImpl.class, id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#loadAll()
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysisResult> loadAll() {
+        throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
 
     /*
@@ -945,6 +950,26 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         return foundInCache;
 
+    }
+
+    /**
+     * @param session
+     * @param geneIds
+     * @param resultSetIds
+     * @param resultSetIdsToArrayDesignsUsed
+     * @param resultSetIdBatch
+     * @return
+     */
+    private Map<Long, Collection<Long>> getProbesForGenesInResultSetBatch( Session session, Collection<Long> geneIds,
+            Map<Long, ExpressionAnalysisResultSet> resultSetIds,
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed,
+            Collection<Long> resultSetIdBatch ) {
+        Collection<Long> adUsed = new HashSet<Long>();
+        for ( Long rsid : resultSetIdBatch ) {
+            adUsed.addAll( resultSetIdsToArrayDesignsUsed.get( resultSetIds.get( rsid ) ) );
+        }
+        Map<Long, Collection<Long>> cs2GeneIdMap = CommonQueries.getCs2GeneIdMap( geneIds, adUsed, session );
+        return cs2GeneIdMap;
     }
 
     /**

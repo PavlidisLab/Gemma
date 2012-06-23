@@ -21,8 +21,6 @@ package ubic.gemma.expression.experiment.service;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * <p>

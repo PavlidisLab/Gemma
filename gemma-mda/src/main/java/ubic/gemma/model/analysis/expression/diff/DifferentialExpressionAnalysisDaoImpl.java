@@ -253,20 +253,20 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     protected void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
             DifferentialExpressionAnalysis dea = ea;
-            doThaw( dea, false );
+            doThaw( dea );
         }
     }
 
     @Override
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.doThaw( differentialExpressionAnalysis, false );
+        this.doThaw( differentialExpressionAnalysis );
     }
 
     /**
      * @param differentialExpressionAnalysis
      * @param deep
      */
-    protected void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis, final boolean deep ) {
+    protected void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         Session session = this.getSession();
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
@@ -282,20 +282,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         for ( ExpressionAnalysisResultSet ear : ears ) {
             session.buildLockRequest( LockOptions.NONE ).lock( ear );
             Hibernate.initialize( ear );
-
-            if ( deep ) { // not used.
-                Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-                Hibernate.initialize( ders );
-                for ( DifferentialExpressionAnalysisResult der : ders ) {
-                    session.buildLockRequest( LockOptions.NONE ).lock( der );
-                    Hibernate.initialize( der );
-
-                    CompositeSequence cs = der.getProbe();
-                    Hibernate.initialize( cs );
-
-                }
-            }
-
             Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
 
         }
@@ -578,7 +564,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 desvo.setFactorIds( EntityUtils.getIds( par.getExperimentalFactors() ) );
 
                 for ( HitListSize hitList : par.getHitListSizes() ) {
-                    if ( hitList.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+                    if ( hitList.getThresholdQvalue().equals(
+                            DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
 
                         if ( hitList.getDirection().equals( Direction.UP ) ) {
                             desvo.setUpregulatedCount( hitList.getNumberOfProbes() );

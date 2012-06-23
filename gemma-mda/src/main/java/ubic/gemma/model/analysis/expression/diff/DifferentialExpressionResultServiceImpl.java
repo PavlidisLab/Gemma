@@ -90,9 +90,9 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      */
     @Override
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
-            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed ) {
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
         return this.getDifferentialExpressionResultDao().findDifferentialExpressionAnalysisResultIdsInResultSet(
-                resultSetIds, geneIds, adUsed );
+                resultSetIdsToArrayDesignsUsed, geneIds );
     }
 
     @Override

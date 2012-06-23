@@ -105,12 +105,10 @@ public interface DifferentialExpressionResultService {
      * interfaces.
      * 
      * @param resultSets
-     * @param genes
-     * @param adUsed
-     * @return map of resultset IDs to map of gene id to differential expression results.
+     * @param genes * @return map of resultset IDs to map of gene id to differential expression results.
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
-            Collection<Long> resultSetIds, Collection<Long> geneIds, Collection<Long> adUsed );
+            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
