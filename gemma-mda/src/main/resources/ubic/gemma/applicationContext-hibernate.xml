@@ -74,7 +74,7 @@
 			<tx:method name="thaw*" read-only="true" />
 			<tx:method name="is*" read-only="true" />
 			<tx:method name="are*" read-only="true" />
-			<tx:method name="count*" read-only="false" /> <!--  temporary -->
+			<tx:method name="count*" read-only="true" /> 
 			<tx:method name="has*" read-only="true" />
 			<tx:method name="lack*" read-only="true" />
 			<tx:method name="retain*" read-only="true" />
@@ -151,7 +151,6 @@
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
-
 				<value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml</value>

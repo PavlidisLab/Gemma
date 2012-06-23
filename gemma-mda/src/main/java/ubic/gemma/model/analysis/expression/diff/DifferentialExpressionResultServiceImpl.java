@@ -153,8 +153,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    protected void handleThaw( ExpressionAnalysisResultSet resultSet ) {
-        this.getExpressionAnalysisResultSetDao().thaw( resultSet );
+    protected ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet ) {
+        return this.getExpressionAnalysisResultSetDao().thaw( resultSet );
     }
 
     @Override

@@ -79,7 +79,7 @@ public abstract class AbstractCLI {
 
     private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2011 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2012 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
     private static int DEFAULT_VERBOSITY = 4; // info.
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
@@ -590,6 +590,7 @@ public abstract class AbstractCLI {
      */
     protected void printHelp( String command ) {
         HelpFormatter h = new HelpFormatter();
+        h.setWidth( 120 );
         h.printHelp( command + " [options]", HEADER, options, FOOTER );
     }
 

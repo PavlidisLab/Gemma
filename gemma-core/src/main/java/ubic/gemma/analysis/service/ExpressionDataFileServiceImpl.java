@@ -642,7 +642,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
          */
 
         for ( ExpressionAnalysisResultSet ears : results ) {
-            differentialExpressionResultService.thaw( ears );
+            ears = differentialExpressionResultService.thaw( ears );
             sortedFirstColumnOfResults = analysisResultSetToString( ears, geneAnnotations, buf, probe2String,
                     sortedFirstColumnOfResults );
 

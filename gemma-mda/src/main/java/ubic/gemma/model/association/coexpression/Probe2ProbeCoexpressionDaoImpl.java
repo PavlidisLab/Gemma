@@ -178,55 +178,55 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         if ( r.isEmpty() ) {
 
-            // FIXME try other way; this is a backwards compatibility fix. It should be removed once all p2p analyses
-            // have the numberOfLinks field populated.
-
-            for ( String p2pClassName : p2pClassNames ) {
-
-                final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
-                        + " where EXPRESSION_EXPERIMENT_FK = :eeid";
-
-                SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
-                queryObject.setMaxResults( 1 );
-                queryObject.setParameter( "eeid", expressionExperiment );
-                List<BigInteger> results = queryObject.list();
-
-                if ( results.isEmpty() || results.get( 0 ).intValue() == 0 ) {
-                    // keep trying
-                    continue;
-                }
-
-                /*
-                 * We divide by 2 because all links are stored twice
-                 */
-                count = results.get( 0 ).intValue() / 2;
-
-                /*
-                 * Backfill
-                 */
-                List<ProbeCoexpressionAnalysis> an = this.getHibernateTemplate().findByNamedParam(
-                        "select a from ProbeCoexpressionAnalysisImpl a where a.experimentAnalyzed.id = :eeid  ",
-                        "eeid", expressionExperiment );
-                if ( an.isEmpty() ) {
-                    if ( count > 0 ) {
-                        log.warn( "Odd, there's a link count (" + count
-                                + ") but no analysis object for experiment with id=" + expressionExperiment );
-                    }
-                } else {
-                    log.info( "Updating coexp link count=" + count + " in analysis for experiment with id="
-                            + expressionExperiment );
-
-                    if ( an.size() > 1 ) {
-                        log.error( "more than one ProbeCoexpressionAnalysis for EE=" + expressionExperiment );
-                        return count;
-                    }
-
-                    an.get( 0 ).setNumberOfLinks( count );
-                    this.getHibernateTemplate().update( an.get( 0 ) );
-                }
-
-                break;
-            }
+//            // FIXME try other way; this is a backwards compatibility fix. It should be removed once all p2p analyses
+//            // have the numberOfLinks field populated.
+//
+//            for ( String p2pClassName : p2pClassNames ) {
+//
+//                final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
+//                        + " where EXPRESSION_EXPERIMENT_FK = :eeid";
+//
+//                SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
+//                queryObject.setMaxResults( 1 );
+//                queryObject.setParameter( "eeid", expressionExperiment );
+//                List<BigInteger> results = queryObject.list();
+//
+//                if ( results.isEmpty() || results.get( 0 ).intValue() == 0 ) {
+//                    // keep trying
+//                    continue;
+//                }
+//
+//                /*
+//                 * We divide by 2 because all links are stored twice
+//                 */
+//                count = results.get( 0 ).intValue() / 2;
+//
+//                /*
+//                 * Backfill
+//                 */
+//                List<ProbeCoexpressionAnalysis> an = this.getHibernateTemplate().findByNamedParam(
+//                        "select a from ProbeCoexpressionAnalysisImpl a where a.experimentAnalyzed.id = :eeid  ",
+//                        "eeid", expressionExperiment );
+//                if ( an.isEmpty() ) {
+//                    if ( count > 0 ) {
+//                        log.warn( "Odd, there's a link count (" + count
+//                                + ") but no analysis object for experiment with id=" + expressionExperiment );
+//                    }
+//                } else {
+//                    log.info( "Updating coexp link count=" + count + " in analysis for experiment with id="
+//                            + expressionExperiment );
+//
+//                    if ( an.size() > 1 ) {
+//                        log.error( "more than one ProbeCoexpressionAnalysis for EE=" + expressionExperiment );
+//                        return count;
+//                    }
+//
+//                    an.get( 0 ).setNumberOfLinks( count );
+//                    this.getHibernateTemplate().update( an.get( 0 ) );
+//                }
+//
+//                break;
+//            }
 
             return count;
         }

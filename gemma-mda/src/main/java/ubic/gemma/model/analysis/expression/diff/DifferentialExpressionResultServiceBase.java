@@ -79,8 +79,8 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
      * @see diff.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    public void thaw( final ExpressionAnalysisResultSet resultSet ) {
-        this.handleThaw( resultSet );
+    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
+        return this.handleThaw( resultSet );
 
     }
 
@@ -113,6 +113,6 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     /**
      * Performs the core logic for {@link #thaw(ExpressionAnalysisResultSet)}
      */
-    protected abstract void handleThaw( ExpressionAnalysisResultSet resultSet );
+    protected abstract ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet );
 
 }

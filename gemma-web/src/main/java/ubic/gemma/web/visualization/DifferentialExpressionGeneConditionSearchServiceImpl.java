@@ -494,7 +494,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     continue;
                 }
 
-                // must have hitlists populated (old analyses)
+                // must have hitlists populated 
                 if ( resultSet.getHitListSizes() == null ) {
                     log.warn( "Possible data issue: resultSet.getHitListSizes() returned null for result set with ID="
                             + resultSet.getId() );
@@ -658,7 +658,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                 // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.
                 if ( correctedPvalue < TINY_QVALUE ) {
-                    correctedPvalue = TINY_QVALUE; // this was 1e-9, and only used for zero.
+                    correctedPvalue = TINY_QVALUE; 
                 }
 
                 if ( uncorrectedPvalue < TINY_PVALUE ) {

@@ -144,7 +144,7 @@ public interface DifferentialExpressionResultService {
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( ExpressionAnalysisResultSet resultSet );
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
     public void thaw( DifferentialExpressionAnalysisResult result );
 

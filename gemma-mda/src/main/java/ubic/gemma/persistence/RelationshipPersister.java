@@ -21,6 +21,7 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -120,6 +121,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             DifferentialExpressionAnalysis entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
+        StopWatch timer = new StopWatch();
+        timer.start();
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
         if ( isTransient( entity.getExperimentAnalyzed() ) ) {
             if ( entity.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
@@ -128,7 +131,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
                 throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
             }
         }
-        return differentialExpressionAnalysisDao.create( entity );
+        DifferentialExpressionAnalysis r = differentialExpressionAnalysisDao.create( entity );
+        if ( timer.getTime() > 5000 ) {
+            log.info( "Save: " + timer.getTime() + "ms" );
+        }
+        return r;
     }
 
     /**

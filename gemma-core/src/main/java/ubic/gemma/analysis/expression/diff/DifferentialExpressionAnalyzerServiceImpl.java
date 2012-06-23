@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -494,7 +495,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
          * 
          * Put all pvalues in one file etc so we don't get 9 files for a 2x anova with interactions.
          */
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         List<Histogram> pvalueHistograms = new ArrayList<Histogram>();
         List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
         List<Histogram> scoreHistograms = new ArrayList<Histogram>();
@@ -505,7 +507,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         List<String> factorNames = new ArrayList<String>();
 
         for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
-            differentialExpressionResultService.thaw( resultSet );
+            resultSet = differentialExpressionResultService.thaw( resultSet );
 
             String factorName = "";
 
@@ -588,7 +590,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         saveDistributionMatrixToFile( "pvalues", pvalueDists, expressionExperiment, resultSetList );
         saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
         saveDistributionMatrixToFile( "scores", scoreDists, expressionExperiment, resultSetList );
-
+        if ( timer.getTime() > 5000 ) {
+            log.info( "Done writing distributions: " + timer.getTime() + "ms" );
+        }
     }
 
     /**
@@ -668,6 +672,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         assert expressionExperiment.getId() != null;
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         log.info( "Saving new results" );
         DifferentialExpressionAnalysis savedResults = ( DifferentialExpressionAnalysis ) persisterHelper
                 .persist( diffExpressionAnalysis );
@@ -687,8 +693,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         /*
          * Update the report
          */
-
         expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
+
+        if ( timer.getTime() > 10000 ) {
+            log.info( "Done saving analysis in " + timer.getTime() + "ms" );
+        }
 
         return savedResults;
     }

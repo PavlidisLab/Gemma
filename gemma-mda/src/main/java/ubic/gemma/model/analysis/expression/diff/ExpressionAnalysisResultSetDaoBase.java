@@ -139,14 +139,8 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
      * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    public void thaw( final ExpressionAnalysisResultSet resultSet ) {
-        try {
-            this.handleThaw( resultSet );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ExpressionAnalysisResultSetDao.thaw(ExpressionAnalysisResultSet resultSet)' --> "
-                            + th, th );
-        }
+    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
+        return this.handleThaw( resultSet );
     }
 
     /**
@@ -185,7 +179,9 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
 
     /**
      * Performs the core logic for {@link #thaw(ExpressionAnalysisResultSet)}
+     * 
+     * @return
      */
-    protected abstract void handleThaw( ExpressionAnalysisResultSet resultSet ) throws java.lang.Exception;
+    protected abstract ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet );
 
 }

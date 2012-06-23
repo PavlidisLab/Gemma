@@ -329,6 +329,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedExpressionVectorCount(java.util.Collection
      * )
      */
+    @Deprecated
     @Override
     public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
 
@@ -1389,20 +1390,22 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
              * FIXME this is a backwards compatibility fix; it can be removed once the numberOfDataVectors has been
              * populated.
              */
-            final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment.id = :ee ";
-
-            List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-            Integer count = ( ( Long ) result.iterator().next() ).intValue();
-
-            ExpressionExperiment ee = this.load( expressionExperiment );
-            ee.setNumberOfDataVectors( count );
-
-            log.info( "Backfilling processed vector count=" + count + " for ee with id=" + expressionExperiment );
-
-            this.getSession().setReadOnly( ee, false );
-            this.getSession().setFlushMode( FlushMode.AUTO );
-            this.getSession().update( ee );
-            return count;
+            // final String queryString =
+            // "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment.id = :ee ";
+            //
+            // List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+            // Integer count = ( ( Long ) result.iterator().next() ).intValue();
+            //
+            // ExpressionExperiment ee = this.load( expressionExperiment );
+            // ee.setNumberOfDataVectors( count );
+            //
+            // log.info( "Backfilling processed vector count=" + count + " for ee with id=" + expressionExperiment );
+            //
+            // this.getSession().setReadOnly( ee, false );
+            // this.getSession().setFlushMode( FlushMode.AUTO );
+            // this.getSession().update( ee );
+            // return count;
+            return null;
 
         }
 

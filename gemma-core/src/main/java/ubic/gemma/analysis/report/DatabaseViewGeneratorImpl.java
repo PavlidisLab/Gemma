@@ -307,7 +307,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 
-                    differentialExpressionResultService.thaw( ears );
+                    ears = differentialExpressionResultService.thaw( ears );
 
                     FactorValue baselineGroup = ears.getBaselineGroup();
 

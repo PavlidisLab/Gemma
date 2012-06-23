@@ -1239,7 +1239,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.loadValueObject( eeId );
     }
 
-    @Override
+@Deprecated    @Override
     public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
         return this.expressionExperimentDao.getProcessedExpressionVectorCount( experiments );
     }

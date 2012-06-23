@@ -111,7 +111,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     protected void buildOptions() {
         Option expOption = OptionBuilder
                 .hasArg()
-                .withArgName( "Expression experiment name" )
+                .withArgName( "shortname" )
                 .withDescription(
                         "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                                 + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
@@ -121,7 +121,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         Option eeFileListOption = OptionBuilder
                 .hasArg()
-                .withArgName( "Expression experiment list file" )
+                .withArgName( "file" )
                 .withDescription(
                         "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
@@ -136,7 +136,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
 
-        Option excludeEeOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
+        Option excludeEeOption = OptionBuilder.hasArg().withArgName( "file" )
                 .withDescription( "File containing list of expression experiments to exclude" )
                 .withLongOpt( "excludeEEFile" ).create( 'x' );
         addOption( excludeEeOption );

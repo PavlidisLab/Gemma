@@ -18,10 +18,14 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.List;
+
+import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -60,23 +64,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends
      * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
-        Session session = this.getSession();
+    protected ExpressionAnalysisResultSet handleThaw( final ExpressionAnalysisResultSet resultSet ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
 
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-            Hibernate.initialize( factor );
+        this.thawLite( resultSet );
+
+        List<ExpressionAnalysisResultSet> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select r from ExpressionAnalysisResultSetImpl r join fetch r.results res join fetch res.probe where r = :rs ",
+                        "rs", resultSet );
+
+        if ( timer.getTime() > 1000 ) {
+            Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
         }
 
-        Hibernate.initialize( resultSet.getAnalysis() );
-        Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
-
-        for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-            Hibernate.initialize( result );
-
-            Hibernate.initialize( result.getProbe() );
-
-        }
+        return res.get( 0 );
 
     }
 }

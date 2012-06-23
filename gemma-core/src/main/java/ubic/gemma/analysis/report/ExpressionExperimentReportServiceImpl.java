@@ -412,14 +412,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ids.add( vo.getId() );
         }
 
-        Collection<ExpressionExperimentValueObject> cachedVos = retrieveValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> cachedVos = retrieveSummaryObjects( ids );
         Map<Long, ExpressionExperimentValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( vos.size() + " EE reports loaded in " + timer.getTime() + "ms" );
-        }
-        timer.reset();
-        timer.start();
 
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             ExpressionExperimentValueObject cacheVo = id2cachedVo.get( eeVo.getId() );
@@ -447,7 +441,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "EE reports processed from cache in " + timer.getTime() + "ms" );
+            log.info( vos.size() + " EE reports fetched in " + timer.getTime() + "ms" );
         }
 
         return result;
@@ -510,7 +504,26 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @Override
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
-        return retrieveValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+
+        for ( Long id : filteredIds ) {
+
+            Element cachedElement = this.statsCache.get( id );
+            if ( cachedElement != null ) {
+                Serializable el = cachedElement.getValue();
+                assert el instanceof ExpressionExperimentValueObject;
+
+                eeValueObjects.add( ( ExpressionExperimentValueObject ) el );
+                continue;
+            }
+
+            ExpressionExperimentValueObject valueObject = generateSummary( id );
+            eeValueObjects.add( valueObject );
+            continue;
+
+        }
+        return eeValueObjects;
     }
 
     /**
