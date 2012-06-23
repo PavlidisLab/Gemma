@@ -861,13 +861,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         /*
-         * Update the meta-data about the analysis.
+         * Update the meta-data about the analysis (but just do it once)
          */
-        ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
-        assert analysisObj.getId() != null;
-        analysisObj.setNumberOfElementsAnalyzed( la.getDataMatrix().rows() );
-        analysisObj.setNumberOfLinks( links.size() - skippedDueToDegree );
-        probeCoexpressionAnalysisService.update( analysisObj );
+        if ( !flip ) {
+            ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
+            assert analysisObj.getId() != null;
+            analysisObj.setNumberOfElementsAnalyzed( la.getDataMatrix().rows() );
+            analysisObj.setNumberOfLinks( links.size() - skippedDueToDegree );
+            probeCoexpressionAnalysisService.update( analysisObj );
+        }
 
     }
 

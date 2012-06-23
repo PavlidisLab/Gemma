@@ -38,8 +38,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ExpressionExperiment</code>.
+ * Is able to create, update, remove, load, and find objects of type <code>ExpressionExperiment</code>.
  * 
  * @see ExpressionExperiment
  * @version $Id$
@@ -265,7 +264,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     @Override
-    public Integer getBioAssayCountById( final long id ) {
+    public Integer getBioAssayCountById( final Long id ) {
         return this.handleGetBioAssayCountById( id );
 
     }
@@ -277,7 +276,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     @Override
-    public Integer getDesignElementDataVectorCountById( final long id ) {
+    public Integer getDesignElementDataVectorCountById( final Long id ) {
         return this.handleGetDesignElementDataVectorCountById( id );
 
     }
@@ -344,7 +343,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
     @Override
-    public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer getProcessedExpressionVectorCount( final Long expressionExperiment ) {
         return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
 
     }
@@ -721,7 +720,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}
      */
-    protected abstract Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
+    protected abstract Integer handleGetProcessedExpressionVectorCount( Long expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getQuantitationTypeCountById(Long)}

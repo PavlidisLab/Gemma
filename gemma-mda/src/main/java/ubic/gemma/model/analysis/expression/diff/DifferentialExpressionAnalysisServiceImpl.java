@@ -216,4 +216,15 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().getAnalyses( expressionExperiments );
     }
 
+    @Override
+    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
+        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentId );
+    }
+
+    @Override
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> experimentIds ) {
+        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentIds );
+    }
+
 }

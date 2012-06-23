@@ -82,12 +82,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * rank (percentile)
      */
     public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, Double rank );
-    
+
     /**
      * 
      */
     public ExpressionExperiment findByFactor( ExperimentalFactor factor );
-    
+
     /**
      * 
      */
@@ -96,7 +96,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public ExpressionExperiment findByFactorValue(  Long factorValueId );
+    public ExpressionExperiment findByFactorValue( Long factorValueId );
 
     /**
      * 
@@ -132,7 +132,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @param limit
      * @return
      */
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit );
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit );
 
     /**
      * 
@@ -149,7 +149,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      */
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
 
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
+    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
     /**
      * 
@@ -178,7 +178,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public Integer getBioAssayCountById( long id );
+    public Integer getBioAssayCountById( Long id );
 
     /**
      * Retrieve the BioAssayDimensions for the study.
@@ -196,7 +196,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public Integer getDesignElementDataVectorCountById( long id );
+    public Integer getDesignElementDataVectorCountById( Long id );
 
     /**
      * 
@@ -257,7 +257,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public Integer getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
+    public Integer getProcessedExpressionVectorCount( Long expressionExperiment );
 
     /**
      * <p>

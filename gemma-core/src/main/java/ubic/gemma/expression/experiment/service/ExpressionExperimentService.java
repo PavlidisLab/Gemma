@@ -234,7 +234,7 @@ public interface ExpressionExperimentService {
      * @return in order of last update (most recent first)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon, int limit );
+    public List<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon, Integer limit );
 
     /**
      * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
@@ -248,7 +248,7 @@ public interface ExpressionExperimentService {
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
+    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
     /**
      * @param expressionExperiment
@@ -293,7 +293,7 @@ public interface ExpressionExperimentService {
      * @param id
      * @return
      */
-    public Integer getDesignElementDataVectorCountById( long id );
+    public Integer getDesignElementDataVectorCountById( Long id );
 
     /**
      * Find vectors constrained to the given quantitation type and design elements. Returns vectors for all experiments
@@ -393,8 +393,8 @@ public interface ExpressionExperimentService {
     /**
      * Counts the number of ProcessedExpressionDataVectors.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Integer getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Integer countProcessedDataVectors( Long expressionExperiment );
 
     /**
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type

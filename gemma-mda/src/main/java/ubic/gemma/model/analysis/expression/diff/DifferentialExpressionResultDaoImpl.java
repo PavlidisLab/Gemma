@@ -114,7 +114,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     // + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
     // + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) ";
     private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT dear.PROBE_FK, dear.ID,"
-            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE  "
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
             + " dear.PROBE_FK IN (:probe_ids) ";
 
@@ -498,8 +498,9 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     Long resultId = ( ( BigInteger ) row[1] ).longValue();
                     Long resultSetId = ( ( BigInteger ) row[2] ).longValue();
                     Double correctedPvalue = ( Double ) row[3];
+                    Double pvalue = ( Double ) row[4];
 
-                    if ( correctedPvalue == null ) continue;
+                    if ( pvalue == null || correctedPvalue == null ) continue;
 
                     if ( !resultsFromDb.containsKey( resultSetId ) ) {
                         resultsFromDb.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
@@ -512,7 +513,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                          * FIXME We might want to skip probes that have more than one gene.
                          */
                         processDiffExResultHit( resultsFromDb.get( resultSetId ), resultSetId, geneId, resultId,
-                                correctedPvalue );
+                                correctedPvalue, pvalue );
                     }
 
                     if ( log.isDebugEnabled() )
@@ -952,9 +953,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @param geneId
      * @param probeAnalysisId
      * @param correctedPvalue
+     * @param uncorrectedPvalue
      */
     private void processDiffExResultHit( Map<Long, DiffExprGeneSearchResult> results, Long resultSetId, Long geneId,
-            Long probeAnalysisId, Double correctedPvalue ) {
+            Long probeAnalysisId, Double correctedPvalue, Double uncorrectedPvalue ) {
 
         assert correctedPvalue != null;
         DiffExprGeneSearchResult r = results.get( geneId );
@@ -964,16 +966,17 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             r.setResultId( probeAnalysisId );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
             if ( correctedPvalue < CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
-                // FIXME is this the intention?
                 r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
             }
             r.setCorrectedPvalue( correctedPvalue );
+            r.setPvalue( uncorrectedPvalue );
             results.put( geneId, r );
         } else if ( r.getCorrectedPvalue() > correctedPvalue ) {
             // replace
             r.setResultId( probeAnalysisId.longValue() ); // note this changes the hashcode of r.
             r.setCorrectedPvalue( correctedPvalue );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
+            r.setPvalue( uncorrectedPvalue );
             r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
         }
     }

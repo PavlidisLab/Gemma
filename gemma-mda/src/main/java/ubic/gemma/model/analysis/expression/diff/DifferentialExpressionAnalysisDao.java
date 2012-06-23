@@ -97,4 +97,8 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
 
+    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
+
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> expressionExperimentIds );
 }

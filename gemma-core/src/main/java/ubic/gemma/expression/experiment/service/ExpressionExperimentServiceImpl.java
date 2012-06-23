@@ -381,7 +381,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         return this.expressionExperimentDao.findByTaxon( taxon, limit );
     }
 
@@ -405,7 +405,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
@@ -494,7 +494,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getDesignElementDataVectorCountById(long)
      */
     @Override
-    public Integer getDesignElementDataVectorCountById( final long id ) {
+    public Integer getDesignElementDataVectorCountById( final Long id ) {
         return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
     }
 
@@ -662,7 +662,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
     @Override
-    public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer countProcessedDataVectors( final Long expressionExperiment ) {
         return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
     }
 

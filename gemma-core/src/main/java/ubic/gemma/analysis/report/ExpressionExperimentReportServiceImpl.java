@@ -18,11 +18,7 @@
  */
 package ubic.gemma.analysis.report;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,22 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
-import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.analysis.Direction;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -73,10 +60,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEv
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -92,10 +77,6 @@ import ubic.gemma.util.EntityUtils;
  */
 @Component
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
-    private static final double CUT_OFF = 0.05;
-
-    // if we should save the 'reports'. We avoid doing this now because it causes things to be out of sync.
-    private static final boolean SERIALIZE_TO_DISK = false;
 
     @Autowired
     private AuditEventService auditEventService;
@@ -106,17 +87,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
-    private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";
-    private String EE_REPORT_DIR = "ExpressionExperimentReports";
-
     private String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -439,13 +413,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         Collection<ExpressionExperimentValueObject> cachedVos = retrieveValueObjects( ids );
-        Map<Long, ExpressionExperimentValueObject> id2cachedVo = new HashMap<Long, ExpressionExperimentValueObject>();
-        for ( ExpressionExperimentValueObject cachedVo : cachedVos ) {
-            id2cachedVo.put( cachedVo.getId(), cachedVo );
-        }
+        Map<Long, ExpressionExperimentValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Link stats read from cache in " + timer.getTime() + "ms" );
+            log.info( vos.size() + " EE reports loaded in " + timer.getTime() + "ms" );
         }
         timer.reset();
         timer.start();
@@ -476,7 +447,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Link stats processed from cache in " + timer.getTime() + "ms" );
+            log.info( "EE reports processed from cache in " + timer.getTime() + "ms" );
         }
 
         return result;
@@ -507,10 +478,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     @Secured({ "GROUP_AGENT" })
     public void generateSummaryObjects() {
-        initDirectories( false );
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
-        updateStats( vos );
+        getStats( vos );
     }
 
     /*
@@ -520,74 +490,17 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @Override
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
-        initDirectories( false );
 
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds,
                 false );
-        updateStats( vos );
-        return vos;
-    }
+        getStats( vos );
 
-    /**
-     * @param eeid
-     * @param threshold
-     * @return A collection of DifferentialExpressionAnalysisValueObjects
-     */
-    public Collection<DifferentialExpressionAnalysisValueObject> getDiffExpressedProbes( ExpressionExperiment ee,
-            double threshold ) {
-
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<DifferentialExpressionAnalysisValueObject>();
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService.getAnalyses( ee );
-
-        for ( DifferentialExpressionAnalysis analysis : analyses ) {
-
-            differentialExpressionAnalysisService.thaw( analysis );
-            Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
-
-            DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
-
-            if ( analysis.getSubsetFactorValue() != null ) {
-                avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
-                avo.setSubsetFactor( new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
-                        .getExperimentalFactor() ) );
-            }
-
-            for ( ExpressionAnalysisResultSet par : results ) {
-
-                DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
-                differentialExpressionResultService.thawLite( par ); // need the thaw for the experimental factor
-                desvo.setThreshold( threshold );
-                desvo.setExperimentalFactors( par.getExperimentalFactors() );
-                desvo.setResultSetId( par.getId() );
-                desvo.setAnalysisId( analysis.getId() );
-                desvo.setFactorIds( EntityUtils.getIds( par.getExperimentalFactors() ) );
-
-                for ( HitListSize hitList : par.getHitListSizes() ) {
-                    if ( hitList.getThresholdQvalue().equals( threshold ) ) {
-
-                        if ( hitList.getDirection().equals( Direction.UP ) ) {
-                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
-                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
-                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
-                        }
-
-                    }
-                }
-
-                if ( par.getBaselineGroup() != null ) {
-                    desvo.setBaselineGroup( new FactorValueValueObject( par.getBaselineGroup() ) );
-                }
-
-                avo.getResultSets().add( desvo );
-
-            }
-
-            summaries.add( avo );
+        for ( ExpressionExperimentValueObject vo : vos ) {
+            evictFromCache( vo.getId() );
+            statsCache.put( new Element( vo.getId(), vo ) );
         }
-        return summaries;
+        return vos;
     }
 
     /*
@@ -613,16 +526,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
-     * @param id
-     * @return
-     */
-    private String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
-    }
-
-    // Methods needed to allow this to be used in a space.
-
-    /**
      * @param ees
      * @return
      */
@@ -636,29 +539,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return result;
     }
 
-    /**
-     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
-     * reports directory exists. If it doesn't, create it.
-     * 
-     * @param deleteFiles
-     */
-    private void initDirectories( boolean deleteFiles ) {
-
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-
-        // clear out all files
-        if ( deleteFiles ) {
-            Collection<File> files = new ArrayList<File>();
-            File[] fileArray = f.listFiles();
-            for ( File file : fileArray ) {
-                files.add( file );
-            }
-            FileTools.deleteFiles( files );
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -670,83 +550,29 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
-     * @return the serialized value objects (either from the disk store or from the in-memory cache).
+     * @return the serialized value objects (either from the db or from the in-memory cache).
      */
     private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
         Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
 
-        int numWarnings = 0;
-        int maxWarnings = 5; // don't put 1000 warnings in the logs!
-
         for ( Long id : filteredIds ) {
 
             Element cachedElement = this.statsCache.get( id );
             if ( cachedElement != null ) {
-                eeValueObjects.add( ( ExpressionExperimentValueObject ) cachedElement.getValue() );
+                Serializable el = cachedElement.getValue();
+                assert el instanceof ExpressionExperimentValueObject;
+
+                eeValueObjects.add( ( ExpressionExperimentValueObject ) el );
                 continue;
             }
 
-            File f = new File( getReportPath( id ) );
+            ExpressionExperimentValueObject valueObject = generateSummary( id );
+            eeValueObjects.add( valueObject );
+            continue;
 
-            if ( !f.exists() ) {
-                /*
-                 * Migration to the 'new way'.
-                 */
-                ExpressionExperimentValueObject valueObject = generateSummary( id );
-                eeValueObjects.add( valueObject );
-                statsCache.put( new Element( id, valueObject ) );
-                continue;
-            }
-
-            try {
-
-                FileInputStream fis = new FileInputStream( getReportPath( id ) );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-
-                ExpressionExperimentValueObject valueObject = ( ExpressionExperimentValueObject ) ois.readObject();
-
-                eeValueObjects.add( valueObject );
-                statsCache.put( new Element( id, valueObject ) );
-
-                ois.close();
-                fis.close();
-
-            } catch ( Exception e ) {
-                if ( numWarnings < maxWarnings ) {
-                    log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-                } else if ( numWarnings == maxWarnings ) {
-                    log.warn( "Skipping futher warnings ... reports need refreshing?" );
-                }
-                numWarnings++;
-                continue;
-            }
         }
         return eeValueObjects;
-    }
-
-    /**
-     * Save the stats report to disk; also update the in-memory cache.
-     * 
-     * @param eeVo Expression Experiment value objects to serialize
-     */
-    private void saveValueObject( ExpressionExperimentValueObject eeVo ) {
-        try {
-            // remove old file first
-            File f = new File( getReportPath( eeVo.getId() ) );
-            if ( f.exists() ) {
-                f.delete();
-            }
-            FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( eeVo );
-            oos.flush();
-            oos.close();
-
-            statsCache.put( new Element( eeVo.getId(), eeVo ) );
-        } catch ( Throwable e ) {
-            log.warn( e );
-        }
     }
 
     /**
@@ -767,55 +593,45 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
-     * Compute statistics for EEs and serialize them to disk for later retrieval.
+     * Compute statistics for EEs, that aren't immediately part of the value object.
      * 
      * @param vos
      */
-    private void updateStats( Collection<ExpressionExperimentValueObject> vos ) {
-        log.info( "Getting stats for " + vos.size() + " value objects." );
+    private void getStats( Collection<ExpressionExperimentValueObject> vos ) {
+        log.debug( "Getting stats for " + vos.size() + " value objects." );
         int count = 0;
         for ( ExpressionExperimentValueObject object : vos ) {
-            updateStats( object );
-
-            // IF we want to save it.
-            if ( SERIALIZE_TO_DISK ) {
-                saveValueObject( object );
-            }
+            getStats( object );
 
             if ( ++count % 10 == 0 ) {
-                log.info( "Processed " + count + " reports." );
+                log.debug( "Processed " + count + " reports." );
             }
         }
-        log.info( "Done, processed " + count + " reports" );
+        log.debug( "Done, processed " + count + " reports" );
     }
 
     /**
-     * Update the stats report for one EE
+     * Get the stats report for one EE
      * 
      * @param object
      */
-    private void updateStats( ExpressionExperimentValueObject eeVo ) {
-        assert eeVo.getId() != null;
+    private void getStats( ExpressionExperimentValueObject eeVo ) {
+        Long id = eeVo.getId();
+        assert id != null;
 
-        // wish we didn't need to do this, since we already got the value object.
-        ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
+        if ( eeVo.getProcessedExpressionVectorCount() == null ) {
+            // normally part of the initial fetch of the experiment, but if not filled in ...
+            eeVo.setProcessedExpressionVectorCount( expressionExperimentService.countProcessedDataVectors( id ) );
+        }
 
-        // FIXME this is probably slow, so precompute and store somewhere
-        eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
+        eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id ) );
 
-        // this report is the one that goes stale, see bug 2308; get these stats from the
-        eeVo.setDifferentialExpressionAnalyses( getDiffExpressedProbes( tempEe, CUT_OFF ) );
-
-        // FIXME get this from the ProbeCoexpressionAnalysis
-        Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
-        eeVo.setCoexpressionLinkCount( numLinks );
+        eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( id ) );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
         assert eeVo.getDateCreated() != null;
         assert eeVo.getDateLastUpdated() != null;
-
-        log.debug( "Generated report for " + eeVo.getShortName() );
 
     }
 

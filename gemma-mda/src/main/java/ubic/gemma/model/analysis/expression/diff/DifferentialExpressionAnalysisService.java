@@ -99,6 +99,13 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> expressionExperimentIds );
+
     /**
      * @param expressionExperiments
      * @return quite deeply thawed analyses (not the results themselves, but metadata)

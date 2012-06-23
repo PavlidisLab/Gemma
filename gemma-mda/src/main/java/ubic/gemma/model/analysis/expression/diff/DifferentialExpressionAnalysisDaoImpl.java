@@ -37,13 +37,16 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.CommonQueries;
@@ -138,9 +141,17 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * @return
      */
     private Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
+
+        Long id = investigation.getId();
+
+        return getAnalysesForExperiment( id );
+
+    }
+
+    private Collection<DifferentialExpressionAnalysis> getAnalysesForExperiment( Long id ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
-        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed=:expressionExperiment ";
-        results.addAll( this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", investigation ) );
+        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed.id=:eeid ";
+        results.addAll( this.getHibernateTemplate().findByNamedParam( query, "eeid", id ) );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
@@ -148,11 +159,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         results.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a"
                         + " join eess.sourceExperiment see "
-                        + " join a.experimentAnalyzed eeanalyzed where see.id=:ee and eess=eeanalyzed", "ee",
-                investigation.getId() ) );
+                        + " join a.experimentAnalyzed eeanalyzed where see.id=:ee and eess=eeanalyzed", "ee", id ) );
 
         return results;
-
     }
 
     /*
@@ -539,6 +548,73 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 + ") at a corrected pvalue threshold of " + threshold );
 
         return count.intValue();
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
+        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<DifferentialExpressionAnalysisValueObject>();
+        Collection<DifferentialExpressionAnalysis> analyses = getAnalysesForExperiment( experimentId );
+
+        // FIXME this can be made much faster with some query help.
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+
+            Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
+
+            DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
+
+            if ( analysis.getSubsetFactorValue() != null ) {
+                avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
+                avo.setSubsetFactor( new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
+                        .getExperimentalFactor() ) );
+            }
+
+            for ( ExpressionAnalysisResultSet par : results ) {
+
+                DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
+                desvo.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
+                desvo.setExperimentalFactors( par.getExperimentalFactors() );
+                desvo.setResultSetId( par.getId() );
+                desvo.setAnalysisId( analysis.getId() );
+                desvo.setFactorIds( EntityUtils.getIds( par.getExperimentalFactors() ) );
+
+                for ( HitListSize hitList : par.getHitListSizes() ) {
+                    if ( hitList.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+
+                        if ( hitList.getDirection().equals( Direction.UP ) ) {
+                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
+                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
+                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
+                        }
+
+                    }
+                }
+
+                if ( par.getBaselineGroup() != null ) {
+                    desvo.setBaselineGroup( new FactorValueValueObject( par.getBaselineGroup() ) );
+                }
+
+                avo.getResultSets().add( desvo );
+
+            }
+
+            summaries.add( avo );
+        }
+        return summaries;
+    }
+
+    @Override
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> expressionExperimentIds ) {
+        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<Long, Collection<DifferentialExpressionAnalysisValueObject>>();
+        for ( Long id : expressionExperimentIds ) {
+
+            Collection<DifferentialExpressionAnalysisValueObject> analyses = this.getAnalysisValueObjects( id );
+            if ( analyses.isEmpty() ) continue;
+            result.put( id, analyses );
+        }
+        return result;
     }
 
 }

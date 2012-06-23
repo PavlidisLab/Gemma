@@ -37,9 +37,9 @@ public interface Probe2ProbeCoexpressionDao {
     public void remove( Probe2ProbeCoexpression link );
 
     /**
-     * Get the total number of probe2probe coexpression links for the given experiment.
+     * Get the total number of probe2probe coexpression links for the given experiment, or null if there are none.
      */
-    public Integer countLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Integer countLinks( Long id );
 
     /**
      * Removes the all the probe2probeCoexpression links for a given expression experiment

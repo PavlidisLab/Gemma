@@ -98,6 +98,11 @@ public class DiffExprGeneSearchResult implements Serializable {
         return result;
     }
 
+    /**
+     * Set the corrected pvalue (i.e., a q-value)
+     * 
+     * @param correctedPvalue
+     */
     public void setCorrectedPvalue( Double correctedPvalue ) {
         this.correctedPvalue = correctedPvalue;
     }
@@ -114,6 +119,11 @@ public class DiffExprGeneSearchResult implements Serializable {
         this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
     }
 
+    /**
+     * Set the <em>uncorrected</em> pvalue.
+     * 
+     * @param pvalue
+     */
     public void setPvalue( Double pvalue ) {
         this.pvalue = pvalue;
     }

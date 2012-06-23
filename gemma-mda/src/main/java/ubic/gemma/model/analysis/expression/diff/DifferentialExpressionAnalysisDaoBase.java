@@ -194,18 +194,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
         if ( entities == null ) {
             throw new IllegalArgumentException( "DifferentialExpressionAnalysis.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends DifferentialExpressionAnalysis> entityIterator = entities
-                                .iterator(); entityIterator.hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getHibernateTemplate().update( entities );
     }
 
     /**

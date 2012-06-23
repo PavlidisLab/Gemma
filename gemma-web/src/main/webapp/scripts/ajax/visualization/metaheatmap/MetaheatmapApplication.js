@@ -562,7 +562,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				instructions: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.instructions,
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
-				id: 'tutorial-cntlPanel-diff-ex',
+				id: 'tutorial-cntlPanel-diff-ex'
 			//stateId: 'diffExVisualiserTutorial'
 			});
 			// hidden is stateful, the panel will be created hidden if the tutorial has already been shown

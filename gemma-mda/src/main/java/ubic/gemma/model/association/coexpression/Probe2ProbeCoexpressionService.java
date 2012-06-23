@@ -38,10 +38,10 @@ public interface Probe2ProbeCoexpressionService {
      */
 
     /**
-     * @param expressionExperiment
-     * @return number of coexpression links for the given experiments or null if the analysis has not been run
+     * @param id
+     * @return number of coexpression links for the given experiment or null if the analysis has not been run
      */
-    public Integer countLinks( ExpressionExperiment expressionExperiment );
+    public Integer countLinks( Long id );
 
     /**
      * Adds a collection of probe2probeCoexpression objects at one time to the DB, in the order given.
@@ -69,6 +69,19 @@ public interface Probe2ProbeCoexpressionService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void deleteLinks( ExpressionExperiment ee );
+
+    /**
+     * Determine which probes, among those provided, actually appear together in links.
+     * 
+     * @param queryProbeIds
+     * @param coexpressedProbeIds
+     * @param ee
+     * @param taxon (to save another query) common name
+     * @return the probes, among the query and coexpressed probes given, which appear in coexpression links.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon );
 
     /***
      * Return a list of all ExpressionExperiments in which the given gene was tested for coexpression in, among the
@@ -159,18 +172,5 @@ public interface Probe2ProbeCoexpressionService {
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_COLLECTION_READ" })
     public void prepareForShuffling( Collection<BioAssaySet> ees, java.lang.String taxon, boolean filterNonSpecific );
-
-    /**
-     * Determine which probes, among those provided, actually appear together in links.
-     * 
-     * @param queryProbeIds
-     * @param coexpressedProbeIds
-     * @param ee
-     * @param taxon (to save another query) common name
-     * @return the probes, among the query and coexpressed probes given, which appear in coexpression links.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
-            ExpressionExperiment ee, String taxon );
 
 }

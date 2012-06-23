@@ -48,7 +48,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public java.lang.Integer countLinks( final ExpressionExperiment expressionExperiment ) {
+    public java.lang.Integer countLinks( final Long expressionExperiment ) {
         return this.handleCountLinks( expressionExperiment );
     }
 
@@ -175,7 +175,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     /**
      * Performs the core logic for {@link #countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract Integer handleCountLinks( ExpressionExperiment expressionExperiment );
+    protected abstract Integer handleCountLinks( Long expressionExperiment );
 
     /**
      * Performs the core logic for {@link #create(java.util.List)}

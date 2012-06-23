@@ -1,5 +1,11 @@
 Ext.namespace('Gemma.Metaheatmap');
 
+/**
+ * TODO document me
+ * 
+ * @author AZ
+ * @version $Id$
+ */
 Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 	initComponent : function () {		
 		Ext.apply (this, {
@@ -140,7 +146,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		}
 		if ( !gene || !condition || gene === null || condition === null) return null;
 		
-		var pValue = 1;
+		var pValue = 1; // perhaps ">0.1"?
+		var correctedPValue  = 1; // perhaps "-"?
 		var foldChange, isProbeMissing, numberOfProbes, numberOfProbesDiffExpressed;
 		var isGeneOnTop = this.isGeneOnTop;
 		var cell  = this.cells.getCell (gene, condition); 		
@@ -177,18 +184,19 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		var transparency = 0;
 
-		if (cell.pValue > 0.1) {
+		if (cell.correctedPValue  > 0.1) {
 			color = 'white';
 		}
 
 		pValue = cell.pValue;
+		correctedPValue  = cell.correctedPValue;
 		foldChange = cell.logFoldChange;
 		isProbeMissing = cell.isProbeMissing;
 		numberOfProbes = cell.numberOfProbes;
 		numberOfProbesDiffExpressed = cell.numberOfProbesDiffExpressed;
 		
 		if (this.isShowPvalue) {
-			transparency = this.calculateVisualizationValueBasedOnPvalue(cell.pValue) / 10;			
+			transparency = this.calculateVisualizationValueBasedOnPvalue(cell.correctedPValue) / 10;			
 		}
 		
 		var x, y, width, height;
@@ -211,6 +219,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			'gene' 		 : gene,
 			'condition'  : condition,
 			'pValue' 	 : pValue,
+			'correctedPValue' : correctedPValue,
 			'foldChange' : foldChange,
 			'visualizationValue' : color,
 			'isProbeMissing' : isProbeMissing,
@@ -259,23 +268,23 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 //		return color;
 //	},
 			
-    calculateVisualizationValueBasedOnPvalue : function ( pValue ) {
+    calculateVisualizationValueBasedOnPvalue : function ( correctedPValue  ) {
         var visualizationValue = 0.5;
-        if ( pValue < 0.5 && pValue >= 0.25 )
+        if ( correctedPValue  < 0.5 && correctedPValue  >= 0.25 )
             visualizationValue = 0.5;
-        else if ( pValue < 0.25 && pValue >= 0.1 )
+        else if ( correctedPValue  < 0.25 && correctedPValue  >= 0.1 )
             visualizationValue = 1;
-        else if ( pValue < 0.1 && pValue >= 0.05 )
+        else if ( correctedPValue  < 0.1 && correctedPValue  >= 0.05 )
             visualizationValue = 1.1;
-        else if ( pValue < 0.05 && pValue >= 0.01 )
+        else if ( correctedPValue  < 0.05 && correctedPValue  >= 0.01 )
             visualizationValue = 4;
-        else if ( pValue < 0.01 && pValue >= 0.005 )
+        else if ( correctedPValue  < 0.01 && correctedPValue  >= 0.005 )
             visualizationValue = 7;
-        else if ( pValue < 0.005 && pValue >= 0.0001 )
+        else if ( correctedPValue  < 0.005 && correctedPValue  >= 0.0001 )
             visualizationValue = 10;
-        else if ( pValue < 0.0001 && pValue >= 0.00001 )
+        else if ( correctedPValue  < 0.0001 && correctedPValue  >= 0.00001 )
             visualizationValue = 10;
-        else if ( pValue < 0.00001 ) visualizationValue = 10;
+        else if ( correctedPValue  < 0.00001 ) visualizationValue = 10;
         return visualizationValue;
     },
 	
@@ -314,15 +323,15 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			}
 		}
    	    	
-		if (cellData.pValue > 0.1) {
+		if (cellData.correctedPValue  > 0.1) {
 			color = 'white';
 		}
 		
 		if (this.isShowPvalue) {
-			transparency = this.calculateVisualizationValueBasedOnPvalue(cellData.pValue) / 10;			
+			transparency = this.calculateVisualizationValueBasedOnPvalue(cellData.correctedPValue) / 10;			
 		}
 
-		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop, transparency )		
+		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop, transparency )		;
 	},
 
 	drawCell_ : function (ctx, gene, condition, color, isProbeMissing, isGeneOnTop, transparency) {
@@ -343,8 +352,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 				ctx.fillStyle = 'white';//"rgba(240, 240,240, 1)";
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 
-				var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
-				var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) 
+		//		var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
+		//		var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) ;
 
 //				ctx.save();
 //				ctx.strokeStyle = "rgba(210, 210,210, 0.8)";//"gray";
@@ -396,7 +405,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 
 			var innerBoxWidth = Math.floor(0.6*condition.display.pxlSize);
-			var innerBoxHeight = Math.floor(0.6*gene.display.pxlSize) 
+			var innerBoxHeight = Math.floor(0.6*gene.display.pxlSize);
 
 			ctx.save();
 			ctx.strokeStyle = "gray";

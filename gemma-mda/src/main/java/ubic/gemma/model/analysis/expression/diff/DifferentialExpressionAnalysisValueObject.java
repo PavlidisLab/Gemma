@@ -31,6 +31,8 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     private static final long serialVersionUID = 622877438067070041L;
 
+    public static final double DEFAULT_THRESHOLD = 0.05; // should be one of the values stored in the HitListSizes
+
     private Long bioAssaySetId;
 
     private Long id;

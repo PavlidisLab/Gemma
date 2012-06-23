@@ -43,7 +43,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public Integer countLinks( final ExpressionExperiment expressionExperiment ) {
+    public Integer countLinks( final Long expressionExperiment ) {
         return this.handleCountLinks( expressionExperiment );
     }
 
@@ -212,7 +212,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * Performs the core logic for {@link #countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract Integer handleCountLinks( ExpressionExperiment expressionExperiment );
+    protected abstract Integer handleCountLinks( Long expressionExperiment );
 
     /**
      * Performs the core logic for {@link #createDatabaseEntity(List)}

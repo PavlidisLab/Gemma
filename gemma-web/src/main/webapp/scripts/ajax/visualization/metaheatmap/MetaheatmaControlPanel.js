@@ -136,7 +136,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : 'Sum pValue filter:',
+				        	text   : 'Sum qValue filter:',
 				        	hidden : true
 				        },			        
 				        {
@@ -150,7 +150,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Hide genes with pValue sum <={0}', thumb.value/100);
+				                     return String.format('Hide genes with corrected pValue sum <={0}', thumb.value/100);
 				                 }
 				            }),
 				        	listeners : {
@@ -271,7 +271,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        {
 				        	xtype  : 'label',
 				        	hidden : true,
-				        	text   : 'Sum pValue filter:',
+				        	text   : 'Sum corrected P value filter:',
 							height : 15
 				        },			        
 				        {
@@ -287,7 +287,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Show conditions Hide conditions with pValue sum <={0}', thumb.value/100);
+				                     return String.format('Show conditions Hide conditions with corrected pValue sum <={0}', thumb.value/100);
 				                 }
 				            }),
 				        	listeners : {

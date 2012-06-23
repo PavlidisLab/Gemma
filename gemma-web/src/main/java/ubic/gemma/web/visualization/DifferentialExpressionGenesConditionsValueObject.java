@@ -42,13 +42,18 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class DifferentialExpressionGenesConditionsValueObject {
     // The details of the result for a gene x condition combination.
     public class Cell {
-        public boolean isProbeMissing;
-        public Double visualizationValue;
-        public Double pValue = null; // important!
-        public Double logFoldChange = 0.0;
-        public Integer direction = 0;
-        public Integer numberOfProbes = 0;
-        public Integer numberOfProbesDiffExpressed = 0;
+        private boolean isProbeMissing;
+        private Double visualizationValue;
+        private Double pValue = null; // important!
+        private Double logFoldChange = 0.0;
+        private Integer direction = 0;
+        private Integer numberOfProbes = 0;
+        private Integer numberOfProbesDiffExpressed = 0;
+        private Double correctedPValue = null; // important
+
+        public Double getCorrectedPValue() {
+            return correctedPValue;
+        }
 
         public int getDirection() {
             return direction;
@@ -87,7 +92,10 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private Long resultSetId;
         private Long analysisId;
         private String analysisType;
+        private Boolean isSubset = false;
+
         private String experimentId;
+
         private String experimentName;
         private String datasetName;
         private Long datasetId;
@@ -103,14 +111,11 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private int experimentGroupIndex;
         private String datasetShortName;
         private Integer numberOfProbesOnArray;
+        private String id;
 
-        public Long getFactorValueId() {
-            return factorValueId;
-        }
+        private boolean isSelected = false;
 
-        public String id;
-        public boolean isSelected = false;
-        public Integer numberOfGenesTested;
+        private Integer numberOfGenesTested;
         private Long factorValueId;
 
         public Condition( ExpressionExperiment experiment, DifferentialExpressionAnalysis analysis,
@@ -129,8 +134,10 @@ public class DifferentialExpressionGenesConditionsValueObject {
             baselineFactorValue = getFactorValueString( resultSet.getBaselineGroup() );
             factorDescription = factor.getDescription();
             factorId = factor.getId();
-            /* FIXME can we use 'None' instead of 'null'? Is this a magic string? */
-            factorCategory = ( factor.getCategory() == null ) ? "null" : factor.getCategory().getCategory();
+
+            factorCategory = ( factor.getCategory() == null ) ? "[No category]" : factor.getCategory().getCategory();
+
+            this.isSubset = analysis.getSubsetFactorValue() != null;
 
             for ( HitListSize h : resultSet.getHitListSizes() ) {
                 if ( h.getThresholdQvalue() == THRESHOLD_QVALUE_FOR_HITLISTS ) {
@@ -228,12 +235,20 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return factorName;
         }
 
+        public Long getFactorValueId() {
+            return factorValueId;
+        }
+
         public String getId() {
             return id;
         }
 
         public boolean getIsSelected() {
             return this.isSelected;
+        }
+
+        public Boolean getIsSubset() {
+            return isSubset;
         }
 
         public Integer getNumberDiffExpressedProbes() {
@@ -246,6 +261,10 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         public Integer getNumberDiffExpressedProbesUp() {
             return numberDiffExpressedProbesUp;
+        }
+
+        public Integer getNumberOfGenesTested() {
+            return numberOfGenesTested;
         }
 
         public Integer getNumberOfProbesOnArray() {
@@ -265,12 +284,20 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return result;
         }
 
+        public void setExperimentGroupIndex( int experimentGroupIndex ) {
+            this.experimentGroupIndex = experimentGroupIndex;
+        }
+
+        void setExperimentGroupName( String experimentGroupName ) {
+            this.experimentGroupName = experimentGroupName;
+        }
+
         /*
          * Helper method to get factor values. TODO: Fix FactorValue class to return correct factor value in the first
          * place.
          */
         private String getFactorValueString( FactorValue fv ) {
-            if ( fv == null ) return "null"; // FIXME is this a magic string?
+            if ( fv == null ) return "[No value]";
 
             if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
                 String fvString = "";
@@ -283,7 +310,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
             } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
                 return fv.getValue();
             } else {
-                return "absent "; // FIXME is this a magic string?
+                return "[Missing]";
             }
         }
 
@@ -291,25 +318,17 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return DifferentialExpressionGenesConditionsValueObject.this;
         }
 
-        void setExperimentGroupName( String experimentGroupName ) {
-            this.experimentGroupName = experimentGroupName;
-        }
-
-        public void setExperimentGroupIndex( int experimentGroupIndex ) {
-            this.experimentGroupIndex = experimentGroupIndex;
-        }
-
     }
 
     // A Gene Value object specialized to hold differential expression results.
     public class Gene {
-        public long id;
-        public String name;
-        public String fullName;
-        public double specificityScore;
-        private int groupIndex;
+        private Long id;
+        private String name;
+        private String fullName;
+        private double specificityScore;
+        private Integer groupIndex;
         private String groupName;
-        public boolean isSelected = false;
+        private boolean isSelected = false;
 
         public Gene( long id, String name, String fullName ) {
             this.id = id;
@@ -429,13 +448,16 @@ public class DifferentialExpressionGenesConditionsValueObject {
     /**
      * @param geneId
      * @param conditionId
+     * @param correctedPValue
      * @param pValue
      * @param numProbes
      * @param numProbesDiffExpressed
      */
-    public void addBlackCell( Long geneId, String conditionId, double pValue, int numProbes, int numProbesDiffExpressed ) {
+    public void addBlackCell( Long geneId, String conditionId, double correctedPValue, double pValue, int numProbes,
+            int numProbesDiffExpressed ) {
         Cell cell = new Cell();
         cell.isProbeMissing = false;
+        cell.correctedPValue = correctedPValue;
         cell.pValue = pValue;
         cell.visualizationValue = 0.0;
         cell.logFoldChange = 0.0;
@@ -454,12 +476,14 @@ public class DifferentialExpressionGenesConditionsValueObject {
      * @param foldChange
      * @param numProbes
      * @param numProbesDiffExpressed
+     * @param correctedPvalue
      */
-    public void addCell( Long geneId, String conditionId, double pValue, double foldChange, int numProbes,
-            int numProbesDiffExpressed ) {
+    public void addCell( Long geneId, String conditionId, double correctedPValue, double foldChange, int numProbes,
+            int numProbesDiffExpressed, Double uncorrectedPvalue ) {
         Cell cell = new Cell();
         cell.isProbeMissing = false;
-        cell.pValue = pValue;
+        cell.correctedPValue = correctedPValue;
+        cell.pValue = uncorrectedPvalue;
         cell.logFoldChange = foldChange;
         cell.numberOfProbes = numProbes;
         cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;

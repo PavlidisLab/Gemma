@@ -424,5 +424,5 @@ GemmaStatUtils.dbinom = function (x, n, p) {
     if ( p < 0 || p > 1 || n < 0 ) throw "IllegalArgumentException";
 
     return GemmaStatUtils.dbinom_raw( x, n, p, 1 - p );
-}
+};
 

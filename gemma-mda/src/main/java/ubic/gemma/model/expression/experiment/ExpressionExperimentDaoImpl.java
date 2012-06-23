@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
@@ -210,12 +211,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * int)
      */
     @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-        tpl.setMaxResults( limit );
+        if ( limit != null ) tpl.setMaxResults( limit );
         return tpl.findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -241,11 +242,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
-    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
+        if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
+        if ( limit == 0 ) return new ArrayList<ExpressionExperiment>();
         Session s = this.getSession();
-        String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate desc ";
+        String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate "
+                + ( limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
-        q.setMaxResults( limit );
+        q.setMaxResults( Math.abs( limit ) );
         return q.list();
     }
 
@@ -327,6 +331,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
+
+        /*
+         * FIXME get this from the field in the EE. -- see
+         */
+
         final String queryString = "select v.expressionExperiment.id, count(v) from ProcessedExpressionDataVectorImpl v "
                 + " where v.expressionExperiment.id in (:ee) group by v.expressionExperiment.id";
 
@@ -1368,11 +1377,42 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment ) {
-        final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment = :ee ";
+    protected Integer handleGetProcessedExpressionVectorCount( Long expressionExperiment ) {
 
-        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-        return ( ( Long ) result.iterator().next() ).intValue();
+        List<Object> r = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select e.numberOfDataVectors from ExpressionExperimentImpl e where e.id = :ee and e.numberOfDataVectors is not null ",
+                        "ee", expressionExperiment );
+        if ( r.isEmpty() ) {
+            /*
+             * FIXME this is a backwards compatibility fix; it can be removed once the numberOfDataVectors has been
+             * populated.
+             */
+            final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment.id = :ee ";
+
+            List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+            Integer count = ( ( Long ) result.iterator().next() ).intValue();
+
+            ExpressionExperiment ee = this.load( expressionExperiment );
+            ee.setNumberOfDataVectors( count );
+
+            log.info( "Backfilling processed vector count=" + count + " for ee with id=" + expressionExperiment );
+
+            this.getSession().setReadOnly( ee, false );
+            this.getSession().setFlushMode( FlushMode.AUTO );
+            this.getSession().update( ee );
+            return count;
+
+        }
+
+        Object cobj = r.get( 0 );
+
+        if ( cobj == null ) {
+            return null;
+        }
+
+        return ( ( Long ) cobj ).intValue();
     }
 
     /*
@@ -1605,7 +1645,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " AD.status, " // 16
                 + " s.troubled, " // 17
                 + " s.validated, " // 18
-                + " count(distinct SU) " // 19
+                + " count(distinct SU), " // 19
+                + " ee.numberOfDataVectors " // 20
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1676,6 +1717,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setExperimentalDesign( ( Long ) res[14] );
             v.setDateLastUpdated( ( ( Date ) res[15] ) );
             v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
+
+            if ( res[20] != null ) v.setProcessedExpressionVectorCount( ( Integer ) res[20] );
             // System.out.println(res[16]);
             vo.put( eeId, v );
         }

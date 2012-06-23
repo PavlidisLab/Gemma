@@ -434,35 +434,35 @@ ExpressionExperimentController.deleteById = function(p0, callback) {
 ExpressionExperimentController.getDesignMatrixRows = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDesignMatrixRows',
 			p0, callback);
-}
+};
 ExpressionExperimentController.loadExpressionExperimentDetails = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperimentDetails', p0, callback);
-}
+};
 ExpressionExperimentController.loadQuantitationTypes = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadQuantitationTypes', p0, callback);
-}
+};
 ExpressionExperimentController.loadExpressionExperiments = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperiments', p0, callback);
-}
+};
 ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries',
 			p0, p1, p2, p3, p4, callback);
-}
+};
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'removePrimaryPublication', p0, callback);
-}
+};
 ExpressionExperimentController.updateAllReports = function(callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateAllReports',
 			callback);
-}
+};
 ExpressionExperimentController.updateBasics = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
-}
+};
 // ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
 // dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 // 'updateBioMaterialMapping', callback);
@@ -470,23 +470,23 @@ ExpressionExperimentController.updateBasics = function(p0, callback) {
 ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays',
 			p0, callback);
-}
+};
 ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment',
 			p0, callback);
-}
+};
 ExpressionExperimentController.browse = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browse', p0,
 			callback);
-}
+};
 ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1,
 			callback);
-}
+};
 ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1,
 			callback);
-}
+};
 ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadCountsForDataSummaryTable', 
 			callback);
@@ -494,7 +494,7 @@ ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback
 ExpressionExperimentController.loadExpressionExperimentsWithQcIssues = function(callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadExpressionExperimentsWithQcIssues', 
 			callback);
-}
+};
 
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)
@@ -503,11 +503,11 @@ ExpressionExperimentDataFetchController._path = '/Gemma/dwr';
 ExpressionExperimentDataFetchController.getDataFile = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getDataFile', p0, callback);
-}
+};
 ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getDiffExpressionDataFile', p0, callback);
-}
+};
 ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getCoExpressionDataFile', p0, callback);

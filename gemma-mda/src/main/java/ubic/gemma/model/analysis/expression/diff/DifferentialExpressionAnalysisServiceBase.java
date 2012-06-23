@@ -24,6 +24,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Spring Service base class for
@@ -144,8 +145,8 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * Performs the core logic for
      * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
-    protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind(
-            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold );
+    protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind( Gene gene,
+            ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}

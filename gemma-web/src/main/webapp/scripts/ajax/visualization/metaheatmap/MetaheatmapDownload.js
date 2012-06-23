@@ -134,7 +134,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 	makeHeaderRow : function () {
 		var row = [];		
 		row.push ("Gene");
-		row.push ("Meta p-value")
+		row.push ("Meta p-value");
 		for (var i = 0; i < this.conditions.items.length; i++) {		
 			var condition = this.conditions.items[0];
 				row.push ("'"+condition.contrastFactorValue + " vs " + condition.baselineFactorValue + " : " + condition.datasetShortName+"'");				
@@ -145,7 +145,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 	makeOraRow : function () {
 		var row = [];		
 		row.push ("ORA p-value");
-		row.push ("NA")
+		row.push ("NA");
 		for (var i = 0; i < this.conditions.items.length; i++) {		
 			var condition = this.conditions.items[0];
 				row.push (condition.ora);				
@@ -163,7 +163,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 			if (cell === null || cell.isProbeMissing) {				
 				row.push ("NA");
 			} else {
-				row.push (cell.pValue);
+				row.push (cell.correctedPValue); // FIXME is this right?
 			}
 		}
 		return row.join('\t')+"\n";

@@ -111,7 +111,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testCountLinks() {
-        Integer countLinks = ppcs.countLinks( ee );
+        Integer countLinks = ppcs.countLinks( ee.getId() );
         /*
          * This would be 6 but we divide the count by 2 as it is assumed we save each link twice.
          */
@@ -123,7 +123,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     @Test
     public void testHandleDeleteLinksExpressionExperiment() {
         ppcs.deleteLinks( ee );
-        Integer countLinks = ppcs.countLinks( ee );
+        Integer countLinks = ppcs.countLinks( ee.getId() );
         assertEquals( null, countLinks );
     }
 

@@ -58,7 +58,9 @@ public class ExpressionDataMatrixColumnSort {
 
     static {
         /*
-         * Values or ontology terms we treat as 'baseline'.
+         * Values or ontology terms we treat as 'baseline'. See also {@link
+         * http://www.chibi.ubc.ca/faculty/pavlidis/wiki
+         * /display/PavLab/Gemma+Curation+Guidelines#GemmaCurationGuidelines-BaselineFactor%2FControlGroup}
          */
         controlGroupTerms.add( "control group" );
         controlGroupTerms.add( "control" );

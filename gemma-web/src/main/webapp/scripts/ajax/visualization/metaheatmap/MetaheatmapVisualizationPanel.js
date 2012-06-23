@@ -464,9 +464,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					if (cell.isProbeMissing) {
 						numProbesMissing++;
 					} else {
-						if (cell.pValue !== null) {
+						if (cell.correctedPValue !== null) {
 							numProbesInSet += cell.numberOfProbes;
-							if (cell.pValue < 0.5) { //TODO: Centralize all threshold values used in Gemma.
+							if (cell.correctedPValue < 0.5) { //TODO: Centralize all threshold values used in Gemma.
 								numOverThresholdInSet += cell.numberOfProbesDiffExpressed;
 							}
 						}
@@ -485,6 +485,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		for (j = 0; j < this.geneTree.items.length; j++) {
 			gene = this.geneTree.items[j];			
 			var pValues = [];
+			// var correctedPValue = [];
 			var alreadySeenFactor = [];
 			numProbesMissing = 0;
 			for (i = 0; i < this.conditionTree.items.length; i++) {
@@ -496,7 +497,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					} else {
 						// We get p-value per condition(factor value vs baseline)  We have to keep only one p-value per factor.
 						if (typeof alreadySeenFactor[condition.factorId] === "undefined") {
-							pValues.push( cell.pValue );
+							pValues.push( cell.pValue );   // uncorrected.
+							// correctedPValue.push( cell.correctedPValue );  // not sure we need this
 							alreadySeenFactor[condition.factorId] = true;
 						}
 					}
@@ -510,23 +512,23 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		}			
 	},	
 
-    calculateBarChartValueBasedOnPvalue : function ( pValue ) {
+    calculateBarChartValueBasedOnPvalue : function ( correctedPValue ) {
         var visualizationValue = 0;
-        if ( pValue < 0.5 && pValue >= 0.25 )
+        if ( correctedPValue < 0.5 && correctedPValue >= 0.25 )
             visualizationValue = 1;
-        else if ( pValue < 0.25 && pValue >= 0.1 )
+        else if ( correctedPValue < 0.25 && correctedPValue >= 0.1 )
             visualizationValue = 2;
-        else if ( pValue < 0.1 && pValue >= 0.05 )
+        else if ( correctedPValue < 0.1 && correctedPValue >= 0.05 )
             visualizationValue = 3;
-        else if ( pValue < 0.05 && pValue >= 0.01 )
+        else if ( correctedPValue < 0.05 && correctedPValue >= 0.01 )
             visualizationValue = 4;
-        else if ( pValue < 0.01 && pValue >= 0.001 )
+        else if ( correctedPValue < 0.01 && correctedPValue >= 0.001 )
             visualizationValue = 5;
-        else if ( pValue < 0.001 && pValue >= 0.0001 )
+        else if ( correctedPValue < 0.001 && correctedPValue >= 0.0001 )
             visualizationValue = 6;
-        else if ( pValue < 0.0001 && pValue >= 0.00001 )
+        else if ( correctedPValue < 0.0001 && correctedPValue >= 0.00001 )
             visualizationValue = 7;
-        else if ( pValue < 0.00001 ) visualizationValue = 8;
+        else if ( correctedPValue < 0.00001 ) visualizationValue = 8;
         return visualizationValue;
     },
 	
@@ -581,6 +583,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					numberOfProbesDiffExpressed : item.numberOfProbesDiffExpressed,
 					
 					pvalue : (item.isProbeMissing)?'No data':item.pValue,
+			        correctedPValue : (item.isProbeMissing)?'No data':item.correctedPValue,
 					foldChange : (item.isProbeMissing || item.foldChange==0) ? 'No data': Math.ceil(item.foldChange*100)/100
 			};
 		}

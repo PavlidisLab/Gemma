@@ -62,6 +62,8 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public Collection<? extends T> create( Collection<? extends T> entities ) {
+        nullCheck( entities );
+        if ( entities.isEmpty() ) return entities;
         this.getHibernateTemplate().saveOrUpdateAll( entities );
         return entities;
     }
@@ -73,6 +75,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public T create( T entity ) {
+        nullCheck( entity );
         this.getHibernateTemplate().save( entity );
         return entity;
     }
@@ -83,16 +86,10 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<T> load( Collection<Long> ids ) {
-        Collection<T> result = new HashSet<T>();
-        for ( Long id : ids ) {
-            Object loaded = this.load( id );
-            if ( loaded != null ) {
-                result.add( ( T ) loaded );
-            }
-        }
-        return result;
+        if ( ids.isEmpty() ) return new HashSet<T>();
+        return this.getHibernateTemplate().findByNamedParam(
+                "from   " + elementClass.getSimpleName() + " where id in (:ids)", "ids", ids );
     }
 
     /*
@@ -102,6 +99,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public T load( Long id ) {
+        nullCheck( id );
         T entity = this.getHibernateTemplate().get( elementClass, id );
         return entity;
     }
@@ -123,6 +121,8 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public void remove( Collection<? extends T> entities ) {
+        nullCheck( entities );
+        if ( entities.isEmpty() ) return;
         this.getHibernateTemplate().deleteAll( entities );
     }
 
@@ -133,6 +133,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public void remove( Long id ) {
+        nullCheck( id );
         this.getHibernateTemplate().delete( this.load( id ) );
     }
 
@@ -143,7 +144,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public void remove( T entity ) {
-        if ( entity == null ) return;
+        nullCheck( entity );
         this.getHibernateTemplate().delete( entity );
     }
 
@@ -166,8 +167,12 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      */
     @Override
     public void update( T entity ) {
+        nullCheck( entity );
         this.getHibernateTemplate().update( entity );
-
     }
-    
+
+    private void nullCheck( Object entity ) {
+        if ( entity == null ) throw new IllegalArgumentException( "Argument cannot be null" );
+    }
+
 }

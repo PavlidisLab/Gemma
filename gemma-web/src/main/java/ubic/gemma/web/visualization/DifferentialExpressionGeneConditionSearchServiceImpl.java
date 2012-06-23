@@ -59,6 +59,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.EntityUtils;
@@ -98,9 +99,20 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
      */
     private class DifferentialExpressionSearchTask implements
             Callable<DifferentialExpressionGenesConditionsValueObject> {
+
+        /**
+         * Pvalues smaller than this (e.g., 0 are set to this value instead.
+         */
+        private static final double TINY_PVALUE = 1e-16;
+
+        private static final double TINY_QVALUE = 1e-10;
+
         private List<List<Gene>> geneGroups;
+
         private List<Collection<ExpressionExperiment>> experimentGroups;
+
         private List<String> geneGroupNames;
+
         private List<String> experimentGroupNames;
 
         private String taskProgressStage = "Search query submitted...";
@@ -143,9 +155,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( searchResult );
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
-            log.info( "--------------------------------" );
-            log.info( searchResult );
-            log.info( "..................................." );
+            // log.info( "--------------------------------" );
+            // log.info( searchResult );
+            // log.info( "..................................." );
             return searchResult;
         }
 
@@ -285,9 +297,19 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             Collection<DifferentialExpressionAnalysis> filtered = new HashSet<DifferentialExpressionAnalysis>();
 
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
-                FactorValue subsetFactorValue = analysis.getSubsetFactorValue();
+
+                if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
+                    /*
+                     * For now let's skip these. We might actually want to favor them but that will require a bit more
+                     * work.
+                     */
+                    log.info( "Subsetted analysis skipped: " + analysis.getExperimentAnalyzed().getName() );
+                    continue;
+                }
+
+                FactorValue subsetFactorValue = analysis.getSubsetFactorValue(); // NOTE proxy.
                 if ( subsetFactorValue != null ) {
-                    log.info( "Subsetted analysis skipped: " + analysis );
+                    log.info( "Subsetted analysis skipped: " + analysis.getExperimentAnalyzed().getName() );
                     /*
                      * For now let's skip these. We might actually want to favor them but that will require a bit more
                      * work.
@@ -355,6 +377,13 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
                 Collection<DiffExprGeneSearchResult> values = resultSetEntry.getValue().values();
                 i += resultSetEntry.getValue().size();
+
+                for ( DiffExprGeneSearchResult v : values ) {
+                    if ( aggregatedResults.contains( v ) ) {
+                        log.warn( "Already have : " + v );
+                    }
+                }
+
                 aggregatedResults.addAll( values );
             }
 
@@ -561,13 +590,14 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          * @param resultSet
          * @param geneId
          * @param searchResult
+         * @param correctedPvalue should not be null.
          * @param pValue should not be null.
          * @param numProbes
          * @param numProbesDiffExpressed
          */
         private void markCellsBlack( ExpressionAnalysisResultSet resultSet, Long geneId,
-                DifferentialExpressionGenesConditionsValueObject searchResult, Double pValue, int numProbes,
-                int numProbesDiffExpressed ) {
+                DifferentialExpressionGenesConditionsValueObject searchResult, Double correctedPvalue, Double pValue,
+                int numProbes, int numProbesDiffExpressed ) {
 
             /*
              * Note that if the resultSet has more than one experimental factor, it is an interaction term.
@@ -579,7 +609,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             for ( FactorValue factorValue : factorValues ) {
                 String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
                         resultSet.getId(), factorValue.getId() );
-                searchResult.addBlackCell( geneId, conditionId, pValue, numProbes, numProbesDiffExpressed );
+                searchResult.addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes,
+                        numProbesDiffExpressed );
             }
         }
 
@@ -619,19 +650,25 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
                 Double correctedPvalue = diffExprGeneSearchResult.getCorrectedPvalue();
+                Double uncorrectedPvalue = diffExprGeneSearchResult.getPvalue();
 
                 // this means we got a 'dummy' value, indicating missing data.
                 if ( correctedPvalue == null ) continue;
+                assert uncorrectedPvalue != null;
 
-                // FIXME arbitrary fixing (meant to deal with zeros)
-                if ( correctedPvalue < 1e-10 ) {
-                    correctedPvalue = 1e-10; // this was 1e-9, and only used for zero.
+                // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.
+                if ( correctedPvalue < TINY_QVALUE ) {
+                    correctedPvalue = TINY_QVALUE; // this was 1e-9, and only used for zero.
+                }
+
+                if ( uncorrectedPvalue < TINY_PVALUE ) {
+                    uncorrectedPvalue = TINY_PVALUE;
                 }
 
                 int numberOfProbes = diffExprGeneSearchResult.getNumberOfProbes();
                 int numberOfProbesDiffExpressed = diffExprGeneSearchResult.getNumberOfProbesDiffExpressed();
 
-                markCellsBlack( resultSet, geneId, searchResult, correctedPvalue, numberOfProbes,
+                markCellsBlack( resultSet, geneId, searchResult, correctedPvalue, uncorrectedPvalue, numberOfProbes,
                         numberOfProbesDiffExpressed );
 
                 Long probeResultId = diffExprGeneSearchResult.getResultId();
@@ -647,7 +684,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
                             resultSet.getId(), factorValue.getId() );
                     searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(), numberOfProbes,
-                            numberOfProbesDiffExpressed );
+                            numberOfProbesDiffExpressed, uncorrectedPvalue );
                 }
 
             }

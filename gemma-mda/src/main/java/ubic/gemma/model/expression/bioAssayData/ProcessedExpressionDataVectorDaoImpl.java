@@ -170,6 +170,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 + " processed data vectors" );
 
         expressionExperiment.getQuantitationTypes().add( preferredMaskedDataQuantitationType );
+        expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
 
         this.getHibernateTemplate().update( expressionExperiment );
 
@@ -1052,14 +1053,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              * design. See bug 1704. This isn't that common, so we try to break out as soon as possible.
              */
             for ( BioAssaySet bas : needToSearch ) {
-                
+
                 Collection<BioAssayDimension> dims = bioAssayDimensions.get( bas );
-                
-                if( dims == null || dims.isEmpty()) {
+
+                if ( dims == null || dims.isEmpty() ) {
                     log.warn( "BioAssayDimensions were null/empty unexpectedly." );
                     continue;
                 }
-                
+
                 if ( dims.size() == 1 ) {
                     if ( needToSearch.size() == 1 ) {
                         // simple case.
