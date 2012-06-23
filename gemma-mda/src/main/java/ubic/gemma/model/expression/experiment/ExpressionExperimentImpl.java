@@ -36,8 +36,8 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
     @Override
     public boolean equals( Object object ) {
         if ( object == null ) return false;
-        Class<?> thisclass = HibernateProxyHelper.getClassWithoutInitializingProxy( this.getClass() );
-        Class<?> thatclass = HibernateProxyHelper.getClassWithoutInitializingProxy( object.getClass() );
+        Class<?> thisclass = HibernateProxyHelper.getClassWithoutInitializingProxy( this );
+        Class<?> thatclass = HibernateProxyHelper.getClassWithoutInitializingProxy( object );
         if ( !thisclass.equals( thatclass ) ) return false;
 
         ExpressionExperiment that = ( ExpressionExperiment ) object;
