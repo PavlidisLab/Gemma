@@ -80,6 +80,8 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
         ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
         analysis.setName( randomName() );
         analysis.setExperimentAnalyzed( ee );
+        analysis.setNumberOfLinks( 3 ); // this is normally computed during the analysis.
+        analysis.setNumberOfElementsAnalyzed( 40 );
 
         analysis = ( ProbeCoexpressionAnalysis ) this.persisterHelper.persist( analysis );
 
@@ -102,6 +104,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
             ppc.setPvalue( 0.2 );
             ppc.setExpressionBioAssaySet( ee );
             ppc.setSourceAnalysis( analysis );
+
             coll.add( ppc );
 
         }
@@ -112,8 +115,12 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     @Test
     public void testCountLinks() {
         Integer countLinks = ppcs.countLinks( ee.getId() );
+
+        assertNotNull( countLinks );
+
         /*
-         * This would be 6 but we divide the count by 2 as it is assumed we save each link twice.
+         * This would be 6 but we divide the count by 2 as it is assumed we save each link twice. (but note that this
+         * value is not computed by the test)
          */
         assertEquals( 3, countLinks.intValue() );
     }
