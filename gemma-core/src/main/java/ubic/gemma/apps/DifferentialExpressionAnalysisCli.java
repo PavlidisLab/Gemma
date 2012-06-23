@@ -180,7 +180,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 continue;
             }
 
-            log.info( ee );
+            if ( expressionExperiments.size() > 1 ) {
+                log.info( ">>>>>> Beginn processing: " + ee );
+            }
 
             /*
              * This is really only important when running as admin and in a batch mode.
