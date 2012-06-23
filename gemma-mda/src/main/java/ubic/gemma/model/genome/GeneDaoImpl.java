@@ -730,7 +730,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         /*
-         * FIXME: check the cache. This is kind of a pain, because each query gene might have different experiments to
+         * Check the cache. This is kind of a pain, because each query gene might have different experiments to
          * consider. So we don't really remove datasets from consideration very readily. An exception might be where
          * interGeneOnly is true.
          */

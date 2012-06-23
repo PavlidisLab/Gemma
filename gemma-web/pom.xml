@@ -76,9 +76,9 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
+							<target>
 								<echo append="false" file="${project.build.directory}/classes/version.properties">gemma.version=${project.version} built ${maven.build.timestamp}</echo>
-							</tasks>
+							</target>
 						</configuration>
 					</execution>
 					<execution>
@@ -88,12 +88,12 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
+							<target>
 								<mkdir dir="${gemma.output.lib.dir}" />
 								<delete>
 									<fileset dir="${gemma.output.lib.dir}" includes="*.jar" />
 								</delete>
-							</tasks>
+							</target>
 						</configuration>
 					</execution>
 					<execution>
@@ -103,10 +103,10 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
+							<target>
 								<mkdir dir="${gemma.output.lib.dir}" />
 								<copy file="src/main/resources/log4j.properties" todir="${gemma.output.lib.dir}" />
-							</tasks>
+							</target>
 						</configuration>
 					</execution>
 				</executions>

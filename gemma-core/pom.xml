@@ -70,9 +70,9 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
+							<target>
 								<echo append="false" file="${project.build.directory}/classes/version.properties">gemma.version=${project.version} built ${maven.build.timestamp}</echo>
-							</tasks>
+							</target>
 						</configuration>
 					</execution>
 				</executions>

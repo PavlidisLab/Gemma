@@ -181,7 +181,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             }
 
             if ( expressionExperiments.size() > 1 ) {
-                log.info( ">>>>>> Beginn processing: " + ee );
+                log.info( ">>>>>> Begin processing: " + ee );
             }
 
             /*

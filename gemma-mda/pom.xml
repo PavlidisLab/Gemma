@@ -208,7 +208,7 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.7</version>
 				<configuration>
-					<tasks>
+					<target>
 						<echo message="******* Building DDL file *******" />
 						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
 							<classpath>
@@ -220,7 +220,7 @@
 							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
-					</tasks>
+					</target>
 				</configuration>
 				<executions>
 					<execution>
