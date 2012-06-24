@@ -60,7 +60,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.7/commons-digester-1.7.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.4.4/ehcache-core-2.4.4.jar" sourcepath="/M2_REPO/net/sf/ehcache/ehcache-core/2.4.3/ehcache-core-2.4.3-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2.jar" sourcepath="/M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://ehcache.sourceforge.net/javadoc/"/>
 		</attributes>
@@ -350,8 +350,8 @@
 	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-mapper-asl/1.7.1/jackson-mapper-asl-1.7.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/codehaus/jackson/jackson-core-asl/1.7.1/jackson-core-asl-1.7.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-ehcache/3.6.7.Final/hibernate-ehcache-3.6.7.Final.jar" sourcepath="/M2_REPO/org/hibernate/hibernate-ehcache/3.6.7.Final/hibernate-ehcache-3.6.7.Final-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-terracotta/2.4.4/ehcache-terracotta-2.4.4.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/terracotta/terracotta-toolkit-1.3-runtime/3.2.0/terracotta-toolkit-1.3-runtime-3.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-terracotta/2.5.2/ehcache-terracotta-2.5.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/terracotta/terracotta-toolkit-1.5-runtime/4.2.0/terracotta-toolkit-1.5-runtime-4.2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-commons-annotations/3.2.0.Final/hibernate-commons-annotations-3.2.0.Final.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/javax/persistence/hibernate-jpa-2.0-api/1.0.1.Final/hibernate-jpa-2.0-api-1.0.1.Final.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
