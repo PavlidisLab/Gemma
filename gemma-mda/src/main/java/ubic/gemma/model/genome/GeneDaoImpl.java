@@ -1656,7 +1656,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CacheConfiguration config = new CacheConfiguration( G2CS_CACHE_NAME, maxElements );
             config.setStatistics( false );
             config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( overFlowToDisk );
+            config.setOverflowToDisk( false );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( 0 );
             config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -1664,7 +1664,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
             config.clearOnFlush( clearOnFlush );
             config.setTimeToLiveSeconds( 0 );
-            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
             config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
             this.gene2CsCache = new Cache( config );

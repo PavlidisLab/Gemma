@@ -52,7 +52,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     private static final int CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int CACHE_DEFAULT_TIME_TO_IDLE = 10000;
     private static final boolean CACHE_DEFAULT_ETERNAL = true;
-    private static final boolean CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
+    private static final boolean CACHE_DEFAULT_OVERFLOW_TO_DISK = false;
 
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
@@ -117,7 +117,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
                 CacheConfiguration config = new CacheConfiguration( CACHE_NAME_BASE, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setOverflowToDisk( overFlowToDisk );
+                config.setOverflowToDisk( false );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -125,7 +125,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
                 config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
                 config.clearOnFlush( clearOnFlush );
                 config.setTimeToLiveSeconds( timeToLive );
-                config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+                config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
                 this.cache = new Cache( config );

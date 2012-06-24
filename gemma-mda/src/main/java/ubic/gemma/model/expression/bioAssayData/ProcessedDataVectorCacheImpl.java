@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import net.sf.ehcache.Cache;
@@ -102,7 +103,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 CacheConfiguration config = new CacheConfiguration( cacheName, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setOverflowToDisk( overFlowToDisk );
+                config.setOverflowToDisk( false );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -110,7 +111,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
                 config.clearOnFlush( clearOnFlush );
                 config.setTimeToLiveSeconds( timeToLive );
-                config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+                config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
                 this.cache = new Cache( config );
@@ -149,7 +150,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     public void clearCache( Long eeid ) {
         for ( Object o : cache.getKeys() ) {
             CacheKey k = ( CacheKey ) o;
-            if ( k.eeid.equals( eeid ) ) {
+            if ( k.getEeid().equals( eeid ) ) {
                 cache.remove( k );
             }
         }
@@ -178,10 +179,11 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     }
 }
 
-class CacheKey {
+class CacheKey implements Serializable {
 
-    Long eeid;
-    Long geneId;
+    private static final long serialVersionUID = -7873367550383853137L;
+    private Long eeid;
+    private Long geneId;
 
     CacheKey( Long eeid, Long geneId ) {
         this.eeid = eeid;
@@ -203,12 +205,20 @@ class CacheKey {
         return true;
     }
 
+    public Long getEeid() {
+        return eeid;
+    }
+
+    public Long getGeneId() {
+        return geneId;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
-        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        result = prime * result + ( eeid == null ? 0 : eeid.hashCode() );
+        result = prime * result + ( geneId == null ? 0 : geneId.hashCode() );
         return result;
     }
 

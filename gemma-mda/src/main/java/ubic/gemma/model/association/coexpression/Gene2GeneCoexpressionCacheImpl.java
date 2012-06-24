@@ -110,7 +110,7 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
             CacheConfiguration config = new CacheConfiguration( GENE_COEXPRESSION_CACHE_NAME, maxElements );
             config.setStatistics( false );
             config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( overFlowToDisk );
+            config.setOverflowToDisk( false );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( timeToIdle );
             config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -118,7 +118,7 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
             config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
             config.clearOnFlush( clearOnFlush );
             config.setTimeToLiveSeconds( timeToLive );
-            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
             config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
             this.cache = new Cache( config );

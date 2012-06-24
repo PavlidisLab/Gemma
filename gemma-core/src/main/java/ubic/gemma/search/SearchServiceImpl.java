@@ -317,7 +317,7 @@ public class SearchServiceImpl implements SearchService {
                 config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
                 config.clearOnFlush( clearOnFlush );
                 config.setTimeToLiveSeconds( ONTOLOGY_CACHE_TIME_TO_DIE );
-                config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+                config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
                 childTermCache = new Cache( config );

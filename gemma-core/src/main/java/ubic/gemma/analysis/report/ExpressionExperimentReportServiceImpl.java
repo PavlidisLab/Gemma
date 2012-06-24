@@ -133,7 +133,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             CacheConfiguration config = new CacheConfiguration( EESTATS_CACHE_NAME, maxElements );
             config.setStatistics( false );
             config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( overFlowToDisk );
+            config.setOverflowToDisk( false );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( 0 );
             config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -141,7 +141,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
             config.clearOnFlush( clearOnFlush );
             config.setTimeToLiveSeconds( 0 );
-            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
             config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
             this.statsCache = new Cache( config );
@@ -507,10 +507,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
 
+        int incache = 0;
         for ( Long id : filteredIds ) {
 
             Element cachedElement = this.statsCache.get( id );
             if ( cachedElement != null ) {
+                incache++;
                 Serializable el = cachedElement.getValue();
                 assert el instanceof ExpressionExperimentValueObject;
 
@@ -522,6 +524,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             eeValueObjects.add( valueObject );
             continue;
 
+        }
+        if ( ids.size() > 1 ) {
+            log.info( incache + "/" + ids.size() + " reports were found in the cache" );
         }
         return eeValueObjects;
     }
@@ -560,32 +565,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.remove( id );
-    }
-
-    /**
-     * @return the serialized value objects (either from the db or from the in-memory cache).
-     */
-    private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
-        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-
-        for ( Long id : filteredIds ) {
-
-            Element cachedElement = this.statsCache.get( id );
-            if ( cachedElement != null ) {
-                Serializable el = cachedElement.getValue();
-                assert el instanceof ExpressionExperimentValueObject;
-
-                eeValueObjects.add( ( ExpressionExperimentValueObject ) el );
-                continue;
-            }
-
-            ExpressionExperimentValueObject valueObject = generateSummary( id );
-            eeValueObjects.add( valueObject );
-            continue;
-
-        }
-        return eeValueObjects;
     }
 
     /**
