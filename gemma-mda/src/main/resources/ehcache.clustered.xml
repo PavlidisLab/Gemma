@@ -3,7 +3,7 @@
 
 	<!--  $Id$ -->
 
-	<terracottaConfig url="${terracotta.url}" rejoin="false" />
+	<terracottaConfig url="${terracotta.url}" rejoin="true" />
 
 	<!--
 		Default Cache configuration
