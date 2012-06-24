@@ -34,6 +34,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -143,7 +145,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             config.setTimeToLiveSeconds( 0 );
             config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+            nonstopConfiguration.addTimeoutBehavior( tobc );
+            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.statsCache = new Cache( config );
 
             // this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,

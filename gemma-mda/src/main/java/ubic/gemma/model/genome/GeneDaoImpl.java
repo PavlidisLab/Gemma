@@ -28,6 +28,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.lang.StringUtils;
@@ -1666,7 +1668,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             config.setTimeToLiveSeconds( 0 );
             config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+            nonstopConfiguration.addTimeoutBehavior( tobc );
+            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.gene2CsCache = new Cache( config );
         } else {
             this.gene2CsCache = new Cache( G2CS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,

@@ -47,6 +47,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -200,11 +202,11 @@ public class SearchServiceImpl implements SearchService {
      * How many term children can stay in memory
      */
     private static final int ONTOLOGY_INFO_CACHE_SIZE = 15000;
-    
+
     /**
-     * If fewer than this number of experiments are returned from the a search of experiment characteristics,
-     * then search for experiments indirectly as well (ex: by finding bioMatierials tagged with 
-     * the characteristicsand getting the experiments associated with them ).
+     * If fewer than this number of experiments are returned from the a search of experiment characteristics, then
+     * search for experiments indirectly as well (ex: by finding bioMatierials tagged with the characteristicsand
+     * getting the experiments associated with them ).
      */
     private static final int SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS = 100;
 
@@ -319,7 +321,11 @@ public class SearchServiceImpl implements SearchService {
                 config.setTimeToLiveSeconds( ONTOLOGY_CACHE_TIME_TO_DIE );
                 config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-                config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+                nonstopConfiguration.addTimeoutBehavior( tobc );
+                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
                 childTermCache = new Cache( config );
 
                 // childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
@@ -723,7 +729,7 @@ public class SearchServiceImpl implements SearchService {
         return searchResults;
     }
 
-   /**
+    /**
      * @param settings
      */
     private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {

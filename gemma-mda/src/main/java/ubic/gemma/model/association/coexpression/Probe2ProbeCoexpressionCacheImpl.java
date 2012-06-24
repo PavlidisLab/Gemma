@@ -33,6 +33,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.CoexpressionCacheValueObject;
@@ -180,7 +182,6 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
             boolean clearOnFlush = false;
 
             if ( terracottaEnabled ) {
-
                 CacheConfiguration config = new CacheConfiguration( CACHE_NAME_BASE, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
@@ -194,7 +195,11 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
                 config.setTimeToLiveSeconds( timeToLive );
                 config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-                config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+                nonstopConfiguration.addTimeoutBehavior( tobc );
+                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
                 this.cache = new Cache( config );
                 // this.cache = new Cache( CACHE_NAME_BASE, maxElements,
                 // MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,

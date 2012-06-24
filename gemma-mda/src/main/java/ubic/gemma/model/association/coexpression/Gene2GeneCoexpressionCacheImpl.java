@@ -28,6 +28,8 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.gemma.util.ConfigUtils;
 
@@ -120,7 +122,11 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
             config.setTimeToLiveSeconds( timeToLive );
             config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+            nonstopConfiguration.addTimeoutBehavior( tobc );
+            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.cache = new Cache( config );
             // this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
             // overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,

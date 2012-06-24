@@ -27,6 +27,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -113,7 +115,11 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 config.setTimeToLiveSeconds( timeToLive );
                 config.getTerracottaConfiguration().setClustered( true );
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-                config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+                nonstopConfiguration.addTimeoutBehavior( tobc );
+                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
                 this.cache = new Cache( config );
                 //
                 // this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,

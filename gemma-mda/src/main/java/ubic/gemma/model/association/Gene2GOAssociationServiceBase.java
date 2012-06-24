@@ -23,6 +23,8 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -71,7 +73,11 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
             config.setTimeToLiveSeconds( timeToLive );
             config.getTerracottaConfiguration().setClustered( terracottaEnabled );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+            nonstopConfiguration.addTimeoutBehavior( tobc );
+            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.gene2goCache = new Cache( config );
 
         } else {
