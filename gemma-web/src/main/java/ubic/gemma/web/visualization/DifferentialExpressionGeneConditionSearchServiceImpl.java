@@ -55,7 +55,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -308,7 +307,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
                 // take the first subsetted analysis we see.
                 if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
-                    differentialExpressionAnalysisService.thaw( analysis ); // NOTE necessary, but possibly slows things down
+                    differentialExpressionAnalysisService.thaw( analysis ); // NOTE necessary, but possibly slows things
+                                                                            // down
 
                     if ( subsetFactor != null
                             && subsetFactor.equals( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
@@ -468,8 +468,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             timer.start();
             // DATABASE CALL HERE, but should be quite fast.
             for ( ExpressionAnalysisResultSet rs : resultSets ) {
-                // TODO indexing this by resultset could be useful to further reduce query size, but not sure it is
-                // worth it
                 resultSetIdsToArrayDesignsUsed
                         .put( rs, EntityUtils.getIds( eeService.getArrayDesignsUsed( rs.getAnalysis()
                                 .getExperimentAnalyzed() ) ) );
@@ -535,18 +533,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             }
 
             return filteredResultSets;
-        }
-
-        /**
-         * @param resultSets
-         * @return
-         */
-        private List<Long> getADIds( Collection<ArrayDesign> resultSets ) {
-            List<Long> ids = new LinkedList<Long>();
-            for ( ArrayDesign resultSet : resultSets ) {
-                ids.add( resultSet.getId() );
-            }
-            return ids;
         }
 
         /**
