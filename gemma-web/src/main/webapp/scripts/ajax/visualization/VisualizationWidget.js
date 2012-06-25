@@ -137,35 +137,34 @@ Gemma.prepareProfiles = function(data) {
 		 * Format the gene symbols and names into strings that will be displayed
 		 * in the legend.
 		 */
-
-		var geneSymbols = "Unmapped"; // was 'no gene'...
-		var geneNames = "";
+		
+		var orderedGeneLinksArr = [];
+		var orderedGeneNamesArr = [];
+		var qtip = 'Probe: ' + probe;
 		if (genes !== undefined && genes.length > 0) {
-			geneSymbols = genes[0].name;
-			var k, gene;
-			for (k = 1; k < genes.size(); k++) {
-				gene = genes[k].name;
+			var k, gene, link, geneName;
+
+			for (k = 0; k < genes.size(); k++) {
+				gene = genes[k];
+				geneName = genes[k].officialName;
+				link = '<a href="' + Gemma.LinkRoots.genePage + gene.id 
+						+ '" target="_blank" ext:qtip="' + qtip + '">'
+						+ Ext.util.Format.ellipsis(gene.officialSymbol,
+								Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + '</a> ';
 
 				// put the query gene first.
-				if (this.queryGene && gene == this.queryGene) {
-					geneSymbols = gene + ", " + geneSymbols;
+				if (this.queryGene && geneName == this.queryGene) {
+					orderedGeneLinksArr.unshift(link);
+					orderedGeneNamesArr.unshift(geneName);
 				} else {
-					geneSymbols = geneSymbols + "," + gene;
+					orderedGeneLinksArr.push(link);
+					orderedGeneNamesArr.push(geneName);
 				}
 			}
-
-			geneNames = genes[0].officialName;
-			for (k = 1; k < genes.size(); k++) {
-				gene = genes[k].name;
-				var genen = genes[k].officialName;
-
-				// put the query gene first.
-				if (this.queryGene && gene == this.queryGene) {
-					geneNames = genen + ", " + geneNames;
-				} else {
-					geneNames = geneNames + "," + genen;
-				}
-			}
+		}else{
+			orderedGeneLinksArr.push("<a href='/Gemma/compositeSequence/show.html?id="
+				+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>Unmapped</a>");
+			orderedGeneNamesArr.push("");
 		}
 
 		/*
@@ -184,7 +183,6 @@ Gemma.prepareProfiles = function(data) {
 		}
 		
 		var labelStyle = '';
-		var qtip = 'Probe: ' + probe + ' (' + geneSymbols + ') ';
 		if (factor && factor < 2) {
 			labelStyle = "font-style:italic";
 			// qtip = qtip + " [Not significant]";  
@@ -198,10 +196,12 @@ Gemma.prepareProfiles = function(data) {
 			data : points, // this is what gets plotted. Flotr wants this name.
 			color : color,
 			genes : genes,
-			rawLabel : pvalueLabel +  geneSymbols + " " + geneNames,
-			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id="
-					+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>"
-					+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames
+			rawLabel : pvalueLabel 
+						+ orderedGeneLinksArr.join("; ") + " "
+						+ orderedGeneNamesArr.join("; "),
+			label : pvalueLabel + "<span style='" + labelStyle + "'>"
+					+ orderedGeneLinksArr.join("; ") + " "
+					+ orderedGeneNamesArr.join("; ")
 					+ "</span>",
 			lines : {
 				lineWidth : Gemma.LINE_THICKNESS
@@ -675,25 +675,33 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	},
 
 	loadcallback : function(records, options, success) {
-		
-		this.loadMask.hide();
-		if (!success || records.length === 0) {
-			Ext.Msg.alert("No data", "Sorry, no data were available", function() {
-				//		this.close();
-				//		this.destroy();
-					}.createDelegate(this));
-			this.fireEvent('loadFailed');
-			return;
+
+		if (this.loadMask) {
+			this.loadMask.hide();
 		}
-		
-		var queryGeneList = options.params[1];
-		var returnedGeneCount = this.getReturnedGeneCount( records );
-		
-		if(!this.hidden){ // in case window was closed before it finished loading
+
+		if (!this.hidden) { // in case window was closed before
+			// it finished loading
+			if (!success || records.length === 0) {
+				Ext.Msg.alert("No data",
+						"Sorry, no data were available",
+						function() {
+					// this.close();
+					// this.destroy();
+				}.createDelegate(this));
+				this.fireEvent('loadFailed');
+				return;
+			}
+
+			var queryGeneList = options.params[1];
+			var returnedGeneCount = this
+			.getReturnedGeneCount(records);
+
 			this.zoom(records[0], this.id);
-			this.fireEvent('loadSucceeded', returnedGeneCount, queryGeneList.length);
+			this.fireEvent('loadSucceeded', returnedGeneCount,
+					queryGeneList.length);
 		}
-		
+
 	},
 	getReturnedGeneCount: function( records ){
 		var returnedGeneIds = {};
