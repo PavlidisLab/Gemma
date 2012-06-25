@@ -854,10 +854,12 @@ public class DEDVController {
                 .findInResultSet( ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
 
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
-        Map<CompositeSequence, Double> pvalues = new HashMap<CompositeSequence, Double>();
+        // Map<CompositeSequenceId, pValue>
+        // using id instead of entity for map key because want to use a value object for retrieval later
+        Map<Long, Double> pvalues = new HashMap<Long, Double>();
         for ( DifferentialExpressionAnalysisResult par : ee2probeResults ) {
             probes.add( par.getProbe() );
-            pvalues.put( par.getProbe(), par.getPvalue() );
+            pvalues.put( par.getProbe().getId(), par.getPvalue() );
         }
 
         watch.reset();
@@ -875,7 +877,7 @@ public class DEDVController {
          * Resort
          */
         for ( DoubleVectorValueObject v : dedvs ) {
-            v.setPvalue( pvalues.get( v.getDesignElement() ) );
+            v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
         }
 
         Collections.sort( dedvs, new Comparator<DoubleVectorValueObject>() {
@@ -1385,7 +1387,7 @@ public class DEDVController {
             }
 
             /*
-             * Set up the experimental designinfo so we can show it above the graph.
+             * Set up the experimental design info so we can show it above the graph.
              */
             if ( layouts != null && layouts.get( ee ) != null ) {
                 vvo.setUpFactorProfiles( layouts.get( ee ) );
