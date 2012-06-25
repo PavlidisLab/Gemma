@@ -290,13 +290,13 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 var color = "#000";
                 var suggestRun = true;
                 var qtip = 'ext:qtip="OK"';
-                if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note:
-                    // no
-                    // such
-                    // thing.
+                if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {  
                     color = 'red';
                     qtip = 'ext:qtip="Failed"';
-                }
+                } else if (record.get('differentialExpressionAnalyses').length == 0) {
+					// we ran it, but the analyses were apparently deleted.
+					return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+				}
                 
                 return '<span style="color:' + color + ';" ' + qtip + '>' +
                 Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') +

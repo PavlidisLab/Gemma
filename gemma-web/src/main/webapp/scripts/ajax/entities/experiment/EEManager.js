@@ -1,7 +1,6 @@
 /**
- * Common tasks to run on experiments. To use this, construct it with a id
- * defined in the config (e.g., {id : 'eemanager}). Then you can use things like
- * onClick=Ext.getCmp('eemanager').updateEEReport(id).
+ * Common tasks to run on experiments. To use this, construct it with a id defined in the config (e.g., {id :
+ * 'eemanager}). Then you can use things like onClick=Ext.getCmp('eemanager').updateEEReport(id).
  * 
  * @class Gemma.EEManager
  * @extends Ext.Component
@@ -113,6 +112,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				name : "batchFetchEventType"
 			}, {
 				name : "pcaAnalysisEventType"
+			}, {
+				name : "differentialExpressionAnalyses"
 			}]),
 
 	/**
@@ -120,8 +121,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	 * @param {}
 	 *            id
 	 * @param {}
-	 *            throbberEl optional element to show the throbber. If omitted,
-	 *            a popup progressbar is shown.
+	 *            throbberEl optional element to show the throbber. If omitted, a popup progressbar is shown.
 	 */
 	updateEEReport : function(id, throbberEl) {
 		var callParams = [];
@@ -211,8 +211,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	},
 
 	/**
-	 * Break the relationships between bioassays and biomaterials, such that
-	 * there is only one bioassay per biomaterial.
+	 * Break the relationships between bioassays and biomaterials, such that there is only one bioassay per biomaterial.
 	 */
 	unmatchBioAssays : function(id) {
 		Ext.Msg.show({
@@ -293,11 +292,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					buttons : [{
 						text : 'Help',
 						handler : function() {
-							Ext.Msg
-									.alert( 
-									Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpTitle,
-									Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpText
-										);
+							Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpTitle,
+									Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpText);
 						}
 					}, {
 						text : 'Done',
@@ -307,9 +303,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 							if (r.length > 0) {
 								Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.UnsavedChanges.title,
-											Gemma.HelpText.CommonWarnings.UnsavedChanges.text
-										, function(
-												btn, txt) {
+										Gemma.HelpText.CommonWarnings.UnsavedChanges.text, function(btn, txt) {
 											if (btn == 'OK') {
 												w.hide();
 											}
@@ -357,7 +351,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
-							
+
 						}
 					},
 					scope : this,
@@ -365,7 +359,6 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					icon : Ext.MessageBox.WARNING
 				});
 	},
-	
 
 	deleteExperimentAnalysis : function(eeId, analysisId, redirectHome) {
 		Ext.Msg.show({
@@ -385,8 +378,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done', 'fail']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-												this.fireEvent('deletedAnalysis');
-												}.createDelegate(this));
+														this.fireEvent('deletedAnalysis');
+													}.createDelegate(this));
 										}.createDelegate(this),
 										errorHandler : function(error) {
 											Ext.Msg.alert("Deletion failed", error);
@@ -394,7 +387,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							DifferentialExpressionAnalysisController.remove.apply(this, callParams);
-							
+
 						}
 					},
 					scope : this,
@@ -639,153 +632,151 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}
 
 			/*
-			 * DifferentialExpressionAnalysisCustomization - only available if
-			 * there is more than one factor. We should refactor this code.
+			 * DifferentialExpressionAnalysisCustomization - only available if there is more than one factor. We should
+			 * refactor this code.
 			 */
 			var deasw = new Ext.Window({
-				name : 'diff-customization-window',
-				modal : true,
-				stateful : false,
-				resizable : false,
-				autoHeight : true,
-				width : 460,
-				plain : true,
-				border : false,
-				title : "Differential analysis settings",
-				padding : 10,
-				items : [{
-							xtype : 'form',
-							bodyBorder : false,
-							autoHeight : true,
-							items : [{
-										xtype : 'fieldset',
-										title : "Select factor(s) to use",
-										autoHeight : true,
-										labelWidth : 375,
-										id : 'diff-ex-analysis-customize-factors'
-									}, {
-										xtype : 'fieldset',
-										title : "Optional: Select a subset factor",
-										items : [{
-													xtype : 'radiogroup',
-													columns : 1,
-													allowBlank : true,
-													autoHeight : true,
-													id : 'diff-ex-analysis-subset-factors',
-													items : subsetRadios,
-													hideLabel : true,
-													listeners : {
-														change : validateFactorsChosen.createDelegate(this, [factors])
-													}
-												}]
-									},
+						name : 'diff-customization-window',
+						modal : true,
+						stateful : false,
+						resizable : false,
+						autoHeight : true,
+						width : 460,
+						plain : true,
+						border : false,
+						title : "Differential analysis settings",
+						padding : 10,
+						items : [{
+									xtype : 'form',
+									bodyBorder : false,
+									autoHeight : true,
+									items : [{
+												xtype : 'fieldset',
+												title : "Select factor(s) to use",
+												autoHeight : true,
+												labelWidth : 375,
+												id : 'diff-ex-analysis-customize-factors'
+											}, {
+												xtype : 'fieldset',
+												title : "Optional: Select a subset factor",
+												items : [{
+															xtype : 'radiogroup',
+															columns : 1,
+															allowBlank : true,
+															autoHeight : true,
+															id : 'diff-ex-analysis-subset-factors',
+															items : subsetRadios,
+															hideLabel : true,
+															listeners : {
+																change : validateFactorsChosen.createDelegate(this,
+																		[factors])
+															}
+														}]
+											},
 
-									{
-										xtype : 'fieldset',
-										labelWidth : 375,
-										autoHeight : true,
-										hidden : false,
+											{
+												xtype : 'fieldset',
+												labelWidth : 375,
+												autoHeight : true,
+												hidden : false,
+
+												/*
+												 * we hide this if we have more than 2 factors -- basically where we're
+												 * not going to bother supporting interactions.
+												 */
+												items : [{
+															xtype : 'checkbox',
+															id : 'diff-ex-analysis-customize-include-interactions-checkbox',
+															fieldLabel : 'Include interactions if possible'
+														}]
+											}]
+								}],
+
+						buttons : [{
+									text : "Help",
+									id : 'diff-ex-customize-help-button',
+									disabled : false,
+									scope : this,
+									handler : function() {
+										Ext.Msg.show({
+													title : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpTitle,
+													msg : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpText,
+													buttons : Ext.Msg.OK,
+													icon : Ext.MessageBox.INFO
+												});
+									}
+								}, {
+									text : 'Proceed',
+									id : 'diff-ex-customize-proceed-button',
+									disabled : false,
+									scope : this,
+									handler : function(btn, text) {
+
+										var includeInteractions = Ext
+												.getCmp('diff-ex-analysis-customize-include-interactions-checkbox')
+												.getValue();
 
 										/*
-										 * we hide this if we have more than 2
-										 * factors -- basically where we're not
-										 * going to bother supporting
-										 * interactions.
+										 * Get the factors the user checked. See checkbox creation code below.
 										 */
-										items : [{
-													xtype : 'checkbox',
-													id : 'diff-ex-analysis-customize-include-interactions-checkbox',
-													fieldLabel : 'Include interactions if possible'
-												}]
-									}]
-						}],
+										var factorsToUseIds = getFactorsToUseIds(factors);
+										var subsetFactor = getSubsetFactorId(factors);
 
-				buttons : [{
-					text : "Help",
-					id : 'diff-ex-customize-help-button',
-					disabled : false,
-					scope : this,
-					handler : function() {
-						Ext.Msg.show({
-							title : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpTitle,
-							msg : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpText,
-							buttons : Ext.Msg.OK,
-							icon : Ext.MessageBox.INFO
-						});
-					}
-				}, {
-					text : 'Proceed',
-					id : 'diff-ex-customize-proceed-button',
-					disabled : false,
-					scope : this,
-					handler : function(btn, text) {
+										if (factorsToUseIds.length < 1) {
+											Ext.Msg.alert("Invalid selection", "Please pick at least one factor.");
+											return;
+										}
 
-						var includeInteractions = Ext
-								.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').getValue();
+										/*
+										 * This should be disallowed by the interface, but just in case.
+										 */
+										if (subsetFactor !== null && factorsToUseIds.indexOf(subsetFactor) >= 0) {
+											Ext.Msg.alert("Invalid selection",
+													"You cannot subset on a factor included in the model.");
+											return;
+										}
 
-						/*
-						 * Get the factors the user checked. See checkbox
-						 * creation code below.
-						 */
-						var factorsToUseIds = getFactorsToUseIds(factors);
-						var subsetFactor = getSubsetFactorId(factors);
-
-						if (factorsToUseIds.length < 1) {
-							Ext.Msg.alert("Invalid selection", "Please pick at least one factor.");
-							return;
-						}
-
-						/*
-						 * This should be disallowed by the interface, but just
-						 * in case.
-						 */
-						if (subsetFactor !== null && factorsToUseIds.indexOf(subsetFactor) >= 0) {
-							Ext.Msg.alert("Invalid selection", "You cannot subset on a factor included in the model.");
-							return;
-						}
-
-						/*
-						 * Pass back the factors to be used, and the choice of
-						 * whether interactions are to be used.
-						 */
-						var callParams = [];
-						callParams.push(id);
-						callParams.push(factorsToUseIds);
-						callParams.push(includeInteractions);
-						callParams.push(subsetFactor);
-						Ext.getBody().mask();
-						callParams.push({
-									callback : function(data) {
-										var k = new Gemma.WaitHandler();
-										k.handleWait(data, true);
-										m.relayEvents(k, ['done', 'fail']);
-										Ext.getBody().unmask();
-										k.on('done', function(payload) {
-													m.fireEvent('differential', payload);
+										/*
+										 * Pass back the factors to be used, and the choice of whether interactions are
+										 * to be used.
+										 */
+										var callParams = [];
+										callParams.push(id);
+										callParams.push(factorsToUseIds);
+										callParams.push(includeInteractions);
+										callParams.push(subsetFactor);
+										Ext.getBody().mask();
+										callParams.push({
+													callback : function(data) {
+														var k = new Gemma.WaitHandler();
+														k.handleWait(data, true);
+														m.relayEvents(k, ['done', 'fail']);
+														Ext.getBody().unmask();
+														k.on('done', function(payload) {
+																	m.fireEvent('differential', payload);
+																});
+													}.createDelegate(m),
+													errorHandler : function(error) {
+														Ext.Msg.alert("Differential exp. Analysis failed", error);
+														Ext.getBody().unmask();
+													}.createDelegate(this)
 												});
-									}.createDelegate(m),
-									errorHandler : function(error) {
-										Ext.Msg.alert("Differential exp. Analysis failed", error);
-										Ext.getBody().unmask();
-									}.createDelegate(this)
-								});
 
-						DifferentialExpressionAnalysisController.runCustom.apply(this, callParams);
-						deasw.close();
-					}
-				}, {
-					text : 'Cancel',
-					handler : function() {
-						deasw.close();
-					}
-				}]
-			});
+										DifferentialExpressionAnalysisController.runCustom.apply(this, callParams);
+										deasw.close();
+									}
+								}, {
+									text : 'Cancel',
+									handler : function() {
+										deasw.close();
+									}
+								}]
+					});
 
 			deasw.doLayout();
 
 			/*
-			 * Create the checkboxes for user choice of factors. We assume there
-			 * is more than one.
+			 * Create the checkboxes for user choice of factors. We assume there is more than one.
 			 */
 			if (factors) {
 				for (var i = 0; i < factors.length; i++) {
@@ -851,10 +842,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		};
 
 		/**
-		 * Callback for analysis type determination. This gets the type of
-		 * analysis, if it can be determined. If the type is non-null, then just
-		 * ask the user for confirmation. If they say no, or the type is null,
-		 * show them the DifferentialExpressionAnalysisSetupWindow.
+		 * Callback for analysis type determination. This gets the type of analysis, if it can be determined. If the
+		 * type is non-null, then just ask the user for confirmation. If they say no, or the type is null, show them the
+		 * DifferentialExpressionAnalysisSetupWindow.
 		 */
 		var cb = function(analysisInfo) {
 			if (analysisInfo.type) {
@@ -945,17 +935,15 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 			} else {
 				/*
-				 * System couldn't guess the analysis type, so force user to
-				 * customize.
+				 * System couldn't guess the analysis type, so force user to customize.
 				 */
 				customize(analysisInfo);
 			}
 		};
 
 		/*
-		 * Make sure checkboxes are logically consistent (warning: this might
-		 * not work 100% perfectly, so it's a good idea to validate again later
-		 * on the client side)
+		 * Make sure checkboxes are logically consistent (warning: this might not work 100% perfectly, so it's a good
+		 * idea to validate again later on the client side)
 		 */
 		var validateFactorsChosen = function(factors) {
 			var factorsToUseIds = getFactorsToUseIds(factors);
@@ -969,8 +957,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}
 
 			/*
-			 * The top checkboxes take precendence. We unset the 'subset' if
-			 * there is a conflict.
+			 * The top checkboxes take precendence. We unset the 'subset' if there is a conflict.
 			 */
 			if (subsetFactor !== null && factorsToUseIds.indexOf(subsetFactor) >= 0) {
 				Ext.getCmp(subsetFactor + '-factor-subset-radio').setValue(false);
@@ -994,9 +981,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	},
 
 	/**
-	 * Run the vector processing. Note that this is normally done when the data
-	 * are first imported, so this is rarely needed unless something fundamental
-	 * changes about the data set.
+	 * Run the vector processing. Note that this is normally done when the data are first imported, so this is rarely
+	 * needed unless something fundamental changes about the data set.
 	 */
 	doProcessedVectors : function(id) {
 		Ext.Msg.show({
@@ -1044,16 +1030,16 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			 * TODO
 			 */
 		};
-		
-		this.on('deleted', function(redirectHome){
-			if (redirectHome) {
-				window.location = '/Gemma/home.html';
-				
-			} else {
-				/* after deletion, clear bottom details pane */
-				Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
-			}
-		});
+
+		this.on('deleted', function(redirectHome) {
+					if (redirectHome) {
+						window.location = '/Gemma/home.html';
+
+					} else {
+						/* after deletion, clear bottom details pane */
+						Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
+					}
+				});
 
 	}
 

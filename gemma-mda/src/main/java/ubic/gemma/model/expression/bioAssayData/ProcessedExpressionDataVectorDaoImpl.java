@@ -991,7 +991,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
             Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
                     EntityUtils.getIds( getExperiments( ees ) ), this.getSession() ).keySet();
-            Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( EntityUtils.getIds( genesToSearch ),
+            Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( genesToSearch,
                     EntityUtils.getIds( arrays ), this.getSession() );
 
             if ( cs2gene.size() == 0 ) {

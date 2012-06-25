@@ -25,11 +25,8 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 							.overwrite(
 									dataSetDetailsPanel.body,
 									'<span class="big">'
-											+ Gemma.EEReportGridColumnRenderers
-													.shortNameRenderer(
-															record
-																	.get('shortName'),
-															null, record)
+											+ Gemma.EEReportGridColumnRenderers.shortNameRenderer(record
+															.get('shortName'), null, record)
 											+ '</span>&nbsp;&nbsp;<span class="medium">'
 											+ record.get('name')
 											+ "</span><p>"
@@ -44,19 +41,16 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 
 		};
 
-		var tpl = new Ext.XTemplate(
-				'<tpl for="."><div class="itemwrap" id="{shortName}">',
-				'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>',
-				"</div></tpl>", {
+		var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
+				'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
 					log : function(id) {
 						// console.log(id);
 					}
 				});
 
 		// if the user is an admin, show the "refresh all" button
-		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin')
-				.getValue() : false;
-				
+		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
+
 		/*
 		 * If the URL contains a list of IDs, limit ourselves to that.
 		 */
@@ -65,14 +59,12 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
 		var ids = null;
 		var taxonid = null;
 		var filterMode = null;
-		var showPublic = true;//!isAdmin;
+		var showPublic = true;// !isAdmin;
 		if (queryStart > -1) {
 			var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
 			ids = urlParams.ids ? urlParams.ids.split(',') : null;
 			taxonid = urlParams.taxon ? urlParams.taxon : null;
-			limit = urlParams.taxon
-					? urlParams.limit
-					: Gemma.DEFAULT_NUMBER_EXPERIMENTS;
+			limit = urlParams.taxon ? urlParams.limit : Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 			filterMode = urlParams.filter ? urlParams.filter : null;
 			showPublic = urlParams.showPublic ? urlParams.showPublic : showPublic;
 		}
@@ -156,8 +148,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	updateTitle : function(count) {
-		this.setTitle('Experiment Manager &nbsp;&nbsp; ( ' + count
-				+ ((count == 1) ? ' row' : ' rows') + ' )');
+		this.setTitle('Experiment Manager &nbsp;&nbsp; ( ' + count + ((count == 1) ? ' row' : ' rows') + ' )');
 	},
 
 	initComponent : function() {
@@ -169,53 +160,48 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.manager = manager;
 
-		var limit = (this.limit)
-				? this.limit
-				: Gemma.DEFAULT_NUMBER_EXPERIMENTS;
+		var limit = (this.limit) ? this.limit : Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 		var ids = (this.ids) ? this.ids : null;
 		var taxonid = (this.taxonid) ? this.taxonid : null;
 		var filterMode = (this.filterMode) ? this.filterMode : null;
 		var showPublic = (this.showPublic) ? this.showPublic : false;
-		
-		var store = new Gemma.PagingDataStore({
-			autoLoad : true,
-			proxy : new Ext.data.DWRProxy({
-				apiActionToHandlerMap : {
-					read : {
-						dwrFunction : ExpressionExperimentController.loadStatusSummaries,
-						getDwrArgsFunction : function(request, recordDataArray) {
-							if (request.options.params
-									&& request.options.params instanceof Array) {
-								return request.options.params;
-							}
-							return [ids, taxonid, limit, filterMode, showPublic];
-						}
-					}
-				}
-			}),
-			reader : new Ext.data.ListRangeReader({
-						id : "id"
-					}, manager.record),
-			remoteSort : false,
-			sortInfo : {
-				field : 'dateLastUpdated',
-				direction : 'DESC'
-			},
-			sort : function(fieldName, dir) {
-				store.fireEvent('beforesort');
-				/*
-				 * Sorting this table is slooow. We need to pause to allow time
-				 * for the loadmask to display.
-				 */
-				var t = new Ext.util.DelayedTask(function() {
-							Gemma.PagingDataStore.superclass.sort.call(store,
-									fieldName, dir);
-							store.fireEvent('aftersort');
-						});
-				t.delay(100);
 
-			}
-		});
+		var store = new Gemma.PagingDataStore({
+					autoLoad : true,
+					proxy : new Ext.data.DWRProxy({
+								apiActionToHandlerMap : {
+									read : {
+										dwrFunction : ExpressionExperimentController.loadStatusSummaries,
+										getDwrArgsFunction : function(request, recordDataArray) {
+											if (request.options.params && request.options.params instanceof Array) {
+												return request.options.params;
+											}
+											return [ids, taxonid, limit, filterMode, showPublic];
+										}
+									}
+								}
+							}),
+					reader : new Ext.data.ListRangeReader({
+								id : "id"
+							}, manager.record),
+					remoteSort : false,
+					sortInfo : {
+						field : 'dateLastUpdated',
+						direction : 'DESC'
+					},
+					sort : function(fieldName, dir) {
+						store.fireEvent('beforesort');
+						/*
+						 * Sorting this table is slooow. We need to pause to allow time for the loadmask to display.
+						 */
+						var t = new Ext.util.DelayedTask(function() {
+									Gemma.PagingDataStore.superclass.sort.call(store, fieldName, dir);
+									store.fireEvent('aftersort');
+								});
+						t.delay(100);
+
+					}
+				});
 
 		store.on('load', function(store, records, options) {
 					this.updateTitle(records.size());
@@ -259,11 +245,8 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 							.overwrite(
 									dataSetDetailsPanel.body,
 									'<span class="big">'
-											+ Gemma.EEReportGridColumnRenderers
-													.shortNameRenderer(
-															record
-																	.get('shortName'),
-															null, record)
+											+ Gemma.EEReportGridColumnRenderers.shortNameRenderer(record
+															.get('shortName'), null, record)
 											+ '</span>&nbsp;&nbsp;<span class="medium">'
 											+ record.get('name')
 											+ "</span><p>"
@@ -278,10 +261,8 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		};
 
-		var tpl = new Ext.XTemplate(
-				'<tpl for="."><div class="itemwrap" id="{shortName}">',
-				'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>',
-				"</div></tpl>", {
+		var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
+				'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
 					log : function(id) {
 						// console.log(id);
 					}
@@ -297,8 +278,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 				}, this);
 
 		// if the user is an admin, show the "refresh all" button
-		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin')
-				.getValue() : false;
+		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
 
 		this.refreshAllLink = (isAdmin)
 				? '<span style="font-weight:normal"> &nbsp;&nbsp | &nbsp;&nbsp; To update all reports click '
@@ -306,8 +286,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 				: '';
 
 		store.on("exception", function(scope, args, data, e) {
-					Ext.Msg.alert('There was an error', e
-									+ ".  \nPlease try again.");
+					Ext.Msg.alert('There was an error', e + ".  \nPlease try again.");
 				});
 
 		var topToolbar = new Gemma.EEReportGridToolbar({
@@ -342,14 +321,13 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 					tbar : topToolbar,
 					bbar : new Ext.Toolbar({
 								items : ['->', {
-									xtype : 'button',
-									handler : this.clearFilter
-											.createDelegate(this),
-									tooltip : "Show all",
-									scope : this,
-									cls : 'x-btn-text',
-									text : 'Reset filter'
-								}, ' ', this.searchInGridField]
+											xtype : 'button',
+											handler : this.clearFilter.createDelegate(this),
+											tooltip : "Show all",
+											scope : this,
+											cls : 'x-btn-text',
+											text : 'Reset filter'
+										}, ' ', this.searchInGridField]
 							})
 
 				});
@@ -382,16 +360,13 @@ Gemma.EEReportGridColumnRenderers = {
 
 	},
 
-	shortNameRenderer : function(value, metadata, record, rowIndex, colIndex,
-			store) {
+	shortNameRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		return '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='
-				+ (record.get("sourceExperiment") ? record
-						.get("sourceExperiment") : record.get("id"))
+				+ (record.get("sourceExperiment") ? record.get("sourceExperiment") : record.get("id"))
 				+ '" target="_blank">' + value + '</a>';
 	},
 
-	experimentalDesignEditRenderer : function(value, metadata, record,
-			rowIndex, colIndex, store) {
+	experimentalDesignEditRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid='
 				+ id
@@ -399,19 +374,12 @@ Gemma.EEReportGridColumnRenderers = {
 		return value + '&nbsp;' + url;
 	},
 
-	experimentTaggerRenderer : function(value, metadata, record, rowIndex,
-			colIndex, store) {
+	experimentTaggerRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var taxonId = record.get('taxonId');
 
-		var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger('
-				+ id
-				+ ','
-				+ taxonId
-				+ ','
-				+ record.get("currentUserHasWritePermission")
-				+ ','
-				+ (record.get("validatedAnnotations") !== null)
+		var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
+				+ record.get("currentUserHasWritePermission") + ',' + (record.get("validatedAnnotations") !== null)
 				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
 		value = value + '&nbsp;' + url;
 
@@ -419,20 +387,13 @@ Gemma.EEReportGridColumnRenderers = {
 			var turl;
 			if (record.get('autoTagDate')) {
 				var icon = "/Gemma/images/icons/wand.png";
-				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag('
-						+ id
-						+ ')"><img src="'
-						+ icon
-						+ '" alt="run auto-tagger" ext:qtip="tagger was run on '
-						+ Ext.util.Format.date(record.get('autoTagDate'),
-								'y/M/d') + '; click to re-run"/></span>';
+				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
+						+ icon + '" alt="run auto-tagger" ext:qtip="tagger was run on '
+						+ Ext.util.Format.date(record.get('autoTagDate'), 'y/M/d') + '; click to re-run"/></span>';
 			} else {
 				var icon = "/Gemma/images/icons/wand--plus.png";
-				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag('
-						+ id
-						+ ')"><img src="'
-						+ icon
-						+ '" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
+				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
+						+ icon + '" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
 			}
 			value = value + '&nbsp;' + turl;
 		}
@@ -440,13 +401,12 @@ Gemma.EEReportGridColumnRenderers = {
 		return value;
 	},
 
-	linkAnalysisRenderer : function(value, metadata, record, rowIndex,
-			colIndex, store) {
+	linkAnalysisRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var runurl = "";
 
 		var BIG_ENOUGH_FOR_LINKS = 7; // FIXME externalize this! And it should
-										// be
+		// be
 		// based on biomaterials. and it should
 		// come from the server side.
 
@@ -474,16 +434,14 @@ Gemma.EEReportGridColumnRenderers = {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>'
-					+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
 	},
 
-	pcaDateRenderer : function(value, metadata, record, rowIndex, colIndex,
-			store) {
+	pcaDateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var runurl = "";
 
@@ -496,9 +454,8 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 
 		/*
-		 * FIXME logic can be more complex here, but it should probably be done
-		 * on the server. Only offer the factor analysis if there is batch
-		 * information or ExperimentalFactors.
+		 * FIXME logic can be more complex here, but it should probably be done on the server. Only offer the factor
+		 * analysis if there is batch information or ExperimentalFactors.
 		 */
 		if (record.get('datePcaAnalysis')) {
 			var type = record.get('pcaAnalysisEventType');
@@ -516,8 +473,7 @@ Gemma.EEReportGridColumnRenderers = {
 					+ true
 					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
 
-			return '<span style="color:' + color + ';" ' + qtip + '>'
-					+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -525,12 +481,10 @@ Gemma.EEReportGridColumnRenderers = {
 	},
 
 	/**
-	 * FIXME: make this hidden unless the user is an administrator.
-	 * User-uploaded data sets will not have batch information available by this
-	 * route.
+	 * FIXME: make this hidden unless the user is an administrator. User-uploaded data sets will not have batch
+	 * information available by this route.
 	 */
-	batchDateRenderer : function(value, metadata, record, rowIndex, colIndex,
-			store) {
+	batchDateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
@@ -552,16 +506,14 @@ Gemma.EEReportGridColumnRenderers = {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>'
-					+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
 	},
 
-	missingValueAnalysisRenderer : function(value, metadata, record, rowIndex,
-			colIndex, store) {
+	missingValueAnalysisRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 
 		var runurl = "";
@@ -572,11 +524,9 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 
 		/*
-		 * Offer missing value analysis if it's possible (this might need
-		 * tweaking).
+		 * Offer missing value analysis if it's possible (this might need tweaking).
 		 */
-		if (record.get('technologyType') != 'ONECOLOR'
-				&& record.get('hasEitherIntensity')) {
+		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasEitherIntensity')) {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
 				var color = "#000";
@@ -587,9 +537,8 @@ Gemma.EEReportGridColumnRenderers = {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>'
-						+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
-						+ (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -599,8 +548,7 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 	},
 
-	processedVectorCreateRenderer : function(value, metadata, record, rowIndex,
-			colIndex, store) {
+	processedVectorCreateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
@@ -620,21 +568,18 @@ Gemma.EEReportGridColumnRenderers = {
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>'
-					+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
 	},
 
-	differentialAnalysisRenderer : function(value, metadata, record, rowIndex,
-			colIndex, store) {
+	differentialAnalysisRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 
 		var diffIsPossible = function(record) {
-			return record.get("numPopulatedFactors") > 0
-					&& record.get("currentUserHasWritePermission");
+			return record.get("numPopulatedFactors") > 0 && record.get("currentUserHasWritePermission");
 		};
 
 		var runurl = "";
@@ -645,28 +590,25 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 
 		if (diffIsPossible(record)) {
-			
-			var analyses = record.get('differentialExpressionAnalyses'); // array		 
-			
+
 			if (record.get('dateDifferentialAnalysis')) {
 				var type = record.get('differentialAnalysisEventType');
 
 				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
-				
+
 				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {
 					color = 'red';
 					qtip = 'ext:qtip="Failed"';
-				} else if ( analyses.length == 0 ) {
-					// we ran it, but the analyses were apparently deleted. 
+				} else if (record.get('differentialExpressionAnalyses').length == 0) {
+					// we ran it, but the analyses were apparently deleted.
 					return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 				}
 
 				// TODO: add tooltip describing the analysis.
-				return '<span style="color:' + color + ';" ' + qtip + '>'
-						+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
-						+ (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -684,18 +626,14 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 
 		if (record.get('troubled')) {
-			result = result
-					+ '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
 					+ record.get('troubleDetails') + '"/>';
 		}
 
 		result = result
-				+ Gemma.SecurityManager
-						.getSecurityLink(
-								'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl',
-								id, record.get('isPublic'), record
-										.get('isShared'), record
-										.get('currentUserIsOwner'));
+				+ Gemma.SecurityManager.getSecurityLink(
+						'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
+						record.get('isShared'), record.get('currentUserIsOwner'));
 
 		return result;
 
@@ -833,16 +771,14 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 
 	refresh : function() {
 		this.setFiltersToDefault();
-		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType, this.showPublic]);
+		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
 	},
 
 	filterType : null,
-	
+
 	filterByNeed : function(box, record, index) {
 		this.filterType = record.get('filterType');
-		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType, this.showPublic]);
+		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
 	},
 
 	filterByTaxon : function(box, record, index) {
@@ -854,8 +790,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 			this.taxonid = record.get('id')
 		}
 
-		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType, this.showPublic]);
+		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
 
 	},
 
@@ -864,8 +799,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		// can't do "50 recently updated" and search results
 		// this.searchCombo.clearValue();
 
-		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit,
-						this.filterType, this.showPublic]);
+		this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
 	},
 
 	filterBySearch : function(box, record, index) {
@@ -878,8 +812,8 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		// can't do "50 recently updated" and search results
 		// this.limitCombo.clearValue();
 
-		this.fireEvent('loadStore', [this.taxonid, this.ids,
-						Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType, this.showPublic]);
+		this.fireEvent('loadStore', [this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType,
+						this.showPublic]);
 	},
 
 	downloadAsText : function() {
@@ -887,8 +821,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	getBookmark : function() {
-		var url = Gemma.BASEURL
-				+ "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
+		var url = Gemma.BASEURL + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
 		if (this.ids) {
 			url += "&ids=" + this.ids.join(",");
 		}
@@ -905,8 +838,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 			url += "&showPublic=" + this.showPublic;
 		}
 
-		Ext.Msg.alert("Your link to this list", '<a href="' + url + '">' + url
-						+ '</a>');
+		Ext.Msg.alert("Your link to this list", '<a href="' + url + '">' + url + '</a>');
 	},
 
 	initComponent : function() {
@@ -921,15 +853,10 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 					store : new Ext.data.ArrayStore({
 								id : 0,
 								fields : ['filterType', 'displayText'],
-								data : [[0, 'No filter'],
-										[1, 'Need diff. expression analysis'],
-										[2, 'Need coexpression analysis'],
-										[3, 'Has diff. expression analysis'],
-										[4, 'Has coexpression analysis'],
-										[5, 'Troubled'], [6, 'No factors'],
-										[7, 'No tags'],
-										[8, 'Needs batch info'],
-										[9, 'Has batch info'],
+								data : [[0, 'No filter'], [1, 'Need diff. expression analysis'],
+										[2, 'Need coexpression analysis'], [3, 'Has diff. expression analysis'],
+										[4, 'Has coexpression analysis'], [5, 'Troubled'], [6, 'No factors'],
+										[7, 'No tags'], [8, 'Needs batch info'], [9, 'Has batch info'],
 										[10, 'Needs PCA'], [11, 'Has PCA']]
 							}),
 					valueField : 'filterType',
@@ -965,16 +892,11 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 					store : new Ext.data.ArrayStore({
 								id : 0,
 								fields : ['count', 'displayText'],
-								data : [[50, '50 recently updated'],
-										[100, '100 recently updated'],
-										[200, '200 recently updated'],
-										[300, '300 recently updated'],
-										[500, '500 recently updated'],
-										[-50, '50 oldest updates'],
-										[-100, '100 oldest updates'],
-										[-200, '200 oldest updates'],
-										[-300, '300 oldest updates'],
-										[-500, '500 oldest updates']]
+								data : [[50, '50 recently updated'], [100, '100 recently updated'],
+										[200, '200 recently updated'], [300, '300 recently updated'],
+										[500, '500 recently updated'], [-50, '50 oldest updates'],
+										[-100, '100 oldest updates'], [-200, '200 oldest updates'],
+										[-300, '300 oldest updates'], [-500, '500 oldest updates']]
 							}),
 					valueField : 'count',
 					displayField : 'displayText',
@@ -1002,8 +924,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 					checked : this.showPublic,
 					handler : function(checkbox, event) {
 						this.showPublic = checkbox.getValue();
-						this.fireEvent('loadStore', [this.taxonid, this.ids,
-										this.limit, this.filterType,
+						this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType,
 										this.showPublic]);
 					},
 					scope : this
@@ -1015,10 +936,8 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 						if (this.taxonid) {
 							this.taxonCombo.setValue(this.taxonid);
 						} else {
-							this.taxonid = (this.taxonCombo.getStore().getAt(0))
-									? this.taxonCombo.getStore().getAt(0)
-											.get('id')
-									: "-1";
+							this.taxonid = (this.taxonCombo.getStore().getAt(0)) ? this.taxonCombo.getStore().getAt(0)
+									.get('id') : "-1";
 							this.taxonCombo.setValue(this.taxonid);
 						}
 					}, this);
@@ -1031,17 +950,14 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 					if (this.filterType) {
 						this.filterCombo.setValue(this.filterType);
 					} else {
-						this.filterCombo
-								.setValue(this.filterCombo.defaultValue);
+						this.filterCombo.setValue(this.filterCombo.defaultValue);
 					}
 				}, this);
 
 		// only call this after everything has loaded! otherwise will break
 		this.setFiltersToDefault = function() {
 
-			this.taxonid = (this.taxonCombo.getStore().getAt(0))
-					? this.taxonCombo.getStore().getAt(0).get('id')
-					: "-1";
+			this.taxonid = (this.taxonCombo.getStore().getAt(0)) ? this.taxonCombo.getStore().getAt(0).get('id') : "-1";
 			this.taxonCombo.setValue(this.taxonid);
 
 			this.limit = this.limitCombo.defaultValue;
@@ -1056,8 +972,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
 		};
 
 		Ext.apply(this, {
-					items : [this.searchCombo, this.filterCombo,
-							this.taxonCombo, this.limitCombo, {
+					items : [this.searchCombo, this.filterCombo, this.taxonCombo, this.limitCombo, {
 								xtype : 'button',
 								minWidth : 20,
 								cls : 'x-btn-icon',
