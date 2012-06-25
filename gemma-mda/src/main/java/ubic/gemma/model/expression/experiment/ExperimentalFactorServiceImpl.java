@@ -75,6 +75,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
         }
 
         this.getExperimentalFactorDao().remove( experimentalFactor );
+
     }
 
     /*

@@ -37,7 +37,6 @@ import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -73,8 +72,8 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
      * ubic.gemma.model.genome.Gene, java.util.Collection)
      */
     @Override
-    public void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection ) {
-        cache.put( new Element( new CacheKey( eeid, g.getId() ), collection ) );
+    public void addToCache( Long eeid, Long g, Collection<DoubleVectorValueObject> collection ) {
+        cache.put( new Element( new CacheKey( eeid, g ), collection ) );
     }
 
     @Override
@@ -170,8 +169,8 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
      * BioAssaySet, ubic.gemma.model.genome.Gene)
      */
     @Override
-    public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Gene g ) {
-        Element element = cache.get( new CacheKey( ee.getId(), g.getId() ) );
+    public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g ) {
+        Element element = cache.get( new CacheKey( ee.getId(), g ) );
         if ( element == null ) return null;
         Collection<DoubleVectorValueObject> result = ( Collection<DoubleVectorValueObject> ) element.getValue();
 

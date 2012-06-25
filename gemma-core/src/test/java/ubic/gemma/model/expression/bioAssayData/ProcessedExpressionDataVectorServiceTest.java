@@ -52,6 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author Paul
@@ -117,7 +118,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         assertEquals( 40, v.size() );
 
         Collection<Gene> genes = getGeneAssociatedWithEe( ee );
-        v = processedDataVectorService.getProcessedDataArrays( ees, genes );
+        v = processedDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
 
         processedDataVectorService.clearCache();

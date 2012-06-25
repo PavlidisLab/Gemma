@@ -981,7 +981,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param vectors
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     private void writeJson( File file, PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         this.designElementDataVectorService.thaw( vectors );

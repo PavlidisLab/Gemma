@@ -171,6 +171,9 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
         this.getHibernateTemplate().update( entity );
     }
 
+    /**
+     * @param entity
+     */
     private void nullCheck( Object entity ) {
         if ( entity == null ) throw new IllegalArgumentException( "Argument cannot be null" );
     }

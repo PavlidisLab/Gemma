@@ -35,13 +35,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
      */
     @Override
     public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.countAll()' --> "
-                            + th, th );
-        }
+        return this.handleCountAll();
     }
 
     /**
@@ -123,13 +117,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
      */
     @Override
     public void thaw( final java.util.Collection<? extends DesignElementDataVector> designElementDataVectors ) {
-        try {
-            this.handleThaw( designElementDataVectors );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.thaw(java.util.Collection designElementDataVectors)' --> "
-                            + th, th );
-        }
+        this.handleThaw( designElementDataVectors );
     }
 
     /**
@@ -137,13 +125,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
      */
     @Override
     public void thaw( final T designElementDataVector ) {
-        try {
-            this.handleThaw( designElementDataVector );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
-                            + th, th );
-        }
+        this.handleThaw( designElementDataVector );
     }
 
     /**
@@ -183,17 +165,16 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+    protected abstract java.lang.Integer handleCountAll();
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
      */
-    protected abstract void handleThaw( T designElementDataVector ) throws java.lang.Exception;
+    protected abstract void handleThaw( T designElementDataVector );
 
 }

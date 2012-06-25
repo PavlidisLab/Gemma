@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
@@ -551,27 +552,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<Gene> result = new HashSet<Gene>();
 
         if ( ids.isEmpty() ) return result;
-
-        Collection<Long> batch = new HashSet<Long>();
-
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Long g : ids ) {
-            batch.add( g );
-            if ( batch.size() == BATCH_SIZE ) {
-                result.addAll( doLoadThawedLite( batch ) );
-                batch.clear();
-            }
-        }
-
-        if ( !batch.isEmpty() ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLite( batch ) );
         }
-
         if ( timer.getTime() > 1000 ) {
-            log.info( "Load+thaw " + ids.size() + " genes: " + timer.getTime() + "ms" );
+            log.info( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
-
         return result;
     }
 
@@ -585,9 +573,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
         }
         // remove associations
-        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
-                "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g in (:g)",
-                "g", entities );
+        List<?> assocs = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
+                        "g", EntityUtils.getIds( entities ) );
         if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
 
         this.getHibernateTemplate().deleteAll( entities );
@@ -1146,7 +1136,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
+                "select g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
                         + "where g.id in (:gids)", "gids", ids );
     }

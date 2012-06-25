@@ -47,24 +47,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArrays(java.util
-     * .Collection, java.util.Collection, java.lang.Boolean)
-     */
-    @Override
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
-            Collection<Gene> genes, Boolean fullMapping ) {
-        return processedExpressionDataVectorDao.getProcessedDataArrays( bioassaySets, genes, fullMapping );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArrays(java.util
      * .Collection, java.util.Collection)
      */
     @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
+            Collection<? extends BioAssaySet> expressionExperiments, Collection<Long> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
     }
 
@@ -82,7 +69,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
-            Collection<Gene> genes ) {
+            Collection<Long> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiment, genes );
     }
 
@@ -94,9 +81,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .Collection)
      */
     @Override
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
-            boolean fullMap ) {
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit ) {
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit );
     }
 
     /*
@@ -108,11 +94,10 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      */
     @Override
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
-            boolean fullMap ) {
+            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
 
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments,
-                compositeSequences, fullMap );
+                compositeSequences );
     }
 
     /*

@@ -108,12 +108,6 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     /*
      * This is a key query: get all results for a set of genes in a set of resultssets (basically, experiments)
      */
-    // private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery =
-    // "SELECT g2s.GENE, dear.CORRECTED_P_VALUE_BIN, dear.ID,"
-    // + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE, dear.SCORE "
-    // + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s "
-    // + " where  g2s.CS = dear.PROBE_FK and dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
-    // + "g2s.AD in (:ad_ids) and  g2s.GENE IN (:gene_ids) ";
     private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT dear.PROBE_FK, dear.ID,"
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.EXPRESSION_ANALYSIS_RESULT_SET_FK in (:rs_ids) and "
@@ -601,6 +595,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#findInResultSet(ubic.gemma.model.analysis
+     * .expression.diff.ExpressionAnalysisResultSet, java.lang.Double, java.lang.Integer, java.lang.Integer)
+     */
     @Override
     public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
             Double threshold, Integer limit, Integer minNumberOfResults ) {
@@ -614,6 +615,17 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         if ( resultSet == null ) {
             return results;
         }
+
+        results = differentialExpressionResultCache.getTopHits( resultSet );
+        if ( results != null && results.size() >= minNumberOfResults ) {
+            log.info( "Top hits already in cache" );
+            return results;
+        }
+
+        results = new ArrayList<DifferentialExpressionAnalysisResult>();
+
+        // get it.
+
         Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<ExpressionAnalysisResultSet>();
         resultsAnalyzed.add( resultSet );
 
@@ -635,6 +647,9 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         // If too few probes meet threshold, redo and just get top minNumberOfResults.
         if ( qresult.size() < minNumberOfResults ) {
+
+            // FIXME why not just do it this way, in the first place.
+            log.info( "No results met threshold, repeating to just get the top hits" );
             qs = fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
 
             tpl = new HibernateTemplate( this.getSessionFactory() );
@@ -655,6 +670,9 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
+
+        differentialExpressionResultCache.addToTopHitsCache( resultSet, results );
+
         return results;
     }
 

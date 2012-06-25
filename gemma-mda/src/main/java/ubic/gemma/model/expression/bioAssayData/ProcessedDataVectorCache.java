@@ -17,7 +17,6 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * Cache of data vectors
@@ -32,7 +31,7 @@ public interface ProcessedDataVectorCache {
      * @param g
      * @param collection
      */
-    public abstract void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection );
+    public abstract void addToCache( Long eeid, Long g, Collection<DoubleVectorValueObject> collection );
 
     public abstract void clearCache();
 
@@ -48,6 +47,6 @@ public interface ProcessedDataVectorCache {
      * @param g
      * @return
      */
-    public abstract Collection<DoubleVectorValueObject> get( BioAssaySet ee, Gene g );
+    public abstract Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g );
 
 }

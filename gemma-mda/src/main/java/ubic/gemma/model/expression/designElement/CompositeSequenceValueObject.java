@@ -21,23 +21,30 @@ package ubic.gemma.model.expression.designElement;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
-
 /**
  * @author anton
  * @version $Id$
  */
 public class CompositeSequenceValueObject {
-    
+
     private Long id;
     private String name;
     private String description;
     private ArrayDesignValueObject arrayDesign;
 
     // for java bean contract
-    public CompositeSequenceValueObject( ) {
-        
+    public CompositeSequenceValueObject() {
+
     }
-    
+
+    public CompositeSequenceValueObject( CompositeSequence cs ) {
+        this.id = cs.getId();
+        this.name = cs.getName();
+        this.description = cs.getDescription();
+        this.arrayDesign = new ArrayDesignValueObject();
+        arrayDesign.setId( cs.getArrayDesign().getId() );
+    }
+
     public CompositeSequenceValueObject( Long id, String name, String description, ArrayDesignValueObject arrayDesign ) {
         super();
         this.id = id;
@@ -46,7 +53,6 @@ public class CompositeSequenceValueObject {
         this.arrayDesign = arrayDesign;
     }
 
-    
     public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesign ) {
         super();
         this.id = describable.getId();
@@ -56,7 +62,7 @@ public class CompositeSequenceValueObject {
     }
 
     // all getters and setters required for java bean contract
-    
+
     public Long getId() {
         return id;
     }
@@ -88,6 +94,5 @@ public class CompositeSequenceValueObject {
     public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
-    
-    
+
 }

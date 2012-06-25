@@ -66,7 +66,7 @@ public class CommonQueries {
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
-        queryObject.setParameterList( "ees", ees );
+        queryObject.setParameterList( "ees", ees, LongType.INSTANCE );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -125,10 +125,10 @@ public class CommonQueries {
 
         final String csQueryString = "select distinct cs from GeneImpl as gene"
                 + " join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene ";
+                + " where ba.bioSequence.id=cs.biologicalCharacteristic.id and ba.geneProduct.id = gp.id and gene.id = :gene ";
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setParameter( "gene", gene );
+        queryObject.setParameter( "gene", gene.getId(), LongType.INSTANCE );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         return queryObject.list();
@@ -147,8 +147,8 @@ public class CommonQueries {
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
+        queryObject.addScalar( "csid", LongType.INSTANCE );
+        queryObject.addScalar( "geneId", LongType.INSTANCE );
 
         queryObject.setParameterList( "geneIds", genes );
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -180,8 +180,8 @@ public class CommonQueries {
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds) and g.AD in (:ads)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
+        queryObject.addScalar( "csid", LongType.INSTANCE );
+        queryObject.addScalar( "geneId", LongType.INSTANCE );
         queryObject.setParameterList( "ads", arrayDesigns );
         queryObject.setParameterList( "geneIds", genes );
         queryObject.setReadOnly( true );
@@ -201,47 +201,6 @@ public class CommonQueries {
 
         return cs2genes;
 
-    }
-
-    /**
-     * @param genes
-     * @param arrays restrict to probes on these arrays only
-     * @param session
-     * @return
-     */
-    public static Map<Long, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Collection<ArrayDesign> arrays,
-            Session session ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
-                + " and gene in (:genes) and cs.arrayDesign in (:ars) ";
-
-        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-        org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setCacheable( true );
-        queryObject.setParameterList( "genes", genes );
-        queryObject.setParameterList( "ars", arrays );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-            Long cs = ( Long ) results.get( 0 );
-            Gene g = ( Gene ) results.get( 1 );
-            if ( !cs2gene.containsKey( cs ) ) {
-                cs2gene.put( cs, new HashSet<Gene>() );
-            }
-            cs2gene.get( cs ).add( g );
-        }
-        results.close();
-        if ( timer.getTime() > 200 ) {
-            log.info( "Get cs2gene for " + genes.size() + " on " + arrays.size() + " array platforms :"
-                    + timer.getTime() + "ms" );
-        }
-        return cs2gene;
     }
 
     /**
@@ -312,103 +271,64 @@ public class CommonQueries {
     /**
      * @param probes
      * @param session
-     * @return map of probes to all the genes 'detected' by those probes (including PARs and predicted genes, if these
-     *         are in use). Probes that don't map to genes will have an empty gene collection.
+     * @return map of probes to all the genes 'detected' by those probes. Probes that don't map to genes will have an
+     *         empty gene collection.
      */
-    public static Map<Long, Collection<Gene>> getFullCs2AllGeneMap( Collection<Long> probes, Session session ) {
-        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
-        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
-                + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs.id in (:probes) ";
+    public static Map<Long, Collection<Long>> getCs2GeneMapForProbes( Collection<Long> probes, Session session ) {
+        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Long>>();
 
-        return getFullCs2GeneMap( probes, session, csQueryString );
-    }
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
 
-    /**
-     * @param probes
-     * @param session
-     * @return map of probes to all the genes 'detected' by those probes -- but excluding PARs and predicted genes.
-     *         Probes that don't map to genes will have an empty gene collection.
-     */
-    public static Map<Long, Collection<Gene>> getFullCs2GeneMap( Collection<Long> probes, Session session ) {
-        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
-
-        final String csQueryString = "select distinct cs.id, gene from GeneImpl as gene"
-                + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs.id in (:probes) and gene.class='GeneImpl'";
-
-        return getFullCs2GeneMap( probes, session, csQueryString );
-    }
-
-    // Removed because it uses the Gene2CS table, which isn't 100% safe: it has to be updated.
-    // /**
-    // * Given gene ids, return map of of gene id -> probes for that gene.
-    // *
-    // * @param genes
-    // * @param session
-    // * @return
-    // */
-    // public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
-    // Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-    //
-    // String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
-    // org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-    // queryObject.addScalar( "csid", new LongType() );
-    // queryObject.addScalar( "geneId", new LongType() );
-    //
-    // queryObject.setParameterList( "geneIds", genes );
-    // ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-    // while ( results.next() ) {
-    // Long csid = results.getLong( 0 );
-    // Long geneId = results.getLong( 1 );
-    //
-    // if ( !cs2genes.containsKey( geneId ) ) {
-    // cs2genes.put( geneId, new HashSet<Long>() );
-    // }
-    // cs2genes.get( geneId ).add( csid );
-    // }
-    // results.close();
-    //
-    // return cs2genes;
-    // }
-
-    private static Map<Long, Collection<Gene>> getFullCs2GeneMap( Collection<Long> probes, Session session,
-            final String csQueryString ) {
-
-        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Gene>>();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Map<Long, Collection<Gene>> cs2gene = new HashMap<Long, Collection<Gene>>();
-        org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setCacheable( true );
-        queryObject.setParameterList( "probes", probes );
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.CS in (:probes) ";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", LongType.INSTANCE );
+        queryObject.addScalar( "geneId", LongType.INSTANCE );
+        queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
-            Long cs = ( Long ) results.get( 0 );
-            Gene g = ( Gene ) results.get( 1 );
-            if ( !cs2gene.containsKey( cs ) ) {
-                cs2gene.put( cs, new HashSet<Gene>() );
-            }
-            cs2gene.get( cs ).add( g );
-        }
+            Long csid = results.getLong( 0 );
+            Long geneId = results.getLong( 1 );
 
-        /*
-         * This shouldn't be necessary if we do the correct outer join, should it?
-         */
-        for ( Long cs : probes ) {
-            if ( !cs2gene.containsKey( cs ) ) {
-                cs2gene.put( cs, new HashSet<Gene>() );
+            if ( !cs2genes.containsKey( csid ) ) {
+                cs2genes.put( csid, new HashSet<Long>() );
             }
+            cs2genes.get( csid ).add( geneId );
         }
-
         results.close();
-        if ( timer.getTime() > 200 ) {
-            log.info( "Get full cs2gene map for " + probes.size() + " :" + timer.getTime() + "ms" );
+
+        return cs2genes;
+    }
+
+    /**
+     * Given gene ids, return map of of gene id -> probes for that gene.
+     * 
+     * @param genes
+     * @param session
+     * @return
+     */
+    public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", LongType.INSTANCE );
+        queryObject.addScalar( "geneId", LongType.INSTANCE );
+        queryObject.setParameterList( "geneIds", genes, LongType.INSTANCE );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            Long csid = results.getLong( 0 );
+            Long geneId = results.getLong( 1 );
+
+            if ( !cs2genes.containsKey( geneId ) ) {
+                cs2genes.put( geneId, new HashSet<Long>() );
+            }
+            cs2genes.get( geneId ).add( csid );
         }
-        return cs2gene;
+        results.close();
+
+        return cs2genes;
     }
 }

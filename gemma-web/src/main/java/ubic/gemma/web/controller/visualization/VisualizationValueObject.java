@@ -35,7 +35,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Stores expression profile data from one expression experiment for plotting.
@@ -81,7 +82,7 @@ public class VisualizationValueObject {
      *        just being displayed because they assay the same gene.
      * @throws IllegalArgumentException if vectors are mixed between EEs.
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes,
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<GeneValueObject> genes,
             Collection<Long> validatedProbeList ) {
         this( vectors, genes, validatedProbeList, null );
     }
@@ -92,11 +93,12 @@ public class VisualizationValueObject {
      * @param validatedProbeList
      * @param minPvalue
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes,
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<GeneValueObject> genes,
             Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
-        if ( genes != null && !genes.isEmpty() ) populateColorMap( genes );
+        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
+        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
@@ -106,14 +108,17 @@ public class VisualizationValueObject {
                         + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
-            Collection<Gene> vectorGenes = vector.getGenes();
+            Collection<Long> vectorGeneids = vector.getGenes();
+            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
 
             String color = "black";
             if ( genes != null ) {
-                for ( Gene g : genes ) {
-                    if ( !vectorGenes.contains( g ) ) {
+                for ( GeneValueObject g : genes ) {
+                    // This seems inefficient. We should just pass in the genes for this vector.
+                    if ( !vectorGeneids.contains( g.getId() ) ) {
                         continue;
                     }
+                    vectorGenes.add( g );
                     color = colorMap.get( g.getId() );
                 }
             }
@@ -123,7 +128,8 @@ public class VisualizationValueObject {
                 valid = 1;
             }
 
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, vector.getPvalue() );
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid,
+                    vector.getPvalue() );
 
             if ( !profile.isAllMissing() ) profiles.add( profile );
 
@@ -136,11 +142,12 @@ public class VisualizationValueObject {
      * @param validatedProbeList
      * @param minPvalue
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Double minPvalue,
-            Collection<DifferentialExpressionValueObject> validatedProbes ) {
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<GeneValueObject> genes,
+            Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
         this();
 
-        populateColorMap( genes );
+        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
+        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
 
         Collection<Long> validatedProbeIdList = new ArrayList<Long>();
         if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
@@ -158,11 +165,14 @@ public class VisualizationValueObject {
             }
 
             String color = null;
-            for ( Gene g : genes ) {
-                if ( !vector.getGenes().contains( g ) ) {
+            Collection<Long> vectorGeneids = vector.getGenes();
+            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
+            for ( Long g : idMap.keySet() ) {
+                if ( !vectorGeneids.contains( g ) ) {
                     continue;
                 }
-                color = colorMap.get( g.getId() );
+                vectorGenes.add( idMap.get( g ) );
+                color = colorMap.get( g );
             }
 
             int valid = 1;
@@ -177,7 +187,7 @@ public class VisualizationValueObject {
                     }
                 }
             }
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, pValue );
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid, pValue );
 
             if ( !profile.isAllMissing() ) profiles.add( profile );
 
@@ -296,13 +306,13 @@ public class VisualizationValueObject {
     /**
      * @param genes
      */
-    private void populateColorMap( List<Gene> genes ) {
+    private void populateColorMap( List<Long> genes ) {
         int i = 0;
         if ( genes.size() > colors.length ) {
             // / FIXME -- we just cycle through for now.
         }
-        for ( Gene g : genes ) {
-            colorMap.put( g.getId(), colors[i % colors.length] );
+        for ( Long g : genes ) {
+            colorMap.put( g, colors[i % colors.length] );
             i++;
         }
     }

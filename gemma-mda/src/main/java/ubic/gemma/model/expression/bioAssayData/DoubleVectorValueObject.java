@@ -32,8 +32,8 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -70,7 +70,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dedv
      * @param genes
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes ) {
+    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes ) {
         super( dedv, genes );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -95,7 +95,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
      *        that aren't in the dedv's bioAssayDimension.
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes, BioAssayDimension dimToMatch ) {
+    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes, BioAssayDimension dimToMatch ) {
         this( dedv, genes );
 
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
@@ -211,13 +211,15 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
-     * @param updatedQuantitationType
      * @param ee
+     * @param cs required
+     * @param updatedQuantitationType required
      * @return
      */
-    public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee,
+    public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
             QuantitationType updatedQuantitationType ) {
         DesignElementDataVector result;
+        if ( updatedQuantitationType == null ) throw new IllegalArgumentException();
         if ( this.masked ) {
             result = ProcessedExpressionDataVector.Factory.newInstance();
             ( ( ProcessedExpressionDataVector ) result ).setRankByMax( rankByMax );
@@ -229,12 +231,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setBioAssayDimension( this.bioAssayDimension );
         assert this.bioAssayDimension != null;
         assert this.bioAssayDimension.getBioAssays().size() > 0;
-        if ( updatedQuantitationType == null ) {
-            result.setQuantitationType( this.quantitationType );
-        } else {
-            result.setQuantitationType( updatedQuantitationType );
-        }
-        result.setDesignElement( designElement );
+
+        result.setQuantitationType( updatedQuantitationType );
+
+        result.setDesignElement( cs );
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }

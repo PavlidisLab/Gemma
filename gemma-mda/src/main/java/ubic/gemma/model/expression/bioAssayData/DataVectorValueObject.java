@@ -22,10 +22,9 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author paul
@@ -43,24 +42,27 @@ public abstract class DataVectorValueObject implements Serializable {
 
     protected Long id;
 
-    protected CompositeSequence designElement;
-    protected BioAssayDimension bioAssayDimension;
-    protected QuantitationType quantitationType;
+    protected CompositeSequenceValueObject designElement;
+    protected QuantitationTypeValueObject quantitationType;
     protected ExpressionExperimentValueObject expressionExperiment;
-    Collection<Gene> genes;
+    private Collection<Long> genes;
 
+    // FIXME Replace with a valueobject
+    protected BioAssayDimension bioAssayDimension;
+
+    
     public DataVectorValueObject() {
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
         this.bioAssayDimension = dedv.getBioAssayDimension();
-        this.quantitationType = dedv.getQuantitationType();
-        this.designElement = dedv.getDesignElement();
+        this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
+        this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
         this.id = dedv.getId();
     }
 
-    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes ) {
+    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes ) {
         this( dedv );
         this.genes = genes;
     }
@@ -81,7 +83,7 @@ public abstract class DataVectorValueObject implements Serializable {
         return bioAssayDimension;
     }
 
-    public CompositeSequence getDesignElement() {
+    public CompositeSequenceValueObject getDesignElement() {
         return designElement;
     }
 
@@ -92,7 +94,7 @@ public abstract class DataVectorValueObject implements Serializable {
     /**
      * @return the genes
      */
-    public Collection<Gene> getGenes() {
+    public Collection<Long> getGenes() {
         return genes;
     }
 
@@ -100,7 +102,7 @@ public abstract class DataVectorValueObject implements Serializable {
         return id;
     }
 
-    public QuantitationType getQuantitationType() {
+    public QuantitationTypeValueObject getQuantitationType() {
         return quantitationType;
     }
 
@@ -116,7 +118,7 @@ public abstract class DataVectorValueObject implements Serializable {
         this.bioAssayDimension = bioAssayDimension;
     }
 
-    public void setDesignElement( CompositeSequence designElement ) {
+    public void setDesignElement( CompositeSequenceValueObject designElement ) {
         this.designElement = designElement;
     }
 
@@ -127,7 +129,7 @@ public abstract class DataVectorValueObject implements Serializable {
     /**
      * @param genes the genes to set
      */
-    public void setGenes( Collection<Gene> genes ) {
+    public void setGenes( Collection<Long> genes ) {
         this.genes = genes;
     }
 
@@ -135,7 +137,7 @@ public abstract class DataVectorValueObject implements Serializable {
         this.id = id;
     }
 
-    public void setQuantitationType( QuantitationType quantitationType ) {
+    public void setQuantitationType( QuantitationTypeValueObject quantitationType ) {
         this.quantitationType = quantitationType;
     }
 

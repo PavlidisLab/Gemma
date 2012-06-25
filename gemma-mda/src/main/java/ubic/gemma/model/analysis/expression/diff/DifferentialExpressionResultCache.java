@@ -15,10 +15,11 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
-
+import java.util.List;
 
 /**
- * Cache for differential expression results.
+ * Cache for differential expression results. This actually manages two caches; one is for resultset x gene results,
+ * requested for the (typically) main visualization and meta-analysis. The second is of the "top hits" for a resultset.
  * 
  * @author paul
  * @version $Id$
@@ -45,6 +46,13 @@ public interface DifferentialExpressionResultCache {
     public abstract void clearCache( Long resultSetId );
 
     /**
+     * Remove all elements from the top hits cache for the given result set, if the cache exists.
+     * 
+     * @param resultSetId
+     */
+    public abstract void clearTopHitCache( Long resultSetId );
+
+    /**
      * @param resultSetId
      * @param genes
      * @return
@@ -67,5 +75,14 @@ public interface DifferentialExpressionResultCache {
      * @param enabled the enabled to set
      */
     public abstract void setEnabled( Boolean enabled );
+
+    public abstract void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
+            List<DifferentialExpressionAnalysisResult> items );
+
+    /**
+     * @param resultSet
+     * @return top hits, or null.
+     */
+    public abstract List<DifferentialExpressionAnalysisResult> getTopHits( ExpressionAnalysisResultSet resultSet );
 
 }

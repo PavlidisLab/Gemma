@@ -110,7 +110,7 @@ public class VectorMergingServiceIntegrationTest extends AbstractGeoServiceTest 
         vectorMergingService.mergeVectors( ee );
 
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService
-                .getProcessedDataArrays( ee, 50, false );
+                .getProcessedDataArrays( ee, 50 );
 
         // System.err.println( processedDataArrays.size() );
 

@@ -22,6 +22,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -56,12 +57,16 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     private static final boolean CACHE_DEFAULT_ETERNAL = true;
     private static final boolean CACHE_DEFAULT_OVERFLOW_TO_DISK = false;
 
+    private static final String TOP_HIT_CACHE_NAME_BASE = "TopDiffExResultCache";
+
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
     private Boolean enabled = true;
 
     private Cache cache;
+
+    private Cache topHitsCache;
 
     /*
      * (non-Javadoc)
@@ -84,7 +89,6 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         for ( DiffExprGeneSearchResult d : diffExForCache ) {
             addToCache( d );
         }
-
     }
 
     /*
@@ -135,12 +139,19 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
                 nonstopConfiguration.addTimeoutBehavior( tobc );
                 config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
                 this.cache = new Cache( config );
+                this.topHitsCache = new Cache( config );
+                this.topHitsCache.setName( TOP_HIT_CACHE_NAME_BASE );
 
             } else {
                 this.cache = new Cache( CACHE_NAME_BASE, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
                         null, eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+                this.topHitsCache = new Cache( TOP_HIT_CACHE_NAME_BASE, maxElements, MemoryStoreEvictionPolicy.LRU,
+                        overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
+                        diskExpiryThreadIntervalSeconds, null );
             }
+
             cacheManager.addCache( cache );
+            cacheManager.addCache( topHitsCache );
         }
 
     }
@@ -153,6 +164,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     @Override
     public void clearCache() {
         cache.removeAll();
+        topHitsCache.removeAll();
     }
 
     /*
@@ -216,6 +228,32 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     @Override
     public void setEnabled( Boolean enabled ) {
         this.enabled = enabled;
+    }
+
+    @Override
+    public void clearTopHitCache( Long resultSetId ) {
+        this.topHitsCache.remove( resultSetId );
+    }
+
+    @Override
+    public void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
+            List<DifferentialExpressionAnalysisResult> items ) {
+        this.topHitsCache.put( new Element( resultSet.getId(), items ) );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultCache#getTopHits(ubic.gemma.model.analysis
+     * .expression.diff.ExpressionAnalysisResultSet)
+     */
+    @Override
+    public List<DifferentialExpressionAnalysisResult> getTopHits( ExpressionAnalysisResultSet resultSet ) {
+        Element element = this.topHitsCache.get( resultSet );
+        if ( element == null ) return null;
+        return ( List<DifferentialExpressionAnalysisResult> ) element.getValue();
     }
 
 }

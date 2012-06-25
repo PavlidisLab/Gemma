@@ -234,9 +234,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
-                log.info( "Fetch " + count + " analyses for " + result.size() + " experiment subsets: "
+                log.info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: "
                         + timer.getTime() + "ms" );
-                log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
+                log.info( "Query for subsets was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
             }
         }
 

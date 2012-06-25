@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -195,7 +196,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         found = false;
         boolean first = true;
         for ( DoubleVectorValueObject v : da ) {
-            CompositeSequence el = v.getDesignElement();
+            CompositeSequenceValueObject el = v.getDesignElement();
             double[] row = v.getData();
 
             // debugging

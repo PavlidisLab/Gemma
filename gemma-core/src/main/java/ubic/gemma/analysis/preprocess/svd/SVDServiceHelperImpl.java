@@ -165,7 +165,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );
         Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
-                ees, probes.keySet(), true );
+                ees, probes.keySet() );
         // note that this might have come from a cache.
 
         /*

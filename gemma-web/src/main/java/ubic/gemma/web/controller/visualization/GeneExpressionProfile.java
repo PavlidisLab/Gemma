@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -56,7 +57,7 @@ public class GeneExpressionProfile {
      * This is a collection because probes are not specific.
      */
     private Collection<GeneValueObject> genes;
-    private CompositeSequence probe;
+    private CompositeSequenceValueObject probe;
     private Double pValue = null;
     private Double rank = null;
 
@@ -64,7 +65,15 @@ public class GeneExpressionProfile {
      * @param vector
      */
     public GeneExpressionProfile( DoubleVectorValueObject vector ) {
-        this( vector, null, null, null, true );
+        this( vector, null, null, null, null, true );
+        this.rank = vector.getRank();
+    }
+
+    /**
+     * @param vector
+     */
+    public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes ) {
+        this( vector, genes, null, null, null, true );
         this.rank = vector.getRank();
     }
 
@@ -74,13 +83,22 @@ public class GeneExpressionProfile {
      * @param factor
      * @param pValue
      */
-    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue ) {
-        this( vector, color, factor, pValue, true );
+    public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes, String color,
+            Integer factor, Double pValue ) {
+        this( vector, genes, color, factor, pValue, true );
     }
 
-    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue,
-            boolean standardize ) {
-        this.genes = GeneValueObject.convert2ValueObjects( vector.getGenes() );
+    /**
+     * @param vector
+     * @param genes
+     * @param color
+     * @param factor
+     * @param pValue
+     * @param standardize
+     */
+    public GeneExpressionProfile( DoubleVectorValueObject vector, Collection<GeneValueObject> genes, String color,
+            Integer factor, Double pValue, boolean standardize ) {
+        this.genes = genes;
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.factor = factor;
@@ -121,7 +139,7 @@ public class GeneExpressionProfile {
         return genes;
     }
 
-    public CompositeSequence getProbe() {
+    public CompositeSequenceValueObject getProbe() {
         return probe;
     }
 
@@ -166,7 +184,7 @@ public class GeneExpressionProfile {
         this.genes = genes;
     }
 
-    public void setProbe( CompositeSequence probe ) {
+    public void setProbe( CompositeSequenceValueObject probe ) {
         this.probe = probe;
     }
 

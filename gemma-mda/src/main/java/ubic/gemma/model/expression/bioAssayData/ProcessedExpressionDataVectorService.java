@@ -51,22 +51,12 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
      * @param genes
-     * @param fullMapping if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs),
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
-            Collection<Gene> genes, Boolean fullMapping );
-
-    /**
-     * @param expressionExperiments
-     * @param genes
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
-
+            Collection<Long> genes );
+ 
     /**
      * @param expressionExperiment
      * @return
@@ -81,17 +71,15 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
-            Collection<Gene> genes );
+            Collection<Long> genes );
 
     /**
      * @param expressionExperiments
      * @param limit (null limit = default hibernate limit).
-     * @param boolean fullMap true returns pars, predicted genes and known genes, false just returns known genes
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
-            boolean fullMap );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit );
 
     /**
      * Retrieves DEDV's by probes and experiments
@@ -103,8 +91,7 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
-            boolean fullMap );
+            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
     /**
      * @param expressionExperiment

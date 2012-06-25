@@ -34,6 +34,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
@@ -41,9 +42,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
@@ -62,11 +63,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @param queryString, which must have parameter list placeholder "cs" and may have parameter list "ees".
      * @return
      */
-    protected Map<T, Collection<Gene>> getVectorsForProbesInExperiments( Collection<Long> ees,
-            Map<Long, Collection<Gene>> cs2gene, final String queryString ) {
+    protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Collection<Long> ees,
+            Map<Long, Collection<Long>> cs2gene, final String queryString ) {
+
         Session session = super.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
-        Map<T, Collection<Gene>> dedv2genes = new HashMap<T, Collection<Gene>>();
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        Map<T, Collection<Long>> dedv2genes = new HashMap<T, Collection<Long>>();
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -77,25 +82,16 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         /*
          * Might need to adjust this. This value just seems reasonable, but it isn't uncommon for it to be much larger.
          * See bug 1866.
-         */
-        int batchSize = 100;
-        Collection<Long> batch = new HashSet<Long>();
-        for ( Long cs : cs2gene.keySet() ) {
-            batch.add( cs );
-            if ( batch.size() == batchSize ) {
-                getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
+         */int batchSize = 100;
+        for ( Collection<Long> batch : new BatchIterator<Long>( cs2gene.keySet(), batchSize ) ) {
             getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
         }
 
-        timer.stop();
         if ( timer.getTime() > 50 ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
-                    + ( ees == null ? "(?)" : ees.size() ) + " ees : " + timer.getTime() + "ms" );
+                    + ( ees == null ? "(?)" : ees.size() ) + " ees : " + timer.getTime() + "ms\n"
+                    + "Vector query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );
+
         }
         return dedv2genes;
     }
@@ -106,8 +102,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
     @Override
-    protected void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors )
-            throws Exception {
+    protected void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors ) {
 
         if ( designElementDataVectors == null ) return;
 
@@ -152,15 +147,11 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         timer.reset();
         timer.start();
-
         // thaw the bioassaydimensions we saw -- This requires a lot of queries, but there usually aren't very many dims
         // to do. Usually one or more rarely two.
         for ( BioAssayDimension bad : dims ) {
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
-
-                // session.lock( ba, LockMode.NONE );
-
                 Hibernate.initialize( ba );
                 Hibernate.initialize( ba.getSamplesUsed() );
 
@@ -185,8 +176,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
                         session.evict( baui );
                     }
                 }
-                // don't do this -- see above.
-                // session.evict( ba );
             }
         }
 
@@ -225,7 +214,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    protected void handleThaw( T designElementDataVector ) throws Exception {
+    protected void handleThaw( T designElementDataVector ) {
 
         Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
 
@@ -267,8 +256,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @param dedv2genes
      * @param batch
      */
-    private void getVectorsBatch( Map<Long, Collection<Gene>> cs2gene, org.hibernate.Query queryObject,
-            Map<T, Collection<Gene>> dedv2genes, Collection<Long> batch ) {
+    private void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
+            Map<T, Collection<Long>> dedv2genes, Collection<Long> batch ) {
         queryObject.setParameterList( "cs", batch );
         queryObject.setFlushMode( FlushMode.MANUAL );
         queryObject.setReadOnly( true );
@@ -277,11 +266,11 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         while ( results.next() ) {
             T dedv = ( T ) results.get( 0 );
             Long cs = ( Long ) results.get( 1 );
-            Collection<Gene> associatedGenes = cs2gene.get( cs );
+            Collection<Long> associatedGenes = cs2gene.get( cs );
             if ( !dedv2genes.containsKey( dedv ) ) {
                 dedv2genes.put( dedv, associatedGenes );
             } else {
-                Collection<Gene> mappedGenes = dedv2genes.get( dedv );
+                Collection<Long> mappedGenes = dedv2genes.get( dedv );
                 mappedGenes.addAll( associatedGenes );
             }
         }

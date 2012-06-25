@@ -224,32 +224,8 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         log.info( "Deleted " + deleted + " data vector elements" );
     }
 
-    // /**
-    // * @param ees
-    // * @param cs2gene
-    // * @return
-    // */
-    // protected Map<RawExpressionDataVector, Collection<Gene>> getPreferredVectorsForProbes( Collection<Long> ees,
-    // Map<Long, Collection<Gene>> cs2gene ) {
-    //
-    // final String queryString;
-    // if ( ees == null || ees.size() == 0 ) {
-    // queryString = "select distinct dedv, dedv.designElement.id from RawExpressionDataVectorImpl dedv "
-    // + " inner join fetch dedv.bioAssayDimension bd "
-    // + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-    // + " where dedv.designElement.id in ( :cs ) and dedv.quantitationType.isPreferred = true";
-    // } else {
-    // queryString = "select distinct dedv, dedv.designElement.id from RawExpressionDataVectorImpl dedv"
-    // + " inner join fetch dedv.bioAssayDimension bd "
-    // + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-    // + " where dedv.designElement.id in (:cs ) and dedv.quantitationType.isPreferred = true"
-    // + " and dedv.expressionExperiment.id in ( :ees )";
-    // }
-    // return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
-    // }
-
     @Override
-    protected Integer handleCountAll() throws Exception {
+    protected Integer handleCountAll() {
         final String query = "select count(*) from RawExpressionDataVectorImpl";
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( query );

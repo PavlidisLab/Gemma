@@ -43,6 +43,7 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
         } else if ( command.getExpressionExperiment() != null ) {
             expressionExperimentReportService.generateSummary( command.getExpressionExperiment().getId() );
             experimentalDesignService.clearDesignCaches( command.getExpressionExperiment() );
+
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }
