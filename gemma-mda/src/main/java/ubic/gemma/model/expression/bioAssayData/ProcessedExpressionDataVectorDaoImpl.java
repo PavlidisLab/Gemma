@@ -954,10 +954,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+            queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
                     + " where dedv.designElement.id in ( :cs ) ";
         } else {
-            queryString = "select distinct dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+            queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
                     + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in ( :ees )";
         }
 
