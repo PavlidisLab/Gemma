@@ -50,6 +50,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -65,6 +66,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private TableMaintenenceUtil tableMaintenenceUtil;
 
     @Autowired
     private GeoService geoService;
@@ -118,6 +122,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         assertEquals( 40, v.size() );
 
         Collection<Gene> genes = getGeneAssociatedWithEe( ee );
+        tableMaintenenceUtil.disableEmail();
+        tableMaintenenceUtil.updateGene2CsEntries();
+
         v = processedDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
 
