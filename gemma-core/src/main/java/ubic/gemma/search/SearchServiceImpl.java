@@ -954,7 +954,7 @@ public class SearchServiceImpl implements SearchService {
 
         watch.stop();
 
-        for ( SearchResult searchR : matchingEntities ) {
+        for ( SearchResult searchR : results ) {
             if ( !matches.containsKey( searchR ) ) {
                 matches.put( searchR, query );
             } else {
