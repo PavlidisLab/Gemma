@@ -413,8 +413,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
-        final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee.id";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+        final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee.getId() );
     }
 
     /**
@@ -711,8 +711,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
         final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee.id ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+                + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee.getId() );
     }
 
     /**
