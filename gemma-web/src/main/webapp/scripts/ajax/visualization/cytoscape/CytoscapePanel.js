@@ -1,3 +1,19 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * 
+ */
+
 Ext.namespace('Gemma');
 
 Gemma.CytoscapePanel = Ext.extend(
@@ -144,7 +160,6 @@ Ext.Panel, {
         	this.display.clearSearchBox();
         	this.fireEvent("textBoxMatchFromCoexpressionViz", '');
         	
-        	//check to see if it is query genes only
             if (this.display.isQueryGenesOnly()){
             	this.display.filter(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency,
     					this.coexpressionSearchData.coexGridCoexCommand.geneIds,
@@ -182,8 +197,7 @@ Ext.Panel, {
         	
         }, this);        
         
-
-        //maybe have this take the results as an argument for more detailed error message
+        
         this.on('searchErrorFromCoexpressionSearchData', function(result) {
         	
         	this.timeOutFromCoexSearchHandler();
@@ -461,7 +475,7 @@ Ext.Panel, {
     //It is a special case because it uses the partial results from the coexpression grid to do the complete search    
     cytoscapePanelAfterRenderHandler: function () {
 
-    	//stopRender is needed because of a bug in extjs where a tabpanel render its components upon removal
+    	//stopRender is needed because of a bug in extjs where a tabpanel renders its components upon removal
     	if (!this.stopRender){
     	
         if (!this.loadMask) {
@@ -515,9 +529,8 @@ Ext.Panel, {
         if (Ext.get("analysis-results-search-form-messages")) {
             Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
         }
-    },
+    },	
 	
-	//after new data we need to determine whether it is appropriate to show the graph or not
 	showUserMessageBarAfterNewData: function(){		
 		
 		if (!this.coexpressionGraphData.mediumGraphDataEnabled){
