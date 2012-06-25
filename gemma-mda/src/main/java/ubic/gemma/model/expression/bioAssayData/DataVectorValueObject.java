@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 

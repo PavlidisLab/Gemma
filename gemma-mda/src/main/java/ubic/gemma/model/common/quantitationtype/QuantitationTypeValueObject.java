@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.experiment;
+package ubic.gemma.model.common.quantitationtype;
 
 import java.util.ArrayList;
 import java.util.Collection;
