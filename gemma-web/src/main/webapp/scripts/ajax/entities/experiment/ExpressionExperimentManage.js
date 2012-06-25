@@ -645,17 +645,25 @@ Gemma.EEReportGridColumnRenderers = {
 		}
 
 		if (diffIsPossible(record)) {
+			
+			var analyses = record.get('differentialExpressionAnalyses'); // array		 
+			
 			if (record.get('dateDifferentialAnalysis')) {
 				var type = record.get('differentialAnalysisEventType');
 
 				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
+				
 				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {
 					color = 'red';
 					qtip = 'ext:qtip="Failed"';
+				} else if ( analyses.length == 0 ) {
+					// we ran it, but the analyses were apparently deleted. 
+					return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 				}
 
+				// TODO: add tooltip describing the analysis.
 				return '<span style="color:' + color + ';" ' + qtip + '>'
 						+ Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 						+ (suggestRun ? runurl : '');
