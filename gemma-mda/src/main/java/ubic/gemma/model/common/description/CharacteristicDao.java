@@ -88,4 +88,25 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
     @Override
     public Integer count();
 
+    /**
+     * @param classesToFilterOn constraint of who the 'owner' of the Characteristic has to be.
+     * @param uriString
+     * @return
+     */
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+
+    /**
+     * @param classes constraint of who the 'owner' of the Characteristic has to be.
+     * @param characteristicUris
+     * @return
+     */
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
+
+    /**
+     * @param classes constraint of who the 'owner' of the Characteristic has to be.
+     * @param string
+     * @return
+     */
+    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
+
 }

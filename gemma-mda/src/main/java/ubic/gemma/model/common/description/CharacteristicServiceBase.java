@@ -35,8 +35,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#create(ubic.gemma.model.common.description.Characteristic)
      */
     @Override
-    public ubic.gemma.model.common.description.Characteristic create(
-            final ubic.gemma.model.common.description.Characteristic c ) {
+    public Characteristic create( final Characteristic c ) {
         return this.handleCreate( c );
     }
 
@@ -52,7 +51,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#delete(ubic.gemma.model.common.description.Characteristic)
      */
     @Override
-    public void delete( final ubic.gemma.model.common.description.Characteristic c ) {
+    public void delete( final Characteristic c ) {
         this.handleDelete( c );
     }
 

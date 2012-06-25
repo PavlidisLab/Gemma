@@ -48,6 +48,31 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
             PhenotypeAssociationImpl.class };
 
     @Override
+    public List<Characteristic> browse( Integer start, Integer limit ) {
+        return this.getCharacteristicDao().browse( start, limit );
+    }
+
+    @Override
+    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
+        return this.getCharacteristicDao().browse( start, limit, sortField, descending );
+    }
+
+    @Override
+    public Integer count() {
+        return this.getCharacteristicDao().count();
+    }
+
+    @Override
+    public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
+            Collection<Characteristic> characteristics ) {
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        for ( Class<?> parentClass : classes ) {
+            charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
+        }
+        return charToParent;
+    }
+
+    @Override
     protected Characteristic handleCreate( Characteristic c ) {
         return this.getCharacteristicDao().create( c );
     }
@@ -80,7 +105,6 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         return this.getCharacteristicDao().findByValue( search + '%' );
     }
 
-    
     /*
      * (non-Javadoc)
      * 
@@ -106,18 +130,18 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     }
 
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit ) {
-        return this.getCharacteristicDao().browse( start, limit );
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
+        return this.getCharacteristicDao().findByUri( classesToFilterOn, uriString );
     }
 
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
-        return this.getCharacteristicDao().browse( start, limit, sortField, descending );
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
+        return this.getCharacteristicDao().findByUri( classes, characteristicUris );
     }
 
     @Override
-    public Integer count() {
-        return this.getCharacteristicDao().count();
+    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
+        return this.getCharacteristicDao().findByValue( classes, string );
     }
 
 }

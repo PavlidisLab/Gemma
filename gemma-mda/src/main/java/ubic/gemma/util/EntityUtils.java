@@ -133,6 +133,15 @@ public class EntityUtils {
         return target;
     }
 
+    public static Class<?> getImplClass( Class<?> type ) {
+        String canonicalName = type.getName();
+        try {
+            return Class.forName( canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl" );
+        } catch ( ClassNotFoundException e ) {
+            throw new RuntimeException( "No 'impl' class for " + type.getCanonicalName() + " found" );
+        }
+    }
+
     /**
      * @param target
      * @return true if the target is a hibernate proxy.

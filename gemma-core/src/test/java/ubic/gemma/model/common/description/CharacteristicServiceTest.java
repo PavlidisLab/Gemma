@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -122,6 +123,20 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         assertEquals( null, charToParent.get( eeChar2 ) );
     }
 
+    @Test
+    public final void testGetParentsWithClazzConstraint() {
+        Map<Characteristic, Object> charToParent;
+        charToParent = characteristicService.getParents(
+                Arrays.asList( new Class<?>[] { ExpressionExperimentImpl.class } ),
+                Arrays.asList( new Characteristic[] { eeChar1 } ) );
+        assertEquals( ee, charToParent.get( eeChar1 ) );
+        assertEquals( null, charToParent.get( eeChar2 ) );
+    }
+
+    /**
+     * @param n
+     * @return
+     */
     private Collection<Characteristic> getTestPersistentCharacteristics( int n ) {
         Collection<Characteristic> chars = new HashSet<Characteristic>();
         for ( int i = 0; i < n; ++i ) {

@@ -98,6 +98,7 @@ import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -488,8 +489,10 @@ public class SearchServiceImpl implements SearchService {
             Collection<Class<?>> classesToFilterOn = new HashSet<Class<?>>();
             classesToFilterOn.add( ExpressionExperiment.class );
 
-            Collection<Characteristic> foundCharacteristics = characteristicService.findByUri( uriString );
-            Map<Characteristic, Object> parentMap = characteristicService.getParents( foundCharacteristics );
+            Collection<Characteristic> foundCharacteristics = characteristicService.findByUri( classesToFilterOn,
+                    uriString );
+            Map<Characteristic, Object> parentMap = characteristicService.getParents( classesToFilterOn,
+                    foundCharacteristics );
 
             Collection<SearchResult> characteristicOwnerResults = filterCharacteristicOwnersByClass( classesToFilterOn,
                     parentMap );
@@ -530,8 +533,14 @@ public class SearchServiceImpl implements SearchService {
         terms2Search4.add( matchingTerm );
 
         Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
-        classesToSearch.add( ExpressionExperiment.class );
-        classesToSearch.add( BioMaterial.class );
+        if ( settings.isSearchExperiments() ) {
+            classesToSearch.add( ExpressionExperiment.class ); // not sure ...
+            classesToSearch.add( BioMaterial.class );
+            classesToSearch.add( FactorValue.class );
+        }
+        if ( settings.isSearchForPhenotypes() ) {
+            classesToSearch.add( PhenotypeAssociationImpl.class );
+        }
 
         Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners( classesToSearch,
                 terms2Search4 );
@@ -891,42 +900,44 @@ public class SearchServiceImpl implements SearchService {
         }
 
         watch.reset();
-        watch.start();
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        Collection<Characteristic> cs = new HashSet<Characteristic>();
+        if ( !matchingTerms.isEmpty() ) {
+            watch.start();
 
-        for ( OntologyTerm term : matchingTerms ) {
-            String uri = term.getUri();
-            if ( uri == null || uri.isEmpty() ) continue;
-            characteristicUris.add( uri );
-            addChildTerms( characteristicUris, term );
-        }
+            for ( OntologyTerm term : matchingTerms ) {
+                String uri = term.getUri();
+                if ( uri == null || uri.isEmpty() ) continue;
+                characteristicUris.add( uri );
+                addChildTerms( characteristicUris, term );
+            }
 
-        // int cacheHits = childTermCache.getStatistics().getCacheHits();
-        // if ( log.isDebugEnabled() ) log.debug( cacheHits + " cache hits for ontology children" );
+            // int cacheHits = childTermCache.getStatistics().getCacheHits();
+            // if ( log.isDebugEnabled() ) log.debug( cacheHits + " cache hits for ontology children" );
 
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
-                    + "ms" );
+            if ( watch.getTime() > 1000 ) {
+                log.info( "Found " + characteristicUris.size() + " possible matches + child terms in "
+                        + watch.getTime() + "ms" );
+            }
+
+            /*
+             * Find occurrences of these terms in our system. This is fast, so long as there aren't too many.
+             */
+            Collection<SearchResult> matchingCharacteristics = dbHitsToSearchResult( characteristicService.findByUri(
+                    classes, characteristicUris ) );
+
+            for ( SearchResult crs : matchingCharacteristics ) {
+                cs.add( ( Characteristic ) crs.getResultObject() );
+            }
         }
         watch.reset();
         watch.start();
-
-        /*
-         * Find occurrences of these terms in our system. This is fast, so long as there aren't too many.
-         */
-        Collection<SearchResult> matchingCharacteristics = dbHitsToSearchResult( characteristicService
-                .findByUri( characteristicUris ) );
-
-        Collection<Characteristic> cs = new HashSet<Characteristic>();
-        for ( SearchResult crs : matchingCharacteristics ) {
-            cs.add( ( Characteristic ) crs.getResultObject() );
-        }
-
         /*
          * Add characteristics that have values matching the query; this pulls in items not associated with ontology
          * terms (free text). We do this here so we can apply the query logic to the matches.
          */
         String dbQueryString = query.replaceAll( "\\*", "" );
-        Collection<Characteristic> valueMatches = characteristicService.findByValue( dbQueryString + "%" );
+        Collection<Characteristic> valueMatches = characteristicService.findByValue( classes, dbQueryString );
 
         if ( valueMatches != null && !valueMatches.isEmpty() ) cs.addAll( valueMatches );
 
@@ -934,6 +945,7 @@ public class SearchServiceImpl implements SearchService {
          * Retrieve the owner objects
          */
         Collection<SearchResult> matchingEntities = getAnnotatedEntities( classes, cs );
+        results.addAll( matchingEntities );
 
         if ( watch.getTime() > 1000 ) {
             log.info( "Slow search: found " + matchingEntities.size() + " matches to characteristics for '" + query
@@ -949,7 +961,8 @@ public class SearchServiceImpl implements SearchService {
                 matches.put( searchR, matches.get( searchR ) + " " + query );
             }
         }
-        return matchingCharacteristics;
+
+        return results;
     }
 
     /**
@@ -1205,7 +1218,7 @@ public class SearchServiceImpl implements SearchService {
      * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      * 
-     * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
+     * @param clazz Class of objects to restrict the search to (typically ExpressionExperimentImpl.class, for example).
      * @param terms A list of ontololgy terms to search for
      * @return Collection of search results for the objects owning the found characteristics, where the owner is of
      *         class clazz
@@ -1218,10 +1231,10 @@ public class SearchServiceImpl implements SearchService {
 
         for ( OntologyTerm term : terms ) {
             // characteristicValueMatches.addAll( characteristicService.findByValue( term.getUri() ));
-            characteristicURIMatches.addAll( characteristicService.findByUri( term.getUri() ) );
+            characteristicURIMatches.addAll( characteristicService.findByUri( classes, term.getUri() ) );
         }
 
-        Map<Characteristic, Object> parentMap = characteristicService.getParents( characteristicURIMatches );
+        Map<Characteristic, Object> parentMap = characteristicService.getParents( classes, characteristicURIMatches );
         // parentMap.putAll( characteristicService.getParents(characteristicValueMatches ) );
 
         return filterCharacteristicOwnersByClass( classes, parentMap );
@@ -1594,7 +1607,7 @@ public class SearchServiceImpl implements SearchService {
             log.info( "Hits: " + hitcount );
 
             /*
-             * If we got hits, it means that some of our results match... so we have to retrive the objects.
+             * If we got hits, it means that some of our results match... so we have to retrieve the objects.
              */
 
             for ( int i = 0; i < hitcount; i++ ) {
@@ -1910,7 +1923,7 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> getAnnotatedEntities( Collection<Class<?>> classes, Collection<Characteristic> cs ) {
 
-        Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
+        Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( classes, cs );
         Collection<SearchResult> matchedEntities = filterCharacteristicOwnersByClass( classes, characterstic2entity );
 
         if ( log.isDebugEnabled() ) {

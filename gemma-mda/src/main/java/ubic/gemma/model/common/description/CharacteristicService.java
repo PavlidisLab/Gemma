@@ -31,57 +31,6 @@ import org.springframework.security.access.annotation.Secured;
 public interface CharacteristicService {
 
     /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public Characteristic create( Characteristic c );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public void delete( java.lang.Long id );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public void delete( Characteristic c );
-
-    /**
-     * <p>
-     * Looks for an exact match of the give string to a valueUri in the characteritic database
-     * </p>
-     */
-    public Collection<Characteristic> findByUri( java.lang.String searchString );
-
-    /**
-     * <p>
-     * given a collection of strings that represent URI's will find all the characteristics that are used in the system
-     * with URI's matching anyone in the given collection
-     * </p>
-     */
-    public Collection<Characteristic> findByUri( Collection<String> uris );
-
-    /**
-     * <p>
-     * Returns a collection of characteristcs that have a Value that match the given search string
-     * </p>
-     * <p>
-     * (the value is usually a human readable form of the termURI
-     * </p>
-     */
-    public Collection<Characteristic> findByValue( java.lang.String search );
-
-    /**
-     * <p>
-     * Returns a map of the specified characteristics to their parent objects.
-     * </p>
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
-
-    /**
      * Browse through the characteristics, excluding GO annotations.
      * 
      * @param start How far into the list to start
@@ -109,6 +58,71 @@ public interface CharacteristicService {
     /**
      * 
      */
+    @Secured({ "GROUP_USER" })
+    public Characteristic create( Characteristic c );
+
+    /**
+     * 
+     */
+    @Secured({ "GROUP_USER" })
+    public void delete( Characteristic c );
+
+    /**
+     * 
+     */
+    @Secured({ "GROUP_USER" })
+    public void delete( java.lang.Long id );
+
+    /**
+     * @param classesToFilterOn - constraint for who the 'owner' of the characteristic is.
+     * @param uriString
+     * @return
+     */
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+
+    /**
+     * @param classes - constraint for who the 'owner' of the characteristic is.
+     * @param characteristicUris
+     * @return
+     */
+    public Collection<? extends Object> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
+
+    /**
+     * <p>
+     * given a collection of strings that represent URI's will find all the characteristics that are used in the system
+     * with URI's matching anyone in the given collection
+     * </p>
+     */
+    public Collection<Characteristic> findByUri( Collection<String> uris );
+
+    /**
+     * Looks for an exact match of the give string to a valueUri in the characteristic database
+     */
+    public Collection<Characteristic> findByUri( java.lang.String searchString );
+
+    /**
+     * Returns a collection of characteristics that have a Value that match the given search string. The value is
+     * usually a human readable form of the termURI
+     */
+    public Collection<Characteristic> findByValue( java.lang.String search );
+
+    /**
+     * Returns a map of the specified characteristics to their parent objects.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
+
+    /**
+     * Returns a map of the specified characteristics to their parent objects, constrained to be among the classes
+     * given.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
+            Collection<Characteristic> characteristics );
+
+    /**
+     * 
+     */
     public Characteristic load( java.lang.Long id );
 
     /**
@@ -120,5 +134,12 @@ public interface CharacteristicService {
      */
     @Secured({ "GROUP_USER" })
     public void update( Characteristic c );
+
+    /**
+     * @param classes constraint
+     * @param string
+     * @return
+     */
+    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
 }
