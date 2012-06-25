@@ -203,6 +203,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // get all expressionExperiment results and convert result object into a value object
         List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
+        if( srEEs == null ){
+            srEEs = new ArrayList<SearchResult>();
+        }
         for ( SearchResult sr : srEEs ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject( ee );
@@ -234,46 +237,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 .convertSearchResults2SearchResultDisplayObjects( srEEs );
         List<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
                 .convertSearchResults2SearchResultDisplayObjects( eesSR );
-
-        /*
-         * FIXME THIS SHOULD BE TAKEN CARE OF BY CALL TO 'expressionExperimentSetService.isValidForFrontEnd' BUT THIS
-         * NEEDS TO BE VERIFIED
-         * 
-         * // when searching for an experiment by short name, one or more experiment set(s) is(are) also returned // ex:
-         * searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member // to fix this, if 1 ee is
-         * returned and the group only has 1 member and it's member has the // same name as the 1 ee returned, then
-         * don't return the ee set if ( experiments.size() == 1 && experimentSets.size() > 0 ) { Long eid = ( (
-         * ExpressionExperimentValueObject ) experiments.iterator().next().getResultValueObject() ) .getId();
-         * Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>(); for (
-         * SearchResultDisplayObject srdo : experimentSets ) { if ( srdo.getMemberIds().size() == 1 && (
-         * srdo.getMemberIds().toArray() )[0].equals( eid ) ) { toRmvSRDO.add( srdo ); } } experimentSets.removeAll(
-         * toRmvSRDO ); }
-         */
-
-        // Taxon taxon = null;
-        // for each experiment search result display object, set the taxon -- pretty hacky,
-        // but only way to get experiment's taxon is using service
-        // can I do this in the SRDO constructor?
-        // Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>();
-        // for ( SearchResultDisplayObject srdo : experiments ) {
-        //
-        // if ( taxonLimited ) {
-        // taxon = taxonParam;
-        // } else {
-        // taxon = expressionExperimentService.getTaxon( ( ( ExpressionExperimentValueObject ) srdo
-        // .getResultValueObject() ).getId() );
-        // }
-        // if ( taxon == null ) {
-        // log.warn( "Experiment had null taxon, was excluded from results: experiment id="
-        // + ( ( ExpressionExperimentValueObject ) srdo.getResultValueObject() ).getId() + " shortname="
-        // + srdo.getName() );
-        // toRmvSRDO.add( srdo );
-        // } else {
-        // srdo.setTaxonId( taxon.getId() );
-        // srdo.setTaxonName( taxon.getCommonName() );
-        // }
-        // }
-        // experiments.removeAll( toRmvSRDO );
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
