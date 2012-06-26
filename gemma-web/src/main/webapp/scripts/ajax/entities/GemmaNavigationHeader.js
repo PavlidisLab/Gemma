@@ -181,6 +181,9 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					href : "http://gemma-chibi-doc.sites.olt.ubc.ca/category/news/",
 					tooltip: "View recent data and software updates"
 				}, {
+					text: 'Dataset References',
+					href : "/Gemma/bibRef/showAllEeBibRefs.html"
+				}, {
 					text: 'Expression Experiment QC',
 					href : "/Gemma/expressionExperimentsWithQC.html"
 				}, {
