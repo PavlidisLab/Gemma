@@ -76,7 +76,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
         EvidenceValueObject evidence = null;
 
-       if ( phe instanceof ExperimentalEvidence ) {
+        if ( phe instanceof ExperimentalEvidence ) {
             evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
         } else if ( phe instanceof GenericEvidence ) {
             evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
@@ -106,11 +106,12 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     private Long lastUpdated = null;
     // security for the evidence
     private EvidenceSecurityValueObject evidenceSecurityValueObject = null;
-    
+
     // linked to what gene
     private Long geneId = null;
     private Integer geneNCBI = null;
     private String geneOfficialSymbol = "";
+    private String geneOfficialName = "";
     private String taxonCommonName = "";
     private boolean isHomologueEvidence = false;
 
@@ -145,11 +146,13 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.geneId = phenotypeAssociation.getGene().getId();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
         this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();
+        this.geneOfficialName = phenotypeAssociation.getGene().getOfficialName();
 
     }
 
-    protected EvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes, String description,
-            String evidenceCode, boolean isNegativeEvidence, EvidenceSourceValueObject evidenceSource ) {
+    protected EvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
+            String description, String evidenceCode, boolean isNegativeEvidence,
+            EvidenceSourceValueObject evidenceSource ) {
         super();
         this.description = description;
         this.evidenceCode = evidenceCode;
@@ -255,14 +258,14 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     }
 
     public Long getGeneId() {
-		return this.geneId;
-	}
+        return this.geneId;
+    }
 
-	public void setGeneId(Long geneId) {
-		this.geneId = geneId;
-	}
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
+    }
 
-	public Integer getGeneNCBI() {
+    public Integer getGeneNCBI() {
         return this.geneNCBI;
     }
 
@@ -270,13 +273,13 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.geneNCBI = geneNCBI;
     }
 
-	public String getGeneOfficialSymbol() {
-		return this.geneOfficialSymbol;
-	}
+    public String getGeneOfficialSymbol() {
+        return this.geneOfficialSymbol;
+    }
 
-	public void setGeneOfficialSymbol(String geneOfficialSymbol) {
-		this.geneOfficialSymbol = geneOfficialSymbol;
-	}
+    public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
+        this.geneOfficialSymbol = geneOfficialSymbol;
+    }
 
     public String getTaxonCommonName() {
         return this.taxonCommonName;
@@ -287,14 +290,22 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     }
 
     public boolean isHomologueEvidence() {
-		return this.isHomologueEvidence;
-	}
+        return this.isHomologueEvidence;
+    }
 
-	public void setHomologueEvidence(boolean isHomologueEvidence) {
-		this.isHomologueEvidence = isHomologueEvidence;
-	}
+    public void setHomologueEvidence( boolean isHomologueEvidence ) {
+        this.isHomologueEvidence = isHomologueEvidence;
+    }
 
-	@Override
+    public String getGeneOfficialName() {
+        return this.geneOfficialName;
+    }
+
+    public void setGeneOfficialName( String geneOfficialName ) {
+        this.geneOfficialName = geneOfficialName;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -339,63 +350,63 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         return true;
     }
 
-    protected int comparePropertiesTo(EvidenceValueObject evidenceValueObject) {
-    	if (this == evidenceValueObject) return 0;
+    protected int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
+        if ( this == evidenceValueObject ) return 0;
 
-    	if (!this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence) return -1;
-    	if (this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence) return 1;
+        if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence ) return -1;
+        if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence ) return 1;
 
-    	int comparison = this.relevance.compareTo(evidenceValueObject.relevance);
-    	if (comparison != 0) return comparison;
+        int comparison = this.relevance.compareTo( evidenceValueObject.relevance );
+        if ( comparison != 0 ) return comparison;
 
-    	if ((this.phenotypes != null && this.phenotypes.size() > 0) &&
-    	    (evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0)) {
-    	    return -1;
-    	}    
-    	    
-    	if ((this.phenotypes == null || this.phenotypes.size() == 0) &&
-    	    (evidenceValueObject.phenotypes != null && evidenceValueObject.phenotypes.size() > 0)) {
-    	    return 1;
-    	}    
+        if ( ( this.phenotypes != null && this.phenotypes.size() > 0 )
+                && ( evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0 ) ) {
+            return -1;
+        }
 
-    	if (this.phenotypes != null && evidenceValueObject.phenotypes != null) {
-    		Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();
-    		Iterator<CharacteristicValueObject> otherIterator = evidenceValueObject.phenotypes.iterator();
+        if ( ( this.phenotypes == null || this.phenotypes.size() == 0 )
+                && ( evidenceValueObject.phenotypes != null && evidenceValueObject.phenotypes.size() > 0 ) ) {
+            return 1;
+        }
 
-    		while (true) {
-    			boolean thisHasNext = thisIterator.hasNext();
-    			boolean otherHasNext = otherIterator.hasNext();
-    		
-	        	if (!thisHasNext && otherHasNext) return -1;
-	        	if (thisHasNext && !otherHasNext) return 1;
-	        	if (!thisHasNext && !otherHasNext) break;
+        if ( this.phenotypes != null && evidenceValueObject.phenotypes != null ) {
+            Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();
+            Iterator<CharacteristicValueObject> otherIterator = evidenceValueObject.phenotypes.iterator();
 
-    			comparison = thisIterator.next().compareTo(otherIterator.next());
-    			if (comparison != 0) return comparison;
-    		}
-    	}
-    	    
-    	if (!this.isNegativeEvidence && evidenceValueObject.isNegativeEvidence) return -1;
-    	if (this.isNegativeEvidence && !evidenceValueObject.isNegativeEvidence) return 1;
+            while ( true ) {
+                boolean thisHasNext = thisIterator.hasNext();
+                boolean otherHasNext = otherIterator.hasNext();
 
-    	comparison = this.className.compareTo(evidenceValueObject.className);
-    	if (comparison != 0) return comparison;
+                if ( !thisHasNext && otherHasNext ) return -1;
+                if ( thisHasNext && !otherHasNext ) return 1;
+                if ( !thisHasNext && !otherHasNext ) break;
 
-    	comparison = this.evidenceCode.compareTo(evidenceValueObject.evidenceCode);
-    	if (comparison != 0) return comparison;
+                comparison = thisIterator.next().compareTo( otherIterator.next() );
+                if ( comparison != 0 ) return comparison;
+            }
+        }
 
-    	return 0;
+        if ( !this.isNegativeEvidence && evidenceValueObject.isNegativeEvidence ) return -1;
+        if ( this.isNegativeEvidence && !evidenceValueObject.isNegativeEvidence ) return 1;
+
+        comparison = this.className.compareTo( evidenceValueObject.className );
+        if ( comparison != 0 ) return comparison;
+
+        comparison = this.evidenceCode.compareTo( evidenceValueObject.evidenceCode );
+        if ( comparison != 0 ) return comparison;
+
+        return 0;
     }
-    
-	@Override
-	public int compareTo(EvidenceValueObject evidenceValueObject) {
-		int comparison = comparePropertiesTo(evidenceValueObject);
-		
-		if (comparison == 0) {
-			// Use id for comparison so that each evidence object is unique. 
-			comparison = this.getId().compareTo(evidenceValueObject.getId());
-		}
 
-		return comparison;
-	}
+    @Override
+    public int compareTo( EvidenceValueObject evidenceValueObject ) {
+        int comparison = comparePropertiesTo( evidenceValueObject );
+
+        if ( comparison == 0 ) {
+            // Use id for comparison so that each evidence object is unique.
+            comparison = this.getId().compareTo( evidenceValueObject.getId() );
+        }
+
+        return comparison;
+    }
 }
