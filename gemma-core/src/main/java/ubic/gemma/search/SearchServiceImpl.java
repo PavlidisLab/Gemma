@@ -1,5 +1,5 @@
 /*
- * The Gemma project
+ ompass* The Gemma project
  * 
  * Copyright (c) 2006 University of British Columbia
  * 

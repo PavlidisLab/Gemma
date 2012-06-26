@@ -289,7 +289,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, false,
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
                 getAdditionalSpringConfigLocations() );
 
         QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );

@@ -50,15 +50,14 @@ public class SpringContextUtil {
 
     /**
      * @param testing If true, it will get a test configured-BeanFactory
-     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
      * @param isWebApp If true, configuration specific to the web application will be included.
      * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return BeanFactory or null if no context could be created.
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp,
+    public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp,
             String[] additionalConfigurationLocations ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing, compassOn, isWebApp );
+            String[] paths = getConfigLocations( testing, isWebApp );
 
             if ( additionalConfigurationLocations != null ) {
                 paths = addPaths( additionalConfigurationLocations, paths );
@@ -93,29 +92,29 @@ public class SpringContextUtil {
 
     /**
      * @param testing If true, it will get a test configured-BeanFactory
-     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests. 
+     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
      * @param isWebApp If true, configuration specific to the web application will be included.
      * @return BeanFactory or null if no context could be created.
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp ) {
-        return getApplicationContext( testing, compassOn, isWebApp, new String[] {} );
+    public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp ) {
+        return getApplicationContext( testing, isWebApp, new String[] {} );
     }
 
     /**
      * @param additionalConfigurationPaths
-     * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the
-     *         additional configuration paths.
+     * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the additional
+     *         configuration paths.
      */
     public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
-        return getApplicationContext( false, false, false, additionalConfigurationPaths );
+        return getApplicationContext( false, false, additionalConfigurationPaths );
     }
 
     /**
-     * @return a minimally-configured standard BeanFactory: no Compass, no Web config.
+     * @return a minimally-configured standard BeanFactory: no Web config.
      * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
      */
     public static BeanFactory getApplicationContext() {
-        return getApplicationContext( false, false, false );
+        return getApplicationContext( false, false );
     }
 
     /**
@@ -124,7 +123,7 @@ public class SpringContextUtil {
      * @return
      */
     public static String[] getConfigLocations() {
-        return getConfigLocations( false, false, true );
+        return getConfigLocations( false, true );
     }
 
     /**
@@ -134,11 +133,11 @@ public class SpringContextUtil {
      * @return
      * @see getApplicationContext
      */
-    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean isWebapp ) {
+    public static String[] getConfigLocations( boolean testing, boolean isWebapp ) {
         if ( testing ) {
-            return getTestConfigLocations( compassOn, isWebapp );
+            return getTestConfigLocations( isWebapp );
         }
-        return getStandardConfigLocations( compassOn, isWebapp );
+        return getStandardConfigLocations( isWebapp );
 
     }
 
@@ -188,13 +187,11 @@ public class SpringContextUtil {
      * @param isWebapp
      * @return
      */
-    private static String[] getStandardConfigLocations( boolean compassOn, boolean isWebapp ) {
+    private static String[] getStandardConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
-        if ( compassOn ) {
-            CompassUtils.turnOnCompass( false, paths );
-        }
+        CompassUtils.turnOnCompass( false, paths );
 
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
@@ -205,13 +202,12 @@ public class SpringContextUtil {
      * @param isWebapp
      * @return
      */
-    private static String[] getTestConfigLocations( boolean compassOn, boolean isWebapp ) {
+    private static String[] getTestConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/testDataSource.xml" );
 
-        if ( compassOn ) {
-            CompassUtils.turnOnCompass( true, paths );
-        }
+        CompassUtils.turnOnCompass( true, paths );
+
         addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
