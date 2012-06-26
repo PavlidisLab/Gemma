@@ -29,7 +29,6 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author pavlidis
@@ -209,7 +208,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
                 long fvId = Long.parseLong( factorValueString.substring( 2 ) );
                 FactorValue fv = factorValueDao.load( fvId );
                 if ( fv == null ) {
-                    throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
+                    throw new RuntimeException( "No such factorValue with id=" + fvId );
                 }
                 updatedFactorValues.add( fv );
             } else {
