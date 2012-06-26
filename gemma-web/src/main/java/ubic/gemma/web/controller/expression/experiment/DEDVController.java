@@ -1463,13 +1463,14 @@ public class DEDVController {
                 factor = pair.getKey();
                 valueOrId = pair.getValue();
 
+                if ( factor == null ) continue;
                 /*
                  * the double is only a double because it is meant to hold measurements when the factor is continuous if
                  * the factor is categorical, the double value is set to the value's id see
                  * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
                  * ExpressionExperiment, BioAssayDimension)
                  */
-                if ( factor == null || valueOrId == null || factor.getType() == null
+                if ( valueOrId == null || factor.getType() == null
                         || ( factor.getType().equals( FactorType.CATEGORICAL ) && factor.getFactorValues().isEmpty() ) ) {
                     factorsMissingValues.add( factor.getName() );
                     continue;
