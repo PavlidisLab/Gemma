@@ -236,7 +236,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 				xtype : "button",
 				text: "Refresh",
 				icon: '/Gemma/images/icons/arrow_refresh_small.png',
-				tooltip: "Refresh the experimental design.",
+				tooltip: "Refresh the experimental design. (Clear the cached design information.)",
 				handler:function(){
 					if(this.eeId && this.eeId > 0){
 						Ext.getBody().mask('Reloading experimental design');
