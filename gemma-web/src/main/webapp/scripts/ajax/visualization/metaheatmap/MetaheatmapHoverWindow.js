@@ -41,7 +41,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'</tpl>',
 				'<tpl if="type==\'gene\'">',		//gene
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
-				'<b>Meta P value</b>: {geneMetaPvalue:sciNotation} based on {metaPvalueCount} pValues.<br>',
+				'<b>Meta P value</b>: {geneMetaPvalue:sciNotation} based on {metaPvalueCount} p-values.<br>',
 				'</tpl>',
 //				'<tpl if="type==\'contrastCell\'">',  //contrast
 //				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
