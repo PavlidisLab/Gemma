@@ -170,16 +170,18 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		if (cell.logFoldChange > 0) {
 			if (cell.logFoldChange > 1) {
-				color =  colorScale["3"];
+				color = colorScale["3"];
 			} else {
-				color =  colorScale["1"];				
+				color = colorScale["1"];				
 			}			
-		} else {
+		} else if (cell.logFoldChange < 0) {
 			if (cell.logFoldChange < -1) {
 				color = colorScale["-3"];
 			} else {
 				color = colorScale["-1"];				
 			}
+		} else { // 0 is when we didn't store the contrast in DB
+			color = 'white';
 		}
 		
 		var transparency = 0;
