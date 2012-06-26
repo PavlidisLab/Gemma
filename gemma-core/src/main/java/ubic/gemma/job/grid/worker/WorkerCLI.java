@@ -304,7 +304,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         } );
         service.submit( heartBeatTask );
-        service.shutdown();
+        service.shutdown();  // blocks until all submitted tasks complete
 
         return heartBeatTask;
 
@@ -314,8 +314,9 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * Create and start a worker instance.
      * 
      * @param workerName bean name e.g. monitorWorker
+     * @throws ClassNotFoundException 
      */
-    private void startWorker( String workerName ) {
+    private void startWorker( String workerName ) throws ClassNotFoundException {
 
         /*
          * In case we need a refresh of connection
@@ -336,7 +337,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         /*
          * Pick up the worker
          */
-        CustomDelegatingWorker worker = this.getBean( CustomDelegatingWorker.class );
+        CustomDelegatingWorker worker = this.getBean( workerName, CustomDelegatingWorker.class );
 
         this.workers.add( worker );
 
@@ -424,9 +425,10 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @param workerName
      * @return
      * @throws InterruptedException
+     * @throws ClassNotFoundException 
      */
     private Object workerCheckLoop( final SpacesRegistrationEntry registrationEntry,
-            final CustomDelegatingWorker worker, String workerName ) throws InterruptedException {
+            final CustomDelegatingWorker worker, String workerName ) throws InterruptedException, ClassNotFoundException {
         log.info( "Starting heartbeat for " + registrationEntry.registrationId );
         while ( true ) {
 
