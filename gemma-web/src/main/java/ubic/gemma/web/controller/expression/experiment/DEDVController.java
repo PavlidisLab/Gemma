@@ -1461,12 +1461,7 @@ public class DEDVController {
             // for each experimental factor, store the name and value
             for ( Entry<ExperimentalFactor, Double> pair : factorMap.entrySet() ) {
                 factor = pair.getKey();
-
-                if ( !seenFactors.contains( factor ) && factor.getType().equals( FactorType.CATEGORICAL ) ) {
-                    for ( FactorValue fv : factor.getFactorValues() ) {
-                        fvs.put( fv.getId(), fv );
-                    }
-                }
+                valueOrId = pair.getValue();
 
                 /*
                  * the double is only a double because it is meant to hold measurements when the factor is continuous if
@@ -1474,11 +1469,16 @@ public class DEDVController {
                  * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
                  * ExpressionExperiment, BioAssayDimension)
                  */
-                valueOrId = pair.getValue();
-                if ( valueOrId == null || factor.getType() == null || factor.getType().equals( FactorType.CATEGORICAL )
-                        && factor.getFactorValues().isEmpty() ) {
+                if ( factor == null || valueOrId == null || factor.getType() == null
+                        || ( factor.getType().equals( FactorType.CATEGORICAL ) && factor.getFactorValues().isEmpty() ) ) {
                     factorsMissingValues.add( factor.getName() );
                     continue;
+                }
+                
+                if ( !seenFactors.contains( factor ) && factor.getType().equals( FactorType.CATEGORICAL ) ) {
+                    for ( FactorValue fv : factor.getFactorValues() ) {
+                        fvs.put( fv.getId(), fv );
+                    }
                 }
 
                 String facValsStr;
