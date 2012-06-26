@@ -434,7 +434,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         List<ProcessedExpressionDataVector> result = new ArrayList<ProcessedExpressionDataVector>();
 
         Integer numvecsavailable = ee.getNumberOfDataVectors();
-        if ( numvecsavailable == null || numvecsavailable == 0 ) return result;
+        if ( numvecsavailable == null || numvecsavailable == 0 ) {
+            log.info( "Experiment does not have any processed vectors" );
+            return result;
+        }
 
         Query q = this.getSession().createQuery(
                 " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee" );
