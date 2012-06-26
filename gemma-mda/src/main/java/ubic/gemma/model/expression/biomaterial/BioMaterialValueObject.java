@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.expression.experiment;
+package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
 import java.util.HashMap;

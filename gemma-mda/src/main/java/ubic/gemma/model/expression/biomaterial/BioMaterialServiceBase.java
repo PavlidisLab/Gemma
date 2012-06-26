@@ -20,6 +20,9 @@ package ubic.gemma.model.expression.biomaterial;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactorDao;
+import ubic.gemma.model.expression.experiment.FactorValueDao;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.biomaterial.BioMaterialService</code>, provides
@@ -31,7 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class BioMaterialServiceBase implements ubic.gemma.model.expression.biomaterial.BioMaterialService {
 
     @Autowired
-    private ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;
+    protected ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;
+
+    @Autowired
+    protected FactorValueDao factorValueDao;
+
+    @Autowired
+    protected ExperimentalFactorDao experimentalFactorDao;
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)

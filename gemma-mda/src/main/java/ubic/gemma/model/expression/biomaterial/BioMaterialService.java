@@ -80,13 +80,13 @@ public interface BioMaterialService {
      * 
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<BioMaterial> loadAll();
+    public Collection<BioMaterial> loadAll();
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<BioMaterial> loadMultiple( java.util.Collection<Long> ids );
+    public Collection<BioMaterial> loadMultiple( Collection<Long> ids );
 
     /**
      * 
@@ -110,5 +110,15 @@ public interface BioMaterialService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioMaterial bioMaterial );
+
+    /**
+     * Update the biomaterials that are described by the given valueObjects. This is used to update experimental designs
+     * in particular.
+     * 
+     * @param valueObjects
+     * @return the biomaterials that were modified.
+     */
+    @Secured({ "GROUP_USER" })
+    public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
 
 }

@@ -829,7 +829,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />
 
-		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterialValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.job.progress.ProgressData" />

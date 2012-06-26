@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,12 +46,10 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.common.measurement.MeasurementType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
@@ -67,6 +64,7 @@ import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Main entry point to editing and viewing experimental designs. Note: do not use parameterized collections as
@@ -520,9 +518,17 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
      */
     @Override
     public void updateBioMaterials( BioMaterialValueObject[] bmvos ) {
-        for ( BioMaterialValueObject bmvo : bmvos ) {
-            updateBioMaterial( bmvo );
-        }
+
+        if ( bmvos == null || bmvos.length == 0 ) return;
+
+        Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
+
+        if ( biomaterials.isEmpty() ) return;
+
+        BioMaterial bm = biomaterials.iterator().next();
+        ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
+        this.experimentalDesignService.clearDesignCaches( ee );
+        experimentReportService.evictFromCache( ee.getId() );
     }
 
     /*
@@ -534,6 +540,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
      */
     @Override
     public void updateExperimentalFactors( ExperimentalFactorValueObject[] efvos ) {
+
+        if ( efvos == null || efvos.length == 0 ) return;
+
         for ( ExperimentalFactorValueObject efvo : efvos ) {
             ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
             ef.setName( efvo.getName() );
@@ -572,9 +581,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             experimentalFactorService.update( ef );
 
-            ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-            this.experimentalDesignService.clearDesignCaches( ee );
-            experimentReportService.evictFromCache( ee.getId() );
             /*
              * TODO: we might want to update the Category on the matching FactorValues (that use the original category).
              * The following code should do this, but is commented out until we evaluate the implications. See bug 1676.
@@ -592,6 +598,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // }
             // }
         }
+
+        ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
+        ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
+        this.experimentalDesignService.clearDesignCaches( ee );
+        experimentReportService.evictFromCache( ee.getId() );
     }
 
     /*
@@ -603,6 +614,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
      */
     @Override
     public void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
+
+        if ( fvvos == null || fvvos.length == 0 ) return;
+
         /*
          * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
          * that code to CharacteristicService.
@@ -673,11 +687,13 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 factorValueService.update( fv );
             }
 
-            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-            this.experimentalDesignService.clearDesignCaches( ee );
-            experimentReportService.evictFromCache( ee.getId() );
-
         }
+
+        FactorValue fv = this.factorValueService.load( fvvos[0].getId() );
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+        this.experimentalDesignService.clearDesignCaches( ee );
+        experimentReportService.evictFromCache( ee.getId() );
+
     }
 
     private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
@@ -705,107 +721,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
-    }
-
-    /**
-     * Update the factor values for a single biomaterial. Old factor values are removed.
-     * 
-     * @param bmvo
-     */
-    private void updateBioMaterial( BioMaterialValueObject bmvo ) {
-        BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-        bioMaterialService.thaw( bm );
-
-        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
-        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
-        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
-            String factorValueString = factorIdToFactorValueId.get( factorIdString );
-
-            assert factorIdString.matches( "factor\\d+" );
-            Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
-
-            if ( StringUtils.isBlank( factorValueString ) ) {
-                // no value provided, that's okay, the curator can fill it in later.
-                continue;
-
-            } else if ( factorValueString.matches( "fv\\d+" ) ) {
-                // categorical
-                long fvId = Long.parseLong( factorValueString.substring( 2 ) );
-                FactorValue fv = factorValueService.load( fvId );
-                if ( fv == null ) {
-                    throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
-                }
-                updatedFactorValues.add( fv );
-            } else {
-                // continuous, the value send is the actual value, not an id. This will only make sense if the value is
-                // a measurement.
-                boolean found = false;
-                // find the right factor value.
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
-                        if ( fv.getMeasurement() == null ) {
-                            throw new IllegalStateException( "Should have been a measurement associated with fv=" + fv
-                                    + ", cannot update." );
-                        } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
-                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
-                                    + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
-                            fv.getMeasurement().setValue( factorValueString );
-                        } else {
-                            log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
-                        }
-
-                        // always add...
-                        updatedFactorValues.add( fv );
-                        found = true;
-                        break;
-                    }
-                }
-
-                if ( !found ) {
-
-                    /*
-                     * Have to load the factor, create a factor value.
-                     */
-
-                    ExperimentalFactor ef = experimentalFactorService.load( factorId );
-
-                    FactorValue fv = FactorValue.Factory.newInstance();
-                    fv.setExperimentalFactor( ef );
-                    fv.setValue( factorValueString );
-                    Measurement m = Measurement.Factory.newInstance();
-                    m.setType( MeasurementType.ABSOLUTE );
-                    m.setValue( fv.getValue() );
-                    try {
-                        Double.parseDouble( fv.getValue() ); // check if it is a number, don't need the value.
-                        m.setRepresentation( PrimitiveType.DOUBLE );
-                    } catch ( NumberFormatException e ) {
-                        m.setRepresentation( PrimitiveType.STRING );
-                    }
-
-                    fv.setMeasurement( m );
-
-                    fv = factorValueService.create( fv );
-
-                    ef.getFactorValues().add( fv );
-
-                    experimentalFactorService.update( ef );
-
-                }
-
-            }
-        }
-
-        // <= because we might have just added one.
-        assert bm.getFactorValues().size() <= updatedFactorValues.size();
-
-        bm.getFactorValues().clear();
-        bm.getFactorValues().addAll( updatedFactorValues );
-
-        bioMaterialService.update( bm );
-
-        ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        this.experimentalDesignService.clearDesignCaches( ee );
-        experimentReportService.evictFromCache( ee.getId() );
     }
 
 }
