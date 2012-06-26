@@ -21,9 +21,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>		
 		<%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall 
 		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
- 		
- 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
-		
+ 				
 		<%-- for registration, possible from any page--%>
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 		
