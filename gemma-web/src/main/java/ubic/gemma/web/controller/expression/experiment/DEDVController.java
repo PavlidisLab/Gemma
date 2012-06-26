@@ -957,6 +957,7 @@ public class DEDVController {
     private Map<Long, GeneValueObject> getGeneValueObjectsUsed( Collection<DoubleVectorValueObject> vectors ) {
         Set<Long> usedGeneIds = new HashSet<Long>();
         for ( DoubleVectorValueObject vec : vectors ) {
+            if( vec == null || vec.getGenes() == null) continue;
             usedGeneIds.addAll( vec.getGenes() );
         }
         Map<Long, GeneValueObject> gmap = EntityUtils.getIdMap( geneService.loadValueObjects( usedGeneIds ) );
@@ -1356,7 +1357,7 @@ public class DEDVController {
         }
 
         List<GeneValueObject> geneValueObjects = new ArrayList<GeneValueObject>();
-        if ( genes == null ) {
+        if ( genes == null || genes.isEmpty() ) {
             geneValueObjects = new ArrayList<GeneValueObject>( getGeneValueObjectsUsed( dedvs ).values() );
         } else {
             geneValueObjects = getGeneValueObjectList( new ArrayList<Long>( genes ) );

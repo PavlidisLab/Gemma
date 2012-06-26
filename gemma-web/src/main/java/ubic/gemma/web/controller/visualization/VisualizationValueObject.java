@@ -112,7 +112,7 @@ public class VisualizationValueObject {
             Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
 
             String color = "black";
-            if ( genes != null ) {
+            if ( genes != null && vectorGeneids != null ) {
                 for ( GeneValueObject g : genes ) {
                     // This seems inefficient. We should just pass in the genes for this vector.
                     if ( !vectorGeneids.contains( g.getId() ) ) {
