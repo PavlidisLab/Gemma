@@ -1,18 +1,19 @@
-#!/usr/bin/groovy
-package ubic.gemma.script
+package ubic.gemma.script.framework
 import  org.apache.log4j.*
+import groovy.transform.InheritConstructors
 
+@InheritConstructors
 class GemmaCliBuilder extends CliBuilder {
-    
-    GemmaCliBuilder(String usage) {
-        super(usage);
+
+    GemmaCliBuilder(String u) {
+        usage = u
         super.v(argName: 'verbosity', longOpt:'verbosity', args:1, 'verbosity [0=silent;5=debug]')
         super.h(longOpt: 'help', 'usage information')
         super.u(argName: 'username', longOpt:'username', args:1, required:true, 'username')
         super.p(argName: 'password', longOpt:'password', args:1, required:true, 'password')
     }
-    
-    
+
+
     def setGemmaLogging(int verbosity) {
         Logger log4jLogger = LogManager.exists( "ubic.gemma" )
         switch ( verbosity ) {
@@ -39,15 +40,14 @@ class GemmaCliBuilder extends CliBuilder {
         }
     }
 
-        def parse() {
-            def opts = super.parse()
-            if (opts.h) {
-                super.usage()
-            }
-            if (opts.v) {
-                setGemmaLogging(opts.v)
-            }
-            return opts
+    def parse() {
+        def opts = super.parse()
+        if (opts.h) {
+            super.usage()
         }
-        
+        if (opts.v) {
+            setGemmaLogging(opts.v)
+        }
+        return opts
+    }
 }
