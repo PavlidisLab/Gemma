@@ -63,7 +63,7 @@ import ubic.gemma.web.view.TextView;
  * @version $Id$
  */
 @Controller
-@RequestMapping("/gene")
+@RequestMapping(value = { "/gene", "/g" })
 public class GeneController extends BaseController {
 
     @Autowired
@@ -137,10 +137,9 @@ public class GeneController extends BaseController {
     /**
      * @param request
      * @param response
-     * @param errors
      * @return ModelAndView
      */
-    @RequestMapping(value = "/showGene.html", method = RequestMethod.GET)
+    @RequestMapping(value = { "/showGene.html", "/" }, method = RequestMethod.GET)
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String idString = request.getParameter( "id" );
@@ -203,7 +202,7 @@ public class GeneController extends BaseController {
      * @param response
      * @return ModelAndView
      */
-    @RequestMapping(value = "/showGenes.html", method = RequestMethod.GET)
+    @RequestMapping(value = { "/showGenes.html", "/show.html" }, method = RequestMethod.GET)
     public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );

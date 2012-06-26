@@ -129,7 +129,7 @@ import ubic.gemma.web.view.TextView;
  * @version $Id$
  */
 @Controller
-@RequestMapping("/expressionExperiment")
+@RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController extends AbstractTaskService {
 
     /**
@@ -528,7 +528,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * AJAX
      * 
      * @param eeId
-     * @return a collectino of factor value objects that represent the factors of a given experiment
+     * @return a collection of factor value objects that represent the factors of a given experiment
      */
     public Collection<FactorValueValueObject> getExperimentalFactors( EntityDelegator e ) {
 
@@ -1142,7 +1142,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param response
      * @return ModelAndView
      */
-    @RequestMapping("/showAllExpressionExperiments.html")
+    @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" })
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
@@ -1283,7 +1283,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param response
      * @return ModelAndView
      */
-    @RequestMapping("/showAllExpressionExperimentLinkSummaries.html")
+    @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" })
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "expressionExperimentLinkSummary" );
     }
@@ -1294,7 +1294,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping("/showBioAssaysFromExpressionExperiment.html")
+    @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" })
     public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String idStr = request.getParameter( "id" );
 
@@ -1326,7 +1326,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping("/showBioMaterialsFromExpressionExperiment.html")
+    @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" })
     public ModelAndView showBioMaterials( HttpServletRequest request, HttpServletResponse response ) {
         String idStr = request.getParameter( "id" );
 
@@ -1377,7 +1377,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping({ "/showExpressionExperiment.html", "/" })
+    @RequestMapping({ "/showExpressionExperiment.html", "/", "/show" })
     public ModelAndView showExpressionExperiment( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch timer = new StopWatch();
@@ -1435,7 +1435,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping("/showExpressionExperimentSubSet.html")
+    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
     public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
