@@ -417,4 +417,45 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
         results.close();
     }
+
+    @Override
+    /** find private evidence id that the user can modifiable or own */
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups ) {
+
+        Set<Long> ids = new HashSet<Long>();
+
+        // owned by user
+        String sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += "where acl_sid.sid = '" + userName + "' ";
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        while ( results.next() ) {
+            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+            ids.add( geneId );
+        }
+
+        // shared to user
+        if ( !groups.isEmpty() ) {
+
+            sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+            sqlQuery += "join GROUP_AUTHORITY on acl_sid.sid = CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
+            sqlQuery += "join USER_GROUP on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
+            sqlQuery += "where acl_entry.mask = 2 ";
+            sqlQuery += addGroupsToQuery( "and", groups );
+
+            results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+            while ( results.next() ) {
+                Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+                ids.add( geneId );
+            }
+        }
+        results.close();
+        return ids;
+    }
 }

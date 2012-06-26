@@ -1478,7 +1478,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             simpleTreeValueObjects.add( simpleTreeValueObject );
 
             for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-            	convertToFlatTree( simpleTreeValueObjects, tree, simpleTreeValueObject.get_id() );
+                convertToFlatTree( simpleTreeValueObjects, tree, simpleTreeValueObject.get_id() );
             }
         }
     }
@@ -1517,7 +1517,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypeAssociationsFiltered;
     }
 
-    // find Homologue Evidence for a gene
+    /** find Homologue Evidence for a gene */
     private Collection<EvidenceValueObject> findHomologueEvidence( Long geneId, EvidenceFilter evidenceFilter ) {
 
         // Get the Gene object for finding homologues' evidence.
@@ -1545,6 +1545,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return homologueEvidenceValueObjects;
+    }
+
+    /** method to be tested and used soon by Frances*/
+    @SuppressWarnings("unused")
+    private Set<Long> findPrivateEvidenceId() {
+
+        Set<Long> privateEvidencesIds = new HashSet<Long>();
+
+        if ( SecurityServiceImpl.isUserLoggedIn() && !SecurityServiceImpl.isUserAdmin() ) {
+
+            String userName = this.userManager.getCurrentUsername();
+            Collection<String> groups = this.userManager.findAllGroups();
+
+            privateEvidencesIds.addAll( this.associationService.findPrivateEvidenceId( userName, groups ) );
+        }
+
+        return privateEvidencesIds;
     }
 
 }

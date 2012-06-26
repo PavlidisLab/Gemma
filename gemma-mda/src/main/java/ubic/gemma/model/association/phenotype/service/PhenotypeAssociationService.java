@@ -130,5 +130,8 @@ public interface PhenotypeAssociationService {
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri );
+    
+    /** find private evidence id that the user can modifiable or own */
+    public Set<Long> findPrivateEvidenceId(String userName, Collection<String> groups);
 
 }

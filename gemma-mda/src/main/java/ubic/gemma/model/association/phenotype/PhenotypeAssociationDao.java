@@ -61,5 +61,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all phenotypes associated with genes */
     public HashMap<String, HashSet<Integer>> findAllPhenotypesGenesAssociations( Taxon taxon );
+    
+
+    /** find private evidence id that the user can modifiable or own */
+    public Set<Long> findPrivateEvidenceId(String userName, Collection<String> groups);
 
 }

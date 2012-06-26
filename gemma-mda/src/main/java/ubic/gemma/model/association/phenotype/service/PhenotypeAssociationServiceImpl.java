@@ -182,4 +182,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri ) {
         return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri );
     }
+    
+    @Override
+    /** find private evidence id that the user can modifiable or own */
+    public Set<Long> findPrivateEvidenceId(String userName, Collection<String> groups){
+        return this.phenotypeAssociationDao.findPrivateEvidenceId( userName, groups );
+    }
 }
