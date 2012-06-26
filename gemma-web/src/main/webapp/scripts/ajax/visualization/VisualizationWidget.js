@@ -140,7 +140,7 @@ Gemma.prepareProfiles = function(data) {
 		
 		var orderedGeneLinksArr = [];
 		var orderedGeneNamesArr = [];
-		var qtip = 'Probe: ' + probe;
+		var qtip = 'Go to gene page (Probe: ' + probe+')';
 		if (genes !== undefined && genes.length > 0) {
 			var k, gene, link, geneName;
 
