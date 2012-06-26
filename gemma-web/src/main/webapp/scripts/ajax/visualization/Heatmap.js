@@ -351,7 +351,7 @@ var Heatmap = function() {
 							if (increment > 1) {
 								var colours = [colour];
 								// take the mode of adjacent columns.
-								for (var k = 1; k < increment && j < conditionLabels.length - 1; k++) {
+								for (var k = 1; k < increment && j + k < conditionLabels.length - 1; k++) {
 									
 									var factorValueArr = conditionLabels[j+k][factorCategory];
 									var value = factorValueArr[0];
