@@ -174,7 +174,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar" sourcepath="/M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.2/json-lib-2.2-jdk15.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.5.RELEASE/javadoc-api/"/>
