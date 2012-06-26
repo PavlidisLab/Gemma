@@ -505,6 +505,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				}				
 			}
 			gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
+			gene.metaPvalueCount = pValues.length;
 			gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;
 			
 			gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue (gene.metaPvalue);
@@ -541,7 +542,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					geneSymbol   : item.name,
 					geneId 		 : item.id,
 					geneFullName : item.fullName,
-					geneMetaPvalue : ( item.metaPvalue == 2.0 ) ? "NA" : item.metaPvalue
+					geneMetaPvalue : ( item.metaPvalue == 2.0 ) ? "NA" : item.metaPvalue,
+					metaPvalueCount : item.metaPvalueCount		
 			};
 		} else if (type === 'condition') {
 			var specificity = Gemma.Metaheatmap.Utils.formatPercent(item.numberDiffExpressedProbes, item.numberOfProbesOnArray, 2);
