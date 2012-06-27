@@ -430,8 +430,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				
 				evidenceId = data.evidenceId;
 				
-				// if we are editing evidence
-				if (evidenceId != null) {
+				// if we need to copy data
+				if (data.evidenceClassName != null) {
 					lastUpdated = data.lastUpdated;
 			
 					evidenceTypeComboBox.selectEvidenceType(data.evidenceClassName);

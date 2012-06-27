@@ -9,6 +9,7 @@ Ext.namespace('Gemma');
 // evidenceStoreProxy should be overridden if used outside of Gemma. 
 Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	evidenceStoreProxy: null,
+	allowCreateOnlyWhenGeneSpecified: true,
 	title: 'Evidence',
     autoScroll: true,
     stripeRows: true,
@@ -93,7 +94,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		};
 
     	var createPhenotypeAssociationButton = new Ext.Button({
-			disabled: (this.currentGene == null),
+			disabled: this.allowCreateOnlyWhenGeneSpecified ?
+				(this.currentGene == null) :
+				false,
 			handler: Gemma.isRunningOutsideOfGemma() ?
 				function() {
 					Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaTitle,
@@ -153,6 +156,53 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 		var getGeneLink = this.getGeneLink;
 		
+		var getFormWindowData = function(id) {
+			var record = this.getStore().getById(id);
+			var evidenceClassName = record.data.className; 
+		
+			var data = null;
+			
+			if (evidenceClassName === 'LiteratureEvidenceValueObject') {
+				data = {
+					pubMedId: record.data.citationValueObject.pubmedAccession
+				};
+			} else if (evidenceClassName === 'ExperimentalEvidenceValueObject') {
+				data = {
+					primaryPubMedId: record.data.primaryPublicationCitationValueObject != null ?
+										record.data.primaryPublicationCitationValueObject.pubmedAccession :
+										null,
+					// Assume we have at most one other PubMed Id.
+					secondaryPubMedId: record.data.relevantPublicationsCitationValueObjects != null &&
+								 	   record.data.relevantPublicationsCitationValueObjects.length > 0 ?
+											record.data.relevantPublicationsCitationValueObjects[0].pubmedAccession :
+											null,
+					experimentCharacteristics: record.data.experimentCharacteristics
+				}
+			}
+			
+			if (data != null) {
+				data.evidenceId = record.data.id;
+				data.gene = {
+					id: record.data.geneId,
+					ncbiId: record.data.geneNCBI,
+					officialSymbol: record.data.geneOfficialSymbol,
+					officialName: record.data.geneOfficialName,
+					taxonCommonName: record.data.taxonCommonName,
+					// As of 2012-06-27, experiment tag's value combo box depends on taxon id.
+					// Elodie and Nicolas said we did not have to set it. So, it is set to null.
+					taxonId: null  
+				};
+				data.phenotypes = record.data.phenotypes;
+				data.evidenceClassName = evidenceClassName;
+				data.isNegativeEvidence = record.data.isNegativeEvidence;
+				data.description = record.data.description;
+				data.evidenceCode = record.data.evidenceCode;
+				data.lastUpdated = record.data.lastUpdated;
+			}
+			
+			return data;
+		}.createDelegate(this);	
+	
 		var evidenceStore = new Ext.data.Store({
 			proxy: this.evidenceStoreProxy == null ?
 						new Ext.data.DWRProxy({
@@ -185,7 +235,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		 			// for LiteratureEvidenceValueObject
 		 			'citationValueObject',
 					// for showing homologues' evidence
-					'geneId', 'geneNCBI', 'geneOfficialSymbol', 'taxonCommonName', 'homologueEvidence',
+					'geneId', 'geneNCBI', 'geneOfficialSymbol', 'geneOfficialName', 'taxonCommonName', 'homologueEvidence',
 		            {
 						name: 'rowExpanderText',
 						convert: function(value, record) {
@@ -497,8 +547,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
 								record.data.evidenceSource == null) {
 			            		adminLinks += ' ' +
-	            					  generateLink('showEditWindow(' + record.data.id + ');', '/Gemma/images/icons/pencil.png', 'Edit evidence') + ' ' +
-									  generateLink('removeEvidence(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove evidence');
+									generateLink('showCreateWindow(' + record.data.id + ');', '/Gemma/images/icons/add.png', 'Clone evidence') + ' ' +			            		
+	            					generateLink('showEditWindow(' + record.data.id + ');', '/Gemma/images/icons/pencil.png', 'Edit evidence') + ' ' +
+									generateLink('removeEvidence(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove evidence');
 		            		}
 		            	}
 		            	
@@ -550,47 +601,30 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    		}
 		    	});
 			},
-			showEditWindow: function(id) {
-				// record to be edited
-				var record = this.getStore().getById(id);
-				var evidenceClassName = record.data.className; 
+			showCreateWindow: function(id) {			
+				var data = getFormWindowData(id);
 			
-				var data = null;
-				
-				if (evidenceClassName === 'LiteratureEvidenceValueObject') {
-					data = {
-						pubMedId: record.data.citationValueObject.pubmedAccession
-					};
-				} else if (evidenceClassName === 'ExperimentalEvidenceValueObject') {
-					data = {
-						primaryPubMedId: record.data.primaryPublicationCitationValueObject != null ?
-											record.data.primaryPublicationCitationValueObject.pubmedAccession :
-											null,
-						// Assume we have at most one other PubMed Id.
-						secondaryPubMedId: record.data.relevantPublicationsCitationValueObjects != null &&
-									 	   record.data.relevantPublicationsCitationValueObjects.length > 0 ?
-												record.data.relevantPublicationsCitationValueObjects[0].pubmedAccession :
-												null,
-						experimentCharacteristics: record.data.experimentCharacteristics
-					}
+				if (data != null) {
+					// Because we are creating new evidence, they should be null.
+					data.evidenceId = null;
+					data.lastUpdated = null;
+					
+					var createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+			
+					createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE, data);
 				}
-				
+			},			
+			showEditWindow: function(id) {			
+				var data = getFormWindowData(id);
+			
 				if (data != null) {
 					var editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
 					this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-
-					data.evidenceId = record.data.id;
-					data.gene = this.currentGene;
-					data.phenotypes = record.data.phenotypes;
-					data.evidenceClassName = evidenceClassName;
-					data.isNegativeEvidence = record.data.isNegativeEvidence;
-					data.description = record.data.description;
-					data.evidenceCode = record.data.evidenceCode;
-					data.lastUpdated = record.data.lastUpdated;
-									
+			
 					editPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT, data);
 				}
-			},
+			},			
 			removeEvidence: function(id) {
 				Ext.MessageBox.confirm('Confirm',
 					'Are you sure you want to remove this evidence?',
@@ -620,7 +654,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					this);
 			}			
 		});
-		this.superclass().initComponent.call(this);
+
+		Gemma.PhenotypeEvidenceGridPanel.superclass.initComponent.call(this);		
 		
 		if (!this.deferLoadToRender) {
 			if (this.currentGene != null && this.currentGene.id != '') {
