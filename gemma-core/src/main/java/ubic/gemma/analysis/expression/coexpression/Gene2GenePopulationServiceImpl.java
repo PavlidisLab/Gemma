@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -48,6 +50,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.Analysis;
@@ -68,11 +71,13 @@ import ubic.gemma.model.association.coexpression.RatGeneCoExpression;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
@@ -156,6 +161,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
@@ -191,8 +198,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * java.util.Collection, int, java.lang.String, boolean)
      */
     @Override
-    public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            String analysisName, boolean useDB ) {
+    public void analyze( Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes,
+            int stringency, String analysisName, boolean useDB ) {
 
         log.info( "Initializing gene link analysis ... " );
 
@@ -211,7 +218,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         GeneCoexpressionAnalysis analysis = null;
         Collection<GeneCoexpressionAnalysis> oldAnalyses = findExistingAnalysis( taxon );
         if ( useDB ) {
-
             analysis = intializeNewAnalysis( expressionExperiments, taxon, toUseGenes, analysisName, stringency );
             assert analysis != null;
         }
@@ -220,7 +226,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         if ( useDB ) {
             // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
-            // definitely have a problem. Ideally there would be a transaction here...
+            // definitely have a problem. Ideally there would be a transaction here...but it would be far too large.
             disableOldAnalyses( oldAnalyses );
         }
         /*
@@ -234,12 +240,80 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.analysis.expression.coexpression.Gene2GenePopulationService#analyze(ubic.gemma.model.genome.Taxon,
+     * java.util.Collection, int, java.lang.String, boolean)
+     */
+    @Override
+    public void analyze( Taxon taxon, Collection<Gene> toUseGenes, int toUseStringency, String analysisName,
+            boolean useDB ) {
+        Collection<ExpressionExperiment> findByTaxon = expressionExperimentService.findByTaxon( taxon );
+        final Collection<Long> untroubled = expressionExperimentService
+                .getUntroubled( EntityUtils.getIds( findByTaxon ) );
+        CollectionUtils.filter( untroubled, new Predicate() {
+            @Override
+            public boolean evaluate( Object object ) {
+                boolean ok = untroubled.contains( ( ( ExpressionExperiment ) object ).getId() );
+                return ok;
+            }
+        } );
+        if ( findByTaxon.size() != untroubled.size() ) {
+            log.info( "Removed " + ( findByTaxon.size() - untroubled.size() )
+                    + " experiments with 'trouble' flags, leaving " + untroubled.size() );
+        }
+
+        this.analyze( expressionExperimentService.loadMultiple( untroubled ), toUseGenes, toUseStringency,
+                analysisName, useDB );
+    }
+
+    /**
+     * @param expressionExperiments
+     * @param taxon
+     * @param toUseGenes
+     * @param analysisName
+     * @param stringency
+     * @return
+     */
+    @Override
+    public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<ExpressionExperiment> expressionExperiments,
+            Taxon taxon, Collection<Gene> toUseGenes, String analysisName, int stringency ) {
+        GeneCoexpressionAnalysisImpl analysis = ( GeneCoexpressionAnalysisImpl ) GeneCoexpressionAnalysis.Factory
+                .newInstance();
+
+        analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
+                + expressionExperiments.size() + " expression experiments; stringency=" + stringency );
+
+        Protocol protocol = createProtocol( expressionExperiments, toUseGenes );
+
+        analysis.setTaxon( taxon );
+        analysis.setStringency( stringency );
+        analysis.setName( analysisName );
+        analysis.setDescription( "Coexpression analysis of " + expressionExperiments.size() + " EEs from "
+                + taxon.getCommonName() );
+        analysis.setProtocol( protocol );
+        analysis.setEnabled( false );
+
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.updateAutomaticallyGeneratedExperimentSet(
+                expressionExperiments, taxon );
+
+        analysis.setExpressionExperimentSetAnalyzed( eeSet );
+
+        analysis = ( GeneCoexpressionAnalysisImpl ) persisterHelper.persist( analysis );
+
+        securityService.makePrivate( analysis );
+        log.info( "Done setting up the analysis entity" );
+        return analysis;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.analysis.expression.coexpression.Gene2GenePopulationService#nodeDegreeAnalysis(java.util.Collection,
      * java.util.Collection, boolean)
      */
     @Override
-    public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
-            boolean useDB ) {
+    public void nodeDegreeAnalysis( Collection<ExpressionExperiment> expressionExperiments,
+            Collection<Gene> toUseGenes, boolean useDB ) {
         allGeneNodeDegrees.clear();
 
         GeneCoexpressionAnalysis toUseAnalysis = getActiveAnalysis( toUseGenes );
@@ -352,7 +426,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return true if node degree was computed.
      * @see completeNodeDegreeComputations(boolean) for the final computation.
      */
-    private boolean computeNodeDegree( Gene queryGene, int usedLinks, Collection<BioAssaySet> expressionExperiments ) {
+    private boolean computeNodeDegree( Gene queryGene, int usedLinks,
+            Collection<? extends BioAssaySet> expressionExperiments ) {
 
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
@@ -480,7 +555,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param toUseGenes
      * @return
      */
-    private Protocol createProtocol( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes ) {
+    private Protocol createProtocol( Collection<? extends BioAssaySet> expressionExperiments,
+            Collection<Gene> toUseGenes ) {
         log.info( "Creating protocol object ... " );
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Stored Gene2GeneCoexpressions" );
@@ -513,8 +589,9 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param analysis if null, no results will be saved to the database, and will be printed to stdout instead.
      * @return genes that were processed.
      */
-    private Collection<Gene> doAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
-            int stringency, String analysisName, Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis ) {
+    private Collection<Gene> doAnalysis( Collection<? extends BioAssaySet> expressionExperiments,
+            Collection<Gene> toUseGenes, int stringency, String analysisName, Map<Long, Gene> genesToAnalyzeMap,
+            GeneCoexpressionAnalysis analysis ) {
         int totalLinks = 0;
         Collection<Gene> processedGenes = new HashSet<Gene>();
         Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzerImpl.getOrderingMap( expressionExperiments );
@@ -622,41 +699,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     }
 
     /**
-     * Check for an old expression experiment set that has the same name as the one we want to use. If it exists, check
-     * if it contains exactly the experiments we want to use. If it does, return it. Otherwise rename the old one and
-     * return null.
-     * 
-     * @param analysisName
-     * @param expressionExperiments
-     * @return expressionExperimentSet if a usable old one exists.
-     */
-    private ExpressionExperimentSet findOrFlagOldEESets( String analysisName,
-            Collection<BioAssaySet> expressionExperiments ) {
-        Collection<ExpressionExperimentSet> oldEESets = expressionExperimentSetService.findByName( analysisName );
-
-        if ( oldEESets.size() > 0 ) {
-            if ( oldEESets.size() > 1 ) {
-                throw new IllegalStateException( "There are multiple analyses existing with name=" + analysisName );
-            }
-            ExpressionExperimentSet oldSet = oldEESets.iterator().next();
-            expressionExperimentSetService.thaw( oldSet );
-            if ( oldSet.getExperiments().containsAll( expressionExperiments )
-                    && oldSet.getExperiments().size() == expressionExperiments.size() ) {
-                log.info( "Reusing an old EE set" );
-                return oldSet;
-            }
-
-            log.info( "Flagging old EEset '" + oldSet.getName() + "'as 'old'" );
-            oldSet.setName( oldSet.getName() + " (old)" );
-            expressionExperimentSetService.update( oldSet );
-            return null;
-
-        }
-        log.info( "New EESet will be created" );
-        return null;
-    }
-
-    /**
      * @param co
      * @return
      */
@@ -725,51 +767,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         else
             g2gCoexpression = OtherGeneCoExpression.Factory.newInstance();
         return g2gCoexpression;
-    }
-
-    /**
-     * @param expressionExperiments
-     * @param taxon
-     * @param toUseGenes
-     * @param analysisName
-     * @param stringency
-     * @return
-     */
-    @Override
-    public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
-            Collection<Gene> toUseGenes, String analysisName, int stringency ) {
-        GeneCoexpressionAnalysisImpl analysis = ( GeneCoexpressionAnalysisImpl ) GeneCoexpressionAnalysis.Factory
-                .newInstance();
-
-        analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
-                + expressionExperiments.size() + " expression experiments; stringency=" + stringency );
-
-        Protocol protocol = createProtocol( expressionExperiments, toUseGenes );
-
-        analysis.setTaxon( taxon );
-        analysis.setStringency( stringency );
-        analysis.setName( analysisName );
-        analysis.setDescription( "Coexpression analysis of " + expressionExperiments.size() + " EEs from "
-                + taxon.getCommonName() );
-        analysis.setProtocol( protocol );
-        analysis.setEnabled( false );
-
-        ExpressionExperimentSet eeSet = findOrFlagOldEESets( analysisName, expressionExperiments );
-
-        /*
-         * If a set matches exactly, we just reuse it. Otherwise we create a new one.
-         */
-        if ( eeSet == null ) {
-            eeSet = expressionExperimentSetService.initAutomaticallyGeneratedExperimentSet( expressionExperiments, taxon, analysisName );
-        }
-
-        analysis.setExpressionExperimentSetAnalyzed( eeSet );
-
-        analysis = ( GeneCoexpressionAnalysisImpl ) persisterHelper.persist( analysis );
-
-        securityService.makePrivate( analysis );
-        log.info( "Done setting up the analysis entity" );
-        return analysis;
     }
 
     /**

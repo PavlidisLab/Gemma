@@ -90,20 +90,19 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         eeMouse = this.getTestPersistentExpressionExperiment( taxMouse );
 
         // Make experiment set
-        Collection<BioAssaySet> ees = new HashSet<BioAssaySet>();
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee1 );
         ees.add( ee2 );
 
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setName( "CreateTest" );
         eeSet.setDescription( "CreateDesc" );
-        eeSet.setExperiments( ees );
+        eeSet.getExperiments().addAll( ees );
         eeSet.setTaxon( tax1 );
 
         eeSet = expressionExperimentSetService.create( eeSet );
 
-        eeSetAutoGen = expressionExperimentSetService
-                .initAutomaticallyGeneratedExperimentSet( ees, tax1, "autoGenTest" );
+        eeSetAutoGen = expressionExperimentSetService.initAutomaticallyGeneratedExperimentSet( ees, tax1 );
         eeSetAutoGen = expressionExperimentSetService.create( eeSetAutoGen );
 
     }

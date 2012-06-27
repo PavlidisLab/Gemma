@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -32,8 +33,8 @@ public interface Gene2GenePopulationService {
      * @param toUseGenes
      * @param useDB
      */
-    public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
-            boolean useDB );
+    public void nodeDegreeAnalysis( Collection<ExpressionExperiment> expressionExperiments,
+            Collection<Gene> toUseGenes, boolean useDB );
 
     /**
      * @param expressionExperiments
@@ -42,8 +43,8 @@ public interface Gene2GenePopulationService {
      * @param analysisName
      * @param useDB
      */
-    public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            String analysisName, boolean useDB );
+    public void analyze( Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes,
+            int stringency, String analysisName, boolean useDB );
 
     /**
      * @param expressionExperiments
@@ -53,7 +54,17 @@ public interface Gene2GenePopulationService {
      * @param stringency
      * @return
      */
-    public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
-            Collection<Gene> toUseGenes, String analysisName, int stringency );
+    public GeneCoexpressionAnalysis intializeNewAnalysis( Collection<ExpressionExperiment> expressionExperiments,
+            Taxon taxon, Collection<Gene> toUseGenes, String analysisName, int stringency );
+
+    /**
+     * @param taxon
+     * @param toUseGenes
+     * @param toUseStringency
+     * @param analysisName
+     * @param useDB
+     */
+    public void analyze( Taxon taxon, Collection<Gene> toUseGenes, int toUseStringency, String analysisName,
+            boolean useDB );
 
 }

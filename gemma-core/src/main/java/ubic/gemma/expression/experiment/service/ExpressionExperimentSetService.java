@@ -37,46 +37,41 @@ import ubic.gemma.model.genome.Taxon;
  */
 public interface ExpressionExperimentSetService {
 
-
     public static String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
-    
+
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * security at DAO level
      */
-    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+    public Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
     /**
      * Get analyses that use this set. Note that if this collection is not empty, modification of the
-     * expressionexperimentset should be disallowed.
-     * 
-     * Security at DAO level.
-     * 
+     * expressionexperimentset should be disallowed. Security at DAO level.
      */
-    public java.util.Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
+    public Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperimentSet load( java.lang.Long id );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperimentSet> load( Collection<Long> ids );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSet> load( Collection<Long> ids );
 
     /**
      * Get the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set
-     * is not (due to security filters). Use this insead of expressionExperimentSet.getExperiments.
-     * 
-     * Security at DAO level.
+     * is not (due to security filters). Use this insead of expressionExperimentSet.getExperiments. Security at DAO
+     * level.
      * 
      * @param id
      * @return
@@ -86,19 +81,17 @@ public interface ExpressionExperimentSetService {
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSet> loadAll();
 
     /**
-     * @return ExpressionExperimentSets that have more than 1 experiment in them.
-     * 
-     * Security at DAO level.
-     * 
+     * @return ExpressionExperimentSets that have more than 1 experiment in them. Security at DAO level.
      */
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
      * Security at DAO level.
+     * 
      * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
@@ -114,7 +107,7 @@ public interface ExpressionExperimentSetService {
     /**
      * @return sets belonging to current user -- only if they have more than one experiment!
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<ExpressionExperimentSet> loadMySets();
 
     /**
@@ -122,24 +115,25 @@ public interface ExpressionExperimentSetService {
      * Load all ExpressionExperimentSets that belong to the given user.
      * </p>
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSet> loadUserSets(
             ubic.gemma.model.common.auditAndSecurity.User user );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<ExpressionExperimentSet> loadMySharedSets();
 
     /**
      * Security handled at DAO level.
+     * 
      * @param expressionExperimentSet
      */
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
@@ -166,7 +160,7 @@ public interface ExpressionExperimentSetService {
      */
     public Collection<ExpressionExperimentSet> validateForFrontEnd( Collection<ExpressionExperimentSet> eeSets );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
     /**
@@ -176,7 +170,7 @@ public interface ExpressionExperimentSetService {
      * @return null if id doesn't match an experiment set
      */
     public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id );
-    
+
     /**
      * Get a value objects for the ids
      * 
@@ -249,10 +243,14 @@ public interface ExpressionExperimentSetService {
      */
     public Collection<Long> findIds( BioAssaySet bioAssaySet );
 
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds( Collection<Long> ids );
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds(
+            Collection<Long> ids );
 
     public boolean isAutomaticallyGenerated( String experimentSetDescription );
 
-    public ExpressionExperimentSet initAutomaticallyGeneratedExperimentSet( Collection<BioAssaySet> expressionExperiments,
-            Taxon taxon, String setName );
+    public ExpressionExperimentSet initAutomaticallyGeneratedExperimentSet(
+            Collection<ExpressionExperiment> expressionExperiments, Taxon taxon );
+
+    public ExpressionExperimentSet updateAutomaticallyGeneratedExperimentSet(
+            Collection<ExpressionExperiment> expressionExperiments, Taxon taxon );
 }

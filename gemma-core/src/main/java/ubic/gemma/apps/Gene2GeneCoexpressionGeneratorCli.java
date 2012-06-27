@@ -21,11 +21,13 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.expression.coexpression.Gene2GenePopulationService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -60,6 +62,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     private boolean useDB = true;
     private boolean nodeDegreeOnly = false;
+    private boolean updateExperimentSetsOnly = false;
 
     @SuppressWarnings("static-access")
     @Override
@@ -81,12 +84,15 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Option nodeDegreeOnlyOption = OptionBuilder.withDescription( "Only populate the node degree information" )
                 .create( "nodes" );
 
+        Option updateExperimentSetsOnlyOption = OptionBuilder.withDescription(
+                "Only populate the 'master' Experiment Sets" ).create( "sets" );
+
         addOption( noDBOption );
         addOption( geneFileOption );
         addOption( stringencyOption );
 
         addOption( nodeDegreeOnlyOption );
-
+        addOption( updateExperimentSetsOnlyOption );
     }
 
     /*
@@ -115,14 +121,28 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             analysisName = "All " + taxon.getCommonName();
         }
 
+        Collection<ExpressionExperiment> eesToUse = new HashSet<ExpressionExperiment>();
+        for ( BioAssaySet ba : expressionExperiments ) {
+            if ( ba instanceof ExpressionExperiment ) {
+                eesToUse.add( ( ExpressionExperiment ) ba );
+            }
+        }
+
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
         ( this.getBean( Probe2ProbeCoexpressionCache.class ) ).setEnabled( false );
 
         if ( this.nodeDegreeOnly ) {
-            geneVoteAnalyzer.nodeDegreeAnalysis( expressionExperiments, toUseGenes, useDB );
+            log.info( "CLI configured to only update 'node degrees'" );
+            geneVoteAnalyzer.nodeDegreeAnalysis( eesToUse, toUseGenes, useDB );
+        } else if ( this.updateExperimentSetsOnly ) {
+            log.info( "CLI configured to only update the 'master' Experiment Set" );
+            experimentSetService.initAutomaticallyGeneratedExperimentSet( eesToUse, taxon );
+        } else if ( this.taxon != null ) {
+            toUseGenes = super.geneService.loadKnownGenesWithProducts( taxon );
+            geneVoteAnalyzer.analyze( taxon, toUseGenes, toUseStringency, analysisName, useDB );
         } else {
-
-            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, analysisName, useDB );
+            // analyze just the specific ones asked for.
+            geneVoteAnalyzer.analyze( eesToUse, toUseGenes, toUseStringency, analysisName, useDB );
         }
         return null;
     }
@@ -140,8 +160,11 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             this.useDB = false;
         }
 
+        // arbitrary precedence, no big deal.
         if ( this.hasOption( "nodes" ) ) {
             this.nodeDegreeOnly = true;
+        } else if ( this.hasOption( "sets" ) ) {
+            this.updateExperimentSetsOnly = true;
         }
 
         if ( this.hasOption( 'g' ) ) {
@@ -189,7 +212,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         return results;
     }
 
+    ExpressionExperimentSetService experimentSetService;
+
     private void initSpringBeans() {
+        experimentSetService = this.getBean( ExpressionExperimentSetService.class );
         geneVoteAnalyzer = this.getBean( Gene2GenePopulationService.class );
 
     }

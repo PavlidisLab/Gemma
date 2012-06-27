@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +48,9 @@ import ubic.gemma.security.SecurityService;
  * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService
  */
 @Service
-public class ExpressionExperimentSetServiceImpl extends
-        ubic.gemma.expression.experiment.service.ExpressionExperimentSetServiceBase {
+public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetServiceBase {
+
+    private static Logger log = LoggerFactory.getLogger( ExpressionExperimentSetServiceImpl.class );
 
     @Autowired
     private SecurityService securityService;
@@ -529,9 +532,9 @@ public class ExpressionExperimentSetServiceImpl extends
     }
 
     /**
-     * Instantiate an experiment set with description = "Automatically generated for ## EEs.". Mostly for use in
-     * Gene2GenePopulationServiceImpl.intializeNewAnalysis(Collection<BioAssaySet>, Taxon, Collection<Gene>, String,
-     * int). By convention, these sets should not be modifiable.
+     * Instantiate non-persistent experiment set with description = "Automatically generated for ## EEs.". Mostly for
+     * use in Gene2GenePopulationServiceImpl.intializeNewAnalysis(Collection<BioAssaySet>, Taxon, Collection<Gene>,
+     * String, int). By convention, these sets should not be modifiable.
      * 
      * @see ubic.gemma.analysis.expression.coexpression.Gene2GenePopulationServiceImpl.intializeNewAnalysis(Collection<
      *      BioAssaySet>, Taxon, Collection<Gene>, String, int)
@@ -542,16 +545,78 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     @Override
     public ExpressionExperimentSet initAutomaticallyGeneratedExperimentSet(
-            Collection<BioAssaySet> expressionExperiments, Taxon taxon, String setName ) {
+            Collection<ExpressionExperiment> expressionExperiments, Taxon taxon ) {
         ExpressionExperimentSet eeSet;
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( taxon );
-        eeSet.setName( setName );
+        eeSet.setName( getMasterSetName( taxon ) );
         eeSet.setDescription( String.format(
                 ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION,
                 String.valueOf( expressionExperiments.size() ) ) );
-        eeSet.setExperiments( expressionExperiments );
+        eeSet.getExperiments().addAll( expressionExperiments );
         return eeSet;
+    }
+
+    /**
+     * @param taxon
+     * @return
+     */
+    private String getMasterSetName( Taxon taxon ) {
+        return "Master set for " + taxon.getCommonName();
+    }
+
+    /**
+     * Check for an old expression experiment set that has the same name as the one we want to use. If it exists, check
+     * if it contains exactly the experiments we want to use. If it does, return it. Otherwise rename the old one and
+     * return null.
+     * <p>
+     * FIXME this needs to be refactored so we aren't passing the experiment in. I also don't like identifying it by
+     * name.
+     * 
+     * @param analysisName
+     * @param expressionExperiments
+     * @return expressionExperimentSet if a usable old one exists.
+     */
+    @Override
+    public ExpressionExperimentSet updateAutomaticallyGeneratedExperimentSet(
+            Collection<ExpressionExperiment> expressionExperiments, Taxon taxon ) {
+        Collection<ExpressionExperimentSet> oldEESets = findByName( getMasterSetName( taxon ) );
+        ExpressionExperimentSet existing = null;
+
+        if ( oldEESets.size() > 0 ) {
+
+            for ( ExpressionExperimentSet oldSet : oldEESets ) {
+                thaw( oldSet );
+
+                if ( !oldSet.getTaxon().equals( taxon ) ) {
+                    log.warn( "There is a EEset the name '" + "Master set for " + taxon.getCommonName()
+                            + "' but taxon is " + oldSet.getTaxon() + ", not expected " + taxon );
+                    // skip it. Though this could be a data error
+                    continue;
+                } else if ( oldSet.getExperiments().containsAll( expressionExperiments )
+                        && oldSet.getExperiments().size() == expressionExperiments.size() ) {
+                    log.info( "Reusing an old EE set that has the same experiments as those requested" );
+                    existing = oldSet;
+                    break;
+                } else {
+                    /*
+                     * Really we should delete it.
+                     */
+                }
+
+                // This means the old set is to be retired. TODO: delete older old sets so we don't have
+                if ( !oldSet.getName().contains( "(old" ) ) {
+                    log.info( "Flagging old EEset '" + oldSet.getName() + "'as 'old'" );
+                    oldSet.setName( oldSet.getName() + " (old)" );
+                    update( oldSet );
+                }
+            }
+        }
+
+        if ( existing != null ) return existing;
+
+        // If we get here, it means there isn't one for this taxon, already.
+        return initAutomaticallyGeneratedExperimentSet( expressionExperiments, taxon );
     }
 
     /**
