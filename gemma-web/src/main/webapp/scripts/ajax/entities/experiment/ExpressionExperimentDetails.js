@@ -520,7 +520,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 				pubMedDisplay.update({
 					pubAvailable: (data.pubmedId) ? 'true' : 'false',
 					primaryCitation: (data.primaryCitation)? data.primaryCitation.citation : '',
-					pubmedURL: (data.primaryCitation)? data.primaryCitation.pubmedURL : '',
+					pubmedURL: (data.primaryCitation)? data.primaryCitation.pubmedURL : ''
 				});
                 
                 currentShortName = data.shortName;
