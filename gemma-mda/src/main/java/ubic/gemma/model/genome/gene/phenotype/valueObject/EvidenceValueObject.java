@@ -333,8 +333,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
             return false;
         }
 
+        Set<String> otherPhenotypesValueUri = other.getPhenotypesValueUri();
+
         for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
-            if ( !other.phenotypes.contains( characteristicValueObject ) ) {
+            if ( !otherPhenotypesValueUri.contains( characteristicValueObject.getValueUri() ) ) {
                 return false;
             }
         }
