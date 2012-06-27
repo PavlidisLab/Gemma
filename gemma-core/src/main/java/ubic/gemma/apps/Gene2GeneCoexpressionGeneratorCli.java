@@ -135,13 +135,19 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             log.info( "CLI configured to only update 'node degrees'" );
             geneVoteAnalyzer.nodeDegreeAnalysis( eesToUse, toUseGenes, useDB );
         } else if ( this.updateExperimentSetsOnly ) {
-            log.info( "CLI configured to only update the 'master' Experiment Set" );
-            experimentSetService.initAutomaticallyGeneratedExperimentSet( eesToUse, taxon );
+            throw new UnsupportedOperationException( "Disabled until we figure out a good way to do this" );
+            // log.info( "CLI configured to only update the 'master' Experiment Set" );
+            // /*
+            // * OK, this might not be a good idea.
+            // *
+            // * The problem is we can't (easily) separate the set that is associated with the
+            // */
+            // experimentSetService.initAutomaticallyGeneratedExperimentSet( eesToUse, taxon );
         } else if ( this.taxon != null ) {
             toUseGenes = super.geneService.loadKnownGenesWithProducts( taxon );
             geneVoteAnalyzer.analyze( taxon, toUseGenes, toUseStringency, analysisName, useDB );
         } else {
-            // analyze just the specific ones asked for.
+            // analyze just the specific ones asked for. Not usual.
             geneVoteAnalyzer.analyze( eesToUse, toUseGenes, toUseStringency, analysisName, useDB );
         }
         return null;

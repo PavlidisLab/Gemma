@@ -17,7 +17,6 @@ package ubic.gemma.analysis.expression.coexpression;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
