@@ -64,7 +64,7 @@ public class PhenotypeController extends BaseController {
             }
         } else {
             // If type of throwable is not known, log it.
-            this.log.error( throwable.getMessage() );
+            this.log.error( throwable.getMessage(), throwable );
         }
 
         return validateEvidenceValueObject;
