@@ -31,6 +31,11 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -50,12 +55,6 @@ import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.common.description.PublicationType;
 import ubic.gemma.model.expression.biomaterial.Compound;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 /**
  * Simple class to parse XML in the format defined by {@link http
@@ -654,13 +653,6 @@ public class PubMedXMLParser {
 
             }
 
-            // OntologyTerm term = MeshService.find( d );
-            // if ( term == null ) {
-            // log.warn( "No MESH term found for: " + d );
-            // continue;
-            // }
-            // VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
-
             bibRef.getMeshTerms().add( vc );
         }
     }
@@ -709,7 +701,7 @@ public class PubMedXMLParser {
                     if ( reftype == null ) continue;
 
                     String reftypeName = ( ( Attr ) reftype ).getValue();
-                    log.info( reftypeName );
+                    log.debug( reftypeName );
                     if ( reftypeName.equals( "RetractionIn" ) ) {
 
                         try {
