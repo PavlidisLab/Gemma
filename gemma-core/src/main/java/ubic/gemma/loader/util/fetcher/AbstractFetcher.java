@@ -41,6 +41,10 @@ public abstract class AbstractFetcher implements Fetcher {
 
     private static final int NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY = 5;
     protected static final int INFO_UPDATE_INTERVAL = 5000;
+
+    // how long we wait in ms for a download that has stalled.
+    private static final long STALLED_BAIL_TIME_LIMIT = 60 * 1000L;
+
     protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     /**
      * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
@@ -248,6 +252,8 @@ public abstract class AbstractFetcher implements Fetcher {
      */
     protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
         int iters = 0;
+        long previousSize = 0;
+        StopWatch idleTimer = new StopWatch();
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
@@ -263,9 +269,10 @@ public abstract class AbstractFetcher implements Fetcher {
                     return false;
                 }
 
-                log.error( "Cancellation failed..." );
+                log.error( "Cancellation of actual download might not have happend? Task says it was not cancelled: "
+                        + future );
 
-                throw new RuntimeException( "Cancellation failed." );
+                return false;
 
             }
 
@@ -283,11 +290,27 @@ public abstract class AbstractFetcher implements Fetcher {
                     log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read ("
                             + String.format( "%.1f", percent ) + "%)" ) );
                 }
+
+                if ( previousSize == outputFile.length() ) {
+                    /*
+                     * Possibly consider bailing after a while.
+                     */
+                    if ( idleTimer.getTime() > STALLED_BAIL_TIME_LIMIT ) {
+                        log.warn( "Download does not seem to be happening, bailing" );
+                        return false;
+                    }
+                    idleTimer.start(); // FIXME
+                } else {
+                    idleTimer.stop(); // NOT TESTED
+                    idleTimer.reset();
+                }
             }
 
             if ( outputFile.length() >= expectedSize ) {
                 // no special action, it will finish soon enough.
             }
+
+            previousSize = outputFile.length();
 
             iters++;
         }
