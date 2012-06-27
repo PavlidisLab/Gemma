@@ -96,6 +96,21 @@ Gemma.Metaheatmap.Config.contrastsColourRange = new org.systemsbiology.visualiza
 		});
 
 
+Gemma.Metaheatmap.Config.FoldChangeColorScale = {
+	     "5"  : "rgb(142, 1, 82)",
+	     "4" : "rgb(197, 27, 125)",
+	     "3" : "rgb(222, 119, 174)",
+	     "2" : "rgb(241, 182, 218)",
+	     "1" : "rgb(253, 224, 239)",
+	     "0" : "rgb(247, 247, 247)",
+	    "-1" : "rgb(230, 245, 208)",
+	    "-2" : "rgb(184, 225, 134)",
+	    "-3" : "rgb(127, 188, 65)",
+	    "-4" : "rgb(77, 146, 33)",
+	    "-5" : "rgb(39, 100, 25)"
+};
+
+
 Gemma.Metaheatmap.Config.ColourLegendSettings = {
 	discreteColorRangeObject  : Gemma.Metaheatmap.Config.basicColourRange,
 	discreteColorRangeObject2 : Gemma.Metaheatmap.Config.contrastsColourRange,
