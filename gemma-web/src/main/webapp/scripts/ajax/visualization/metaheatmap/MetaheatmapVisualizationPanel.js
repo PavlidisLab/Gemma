@@ -25,7 +25,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		
 		Ext.apply (this, {
 			isLegendShown: false,
-			//autoScroll: false,
 			geneTree: this.geneTree,
 			conditionTree: this.conditionTree,
 			cells: this.cells,
@@ -37,7 +36,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				name: 'fixedWidthCol',
 				ref: 'fixedWidthCol',
 				flex: 0,
-				//width: 135,
 				layout: 'vbox',
 				layoutConfig: {
 					align: 'stretch',
@@ -51,8 +49,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					ref: 'pnlControlAndLabels',
 					layout: 'border',
 					autoScroll : true,
-					// html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
-					//   '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
 					border : false,
 					items: [
 					        {
@@ -113,7 +109,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					        	        	if (toggle) {
 					        	        		this.hoverWindow.isDocked = true;
 					        	        		this.hoverWindow.setTitle('Docked popup: click & drag to move');
-					        	        		//	this.hoverWindow.setPagePosition ( 800, 100);
 					        	        		btn.setText("Undock popup");
 					        	        	} else {
 					        	        		this.hoverWindow.isDocked = false;
@@ -466,7 +461,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					} else {
 						if (cell.correctedPValue !== null) {
 							numProbesInSet += cell.numberOfProbes;
-							if (cell.correctedPValue < 0.5) { //TODO: Centralize all threshold values used in Gemma.
+							if (cell.correctedPValue < Gemma.Constants.DifferentialExpressionQvalueThreshold) {
 								numOverThresholdInSet += cell.numberOfProbesDiffExpressed;
 							}
 						}

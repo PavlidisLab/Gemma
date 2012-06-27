@@ -1,7 +1,4 @@
 Ext.namespace('Gemma.Metaheatmap');
-Ext.namespace('Gemma.Constants');
-
-Gemma.Constants.DifferentialExpressionQvalueThreshold = 0.05;
 
 /**
  * TODO document me

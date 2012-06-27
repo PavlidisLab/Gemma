@@ -1,5 +1,10 @@
 Ext.namespace('Gemma.Metaheatmap');
 
+Ext.namespace('Gemma.Constants');
+
+Gemma.Constants.DifferentialExpressionQvalueThreshold = 0.05;
+
+
 Gemma.Metaheatmap.Config = {};
 
 // Sizes
