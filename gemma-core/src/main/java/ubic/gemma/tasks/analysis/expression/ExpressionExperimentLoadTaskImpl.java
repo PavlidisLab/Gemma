@@ -104,22 +104,25 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
                     .fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, aggressiveQtRemoval, splitByPlatform,
                             allowSuperSeriesLoad, allowSubSeriesLoad );
 
+            if ( datasets == null || datasets.isEmpty() ) {
+                // can happen with cancellation.
+                throw new IllegalStateException( "Failed to load anything" );
+            }
+
             log.info( "Loading done, starting postprocessing" );
             postProcess( datasets );
 
-            ArrayList<ExpressionExperiment> minimalDatasets = null;
-            if ( datasets != null ) {
-                /* Don't send the full experiments to space. Instead, create a minimal result. */
-                minimalDatasets = new ArrayList<ExpressionExperiment>();
-                for ( ExpressionExperiment ee : datasets ) {
-                    ExpressionExperiment minimalDataset = ExpressionExperiment.Factory.newInstance();
-                    minimalDataset.setId( ee.getId() );
-                    minimalDataset.setName( ee.getName() );
-                    minimalDataset.setDescription( ee.getDescription() );
+            /* Don't send the full experiments to space. Instead, create a minimal result. */
+            ArrayList<ExpressionExperiment> minimalDatasets = new ArrayList<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : datasets ) {
+                ExpressionExperiment minimalDataset = ExpressionExperiment.Factory.newInstance();
+                minimalDataset.setId( ee.getId() );
+                minimalDataset.setName( ee.getName() );
+                minimalDataset.setDescription( ee.getDescription() );
 
-                    minimalDatasets.add( minimalDataset );
-                }
+                minimalDatasets.add( minimalDataset );
             }
+
             result = new TaskResult( command, minimalDatasets );
         }
 
