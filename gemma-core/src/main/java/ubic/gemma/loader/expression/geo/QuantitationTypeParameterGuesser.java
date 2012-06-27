@@ -144,7 +144,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma" );
+        scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
@@ -423,7 +423,7 @@ public class QuantitationTypeParameterGuesser {
                 }
             }
             for ( String patt : scaleDescPatterns.get( type ) ) {
-                if ( description.matches( patt ) ) {
+                if ( description.toLowerCase().matches( patt ) ) {
                     log.debug( "!!!!!description=" + description + " matched " + patt );
                     return type;
                 }
