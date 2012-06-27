@@ -847,11 +847,17 @@
 			<dwr:exclude method="technologyType" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommandValueObject">
-			
-		</dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommandValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
+			<dwr:exclude method="securityContext" />
+		</dwr:convert>
+		
+		<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand">
+			<dwr:exclude method="securityContext" />
+		</dwr:convert>
+		
+			<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand">
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
 
