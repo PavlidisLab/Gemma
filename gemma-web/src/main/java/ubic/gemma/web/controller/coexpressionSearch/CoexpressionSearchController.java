@@ -155,6 +155,10 @@ public class CoexpressionSearchController {
         // queryGeneIds is used to trim the graph appropriately when it gets too big so that not too much data is sent
         // back to the browser
 
+        if ( searchOptions == null ) {
+            throw new IllegalArgumentException( "Search options cannot be null" );
+        }
+
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
 
         restrictSearchOptionsQueryGenes( searchOptions, queryGeneIds );
