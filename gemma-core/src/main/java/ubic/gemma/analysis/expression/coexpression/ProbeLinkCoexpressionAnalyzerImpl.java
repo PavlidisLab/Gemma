@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -57,6 +58,31 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzerImpl.class.getName() );
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 25;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
+
+    /**
+     * Provide a consistent mapping of experiments that can be used to index a vector. The actual ordering is not
+     * guaranteed to be anything in particular, just that repeated calls to this method with the same experiments will
+     * yield the same mapping.
+     * 
+     * @param experiments
+     * @return Map of EE IDs to an index, where the index values are from 0 ... N-1 where N is the number of
+     *         experiments.
+     */
+    public static Map<Long, Integer> getOrderingMap( Collection<? extends BioAssaySet> experiments ) {
+        List<Long> eeIds = new ArrayList<Long>();
+        for ( BioAssaySet ee : experiments ) {
+            eeIds.add( ee.getId() );
+        }
+        Collections.sort( eeIds );
+        Map<Long, Integer> result = new HashMap<Long, Integer>();
+        int index = 0;
+        for ( Long id : eeIds ) {
+            result.put( id, index );
+            index++;
+        }
+        assert result.size() == experiments.size();
+        return result;
+    }
 
     @Autowired
     private GeneService geneService;
@@ -197,119 +223,51 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     }
 
     /**
-     * @param coexpressions
-     * @param limit
-     * @param stringency
+     * For each experiment, get the genes it tested and populate a map. This is slow; but once we've seen a gene, we
+     * don't have to repeat it. We used to cache the ee->gene relationship, but doing it the other way around yields
+     * must faster code.
+     * 
+     * @param ees
+     * @param eeIndexMap
      */
-    private void filter( CoexpressionCollectionValueObject coexpressions, int limit, int stringency ) {
-        CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
-        coexps.filter( limit, stringency );
+    private void cacheEesGeneTestedIn( Collection<? extends BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
 
-        // coexps = coexpressions.getPredictedGeneCoexpression();
-        // coexps.filter( limit, stringency );
-        //
-        // coexps = coexpressions.getProbeAlignedRegionCoexpression();
-        // coexps.filter( limit, stringency );
-    }
+        assert ees != null;
+        assert eeIndexMap != null;
+        assert !ees.isEmpty();
+        assert !eeIndexMap.isEmpty();
 
-    /**
-     * @param coexpressions
-     */
-    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
-        Collection<Long> eeIds = new HashSet<Long>();
-        log.debug( "Filling in EE info" );
-
-        CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
-        fillInEEInfo( coexpressions, eeIds, coexps );
-
-        // coexps = coexpressions.getPredictedGeneCoexpression();
-        // fillInEEInfo( coexpressions, eeIds, coexps );
-        //
-        // coexps = coexpressions.getProbeAlignedRegionCoexpression();
-        // fillInEEInfo( coexpressions, eeIds, coexps );
-
-    }
-
-    /**
-     * @param coexpressions
-     * @param eeIds
-     * @param coexps
-     */
-    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
-            CoexpressedGenesDetails coexps ) {
-        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
-            eeIds.add( evo.getId() );
-        }
-        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
-        Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
-        for ( ExpressionExperimentValueObject evo : ees ) {
-            em.put( evo.getId(), evo );
-        }
-
-        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
-            em.put( evo.getId(), evo );
-        }
-        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
-            ExpressionExperimentValueObject ee = em.get( evo.getId() );
-            evo.setShortName( ee.getShortName() );
-            evo.setName( ee.getName() );
-        }
-
-        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
-            ExpressionExperimentValueObject ee = em.get( evo.getId() );
-            evo.setShortName( ee.getShortName() );
-            evo.setName( ee.getName() );
-        }
-    }
-
-    /**
-     * @param stringency
-     * @param coexpressions
-     */
-    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
-        log.debug( "Filling in Gene info" );
-        CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
-        fillInGeneInfo( stringency, coexpressions, coexp );
-
-        // coexp = coexpressions.getPredictedGeneCoexpression();
-        // fillInGeneInfo( stringency, coexpressions, coexp );
-        //
-        // coexp = coexpressions.getProbeAlignedRegionCoexpression();
-        // fillInGeneInfo( stringency, coexpressions, coexp );
-
-    }
-
-    /**
-     * @param stringency
-     * @param coexpressions
-     * @param coexp
-     */
-    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
-            CoexpressedGenesDetails coexp ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        List<CoexpressionValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
-        Collection<Long> geneIds = new HashSet<Long>();
-        for ( CoexpressionValueObject cod : coexpressionData ) {
-            geneIds.add( cod.getGeneId() );
-        }
+        int count = 0;
+        for ( BioAssaySet ee : ees ) {
+            Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
 
-        Collection<Gene> genes = geneService.loadMultiple( geneIds ); // this can be slow if there are a lot.
-        Map<Long, Gene> gm = new HashMap<Long, Gene>();
-        for ( Gene g : genes ) {
-            gm.put( g.getId(), g );
-        }
-        for ( CoexpressionValueObject cod : coexpressionData ) {
-            Gene g = gm.get( cod.getGeneId() );
-            cod.setGeneName( g.getName() );
-            cod.setGeneOfficialName( g.getOfficialName() );
-            cod.setGeneType( g.getClass().getSimpleName() );
-            cod.setTaxonId( g.getTaxon().getId() );
-            coexpressions.add( cod );
-        }
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Filled in gene info: " + timer.getTime() + "ms" );
+            // inverted map of gene -> ees tested in.
+            Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
+
+            assert indexOfEEInAr != null : "No index for EEID=" + ee.getId() + " in the eeIndexMap";
+
+            for ( Long geneId : genes ) {
+                if ( !genesTestedIn.containsKey( geneId ) ) {
+
+                    // initialize the boolean array for this gene.
+                    genesTestedIn.put( geneId, new ArrayList<Boolean>() );
+                    for ( int i = 0; i < ees.size(); i++ ) {
+                        genesTestedIn.get( geneId ).add( Boolean.FALSE );
+                    }
+
+                }
+
+                // flip to true since the gene was tested in the ee
+                genesTestedIn.get( geneId ).set( indexOfEEInAr, Boolean.TRUE );
+            }
+
+            if ( ++count % 100 == 0 ) {
+                log.info( "Got EEs gene tested in map for " + count + " experiments ... " + timer.getTime()
+                        + "ms elapsed" );
+            }
+
         }
     }
 
@@ -329,7 +287,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             CoexpressionCollectionValueObject coexpressions, Collection<? extends BioAssaySet> eesQueryTestedIn,
             int stringency, int limit ) {
 
-        List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
+        List<CoexpressionValueObject> coexpressionData = coexpressions.getGeneCoexpressionData( stringency );
 
         if ( limit == 0 ) {
             // when we expect to be analyzing many query genes. Note that we pass in the full set of experiments, not
@@ -346,28 +304,49 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     }
 
     /**
-     * Provide a consistent mapping of experiments that can be used to index a vector. The actual ordering is not
-     * guaranteed to be anything in particular, just that repeated calls to this method with the same experiments will
-     * yield the same mapping.
+     * For the genes that the query is coexpressed with. This is limited to the top MAX_GENES_TO_COMPUTE_EESTESTEDIN.
+     * This is not very fast if MAX_GENES_TO_COMPUTE_EESTESTEDIN is large. We use this version for on-line requests.
      * 
-     * @param experiments
-     * @return Map of EE IDs to an index, where the index values are from 0 ... N-1 where N is the number of
-     *         experiments.
+     * @param eesQueryTestedIn, limited to the ees that the query gene is tested in.
+     * @param coexpressionData
+     * @see ProbeLinkCoexpressionAnalyzerImpl.computeEesTestedInBatch for the version used when requests are going to be
+     *      done for many genes, so cache is built first time.
      */
-    public static Map<Long, Integer> getOrderingMap( Collection<? extends BioAssaySet> experiments ) {
-        List<Long> eeIds = new ArrayList<Long>();
-        for ( BioAssaySet ee : experiments ) {
-            eeIds.add( ee.getId() );
+    private void computeEesTestedIn( Collection<? extends BioAssaySet> eesQueryTestedIn,
+            List<CoexpressionValueObject> coexpressionData ) {
+        Collection<Long> coexGeneIds = new HashSet<Long>();
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int i = 0;
+        Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
+
+        for ( CoexpressionValueObject o : coexpressionData ) {
+            coexGeneIds.add( o.getGeneId() );
+            gmap.put( o.getGeneId(), o );
+            i++;
+            if ( i >= MAX_GENES_TO_COMPUTE_EESTESTEDIN ) break;
         }
-        Collections.sort( eeIds );
-        Map<Long, Integer> result = new HashMap<Long, Integer>();
-        int index = 0;
-        for ( Long id : eeIds ) {
-            result.put( id, index );
-            index++;
+
+        log.debug( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
+        Map<Long, Collection<BioAssaySet>> eesTestedIn = probe2ProbeCoexpressionService
+                .getExpressionExperimentsTestedIn( coexGeneIds, eesQueryTestedIn, false );
+        for ( Long g : eesTestedIn.keySet() ) {
+            CoexpressionValueObject cvo = gmap.get( g );
+            assert cvo != null;
+            assert eesTestedIn.get( g ).size() <= eesQueryTestedIn.size();
+
+            Collection<Long> ids = new HashSet<Long>();
+            for ( BioAssaySet ee : eesTestedIn.get( g ) ) {
+                Long eeid = ee.getId();
+                ids.add( eeid );
+            }
+            cvo.setDatasetsTestedIn( ids );
         }
-        assert result.size() == experiments.size();
-        return result;
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "computeEesTestedIn: " + timer.getTime() + "ms" );
+        }
     }
 
     /**
@@ -463,140 +442,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     }
 
     /**
-     * @param datasetsTestedIn
-     * @param eeIdOrder
-     * @return
-     */
-    private byte[] computeTestedDatasetVector( Long geneId, Collection<? extends BioAssaySet> ees,
-            Map<Long, Integer> eeIdOrder ) {
-        /*
-         * This condition is, pretty much only true once in practice. That's because the first time through populates
-         * genesTestedIn for all the genes tested in any of the data sets.
-         */
-        if ( !genesTestedIn.containsKey( geneId ) ) {
-            cacheEesGeneTestedIn( ees, eeIdOrder );
-        }
-
-        assert eeIdOrder.size() == ees.size();
-
-        assert genesTestedIn.containsKey( geneId );
-
-        List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
-
-        assert eesTestingGene.size() == ees.size();
-
-        // initialize.
-        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
-        for ( int i = 0, j = result.length; i < j; i++ ) {
-            result[i] = 0x0;
-        }
-
-        for ( BioAssaySet ee : ees ) {
-            Long eeid = ee.getId();
-            Integer index = eeIdOrder.get( eeid );
-            if ( eesTestingGene.get( index ) ) {
-                BitUtil.set( result, index );
-            }
-        }
-        return result;
-    }
-
-    /**
-     * For each experiment, get the genes it tested and populate a map. This is slow; but once we've seen a gene, we
-     * don't have to repeat it. We used to cache the ee->gene relationship, but doing it the other way around yields
-     * must faster code.
-     * 
-     * @param ees
-     * @param eeIndexMap
-     */
-    private void cacheEesGeneTestedIn( Collection<? extends BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
-
-        assert ees != null;
-        assert eeIndexMap != null;
-        assert !ees.isEmpty();
-        assert !eeIndexMap.isEmpty();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int count = 0;
-        for ( BioAssaySet ee : ees ) {
-            Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
-
-            // inverted map of gene -> ees tested in.
-            Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
-
-            assert indexOfEEInAr != null : "No index for EEID=" + ee.getId() + " in the eeIndexMap";
-
-            for ( Long geneId : genes ) {
-                if ( !genesTestedIn.containsKey( geneId ) ) {
-
-                    // initialize the boolean array for this gene.
-                    genesTestedIn.put( geneId, new ArrayList<Boolean>() );
-                    for ( int i = 0; i < ees.size(); i++ ) {
-                        genesTestedIn.get( geneId ).add( Boolean.FALSE );
-                    }
-
-                }
-
-                // flip to true since the gene was tested in the ee
-                genesTestedIn.get( geneId ).set( indexOfEEInAr, Boolean.TRUE );
-            }
-
-            if ( ++count % 100 == 0 ) {
-                log.info( "Got EEs gene tested in map for " + count + " experiments ... " + timer.getTime()
-                        + "ms elapsed" );
-            }
-
-        }
-    }
-
-    /**
-     * For the genes that the query is coexpressed with. This is limited to the top MAX_GENES_TO_COMPUTE_EESTESTEDIN.
-     * This is not very fast if MAX_GENES_TO_COMPUTE_EESTESTEDIN is large. We use this version for on-line requests.
-     * 
-     * @param eesQueryTestedIn, limited to the ees that the query gene is tested in.
-     * @param coexpressionData
-     * @see ProbeLinkCoexpressionAnalyzerImpl.computeEesTestedInBatch for the version used when requests are going to be
-     *      done for many genes, so cache is built first time.
-     */
-    private void computeEesTestedIn( Collection<? extends BioAssaySet> eesQueryTestedIn,
-            List<CoexpressionValueObject> coexpressionData ) {
-        Collection<Long> coexGeneIds = new HashSet<Long>();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int i = 0;
-        Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
-
-        for ( CoexpressionValueObject o : coexpressionData ) {
-            coexGeneIds.add( o.getGeneId() );
-            gmap.put( o.getGeneId(), o );
-            i++;
-            if ( i >= MAX_GENES_TO_COMPUTE_EESTESTEDIN ) break;
-        }
-
-        log.debug( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
-        Map<Long, Collection<BioAssaySet>> eesTestedIn = probe2ProbeCoexpressionService
-                .getExpressionExperimentsTestedIn( coexGeneIds, eesQueryTestedIn, false );
-        for ( Long g : eesTestedIn.keySet() ) {
-            CoexpressionValueObject cvo = gmap.get( g );
-            assert cvo != null;
-            assert eesTestedIn.get( g ).size() <= eesQueryTestedIn.size();
-
-            Collection<Long> ids = new HashSet<Long>();
-            for ( BioAssaySet ee : eesTestedIn.get( g ) ) {
-                Long eeid = ee.getId();
-                ids.add( eeid );
-            }
-            cvo.setDatasetsTestedIn( ids );
-        }
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "computeEesTestedIn: " + timer.getTime() + "ms" );
-        }
-    }
-
-    /**
      * @param queryGene
      * @param numQueryGeneGOTerms
      * @param coexpressionData
@@ -638,11 +483,148 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
 
         if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) return;
 
-        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions
-                .getKnownGeneCoexpressionData( stringency );
+        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions.getGeneCoexpressionData( stringency );
         computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
 
         // Only known genes have GO terms, so we don't need to look at Predicted and PARs.
+    }
+
+    /**
+     * @param datasetsTestedIn
+     * @param eeIdOrder
+     * @return
+     */
+    private byte[] computeTestedDatasetVector( Long geneId, Collection<? extends BioAssaySet> ees,
+            Map<Long, Integer> eeIdOrder ) {
+        /*
+         * This condition is, pretty much only true once in practice. That's because the first time through populates
+         * genesTestedIn for all the genes tested in any of the data sets.
+         */
+        if ( !genesTestedIn.containsKey( geneId ) ) {
+            cacheEesGeneTestedIn( ees, eeIdOrder );
+        }
+
+        assert eeIdOrder.size() == ees.size();
+
+        assert genesTestedIn.containsKey( geneId );
+
+        List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
+
+        assert eesTestingGene.size() == ees.size();
+
+        // initialize.
+        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
+        for ( int i = 0, j = result.length; i < j; i++ ) {
+            result[i] = 0x0;
+        }
+
+        for ( BioAssaySet ee : ees ) {
+            Long eeid = ee.getId();
+            Integer index = eeIdOrder.get( eeid );
+            if ( eesTestingGene.get( index ) ) {
+                BitUtil.set( result, index );
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param coexpressions
+     */
+    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
+        Collection<Long> eeIds = new HashSet<Long>();
+        log.debug( "Filling in EE info" );
+
+        CoexpressedGenesDetails coexps = coexpressions.getGeneCoexpression();
+        fillInEEInfo( coexpressions, eeIds, coexps );
+
+    }
+
+    /**
+     * @param coexpressions
+     * @param eeIds
+     * @param coexps
+     */
+    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
+            CoexpressedGenesDetails coexps ) {
+        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
+            eeIds.add( evo.getId() );
+        }
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
+        Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject evo : ees ) {
+            em.put( evo.getId(), evo );
+        }
+
+        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
+            em.put( evo.getId(), evo );
+        }
+        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
+            ExpressionExperimentValueObject ee = em.get( evo.getId() );
+            evo.setShortName( ee.getShortName() );
+            evo.setName( ee.getName() );
+        }
+
+        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
+            ExpressionExperimentValueObject ee = em.get( evo.getId() );
+            evo.setShortName( ee.getShortName() );
+            evo.setName( ee.getName() );
+        }
+    }
+
+    /**
+     * @param stringency
+     * @param coexpressions
+     */
+    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
+        log.debug( "Filling in Gene info" );
+        CoexpressedGenesDetails coexp = coexpressions.getGeneCoexpression();
+        fillInGeneInfo( stringency, coexpressions, coexp );
+
+    }
+
+    /**
+     * @param stringency
+     * @param coexpressions
+     * @param coexp
+     */
+    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
+            CoexpressedGenesDetails coexp ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<CoexpressionValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
+        Collection<Long> geneIds = new HashSet<Long>();
+        for ( CoexpressionValueObject cod : coexpressionData ) {
+            geneIds.add( cod.getGeneId() );
+        }
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds ); // this can be slow if there are a lot.
+        Map<Long, Gene> gm = new HashMap<Long, Gene>();
+        for ( Gene g : genes ) {
+            gm.put( g.getId(), g );
+        }
+        for ( CoexpressionValueObject cod : coexpressionData ) {
+            Gene g = gm.get( cod.getGeneId() );
+            cod.setGeneName( g.getName() );
+            cod.setGeneOfficialName( g.getOfficialName() );
+            cod.setGeneType( g.getClass().getSimpleName() );
+            cod.setTaxonId( g.getTaxon().getId() );
+            coexpressions.add( cod );
+        }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Filled in gene info: " + timer.getTime() + "ms" );
+        }
+    }
+
+    /**
+     * @param coexpressions
+     * @param limit
+     * @param stringency
+     */
+    private void filter( CoexpressionCollectionValueObject coexpressions, int limit, int stringency ) {
+        CoexpressedGenesDetails coexps = coexpressions.getGeneCoexpression();
+        coexps.filter( limit, stringency );
     }
 
 }

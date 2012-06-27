@@ -781,7 +781,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param gene to use as the query
      * @param ees Data sets to restrict the search to.
      * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
-     * @param knownGenesOnly
      * @return Collection of CoexpressionCollectionValueObjects. This needs to be 'postprocessed' before it has all the
      *         data needed for web display.
      */
@@ -1196,7 +1195,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Returns KNOWN genes in the region.
+     * Returns genes in the region.
      * 
      * @param chrom
      * @param targetStart
@@ -1274,7 +1273,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param in
      * @param out
      * @param eeIds this is required.
-     * @param knownGenesOnly
      * @param interGeneOnly true to restrict to links among the query genes only (this will not work correctly if you
      *        only put in one gene!)
      * @return
@@ -1329,7 +1327,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param in
      * @param out
      * @param eeIds this is required.
-     * @param knownGenesOnly
      * @return
      */
     private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
@@ -1452,8 +1449,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
-        knownGeneCoexpression.postProcess();
+        CoexpressedGenesDetails geneCoexpression = coexpressions.getGeneCoexpression();
+        geneCoexpression.postProcess();
         watch.stop();
         Long elapsed = watch.getTime();
         coexpressions.setPostProcessTime( elapsed );
@@ -1635,7 +1632,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return;
         }
 
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 100 ) {
             log.info( "Gene2Cs Cache check: " + timer.getTime() + "ms" );
         }
         timer.reset();

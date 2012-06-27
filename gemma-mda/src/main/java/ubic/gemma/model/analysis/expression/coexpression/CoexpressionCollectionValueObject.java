@@ -49,11 +49,7 @@ public class CoexpressionCollectionValueObject {
 
     private String errorState;
 
-    private CoexpressedGenesDetails knownGeneCoexpressionData;
-
-    // private CoexpressedGenesDetails predictedCoexpressionData;
-
-    // private CoexpressedGenesDetails probeAlignedRegionCoexpressionData;
+    private CoexpressedGenesDetails GeneCoexpressionData;
 
     private Gene queryGene;
     private int queryGeneGoTermCount;
@@ -71,23 +67,13 @@ public class CoexpressionCollectionValueObject {
     public CoexpressionCollectionValueObject( Gene queryGene, int supportThreshold ) {
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
-        knownGeneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
-        // predictedCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
-        // probeAlignedRegionCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
+        GeneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
         queryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
         this.eesQueryTestedIn = new HashSet<BioAssaySet>();
     }
 
     public void add( CoexpressionValueObject vo ) {
-        // String geneType = vo.getGeneType();
-        // if ( geneType.equals( GENE_IMPL ) )
-        this.knownGeneCoexpressionData.add( vo );
-        // else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
-        // this.probeAlignedRegionCoexpressionData.add( vo );
-        // else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
-        // this.predictedCoexpressionData.add( vo );
-        // else
-        // throw new IllegalArgumentException( "Unknown gene type" + geneType );
+        this.GeneCoexpressionData.add( vo );
     }
 
     /**
@@ -98,14 +84,7 @@ public class CoexpressionCollectionValueObject {
         /*
          * Maintain a list of which expression experiments participate in which type of coexpression
          */
-        // if ( geneType.equals( GENE_IMPL ) )
-        this.knownGeneCoexpressionData.addExpressionExperiment( eevo );
-        // else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
-        // this.probeAlignedRegionCoexpressionData.addExpressionExperiment( eevo );
-        // else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
-        // this.predictedCoexpressionData.addExpressionExperiment( eevo );
-        // else
-        // throw new IllegalArgumentException( "Unknown gene type" + geneType );
+        this.GeneCoexpressionData.addExpressionExperiment( eevo );
     }
 
     /**
@@ -113,9 +92,7 @@ public class CoexpressionCollectionValueObject {
      * @return
      */
     public boolean contains( Long coexpressedGeneId ) {
-        return knownGeneCoexpressionData.containsKey( coexpressedGeneId );
-        // || predictedCoexpressionData.containsKey( coexpressedGeneId )
-        // || probeAlignedRegionCoexpressionData.containsKey( coexpressedGeneId );
+        return GeneCoexpressionData.containsKey( coexpressedGeneId );
     }
 
     /**
@@ -127,20 +104,10 @@ public class CoexpressionCollectionValueObject {
 
         CoexpressionValueObject result = null;
 
-        if ( knownGeneCoexpressionData.containsKey( coexpressedGeneId ) ) {
-            result = knownGeneCoexpressionData.get( coexpressedGeneId );
+        if ( GeneCoexpressionData.containsKey( coexpressedGeneId ) ) {
+            result = GeneCoexpressionData.get( coexpressedGeneId );
         }
 
-        // if ( predictedCoexpressionData.containsKey( coexpressedGeneId ) ) {
-        // assert result == null;
-        // result = predictedCoexpressionData.get( coexpressedGeneId );
-        // }
-        //
-        // if ( probeAlignedRegionCoexpressionData.containsKey( coexpressedGeneId ) ) {
-        // assert result == null;
-        // result = probeAlignedRegionCoexpressionData.get( coexpressedGeneId );
-        //
-        // }
         return result;
 
     }
@@ -151,9 +118,7 @@ public class CoexpressionCollectionValueObject {
      */
     public List<CoexpressionValueObject> getAllGeneCoexpressionData( int stringency ) {
         List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
-        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData( stringency ) );
-        // result.addAll( this.predictedCoexpressionData.getCoexpressionData( stringency ) );
-        // result.addAll( this.probeAlignedRegionCoexpressionData.getCoexpressionData( stringency ) );
+        result.addAll( this.GeneCoexpressionData.getCoexpressionData( stringency ) );
         Collections.sort( result );
         return result;
     }
@@ -182,15 +147,7 @@ public class CoexpressionCollectionValueObject {
      * Only searches the given geneType for the specified EE. if not found return null.
      */
     public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-        // if ( geneType.equals( GENE_IMPL ) )
-        return knownGeneCoexpressionData.getExpressionExperiment( eeID );
-        // else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
-        // return probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID );
-        // else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
-        // return predictedCoexpressionData.getExpressionExperiment( eeID );
-
-        // return null;
-
+        return GeneCoexpressionData.getExpressionExperiment( eeID );
     }
 
     /**
@@ -198,9 +155,7 @@ public class CoexpressionCollectionValueObject {
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         Collection<ExpressionExperimentValueObject> all = new HashSet<ExpressionExperimentValueObject>();
-        all.addAll( this.knownGeneCoexpressionData.getExpressionExperiments() );
-        // all.addAll( this.probeAlignedRegionCoexpressionData.getExpressionExperiments() );
-        // all.addAll( this.predictedCoexpressionData.getExpressionExperiments() );
+        all.addAll( this.GeneCoexpressionData.getExpressionExperiments() );
         return all;
 
     }
@@ -208,101 +163,35 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the CoexpressedGenesDetails for standard genes
      */
-    public CoexpressedGenesDetails getKnownGeneCoexpression() {
-        return this.knownGeneCoexpressionData;
+    public CoexpressedGenesDetails getGeneCoexpression() {
+        return this.GeneCoexpressionData;
     }
 
     /**
-     * @return the coexpressionData for known genes in order of decreasing support
+     * @return the coexpressionData for genes in order of decreasing support
      */
     @SuppressWarnings("hiding")
-    public List<CoexpressionValueObject> getKnownGeneCoexpressionData( int supportThreshold ) {
-        return this.knownGeneCoexpressionData.getCoexpressionData( supportThreshold );
+    public List<CoexpressionValueObject> getGeneCoexpressionData( int supportThreshold ) {
+        return this.GeneCoexpressionData.getCoexpressionData( supportThreshold );
     }
 
     /**
-     * @return the number of Known Genes coexpressed with the query
+     * @return the number of Genes coexpressed with the query
      */
-    public int getNumKnownGenes() {
-        return this.knownGeneCoexpressionData.getNumberOfGenes();
+    public int getNumGenes() {
+        return this.GeneCoexpressionData.getNumberOfGenes();
     }
 
-    //
-    // /**
-    // * @return the numPredictedGenes coexpressed with the query
-    // */
-    // public int getNumPredictedGenes() {
-    // return this.predictedCoexpressionData.getNumberOfGenes();
-    // }
-    //
-    // /**
-    // * @return the numProbeAlignedRegions coexpressed with the query
-    // */
-    // public int getNumProbeAlignedRegions() {
-    // return this.probeAlignedRegionCoexpressionData.getNumberOfGenes();
-    // }
-
     /**
-     * @return the numStringencyGenes - for known genes.
+     * @return the numStringencyGenes - for genes.
      */
     public int getNumStringencyGenes() {
-        return getNumStringencyKnownGenes();
+        return this.GeneCoexpressionData.getNumberOfGenes();
     }
-
-    /**
-     * @return the numStringencyGenes - for known genes.
-     */
-    public int getNumStringencyKnownGenes() {
-        return this.knownGeneCoexpressionData.getNumberOfGenes();
-    }
-
-    // /**
-    // * @return the numStringencyPredictedGenes
-    // */
-    // public int getNumStringencyPredictedGenes() {
-    // return this.predictedCoexpressionData.getNumberOfGenes();
-    // }
-    //
-    // /**
-    // * @return the numStringencyProbeAlignedRegions
-    // */
-    // public int getNumStringencyProbeAlignedRegions() {
-    // return this.probeAlignedRegionCoexpressionData.getNumberOfGenes();
-    // }
 
     public double getPostProcessSeconds() {
         return postProcessSeconds;
     }
-
-    // /**
-    // * @return the predicted genes CoexpressionDataValueobjects in order of decreasing support
-    // */
-    // @SuppressWarnings("hiding")
-    // public List<CoexpressionValueObject> getPredictedCoexpressionData( int supportThreshold ) {
-    // return this.predictedCoexpressionData.getCoexpressionData( supportThreshold );
-    // }
-
-    // /**
-    // * @return the CoexpressedGenesDetails for predicted Genes
-    // */
-    // public CoexpressedGenesDetails getPredictedGeneCoexpression() {
-    // return this.predictedCoexpressionData;
-    // }
-
-    // /**
-    // * @return the probe aligned genes CoexpressionDataValueObjects in order of decreasing support
-    // */
-    // @SuppressWarnings("hiding")
-    // public List<CoexpressionValueObject> getProbeAlignedCoexpressionData( int supportThreshold ) {
-    // return this.probeAlignedRegionCoexpressionData.getCoexpressionData( supportThreshold );
-    // }
-
-    // /**
-    // * @return the CoexpressedGenesDetails for probe aligned regions
-    // */
-    // public CoexpressedGenesDetails getProbeAlignedRegionCoexpression() {
-    // return this.probeAlignedRegionCoexpressionData;
-    // }
 
     /**
      * @return the queryGene
@@ -435,20 +324,9 @@ public class CoexpressionCollectionValueObject {
                  */
                 if ( genes.size() == 1 && genes.iterator().next().equals( queryGene.getId() ) ) {
 
-                    /*
-                     * This is a high-level record.
-                     */
-                    // if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                    // this.predictedCoexpressionData.getExpressionExperiment( eeID ).setHasProbeSpecificForQueryGene(
-                    // true );
-
-                    if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.knownGeneCoexpressionData.getExpressionExperiment( eeID ).setHasProbeSpecificForQueryGene(
-                                true );
-                    //
-                    // if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
-                    // this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID )
-                    // .setHasProbeSpecificForQueryGene( true );
+                    if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.GeneCoexpressionData.getExpressionExperiment( eeID )
+                                .setHasProbeSpecificForQueryGene( true );
 
                 }
             }
@@ -463,25 +341,14 @@ public class CoexpressionCollectionValueObject {
     }
 
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.knownGeneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
-
-        // if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-        // this.predictedCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
-        //
-        // if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
-        // this.probeAlignedRegionCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
+        if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.GeneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
     }
 
     private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.knownGeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+        if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.GeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
 
-        // if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-        // this.predictedCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
-        //
-        // if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
-        // this.probeAlignedRegionCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
     }
 
 }
