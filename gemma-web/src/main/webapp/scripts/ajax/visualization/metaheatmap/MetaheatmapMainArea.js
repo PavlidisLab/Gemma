@@ -1,4 +1,7 @@
 Ext.namespace('Gemma.Metaheatmap');
+Ext.namespace('Gemma.Constants');
+
+Gemma.Constants.DifferentialExpressionQvalueThreshold = 0.05;
 
 /**
  * TODO document me
@@ -100,8 +103,6 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		// (this is alternative to this.ownerCt which is dangerous to use because it will break if there are any layout nesting changes made)
 		var ownerCt = this.findParentByType('Metaheatmap.VisualizationPanel');
 
-		//this.setPosition (ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height, ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height);		
-		
 		var headerHeight = ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height;
 		var sideWidth    = ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height;
 		
@@ -151,21 +152,9 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var foldChange, isProbeMissing, numberOfProbes, numberOfProbesDiffExpressed;
 		var isGeneOnTop = this.isGeneOnTop;
 		var cell  = this.cells.getCell (gene, condition); 		
-		//var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cell.logFoldChange);
 		
-		var colorScale = {
-			     "5"  : "rgb(142, 1, 82)",
-			     "4" : "rgb(197, 27, 125)",
-			     "3" : "rgb(222, 119, 174)",
-			     "2" : "rgb(241, 182, 218)",
-			     "1" : "rgb(253, 224, 239)",
-			     "0" : "rgb(247, 247, 247)",
-			    "-1" : "rgb(230, 245, 208)",
-			    "-2" : "rgb(184, 225, 134)",
-			    "-3" : "rgb(127, 188, 65)",
-			    "-4" : "rgb(77, 146, 33)",
-			    "-5" : "rgb(39, 100, 25)"
-		};
+		var colorScale = Gemma.Metaheatmap.Config.FoldChangeColorScale; 
+		
 		var color;
 		
 		if (cell.logFoldChange > 0) {
@@ -186,7 +175,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		var transparency = 0;
 
-		if (cell.correctedPValue  > 0.1) {
+		if (cell.correctedPValue  > Gemma.Constants.DifferentialExpressionQvalueThreshold) {
 			color = 'white';
 		}
 
@@ -247,29 +236,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			}			
 		};
 	},
-	
-//	getVisualizationValue : function (gene, condition) {
-//		var color;
-//		var cellData = this.cells.getCell (gene,condition);
-//		if (cellData === null) {
-//			// Contrast not stored. Assuming high pValue.
-//			color = 'black';			
-//		} else {
-//			if (cellData.isProbeMissing) {
-//				 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (null); // Gray cell.				
-//			} else {
-//				if (this.isShowPvalue) {
-//					 color = Gemma.Metaheatmap.Config.basicColourRange.getCellColorString (						
-//							 this.calculateVisualizationValueBasedOnPvalue (cellData.pValue) );
-//				} else {					
-//					color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
-//				}
-//			}
-//		}		
-//
-//		return color;
-//	},
-			
+				
     calculateVisualizationValueBasedOnPvalue : function ( correctedPValue  ) {
         var visualizationValue = 0.5;
         if ( correctedPValue  < 0.5 && correctedPValue  >= 0.25 )
@@ -294,21 +261,9 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var cellData = this.cells.getCell (gene,condition);		
 
     	var transparency = 0;
-		//var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
 
-		var colorScale = {
-			     "5"  : "rgb(142, 1, 82)",
-			     "4" : "rgb(197, 27, 125)",
-			     "3" : "rgb(222, 119, 174)",
-			     "2" : "rgb(241, 182, 218)",
-			     "1" : "rgb(253, 224, 239)",
-			     "0" : "rgb(247, 247, 247)",
-			    "-1" : "rgb(230, 245, 208)",
-			    "-2" : "rgb(184, 225, 134)",
-			    "-3" : "rgb(127, 188, 65)",
-			    "-4" : "rgb(77, 146, 33)",
-			    "-5" : "rgb(39, 100, 25)"
-		};
+		var colorScale = Gemma.Metaheatmap.Config.FoldChangeColorScale;
+		
 		var color;
 		
 		if (cellData.logFoldChange > 0) {
@@ -317,15 +272,18 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			} else {
 				color =  colorScale["1"];				
 			}			
-		} else {
+		} else if (cellData.logFoldChange < 0) {
 			if (cellData.logFoldChange < -1) {
 				color = colorScale["-3"];
 			} else {
 				color = colorScale["-1"];				
 			}
+		} else { // 0 is when we didn't store the contrast in DB
+			color = 'white';
 		}
+
    	    	
-		if (cellData.correctedPValue  > 0.1) {
+		if (cellData.correctedPValue  > Gemma.Constants.DifferentialExpressionQvalueThreshold) {
 			color = 'white';
 		}
 		
@@ -338,35 +296,15 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 
 	drawCell_ : function (ctx, gene, condition, color, isProbeMissing, isGeneOnTop, transparency) {
 		if (isProbeMissing) {
-			//this.drawMissingCell_(ctx, gene, condition, isGeneOnTop);
 			if (isGeneOnTop) {
-//				ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
 				ctx.fillStyle = 'white';
-				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
-				
-				ctx.fillStyle = "gray";
-				
-				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);
-				
+				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);				
+				ctx.fillStyle = "gray";				
+				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);				
 				ctx.restore();
 			} else {
-//				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 				ctx.fillStyle = 'white';//"rgba(240, 240,240, 1)";
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
-
-		//		var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
-		//		var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) ;
-
-//				ctx.save();
-//				ctx.strokeStyle = "rgba(210, 210,210, 0.8)";//"gray";
-//				ctx.translate (condition.display.pxlStart, gene.display.pxlStart);
-//				ctx.beginPath();
-//				ctx.moveTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
-//				ctx.lineTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
-//				ctx.moveTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
-//				ctx.lineTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
-//				ctx.stroke();
-//				ctx.restore();
 			}					
 			
 		} else {
@@ -392,7 +330,6 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 	drawMissingCell_ : function (ctx, gene, condition, isGeneOnTop) {
 		if (isGeneOnTop) {
-//			ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
 			ctx.fillStyle = 'white';
 			ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
 			
@@ -402,7 +339,6 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			
 			ctx.restore();
 		} else {
-//			ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 			ctx.fillStyle = 'white';
 			ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 

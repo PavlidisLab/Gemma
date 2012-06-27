@@ -27,12 +27,10 @@ import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchSer
  */
 public interface DifferentialExpressionGeneConditionSearchService {
 
-    public abstract String scheduleDiffExpSearchTask( List<List<Gene>> genes,
+    public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
             List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
             List<String> experimentGroupNames );
 
-    public abstract DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId );
-
-    public abstract TaskProgress getDiffExpSearchTaskProgress( String taskId );
+    public TaskProgress getDiffExpSearchTaskProgress( String taskId );
 
 }

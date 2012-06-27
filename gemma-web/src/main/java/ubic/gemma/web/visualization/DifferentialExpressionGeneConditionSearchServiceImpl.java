@@ -77,10 +77,13 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public static class TaskProgress {
         private double progressPercent;
         private String currentStage;
+        
+        private DifferentialExpressionGenesConditionsValueObject taskResult = null;
 
-        public TaskProgress( String stage, double percent ) {
+        public TaskProgress( String stage, double percent, DifferentialExpressionGenesConditionsValueObject result ) {
             this.currentStage = stage;
             this.progressPercent = percent;
+            this.taskResult = result;
         }
 
         public String getCurrentStage() {
@@ -90,6 +93,14 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         public double getProgressPercent() {
             return this.progressPercent;
         }
+
+        public DifferentialExpressionGenesConditionsValueObject getTaskResult() {
+            return taskResult;
+        }
+
+        public void setTaskResult( DifferentialExpressionGenesConditionsValueObject taskResult ) {
+            this.taskResult = taskResult;
+        }                
     }
 
     /**
@@ -117,6 +128,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         private String taskProgressStage = "Search query submitted...";
         private double taskProgressPercent = 0.0;
 
+        private DifferentialExpressionGenesConditionsValueObject taskResult = null;
+        
         /**
          * @param geneGroups - the sets of genes to query
          * @param experimentGroups - the sets of experiments to query
@@ -154,19 +167,22 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( searchResult );
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
-            // log.info( "--------------------------------" );
-            // log.info( searchResult );
-            // log.info( "..................................." );
+            this.taskResult = searchResult;
             return searchResult;
         }
 
+        
+        private synchronized void setTaskResult(DifferentialExpressionGenesConditionsValueObject result) {
+            this.taskResult = result;
+        }
+        
         /**
          * @return
          */
         public synchronized TaskProgress getTaskProgress() {
             // I think this is safe only because String is immutable
             // and double is copied by value. FIXME ????
-            return new TaskProgress( this.taskProgressStage, this.taskProgressPercent );
+            return new TaskProgress( this.taskProgressStage, this.taskProgressPercent, this.taskResult );
         }
 
         /**
@@ -739,29 +755,29 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
      * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchResult(java.lang
      * .String)
      */
-    @Override
-    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
-        DifferentialExpressionGenesConditionsValueObject result = null;
-
-        try {
-            DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
-                    .get( taskId ).getObjectValue();
-
-            ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-            Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor
-                    .submit( diffExpSearchTask );
-            singleThreadExecutor.shutdown();
-
-            result = backgroundTask.get(); // blocks
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( e );
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( e );
-        } finally {
-            this.diffExpSearchTasksCache.remove( taskId );
-        }
-        return result;
-    }
+//    @Override
+//    private DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
+//        DifferentialExpressionGenesConditionsValueObject result = null;
+//
+//        try {
+//            DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
+//                    .get( taskId ).getObjectValue();
+//
+//            ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+//            Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor
+//                    .submit( diffExpSearchTask );
+//            singleThreadExecutor.shutdown();
+//
+//            result = backgroundTask.get(); // blocks
+//        } catch ( InterruptedException e ) {
+//            throw new RuntimeException( e );
+//        } catch ( ExecutionException e ) {
+//            throw new RuntimeException( e );
+//        } finally {
+//            this.diffExpSearchTasksCache.remove( taskId );
+//        }
+//        return result;
+//    }
 
     /*
      * (non-Javadoc)
@@ -774,10 +790,16 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public TaskProgress getDiffExpSearchTaskProgress( String taskId ) {
         if ( this.diffExpSearchTasksCache.isKeyInCache( taskId ) ) {
             DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
-                    .get( taskId ).getObjectValue();
-            return diffExpSearchTask.getTaskProgress();
-        }
-        return new TaskProgress( "Completed", 100.0 );
+                    .get( taskId ).getObjectValue();            
+            
+            TaskProgress taskProgress = diffExpSearchTask.getTaskProgress();
+            DifferentialExpressionGenesConditionsValueObject result = taskProgress.getTaskResult();
+            if (result != null) {
+                this.diffExpSearchTasksCache.remove( taskId );                                
+            }
+            return taskProgress;
+        }       
+        return new TaskProgress( "Removed", 0.0, null );
     }
 
     /*
@@ -791,12 +813,21 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
             List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
             List<String> experimentGroupNames ) {
-        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes, experiments,
-                geneGroupNames, experimentGroupNames );
+        
+        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes,
+                                                                                                   experiments,
+                                                                                                   geneGroupNames,
+                                                                                                   experimentGroupNames );
 
         String taskId = UUID.randomUUID().toString();
         this.diffExpSearchTasksCache.put( new Element( taskId, diffExpSearchTask ) );
 
+        ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+        
+        Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor.submit( diffExpSearchTask );
+        
+        singleThreadExecutor.shutdown();
+        
         return taskId;
     }
 
