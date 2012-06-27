@@ -5,23 +5,23 @@
 
 	<!--  $Id$ -->
 	<!--
-		Sets the path to the directory where cache .data files are created. If the path is a Java System Property it is
-		replaced by its value in the running VM. The following properties are translated: user.home - User's home directory
-		user.dir - User's current working directory java.io.tmpdir - Default temp file path
-	-->
+			Sets the path to the directory where cache .data files are created. If the path is a Java System Property it is
+			replaced by its value in the running VM. The following properties are translated: user.home - User's home directory
+			user.dir - User's current working directory java.io.tmpdir - Default temp file path
+		-->
 	<diskStore path="ehcache.disk.store.dir" />
 
 	<!--
-		Default Cache configuration. These will applied to caches programmatically created through the CacheManager. The
-		following attributes are required for defaultCache: maxInMemory - Sets the maximum number of objects that will be
-		created in memory eternal - Sets whether elements are eternal. If eternal, timeouts are ignored and the element is
-		never expired. timeToIdleSeconds - Sets the time to idle for an element before it expires. i.e. The maximum amount of
-		time between accesses before an element expires Is only used if the element is not eternal. Optional attribute. A
-		value of 0 means that an Element can idle for infinity timeToLiveSeconds - Sets the time to live for an element before
-		it expires. i.e. The maximum time between creation time and when an element expires. Is only used if the element is
-		not eternal. overflowToDisk - Sets whether elements can overflow to disk when the in-memory cache has reached the
-		maxInMemory limit.
-	-->
+			Default Cache configuration. These will applied to caches programmatically created through the CacheManager. The
+			following attributes are required for defaultCache: maxInMemory - Sets the maximum number of objects that will be
+			created in memory eternal - Sets whether elements are eternal. If eternal, timeouts are ignored and the element is
+			never expired. timeToIdleSeconds - Sets the time to idle for an element before it expires. i.e. The maximum amount of
+			time between accesses before an element expires Is only used if the element is not eternal. Optional attribute. A
+			value of 0 means that an Element can idle for infinity timeToLiveSeconds - Sets the time to live for an element before
+			it expires. i.e. The maximum time between creation time and when an element expires. Is only used if the element is
+			not eternal. overflowToDisk - Sets whether elements can overflow to disk when the in-memory cache has reached the
+			maxInMemory limit.
+		-->
 	<defaultCache maxElementsInMemory="1000"
 		eternal="false" 
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200"
@@ -30,12 +30,12 @@
 
 
 	<!--  see http://ehcache.sourceforge.net/documentation/configuration.html
-    -->
+		-->
 
 	<!--
-		Customize caches below. Increase or decrease maxElementsInMemory; 10000 genes takes about 10 MB in RAM. Make items
-		that are essentially immutable 'eternal'.
-	-->
+			Customize caches below. Increase or decrease maxElementsInMemory; 10000 genes takes about 10 MB in RAM. Make items
+			that are essentially immutable 'eternal'.
+		-->
 	<cache name="org.hibernate.cache.StandardQueryCache" maxElementsInMemory="5000" eternal="false"
 		timeToLiveSeconds="60000" timeToIdleSeconds="0" overflowToDisk="false" />
 
@@ -44,7 +44,7 @@
 
 
 	<!--  cache names must match the class element names defined in the hbm.xml files.
-    -->
+		-->
 	<cache name="ubic.gemma.model.analysis.expression.pca.EigenvectorImpl" maxElementsInMemory="1000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 	<cache name="ubic.gemma.model.analysis.expression.diff.HitListSizeImpl" maxElementsInMemory="1000" eternal="false"
@@ -288,7 +288,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<!--  we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="0" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="1" eternal="false"
 		timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsInMemory="10000" eternal="false"
@@ -457,7 +457,7 @@
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.characteristics"
-		maxElementsInMemory="0" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.quantitationTypes"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -478,7 +478,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<!--  we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl.characteristics" maxElementsInMemory="0"
+	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl.characteristics" maxElementsInMemory="1"
 		eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" maxElementsInMemory="10000" eternal="false"
@@ -486,7 +486,7 @@
 
 	<!--  we would disable this entirely, not so easy with AndroMDA -->
 	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.experimentalFactors"
-		maxElementsInMemory="0" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
+		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.types" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -495,7 +495,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<!--  we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsInMemory="0"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsInMemory="1"
 		eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.annotations" maxElementsInMemory="10000"
