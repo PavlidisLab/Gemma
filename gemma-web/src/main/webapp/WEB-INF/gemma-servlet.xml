@@ -793,7 +793,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.QuantitationTypeValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject" />
