@@ -2312,6 +2312,13 @@ public class SearchServiceImpl implements SearchService {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
+        if ( settings.isUsePhenotypes() && settings.isSearchGenes() ) {
+
+            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
+                    geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
+                    "From phenotype association" );
+            accreteResults( rawResults, phenotypeGenes );
+        }
 
         Collection<SearchResult> compositeSequences = null;
         if ( settings.isSearchProbes() ) {
@@ -2333,14 +2340,6 @@ public class SearchServiceImpl implements SearchService {
             Collection<SearchResult> ontologyGenes = dbHitsToSearchResult(
                     geneSearchService.getGOGroupGenes( searchString, settings.getTaxon() ), "From GO group" );
             accreteResults( rawResults, ontologyGenes );
-        }
-
-        if ( settings.isUsePhenotypes() ) {
-
-            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
-                    geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
-                    "From phenotype association" );
-            accreteResults( rawResults, phenotypeGenes );
         }
 
         if ( settings.isSearchBibrefs() ) {
