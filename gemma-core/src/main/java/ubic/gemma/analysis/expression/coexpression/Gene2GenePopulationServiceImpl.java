@@ -602,48 +602,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         try {
             for ( Gene queryGene : toUseGenes ) {
-
-                // Do it
-                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
-                        queryGene, expressionExperiments, stringency, 0 );
-
-                // persist it or write out
-
-                StopWatch timer = new StopWatch();
-                int usedLinks = 0;
-                if ( analysis != null ) {
-                    timer.start();
-                    List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions,
-                            analysis, genesToAnalyzeMap, processedGenes, stringency );
-                    totalLinks += created.size();
-                    usedLinks = created.size();
-                    timer.stop();
-                    if ( timer.getTime() > 2000 ) {
-                        log.info( "Persist links: " + timer.getTime() + "ms" );
-                    }
-                } else {
-                    List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-                    for ( CoexpressionValueObject co : coexps ) {
-                        if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
-                            continue;
-                        }
-                        Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
-                        if ( processedGenes.contains( secondGene ) ) {
-                            continue;
-                        }
-                        usedLinks++;
-                        totalLinks++;
-                        System.out.println( format( co ) );
-                    }
-                    if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
-                }
-
-                computeNodeDegree( queryGene, usedLinks, expressionExperiments );
-
-                processedGenes.add( queryGene );
-                if ( processedGenes.size() % 100 == 0 ) {
-                    log.info( "Processed " + processedGenes.size() + " genes..." );
-                }
+                totalLinks = processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
+                        processedGenes, stringency, totalLinks, queryGene );
             } // end loop over genes
 
             completeNodeDegreeComputations( analysis != null );
@@ -668,6 +628,64 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             throw new RuntimeException( e );
         }
         return processedGenes;
+    }
+
+    /**
+     * @param expressionExperiments
+     * @param genesToAnalyzeMap
+     * @param analysis
+     * @param eeIdOrder
+     * @param processedGenes
+     * @param stringency
+     * @param totalLinks
+     * @param queryGene
+     * @return
+     */
+    private int processGene( Collection<? extends BioAssaySet> expressionExperiments,
+            Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Map<Long, Integer> eeIdOrder,
+            Collection<Gene> processedGenes, int stringency, int totalLinks, Gene queryGene ) {
+        // Do it
+        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
+                expressionExperiments, stringency, 0 );
+
+        // persist it or write out
+
+        StopWatch timer = new StopWatch();
+        int usedLinks = 0;
+        if ( analysis != null ) {
+            timer.start();
+            List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions, analysis,
+                    genesToAnalyzeMap, processedGenes, stringency );
+            totalLinks += created.size();
+            usedLinks = created.size();
+            timer.stop();
+            if ( timer.getTime() > 2000 ) {
+                log.info( "Persist " + usedLinks + " links: " + timer.getTime() + "ms" );
+            }
+        } else {
+            List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+            for ( CoexpressionValueObject co : coexps ) {
+                if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                    continue;
+                }
+                Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                if ( processedGenes.contains( secondGene ) ) {
+                    continue;
+                }
+                usedLinks++;
+                totalLinks++;
+                System.out.println( format( co ) );
+            }
+            if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
+        }
+
+        computeNodeDegree( queryGene, usedLinks, expressionExperiments );
+
+        processedGenes.add( queryGene );
+        if ( processedGenes.size() % 100 == 0 ) {
+            log.info( "Processed " + processedGenes.size() + " genes..." );
+        }
+        return totalLinks;
     }
 
     /**

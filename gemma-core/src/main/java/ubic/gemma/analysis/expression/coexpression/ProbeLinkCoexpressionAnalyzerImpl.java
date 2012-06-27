@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -73,13 +74,13 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * Gene->EEs tested in. This is a cache that _should_ be safe to use, as it is only used in batch processing, which
      * uses a 'short-lived' spring context build on the command line -- not the web application.
      */
-    private Map<Long, List<Boolean>> genesTestedIn = new HashMap<Long, List<Boolean>>();
+    private Map<Long, List<Boolean>> genesTestedIn = new ConcurrentHashMap<Long, List<Boolean>>();
 
     /**
      * Gene->ees tested in, in a faster access format - preordered by the ees. As for the genesTestedIn, this should not
      * be used in webapps.
      */
-    private Map<Long, byte[]> geneTestStatusByteCache = new HashMap<Long, byte[]>();
+    private Map<Long, byte[]> geneTestStatusByteCache = new ConcurrentHashMap<Long, byte[]>();
 
     /*
      * (non-Javadoc)
@@ -448,9 +449,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         }
 
         if ( timer.getTime() > 100 ) {
+            // It usually doesn't take this long.
             log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms; " + loopcount + " loops  " );
 
-            // provide a cache status update at the same time. Worried about memory. 1500 * 50000 = 75megabytes, so this
+            // provide a cache status update at the same time. Worried about memory. 1500 data sets * 50000 genes =
+            // 75megabytes, so this
             // shouldn't be a big deal.
             log.info( geneTestStatusByteCache.size() + " gene test status stored in cache, approx "
                     + ( geneTestStatusByteCache.get( queryGeneId ).length * geneTestStatusByteCache.size() )

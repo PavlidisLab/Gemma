@@ -38,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -119,6 +120,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                      * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put
                      * in place to help in the cleanup of duplicated genes. But this can happen fairly routinely when
                      * NCBI information changes in messy ways.
+                     * 
+                     * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call
+                     * from a read-write method.
                      */
                     Collection<Gene> toDelete = new HashSet<Gene>();
                     for ( Gene foundGene : results ) {
@@ -627,6 +631,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.thaw( gene );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleCountAll()
+     */
     @Override
     protected Integer handleCountAll() {
         final String query = "select count(*) from GeneImpl";
@@ -634,6 +643,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Integer ) r.iterator().next();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleFindByAccession(java.lang.String,
+     * ubic.gemma.model.common.description.ExternalDatabase)
+     */
     @SuppressWarnings({ "cast" })
     @Override
     protected Gene handleFindByAccession( String accession, ExternalDatabase source ) {
@@ -709,40 +724,35 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         final Map<Gene, CoexpressionCollectionValueObject> coexpressions = new HashMap<Gene, CoexpressionCollectionValueObject>();
+
+        if ( genes.size() == 1 ) {
+            Gene soleQueryGene = genes.iterator().next();
+            CoexpressionCollectionValueObject coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees,
+                    stringency );
+            coexpressions.put( soleQueryGene, coexpressedGenes );
+            return coexpressions;
+        }
+
         Map<Long, Gene> queryGenes = new HashMap<Long, Gene>();
         for ( Gene g : genes ) {
             queryGenes.put( g.getId(), g );
             coexpressions.put( g, new CoexpressionCollectionValueObject( g, stringency ) );
         }
 
-        if ( genes.size() == 1 ) {
-            Gene soleQueryGene = genes.iterator().next();
-            coexpressions.put( soleQueryGene, this.getCoexpressedGenes( soleQueryGene, ees, stringency ) );
-            return coexpressions;
-        }
-
-        /*
-         * Check the cache. This is kind of a pain, because each query gene might have different experiments to
-         * consider. So we don't really remove datasets from consideration very readily. An exception might be where
-         * interGeneOnly is true.
-         */
-
         /*
          * NOTE: assuming all genes are from the same taxon!
          */
         Gene givenG = genes.iterator().next();
-        final long id = givenG.getId();
         log.debug( "Gene: " + givenG.getName() );
 
         final String p2pClassName = getP2PClassName( givenG );
-
         final Collection<Long> eeIds = EntityUtils.getIds( ees );
 
         String queryString = getNativeBatchQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
                 interGeneOnly );
 
-        Session session = this.getSession( false );
-        org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, id, queryString );
+        Session session = this.getSession();
+        org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, queryString );
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
@@ -751,8 +761,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         processCoexpQuery( queryGenes, queryObject, coexpressions );
 
         overallWatch.stop();
-        if ( overallWatch.getTime() > 1000 ) {
-            log.info( "Raw query for " + genes.size() + " genes in batch: " + overallWatch.getTime() + "ms" );
+        if ( overallWatch.getTime() > 3000 ) {
+            log.info( "Raw query for " + genes.size() + " genes in batch: " + overallWatch.getTime()
+                    + "ms;\n Query was: " + queryObject.getQueryString() );
         }
 
         for ( CoexpressionCollectionValueObject coexp : coexpressions.values() ) {
@@ -778,11 +789,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( final Gene gene,
             Collection<? extends BioAssaySet> ees, Integer stringency ) {
 
-        Gene givenG = gene;
-        final long id = givenG.getId();
         log.debug( "Gene: " + gene.getName() );
 
-        final String p2pClassName = getP2PClassName( givenG );
+        final String p2pClassName = getP2PClassName( gene );
 
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene, stringency );
 
@@ -828,7 +837,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
 
             Session session = this.getSession( false );
-            org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+            org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, queryString );
 
             // This is the actual business of querying the database.
             processCoexpQuery( gene, queryObject, coexpressions );
@@ -1056,6 +1065,51 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         return result;
+    }
+
+    @Override
+    protected void initDao() throws Exception {
+        /*
+         * Initialize the cache; if it already exists it will not be recreated.
+         */
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean diskPersistent = false;
+        int maxElements = 100000;
+        boolean eternal = false;
+        boolean overFlowToDisk = false;
+        int diskExpiryThreadIntervalSeconds = 600;
+        int maxElementsOnDisk = 0;
+        boolean terracottaCoherentReads = false;
+        boolean clearOnFlush = false;
+
+        if ( terracottaEnabled ) {
+            CacheConfiguration config = new CacheConfiguration( G2CS_CACHE_NAME, maxElements );
+            config.setStatistics( false );
+            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+            config.setOverflowToDisk( false );
+            config.setEternal( eternal );
+            config.setTimeToIdleSeconds( 0 );
+            config.setMaxElementsOnDisk( maxElementsOnDisk );
+            config.addTerracotta( new TerracottaConfiguration() );
+            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+            config.clearOnFlush( clearOnFlush );
+            config.setTimeToLiveSeconds( 0 );
+            config.getTerracottaConfiguration().setClustered( true );
+            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+            nonstopConfiguration.addTimeoutBehavior( tobc );
+            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
+            this.gene2CsCache = new Cache( config );
+        } else {
+            this.gene2CsCache = new Cache( G2CS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+        }
+
+        cacheManager.addCache( gene2CsCache );
+        this.gene2CsCache = cacheManager.getCache( G2CS_CACHE_NAME );
+
     }
 
     /**
@@ -1625,52 +1679,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Gene2Cs cache fill " + newitems.size() + " elements: " + timer.getTime() + "ms" );
+            try {
+                log.info( gene2CsCache.getMemoryStoreSize() + " items in cache memory; " );
+            } catch ( Exception e ) {
+                // no big deal.
+                log.info( "Was unable to get Gene2CS cache stats:  " + e.getMessage() );
+            }
         }
-
-    }
-
-    @Override
-    protected void initDao() throws Exception {
-        /*
-         * Initialize the cache; if it already exists it will not be recreated.
-         */
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
-        boolean diskPersistent = false;
-        int maxElements = 100000;
-        boolean eternal = false;
-        boolean overFlowToDisk = false;
-        int diskExpiryThreadIntervalSeconds = 600;
-        int maxElementsOnDisk = 0;
-        boolean terracottaCoherentReads = false;
-        boolean clearOnFlush = false;
-
-        if ( terracottaEnabled ) {
-            CacheConfiguration config = new CacheConfiguration( G2CS_CACHE_NAME, maxElements );
-            config.setStatistics( false );
-            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( false );
-            config.setEternal( eternal );
-            config.setTimeToIdleSeconds( 0 );
-            config.setMaxElementsOnDisk( maxElementsOnDisk );
-            config.addTerracotta( new TerracottaConfiguration() );
-            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
-            config.clearOnFlush( clearOnFlush );
-            config.setTimeToLiveSeconds( 0 );
-            config.getTerracottaConfiguration().setClustered( true );
-            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
-            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
-            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
-            nonstopConfiguration.addTimeoutBehavior( tobc );
-            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
-            this.gene2CsCache = new Cache( config );
-        } else {
-            this.gene2CsCache = new Cache( G2CS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                    null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
-        }
-
-        cacheManager.addCache( gene2CsCache );
-        this.gene2CsCache = cacheManager.getCache( G2CS_CACHE_NAME );
 
     }
 
@@ -1679,16 +1694,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @param genes
      * @param ees
-     * @param id
      * @param eeIds
      * @param queryString
      * @return
      */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Collection<Gene> genes, long id,
-            String queryString ) {
-        org.hibernate.SQLQuery queryObject;
+    private org.hibernate.Query setCoexpQueryParameters( Session session, Collection<Gene> genes, String queryString ) {
+        SQLQuery queryObject;
         queryObject = session.createSQLQuery( queryString ); // for native query.
-
         queryObject.addScalar( "id", new LongType() ); // gene out.
         queryObject.addScalar( "exper", new LongType() );
         queryObject.addScalar( "pvalue", new DoubleType() );
@@ -1696,13 +1708,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
         queryObject.addScalar( "queryGeneId", new LongType() );
-
-        Collection<Long> ids = new HashSet<Long>();
-        for ( Gene gene : genes ) {
-            ids.add( gene.getId() );
-        }
-
-        queryObject.setParameterList( "ids", ids );
+        queryObject.setParameterList( "ids", EntityUtils.getIds( genes ) );
 
         return queryObject;
     }
@@ -1710,12 +1716,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * @param gene
      * @param ees
-     * @param id
      * @param eeIds
      * @param queryString
      * @return
      */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
+    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, String queryString ) {
         org.hibernate.SQLQuery queryObject;
         queryObject = session.createSQLQuery( queryString ); // for native query.
 
@@ -1725,8 +1730,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
-        // queryObject.addScalar( "geneType", new StringType() );
-        queryObject.setLong( "id", id );
+        queryObject.setLong( "id", gene.getId() );
 
         return queryObject;
     }
