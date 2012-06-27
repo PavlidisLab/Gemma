@@ -183,7 +183,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         width: 0.1,
         tooltip: "View bioassays",
         renderer: function(value, metaData, record, rowIndex, colIndex, store){
-            return (value && record) ? '<a title="View bioassays" href="Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=' + record.id + '">' + value + '</a>' : '';
+            return (value && record) ? '<a title="View bioassays" href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=' + record.id + '">' + value + '</a>' : '';
         }
     }, {
         header: "Species",
