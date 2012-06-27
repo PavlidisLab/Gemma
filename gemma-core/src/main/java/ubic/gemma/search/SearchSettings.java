@@ -288,6 +288,7 @@ public class SearchSettings {
         this.searchProbes = false;
         this.searchGeneSets = false;
         this.searchExperimentSets = false;
+        this.searchForPhenotypes = false;
     }
 
     public ArrayDesign getArrayDesign() {
