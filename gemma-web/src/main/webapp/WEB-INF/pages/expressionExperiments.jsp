@@ -33,7 +33,7 @@ $Id$
 		}
 		
 		var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel({
-			height:260,
+			height:280,
 			flex:'0',
 			listeners: {
 				expand: onExpandCollapse,
