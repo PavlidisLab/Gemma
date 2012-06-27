@@ -151,7 +151,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     //width: 1000,
     autoScroll: true,
     stripeRows: true,
-    rowExpander: true,
+    rowExpander: null,
     emptyText: Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.emptyText,
     viewConfig: {
         forceFit: true
@@ -264,7 +264,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		this.rowExpander = new Ext.grid.RowExpander({
 			enableCaching : false,
-			tpl: Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
+			tpl: Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails
 		});
 		
 		this.on('reportUpdated', function(id){
@@ -439,8 +439,8 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					}
 				}
 				return false;
-			}
-		}
+			};
+		};
 		
 		
 		Ext.apply(this, {
@@ -589,7 +589,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     adjustForIsAdmin: function(isAdmin){
 		
         // if user is admin, update the column model to show the status column
-		var colModel = this.getColumnModel()
+		var colModel = this.getColumnModel();
 		
         var index = this.getColumnModel().findColumnIndex('lastSequenceUpdate');
         colModel.setHidden(index, !isAdmin);
