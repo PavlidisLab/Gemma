@@ -257,7 +257,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     private void findPhenotypesGenesAssociationsOwnedByUser( String userName, Taxon taxon,
             HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
-
+        
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
         sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
         sqlQuery += "where acl_sid.sid = '" + userName + "' ";
@@ -319,7 +319,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         queryString += "join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity ";
         queryString += "join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id ";
         queryString += "join acl_class on acl_class.id = acl_object_identity.object_id_class ";
-        queryString += "join acl_sid on acl_sid.id = acl_entry.sid ";
+        queryString += "join acl_sid on acl_sid.id = acl_object_identity.owner_sid ";
 
         return queryString;
     }
