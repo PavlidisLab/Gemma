@@ -93,9 +93,9 @@ public class DifferentialExpressionSearchController {
      * @param taskId
      * @return
      */
-    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
-        return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
-    }
+//    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
+//        return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
+//    }
 
     /**
      * @param taskId
