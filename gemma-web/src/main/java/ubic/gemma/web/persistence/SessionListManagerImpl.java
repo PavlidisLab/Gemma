@@ -91,18 +91,46 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
-            List<SessionBoundGeneSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundGeneSetValueObject>();
-            for ( SessionBoundGeneSetValueObject gsvo : castedCollection ) {
-                if ( gsvo.getTaxonId() == taxonId ) {
-                    taxonFilteredCollection.add( gsvo );
-                }
-            }
-
-            castedCollection = taxonFilteredCollection;
-
+            castedCollection = filterGeneSetsByTaxon( taxonId, castedCollection );
         }
 
         return castedCollection;
+    }
+
+    /**
+     * Return only those sets that have taxonId equal to the taxonId param
+     * @param taxonId
+     * @param castedCollection
+     * @return
+     */
+    private List<SessionBoundGeneSetValueObject> filterGeneSetsByTaxon( Long taxonId,
+            List<SessionBoundGeneSetValueObject> castedCollection ) {
+        List<SessionBoundGeneSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundGeneSetValueObject>();
+        for ( SessionBoundGeneSetValueObject gsvo : castedCollection ) {
+            if ( gsvo.getTaxonId().equals( taxonId ) ) {
+                taxonFilteredCollection.add( gsvo );
+            }
+        }
+
+        return taxonFilteredCollection;
+    }
+
+    /**
+     * Return only those sets that have taxonId equal to the taxonId param
+     * @param taxonId
+     * @param castedCollection
+     * @return
+     */
+    private List<SessionBoundExpressionExperimentSetValueObject> filterExperimentSetsByTaxon( Long taxonId,
+            List<SessionBoundExpressionExperimentSetValueObject> castedCollection ) {
+        List<SessionBoundExpressionExperimentSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundExpressionExperimentSetValueObject>();
+        for ( SessionBoundExpressionExperimentSetValueObject eesvo : castedCollection ) {
+            if ( eesvo.getTaxonId().equals( taxonId ) ) {
+                taxonFilteredCollection.add( eesvo );
+            }
+        }
+
+        return taxonFilteredCollection;
     }
 
     /*
@@ -136,15 +164,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
-            List<SessionBoundGeneSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundGeneSetValueObject>();
-            for ( SessionBoundGeneSetValueObject gsvo : castedCollection ) {
-                if ( gsvo.getTaxonId() == taxonId ) {
-                    taxonFilteredCollection.add( gsvo );
-                }
-            }
-
-            castedCollection = taxonFilteredCollection;
-
+            castedCollection = this.filterGeneSetsByTaxon( taxonId, castedCollection );
         }
 
         return castedCollection;
@@ -345,15 +365,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
-            List<SessionBoundExpressionExperimentSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundExpressionExperimentSetValueObject>();
-            for ( SessionBoundExpressionExperimentSetValueObject gsvo : castedCollection ) {
-                if ( gsvo.getTaxonId() == taxonId ) {
-                    taxonFilteredCollection.add( gsvo );
-                }
-            }
-
-            castedCollection = taxonFilteredCollection;
-
+            castedCollection = this.filterExperimentSetsByTaxon( taxonId, castedCollection );
         }
 
         return castedCollection;
