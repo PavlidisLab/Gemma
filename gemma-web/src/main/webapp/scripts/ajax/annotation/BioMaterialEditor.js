@@ -96,6 +96,11 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.factorValueEditors = [];
 
+		/*
+		 *  sort by id to give consistency.
+		 */
+		factors.sort(function(a,b){return a.id - b.id});
+		
 		for (var i = 0; i < factors.length; i++) {
 			var factor = factors[i];
 			var factorId = "factor" + factor.id;
