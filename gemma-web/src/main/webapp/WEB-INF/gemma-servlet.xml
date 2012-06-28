@@ -324,6 +324,7 @@
 			<dwr:include method="getExperimentIdsInSet" />
 			<dwr:include method="loadAll" />
 			<dwr:include method="load" />
+			<dwr:include method="loadByName" />
 			<dwr:include method="update" />
 			<dwr:include method="updateNameDesc" />
 			<dwr:include method="create" />

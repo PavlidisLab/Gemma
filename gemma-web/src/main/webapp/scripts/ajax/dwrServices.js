@@ -553,6 +553,10 @@ ExpressionExperimentSetController.load = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'load', p0,
 			callback);
 }
+ExpressionExperimentSetController.loadByName = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadByName', p0,
+			callback);
+}
 ExpressionExperimentSetController.removeUserAndSessionGroups = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'removeUserAndSessionGroups', p0,
 			callback);
