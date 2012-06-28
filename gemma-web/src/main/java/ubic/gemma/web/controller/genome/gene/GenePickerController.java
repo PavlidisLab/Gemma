@@ -209,8 +209,10 @@ public class GenePickerController {
 
         Collections.sort( sessionSets );
                 
-        Collection<SearchResultDisplayObject> results = geneSearchService.searchGenesAndGeneGroups(query, taxonId );
+        // maintain order: session sets first
+        Collection<SearchResultDisplayObject> results = new ArrayList<SearchResultDisplayObject>();
         results.addAll( sessionSets );
+        results.addAll( geneSearchService.searchGenesAndGeneGroups(query, taxonId ) );
         return results;
 
     }
