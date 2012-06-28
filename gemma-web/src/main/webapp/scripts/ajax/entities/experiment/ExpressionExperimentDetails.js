@@ -574,6 +574,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var shortNameField = new Ext.form.TextField({
             enableKeyEvents: true,
             allowBlank: false,
+            grow: true,
             disabledClass: 'disabled-plain',
             readOnly: true,
             //disabled: true,
