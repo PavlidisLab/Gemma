@@ -248,8 +248,8 @@
 					<groupId>taglibs</groupId>
 				</exclusion>
 				<exclusion>
-					<artifactId>org.slf4j</artifactId>
-					<groupId>jcl104-over-slf4j</groupId>
+					<groupId>org.slf4j</groupId>
+					<artifactId>jcl104-over-slf4j</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
