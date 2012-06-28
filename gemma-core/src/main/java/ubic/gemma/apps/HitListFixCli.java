@@ -111,6 +111,8 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
                 }
 
                 probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
+                log.info( "Got probe/gene info" );
+
                 assert !probe2GeneMap.isEmpty();
 
                 for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
@@ -120,10 +122,12 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
                     resultSet.getHitListSizes().clear();
                     resultSet.getHitListSizes().addAll( hitlists );
                     diffS.update( resultSet );
-
+                    log.info( "Did result set" );
                 }
 
             }
+
+            log.info( "Done with " + bas );
 
         }
 
