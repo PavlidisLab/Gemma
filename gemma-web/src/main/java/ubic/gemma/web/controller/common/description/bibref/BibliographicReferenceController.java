@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -45,7 +46,7 @@ public interface BibliographicReferenceController {
      */
     @RequestMapping("/bibRefAdd.html")
     public abstract ModelAndView add( HttpServletRequest request, HttpServletResponse response );
-    
+
     /**
      * AJAX
      * 
@@ -55,20 +56,59 @@ public interface BibliographicReferenceController {
     public abstract JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch );
 
     /**
-     * AJAX
-     * 
-     * @param query
-     * @return
-     */
-    public abstract JsonReaderResponse<BibliographicReferenceValueObject> search( String query);
-
-    /**
      * @param request
      * @param response
      * @return
      */
     @RequestMapping("/deleteBibRef.html")
     public abstract ModelAndView delete( HttpServletRequest request, HttpServletResponse response );
+
+    /**
+     * AJAX
+     * 
+     * @param ids
+     * @return
+     */
+    public BibliographicReferenceValueObject load( Long id );
+
+    /**
+     * AJAX
+     * 
+     * @return collection of all bib refs that are for an experiment
+     */
+    public Collection<BibliographicReferenceValueObject> loadAllForExperiments();
+
+    /**
+     * AJAX
+     * 
+     * @param pubmed ID id
+     * @return
+     */
+    public BibliographicReferenceValueObject loadFromPubmedID( String pubmedID );
+
+    /**
+     * AJAX
+     * 
+     * @param ids
+     * @return
+     */
+    public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids );
+
+    /**
+     * AJAX
+     * 
+     * @param query
+     * @return
+     */
+    public abstract JsonReaderResponse<BibliographicReferenceValueObject> search( String query );
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/searchBibRefs.html")
+    public abstract ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response );
 
     /**
      * @param request
@@ -83,49 +123,15 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/searchBibRefs.html")
-    public abstract ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response );
-    
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/showAllEeBibRefs.html")
     public abstract ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response );
 
-
-    /**
-     * AJAX 
-     * @return collection of all bib refs that are for an experiment
-     */
-    public Collection<BibliographicReferenceValueObject> loadAllForExperiments();
     /**
      * For AJAX calls. Refresh the Gemma entry based on information from PubMed.
      * 
      * @param id
-     */
-    public abstract void update( Long id );
-    
-    /**
-     * AJAX
-     * @param ids
      * @return
      */
-    public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids );
-    
-    /**
-     * AJAX
-     * @param ids
-     * @return
-     */
-    public BibliographicReferenceValueObject load( Long id );
-
-    /**
-     * AJAX
-     * @param pubmed ID id
-     * @return
-     */
-    public BibliographicReferenceValueObject loadFromPubmedID( String pubmedID );
+    public abstract BibliographicReference update( Long id, String pubMedId );
 
 }
