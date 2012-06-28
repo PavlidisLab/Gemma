@@ -27,6 +27,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
+    public static void main( String[] args ) {
+        BatchEffectPopulationCli b = new BatchEffectPopulationCli();
+        b.doWork( args );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -62,7 +67,9 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                 log.info( "Processing: " + bas );
 
                 try {
-                    boolean success = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
+                    ExpressionExperiment ee = ( ExpressionExperiment ) bas;
+                    ee = this.eeService.thawLite( ee );
+                    boolean success = ser.fillBatchInformation( ee, force );
                     if ( success ) {
                         this.successObjects.add( bas.toString() );
                     } else {
@@ -79,11 +86,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
         summarizeProcessing();
         return null;
-    }
-
-    public static void main( String[] args ) {
-        BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-        b.doWork( args );
     }
 
 }
