@@ -53,8 +53,7 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public Gene findByAccession( String accession,
-            ExternalDatabase source );
+    public Gene findByAccession( String accession, ExternalDatabase source );
 
     /**
      * <p>
@@ -145,8 +144,7 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public Collection<CompositeSequence> getCompositeSequences( Gene gene,
-            ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
 
     /**
      * 
@@ -206,8 +204,6 @@ public interface GeneDao extends BaseDao<Gene> {
      * genes)
      */
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
 
     /**
      * @param ids

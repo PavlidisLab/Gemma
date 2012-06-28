@@ -92,7 +92,7 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Collection<Gene> geneCollection = geneService.loadKnownGenes( tax );
+        Collection<Gene> geneCollection = geneService.loadAll( tax );
 
         // build results in the form of a collection
         Collection<String> geneIds = new HashSet<String>();

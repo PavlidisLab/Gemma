@@ -90,7 +90,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
      */
     @Override
     public void updateMultifunctionality( Taxon taxon ) {
-        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
+        Collection<Gene> genes = geneService.loadAll( taxon );
 
         if ( genes.isEmpty() ) {
             return;

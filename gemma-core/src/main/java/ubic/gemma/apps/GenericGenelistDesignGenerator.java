@@ -110,7 +110,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         /*
          * Load up the genes for the organism, exclusing predicted genes (for now) and pars.
          */
-        Collection<Gene> knownGenes = geneService.loadKnownGenes( taxon );
+        Collection<Gene> knownGenes = geneService.loadAll( taxon );
         log.info( knownGenes.size() + " genes" );
 
         /*

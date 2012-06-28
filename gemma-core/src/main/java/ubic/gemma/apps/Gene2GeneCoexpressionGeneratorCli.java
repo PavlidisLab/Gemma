@@ -144,7 +144,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             // */
             // experimentSetService.initAutomaticallyGeneratedExperimentSet( eesToUse, taxon );
         } else if ( this.taxon != null ) {
-            toUseGenes = super.geneService.loadKnownGenesWithProducts( taxon );
+            assert !toUseGenes.isEmpty();
             geneVoteAnalyzer.analyze( taxon, toUseGenes, toUseStringency, analysisName, useDB );
         } else {
             // analyze just the specific ones asked for. Not usual.
@@ -186,7 +186,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
                 throw new RuntimeException( e );
             }
         } else {
-            toUseGenes = super.geneService.loadKnownGenesWithProducts( taxon );
+            toUseGenes = super.geneService.loadAll( taxon );
         }
 
         if ( toUseGenes.size() < 2 ) {

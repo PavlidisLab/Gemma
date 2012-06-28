@@ -515,7 +515,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
         }
         log.info( "Processing all genes for " + taxon );
-        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
+        Collection<Gene> genes = geneService.loadAll( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
                 type );

@@ -258,17 +258,9 @@ public interface GeneService {
     public GeneValueObject loadGenePhenotypes( Long geneId );
 
     /**
-     * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
+     * Returns a collection of genes for the specified taxon
      */
-    public Collection<Gene> loadKnownGenes( Taxon taxon );
-
-    /**
-     * Like loadKnownGenes, but excludes genes that don't have gene products.
-     * 
-     * @param taxon
-     * @return
-     */
-    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
+    public Collection<Gene> loadAll( Taxon taxon );
 
     /**
      * Gets all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching

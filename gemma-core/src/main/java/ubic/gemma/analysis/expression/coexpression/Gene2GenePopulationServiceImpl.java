@@ -247,15 +247,17 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     public void analyze( Taxon taxon, Collection<Gene> toUseGenes, int toUseStringency, String analysisName,
             boolean useDB ) {
         Collection<ExpressionExperiment> findByTaxon = expressionExperimentService.findByTaxon( taxon );
+
         final Collection<Long> untroubled = expressionExperimentService
                 .getUntroubled( EntityUtils.getIds( findByTaxon ) );
-        CollectionUtils.filter( untroubled, new Predicate() {
+
+        CollectionUtils.filter( findByTaxon, new Predicate() {
             @Override
             public boolean evaluate( Object object ) {
-                boolean ok = untroubled.contains( ( ( ExpressionExperiment ) object ).getId() );
-                return ok;
+                return untroubled.contains( ( ( ExpressionExperiment ) object ).getId() );
             }
         } );
+
         if ( findByTaxon.size() != untroubled.size() ) {
             log.info( "Removed " + ( findByTaxon.size() - untroubled.size() )
                     + " experiments with 'trouble' flags, leaving " + untroubled.size() );
@@ -602,8 +604,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         try {
             for ( Gene queryGene : toUseGenes ) {
-                totalLinks = processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
-                        processedGenes, stringency, totalLinks, queryGene );
+                totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
+                        processedGenes, stringency, queryGene );
             } // end loop over genes
 
             completeNodeDegreeComputations( analysis != null );
@@ -643,7 +645,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      */
     private int processGene( Collection<? extends BioAssaySet> expressionExperiments,
             Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Map<Long, Integer> eeIdOrder,
-            Collection<Gene> processedGenes, int stringency, int totalLinks, Gene queryGene ) {
+            Collection<Gene> processedGenes, int stringency, Gene queryGene ) {
         // Do it
         CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
                 expressionExperiments, stringency, 0 );
@@ -656,7 +658,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             timer.start();
             List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions, analysis,
                     genesToAnalyzeMap, processedGenes, stringency );
-            totalLinks += created.size();
             usedLinks = created.size();
             timer.stop();
             if ( timer.getTime() > 2000 ) {
@@ -673,19 +674,13 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                     continue;
                 }
                 usedLinks++;
-                totalLinks++;
                 System.out.println( format( co ) );
             }
             if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
         }
 
         computeNodeDegree( queryGene, usedLinks, expressionExperiments );
-
-        processedGenes.add( queryGene );
-        if ( processedGenes.size() % 100 == 0 ) {
-            log.info( "Processed " + processedGenes.size() + " genes..." );
-        }
-        return totalLinks;
+        return usedLinks;
     }
 
     /**

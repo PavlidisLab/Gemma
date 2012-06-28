@@ -251,7 +251,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection<Gene> genes = geneDao.loadKnownGenes( human );
+        Collection<Gene> genes = geneDao.loadAll( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );

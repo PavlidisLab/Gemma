@@ -37,12 +37,14 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -533,19 +535,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
-    @Override
-    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon ) {
-
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Must provide taxon" );
-        }
-
-        final String queryString = "select distinct gene from GeneImpl as gene fetch all properties join gene.products where gene.taxon = :taxon"
-                + " and gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL;
-
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -662,7 +651,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );
                 } catch ( NumberFormatException e ) {
-
+                    // it's not an NCBIid
                 }
             }
         } else {
@@ -670,7 +659,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 try {
                     return this.findByNcbiId( Integer.parseInt( accession ) );
                 } catch ( NumberFormatException e ) {
-
+                    // it's not an NCBIid
                 }
             } else {
                 genes = this.getHibernateTemplate().findByNamedParam( externalDbquery,
@@ -971,8 +960,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
 
-        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-                + " and gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL;
+        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon";
 
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -1213,7 +1201,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
                 + "(pl.nucleotide >= :start AND pl.nucleotide <= :end) "
                 + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
-                + "and pl.chromosome = :chromosome and g.class='GeneImpl' ";
+                + "and pl.chromosome = :chromosome ";
 
         query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
 

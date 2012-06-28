@@ -1586,7 +1586,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param taxon
      */
     private void rebuildTaxonGeneGOMap() {
-        Collection<Gene> genes = geneService.loadKnownGenes( this.taxon );
+        Collection<Gene> genes = geneService.loadAll( this.taxon );
         populateGeneGoMap( genes );
         saveCacheToDisk( geneGoMap, getGeneGOMapFileName() );
     }

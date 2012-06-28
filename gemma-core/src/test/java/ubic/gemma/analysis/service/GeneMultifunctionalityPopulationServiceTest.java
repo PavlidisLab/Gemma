@@ -65,7 +65,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     public void tearDown() {
         gene2GoService.removeAll();
         if ( testTaxon != null ) {
-            Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );
+            Collection<Gene> genes = geneService.loadAll( testTaxon );
             if ( !genes.isEmpty() ) geneService.remove( genes );
         }
         goService.shutDown();
@@ -96,7 +96,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         log.info( "Cleaning ..." );
 
         gene2GoService.removeAll();
-        Collection<Gene> oldGenes = geneService.loadKnownGenes( testTaxon );
+        Collection<Gene> oldGenes = geneService.loadAll( testTaxon );
         if ( !oldGenes.isEmpty() ) geneService.remove( oldGenes );
 
         log.info( "Creating new genes  ..." );
@@ -135,7 +135,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
         log.info( "Checking results" );
 
-        Collection<Gene> genes = geneService.loadKnownGenes( testTaxon );
+        Collection<Gene> genes = geneService.loadAll( testTaxon );
 
         assertEquals( 120, genes.size() );
 

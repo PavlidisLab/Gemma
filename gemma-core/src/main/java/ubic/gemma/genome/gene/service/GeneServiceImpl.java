@@ -271,11 +271,6 @@ public class GeneServiceImpl implements GeneService {
     }
 
     @Override
-    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon ) {
-        return this.getGeneDao().loadKnownGenesWithProducts( taxon );
-    }
-
-    @Override
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
         Gene gene = load( geneId );
@@ -535,10 +530,10 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see GeneService#loadKnownGenes(Taxon)
+     * @see GeneService#loadAll(Taxon)
      */
     @Override
-    public Collection<Gene> loadKnownGenes( final Taxon taxon ) {
+    public Collection<Gene> loadAll( final Taxon taxon ) {
         return this.getGeneDao().loadKnownGenes( taxon );
     }
 
