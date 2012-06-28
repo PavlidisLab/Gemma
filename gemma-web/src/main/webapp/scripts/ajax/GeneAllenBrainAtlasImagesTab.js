@@ -44,11 +44,13 @@ Gemma.GeneAllenBrainAtlasImages =  Ext.extend(Ext.Panel, {
 				var i;
 				for(i = 0; i< imageObjects.length; i++){
 					img = imageObjects[i];
+				var tmpThumblink = img.downloadExpressionPath.replace("zoom=2","zoom=0");
 				this.add({
 					html: '<div style="cursor: pointer; float: left; padding: 8px">'+
 						'<a title="Allen Brain Atlas Image for '+img.queryGeneSymbol+', click to enlarge" '+
 						'onClick="Gemma.geneLinkOutPopUp( &#34; '+img.downloadExpressionPath+' &#34; )">'+
-						'<img src="'+img.expressionThumbnailUrl+'" /> </a>'+
+						'<img src="'+ tmpThumblink +'" /> </a>'+
+//	this link is broken:'<img src="'+img.expressionThumbnailUrl+'" /> </a>'+
 						'</div>'
 				});	
 				}
