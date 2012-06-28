@@ -25,7 +25,37 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 	},		
 	
 	initTemplate_ : function () {
-		return new Ext.XTemplate (
+		if (Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT) {
+			return new Ext.XTemplate (
+					'<span style="font-size: 12px ">',
+					'<tpl for=".">',
+					'<tpl if="type==\'condition\'">',   //condition
+					'<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
+					'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br> ',				
+					'<b>Baseline</b>: {baselineFactorValue} <br> ',				
+					'<b>Enrichment</b>: {numDiffExpressed} out of {numInSet} genes are differentially expressed with p-value {ora:sciNotation} <br> ',				
+					'<b>Specificity</b>: {specificityPercent}% of genes were differentially expressed under this condition ({totalDiffExpressed} out of {totalOnArray})<br><br> ',
+					'</tpl>',
+					'<tpl if="type==\'minipie\'">',     //minipie
+					'{percentDiffExpressed} of genes are differentially expressed.<br>',
+					'({totalDiffExpressed} of {totalOnArray}) Click for details.',
+					'</tpl>',
+					'<tpl if="type==\'gene\'">',		//gene
+					'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
+					'<b>Meta P value</b>: {geneMetaPvalue:sciNotation} based on {metaPvalueCount} p-values.<br>',
+					'</tpl>',
+					'<tpl if="type==\'cell\'">',		 //cell
+					'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
+					'<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
+					'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br>',				
+					'<b>Baseline</b>: {baselineFactorValue} <br>',
+					'<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',				
+					'<b>q-value</b>: {correctedPValue:sciNotation}<br>',
+					'<b>p-value</b>: {pvalue:sciNotation}<br>',
+					'<b>log fold change</b>: {foldChange}',				
+					'</tpl>', '</tpl></span>');				
+		} else {
+			return new Ext.XTemplate (
 				'<span style="font-size: 12px ">',
 				'<tpl for=".">',
 				'<tpl if="type==\'condition\'">',   //condition
@@ -33,11 +63,11 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br> ',				
 				'<b>Baseline</b>: {baselineFactorValue} <br> ',				
 				'<b>Enrichment</b>: {numDiffExpressed} out of {numInSet} probes are differentially expressed with p-value {ora:sciNotation} <br> ',				
-				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
+				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({totalDiffExpressed} out of {totalOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
-				'{percentProbesDiffExpressed} of probes are differentially expressed.<br>',
-				'({numberOfProbesDiffExpressed} of {numberOfProbesTotal}) Click for details.',
+				'{percentDiffExpressed} of probes are differentially expressed.<br>',
+				'({totalDiffExpressed} of {totalOnArray}) Click for details.',
 				'</tpl>',
 				'<tpl if="type==\'gene\'">',		//gene
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
@@ -53,6 +83,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>p-value</b>: {pvalue:sciNotation}<br>',
 				'<b>log fold change</b>: {foldChange}',				
 				'</tpl>', '</tpl></span>');
+		}
 	},
 
 	onRender: function() {

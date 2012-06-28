@@ -116,13 +116,17 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private boolean isSelected = false;
 
         private Integer numberOfGenesTested;
+        private Integer numberOfGenesDiffExpressed;
+        
         private Long factorValueId;
 
-        public Condition( ExpressionExperiment experiment, DifferentialExpressionAnalysis analysis,
-                ExpressionAnalysisResultSet resultSet, FactorValue factorValue ) {
+        public Condition( ExpressionExperiment experiment,
+                          DifferentialExpressionAnalysis analysis,
+                          ExpressionAnalysisResultSet resultSet,
+                          FactorValue factorValue ) {
             this( resultSet.getId(), factorValue.getId() );
             numberOfProbesOnArray = resultSet.getNumberOfProbesTested();
-            numberOfGenesTested = resultSet.getNumberOfGenesTested(); // FIXME USE THIS
+            numberOfGenesTested = resultSet.getNumberOfGenesTested();
             ExperimentalFactor factor = factorValue.getExperimentalFactor();
             datasetShortName = experiment.getShortName();
             datasetName = experiment.getName();
@@ -147,6 +151,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
                         numberDiffExpressedProbesUp = h.getNumberOfProbes();
                     } else if ( h.getDirection().equals( Direction.EITHER ) ) {
                         numberDiffExpressedProbes = h.getNumberOfProbes();
+                        numberOfGenesDiffExpressed = h.getNumberOfGenes();
                     }
                 }
             }
@@ -253,6 +258,10 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         public Integer getNumberDiffExpressedProbes() {
             return numberDiffExpressedProbes;
+        }
+
+        public Integer getNumberOfGenesDiffExpressed() {
+            return numberOfGenesDiffExpressed;
         }
 
         public Integer getNumberDiffExpressedProbesDown() {

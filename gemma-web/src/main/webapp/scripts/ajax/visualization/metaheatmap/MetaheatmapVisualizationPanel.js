@@ -216,8 +216,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					
 					discreteColorRangeObject: Gemma.Metaheatmap.Config.contrastsColourRange,
 					
-					pValueLabels: ["No Data", "Not Significant","0.1~0.05", "0.05~0.01", "0.01~0.005", "< 0.005"],
-					pValueValues: [0, 0, 1.1, 4, 7, 10],
+					pValueLabels: ["No Data", "Not Significant", "0.05~0.01", "0.01~0.005", "< 0.005"],
+					pValueValues: [0, 0, 4, 7, 10],
 					
 					fontSize: 12
 				}
@@ -449,8 +449,12 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			var condition = this.conditionTree.items[i];
 			condition.experimentSpecificity = condition.numberDiffExpressedProbes / condition.numberOfProbesOnArray;			
 			var numProbesMissing = 0;
-			var numOverThresholdInSet = 0;
+			
 			var numProbesInSet = 0;
+			var numProbesOverThresholdInSet = 0;
+
+			var numGenesInSet = 0;
+			var numGenesOverThresholdInSet = 0;
 
 			for (j = 0; j < this.geneTree.items.length; j++) {				
 				var gene = this.geneTree.items[j];
@@ -460,19 +464,28 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						numProbesMissing++;
 					} else {
 						if (cell.correctedPValue !== null) {
+							numGenesInSet ++;
 							numProbesInSet += cell.numberOfProbes;
 							if (cell.correctedPValue < Gemma.Constants.DifferentialExpressionQvalueThreshold) {
-								numOverThresholdInSet += cell.numberOfProbesDiffExpressed;
+								numGenesOverThresholdInSet ++;
+								numProbesOverThresholdInSet += cell.numberOfProbesDiffExpressed;								
 							}
 						}
 					}
 				}
 			}
-			condition.inverseSumPvalue = GemmaStatUtils.computeOraPvalue( condition.numberOfProbesOnArray, numProbesInSet, numOverThresholdInSet, condition.numberDiffExpressedProbes );
-			condition.ora = condition.inverseSumPvalue;
+			
+			if (Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT) {
+				condition.ora = GemmaStatUtils.computeOraPvalue( condition.numberOfGenesTested, numGenesInSet, numGenesOverThresholdInSet, condition.numberOfGenesDiffExpressed );
+				condition.numInSet = numGenesInSet;
+				condition.numDiffExpressed = numGenesOverThresholdInSet;
+			} else {						
+				condition.ora = GemmaStatUtils.computeOraPvalue( condition.numberOfProbesOnArray, numProbesInSet, numProbesOverThresholdInSet, condition.numberDiffExpressedProbes );
+				condition.numInSet = numProbesInSet;
+				condition.numDiffExpressed = numProbesOverThresholdInSet; 
+			}
+			
 			condition.oraDisplayValue = this.calculateBarChartValueBasedOnPvalue (condition.ora);
-			condition.numInSet = numProbesInSet;
-			condition.numDiffExpressed = numOverThresholdInSet; 
 			condition.percentProbesMissing = numProbesMissing / this.geneTree.items.length;
 		}	
 
@@ -480,7 +493,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		for (j = 0; j < this.geneTree.items.length; j++) {
 			gene = this.geneTree.items[j];			
 			var pValues = [];
-			// var correctedPValue = [];
 			var alreadySeenFactor = [];
 			numProbesMissing = 0;
 			for (i = 0; i < this.conditionTree.items.length; i++) {
@@ -493,7 +505,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						// We get p-value per condition(factor value vs baseline)  We have to keep only one p-value per factor.
 						if (typeof alreadySeenFactor[condition.factorId] === "undefined") {
 							pValues.push( cell.pValue );   // uncorrected.
-							// correctedPValue.push( cell.correctedPValue );  // not sure we need this
 							alreadySeenFactor[condition.factorId] = true;
 						}
 					}
@@ -501,10 +512,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			}
 			gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
 			gene.metaPvalueCount = pValues.length;
-			gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;
-			
-			gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue (gene.metaPvalue);
-			
+			gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;			
+			gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue (gene.metaPvalue);			
 		}			
 	},	
 
@@ -541,7 +550,15 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					metaPvalueCount : item.metaPvalueCount		
 			};
 		} else if (type === 'condition') {
-			var specificity = Gemma.Metaheatmap.Utils.formatPercent(item.numberDiffExpressedProbes, item.numberOfProbesOnArray, 2);
+			
+			if (Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT) {
+				item.totalDiffExpressed = item.numberOfGenesDiffExpressed;
+				item.totalOnArray = item.numberOfGenesTested;
+			} else {
+				item.totalDiffExpressed = item.numberDiffExpressedProbes;
+				item.totalOnArray = item.numberOfProbesOnArray;
+			}
+
 			msg = {
 					type 			  : 'condition',
 					factorCategory	  : item.factorCategory,
@@ -556,9 +573,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					numDiffExpressed    : item.numDiffExpressed,
 					numInSet			: item.numInSet,	
 					ora					: item.ora,
-					specificityPercent  : specificity,
-					numberDiffExpressedProbes : item.numberDiffExpressedProbes,
-					numberOfProbesOnArray     : item.numberOfProbesOnArray
+					specificityPercent  : Gemma.Metaheatmap.Utils.formatPercent(item.totalDiffExpressed, item.totalOnArray, 2),
+					totalDiffExpressed  : item.totalDiffExpressed,
+					totalOnArray        : item.totalOnArray
 			};
 		} else {
 			msg = {
