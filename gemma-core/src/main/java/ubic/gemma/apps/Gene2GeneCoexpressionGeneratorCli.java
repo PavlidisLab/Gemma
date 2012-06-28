@@ -64,6 +64,8 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     private boolean nodeDegreeOnly = false;
     private boolean updateExperimentSetsOnly = false;
 
+    ExpressionExperimentSetService experimentSetService;
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -217,8 +219,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
         return results;
     }
-
-    ExpressionExperimentSetService experimentSetService;
 
     private void initSpringBeans() {
         experimentSetService = this.getBean( ExpressionExperimentSetService.class );

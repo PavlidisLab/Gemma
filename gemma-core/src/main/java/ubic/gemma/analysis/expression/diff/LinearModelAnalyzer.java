@@ -45,10 +45,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.jet.math.Functions;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -80,6 +76,9 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.jet.math.Functions;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -114,6 +113,116 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * Preset levels for which we will store the HitListSizes.
      */
     private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.DiffExAnalyzer#computeHitListSizes(java.util.List, java.util.Map)
+     */
+    @Override
+    public Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+        Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
+
+        assert probeToGeneMap != null;
+
+        Collection<Gene> allGenes = new HashSet<Gene>();
+        for ( Collection<Gene> genes : probeToGeneMap.values() ) {
+            allGenes.addAll( genes );
+        }
+
+        // maps from Doubles are a bit dodgy...
+        Map<Double, Integer> upCounts = new HashMap<Double, Integer>();
+        Map<Double, Integer> downCounts = new HashMap<Double, Integer>();
+        Map<Double, Integer> eitherCounts = new HashMap<Double, Integer>();
+
+        Map<Double, Integer> upCountGenes = new HashMap<Double, Integer>();
+        Map<Double, Integer> downCountGenes = new HashMap<Double, Integer>();
+        Map<Double, Integer> eitherCountGenes = new HashMap<Double, Integer>();
+
+        Collection<Gene> seenGenes = new HashSet<Gene>();
+        for ( DifferentialExpressionAnalysisResult r : results ) {
+
+            Double corrP = r.getCorrectedPvalue();
+            if ( corrP == null ) continue;
+
+            CompositeSequence probe = r.getProbe();
+            Collection<Gene> genesForProbe = probeToGeneMap.get( probe );
+
+            int numGenes = countNumberOfGenesNotSeenAlready( genesForProbe, seenGenes );
+
+            if ( numGenes == 0 ) {
+                // This is okay; it might mean we already counted it as differentially expressed.
+            }
+
+            Collection<ContrastResult> crs = r.getContrasts();
+            boolean up = false;
+            boolean down = false;
+            for ( ContrastResult cr : crs ) {
+                Double lf = cr.getLogFoldChange();
+                if ( lf < 0 ) {
+                    down = true;
+                } else if ( lf > 0 ) {
+                    up = true;
+                }
+            }
+
+            for ( double thresh : qValueThresholdsForHitLists ) {
+
+                if ( !upCounts.containsKey( thresh ) ) {
+                    upCounts.put( thresh, 0 );
+                    upCountGenes.put( thresh, 0 );
+                }
+                if ( !downCounts.containsKey( thresh ) ) {
+                    downCounts.put( thresh, 0 );
+                    downCountGenes.put( thresh, 0 );
+                }
+                if ( !eitherCounts.containsKey( thresh ) ) {
+                    eitherCounts.put( thresh, 0 );
+                    eitherCountGenes.put( thresh, 0 );
+                }
+
+                if ( corrP < thresh ) {
+                    if ( up ) {
+                        upCounts.put( thresh, upCounts.get( thresh ) + 1 );
+                        upCountGenes.put( thresh, upCountGenes.get( thresh ) + numGenes );
+                    }
+                    if ( down ) {
+                        downCounts.put( thresh, downCounts.get( thresh ) + 1 );
+                        downCountGenes.put( thresh, downCountGenes.get( thresh ) + numGenes );
+                    }
+
+                    eitherCounts.put( thresh, eitherCounts.get( thresh ) + 1 );
+                    eitherCountGenes.put( thresh, eitherCountGenes.get( thresh ) + numGenes );
+
+                }
+            }
+
+        }
+
+        for ( double thresh : qValueThresholdsForHitLists ) {
+            assert !( allGenes.size() < upCountGenes.get( thresh ) || allGenes.size() < downCountGenes.get( thresh ) || allGenes
+                    .size() < eitherCountGenes.get( thresh ) ) : "There were more genes differentially expressed than exist in the experment";
+
+            // Ensure we don't set values to null.
+            Integer up = upCounts.get( thresh ) == null ? 0 : upCounts.get( thresh );
+            Integer down = downCounts.get( thresh ) == null ? 0 : downCounts.get( thresh );
+            Integer either = eitherCounts.get( thresh ) == null ? 0 : eitherCounts.get( thresh );
+
+            Integer upGenes = upCountGenes.get( thresh ) == null ? 0 : upCountGenes.get( thresh );
+            Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
+            Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
+
+            HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
+            HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
+            HitListSize eitherS = HitListSize.Factory.newInstance( thresh, either, Direction.EITHER, eitherGenes );
+
+            hitListSizes.add( upS );
+            hitListSizes.add( downS );
+            hitListSizes.add( eitherS );
+        }
+        return hitListSizes;
+    }
 
     /**
      * Determine if any factor should be treated as the intercept term.
@@ -536,104 +645,23 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * Generate HitListSize entities that will be stored to count the number of diff. ex probes at various preset
-     * thresholds, to avoid wasting time generating these counts on the fly later.
-     * 
-     * @param results
+     * @param genesForProbe
+     * @param seenGenes
      * @return
      */
-    private Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results,
-            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
-        Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
-
-        assert probeToGeneMap != null;
-
-        // maps from Doubles are a bit dodgy...
-        Map<Double, Integer> upCounts = new HashMap<Double, Integer>();
-        Map<Double, Integer> downCounts = new HashMap<Double, Integer>();
-        Map<Double, Integer> eitherCounts = new HashMap<Double, Integer>();
-
-        Map<Double, Integer> upCountGenes = new HashMap<Double, Integer>();
-        Map<Double, Integer> downCountGenes = new HashMap<Double, Integer>();
-        Map<Double, Integer> eitherCountGenes = new HashMap<Double, Integer>();
-
-        for ( DifferentialExpressionAnalysisResult r : results ) {
-
-            Double corrP = r.getCorrectedPvalue();
-            if ( corrP == null ) continue;
-
-            int numGenes = 0;
-
-            CompositeSequence probe = r.getProbe();
-            if ( probeToGeneMap.containsKey( probe ) ) {
-                Collection<Gene> genes = probeToGeneMap.get( probe );
-                numGenes = genes.size();
+    private int countNumberOfGenesNotSeenAlready( Collection<Gene> genesForProbe, Collection<Gene> seenGenes ) {
+        int numGenes = 0;
+        if ( genesForProbe != null ) {
+            for ( Gene g : genesForProbe ) {
+                if ( seenGenes.contains( g ) ) {
+                    continue;
+                }
+                numGenes++;
             }
-
-            Collection<ContrastResult> crs = r.getContrasts();
-            boolean up = false;
-            boolean down = false;
-            for ( ContrastResult cr : crs ) {
-                Double lf = cr.getLogFoldChange();
-                if ( lf < 0 ) {
-                    down = true;
-                } else if ( lf > 0 ) {
-                    up = true;
-                }
-            }
-
-            for ( double thresh : qValueThresholdsForHitLists ) {
-
-                if ( !upCounts.containsKey( thresh ) ) {
-                    upCounts.put( thresh, 0 );
-                    upCountGenes.put( thresh, 0 );
-                }
-                if ( !downCounts.containsKey( thresh ) ) {
-                    downCounts.put( thresh, 0 );
-                    downCountGenes.put( thresh, 0 );
-                }
-                if ( !eitherCounts.containsKey( thresh ) ) {
-                    eitherCounts.put( thresh, 0 );
-                    eitherCountGenes.put( thresh, 0 );
-                }
-
-                if ( corrP < thresh ) {
-                    if ( up ) {
-                        upCounts.put( thresh, upCounts.get( thresh ) + 1 );
-                        upCountGenes.put( thresh, upCountGenes.get( thresh ) + numGenes );
-                    }
-                    if ( down ) {
-                        downCounts.put( thresh, downCounts.get( thresh ) + 1 );
-                        downCountGenes.put( thresh, downCountGenes.get( thresh ) + numGenes );
-                    }
-
-                    eitherCounts.put( thresh, eitherCounts.get( thresh ) + 1 );
-                    eitherCountGenes.put( thresh, eitherCountGenes.get( thresh ) + numGenes );
-                }
-            }
-
+            seenGenes.addAll( genesForProbe );
         }
 
-        for ( double thresh : qValueThresholdsForHitLists ) {
-
-            // Ensure we don't set values to null.
-            Integer up = upCounts.get( thresh ) == null ? 0 : upCounts.get( thresh );
-            Integer down = downCounts.get( thresh ) == null ? 0 : downCounts.get( thresh );
-            Integer either = eitherCounts.get( thresh ) == null ? 0 : eitherCounts.get( thresh );
-
-            Integer upGenes = upCountGenes.get( thresh ) == null ? 0 : upCountGenes.get( thresh );
-            Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
-            Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
-
-            HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
-            HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
-            HitListSize eitherS = HitListSize.Factory.newInstance( thresh, either, Direction.EITHER, eitherGenes );
-
-            hitListSizes.add( upS );
-            hitListSizes.add( downS );
-            hitListSizes.add( eitherS );
-        }
-        return hitListSizes;
+        return numGenes;
     }
 
     /**
