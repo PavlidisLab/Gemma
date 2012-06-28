@@ -196,6 +196,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 					ExpressionExperimentSetController.load(setId, this.eeSetCb.createDelegate(this));
 				} else if (setName) {
 					ExpressionExperimentSetController.loadByName(setName, this.eeSetCb.createDelegate(this));
+				} else {
+					// panic?
 				}
 			},
 

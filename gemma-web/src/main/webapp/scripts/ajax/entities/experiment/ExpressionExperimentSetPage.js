@@ -71,6 +71,8 @@ Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
 							} else if (this.eeSetName) {
 								ExpressionExperimentSetController.findByName(this.eeSetName, eeSetCb
 												.createDelegate(this));
+							} else {
+								// panic?
 							}
 						});
 			},
