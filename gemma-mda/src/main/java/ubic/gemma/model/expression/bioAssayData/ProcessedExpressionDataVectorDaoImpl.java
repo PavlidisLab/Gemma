@@ -959,12 +959,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
                     + " where dedv.designElement.id in ( :cs ) ";
-        } else {
-            queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in ( :ees )";
+            return getVectorsForProbesInExperiments( cs2gene, queryString );
         }
 
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
+        // Do not do in clause for experiments, as it can't use the indices
+        queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id  = :eeid ";
+        Map<ProcessedExpressionDataVector, Collection<Long>> result = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
+        for ( Long ee : ees ) {
+            result.putAll( getVectorsForProbesInExperiments( ee, cs2gene, queryString ) );
+        }
+        return result;
+
     }
 
     /**

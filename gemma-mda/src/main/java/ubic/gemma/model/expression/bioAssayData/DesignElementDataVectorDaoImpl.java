@@ -58,13 +58,13 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     private static Log log = LogFactory.getLog( DesignElementDataVectorDaoImpl.class.getName() );
 
     /**
-     * @param ees
+     * @param ee
      * @param cs2gene Map of probes to genes.
      * @param queryString, which must have parameter list placeholder "cs" and may have parameter list "ees".
      * @return
      */
-    protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Collection<Long> ees,
-            Map<Long, Collection<Long>> cs2gene, final String queryString ) {
+    protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene,
+            final String queryString ) {
 
         Session session = super.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
@@ -75,9 +75,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         StopWatch timer = new StopWatch();
         timer.start();
 
-        if ( ees != null && ees.size() > 0 ) {
-            queryObject.setParameterList( "ees", ees );
-        }
+        queryObject.setLong( "eeid", ee );
 
         /*
          * Might need to adjust this. This value just seems reasonable, but it isn't uncommon for it to be much larger.
@@ -89,8 +87,42 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         if ( timer.getTime() > 50 ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
-                    + ( ees == null ? "(?)" : ees.size() ) + " ees : " + timer.getTime() + "ms\n"
-                    + "Vector query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );
+                    + timer.getTime() + "ms\n" + "Vector query was: "
+                    + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );
+
+        }
+        return dedv2genes;
+    }
+
+    /**
+     * @param cs2gene
+     * @param queryString
+     * @return
+     */
+    protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene,
+            final String queryString ) {
+
+        Session session = super.getSession();
+        org.hibernate.Query queryObject = session.createQuery( queryString );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        Map<T, Collection<Long>> dedv2genes = new HashMap<T, Collection<Long>>();
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        /*
+         * Might need to adjust this. This value just seems reasonable, but it isn't uncommon for it to be much larger.
+         * See bug 1866.
+         */int batchSize = 100;
+        for ( Collection<Long> batch : new BatchIterator<Long>( cs2gene.keySet(), batchSize ) ) {
+            getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
+        }
+
+        if ( timer.getTime() > 50 ) {
+            log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
+                    + timer.getTime() + "ms\n" + "Vector query was: "
+                    + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );
 
         }
         return dedv2genes;
