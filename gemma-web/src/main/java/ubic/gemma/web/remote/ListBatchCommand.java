@@ -30,7 +30,8 @@ public class ListBatchCommand {
 
     private Integer limit;
 
-    private String sort; // which column
+    // FIXME rather not use a string here.
+    private String sort = "modDate"; // which column
 
     private Integer start;
 

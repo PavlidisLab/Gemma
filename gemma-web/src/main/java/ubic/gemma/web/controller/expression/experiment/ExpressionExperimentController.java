@@ -324,6 +324,151 @@ public class ExpressionExperimentController extends AbstractTaskService {
     @Autowired
     private StatusService statusService;
 
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    /**
+     * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
+     * level. 1. a db call returns all experiments, which are filtered by the service method 2. if the user is an admin,
+     * we filter out the troubled experiments 3. an appropriate page-sized chunk is then taken from this (filtered) list
+     * 4. another round of db calls create and fill value objects for this chunk 5. value objects are returned
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
+
+        int limit = batch.getLimit();
+        int origStart = batch.getStart();
+        // have to load entities instead of directly loading value objects because we need security filtering
+        List<ExpressionExperiment> records = loadAllOrdered( batch );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        /*
+         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
+         * have access to
+         */
+        int count = records.size();
+
+        int start = origStart;
+        int stop = Math.min( origStart + limit, records.size() );
+
+        List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( recordsSubset ) );
+
+        // if admin, want to show why experiment is troubled
+        if ( SecurityServiceImpl.isUserAdmin() ) {
+            expressionExperimentReportService.getEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, count );
+
+        return returnVal;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
+
+        int origLimit = batch.getLimit();
+        int origStart = batch.getStart();
+        if ( taxonId == null ) {
+            return browse( batch );
+        }
+        Taxon taxon = taxonService.load( taxonId );
+        if ( taxon == null ) {
+            log.info( "Attempted to browse experiments by taxon with id = " + taxonId
+                    + ", but this id is invalid. Browsing without taxon restriction." );
+            return browse( batch );
+        }
+        List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        /*
+         * can't just do countAll because this will count experiments the user may not have access to Integer count =
+         * expressionExperimentService.countAll();
+         */
+        int count = records.size();
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( records.subList( origStart,
+                        Math.min( origStart + origLimit, records.size() ) ) ) );
+
+        // if admin, want to show if experiment is troubled
+        if ( SecurityServiceImpl.isUserAdmin() ) {
+            expressionExperimentReportService.getEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, count );
+
+        return returnVal;
+    }
+
+    /**
+     * AJAX call for remote paging store
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
+            Collection<Long> ids ) {
+        int origLimit = batch.getLimit();
+        int origStart = batch.getStart();
+
+        Set<Long> noDupIds = new HashSet<Long>( ids );
+        List<ExpressionExperiment> records = loadAllOrdered( batch, noDupIds );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( records.subList( origStart,
+                        Math.min( origStart + origLimit, records.size() ) ) ) );
+
+        // if admin, want to show if experiment is troubled
+        if ( SecurityServiceImpl.isUserAdmin() ) {
+            expressionExperimentReportService.getEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, records.size() );
+        return returnVal;
+    }
+
+    /**
+     * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
+     * 
+     * @param
+     * @return
+     */
+    public boolean canCurrentUserEditExperiment( Long eeId ) {
+        boolean userCanEditGroup = false;
+        try {
+            userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eeId ) );
+        } catch ( org.springframework.security.access.AccessDeniedException ade ) {
+            return false;
+        }
+        return userCanEditGroup;
+    }
+
     /**
      * Exposed for AJAX calls.
      * 
@@ -335,6 +480,22 @@ public class ExpressionExperimentController extends AbstractTaskService {
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
         startTask( job );
         return job.getTaskId();
+    }
+
+    /**
+     * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
+     * 
+     * @param
+     * @return
+     */
+    public boolean doesCurrentUserOwnExperiment( Long eeId ) {
+        boolean userOwnsGroup = false;
+        try {
+            userOwnsGroup = securityService.isOwnedByCurrentUser( expressionExperimentService.load( eeId ) );
+        } catch ( org.springframework.security.access.AccessDeniedException ade ) {
+            return false;
+        }
+        return userOwnsGroup;
     }
 
     /**
@@ -387,53 +548,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public Collection<Long> find( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
-    }
-
-    /**
-     * AJAX (used by experimentAndExperimentGroupCombo.js)
-     * 
-     * @param query
-     * @param taxonId if the search should not be limited by taxon, pass in null
-     * @return Collection of SearchResultDisplayObjects
-     */
-    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
-        boolean taxonLimited = ( taxonId != null ) ? true : false;
-        List<SearchResultDisplayObject> displayResults = expressionExperimentSearchService
-                .searchExperimentsAndExperimentGroups( query, taxonId );
-
-        // add session bound sets
-        // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
-                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
-
-        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
-
-        // create SearchResultDisplayObjects
-        if ( sessionResult != null && sessionResult.size() > 0 ) {
-            for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
-                SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
-                srdo.setUserOwned( true );
-                sessionSets.add( srdo );
-            }
-        }
-
-        // keep sets in proper order (user's groups first, then public ones)
-        Collections.sort( sessionSets );
-        displayResults.addAll( sessionSets );
-
-        return displayResults;
-    }
-
-    /**
-     * AJAX (used by ExperimentCombo.js)
-     * 
-     * @param query
-     * @return Collection of expression experiment entity objects
-     */
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
-
-        return expressionExperimentSearchService.searchExpressionExperiments( query );
-
     }
 
     /**
@@ -572,40 +686,148 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * AJAX; get a collection of experiments that have had samples removed due to outliers and experiment that have
-     * possible batch effects detected
+     * Used to include the html for the qc table in an ext panel (without using a tag) (This method should probably be
+     * in a service?)
      * 
-     * @param id Identifier for the experiment
+     * @param ee
      */
-    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
+    public String getQCTagHTML( ExpressionExperiment ee ) {
+        ExperimentQCTag qc = new ExperimentQCTag();
+        qc.setEe( ee.getId() );
+        qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
+        qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
+        qc.setHasPCA( svdService.hasPca( ee.getId() ) );
+        qc.setHasPvalueDist( ExpressionExperimentQCUtils.hasPvalueDistFiles( ee ) );
+        qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
+        return qc.getQChtml();
+    }
 
-        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService
-                .getExperimentsWithEvent( SampleRemovalEvent.class );
+    /**
+     * AJAX method to get data for database summary table, returned as a JSON object the slow part here is loading each
+     * new or updated object in whatsNewService.retrieveReport() -> fetch()
+     * 
+     * @return
+     */
+    public JSONObject loadCountsForDataSummaryTable() {
 
-        // List<ExpressionExperimentValueObject> batchEffectEEs =
-        // expressionExperimentService.getExperimentsWithBatchEffect();
-        List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
+        JSONObject summary = new JSONObject();
+        net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
 
-        HashSet<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
-        ees.addAll( sampleRemovedEEs );
-        ees.addAll( batchEffectEEs );
+        long bioAssayCount = bioAssayService.countAll();
+        long arrayDesignCount = arrayDesignService.countAll();
+        Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
 
-        List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                return o1.getScientificName().compareTo( o2.getScientificName() );
+            }
+        } );
+        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
 
-        for ( ExpressionExperimentValueObject ee : ees ) {
-            JSONObject record = new JSONObject();
-            record.element( "id", ee.getId() );
-            record.element( "shortName", ee.getShortName() );
-            record.element( "name", ee.getName() );
-            record.element( "sampleRemoved", sampleRemovedEEs.contains( ee ) );
-            record.element( "batchEffect", batchEffectEEs.contains( ee ) );
-            jsonRecords.add( record );
+        long expressionExperimentCount = 0; // expressionExperimentService.countAll();
+        for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
+            Taxon t = it.next();
+            Long c = unsortedEEsPerTaxon.get( t );
+
+            eesPerTaxon.put( t, c );
+            eesPerTaxonName.put( t.getScientificName(), c );
+
+            // hide 'uncommon' taxa from this table. See bug 2052
+            // this bug proposed being able to make taxa private
+            // it is now marked as "won't fix" so I assume they want everything to be shown
+            // so I'll comment this out (for now)
+            /*
+             * if ( c < 10 ) { otherTaxaEECount += c; //it.remove(); }
+             */
+            expressionExperimentCount += c;
         }
 
-        JsonReaderResponse<JSONObject> returnVal = new JsonReaderResponse<JSONObject>( jsonRecords );
+        // this is the slow part
+        WhatsNew wn = whatsNewService.retrieveReport();
 
-        return returnVal;
+        if ( wn == null ) {
+            Calendar c = Calendar.getInstance();
+            Date date = c.getTime();
+            date = DateUtils.addWeeks( date, -1 );
+            wn = whatsNewService.getReport( date );
 
+        }
+        if ( wn != null ) {
+            // Get count for new assays
+            int newAssayCount = wn.getNewAssayCount();
+
+            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
+                    .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
+                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
+
+            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
+                    .getNewExpressionExperiments().size() : 0;
+            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ? wn
+                    .getUpdatedExpressionExperiments().size() : 0;
+
+            /* Store counts for new and updated experiments by taxonId */
+            Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
+            Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
+
+            for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
+                Taxon t = it.next();
+                JSONObject taxLine = new JSONObject();
+                taxLine.put( "taxonId", t.getId() );
+                taxLine.put( "taxonName", t.getScientificName() );
+                taxLine.put( "totalCount", eesPerTaxon.get( t ) );
+                if ( newEEsPerTaxon.containsKey( t ) ) {
+                    taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
+                    taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
+                }
+                if ( updatedEEsPerTaxon.containsKey( t ) ) {
+                    taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
+                    taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
+                }
+                taxonEntries.add( taxLine );
+            }
+
+            summary.element( "sortedCountsPerTaxon", taxonEntries );
+
+            // Get count for new and updated array designs
+            int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
+            int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
+
+            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 ) ? true
+                    : false;
+            boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 ) ? true
+                    : false;
+            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG )
+                    .format( wn.getDate() ) : "";
+            date = date.replace( '-', ' ' );
+
+            summary.element( "updateDate", date );
+            summary.element( "drawNewColumn", drawNewColumn );
+            summary.element( "drawUpdatedColumn", drawUpdatedColumn );
+            if ( newAssayCount != 0 ) summary.element( "newBioAssayCount", new Long( newAssayCount ) );
+            if ( newArrayCount != 0 ) summary.element( "newArrayDesignCount", new Long( newArrayCount ) );
+            if ( updatedArrayCount != 0 ) summary.element( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
+            if ( newExpressionExperimentCount != 0 )
+                summary.element( "newExpressionExperimentCount", newExpressionExperimentCount );
+            if ( updatedExpressionExperimentCount != 0 )
+                summary.element( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+            if ( newExpressionExperimentCount != 0 )
+                summary.element( "newExpressionExperimentIds", newExpressionExperimentIds );
+            if ( updatedExpressionExperimentCount != 0 )
+                summary.element( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
+
+        }
+
+        summary.element( "bioAssayCount", bioAssayCount );
+        summary.element( "arrayDesignCount", arrayDesignCount );
+
+        summary.element( "expressionExperimentCount", expressionExperimentCount );
+
+        return summary;
     }
 
     /**
@@ -735,25 +957,55 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * @param ee
-     * @param includeAutoGenerated
-     * @return
+     * AJAX - for display in tables. Don't retrieve too much detail.
+     * 
+     * @param ids of EEs to load
+     * @return security-filtered set of value objects.
      */
-    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( ExpressionExperiment ee,
-            boolean includeAutoGenerated ) {
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> dbEEsvos = expressionExperimentSetService
-                .getLightValueObjectsFromIds( expressionExperimentSetService.findIds( ee ) );
-        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
+                false, null, true );
+        return result;
+    }
 
-        if ( !includeAutoGenerated ) {
-            for ( DatabaseBackedExpressionExperimentSetValueObject dbEEsvo : dbEEsvos ) {
-                if ( !expressionExperimentSetService.isAutomaticallyGenerated( dbEEsvo.getDescription() ) ) {
-                    eesvos.add( dbEEsvo );
-                }
-            }
+    /**
+     * AJAX; get a collection of experiments that have had samples removed due to outliers and experiment that have
+     * possible batch effects detected
+     * 
+     * @param id Identifier for the experiment
+     */
+    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
+
+        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService
+                .getExperimentsWithEvent( SampleRemovalEvent.class );
+
+        // List<ExpressionExperimentValueObject> batchEffectEEs =
+        // expressionExperimentService.getExperimentsWithBatchEffect();
+        List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
+
+        HashSet<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
+        ees.addAll( sampleRemovedEEs );
+        ees.addAll( batchEffectEEs );
+
+        List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
+
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            JSONObject record = new JSONObject();
+            record.element( "id", ee.getId() );
+            record.element( "shortName", ee.getShortName() );
+            record.element( "name", ee.getName() );
+            record.element( "sampleRemoved", sampleRemovedEEs.contains( ee ) );
+            record.element( "batchEffect", batchEffectEEs.contains( ee ) );
+            jsonRecords.add( record );
         }
 
-        return eesvos;
+        JsonReaderResponse<JSONObject> returnVal = new JsonReaderResponse<JSONObject>( jsonRecords );
+
+        return returnVal;
+
     }
 
     /**
@@ -771,38 +1023,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<QuantitationTypeValueObject> qtvos = QuantitationTypeValueObject.convert2ValueObjects( qts );
 
         return qtvos;
-    }
-
-    /**
-     * Used to include the html for the qc table in an ext panel (without using a tag) (This method should probably be
-     * in a service?)
-     * 
-     * @param ee
-     */
-    public String getQCTagHTML( ExpressionExperiment ee ) {
-        ExperimentQCTag qc = new ExperimentQCTag();
-        qc.setEe( ee.getId() );
-        qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
-        qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
-        qc.setHasPCA( svdService.hasPca( ee.getId() ) );
-        qc.setHasPvalueDist( ExpressionExperimentQCUtils.hasPvalueDistFiles( ee ) );
-        qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        return qc.getQChtml();
-    }
-
-    /**
-     * AJAX - for display in tables. Don't retrieve too much detail.
-     * 
-     * @param ids of EEs to load
-     * @return security-filtered set of value objects.
-     */
-    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return new HashSet<ExpressionExperimentValueObject>();
-        }
-        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
-                false, null, true );
-        return result;
     }
 
     /**
@@ -879,158 +1099,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return runner.getTaskId();
     }
 
-    /**
-     * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
-     * level. 1. a db call returns all experiments, which are filtered by the service method 2. if the user is an admin,
-     * we filter out the troubled experiments 3. an appropriate page-sized chunk is then taken from this (filtered) list
-     * 4. another round of db calls create and fill value objects for this chunk 5. value objects are returned
-     * 
-     * @param batch
-     * @return
-     */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
-
-        int limit = batch.getLimit();
-        int origStart = batch.getStart();
-        // have to load entities instead of directly loading value objects because we need security filtering
-        List<ExpressionExperiment> records = loadAllOrdered( batch );
-
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
-        }
-
-        /*
-         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
-         * have access to
-         */
-        int count = records.size();
-
-        int start = origStart;
-        int stop = Math.min( origStart + limit, records.size() );
-
-        List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
-
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( recordsSubset ) );
-
-        // if admin, want to show why experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, count );
-
-        return returnVal;
-    }
-
-    /**
-     * Return a version of the passed in list where all troubled experiments have been removed
-     * 
-     * @param records
-     * @return filtered list of records
-     */
-    private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
-        List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
-        // Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService.getTroubledEvents( records );
-        // Long id = null;
-        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
-        for ( ExpressionExperiment record : records ) {
-
-            Status s = statusService.getStatus( record );
-            if ( s != null && s.getTroubled() ) {
-                toRemove.add( record );
-            }
-            // id = record.getId();
-            // if ( troubleEvents.containsKey( id ) ) {
-            // toRemove.add( record );
-            // }
-        }
-        untroubled.removeAll( toRemove );
-        return untroubled;
-    }
-
-    /**
-     * AJAX call for remote paging store
-     * 
-     * @param batch
-     * @return
-     */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
-            Collection<Long> ids ) {
-        int origLimit = batch.getLimit();
-        int origStart = batch.getStart();
-
-        Set<Long> noDupIds = new HashSet<Long>( ids );
-        List<ExpressionExperiment> records = loadAllOrdered( batch, noDupIds );
-
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
-        }
-
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
-
-        // if admin, want to show if experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, records.size() );
-        return returnVal;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param batch
-     * @return
-     */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
-
-        int origLimit = batch.getLimit();
-        int origStart = batch.getStart();
-        if ( taxonId == null ) {
-            return browse( batch );
-        }
-        Taxon taxon = taxonService.load( taxonId );
-        if ( taxon == null ) {
-            log.info( "Attempted to browse experiments by taxon with id = " + taxonId
-                    + ", but this id is invalid. Browsing without taxon restriction." );
-            return browse( batch );
-        }
-        List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
-
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
-        }
-
-        /*
-         * can't just do countAll because this will count experiments the user may not have access to Integer count =
-         * expressionExperimentService.countAll();
-         */
-        int count = records.size();
-
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
-
-        // if admin, want to show if experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, count );
-
-        return returnVal;
-    }
-
     // /**
     // * AJAX call for remote paging store
     // *
@@ -1082,57 +1150,51 @@ public class ExpressionExperimentController extends AbstractTaskService {
     // return records;
     // }
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch ) {
-        return loadAllOrdered( batch, null, null );
-    }
+    /**
+     * AJAX (used by experimentAndExperimentGroupCombo.js)
+     * 
+     * @param query
+     * @param taxonId if the search should not be limited by taxon, pass in null
+     * @return Collection of SearchResultDisplayObjects
+     */
+    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
+        boolean taxonLimited = ( taxonId != null ) ? true : false;
+        List<SearchResultDisplayObject> displayResults = expressionExperimentSearchService
+                .searchExperimentsAndExperimentGroups( query, taxonId );
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids ) {
-        return loadAllOrdered( batch, ids, null );
-    }
+        // add session bound sets
+        // get any session-bound groups
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
+                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Taxon taxon ) {
-        return loadAllOrdered( batch, null, taxon );
-    }
+        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
-        List<ExpressionExperiment> records;
-        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
-
-            String o = batch.getSort();
-
-            String orderBy = "name"; // default ordering
-            if ( o.equals( "shortName" ) ) {
-                orderBy = "shortName";
-            } else if ( o.equals( "name" ) ) {
-                orderBy = "name";
-            } else if ( o.equals( "bioAssayCount" ) ) {
-                orderBy = "bioAssayCount";
-            } else if ( o.equals( "taxon" ) ) {
-                orderBy = "taxon";
-            } else if ( o.equals( "troubled" ) ) {
-                orderBy = "troubled";
-            } else {
-                throw new IllegalArgumentException( "Unknown sort field: " + o );
-            }
-
-            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
-            if ( ids != null ) {
-                records = expressionExperimentService.loadMultipleOrdered( orderBy, descending, ids );
-            } else if ( taxon != null ) {
-                records = expressionExperimentService.loadAllTaxonOrdered( orderBy, descending, taxon );
-            } else {
-                records = expressionExperimentService.loadAllOrdered( orderBy, descending );
-            }
-        } else {
-            if ( ids != null ) {
-                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
-            } else if ( taxon != null ) {
-                records = expressionExperimentService.loadAllTaxon( taxon );
-            } else {
-                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
+        // create SearchResultDisplayObjects
+        if ( sessionResult != null && sessionResult.size() > 0 ) {
+            for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
+                SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
+                srdo.setUserOwned( true );
+                sessionSets.add( srdo );
             }
         }
-        return records;
+
+        // keep sets in proper order (user's groups first, then public ones)
+        Collections.sort( sessionSets );
+        displayResults.addAll( sessionSets );
+
+        return displayResults;
+    }
+
+    /**
+     * AJAX (used by ExperimentCombo.js)
+     * 
+     * @param query
+     * @return Collection of expression experiment entity objects
+     */
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
+
+        return expressionExperimentSearchService.searchExpressionExperiments( query );
+
     }
 
     /**
@@ -1148,134 +1210,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
         return mav;
 
-    }
-
-    /**
-     * AJAX method to get data for database summary table, returned as a JSON object the slow part here is loading each
-     * new or updated object in whatsNewService.retrieveReport() -> fetch()
-     * 
-     * @return
-     */
-    public JSONObject loadCountsForDataSummaryTable() {
-
-        JSONObject summary = new JSONObject();
-        net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
-
-        long bioAssayCount = bioAssayService.countAll();
-        long arrayDesignCount = arrayDesignService.countAll();
-        Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
-
-        /*
-         * Sort taxa by name.
-         */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                return o1.getScientificName().compareTo( o2.getScientificName() );
-            }
-        } );
-        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
-
-        long expressionExperimentCount = 0; // expressionExperimentService.countAll();
-        for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
-            Taxon t = it.next();
-            Long c = unsortedEEsPerTaxon.get( t );
-
-            eesPerTaxon.put( t, c );
-            eesPerTaxonName.put( t.getScientificName(), c );
-
-            // hide 'uncommon' taxa from this table. See bug 2052
-            // this bug proposed being able to make taxa private
-            // it is now marked as "won't fix" so I assume they want everything to be shown
-            // so I'll comment this out (for now)
-            /*
-             * if ( c < 10 ) { otherTaxaEECount += c; //it.remove(); }
-             */
-            expressionExperimentCount += c;
-        }
-
-        // this is the slow part
-        WhatsNew wn = whatsNewService.retrieveReport();
-
-        if ( wn == null ) {
-            Calendar c = Calendar.getInstance();
-            Date date = c.getTime();
-            date = DateUtils.addWeeks( date, -1 );
-            wn = whatsNewService.getReport( date );
-
-        }
-        if ( wn != null ) {
-            // Get count for new assays
-            int newAssayCount = wn.getNewAssayCount();
-
-            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
-            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
-
-            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
-                    .getNewExpressionExperiments().size() : 0;
-            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ? wn
-                    .getUpdatedExpressionExperiments().size() : 0;
-
-            /* Store counts for new and updated experiments by taxonId */
-            Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
-            Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
-
-            for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
-                Taxon t = it.next();
-                JSONObject taxLine = new JSONObject();
-                taxLine.put( "taxonId", t.getId() );
-                taxLine.put( "taxonName", t.getScientificName() );
-                taxLine.put( "totalCount", eesPerTaxon.get( t ) );
-                if ( newEEsPerTaxon.containsKey( t ) ) {
-                    taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
-                    taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
-                }
-                if ( updatedEEsPerTaxon.containsKey( t ) ) {
-                    taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
-                    taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
-                }
-                taxonEntries.add( taxLine );
-            }
-
-            summary.element( "sortedCountsPerTaxon", taxonEntries );
-
-            // Get count for new and updated array designs
-            int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
-            int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
-
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 ) ? true
-                    : false;
-            boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 ) ? true
-                    : false;
-            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG )
-                    .format( wn.getDate() ) : "";
-            date = date.replace( '-', ' ' );
-
-            summary.element( "updateDate", date );
-            summary.element( "drawNewColumn", drawNewColumn );
-            summary.element( "drawUpdatedColumn", drawUpdatedColumn );
-            if ( newAssayCount != 0 ) summary.element( "newBioAssayCount", new Long( newAssayCount ) );
-            if ( newArrayCount != 0 ) summary.element( "newArrayDesignCount", new Long( newArrayCount ) );
-            if ( updatedArrayCount != 0 ) summary.element( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
-            if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentCount", newExpressionExperimentCount );
-            if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
-            if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentIds", newExpressionExperimentIds );
-            if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
-
-        }
-
-        summary.element( "bioAssayCount", bioAssayCount );
-        summary.element( "arrayDesignCount", arrayDesignCount );
-
-        summary.element( "expressionExperimentCount", expressionExperimentCount );
-
-        return summary;
     }
 
     /**
@@ -1582,6 +1516,77 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return runner.getTaskId();
     }
 
+    /**
+     * Returns a collection of {@link Long} ids from strings.
+     * 
+     * @param idString
+     * @return
+     */
+    protected Collection<Long> extractIds( String idString ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s.trim() ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
+    }
+
+    /*
+     * Handle case of text export of a list of genes
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by
+     * /Gemma/expressionExperiment/downloadExpressionExperimentList.html
+     */
+    @RequestMapping("/downloadExpressionExperimentList.html")
+    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        Collection<Long> eeIds = extractIds( request.getParameter( "e" ) ); // might not be any
+        Collection<Long> eeSetIds = extractIds( request.getParameter( "es" ) ); // might not be there
+        String eeSetName = request.getParameter( "esn" ); // might not be there
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+        if ( ( eeIds == null || eeIds.isEmpty() ) && ( eeSetIds == null || eeSetIds.isEmpty() ) ) {
+            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds
+                    + "} or expression experiment set ids {" + eeSetIds + "}" );
+            return mav;
+        }
+
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
+
+        for ( Long id : eeSetIds ) {
+            ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
+        }
+
+        mav.addObject( TextView.TEXT_PARAM, format4File( ees, eeSetName ) );
+        watch.stop();
+        Long time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
+        }
+        return mav;
+
+    }
+
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
@@ -1683,24 +1688,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is true
-     * 
-     * @param ees
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees ) {
-        List<ExpressionExperimentValueObject> troubled = new ArrayList<ExpressionExperimentValueObject>();
-
-        for ( ExpressionExperimentValueObject eevo : ees ) {
-            if ( eevo.getTroubled() ) {
-                troubled.add( eevo );
-            }
-        }
-
-        return troubled;
-    }
-
-    /**
     
      */
     private String batchConfound( ExpressionExperiment ee ) {
@@ -1722,6 +1709,30 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         return result;
 
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
+    private String format4File( Collection<ExpressionExperimentValueObject> ees, String eeSetName ) {
+        StringBuffer strBuff = new StringBuffer();
+        strBuff.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
+        strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+
+        if ( eeSetName != null && eeSetName.length() != 0 ) strBuff.append( "# Experiment Set: " + eeSetName + "\n" );
+        strBuff.append( "# " + ees.size() + ( ( ees.size() > 1 ) ? " experiments" : " experiment" ) + "\n#\n" );
+
+        // add header
+        strBuff.append( "Short Name\tFull Name\n" );
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            if ( ee != null ) {
+                strBuff.append( ee.getShortName() + "\t" + ee.getName() );
+                strBuff.append( "\n" );
+            }
+        }
+
+        return strBuff.toString();
     }
 
     /**
@@ -1827,6 +1838,28 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
         return expressionExperiment;
+    }
+
+    /**
+     * @param ee
+     * @param includeAutoGenerated
+     * @return
+     */
+    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( ExpressionExperiment ee,
+            boolean includeAutoGenerated ) {
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> dbEEsvos = expressionExperimentSetService
+                .getLightValueObjectsFromIds( expressionExperimentSetService.findIds( ee ) );
+        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+
+        if ( !includeAutoGenerated ) {
+            for ( DatabaseBackedExpressionExperimentSetValueObject dbEEsvo : dbEEsvos ) {
+                if ( !expressionExperimentSetService.isAutomaticallyGenerated( dbEEsvo.getDescription() ) ) {
+                    eesvos.add( dbEEsvo );
+                }
+            }
+        }
+
+        return eesvos;
     }
 
     /**
@@ -2030,8 +2063,105 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return eventDates;
     }
 
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch ) {
+        return loadAllOrdered( batch, null, null );
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids ) {
+        return loadAllOrdered( batch, ids, null );
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
+        List<ExpressionExperiment> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+
+            String orderBy = "name"; // default ordering
+            if ( o.equals( "shortName" ) ) {
+                orderBy = "shortName";
+            } else if ( o.equals( "name" ) ) {
+                orderBy = "name";
+            } else if ( o.equals( "bioAssayCount" ) ) {
+                orderBy = "bioAssayCount";
+            } else if ( o.equals( "taxon" ) ) {
+                orderBy = "taxon";
+            } else if ( o.equals( "troubled" ) ) {
+                orderBy = "troubled";
+            } else if ( o.equals( "dateLastUpdated" ) ) {
+                orderBy = "dateLastUpdated";
+                descending = !descending;
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            if ( ids != null ) {
+                records = expressionExperimentService.loadMultipleOrdered( orderBy, descending, ids );
+            } else if ( taxon != null ) {
+                records = expressionExperimentService.loadAllTaxonOrdered( orderBy, descending, taxon );
+            } else {
+                records = expressionExperimentService.loadAllOrdered( orderBy, descending );
+            }
+        } else {
+            if ( ids != null ) {
+                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
+            } else if ( taxon != null ) {
+                records = expressionExperimentService.loadAllTaxon( taxon );
+            } else {
+                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
+            }
+        }
+        return records;
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Taxon taxon ) {
+        return loadAllOrdered( batch, null, taxon );
+    }
+
+    /**
+     * Return a version of the passed in list where all troubled experiments have been removed
+     * 
+     * @param records
+     * @return filtered list of records
+     */
+    private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
+        List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
+        // Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService.getTroubledEvents( records );
+        // Long id = null;
+        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
+        for ( ExpressionExperiment record : records ) {
+
+            Status s = statusService.getStatus( record );
+            if ( s != null && s.getTroubled() ) {
+                toRemove.add( record );
+            }
+            // id = record.getId();
+            // if ( troubleEvents.containsKey( id ) ) {
+            // toRemove.add( record );
+            // }
+        }
+        untroubled.removeAll( toRemove );
+        return untroubled;
+    }
+
+    /**
+     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is true
+     * 
+     * @param ees
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees ) {
+        List<ExpressionExperimentValueObject> troubled = new ArrayList<ExpressionExperimentValueObject>();
+
+        for ( ExpressionExperimentValueObject eevo : ees ) {
+            if ( eevo.getTroubled() ) {
+                troubled.add( eevo );
+            }
+        }
+
+        return troubled;
+    }
 
     /**
      * Update the file used for the sample correlation heatmaps FIXME make this a background task, use the
@@ -2046,133 +2176,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
         sampleCoexpressionMatrixService.create( expressionExperiment, true );
-    }
-
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
-    }
-
-    /**
-     * Returns a collection of {@link Long} ids from strings.
-     * 
-     * @param idString
-     * @return
-     */
-    protected Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
-
-    /*
-     * Handle case of text export of a list of genes
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by
-     * /Gemma/expressionExperiment/downloadExpressionExperimentList.html
-     */
-    @RequestMapping("/downloadExpressionExperimentList.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        Collection<Long> eeIds = extractIds( request.getParameter( "e" ) ); // might not be any
-        Collection<Long> eeSetIds = extractIds( request.getParameter( "es" ) ); // might not be there
-        String eeSetName = request.getParameter( "esn" ); // might not be there
-
-        ModelAndView mav = new ModelAndView( new TextView() );
-        if ( ( eeIds == null || eeIds.isEmpty() ) && ( eeSetIds == null || eeSetIds.isEmpty() ) ) {
-            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds
-                    + "} or expression experiment set ids {" + eeSetIds + "}" );
-            return mav;
-        }
-
-        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
-
-        for ( Long id : eeSetIds ) {
-            ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
-        }
-
-        mav.addObject( TextView.TEXT_PARAM, format4File( ees, eeSetName ) );
-        watch.stop();
-        Long time = watch.getTime();
-
-        if ( time > 100 ) {
-            log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
-        }
-        return mav;
-
-    }
-
-    /**
-     * @param vectors
-     * @return
-     */
-    private String format4File( Collection<ExpressionExperimentValueObject> ees, String eeSetName ) {
-        StringBuffer strBuff = new StringBuffer();
-        strBuff.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
-        strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
-
-        if ( eeSetName != null && eeSetName.length() != 0 ) strBuff.append( "# Experiment Set: " + eeSetName + "\n" );
-        strBuff.append( "# " + ees.size() + ( ( ees.size() > 1 ) ? " experiments" : " experiment" ) + "\n#\n" );
-
-        // add header
-        strBuff.append( "Short Name\tFull Name\n" );
-        for ( ExpressionExperimentValueObject ee : ees ) {
-            if ( ee != null ) {
-                strBuff.append( ee.getShortName() + "\t" + ee.getName() );
-                strBuff.append( "\n" );
-            }
-        }
-
-        return strBuff.toString();
-    }
-
-    /**
-     * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
-     * 
-     * @param
-     * @return
-     */
-    public boolean canCurrentUserEditExperiment( Long eeId ) {
-        boolean userCanEditGroup = false;
-        try {
-            userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eeId ) );
-        } catch ( org.springframework.security.access.AccessDeniedException ade ) {
-            return false;
-        }
-        return userCanEditGroup;
-    }
-
-    /**
-     * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
-     * 
-     * @param
-     * @return
-     */
-    public boolean doesCurrentUserOwnExperiment( Long eeId ) {
-        boolean userOwnsGroup = false;
-        try {
-            userOwnsGroup = securityService.isOwnedByCurrentUser( expressionExperimentService.load( eeId ) );
-        } catch ( org.springframework.security.access.AccessDeniedException ade ) {
-            return false;
-        }
-        return userOwnsGroup;
     }
 
 }

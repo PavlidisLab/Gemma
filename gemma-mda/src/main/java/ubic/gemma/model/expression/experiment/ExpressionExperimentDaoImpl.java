@@ -33,7 +33,6 @@ import java.util.Set;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
@@ -430,6 +429,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else if ( orderField.equals( "bioAssayCount" ) ) {
             qs += "inner join ee.bioAssays as ba " + "group by ee.id " + "order by count(ba) "
                     + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            qs += "inner join ee.status as status " + "order by status.lastUpdateDate " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
             qs += "inner join ee.status as status " + "order by status.troubled " + ( descending ? "desc" : "" );
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
@@ -462,6 +463,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             qs += where + "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
             qs += "inner join ee.status as status " + where + "order by status.troubled " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            qs += "inner join ee.status as s " + where + " order by s.lastUpdateDate " + ( descending ? "desc" : "" );
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += where + " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
@@ -516,6 +519,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else if ( orderField.equals( "bioAssayCount" ) ) {
             qs += "inner join ee.bioAssays as ba " + "where ee.id in (:ids) " + "group by ee.id "
                     + "order by count(ba) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            qs += "inner join ee.status as s " + "where ee.id in (:ids) " + "group by ee.id "
+                    + "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += " where ee.id in (:ids) ";
             qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
