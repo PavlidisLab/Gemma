@@ -16,7 +16,7 @@
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
-		
+				
 		<%-- for dwr creation of javascript objects to mirror java value objects--%>		
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>		
 		<%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall 
@@ -24,6 +24,11 @@
  				
 		<%-- for registration, possible from any page--%>
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
+		
+		<%-- not bundled with JAWR, needs to be included *last* (at least after include.js & gemma-lib.js) --%>
+		<jwr:script src='/scripts/app/valueObjectsInheritanceStructure.js' />	
+		
+		
 		
 		<%-- log javascript errors --%>
 		<script type="text/javascript">
