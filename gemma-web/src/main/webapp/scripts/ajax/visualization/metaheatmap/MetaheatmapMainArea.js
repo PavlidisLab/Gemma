@@ -187,6 +187,11 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			transparency = this.calculateVisualizationValueBasedOnPvalue(cell.correctedPValue) / 10;			
 		}
 		
+		if (cell.correctedPValue  > Gemma.Constants.DifferentialExpressionQvalueThreshold) {
+			color = 'white';
+			transparency = 0;
+		}		
+		
 		var x, y, width, height;
 		
 		if (this.isGeneOnTop) {
@@ -280,13 +285,14 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		}
 
    	    	
-		if (cellData.correctedPValue  > Gemma.Constants.DifferentialExpressionQvalueThreshold) {
-			color = 'white';
-		}
-		
 		if (this.isShowPvalue) {
 			transparency = this.calculateVisualizationValueBasedOnPvalue(cellData.correctedPValue) / 10;			
 		}
+
+		if (cellData.correctedPValue  > Gemma.Constants.DifferentialExpressionQvalueThreshold) {
+			color = 'white';
+			transparency = 0;
+		}		
 
 		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop, transparency )		;
 	},
@@ -300,7 +306,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);				
 				ctx.restore();
 			} else {
-				ctx.fillStyle = 'white';//"rgba(240, 240,240, 1)";
+				ctx.fillStyle = 'white';
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 			}					
 			
