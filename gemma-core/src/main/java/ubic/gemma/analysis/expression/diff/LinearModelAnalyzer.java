@@ -220,6 +220,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             hitListSizes.add( upS );
             hitListSizes.add( downS );
             hitListSizes.add( eitherS );
+
+            assert upGenes <= eitherGenes : "More genes upregulated than upregulated+downregulated";
+            assert downGenes <= eitherGenes : "More genes downregulated than upregulated+downregulated";
+
         }
         return hitListSizes;
     }
