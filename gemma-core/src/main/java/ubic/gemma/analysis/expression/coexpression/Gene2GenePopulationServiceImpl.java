@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.list.DoubleArrayList;
-import cern.jet.random.engine.DRand;
-import cern.jet.random.engine.RandomEngine;
-import cern.jet.stat.Descriptive;
 
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.dataStructure.matrix.MatrixUtil;
@@ -78,6 +72,10 @@ import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
+import cern.colt.list.DoubleArrayList;
+import cern.jet.random.engine.DRand;
+import cern.jet.random.engine.RandomEngine;
+import cern.jet.stat.Descriptive;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
@@ -203,28 +201,22 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         log.info( "Initializing gene link analysis ... " );
 
-        Taxon taxon = null;
-        Map<Long, Gene> genesToAnalyzeMap = new HashMap<Long, Gene>();
-        for ( Gene g : toUseGenes ) {
-            if ( taxon == null ) {
-                taxon = g.getTaxon();
-            } else if ( !taxon.equals( g.getTaxon() ) ) {
-                // sanity check.
-                throw new IllegalArgumentException( "Cannot analyze genes from multiple taxa" );
-            }
-            genesToAnalyzeMap.put( g.getId(), g );
-        }
+        Taxon taxon = toUseGenes.iterator().next().getTaxon(); // assume it is same for all genes ...
+        Collection<GeneCoexpressionAnalysis> oldAnalyses = findExistingAnalysis( taxon );
 
         GeneCoexpressionAnalysis analysis = null;
-        Collection<GeneCoexpressionAnalysis> oldAnalyses = findExistingAnalysis( taxon );
         if ( useDB ) {
             analysis = intializeNewAnalysis( expressionExperiments, taxon, toUseGenes, analysisName, stringency );
             assert analysis != null;
         }
+        log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
+                + expressionExperiments.size() + " experiments with a stringency of " + stringency
+                + "; store links both ways = " + SINGLE_QUERY_FOR_LINKS );
 
-        doAnalysis( expressionExperiments, toUseGenes, stringency, analysisName, genesToAnalyzeMap, analysis );
+        doAnalysis( expressionExperiments, toUseGenes, stringency, analysis );
 
         if ( useDB ) {
+
             // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
             // definitely have a problem. Ideally there would be a transaction here...but it would be far too large.
             disableOldAnalyses( oldAnalyses );
@@ -586,27 +578,21 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param expressionExperiments
      * @param toUseGenes
      * @param stringency
-     * @param analysisName
-     * @param genesToAnalyzeMap
      * @param analysis if null, no results will be saved to the database, and will be printed to stdout instead.
      * @return genes that were processed.
      */
-    private Collection<Gene> doAnalysis( Collection<? extends BioAssaySet> expressionExperiments,
-            Collection<Gene> toUseGenes, int stringency, String analysisName, Map<Long, Gene> genesToAnalyzeMap,
-            GeneCoexpressionAnalysis analysis ) {
+    private Collection<Long> doAnalysis( Collection<? extends BioAssaySet> expressionExperiments,
+            Collection<Gene> toUseGenes, int stringency, GeneCoexpressionAnalysis analysis ) {
         int totalLinks = 0;
-        Collection<Gene> processedGenes = new HashSet<Gene>();
+        Collection<Long> processedGenes = new HashSet<Long>();
         Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzerImpl.getOrderingMap( expressionExperiments );
 
-        log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
-                + expressionExperiments.size() + " experiments with a stringency of " + stringency
-                + "; store links both ways = " + SINGLE_QUERY_FOR_LINKS );
-
         try {
-            for ( Gene queryGene : toUseGenes ) {
+            Map<Long, Gene> genesToAnalyzeMap = EntityUtils.getIdMap( toUseGenes );
+            for ( Gene queryGene : genesToAnalyzeMap.values() ) {
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
-            } // end loop over genes
+            }
 
             completeNodeDegreeComputations( analysis != null );
 
@@ -630,57 +616,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             throw new RuntimeException( e );
         }
         return processedGenes;
-    }
-
-    /**
-     * @param expressionExperiments
-     * @param genesToAnalyzeMap
-     * @param analysis
-     * @param eeIdOrder
-     * @param processedGenes
-     * @param stringency
-     * @param totalLinks
-     * @param queryGene
-     * @return
-     */
-    private int processGene( Collection<? extends BioAssaySet> expressionExperiments,
-            Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Map<Long, Integer> eeIdOrder,
-            Collection<Gene> processedGenes, int stringency, Gene queryGene ) {
-        // Do it
-        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
-                expressionExperiments, stringency, 0 );
-
-        // persist it or write out
-
-        StopWatch timer = new StopWatch();
-        int usedLinks = 0;
-        if ( analysis != null ) {
-            timer.start();
-            List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions, analysis,
-                    genesToAnalyzeMap, processedGenes, stringency );
-            usedLinks = created.size();
-            timer.stop();
-            if ( timer.getTime() > 2000 ) {
-                log.info( "Persist " + usedLinks + " links: " + timer.getTime() + "ms" );
-            }
-        } else {
-            List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-            for ( CoexpressionValueObject co : coexps ) {
-                if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
-                    continue;
-                }
-                Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
-                if ( processedGenes.contains( secondGene ) ) {
-                    continue;
-                }
-                usedLinks++;
-                System.out.println( format( co ) );
-            }
-            if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
-        }
-
-        computeNodeDegree( queryGene, usedLinks, expressionExperiments );
-        return usedLinks;
     }
 
     /**
@@ -794,7 +729,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      */
     private List<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
             CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
-            final Map<Long, Gene> genesToAnalyze, final Collection<Gene> alreadyPersisted, int stringency ) {
+            final Map<Long, Gene> genesToAnalyze, final Collection<Long> alreadyPersisted, int stringency ) {
 
         assert analysis != null;
 
@@ -828,7 +763,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             /*
              * If we store the links in both directions, only one query is needed for retrieval.
              */
-            if ( !SINGLE_QUERY_FOR_LINKS && alreadyPersisted.contains( secondGene ) ) continue;
+            if ( !SINGLE_QUERY_FOR_LINKS && alreadyPersisted.contains( secondGene.getId() ) ) continue;
 
             if ( log.isDebugEnabled() )
                 log.debug( firstGene.getName() + " link to " + secondGene.getName() + " tested in "
@@ -905,5 +840,56 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         }
         return all;
 
+    }
+
+    /**
+     * @param expressionExperiments
+     * @param genesToAnalyzeMap
+     * @param analysis
+     * @param eeIdOrder
+     * @param processedGenes
+     * @param stringency
+     * @param totalLinks
+     * @param queryGene
+     * @return
+     */
+    private int processGene( Collection<? extends BioAssaySet> expressionExperiments,
+            Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Map<Long, Integer> eeIdOrder,
+            Collection<Long> processedGenes, int stringency, Gene queryGene ) {
+        // Do it
+        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
+                expressionExperiments, stringency, 0 );
+
+        // persist it or write out
+
+        StopWatch timer = new StopWatch();
+        int usedLinks = 0;
+        if ( analysis != null ) {
+            timer.start();
+            List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions, analysis,
+                    genesToAnalyzeMap, processedGenes, stringency );
+            usedLinks = created.size();
+            timer.stop();
+            if ( timer.getTime() > 2000 ) {
+                log.info( "Persist " + usedLinks + " links: " + timer.getTime() + "ms" );
+            }
+        } else {
+            List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+            for ( CoexpressionValueObject co : coexps ) {
+                if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                    continue;
+                }
+                Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                if ( processedGenes.contains( secondGene ) ) {
+                    continue;
+                }
+                usedLinks++;
+                System.out.println( format( co ) );
+            }
+            if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
+        }
+
+        computeNodeDegree( queryGene, usedLinks, expressionExperiments );
+        return usedLinks;
     }
 }
