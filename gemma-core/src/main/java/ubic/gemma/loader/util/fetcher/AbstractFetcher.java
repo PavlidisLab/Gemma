@@ -299,9 +299,9 @@ public abstract class AbstractFetcher implements Fetcher {
                         log.warn( "Download does not seem to be happening, bailing" );
                         return false;
                     }
-                    idleTimer.start(); // FIXME
+                    if ( idleTimer.getTime() == 0 ) idleTimer.start();
                 } else {
-                    idleTimer.stop(); // NOT TESTED
+                    idleTimer.stop();
                     idleTimer.reset();
                 }
             }
