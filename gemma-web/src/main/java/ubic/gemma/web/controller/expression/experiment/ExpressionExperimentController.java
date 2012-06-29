@@ -1159,8 +1159,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
         boolean taxonLimited = ( taxonId != null ) ? true : false;
-        List<SearchResultDisplayObject> displayResults = expressionExperimentSearchService
-                .searchExperimentsAndExperimentGroups( query, taxonId );
+        List<SearchResultDisplayObject> displayResults = new ArrayList<SearchResultDisplayObject>();
 
         // add session bound sets
         // get any session-bound groups
@@ -1178,9 +1177,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        // keep sets in proper order (user's groups first, then public ones)
+        // keep sets in proper order (session-bound groups first)
         Collections.sort( sessionSets );
         displayResults.addAll( sessionSets );
+        displayResults
+                .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
 
         return displayResults;
     }
