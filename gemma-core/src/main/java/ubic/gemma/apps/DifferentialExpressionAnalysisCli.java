@@ -93,6 +93,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
+    private boolean delete = false;
+
     /*
      * (non-Javadoc)
      * 
@@ -159,6 +161,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addOption( "redo", false, "If using automatic analysis, and there are more than 3 factors available, "
                 + "try to base the analysis on a previous analysis. Only works if there is just one old analysis." );
 
+        super.addOption( "delete", false,
+                "Instead of running the analyssi on the given experiments, delete the old analyses. Use with care!" );
+
     }
 
     /*
@@ -200,57 +205,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         summarizeProcessing();
 
         return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
-        differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
-        if ( hasOption( "type" ) ) {
-
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "You can only specify the analysis type when analyzing a single experiment" );
-            }
-
-            if ( !hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
-            }
-            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
-        }
-
-        if ( hasOption( "usebatch" ) ) {
-            this.ignoreBatch = false;
-        }
-
-        this.tryToCopyOld = hasOption( "redo" );
-
-        if ( hasOption( "factors" ) ) {
-
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "You can only specify the factors when analyzing a single experiment" );
-            }
-
-            String rawfactors = getOptionValue( "factors" );
-            String[] factorIDst = StringUtils.split( rawfactors, "," );
-            if ( factorIDst != null && factorIDst.length > 0 ) {
-                for ( String string : factorIDst ) {
-                    try {
-                        Long factorId = Long.parseLong( string );
-                        this.factorIds.add( factorId );
-                    } catch ( NumberFormatException e ) {
-                        this.factorNames.add( string );
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -323,6 +277,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         try {
 
             ee = this.eeService.thawLite( ee );
+
+            if ( delete ) {
+                log.info( "Deleting any analyses for experiment=" + ee );
+                differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+                return;
+            }
 
             Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
             if ( experimentalFactors.size() == 0 ) {
@@ -438,5 +398,60 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             errorObjects.add( ee + ": " + e.getMessage() );
         }
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
+        differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
+        if ( hasOption( "type" ) ) {
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the analysis type when analyzing a single experiment" );
+            }
+
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
+            }
+            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        }
+
+        if ( hasOption( "usebatch" ) ) {
+            this.ignoreBatch = false;
+        }
+
+        if ( hasOption( "delete" ) ) {
+            this.delete = true;
+        }
+
+        this.tryToCopyOld = hasOption( "redo" );
+
+        if ( hasOption( "factors" ) ) {
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the factors when analyzing a single experiment" );
+            }
+
+            String rawfactors = getOptionValue( "factors" );
+            String[] factorIDst = StringUtils.split( rawfactors, "," );
+            if ( factorIDst != null && factorIDst.length > 0 ) {
+                for ( String string : factorIDst ) {
+                    try {
+                        Long factorId = Long.parseLong( string );
+                        this.factorIds.add( factorId );
+                    } catch ( NumberFormatException e ) {
+                        this.factorNames.add( string );
+                    }
+                }
+            }
+        }
     }
 }
