@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -76,8 +77,8 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
 
         DiffExAnalyzer lma = this.getBean( DiffExAnalyzer.class );
 
-        for ( BioAssaySet bas : this.expressionExperiments ) {
-
+        for ( Iterator<BioAssaySet> it = this.expressionExperiments.iterator(); it.hasNext(); ) {
+            BioAssaySet bas = it.next();
             if ( !( bas instanceof ExpressionExperiment ) ) {
                 log.warn( "Subsets not supported yet (" + bas + "), skipping" );
                 continue;
@@ -121,14 +122,16 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
                     Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
                     resultSet.getHitListSizes().clear();
                     resultSet.getHitListSizes().addAll( hitlists );
-                    diffS.update( resultSet );
+                    diffS.update( resultSet ); // cascades. But this updates the diff ex set from scratch, so it is
+                                               // costly.
                     log.info( "Did result set" );
                 }
 
             }
 
             log.info( "Done with " + bas );
-
+            it.remove();
+            allAnalyses.remove( bas ); // allow garbage to be collected.
         }
 
         return null;
