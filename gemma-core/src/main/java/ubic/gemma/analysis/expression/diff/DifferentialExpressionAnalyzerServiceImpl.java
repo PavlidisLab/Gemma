@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.writer.MatrixWriter;
@@ -41,11 +42,11 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
@@ -135,7 +136,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
             log.info( "Deleting old differential expression analysis for experiment "
-                    + expressionExperiment.getShortName() );
+                    + expressionExperiment.getShortName() + ": Analysis ID=" + de.getId() );
             differentialExpressionAnalysisService.delete( de );
 
             deleteOldDistributionMatrices( expressionExperiment, de );
@@ -212,7 +213,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
-        log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName() );
+        log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName()
+                + " Analysis ID=" + existingAnalysis.getId() );
         differentialExpressionAnalysisService.delete( existingAnalysis );
 
         /*
