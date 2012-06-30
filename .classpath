@@ -126,7 +126,7 @@
 			<attribute name="javadoc_location" value="http://junit.sourceforge.net/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.5/dwr-2.0.5.jar" sourcepath="/M2_REPO/org/directwebremoting/dwr/2.0.5"/>
+	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.5/dwr-2.0.5.jar" sourcepath="/M2_REPO/org/directwebremoting/dwr/2.0.10/dwr-2.0.10-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xalan/xalan/2.7.0/xalan-2.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.12/org.mortbay.jetty-5.1.12.jar"/>
@@ -366,5 +366,6 @@
 			<attribute name="owner.project.facets" value="jst.web"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/classmexer/classmexer/0.03/classmexer-0.03.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

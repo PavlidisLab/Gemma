@@ -77,6 +77,9 @@ import cern.jet.random.engine.DRand;
 import cern.jet.random.engine.RandomEngine;
 import cern.jet.stat.Descriptive;
 
+import com.javamex.classmexer.MemoryUtil;
+import com.javamex.classmexer.MemoryUtil.VisibilityFilter;
+
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
  * (including node degree). The results are tied to a specific Analysis that can be referred to by clients. In practice
@@ -89,7 +92,7 @@ import cern.jet.stat.Descriptive;
  */
 @Component
 public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationService {
-    private static final int BATCH_SIZE = 500;
+    private static final int BATCH_SIZE = 1000;
 
     private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
 
@@ -157,8 +160,18 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         return ids;
     }
 
+    /**
+     * @param message
+     * @param obj
+     * @return
+     */
+    private static String getMemoryInfoString( String message, Object obj ) {
+        return message + MemoryUtil.deepMemoryUsageOf( obj, VisibilityFilter.ALL ) + "bytes";
+    }
+
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -589,9 +602,22 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         try {
             Map<Long, Gene> genesToAnalyzeMap = EntityUtils.getIdMap( toUseGenes );
+            StopWatch timer = new StopWatch();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
+                if ( timer.getTime() > 60000 ) {
+
+                    // log.info( getMemoryInfoString( this.getClass().getSimpleName(), this ) );
+                    log.info( getMemoryInfoString( "Experiments", expressionExperiments ) );
+                    log.info( getMemoryInfoString( "toUseGenes", toUseGenes ) );
+                    log.info( getMemoryInfoString( "analysis", analysis ) );
+                    log.info( getMemoryInfoString( "Node degrees: ", this.allGeneNodeDegrees ) );
+
+                    timer.reset();
+                    timer.start();
+
+                }
             }
 
             completeNodeDegreeComputations( analysis != null );
@@ -830,13 +856,15 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                         + " ( " + co.getNegativeScore() + " , +" + co.getPositiveScore() + " )" );
         }
 
+        // bit at the end.
         if ( batch.size() > 0 ) {
             all.addAll( this.gene2GeneCoexpressionService.create( batch ) );
             batch.clear();
         }
+
         if ( all.size() > 0 ) {
-            log.info( "Persisted " + all.size() + " gene2geneCoexpressions for " + firstGene.getName()
-                    + " in analysis: " + analysis.getName() );
+            log.info( "Persisted " + all.size() + " links for " + firstGene.getOfficialSymbol() + " "
+                    + firstGene.getOfficialName() );
         }
         return all;
 
