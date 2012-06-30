@@ -379,8 +379,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             Map<Long, DifferentialExpressionAnalysisResult> detailedResults = getDetailsForContrasts( aggregatedResults );
 
             processHits( searchResult, resultSetToGeneResults, resultSetMap, detailedResults );
+
             watch.stop();
-            log.info( watch.prettyPrint() );
+            log.info( "Diff ex search finished:\n" + watch.prettyPrint() );
         }
 
         /**

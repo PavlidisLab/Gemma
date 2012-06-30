@@ -152,10 +152,12 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             return result;
         }
 
-        Map<CompositeSequence, ProbeLoading> probes = new LinkedHashMap<CompositeSequence, ProbeLoading>();
+        Map<Long, ProbeLoading> probes = new LinkedHashMap<Long, ProbeLoading>();
+        Set<CompositeSequence> p = new HashSet<CompositeSequence>();
         for ( ProbeLoading probeLoading : topLoadedProbes ) {
             CompositeSequence probe = probeLoading.getProbe();
-            probes.put( probe, probeLoading );
+            probes.put( probe.getId(), probeLoading );
+            p.add( probe );
         }
 
         if ( probes.isEmpty() ) return result;
@@ -165,7 +167,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );
         Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
-                ees, probes.keySet() );
+                ees, p );
         // note that this might have come from a cache.
 
         /*
@@ -178,7 +180,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         assert !bioAssayDimension.getBioAssays().isEmpty();
 
         for ( DoubleVectorValueObject vct : vect ) {
-            ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
+            ProbeLoading probeLoading = probes.get( vct.getDesignElement().getId() );
 
             if ( probeLoading == null ) {
                 /*
@@ -193,6 +195,10 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             vct.setBioAssayDimension( bioAssayDimension );
             vct.setExpressionExperiment( new ExpressionExperimentValueObject( ee ) );
             result.put( probeLoading, vct );
+        }
+
+        if ( result.isEmpty() ) {
+            log.warn( "No results, something went wrong" );
         }
 
         return result;
