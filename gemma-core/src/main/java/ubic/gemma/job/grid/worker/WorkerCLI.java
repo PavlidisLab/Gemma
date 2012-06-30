@@ -229,9 +229,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         super.processOptions();
 
         if ( this.hasOption( "mmtx" ) ) {
-            if ( !ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY ) ) {
-                this.getBean( ExpressionExperimentAnnotator.class ).init();
-            }
+            ExpressionExperimentAnnotator eeAnnotator = this.getBean( ExpressionExperimentAnnotator.class );
+            eeAnnotator.init();
         }
 
         String workS = this.getOptionValue( "workers" );
