@@ -52,6 +52,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -746,12 +747,16 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             return probeResults;
         }
 
-        int BATCH_SIZE = 500;
+        int BATCH_SIZE = 1000; // previously: 500.
 
         for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
-
+            StopWatch timer = new StopWatch();
+            timer.start();
             probeResults.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
-
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer.getTime()
+                        + "ms; query was\n " + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+            }
         }
 
         return probeResults;

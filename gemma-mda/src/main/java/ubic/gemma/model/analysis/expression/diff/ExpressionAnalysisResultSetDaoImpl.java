@@ -67,7 +67,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     protected ExpressionAnalysisResultSet handleThaw( final ExpressionAnalysisResultSet resultSet ) {
         StopWatch timer = new StopWatch();
         timer.start();
-
         this.thawLite( resultSet );
 
         List<ExpressionAnalysisResultSet> res = this
@@ -78,6 +77,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
+        }
+
+        if ( res.isEmpty() ) {
+            // this could be due to replication lag. Bug 3034.
+            throw new IllegalStateException( "Failed to thaw the result set: " + resultSet.getId() );
         }
 
         return res.get( 0 );

@@ -510,7 +510,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
             resultSet = differentialExpressionResultService.thaw( resultSet );
-
+            // FIXME might not be available.
             String factorName = "";
 
             // these will be headings on the

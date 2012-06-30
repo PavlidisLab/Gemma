@@ -28,10 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 
@@ -77,7 +75,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public static class TaskProgress {
         private double progressPercent;
         private String currentStage;
-        
+
         private DifferentialExpressionGenesConditionsValueObject taskResult = null;
 
         public TaskProgress( String stage, double percent, DifferentialExpressionGenesConditionsValueObject result ) {
@@ -100,7 +98,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
         public void setTaskResult( DifferentialExpressionGenesConditionsValueObject taskResult ) {
             this.taskResult = taskResult;
-        }                
+        }
     }
 
     /**
@@ -129,7 +127,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         private double taskProgressPercent = 0.0;
 
         private DifferentialExpressionGenesConditionsValueObject taskResult = null;
-        
+
         /**
          * @param geneGroups - the sets of genes to query
          * @param experimentGroups - the sets of experiments to query
@@ -171,11 +169,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             return searchResult;
         }
 
-        
-        private synchronized void setTaskResult(DifferentialExpressionGenesConditionsValueObject result) {
-            this.taskResult = result;
-        }
-        
         /**
          * @return
          */
@@ -304,83 +297,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
-         * If there are multiple analyses, pick the ones that "don't overlap" (see implementation for details, evolving)
-         * 
-         * @param collection
-         * @return a collection with either 0 or a small number of non-conflicting analyses.
-         */
-        private Collection<DifferentialExpressionAnalysis> filterAnalyses(
-                Collection<DifferentialExpressionAnalysis> analyses ) {
-
-            // easy case.
-            if ( analyses.size() == 1 ) return analyses;
-
-            Collection<DifferentialExpressionAnalysis> filtered = new HashSet<DifferentialExpressionAnalysis>();
-
-            ExperimentalFactor subsetFactor = null;
-            Map<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>> analysisFactorsUsed = new HashMap<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>>();
-            for ( DifferentialExpressionAnalysis analysis : analyses ) {
-
-                // take the first subsetted analysis we see.
-                if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
-                    differentialExpressionAnalysisService.thaw( analysis ); // NOTE necessary, but possibly slows things
-                                                                            // down
-
-                    if ( subsetFactor != null
-                            && subsetFactor.equals( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
-                        filtered.add( analysis );
-                    } else {
-                        filtered.add( analysis );
-                    }
-                    subsetFactor = analysis.getSubsetFactorValue().getExperimentalFactor();
-                } else {
-
-                    List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
-                    Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
-                    for ( ExpressionAnalysisResultSet rs : resultSets ) {
-                        if ( isBatch( rs ) ) continue;
-                        Collection<ExperimentalFactor> facts = rs.getExperimentalFactors();
-                        for ( ExperimentalFactor f : facts ) {
-                            if ( ExperimentalDesignUtils.isBatch( f ) ) continue;
-                            factorsUsed.add( f );
-                        }
-                    }
-                    if ( factorsUsed.isEmpty() ) continue;
-                    analysisFactorsUsed.put( analysis, factorsUsed );
-                }
-            }
-
-            /*
-             * If we got a subset analysis, just use it.
-             */
-            if ( !filtered.isEmpty() ) {
-                log.info( "Using subsetted analyses for " + analyses.iterator().next().getExperimentAnalyzed() );
-                return filtered;
-            }
-
-            if ( analysisFactorsUsed.isEmpty() ) {
-                log.info( "No analyses were usable for " + analyses.iterator().next().getExperimentAnalyzed() );
-                return filtered;
-            }
-
-            /*
-             * Look for the analysis that has the most factors. We might change this to pick more than one if they use
-             * different factors, but this would be pretty rare.
-             */
-            assert !analysisFactorsUsed.isEmpty();
-            DifferentialExpressionAnalysis best = null;
-            for ( DifferentialExpressionAnalysis candidate : analysisFactorsUsed.keySet() ) {
-                if ( best == null
-                        || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
-                    best = candidate;
-                }
-            }
-
-            return filtered;
-
-        }
-
-        /**
          * No database calls here, just organization.
          * 
          * @param searchResult
@@ -498,6 +414,83 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         }
 
         /**
+         * If there are multiple analyses, pick the ones that "don't overlap" (see implementation for details, evolving)
+         * 
+         * @param collection
+         * @return a collection with either 0 or a small number of non-conflicting analyses.
+         */
+        private Collection<DifferentialExpressionAnalysis> filterAnalyses(
+                Collection<DifferentialExpressionAnalysis> analyses ) {
+
+            // easy case.
+            if ( analyses.size() == 1 ) return analyses;
+
+            Collection<DifferentialExpressionAnalysis> filtered = new HashSet<DifferentialExpressionAnalysis>();
+
+            ExperimentalFactor subsetFactor = null;
+            Map<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>> analysisFactorsUsed = new HashMap<DifferentialExpressionAnalysis, Collection<ExperimentalFactor>>();
+            for ( DifferentialExpressionAnalysis analysis : analyses ) {
+
+                // take the first subsetted analysis we see.
+                if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
+                    differentialExpressionAnalysisService.thaw( analysis ); // NOTE necessary, but possibly slows things
+                                                                            // down
+
+                    if ( subsetFactor != null
+                            && subsetFactor.equals( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
+                        filtered.add( analysis );
+                    } else {
+                        filtered.add( analysis );
+                    }
+                    subsetFactor = analysis.getSubsetFactorValue().getExperimentalFactor();
+                } else {
+
+                    List<ExpressionAnalysisResultSet> resultSets = filterResultSets( analysis.getResultSets() );
+                    Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
+                    for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                        if ( isBatch( rs ) ) continue;
+                        Collection<ExperimentalFactor> facts = rs.getExperimentalFactors();
+                        for ( ExperimentalFactor f : facts ) {
+                            if ( ExperimentalDesignUtils.isBatch( f ) ) continue;
+                            factorsUsed.add( f );
+                        }
+                    }
+                    if ( factorsUsed.isEmpty() ) continue;
+                    analysisFactorsUsed.put( analysis, factorsUsed );
+                }
+            }
+
+            /*
+             * If we got a subset analysis, just use it.
+             */
+            if ( !filtered.isEmpty() ) {
+                log.info( "Using subsetted analyses for " + analyses.iterator().next().getExperimentAnalyzed() );
+                return filtered;
+            }
+
+            if ( analysisFactorsUsed.isEmpty() ) {
+                log.info( "No analyses were usable for " + analyses.iterator().next().getExperimentAnalyzed() );
+                return filtered;
+            }
+
+            /*
+             * Look for the analysis that has the most factors. We might change this to pick more than one if they use
+             * different factors, but this would be pretty rare.
+             */
+            assert !analysisFactorsUsed.isEmpty();
+            DifferentialExpressionAnalysis best = null;
+            for ( DifferentialExpressionAnalysis candidate : analysisFactorsUsed.keySet() ) {
+                if ( best == null
+                        || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
+                    best = candidate;
+                }
+            }
+
+            return filtered;
+
+        }
+
+        /**
          * @param factorValues
          * @param baselineFactorValueId
          * @return
@@ -569,7 +562,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     continue;
                 }
 
-                // Here I am trying to avoid fetching them when there is no hope. FIXME make sure this is reasonable.
+                // Here I am trying to avoid fetching them when there is no hope.
                 if ( r.getCorrectedPvalue() == null
                         || r.getCorrectedPvalue() > LinearModelAnalyzer.PVALUE_CONTRAST_SELECT_THRESHOLD ) {
                     // Then it won't have contrasts; no need to fetch.
@@ -657,6 +650,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 Map<Long, ExpressionAnalysisResultSet> resultSetMap,
                 Map<Long, DifferentialExpressionAnalysisResult> detailedResults ) {
 
+            int i = 0;
+
             for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 
                 Map<Long, DiffExprGeneSearchResult> geneToProbeResult = resultSetEntry.getValue();
@@ -665,6 +660,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 assert resultSet != null;
 
                 processHitsForResultSet( searchResult, detailedResults, geneToProbeResult, resultSet );
+
+                if ( ++i % 2000 == 0 ) {
+                    log.info( "Processed " + i + "/" + resultSetToGeneResults.size() + " hits." );
+                }
             }
 
         }
@@ -678,6 +677,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         private void processHitsForResultSet( DifferentialExpressionGenesConditionsValueObject searchResult,
                 Map<Long, DifferentialExpressionAnalysisResult> detailedResults,
                 Map<Long, DiffExprGeneSearchResult> geneToProbeResult, ExpressionAnalysisResultSet resultSet ) {
+            // No database calls.
             for ( Long geneId : geneToProbeResult.keySet() ) {
                 DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
@@ -730,6 +730,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             this.taskProgressStage = stage;
             this.taskProgressPercent = percent;
         }
+
     }
 
     protected static Log log = LogFactory.getLog( DifferentialExpressionGeneConditionSearchServiceImpl.class.getName() );
@@ -752,37 +753,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchResult(java.lang
-     * .String)
-     */
-//    @Override
-//    private DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
-//        DifferentialExpressionGenesConditionsValueObject result = null;
-//
-//        try {
-//            DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
-//                    .get( taskId ).getObjectValue();
-//
-//            ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-//            Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor
-//                    .submit( diffExpSearchTask );
-//            singleThreadExecutor.shutdown();
-//
-//            result = backgroundTask.get(); // blocks
-//        } catch ( InterruptedException e ) {
-//            throw new RuntimeException( e );
-//        } catch ( ExecutionException e ) {
-//            throw new RuntimeException( e );
-//        } finally {
-//            this.diffExpSearchTasksCache.remove( taskId );
-//        }
-//        return result;
-//    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
      * ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService#getDiffExpSearchTaskProgress(java
      * .lang.String)
      */
@@ -790,15 +760,15 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public TaskProgress getDiffExpSearchTaskProgress( String taskId ) {
         if ( this.diffExpSearchTasksCache.isKeyInCache( taskId ) ) {
             DifferentialExpressionSearchTask diffExpSearchTask = ( DifferentialExpressionSearchTask ) this.diffExpSearchTasksCache
-                    .get( taskId ).getObjectValue();            
-            
+                    .get( taskId ).getObjectValue();
+
             TaskProgress taskProgress = diffExpSearchTask.getTaskProgress();
             DifferentialExpressionGenesConditionsValueObject result = taskProgress.getTaskResult();
-            if (result != null) {
-                this.diffExpSearchTasksCache.remove( taskId );                                
+            if ( result != null ) {
+                this.diffExpSearchTasksCache.remove( taskId );
             }
             return taskProgress;
-        }       
+        }
         return new TaskProgress( "Removed", 0.0, null );
     }
 
@@ -813,21 +783,17 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
     public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
             List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
             List<String> experimentGroupNames ) {
-        
-        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes,
-                                                                                                   experiments,
-                                                                                                   geneGroupNames,
-                                                                                                   experimentGroupNames );
+
+        DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes, experiments,
+                geneGroupNames, experimentGroupNames );
 
         String taskId = UUID.randomUUID().toString();
         this.diffExpSearchTasksCache.put( new Element( taskId, diffExpSearchTask ) );
 
         ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-        
-        Future<DifferentialExpressionGenesConditionsValueObject> backgroundTask = singleThreadExecutor.submit( diffExpSearchTask );
-        
+
         singleThreadExecutor.shutdown();
-        
+
         return taskId;
     }
 
