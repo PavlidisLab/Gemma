@@ -611,7 +611,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                     // log.info( getMemoryInfoString( this.getClass().getSimpleName(), this ) );
                     log.info( getMemoryInfoString( "Experiments", expressionExperiments ) );
                     log.info( getMemoryInfoString( "toUseGenes", toUseGenes ) );
-                    log.info( getMemoryInfoString( "analysis", analysis ) );
+                    if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
                     log.info( getMemoryInfoString( "Node degrees: ", this.allGeneNodeDegrees ) );
 
                     timer.reset();
