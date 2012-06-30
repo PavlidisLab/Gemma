@@ -161,6 +161,33 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.util.Collection, java.lang.String)
+     */
+    @Override
+    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
+        HashSet<Characteristic> result = new HashSet<Characteristic>();
+
+        if ( classes.isEmpty() ) {
+            return result;
+        }
+
+        for ( Class<?> clazz : classes ) {
+
+            String field = getCharactersticFieldName( clazz );
+
+            final String queryString = "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName()
+                    + " as parent " + " join parent." + field + " as char " + "where char.value like :v";
+
+            result.addAll( getHibernateTemplate().findByNamedParam( queryString, "v", string + "%" ) );
+
+        }
+
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
@@ -238,33 +265,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.util.Collection, java.lang.String)
-     */
-    @Override
-    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
-        HashSet<Characteristic> result = new HashSet<Characteristic>();
-
-        if ( classes.isEmpty() ) {
-            return result;
-        }
-
-        for ( Class<?> clazz : classes ) {
-
-            String field = getCharactersticFieldName( clazz );
-
-            final String queryString = "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName()
-                    + " as parent " + " join parent." + field + " as char " + "where char.value like :v";
-
-            result.addAll( getHibernateTemplate().findByNamedParam( queryString, "v", string + "%" ) );
-
-        }
-
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
      * java.util.Collection)
      */
@@ -276,19 +276,18 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         if ( characteristics == null || characteristics.size() == 0 ) {
             return charToParent;
         }
-
-        // FIXME temporary debugging code
-        Collection<String> uris = new HashSet<String>();
-        for ( Characteristic c : characteristics ) {
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                if ( vc.getValueUri() == null ) continue;
-                uris.add( vc.getValueUri() );
+        if ( log.isDebugEnabled() ) {
+            Collection<String> uris = new HashSet<String>();
+            for ( Characteristic c : characteristics ) {
+                if ( c instanceof VocabCharacteristic ) {
+                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                    if ( vc.getValueUri() == null ) continue;
+                    uris.add( vc.getValueUri() );
+                }
             }
+            log.debug( "For class=" + parentClass.getSimpleName() + ": " + characteristics.size()
+                    + " Characteristics have URIS:\n" + StringUtils.join( uris, "\n" ) );
         }
-
-        log.info( "For class=" + parentClass.getSimpleName() + ": " + characteristics.size()
-                + " Characteristics have URIS:\n" + StringUtils.join( uris, "\n" ) );
 
         StopWatch timer = new StopWatch();
         timer.start();
