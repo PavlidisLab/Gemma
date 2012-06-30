@@ -5,8 +5,8 @@
 </div>
 <div class="footer">
 
-	<span class="left">Copyright &copy; 2007-2012 &nbsp;
-	<a href='<c:url value="/static/termsAndConditions.html" />'>Terms and conditions</a> </span>
+	<span class="left">Gemma  &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2012 &nbsp;
+	<a href='<c:url value="http://gemma-chibi-doc.sites.olt.ubc.ca/terms-and-conditions" />'>Terms and conditions</a></span>
 </div>
 
 <c:if test='${ appConfig["ga.tracker"] != null}'>
