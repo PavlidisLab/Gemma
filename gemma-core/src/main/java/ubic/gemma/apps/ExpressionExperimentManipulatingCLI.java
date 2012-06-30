@@ -311,9 +311,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             throw new RuntimeException( e );
         }
         assert expressionExperiments.size() > 0;
-        int count = 0;
+
+        int before = expressionExperiments.size();
+
         expressionExperiments.removeAll( excludeExperiments );
-        if ( count > 0 ) log.info( "Excluded " + excludeExperiments.size() + " expression experiments" );
+        int removed = before - expressionExperiments.size();
+
+        if ( removed > 0 ) log.info( "Excluded " + removed + " expression experiments" );
     }
 
     /**
