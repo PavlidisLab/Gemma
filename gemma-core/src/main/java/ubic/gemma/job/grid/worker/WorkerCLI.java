@@ -41,7 +41,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
-import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.job.grid.util.SpacesUtilImpl;
@@ -231,7 +230,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         if ( this.hasOption( "mmtx" ) ) {
             if ( !ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY ) ) {
-                ( ( ExpressionExperimentAnnotatorImpl ) this.getBean( ExpressionExperimentAnnotator.class ) ).init();
+                this.getBean( ExpressionExperimentAnnotator.class ).init();
             }
         }
 
@@ -304,7 +303,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         } );
         service.submit( heartBeatTask );
-        service.shutdown();  // blocks until all submitted tasks complete
+        service.shutdown(); // blocks until all submitted tasks complete
 
         return heartBeatTask;
 
@@ -314,7 +313,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * Create and start a worker instance.
      * 
      * @param workerName bean name e.g. monitorWorker
-     * @throws ClassNotFoundException 
+     * @throws ClassNotFoundException
      */
     private void startWorker( String workerName ) throws ClassNotFoundException {
 
@@ -425,10 +424,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @param workerName
      * @return
      * @throws InterruptedException
-     * @throws ClassNotFoundException 
+     * @throws ClassNotFoundException
      */
     private Object workerCheckLoop( final SpacesRegistrationEntry registrationEntry,
-            final CustomDelegatingWorker worker, String workerName ) throws InterruptedException, ClassNotFoundException {
+            final CustomDelegatingWorker worker, String workerName ) throws InterruptedException,
+            ClassNotFoundException {
         log.info( "Starting heartbeat for " + registrationEntry.registrationId );
         while ( true ) {
 
