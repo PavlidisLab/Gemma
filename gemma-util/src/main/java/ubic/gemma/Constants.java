@@ -30,7 +30,7 @@ public class Constants {
     // ~ Static fields/initializers =============================================
 
     public static final String APP_NAME = "Gemma";
-    
+
     /** The name of the ResourceBundle used in this application */
     public static final String BUNDLE_KEY = "messages";
 
@@ -66,7 +66,7 @@ public class Constants {
     public static final String AVAILABLE_ROLES = "availableRoles";
 
     /**
-     * The name of the configuration hashmap stored in application scope. Variables placed here (in the StartupListner)
+     * The name of the configuration hashmap stored in application scope. Variables placed here (in the StartupListener)
      * are available in jsps using $appConfig['key'] synax.
      */
     public static final String CONFIG = "appConfig";

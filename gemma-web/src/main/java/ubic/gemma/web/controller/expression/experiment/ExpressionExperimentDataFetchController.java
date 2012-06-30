@@ -271,14 +271,6 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    public File getOutputFile( String filename ) {
-        String fullFilePath = DATA_DIR + filename;
-        File f = new File( fullFilePath );
-        File parentDir = f.getParentFile();
-        if ( !parentDir.exists() ) parentDir.mkdirs();
-        return f;
-    }
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -292,12 +284,16 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
      * 
-     * @param request
-     * @param response
+     * @param file
      * @return
      */
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
     public ModelAndView downloadFile( String file ) {
+
+        if ( StringUtils.isBlank( file ) ) {
+            throw new IllegalArgumentException( "The file name cannot be blank" );
+        }
+
         ModelAndView mav = new ModelAndView( new DownloadBinaryFileView() );
         String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
         mav.addObject( DownloadBinaryFileView.PATH_PARAM, fullFilePath );
@@ -343,6 +339,14 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
         tc.setAnalysisId( analysisId );
         DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( tc );
         return startTask( runner );
+    }
+
+    public File getOutputFile( String filename ) {
+        String fullFilePath = DATA_DIR + filename;
+        File f = new File( fullFilePath );
+        File parentDir = f.getParentFile();
+        if ( !parentDir.exists() ) parentDir.mkdirs();
+        return f;
     }
 
     public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
