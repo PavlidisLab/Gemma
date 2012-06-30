@@ -21,18 +21,22 @@ package ubic.gemma.util.monitor;
 public interface CacheMonitor {
 
     /**
+     * Remove all items from all caches.
+     * 
+     * @param cacheName
+     */
+    public abstract void clearAllCaches();
+
+    /**
      * Remove all items from the cache given
      * 
      * @param cacheName
      */
     public abstract void clearCache( String cacheName );
 
-    /**
-     * Remove all items from all caches.
-     * 
-     * @param cacheName
-     */
-    public abstract void clearAllCaches();
+    public void disableStatistics();
+
+    public void enableStatistics();
 
     /**
      * @return

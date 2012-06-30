@@ -54,26 +54,33 @@ public class SystemMonitorController {
     SpaceMonitor spaceMonitor;
 
     /**
-     * Flush (clear) all caches. Expose to AJAX
+     * Flush (clear) all caches. Exposed to AJAX
      */
     public void clearAllCaches() {
         this.cacheMonitor.clearAllCaches();
-    }
-    
-    /**
-     * 
-     */
-    public void resetHibernateStatus() {
-        this.hibernateMonitor.resetStats();
     }
 
     /**
      * Flush (clear) a cache.
      * 
-     * @param cache name Expose to AJAX
+     * @param cache name Exposed to AJAX
      */
     public void clearCache( String name ) {
         this.cacheMonitor.clearCache( name );
+    }
+
+    /**
+     * Exposed to AJAX
+     */
+    public void disableStatistics() {
+        this.cacheMonitor.disableStatistics();
+    }
+
+    /**
+     * Exposed to AJAX
+     */
+    public void enableStatistics() {
+        this.cacheMonitor.enableStatistics();
     }
 
     public String getCacheStatus() {
@@ -86,7 +93,7 @@ public class SystemMonitorController {
      * @return
      */
     public String getHibernateStatus() {
-        return this.hibernateMonitor.getStats( true, true, true );
+        return this.hibernateMonitor.getStats( false, false, false );
     }
 
     /**
@@ -140,6 +147,13 @@ public class SystemMonitorController {
     public ModelAndView gridStatus( HttpServletRequest request, HttpServletResponse response ) {
         String spaceStatus = getSpaceStatus();
         return new ModelAndView( "systemNotices" ).addObject( "status", spaceStatus );
+    }
+
+    /**
+     * 
+     */
+    public void resetHibernateStatus() {
+        this.hibernateMonitor.resetStats();
     }
 
     /**

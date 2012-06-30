@@ -672,6 +672,8 @@
       		<dwr:include method="clearCache" />   
       		<dwr:include method="clearAllCaches" />   
       		<dwr:include method="resetHibernateStatus" />   
+      		<dwr:include method="enableStatistics" />
+      		<dwr:include method="disableStatistics" />
 		</dwr:remote>
 	</bean>
 

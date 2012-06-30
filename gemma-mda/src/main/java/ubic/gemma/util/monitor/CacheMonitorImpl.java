@@ -20,16 +20,15 @@ package ubic.gemma.util.monitor;
 
 import java.util.Arrays;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Statistics;
-
-import net.sf.ehcache.config.CacheConfiguration;
 
 /**
  * Get statistics about and manage caches.
@@ -48,6 +47,17 @@ public class CacheMonitorImpl implements CacheMonitor {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.util.monitor.CacheMonitor#clearAllCaches()
+     */
+    @Override
+    public void clearAllCaches() {
+        log.info( "Clearing all caches" );
+        cacheManager.clearAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.monitor.CacheMonitor#clearCache(java.lang.String)
      */
     @Override
@@ -61,14 +71,17 @@ public class CacheMonitorImpl implements CacheMonitor {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.monitor.CacheMonitor#clearAllCaches()
-     */
     @Override
-    public void clearAllCaches() {
-        cacheManager.clearAll();
+    public void disableStatistics() {
+        log.info( "Disabling statistics" );
+        setStatisticsEnabled( false );
+    }
+
+    @Override
+    public void enableStatistics() {
+        log.info( "Enabling statistics" );
+        setStatisticsEnabled( true );
+
     }
 
     /*
@@ -84,9 +97,12 @@ public class CacheMonitorImpl implements CacheMonitor {
         Arrays.sort( cacheNames );
 
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
-        buf.append( "&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
+        buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
+
         buf.append( "<table style='font-size:small'  ><tr>" );
-        String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
+        String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
         buf.append( header );
         buf.append( "</tr>" );
 
@@ -102,27 +118,30 @@ public class CacheMonitorImpl implements CacheMonitor {
             }
 
             // a little shorter...
-            String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "[entity] " );
+            String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "u.g.m." );
 
             buf.append( "<tr><td>" + getClearCacheHtml( rawCacheName ) + cacheName + "</td>" );
             long hits = statistics.getCacheHits();
             long misses = statistics.getCacheMisses();
             long inMemoryHits = statistics.getInMemoryHits();
+            long inMemoryMisses = statistics.getInMemoryMisses();
+
             long onDiskHits = statistics.getOnDiskHits();
             long evictions = statistics.getEvictionCount();
 
-            buf.append( "<td>" + ( hits > 0 ? hits : "" ) + "</td>" );
-            buf.append( "<td>" + ( misses > 0 ? misses : "" ) + "</td>" );
-            buf.append( "<td>" + ( objectCount > 0 ? objectCount : "" ) + "</td>" );
-            buf.append( "<td>" + ( inMemoryHits > 0 ? inMemoryHits : "" ) + "</td>" );
-            buf.append( "<td>" + ( onDiskHits > 0 ? onDiskHits : "" ) + "</td>" );
-            buf.append( "<td>" + ( evictions > 0 ? evictions : "" ) + "</td>" );
+            buf.append( makeTableCellForStat( hits ) );
+            buf.append( makeTableCellForStat( misses ) );
+            buf.append( makeTableCellForStat( objectCount ) );
+            buf.append( makeTableCellForStat( inMemoryHits ) );
+            buf.append( makeTableCellForStat( inMemoryMisses ) );
+            buf.append( makeTableCellForStat( onDiskHits ) );
+            buf.append( makeTableCellForStat( evictions ) );
 
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
             buf.append( "<td>" + ( eternal ? "&bull;" : "" ) + "</td>" );
             buf.append( "<td>" + ( cacheConfiguration.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
-            buf.append( "<td>" + cacheConfiguration.getMaxElementsInMemory() + "</td>" );
+            buf.append( "<td>" + cacheConfiguration.getMaxEntriesLocalHeap() + "</td>" );
 
             if ( eternal ) {
                 // timeouts are irrelevant.
@@ -146,6 +165,23 @@ public class CacheMonitorImpl implements CacheMonitor {
     private String getClearCacheHtml( String cacheName ) {
         return "<img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearCache('" + cacheName
                 + "')\" alt='Clear cache' title='Clear cache' />&nbsp;&nbsp;";
+    }
+
+    /**
+     * @param hits
+     * @return
+     */
+    private String makeTableCellForStat( long hits ) {
+        return "<td>" + ( hits > 0 ? hits : "" ) + "</td>";
+    }
+
+    private void setStatisticsEnabled( boolean b ) {
+        String[] cacheNames = cacheManager.getCacheNames();
+
+        for ( String rawCacheName : cacheNames ) {
+            Cache cache = cacheManager.getCache( rawCacheName );
+            cache.setSampledStatisticsEnabled( b );
+        }
     }
 
 }

@@ -869,6 +869,12 @@ SystemMonitorController.clearCache = function(p0, callback) {
 SystemMonitorController.clearAllCaches = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'clearAllCaches', callback);
 }
+SystemMonitorController.enableStatistics = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'enableStatistics', callback);
+}
+SystemMonitorController.disableStatistics = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'disableStatistics', callback);
+}
 SystemMonitorController.resetHibernateStatus = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
 }

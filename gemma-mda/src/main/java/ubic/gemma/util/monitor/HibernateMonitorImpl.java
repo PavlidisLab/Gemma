@@ -20,7 +20,9 @@ package ubic.gemma.util.monitor;
 
 //import java.lang.management.ManagementFactory;
 import java.util.Arrays;
+import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -47,7 +49,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
 
     private boolean showQueryCacheStats = true;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.monitor.HibernateMonitor#getStats()
      */
     @Override
@@ -55,7 +59,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         return getStats( false, false, false );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.monitor.HibernateMonitor#getStats(boolean, boolean, boolean)
      */
     @Override
@@ -64,26 +70,34 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         Statistics stats = sessionFactory.getStatistics();
 
         StringBuilder buf = new StringBuilder();
+        buf.append( "Statistics started at: " + new Date( stats.getStartTime() ) + "\n" );
         long flushes = stats.getFlushCount();
         long trans = stats.getTransactionCount();
         long prep = stats.getPrepareStatementCount();
         long open = stats.getSessionOpenCount();
         long close = stats.getSessionCloseCount();
+        long ex = stats.getQueryExecutionCount();
+
+        buf.append( "Queries executed: " + ex + "\n" );
 
         buf.append( open + " sessions opened, " + close + " closed\n" );
         buf.append( prep + " statements prepared, " + trans + " transactions completed, " + flushes + " flushes.\n" );
+        String slowQuery = stats.getQueryExecutionMaxTimeQueryString();
+        long queryExecutionMaxTime = stats.getQueryExecutionMaxTime();
+        if ( queryExecutionMaxTime > 1000 ) {
+            buf.append( "Slowest query [" + queryExecutionMaxTime + "ms]: " + StringUtils.abbreviate( slowQuery, 150 )
+                    + "\n" );
+        }
 
         if ( showQueryCacheStats ) {
             buf.append( "\n------------------- Query Cache stats -----------------------\n" );
             long queryCacheHitCount = stats.getQueryCacheHitCount();
             long queryCacheMissCount = stats.getQueryCacheMissCount();
             long queryCachePutCount = stats.getQueryCachePutCount();
-            long queryCacheExecutions = stats.getQueryExecutionCount();
 
+            buf.append( "Puts: " + queryCachePutCount + "\n" );
             buf.append( "Hits: " + queryCacheHitCount + "\n" );
             buf.append( "Misses: " + queryCacheMissCount + "\n" );
-            buf.append( "Puts: " + queryCachePutCount + "\n" );
-            buf.append( "Executions: " + queryCacheExecutions + "\n" );
 
         }
 
@@ -91,7 +105,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         long secCacheHits = stats.getSecondLevelCacheHitCount();
         long secCacheMiss = stats.getSecondLevelCacheMissCount();
         long secCachePut = stats.getSecondLevelCachePutCount();
-        buf.append( "2' Cache: " + secCacheHits + " hits; " + secCacheMiss + " miss; " + secCachePut + " put\n" );
+        buf.append( "Puts: " + secCachePut + "\n" );
+        buf.append( "Hits: " + secCacheHits + "\n" );
+        buf.append( "Misses: " + secCacheMiss + "\n" );
 
         if ( showSecondLevelCacheDetails ) {
             String[] regions = stats.getSecondLevelCacheRegionNames();
@@ -110,12 +126,6 @@ public class HibernateMonitorImpl implements HibernateMonitor {
                             + " puts; Memcount=" + count + "; Diskcount=" + diskCount + " MemSizeBytes=" + size + "\n" );
                 }
             }
-        }
-
-        String slowQuery = stats.getQueryExecutionMaxTimeQueryString();
-        long queryExecutionMaxTime = stats.getQueryExecutionMaxTime();
-        if ( queryExecutionMaxTime > 1000 ) {
-            buf.append( "Slowest query [" + queryExecutionMaxTime + "ms]: " + slowQuery + "\n" );
         }
 
         if ( showCollectionStats ) {
@@ -167,7 +177,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         return buf.toString();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.monitor.HibernateMonitor#resetStats()
      */
     @Override
