@@ -85,55 +85,61 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
             }
 
             ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) bas;
+            try {
 
-            Collection<DifferentialExpressionAnalysis> analyses = allAnalyses.get( expressionExperiment );
-            if ( analyses == null ) {
-                log.debug( "No analyses for " + expressionExperiment );
-                continue;
-            }
+                Collection<DifferentialExpressionAnalysis> analyses = allAnalyses.get( expressionExperiment );
+                if ( analyses == null ) {
+                    log.debug( "No analyses for " + expressionExperiment );
+                    continue;
+                }
 
-            log.info( "Processing analyses for " + bas );
+                log.info( "Processing analyses for " + bas );
 
-            diffS.thaw( analyses );
-            for ( DifferentialExpressionAnalysis analysis : analyses ) {
+                diffS.thaw( analyses );
+                for ( DifferentialExpressionAnalysis analysis : analyses ) {
 
-                Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
+                    Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
 
-                for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+                    for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
 
-                    diffrS.thaw( resultSet );
+                        diffrS.thaw( resultSet );
 
-                    List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
-                            resultSet.getResults() );
-                    for ( DifferentialExpressionAnalysisResult d : results ) {
-                        CompositeSequence probe = d.getProbe();
-                        probe2GeneMap.put( probe, new HashSet<Gene>() );
+                        List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
+                                resultSet.getResults() );
+                        for ( DifferentialExpressionAnalysisResult d : results ) {
+                            CompositeSequence probe = d.getProbe();
+                            probe2GeneMap.put( probe, new HashSet<Gene>() );
+                        }
                     }
+
+                    probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
+                    log.info( "Got probe/gene info" );
+
+                    assert !probe2GeneMap.isEmpty();
+
+                    for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+                        List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
+                                resultSet.getResults() );
+                        Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
+                        resultSet.getHitListSizes().clear();
+                        resultSet.getHitListSizes().addAll( hitlists );
+                        diffS.update( resultSet ); // cascades. But this updates the diff ex set from scratch, so it is
+                                                   // costly.
+                        log.info( "Did result set" );
+                    }
+
                 }
 
-                probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
-                log.info( "Got probe/gene info" );
-
-                assert !probe2GeneMap.isEmpty();
-
-                for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-                    List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
-                            resultSet.getResults() );
-                    Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
-                    resultSet.getHitListSizes().clear();
-                    resultSet.getHitListSizes().addAll( hitlists );
-                    diffS.update( resultSet ); // cascades. But this updates the diff ex set from scratch, so it is
-                                               // costly.
-                    log.info( "Did result set" );
-                }
-
+                log.info( "Done with " + bas );
+                it.remove();
+                allAnalyses.remove( bas ); // allow garbage to be collected.
+                this.successObjects.add( bas );
+            } catch ( Exception e ) {
+                log.error( e, e );
+                this.errorObjects.add( bas + " " + e.getMessage() );
             }
-
-            log.info( "Done with " + bas );
-            it.remove();
-            allAnalyses.remove( bas ); // allow garbage to be collected.
         }
-
+        summarizeProcessing();
         return null;
     }
 }
