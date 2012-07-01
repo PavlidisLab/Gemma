@@ -65,12 +65,13 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  */
 public abstract class AbstractCLI {
 
-    protected static final String THREADS_OPTION = "threads";
-    protected static final String AUTO_OPTION_NAME = "auto";
-
     public enum ErrorCode {
         NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
     }
+
+    protected static final String THREADS_OPTION = "threads";
+
+    protected static final String AUTO_OPTION_NAME = "auto";
 
     private static final char PASSWORD_CONSTANT = 'p';
     private static final char USERNAME_OPTION = 'u';
@@ -126,8 +127,6 @@ public abstract class AbstractCLI {
         this.buildStandardOptions();
         this.buildOptions();
     }
-
-    public abstract String getShortDesc();
 
     /**
      * @param opt
@@ -240,6 +239,8 @@ public abstract class AbstractCLI {
         return this.options.getRequiredOptions();
     }
 
+    public abstract String getShortDesc();
+
     public boolean hasOption( char opt ) {
         return commandLine.hasOption( opt );
     }
@@ -249,126 +250,15 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Call in 'buildOptions' to force users to provide a user name and password.
+     * You must implement the handling for this option.
      */
-    protected void requireLogin() {
-        if ( this.passwordOpt != null ) {
-            this.passwordOpt.setRequired( true );
-        }
-        if ( this.usernameOpt != null ) {
-            this.usernameOpt.setRequired( true );
-        }
-    }
+    @SuppressWarnings("static-access")
+    protected void addAutoOption() {
+        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME )
+                .withDescription( "Attempt to process entities that need processing based on workflow criteria." )
+                .create( AUTO_OPTION_NAME );
 
-    /**
-     * Set up logging according to the user-selected (or default) verbosity level.
-     */
-    private void configureLogging( String loggerName, int v ) {
-
-        Logger log4jLogger = LogManager.exists( loggerName );
-
-        if ( log4jLogger == null ) {
-            try {
-                log4jLogger = LogManager.getLogger( Class.forName( loggerName ) );
-            } catch ( ClassNotFoundException e ) {
-                log.warn( "ClassNotFound: " + loggerName );
-            }
-
-            if ( log4jLogger == null ) {
-                log.warn( "No logger of name '" + loggerName + "'" );
-                return;
-            }
-        }
-
-        this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
-
-        switch ( v ) {
-            case 0:
-                log4jLogger.setLevel( Level.OFF );
-                break;
-            case 1:
-                log4jLogger.setLevel( Level.FATAL );
-                break;
-            case 2:
-                log4jLogger.setLevel( Level.ERROR );
-                break;
-            case 3:
-                log4jLogger.setLevel( Level.WARN );
-                break;
-            case 4:
-                log4jLogger.setLevel( Level.INFO );
-                break;
-            case 5:
-                log4jLogger.setLevel( Level.DEBUG );
-                break;
-            default:
-                throw new RuntimeException( "Verbosity must be from 0 to 5" );
-
-        }
-
-        log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
-    }
-
-    private String invalidOptionString( String option ) {
-        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
-    }
-
-    /**
-     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
-     * purposes.
-     */
-    private void processStandardOptions() {
-
-        if ( commandLine.hasOption( HOST_OPTION ) ) {
-            this.host = commandLine.getOptionValue( HOST_OPTION );
-        } else {
-            this.host = DEFAULT_HOST;
-        }
-
-        if ( commandLine.hasOption( PORT_OPTION ) ) {
-            this.port = getIntegerOptionValue( PORT_OPTION );
-        } else {
-            this.port = DEFAULT_PORT;
-        }
-
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            this.username = commandLine.getOptionValue( USERNAME_OPTION );
-        }
-
-        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
-            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
-        }
-
-        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
-            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
-            if ( verbosity < 1 || verbosity > 5 ) {
-                throw new RuntimeException( "Verbosity must be from 1 to 5" );
-            }
-        }
-        PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
-        ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
-        Logger f = LogManager.getRootLogger();
-        assert f != null;
-        f.addAppender( cnslAppndr );
-
-        if ( commandLine.hasOption( "logger" ) ) {
-            String value = getOptionValue( "logger" );
-            String[] vals = value.split( "=" );
-            if ( vals.length != 2 ) throw new RuntimeException( "Logging value must in format [logger]=[value]" );
-            try {
-                log.info( "Setting logging for " + vals[0] + " to " + vals[1] );
-                configureLogging( vals[0], Integer.parseInt( vals[1] ) );
-            } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Logging level must be an integer" );
-            }
-        }
-
-        if ( hasOption( "mdate" ) ) {
-            this.mDate = this.getOptionValue( "mdate" );
-        }
-
-        configureLogging( "ubic.gemma", this.verbosity );
-
+        addOption( autoSeekOption );
     }
 
     @SuppressWarnings("static-access")
@@ -383,18 +273,6 @@ public abstract class AbstractCLI {
                 .create( "mdate" );
 
         addOption( dateOption );
-    }
-
-    /**
-     * You must implement the handling for this option.
-     */
-    @SuppressWarnings("static-access")
-    protected void addAutoOption() {
-        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME )
-                .withDescription( "Attempt to process entities that need processing based on workflow criteria." )
-                .create( AUTO_OPTION_NAME );
-
-        addOption( autoSeekOption );
     }
 
     /**
@@ -430,6 +308,16 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * Add required user name and password options.
+     */
+    protected void addUserNameAndPasswordOptions() {
+        /*
+         * Changed to make it so password is not required.
+         */
+        this.addUserNameAndPasswordOptions( false );
+    }
+
+    /**
      * Convenience method to add a standard pair of (required) options to intake a user name and password, optionally
      * required
      */
@@ -448,16 +336,6 @@ public abstract class AbstractCLI {
 
         options.addOption( usernameOpt );
         options.addOption( passwordOpt );
-    }
-
-    /**
-     * Add required user name and password options.
-     */
-    protected void addUserNameAndPasswordOptions() {
-        /*
-         * Changed to make it so password is not required.
-         */
-        this.addUserNameAndPasswordOptions( false );
     }
 
     /**
@@ -650,6 +528,64 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * Implement this to provide processing of options. It is called at the end of processCommandLine.
+     */
+    protected abstract void processOptions();
+
+    /**
+     * Call in 'buildOptions' to force users to provide a user name and password.
+     */
+    protected void requireLogin() {
+        if ( this.passwordOpt != null ) {
+            this.passwordOpt.setRequired( true );
+        }
+        if ( this.usernameOpt != null ) {
+            this.usernameOpt.setRequired( true );
+        }
+    }
+
+    /**
+     * This is needed for CLIs that run in tests, so the logging settings get reset.
+     */
+    protected void resetLogging() {
+        for ( Logger log4jLogger : this.originalLoggingLevels.keySet() ) {
+            log4jLogger.setLevel( this.originalLoggingLevels.get( log4jLogger ) );
+        }
+    }
+
+    /**
+     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
+     * 'successObjects' and 'errorObjects'
+     * 
+     * @param errorObjects
+     * @param successObjects
+     */
+    protected void summarizeProcessing() {
+        if ( successObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Processed:\n" );
+            for ( Object object : successObjects ) {
+                buf.append( "\t" + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+
+            log.info( buf );
+        } else {
+            log.error( "No objects processed successfully!" );
+        }
+
+        if ( errorObjects.size() > 0 ) {
+            StringBuilder buf = new StringBuilder();
+            buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
+            for ( Object object : errorObjects ) {
+                buf.append( "\t" + object + "\n" );
+            }
+            buf.append( "---------------------\n" );
+            log.error( buf );
+        }
+    }
+
+    /**
      * Wait for completion.
      */
     protected void waitForThreadPoolCompletion( Collection<Thread> threads ) {
@@ -673,48 +609,113 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Implement this to provide processing of options. It is called at the end of processCommandLine.
+     * Set up logging according to the user-selected (or default) verbosity level.
      */
-    protected abstract void processOptions();
+    private void configureLogging( String loggerName, int v ) {
 
-    /**
-     * This is needed for CLIs that run in tests, so the logging settings get reset.
-     */
-    protected void resetLogging() {
-        for ( Logger log4jLogger : this.originalLoggingLevels.keySet() ) {
-            log4jLogger.setLevel( this.originalLoggingLevels.get( log4jLogger ) );
+        Logger log4jLogger = LogManager.exists( loggerName );
+
+        if ( log4jLogger == null ) {
+            try {
+                log4jLogger = LogManager.getLogger( Class.forName( loggerName ) );
+            } catch ( ClassNotFoundException e ) {
+                log.warn( "ClassNotFound: " + loggerName );
+            }
+
+            if ( log4jLogger == null ) {
+                log.warn( "No logger of name '" + loggerName + "'" );
+                return;
+            }
         }
+
+        this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
+
+        switch ( v ) {
+            case 0:
+                log4jLogger.setLevel( Level.OFF );
+                break;
+            case 1:
+                log4jLogger.setLevel( Level.FATAL );
+                break;
+            case 2:
+                log4jLogger.setLevel( Level.ERROR );
+                break;
+            case 3:
+                log4jLogger.setLevel( Level.WARN );
+                break;
+            case 4:
+                log4jLogger.setLevel( Level.INFO );
+                break;
+            case 5:
+                log4jLogger.setLevel( Level.DEBUG );
+                break;
+            default:
+                throw new RuntimeException( "Verbosity must be from 0 to 5" );
+
+        }
+
+        log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
+    }
+
+    private String invalidOptionString( String option ) {
+        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
 
     /**
-     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
-     * 'successObjects' and 'errorObjects'
-     * 
-     * @param errorObjects
-     * @param successObjects
+     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
+     * purposes.
      */
-    protected void summarizeProcessing() {
-        if ( successObjects.size() > 0 ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\n   Processed:\n" );
-            for ( Object object : successObjects ) {
-                buf.append( "    " + object + "\n" );
-            }
-            buf.append( "---------------------\n" );
+    private void processStandardOptions() {
 
-            log.info( buf );
+        if ( commandLine.hasOption( HOST_OPTION ) ) {
+            this.host = commandLine.getOptionValue( HOST_OPTION );
         } else {
-            log.error( "No objects processed successfully!" );
+            this.host = DEFAULT_HOST;
         }
 
-        if ( errorObjects.size() > 0 ) {
-            StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
-            for ( Object object : errorObjects ) {
-                buf.append( "    " + object + "\n" );
-            }
-            buf.append( "---------------------\n" );
-            log.error( buf );
+        if ( commandLine.hasOption( PORT_OPTION ) ) {
+            this.port = getIntegerOptionValue( PORT_OPTION );
+        } else {
+            this.port = DEFAULT_PORT;
         }
+
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( USERNAME_OPTION );
+        }
+
+        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
+            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
+        }
+
+        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
+            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
+            if ( verbosity < 1 || verbosity > 5 ) {
+                throw new RuntimeException( "Verbosity must be from 1 to 5" );
+            }
+        }
+        PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
+        ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
+        Logger f = LogManager.getRootLogger();
+        assert f != null;
+        f.addAppender( cnslAppndr );
+
+        if ( commandLine.hasOption( "logger" ) ) {
+            String value = getOptionValue( "logger" );
+            String[] vals = value.split( "=" );
+            if ( vals.length != 2 ) throw new RuntimeException( "Logging value must in format [logger]=[value]" );
+            try {
+                log.info( "Setting logging for " + vals[0] + " to " + vals[1] );
+                configureLogging( vals[0], Integer.parseInt( vals[1] ) );
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( "Logging level must be an integer" );
+            }
+        }
+
+        if ( hasOption( "mdate" ) ) {
+            this.mDate = this.getOptionValue( "mdate" );
+        }
+
+        configureLogging( "ubic.gemma", this.verbosity );
+
     }
 }
