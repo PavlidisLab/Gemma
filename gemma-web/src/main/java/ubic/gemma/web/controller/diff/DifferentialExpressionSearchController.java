@@ -54,7 +54,6 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService;
-import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject;
 
 /**
  * A controller used to get differential expression analysis and meta analysis results.
@@ -66,8 +65,6 @@ import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueOb
 public class DifferentialExpressionSearchController {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
-
-    // private static final double DEFAULT_THRESHOLD = 0.01;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
@@ -90,65 +87,6 @@ public class DifferentialExpressionSearchController {
     private DifferentialExpressionGeneConditionSearchService geneConditionSearchService;
 
     /**
-     * @param taskId
-     * @return
-     */
-//    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult( String taskId ) {
-//        return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
-//    }
-
-    /**
-     * @param taskId
-     * @return
-     */
-    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(
-            String taskId ) {
-        return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param taxonId
-     * @param datasetValueObjects
-     * @param geneValueObjects
-     * @param geneSessionGroupQueries
-     * @param experimentSessionGroupQueries
-     * @return
-     */
-    public String scheduleDiffExpSearchTask( Long taxonId,
-            Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
-            Collection<GeneSetValueObject> geneValueObjects, List<String> geneSessionGroupQueries,
-            List<String> experimentSessionGroupQueries ) {
-
-        log.info( "Starting gene x condition search..." );
-        // Load experiments
-        List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
-        List<String> datasetGroupNames = new ArrayList<String>();
-        for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
-            if ( eevo != null ) {
-                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
-                datasetGroupNames.add( eevo.getName() );
-            }
-        }
-
-        // Load genes
-        List<List<Gene>> genes = new ArrayList<List<Gene>>();
-        List<String> geneGroupNames = new ArrayList<String>();
-
-        for ( GeneSetValueObject gsvo : geneValueObjects ) {
-            if ( gsvo != null ) {
-                geneGroupNames.add( gsvo.getName() );
-                genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
-            }
-        }
-
-        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask( genes, experiments, geneGroupNames,
-                datasetGroupNames );
-        return taskId;
-    }
-
-    /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
      * 
@@ -159,35 +97,6 @@ public class DifferentialExpressionSearchController {
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
         return this.getDifferentialExpression( geneId, threshold, null );
-    }
-
-    /**
-     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
-     * the gene with the id, geneId, are returned. This method is just like getDifferentialExpression but any analyses
-     * with the 'batch' factor are filtered out because they are not biologically relevant
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionWithoutBatch( Long geneId,
-            double threshold, Integer limit ) {
-
-        Collection<DifferentialExpressionValueObject> analyses = getDifferentialExpression( geneId, threshold, limit );
-
-        // for each DifferentialExpressionValueObject, check if its factors includes a batch factor and if so, remove
-        // the batch factor
-        Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<DifferentialExpressionValueObject>();
-        for ( DifferentialExpressionValueObject analysis : analyses ) {
-            for ( ExperimentalFactorValueObject factor : analysis.getExperimentalFactors() ) {
-                if ( ExperimentalDesignUtils.isBatch( factor ) ) {
-                    toRemove.add( analysis );
-                }
-            }
-        }
-        analyses.removeAll( toRemove );
-
-        return analyses;
     }
 
     /**
@@ -233,6 +142,35 @@ public class DifferentialExpressionSearchController {
                 .getDifferentialExpression( g, threshold, factorMap );
 
         return result;
+    }
+
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned. This method is just like getDifferentialExpression but any analyses
+     * with the 'batch' factor are filtered out because they are not biologically relevant
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionWithoutBatch( Long geneId,
+            double threshold, Integer limit ) {
+
+        Collection<DifferentialExpressionValueObject> analyses = getDifferentialExpression( geneId, threshold, limit );
+
+        // for each DifferentialExpressionValueObject, check if its factors includes a batch factor and if so, remove
+        // the batch factor
+        Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<DifferentialExpressionValueObject>();
+        for ( DifferentialExpressionValueObject analysis : analyses ) {
+            for ( ExperimentalFactorValueObject factor : analysis.getExperimentalFactors() ) {
+                if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+                    toRemove.add( analysis );
+                }
+            }
+        }
+        analyses.removeAll( toRemove );
+
+        return analyses;
     }
 
     /**
@@ -312,6 +250,15 @@ public class DifferentialExpressionSearchController {
         return mavos;
     }
 
+    /**
+     * @param taskId
+     * @return
+     */
+    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(
+            String taskId ) {
+        return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
+    }
+
     public ExpressionExperimentSetService getExpressionExperimentSetService() {
         return expressionExperimentSetService;
     }
@@ -388,68 +335,53 @@ public class DifferentialExpressionSearchController {
     }
 
     /**
-     * @param differentialExpressionAnalyzerService
+     * AJAX
+     * 
+     * @param taxonId
+     * @param datasetValueObjects
+     * @param geneValueObjects
+     * @param geneSessionGroupQueries
+     * @param experimentSessionGroupQueries
+     * @return
      */
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
+    public String scheduleDiffExpSearchTask( Long taxonId,
+            Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
+            Collection<GeneSetValueObject> geneValueObjects, List<String> geneSessionGroupQueries,
+            List<String> experimentSessionGroupQueries ) {
 
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+        log.info( "Starting gene x condition search..." );
+        // Load experiments
+        List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
+        List<String> datasetGroupNames = new ArrayList<String>();
+        for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
+            if ( eevo != null ) {
+                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+                datasetGroupNames.add( eevo.getName() );
+            }
+        }
 
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
+        log.info( "Got experiments for set" );
 
-    /**
-     * @param geneDifferentialExpressionService
-     */
-    public void setGeneDifferentialExpressionService(
-            GeneDifferentialExpressionService geneDifferentialExpressionService ) {
-        this.geneDifferentialExpressionService = geneDifferentialExpressionService;
-    }
+        // Load genes
+        List<List<Gene>> genes = new ArrayList<List<Gene>>();
+        List<String> geneGroupNames = new ArrayList<String>();
 
-    /**
-     * @param geneService
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
+        for ( GeneSetValueObject gsvo : geneValueObjects ) {
+            if ( gsvo != null ) {
+                geneGroupNames.add( gsvo.getName() );
+                genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
+            }
+        }
 
-    // /**
-    // * @param fs
-    // * @return
-    // */
-    // private Collection<DiffExpressionSelectedFactorCommand> extractFactorInfo( String fs ) {
-    // Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new
-    // HashSet<DiffExpressionSelectedFactorCommand>();
-    // try {
-    // if ( fs != null ) {
-    // String[] fss = fs.split( "," );
-    // for ( String fm : fss ) {
-    // String[] m = fm.split( "\\." );
-    // if ( m.length != 2 ) {
-    // continue;
-    // }
-    // String eeIdStr = m[0];
-    // String efIdStr = m[1];
-    //
-    // Long eeId = Long.parseLong( eeIdStr );
-    // Long efId = Long.parseLong( efIdStr );
-    // DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
-    // selectedFactors.add( dsfc );
-    // }
-    // }
-    // } catch ( NumberFormatException e ) {
-    // log.warn( "Error parsing factor info" );
-    // }
-    // return selectedFactors;
-    // }
+        log.info( "Got genes" );
+
+        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask( genes, experiments, geneGroupNames,
+                datasetGroupNames );
+
+        log.info( "Scheduled search with task=" + taskId );
+
+        return taskId;
+    }
 
     /**
      * Returns the results of the meta-analysis.
@@ -512,27 +444,6 @@ public class DifferentialExpressionSearchController {
 
         return mavo;
     }
-
-    // /*
-    // * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first
-    // place.
-    // */
-    // private String getFactorValueString( FactorValue fv ) {
-    // if ( fv == null ) return "null";
-    //
-    // if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-    // String fvString = "";
-    // for ( Characteristic c : fv.getCharacteristics() ) {
-    // fvString += c.getValue() + " ";
-    // }
-    // return fvString;
-    // } else if ( fv.getMeasurement() != null ) {
-    // return fv.getMeasurement().getValue();
-    // } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-    // return fv.getValue();
-    // } else
-    // return "absent ";
-    // }
 
     /**
      * @param ids

@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 
@@ -123,7 +124,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
         private List<String> experimentGroupNames;
 
-        private String taskProgressStage = "Search query submitted...";
+        private String taskProgressStage = "Query submitted...";
         private double taskProgressPercent = 0.0;
 
         private DifferentialExpressionGenesConditionsValueObject taskResult = null;
@@ -157,7 +158,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          */
         @Override
         public DifferentialExpressionGenesConditionsValueObject call() {
-
+            log.info( "Call..." );
             DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();
 
             addGenesToSearchResultValueObject( searchResult );
@@ -393,7 +394,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
          */
         private void fillHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
                 DifferentialExpressionGenesConditionsValueObject searchResult ) {
-            this.setTaskProgress( "Processing request...", 10 );
+            this.setTaskProgress( "Starting analysis ...", this.getTaskProgress().getProgressPercent() + 10 );
 
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed = new HashMap<ExpressionAnalysisResultSet, Collection<Long>>();
 
@@ -730,6 +731,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         private synchronized void setTaskProgress( String stage, double percent ) {
             this.taskProgressStage = stage;
             this.taskProgressPercent = percent;
+            log.info( "Task progress updated: " + stage );
         }
 
     }
@@ -785,6 +787,9 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
             List<String> experimentGroupNames ) {
 
+        log.info( "Got request to schedule search involving " + genes.size() + " gene groups and " + experiments.size()
+                + " experiments groups" );
+
         DifferentialExpressionSearchTask diffExpSearchTask = new DifferentialExpressionSearchTask( genes, experiments,
                 geneGroupNames, experimentGroupNames );
 
@@ -792,6 +797,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         this.diffExpSearchTasksCache.put( new Element( taskId, diffExpSearchTask ) );
 
         ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+        Future<DifferentialExpressionGenesConditionsValueObject> submit = singleThreadExecutor
+                .submit( diffExpSearchTask );
 
         singleThreadExecutor.shutdown();
 

@@ -22,15 +22,26 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress;
 
 /**
- * @author paul
+ * @author anton
  * @version $Id$
  */
 public interface DifferentialExpressionGeneConditionSearchService {
 
+    /**
+     * @param taskId
+     * @return
+     */
+    public TaskProgress getDiffExpSearchTaskProgress( String taskId );
+
+    /**
+     * @param genes
+     * @param experiments
+     * @param geneGroupNames
+     * @param experimentGroupNames
+     * @return
+     */
     public String scheduleDiffExpSearchTask( List<List<Gene>> genes,
             List<Collection<ExpressionExperiment>> experiments, List<String> geneGroupNames,
             List<String> experimentGroupNames );
-
-    public TaskProgress getDiffExpSearchTaskProgress( String taskId );
 
 }
