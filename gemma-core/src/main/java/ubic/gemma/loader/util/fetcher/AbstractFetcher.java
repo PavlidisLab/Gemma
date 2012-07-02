@@ -301,8 +301,8 @@ public abstract class AbstractFetcher implements Fetcher {
                     }
                     if ( idleTimer.getTime() == 0 ) idleTimer.start();
                 } else {
-                    idleTimer.stop();
                     idleTimer.reset();
+                    idleTimer.start();
                 }
             }
 
