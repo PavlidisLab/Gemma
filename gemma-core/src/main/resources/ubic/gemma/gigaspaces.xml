@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<!--
+<!--
 		$Id$
 	-->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
-            
-       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
-        http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 	<!-- Declaration of GigaSpaces factory bean -->
 	<bean id="gigaspace" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
@@ -35,20 +35,20 @@
 			<value>true</value> <!-- When the interceptor executes, block: this is important so we can cleanup easily. See GridTaskInterceptor -->
 		</property>
 		<!--
-			The master will take the result from the space when it is available. This sets the time the master will wait for a
-			result before timing out. This has been set to an extremely large value to make the effects negligible. That is, the
-			master will never time out based on this setting. Instead, the master should terminate itself programmatically after
-			receiving the result.
-		-->
+				The master will take the result from the space when it is available. This sets the time the master will wait for a
+				result before timing out. This has been set to an extremely large value to make the effects negligible. That is, the
+				master will never time out based on this setting. Instead, the master should terminate itself programmatically after
+				receiving the result.
+			-->
 		<property name="timeoutMillis">
 			<value>600000000</value>
 		</property>
 	</bean>
 
 	<!--
-		help us with some bookkeeping on the client (master). See also taskMethodAdvice defined in serviceBeans, for worker
-		wrapper.
-	-->
+			help us with some bookkeeping on the client (master). See also taskMethodAdvice defined in serviceBeans, for worker
+			wrapper.
+		-->
 	<bean id="gridTaskInterceptor" class="ubic.gemma.job.grid.GridTaskInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 	</bean>
@@ -65,48 +65,20 @@
 		</property>
 		<property name="proxyInterfaces">
 			<list>
-				<value>
-					ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask
-				</value>
-				<value>
-					ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask
-				</value>
-				<value>
-					ubic.gemma.tasks.maintenance.IndexerTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.AutoTaggerTask
-				</value>
-				<value>
-					ubic.gemma.job.grid.util.MonitorTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.SvdTask
-				</value>
-				<value>
-					ubic.gemma.tasks.analysis.expression.BatchInfoFetchTask
-				</value>
+				<value>ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask</value>
+				<value>ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask</value>
+				<value>ubic.gemma.tasks.maintenance.IndexerTask</value>
+				<value>ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask</value>
+				<value>ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask</value>
+				<value>ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask</value>
+				<value>ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.AutoTaggerTask</value>
+				<value>ubic.gemma.job.grid.util.MonitorTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.SvdTask</value>
+				<value>ubic.gemma.tasks.analysis.expression.BatchInfoFetchTask</value>
 			</list>
 		</property>
 	</bean>
@@ -119,9 +91,7 @@
 			<ref bean="expressionExperimentLoadTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask</value>
 		</property>
 	</bean>
 
@@ -131,9 +101,7 @@
 			<ref bean="indexerTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.maintenance.IndexerTask
-			</value>
+			<value>ubic.gemma.tasks.maintenance.IndexerTask</value>
 		</property>
 	</bean>
 
@@ -144,9 +112,7 @@
 			<ref bean="expressionExperimentReportTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask
-			</value>
+			<value>ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask</value>
 		</property>
 	</bean>
 
@@ -156,9 +122,7 @@
 			<ref bean="svdTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-	ubic.gemma.tasks.expression.SvdTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.SvdTask</value>
 		</property>
 	</bean>
 
@@ -168,9 +132,7 @@
 			<ref bean="differentialExpressionAnalysisTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask</value>
 		</property>
 	</bean>
 
@@ -181,9 +143,7 @@
 			<ref bean="processedExpressionDataVectorCreateTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask</value>
 		</property>
 	</bean>
 
@@ -193,9 +153,7 @@
 			<ref bean="twoChannelMissingValueTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask</value>
 		</property>
 	</bean>
 
@@ -205,9 +163,7 @@
 			<ref bean="linkAnalysisTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask</value>
 		</property>
 	</bean>
 
@@ -218,9 +174,7 @@
 			<ref bean="arrayDesignProbeMapperTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask</value>
 		</property>
 	</bean>
 
@@ -230,9 +184,7 @@
 			<ref bean="arrayDesignProbeMapperTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask</value>
 		</property>
 	</bean>
 
@@ -242,9 +194,7 @@
 			<ref bean="autoTaggerTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.expression.AutoTaggerTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.AutoTaggerTask</value>
 		</property>
 	</bean>
 
@@ -254,9 +204,7 @@
 			<ref bean="monitorTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.job.grid.util.MonitorTask
-			</value>
+			<value>ubic.gemma.job.grid.util.MonitorTask</value>
 		</property>
 	</bean>
 
@@ -266,9 +214,7 @@
 			<ref bean="bioAssayOutlierProcessingTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
-			</value>
+			<value>ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask</value>
 		</property>
 	</bean>
 	
@@ -278,9 +224,7 @@
 			<ref bean="batchInfoFetchTask" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.tasks.expression.BatchInfoFetchTask
-			</value>
+			<value>ubic.gemma.tasks.expression.BatchInfoFetchTask</value>
 		</property>
 	</bean>
 
