@@ -422,10 +422,13 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						}
 						var canEdit = (record.get('id') && record.get('id') > 0)?
 										record.get('currentUserHasWritePermission') : false;
+										
+						var isCurrentOwner = (record.get('id') && record.get('id') > 0)?
+										record.get('currentUserIsOwner') : false;
 						
 						var sl = Gemma.SecurityManager
 								.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl",
-										record.get('id'), record.get('publik'), record.get('shared'), canEdit);
+										record.get('id'), record.get('publik'), record.get('shared'), canEdit,null,null,null, isCurrentOwner );
 
 						v = v + "&nbsp;" + sl;
 						return v;

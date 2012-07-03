@@ -54,6 +54,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "currentUserHasWritePermission"
 			}, {
+				name : "currentUserIsOwner"
+			}, {
 				name : "sourceExperiment"
 			}, {
 				name : "coexpressionLinkCount"

@@ -1884,11 +1884,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
                 .loadValueObjects( ids, true );
 
-        if ( SecurityServiceImpl.isUserAdmin() ) {
-            for ( ExpressionExperimentValueObject vo : valueObjs ) {
-                vo.setCurrentUserHasWritePermission( true );
-            }
-        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
             Map<Long, Boolean> canEdit = new HashMap<Long, Boolean>();
             Map<Long, Boolean> owns = new HashMap<Long, Boolean>();
             for ( ExpressionExperiment ee : securedEEs ) {

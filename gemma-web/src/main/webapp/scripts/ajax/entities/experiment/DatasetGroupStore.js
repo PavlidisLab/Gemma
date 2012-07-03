@@ -43,6 +43,9 @@ Gemma.DatasetGroupStore = function(config) {
 			}, {
 				name : "currentUserHasWritePermission",
 				type : 'boolean'
+			}, {
+				name : "currentUserIsOwner",
+				type : 'boolean'
 			}]);
 
 	// todo replace with JsonReader.
