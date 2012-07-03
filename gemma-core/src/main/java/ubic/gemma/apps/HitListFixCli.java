@@ -123,6 +123,8 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
                         Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
                         resultSet.getHitListSizes().clear();
                         resultSet.getHitListSizes().addAll( hitlists );
+                        resultSet.setNumberOfGenesTested( getNumberOfGenesTested( results, probe2GeneMap ) );
+                        resultSet.setNumberOfProbesTested( results.size() );
                         diffS.update( resultSet ); // cascades. But this updates the diff ex set from scratch, so it is
                                                    // costly.
                         log.info( "Did result set" );
@@ -141,5 +143,25 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
         }
         summarizeProcessing();
         return null;
+    }
+
+    /**
+     * code borrowed from LinearModelAnalyzer.
+     * 
+     * @param resultList
+     * @param probeToGeneMap
+     * @return
+     */
+    private int getNumberOfGenesTested( List<DifferentialExpressionAnalysisResult> resultList,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+
+        Collection<Gene> gs = new HashSet<Gene>();
+        for ( DifferentialExpressionAnalysisResult d : resultList ) {
+            CompositeSequence probe = d.getProbe();
+            if ( probeToGeneMap.containsKey( probe ) ) {
+                gs.addAll( probeToGeneMap.get( probe ) );
+            }
+        }
+        return gs.size();
     }
 }
