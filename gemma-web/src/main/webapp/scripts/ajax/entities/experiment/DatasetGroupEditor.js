@@ -56,7 +56,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 							isLoggedIn : this.isLoggedIn,
 							region : 'east',
 							title : "Datasets in current set",
-							showAnalysisInfo : true,
+							showAnalysisInfo : false,
 							loadMask : {
 								msg : 'Loading datasets ...'
 							},
