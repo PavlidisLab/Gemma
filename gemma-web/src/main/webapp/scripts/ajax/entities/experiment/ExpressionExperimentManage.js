@@ -49,7 +49,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
                 });
 
         // if the user is an admin, show the "refresh all" button
-        var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
+        var isAdmin = (Ext.get('hasAdmin')) ? Ext.get('hasAdmin').getValue() : false;
 
         /*
          * If the URL contains a list of IDs, limit ourselves to that.
@@ -97,13 +97,10 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel, {
                         + '<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"> here </span></span>'
                 : '';
 
-        // need to delay this until after layout because otherwise load mask
-        // won't work
-        // manager.loadStoreWithParam(taxonid, ids, limit, filterMode);
-
-        // store.load({
-        // params: [taxonid, ids, limit, filterMode]
-        // });
+        // only allow admins to mess with batch (in any obvious way)
+        var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
+        var c = reportGrid.getColumnModel().findColumnIndex('dateBatchFetch');
+        reportGrid.getColumnModel().setHidden(c, !isAdmin);
 
         this.add([reportGrid, dataSetDetailsPanel]);
 
@@ -198,7 +195,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
                                             if (request.options.params && request.options.params instanceof Array) {
                                                 return request.options.params;
                                             }
-                                            return [ids, taxonid, limit, filterMode, showPublic];
+                                            return [taxonid, ids, limit, filterMode, showPublic];
                                         }
                                     }
                                 }
@@ -300,7 +297,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
                 }, this);
 
         // if the user is an admin, show the "refresh all" button
-        var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
+        var isAdmin = (Ext.get('hasAdmin')) ? Ext.get('hasAdmin').getValue() : false;
 
         this.refreshAllLink = (isAdmin)
                 ? '<span style="font-weight:normal"> &nbsp;&nbsp | &nbsp;&nbsp; To update all reports click '
@@ -511,10 +508,6 @@ Gemma.EEReportGridColumnRenderers = {
         }
     },
 
-    /**
-     * FIXME: make this hidden unless the user is an administrator. User-uploaded data sets will not have batch
-     * information available by this route.
-     */
     batchDateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
         var runurl = "";
@@ -523,24 +516,35 @@ Gemma.EEReportGridColumnRenderers = {
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
         }
+
+        /*
+         * See bug 2626. If we have batch information, do not let us clobber it from here. FIXME hasBatchInformation is
+         * not populated here.
+         */
+        var hasBatchInformation = record.get('hasBatchInformation');
         if (record.get('dateBatchFetch')) {
             var type = record.get('batchFetchEventType');
             var color = "#000";
-            var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
             if (type == 'FailedBatchInformationFetchingEventImpl') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             } else if (type == 'FailedBatchInformationMissingEventImpl') {
-                color = '#CCC';
-                qtip = 'ext:qtip="Raw data files not available from source"';
-                suggestRun = false;
+                if (hasBatchInformation) {
+                    return '<span style="color:#000;">Provided</span>&nbsp;';
+                } else {
+                    color = '#CCC';
+                    qtip = 'ext:qtip="Raw data files not available from source"';
+                    suggestRun = false;
+                }
             }
 
             return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
                     + (suggestRun ? runurl : '');
-        } else {
+        } else if (!hasBatchInformation) {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+        } else {
+            return '<span style="color:#000;">Provided</span>&nbsp;';
         }
     },
 

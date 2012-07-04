@@ -99,6 +99,15 @@ public class BatchInfoFetchController extends AbstractTaskService {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         ee = expressionExperimentService.thawLite( ee );
+
+        /*
+         * Check preconditions.
+         */
+        if ( ee.getAccession() == null ) {
+            throw new IllegalArgumentException(
+                    "The experiment does not seem to be from an external source that would have batch information available." );
+        }
+
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
 
         return super.run( cmd );

@@ -186,6 +186,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
         ee = expressionExperimentService.thaw( ee );
+
+        if ( ee.getAccession() == null ) {
+            // in fact, currently it has to be from GEO.
+            throw new IllegalArgumentException(
+                    "The experiment does not seem to be from an external source that would have batch information available." );
+        }
+
         Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
         removeExistingBatchFactor( ee );
