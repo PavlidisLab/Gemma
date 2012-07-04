@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +46,9 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+
+import com.javamex.classmexer.MemoryUtil;
+import com.javamex.classmexer.MemoryUtil.VisibilityFilter;
 
 /**
  * Perform gene-to-gene coexpression link analysis ("TMM-style"), based on stored probe-probe coexpression.
@@ -218,7 +222,21 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         if ( timer.getTime() > 1000 ) {
             log.info( "All Post-Postprocessing: " + timer.getTime() + "ms" );
         }
+
+        if ( RandomUtils.nextBoolean() ) {
+            log.info( "Memory status: \n" );
+            log.info( "geneTestStatusByteCache: "
+                    + MemoryUtil.deepMemoryUsageOf( geneTestStatusByteCache, VisibilityFilter.ALL ) + "bytes" );
+            log.info( "probe2ProbeCoexpressionService: "
+                    + MemoryUtil.deepMemoryUsageOf( probe2ProbeCoexpressionService, VisibilityFilter.ALL ) + "bytes" );
+            log.info( "geneService: " + MemoryUtil.deepMemoryUsageOf( geneService, VisibilityFilter.ALL ) + "bytes" );
+            log.info( "genesTestedIn: " + MemoryUtil.deepMemoryUsageOf( genesTestedIn, VisibilityFilter.ALL ) + "bytes" );
+            log.info( "expressionExperimentService: "
+                    + MemoryUtil.deepMemoryUsageOf( expressionExperimentService, VisibilityFilter.ALL ) + "bytes" );
+        }
+
         log.debug( "Analysis completed" );
+
         return coexpressions;
     }
 
