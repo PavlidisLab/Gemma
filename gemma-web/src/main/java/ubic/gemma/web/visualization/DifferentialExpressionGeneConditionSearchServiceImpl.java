@@ -731,7 +731,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         private synchronized void setTaskProgress( String stage, double percent ) {
             this.taskProgressStage = stage;
             this.taskProgressPercent = percent;
-            log.info( "Task progress updated: " + stage );
         }
 
     }
