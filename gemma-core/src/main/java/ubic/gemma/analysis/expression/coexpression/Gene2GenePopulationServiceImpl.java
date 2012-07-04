@@ -166,7 +166,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return
      */
     private static String getMemoryInfoString( String message, Object obj ) {
-        return message + MemoryUtil.deepMemoryUsageOf( obj, VisibilityFilter.ALL ) + "bytes";
+        return message + " " + MemoryUtil.deepMemoryUsageOf( obj, VisibilityFilter.ALL ) + " bytes";
     }
 
     @Autowired
