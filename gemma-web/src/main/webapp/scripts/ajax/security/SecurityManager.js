@@ -64,10 +64,22 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		var isOwner = securityInfo.currentUserOwns;
 		
 		var ownerName = securityInfo.owner.authority;
+		var ownersGroups = securityInfo.ownersGroups;
+		var ownerIsAdmin = false;
+		for (var k = 0, len = ownersGroups.length; k < len; k++) {
+			var groupName = ownersGroups[k];
+			
+			if (groupName === Gemma.SecurityManager.adminGroupName){
+				ownerIsAdmin = true;
+				break;
+			}
+			
+		}
 
 		var readers = securityInfo.groupsThatCanRead;
 		var writers = securityInfo.groupsThatCanWrite;
 		var availableGroups = securityInfo.availableGroups;
+		
 		var clazz = securityInfo.entityClazz;
 
 		var readerChecks = [];
@@ -258,6 +270,20 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		/*
 		 * show panel...
 		 */
+		
+		var ownerHtml = "<b>Owner</b>: " + ownerName;
+		
+		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
+		
+		if (isAdmin){
+		
+			if (ownerIsAdmin){
+				ownerHtml = ownerHtml + ' (Administrator)';
+			}else{
+				ownerHtml = ownerHtml + ' (Registered non-administrator)';
+			}
+		}
+		
 		var securityPanel = new Ext.Window({
 					title : "Security for: " +
 								(securityFormTitle == null ?
@@ -278,7 +304,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 					// for now that can't happen so this is ok
 					items : [{
 						xtype: 'panel',
-						html: "<b>Owner</b>: " + ownerName,
+						html: ownerHtml,
 						border:false,
 						padding: '10'
 					}, readerFieldSet,writerFieldSet],

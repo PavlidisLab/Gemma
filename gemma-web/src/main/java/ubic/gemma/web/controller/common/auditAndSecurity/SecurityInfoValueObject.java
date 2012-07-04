@@ -71,6 +71,8 @@ public class SecurityInfoValueObject {
      * Principal who owns the data. Can be null.
      */
     private SidValueObject owner;
+    
+    private Collection<String> ownersGroups = new HashSet<String>();
   
     public SecurityInfoValueObject() {
     }
@@ -257,6 +259,14 @@ public class SecurityInfoValueObject {
 
     public Boolean getCurrentUserOwns() {
         return this.currentUserOwns;
+    }
+
+    public Collection<String> getOwnersGroups() {
+        return ownersGroups;
+    }
+
+    public void setOwnersGroups( Collection<String> ownersGroups ) {
+        this.ownersGroups = ownersGroups;
     }
 
 }

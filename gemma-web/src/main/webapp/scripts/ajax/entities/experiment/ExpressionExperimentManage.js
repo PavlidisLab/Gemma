@@ -525,6 +525,7 @@ Gemma.EEReportGridColumnRenderers = {
         if (record.get('dateBatchFetch')) {
             var type = record.get('batchFetchEventType');
             var color = "#000";
+            var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
             if (type == 'FailedBatchInformationFetchingEventImpl') {
                 color = 'red';
@@ -668,7 +669,7 @@ Gemma.EEReportGridColumnRenderers = {
         result = result
                 + Gemma.SecurityManager.getSecurityLink(
                         'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
-                        record.get('isShared'), record.get('currentUserIsOwner'));
+                        record.get('isShared'), record.get('currentUserHasWritePermission'),null, null,null, record.get('currentUserIsOwner'));
 
         return result;
 

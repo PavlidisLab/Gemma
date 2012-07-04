@@ -102,7 +102,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						renderer : function(value, metadata, record, rowIndex, colIndex, store) {
 							var result = Gemma.SecurityManager.getSecurityLink(
 									"ubic.gemma.model.genome.gene.GeneSetImpl", record.get('id'), record.get('publik'),
-									record.get('shared'), record.get('currentUserIsOwner'));
+									record.get('shared'), record.get('currentUserHasWritePermission'), null, null, null, record.get('currentUserIsOwner'));
 							return result;
 						},
 

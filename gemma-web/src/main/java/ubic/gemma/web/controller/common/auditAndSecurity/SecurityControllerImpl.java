@@ -34,6 +34,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -625,6 +626,22 @@ public class SecurityControllerImpl implements SecurityController {
     private Collection<String> getGroupsForCurrentUser() {
         return userManager.findGroupsForUser( userManager.getCurrentUsername() );
     }
+    private Collection<String> getGroupsForUser(String username) {
+        
+        if (username==null){
+            return new HashSet<String>();
+        }
+        
+        Collection <String> results;
+        
+        try{
+            results = userManager.findGroupsForUser( username );
+        }
+        catch(UsernameNotFoundException e) {
+            return new HashSet<String>();
+        }
+        return results; 
+    }
 
     /**
      * @param userName
@@ -756,6 +773,7 @@ public class SecurityControllerImpl implements SecurityController {
         result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
         result.setShared( isShared );
         result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
+        result.setOwnersGroups( getGroupsForUser(result.getOwner().getAuthority()) );
         result.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
         result.setCurrentUserCanwrite( canWrite );
 
