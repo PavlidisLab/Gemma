@@ -22,25 +22,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.SingularValueDecomposition;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter;
-import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
-import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
+import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
+import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix1D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.linalg.Algebra;
 
 /**
  * Perform SVD on an expression data matrix, E = U S V'. The rows of the input matrix are probes (genes), following the
@@ -85,6 +85,18 @@ public class ExpressionDataSVD {
         AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
         this.expressionData = affyProbeNameFilter.filter( this.expressionData );
 
+        // /*
+        // * FIXME Remove any columns which have only missing data. We have to put in dummy values, otherwise things
+        // will
+        // * be quite messed up.
+        // */
+        // ColumnMissingValueFilter columnMissingFilter = new ColumnMissingValueFilter();
+        // columnMissingFilter.setMinPresentFactrion( 10 );
+        // this.expressionData = columnMissingFilter.filter( this.expressionData );
+
+        /*
+         * Now filter rows.
+         */
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
         rowMissingFilter.setMinPresentFraction( MIN_PRESENT_FRACTION_FOR_ROW );
         this.expressionData = rowMissingFilter.filter( this.expressionData );

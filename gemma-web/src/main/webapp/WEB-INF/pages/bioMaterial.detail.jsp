@@ -7,7 +7,6 @@
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/bmFactorValues.js' />
 
-
 	<script type='text/javascript'>
 	Ext.namespace('Gemma');
 	Ext.onReady( function() {
@@ -32,10 +31,7 @@
 	});
 </script>
 
-
 </head>
-
-
 
 <h2>
 	BioMaterial: ${bioMaterial.name} from

@@ -37,14 +37,12 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +68,8 @@ import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
+
+import com.javamex.classmexer.MemoryUtil;
 
 /**
  * @author pavlidis
@@ -1622,6 +1622,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( timer.getTime() > 100 ) {
             log.info( "Gene2Cs Cache check: " + timer.getTime() + "ms" );
+            log.info( "Cache memory: " + MemoryUtil.deepMemoryUsageOf( gene2CsCache ) + " bytes." );
         }
         timer.reset();
         timer.start();

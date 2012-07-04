@@ -215,11 +215,6 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>concurrent</groupId>
-			<artifactId>concurrent</artifactId>
-			<version>1.3.4</version>
-		</dependency>
-		<dependency>
 			<groupId>obo</groupId>
 			<artifactId>obo</artifactId>
 			<version>1.002</version>
@@ -394,11 +389,6 @@
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 			<version>1.8.5</version>
-		</dependency>
-		<dependency>
-			<groupId>spark</groupId>
-			<artifactId>spark</artifactId>
-			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>hsqldb</groupId>

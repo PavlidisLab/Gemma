@@ -61,8 +61,7 @@
 
 
 				<div id="main">
-					<%@ include file="/common/messages.jsp"%>
-					<%@ include file="/common/helpLink.jsp"%>
+					<%@ include file="/common/messages.jsp"%> 
 
 					<h2>
 						<decorator:getProperty property="page.heading" />

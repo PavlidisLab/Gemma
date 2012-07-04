@@ -24,7 +24,7 @@ package ubic.gemma.model.expression.arrayDesign;
  * @version $Id$
  * @author paul et al
  */
-public class ArrayDesignValueObject implements java.io.Serializable {
+public class ArrayDesignValueObject implements java.io.Serializable, Comparable<ArrayDesignValueObject> {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -641,6 +641,15 @@ public class ArrayDesignValueObject implements java.io.Serializable {
     @Override
     public String toString() {
         return this.getShortName();
+    }
+
+    @Override
+    public int compareTo( ArrayDesignValueObject arg0 ) {
+
+        if ( arg0.getDateCreated() == null || this.getDateCreated() == null ) return 0;
+
+        return arg0.getDateCreated().compareTo( this.getDateCreated() );
+
     }
 
     // ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject value-object java merge-point

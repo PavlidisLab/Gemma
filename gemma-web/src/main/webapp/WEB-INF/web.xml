@@ -23,9 +23,9 @@
 	</context-param>
 
 	<!--
-		Name of Log4j config file relative to webapp root directory. This is done by the
-		org.springframework.web.util.Log4jWebConfigurer
-	-->
+			Name of Log4j config file relative to webapp root directory. This is done by the
+			org.springframework.web.util.Log4jWebConfigurer
+		-->
 	<context-param>
 		<param-name>log4jConfigLocation</param-name>
 		<param-value>/WEB-INF/classes/log4j.properties</param-value>
@@ -40,18 +40,18 @@
 	<!-- Filters.  -->
 
 	<!--
-		Security.
-	-->
+			Security.
+		-->
 	<filter>
 		<filter-name>springSecurityFilterChain</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
 
-<!-- 
-	<filter>
-    	<filter-name>monitoring</filter-name>
-        <filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
-    </filter>
+	<!-- 
+		<filter>
+			<filter-name>monitoring</filter-name>
+			<filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
+		</filter>
 -->
 
 	<!--  Filter that allows one to specify a character encoding for requests-->
@@ -65,16 +65,6 @@
 		<init-param>
 			<param-name>forceEncoding</param-name>
 			<param-value>true</param-value>
-		</init-param>
-	</filter>
-
-	<!-- URL rewriting -->
-	<filter>
-		<filter-name>rewriteFilter</filter-name>
-		<filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
-		<init-param>
-			<param-name>logLevel</param-name>
-			<param-value>commons</param-value>
 		</init-param>
 	</filter>
 
@@ -108,19 +98,13 @@
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
-<!-- 
-	<filter-mapping>
-    	<filter-name>monitoring</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
+	<!-- 
+		<filter-mapping>
+			<filter-name>monitoring</filter-name>
+			<url-pattern>/*</url-pattern>
+		</filter-mapping>
 -->
-	<!-- URL rewriting (can we make this more restrictive?) -->
-	<filter-mapping>
-		<filter-name>rewriteFilter</filter-name>
-		<url-pattern>/*</url-pattern>
-		<dispatcher>REQUEST</dispatcher>
-		<dispatcher>FORWARD</dispatcher>
-	</filter-mapping>
+
 
 	<!-- All requests are decorated with sitemesh -->
 	<filter-mapping>
@@ -131,13 +115,13 @@
 	</filter-mapping>
 
 	<!--
-		<listener> <listener-class>com.opensymphony.clickstream.ClickstreamListener</listener-class> </listener>
-	-->
+			<listener> <listener-class>com.opensymphony.clickstream.ClickstreamListener</listener-class> </listener>
+		-->
 	<!--
-	<listener>
-		<listener-class>net.sf.navigator.menu.MenuContextListener</listener-class>
-	</listener>
-	-->
+		<listener>
+			<listener-class>net.sf.navigator.menu.MenuContextListener</listener-class>
+		</listener>
+		-->
 	<listener>
 		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
 	</listener>
@@ -151,12 +135,12 @@
 		<listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
 	</listener>
 	<listener><!-- this may not be necessary, see http://ehcache.org/documentation/user-guide/shutdown -->
-  		<listener-class>net.sf.ehcache.constructs.web.ShutdownListener</listener-class>
+		<listener-class>net.sf.ehcache.constructs.web.ShutdownListener</listener-class>
 	</listener>
 	<!-- 
-	<listener>
-    	<listener-class>net.bull.javamelody.SessionListener</listener-class>
-    </listener>
+		<listener>
+			<listener-class>net.bull.javamelody.SessionListener</listener-class>
+		</listener>
 -->
 	<!-- Dispatch Servlet Configuration -->
 	<servlet>
@@ -175,11 +159,6 @@
 			<param-name>transformWsdlLocations</param-name>
 			<param-value>false</param-value>
 		</init-param>
-	</servlet>
-
-	<servlet>
-		<servlet-name>SparkLines</servlet-name>
-		<servlet-class>com.representqueens.spark.service.SparkController</servlet-class>
 	</servlet>
 
 	<servlet>
@@ -250,10 +229,10 @@
 	</servlet-mapping>
 
 	<!--
-		<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.css</url-pattern> </servlet-mapping>
+			<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.css</url-pattern> </servlet-mapping>
 
-		<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.js</url-pattern> </servlet-mapping>
-	-->
+			<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.js</url-pattern> </servlet-mapping>
+		-->
 
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
@@ -295,19 +274,6 @@
 		<url-pattern>/dwr/*</url-pattern>
 	</servlet-mapping>
 
-	<!--
-		static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. See urlrewrite.xml
-	-->
-	<servlet-mapping>
-		<servlet-name>default</servlet-name>
-		<url-pattern>/s/*</url-pattern>
-	</servlet-mapping>
-
-	<servlet-mapping>
-		<servlet-name>SparkLines</servlet-name>
-		<url-pattern>/spark</url-pattern>
-	</servlet-mapping>
-
 	<!-- JAWR js and css compression -->
 	<servlet-mapping>
 		<servlet-name>JavascriptCompressServlet</servlet-name>
@@ -320,7 +286,7 @@
 	</servlet-mapping>
 
 	<!-- REST web service -->
- 	<servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>rest-ws-servlet</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>

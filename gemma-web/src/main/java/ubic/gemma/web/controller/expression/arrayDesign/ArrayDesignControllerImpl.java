@@ -79,7 +79,6 @@ import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
-import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -173,8 +172,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
     @Autowired
     private TaxonService taxonService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#addAlternateName(java.lang.Long, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#addAlternateName(java.lang.Long,
+     * java.lang.String)
      */
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
@@ -195,12 +197,16 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return formatAlternateNames( ad );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#browse(ubic.gemma.web.remote.ListBatchCommand, java.util.Collection, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#browse(ubic.gemma.web.remote.ListBatchCommand
+     * , java.util.Collection, boolean, boolean)
      */
     @Override
-    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids,
-            boolean showMerged, boolean showOrphans ) {
+    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids, boolean showMerged,
+            boolean showOrphans ) {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
 
@@ -219,8 +225,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return returnVal;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#delete(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#delete(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/deleteArrayDesign.html")
@@ -260,8 +270,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#downloadAnnotationFile(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#downloadAnnotationFile(javax.servlet.http
+     * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/downloadAnnotationFile.html")
@@ -315,8 +329,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#filter(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#filter(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/filterArrayDesigns.html")
@@ -364,8 +382,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#generateSummary(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#generateSummary(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/generateArrayDesignSummary.html")
@@ -394,8 +415,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getArrayDesigns(java.util.Collection, boolean, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getArrayDesigns(java.util.Collection,
+     * boolean, boolean)
      */
     @Override
     public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
@@ -403,12 +427,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        if ( arrayDesignIds == null || arrayDesignIds.length == 0) {
+        if ( arrayDesignIds == null || arrayDesignIds.length == 0 ) {
             result.addAll( arrayDesignService.loadAllValueObjects() );
 
         } else {// if ids are specified, then display only those arrayDesigns
 
-            Collection<Long> adCol = new LinkedList<Long>(Arrays.asList( arrayDesignIds ));
+            Collection<Long> adCol = new LinkedList<Long>( Arrays.asList( arrayDesignIds ) );
             result.addAll( arrayDesignService.loadValueObjects( adCol ) );
         }
 
@@ -424,13 +448,16 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         }
         result.removeAll( toHide );
 
-        Collections.sort( result, new ArrayDesignValueObjectComparator() );
+        Collections.sort( result );
 
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getCsSummaries(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getCsSummaries(ubic.gemma.web.remote.
+     * EntityDelegator)
      */
     @Override
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
@@ -438,8 +465,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return this.getDesignSummaries( arrayDesign );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.expression
+     * .arrayDesign.ArrayDesign)
      */
     @Override
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
@@ -449,8 +480,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return summaries;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getReportHtml(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getReportHtml(ubic.gemma.web.remote.
+     * EntityDelegator)
      */
     @Override
     public Map<String, String> getReportHtml( EntityDelegator ed ) {
@@ -466,8 +500,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getSummaryForArrayDesign(java.lang.Long)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getSummaryForArrayDesign(java.lang.Long)
      */
     @Override
     public String getSummaryForArrayDesign( Long id ) {
@@ -495,8 +532,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return "[Not avail.]";
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsForShowAll(java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsForShowAll(java.util.
+     * Collection)
      */
     @Override
     public Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Long[] arrayDesignIds ) {
@@ -515,7 +555,9 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return valueObjects;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsSummary()
      */
     @Override
@@ -524,8 +566,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return arrayDesignReportService.getSummaryObject();
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#remove(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#remove(ubic.gemma.web.remote.EntityDelegator
+     * )
      */
     @Override
     public String remove( EntityDelegator ed ) {
@@ -546,8 +592,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return job.getTaskId();
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showAllArrayDesigns(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showAllArrayDesigns(javax.servlet.http
+     * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping("/showAllArrayDesigns.html")
@@ -555,8 +605,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return new ModelAndView( "arrayDesigns" );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showArrayDesign(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showArrayDesign(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     @RequestMapping({ "/showArrayDesign.html", "/" })
@@ -642,8 +695,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return mav;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showCompositeSequences(javax.servlet.http.HttpServletRequest)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showCompositeSequences(javax.servlet.http
+     * .HttpServletRequest)
      */
     @Override
     @RequestMapping("/showCompositeSequenceSummary.html")
@@ -673,8 +730,12 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return mav;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showExpressionExperiments(javax.servlet.http.HttpServletRequest)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showExpressionExperiments(javax.servlet
+     * .http.HttpServletRequest)
      */
     @Override
     @RequestMapping("/showExpressionExperiments.html")
@@ -701,8 +762,11 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
                 + ids ) );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#updateReport(ubic.gemma.web.remote.EntityDelegator)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#updateReport(ubic.gemma.web.remote.
+     * EntityDelegator)
      */
     @Override
     public String updateReport( EntityDelegator ed ) {
@@ -711,7 +775,9 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         return runner.getTaskId();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#updateReportById(java.lang.Long)
      */
     @Override
