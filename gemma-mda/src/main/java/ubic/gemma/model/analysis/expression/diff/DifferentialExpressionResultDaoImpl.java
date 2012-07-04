@@ -50,7 +50,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
@@ -449,39 +448,49 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 .createSQLQuery( fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery );
 
         /*
-         * Get the probes using the CommonQueries gene2cs. Otherwise we (in effect) end up doing this over and over
-         * again. This could be further stratified by resultset x arraydesign, since many probes are irrelevant for a
-         * given resultset.
+         * We have to batch _either_ genes _or_ resultsets, not both.
          */
+        int resultSetBatchSize = 1;
+        int geneBatchSize = 1;
 
-        // TODO temporary like this - fix it so we don't get it multiple times.
-        int RS_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.resultset.batchsize", 1 );
-        int GENE_BATCH_SIZE = ConfigUtils.getInt( "gemma.diffex.gene.batchsize", 100 );
-        /*
-         * Note that batching resultsets is not effective as the queryplanner cannot use the index.
-         */
+        if ( resultSetsNeeded.size() > geneIds.size() ) {
+            log.info( "Batching by result sets" );
+            resultSetBatchSize = 100;
+        } else {
+            log.info( "Batching by genes" );
+            geneBatchSize = 100;
+        }
+
+        final int numResultSetBatches = ( int ) Math.ceil( resultSetsNeeded.size() / resultSetBatchSize );
+
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         StopWatch timer = new StopWatch();
         timer.start();
-        int i = 1;
-        int j = 0;
+        int numResults = 0;
 
         HashMap<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
-        for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, RS_BATCH_SIZE ) ) {
+        int numResultSetBatchesDone = 0;
+        int numGeneBatchesDone = 0;
+        for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, resultSetBatchSize ) ) {
 
             if ( log.isDebugEnabled() )
                 log.debug( "Starting batch of resultsets: "
                         + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
 
+            /*
+             * Get the probes using the CommonQueries gene2cs. Otherwise we (in effect) end up doing this over and over
+             * again.
+             */
             Map<Long, Collection<Long>> cs2GeneIdMap = getProbesForGenesInResultSetBatch( session, geneIds,
                     resultSetIds, resultSetIdsToArrayDesignsUsed, resultSetIdBatch );
 
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
 
-            for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), GENE_BATCH_SIZE ) ) {
+            final int numGeneBatches = ( int ) Math.ceil( cs2GeneIdMap.size() / geneBatchSize );
+            for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
                 if ( log.isDebugEnabled() )
                     log.debug( "Starting batch of probes: "
@@ -520,21 +529,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     if ( log.isDebugEnabled() )
                         log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval="
                                 + String.format( "%.2g", correctedPvalue ) );
-                    j++;
+                    numResults++;
                 }
 
-                if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
-                    log.info( "Fetched DiffEx for " + i + " 'batches'; " + j + " results so far; took "
-                            + timer.getTime() + " ms : probeIds="
-                            + StringUtils.abbreviate( StringUtils.join( probeBatch, "," ), 50 ) + " result set="
-                            + StringUtils.abbreviate( StringUtils.join( resultSetIdBatch, "," ), 50 ) );
+                if ( timer.getTime() > 5000 && log.isInfoEnabled() ) {
+                    log.info( "Fetched DiffEx " + numResults + " results so far. " + numResultSetBatchesDone + "/"
+                            + numResultSetBatches + " resultset batches completed. " + numGeneBatchesDone + "/"
+                            + numGeneBatches + " gene batches done." );
                     timer.reset();
                     timer.start();
-                    i = 0;
                 }
 
-                i++;
+                numGeneBatchesDone++;
             }// over probes.
+
+            numResultSetBatchesDone++;
         }
 
         if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
