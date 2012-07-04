@@ -227,13 +227,10 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             log.info( "Memory status: \n" );
             log.info( "geneTestStatusByteCache: "
                     + MemoryUtil.deepMemoryUsageOf( geneTestStatusByteCache, VisibilityFilter.ALL ) + " bytes" );
-            log.info( "probe2ProbeCoexpressionService (nondeep): "
-                    + MemoryUtil.memoryUsageOf( probe2ProbeCoexpressionService ) + " bytes" );
-            log.info( "geneService (nondeep):  " + MemoryUtil.memoryUsageOf( geneService ) + " bytes" );
             log.info( "genesTestedIn: " + MemoryUtil.deepMemoryUsageOf( genesTestedIn, VisibilityFilter.ALL )
                     + " bytes" );
-            log.info( "expressionExperimentService: "
-                    + MemoryUtil.deepMemoryUsageOf( expressionExperimentService, VisibilityFilter.ALL ) + " bytes" );
+            // log.info( "expressionExperimentService: "
+            // + MemoryUtil.deepMemoryUsageOf( expressionExperimentService, VisibilityFilter.ALL ) + " bytes" );
         }
 
         log.debug( "Analysis completed" );
