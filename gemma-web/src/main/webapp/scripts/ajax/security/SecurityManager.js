@@ -66,14 +66,20 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
 		var ownerName = securityInfo.owner.authority;
 		var ownersGroups = securityInfo.ownersGroups;
 		var ownerIsAdmin = false;
-		for (var k = 0, len = ownersGroups.length; k < len; k++) {
-			var groupName = ownersGroups[k];
+		
+		if (ownerName=='GROUP_ADMIN'){
+			ownerIsAdmin = true;
+		}
+		else{
+			for (var k = 0, len = ownersGroups.length; k < len; k++) {
+				var groupName = ownersGroups[k];
 			
-			if (groupName === Gemma.SecurityManager.adminGroupName){
-				ownerIsAdmin = true;
-				break;
+				if (groupName === Gemma.SecurityManager.adminGroupName){
+					ownerIsAdmin = true;
+					break;
+				}
+			
 			}
-			
 		}
 
 		var readers = securityInfo.groupsThatCanRead;
