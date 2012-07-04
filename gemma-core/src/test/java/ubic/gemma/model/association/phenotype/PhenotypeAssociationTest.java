@@ -170,7 +170,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.litEvidence.setPhenotypes( phenotypes );
         this.litEvidence.setCitationValueObject( citationValueObject );
 
-        this.phenotypeAssociationManagerService.create( this.litEvidence );
+        this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
     }
 
     private void mockOntology() throws SecurityException, NoSuchMethodException {

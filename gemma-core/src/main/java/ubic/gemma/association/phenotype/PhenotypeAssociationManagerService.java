@@ -42,7 +42,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return Status of the operation
      */
-    public abstract ValidateEvidenceValueObject create( EvidenceValueObject evidence );
+    public abstract ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
 
     /**
      * Return all evidence for a specific gene NCBI

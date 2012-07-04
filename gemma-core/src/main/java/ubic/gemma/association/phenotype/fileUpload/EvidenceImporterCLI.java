@@ -118,7 +118,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 int i = 1;
 
                 for ( EvidenceValueObject e : evidenceValueObjects ) {
-                    this.phenotypeAssociationService.create( e );
+                    this.phenotypeAssociationService.makeEvidence( e );
                     System.out.println( "created evidence " + i );
                     i++;
                 }

@@ -115,8 +115,8 @@ public class PhenotypeController extends BaseController {
      * @return bibliographic reference with the given pubmed id
      */
     public Collection<BibliographicReferenceValueObject> findBibliographicReference( String pubMedId, Long evidenceId ) {
-        BibliographicReferenceValueObject valueObject = this.phenotypeAssociationManagerService.findBibliographicReference(
-                pubMedId, evidenceId );
+        BibliographicReferenceValueObject valueObject = this.phenotypeAssociationManagerService
+                .findBibliographicReference( pubMedId, evidenceId );
 
         // Contain at most 1 element.
         ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>( 1 );
@@ -138,13 +138,15 @@ public class PhenotypeController extends BaseController {
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
-        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri, taxonId );
+        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
+                taxonId );
     }
 
     public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
-            validateEvidenceValueObject = this.phenotypeAssociationManagerService.validateEvidence( evidenceValueObject );
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService
+                    .validateEvidence( evidenceValueObject );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
@@ -156,7 +158,8 @@ public class PhenotypeController extends BaseController {
 
         try {
             if ( evidenceValueObject.getId() == null ) { // if the form is a "create evidence" form
-                validateEvidenceValueObject = this.phenotypeAssociationManagerService.create( evidenceValueObject );
+                validateEvidenceValueObject = this.phenotypeAssociationManagerService
+                        .makeEvidence( evidenceValueObject );
             } else { // if the form is an "edit evidence" form
                 validateEvidenceValueObject = this.phenotypeAssociationManagerService.update( evidenceValueObject );
             }
