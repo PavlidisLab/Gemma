@@ -42,11 +42,14 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * Used to delete results that were not run after institution of precomputed hitlists, and for whatever reason will not
- * be ru-run automagically.
+ * be re-run automagically.
  * 
  * @author Paul
  * @version $Id$
+ * @deprecated because it should not be needed any more; for isolated problems it is easier to simply rerun the
+ *             analysis.
  */
+@Deprecated
 public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
 
     /**
