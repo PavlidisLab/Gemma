@@ -923,6 +923,9 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         }
 
         computeNodeDegree( queryGene, usedLinks, expressionExperiments );
+
+        processedGenes.add( queryGene.getId() );
+
         return usedLinks;
     }
 }
