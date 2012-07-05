@@ -22,11 +22,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.stereotype.Component;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -36,6 +31,14 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
+
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.CoexpressionCacheValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -51,6 +54,8 @@ import ubic.gemma.util.ConfigUtils;
  */
 @Component
 public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe2ProbeCoexpressionCache {
+
+    private static Logger log = LoggerFactory.getLogger( Probe2ProbeCoexpressionCacheImpl.class );
 
     private static final String CACHE_NAME_BASE = "Probe2ProbeCache";
     private static final int CACHE_DEFAULT_MAX_ELEMENTS = 100000;
@@ -94,6 +99,10 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
      */
     @Override
     public void addToCache( CoexpressionCacheValueObject coExVOForCache ) {
+        if ( !this.enabled ) {
+            log.warn( "Cache is not enabled" );
+            return;
+        }
         Long eeID = coExVOForCache.getExpressionExperiment();
         Gene queryGene = coExVOForCache.getQueryGene();
 

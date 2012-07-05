@@ -796,25 +796,31 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          */
         Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
         Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
-        for ( BioAssaySet ee : ees ) {
-            Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().get( ee, gene );
 
-            if ( eeResults != null ) {
-                cachedResults.put( ee.getId(), eeResults );
-                if ( log.isDebugEnabled() ) log.debug( "Cache hit! for ee=" + ee.getId() );
-            } else {
-                eesToSearch.add( ee );
+        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
+            for ( BioAssaySet ee : ees ) {
+                Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().get( ee,
+                        gene );
+
+                if ( eeResults != null ) {
+                    cachedResults.put( ee.getId(), eeResults );
+                    if ( log.isDebugEnabled() ) log.debug( "Cache hit! for ee=" + ee.getId() );
+                } else {
+                    eesToSearch.add( ee );
+                }
             }
+            overallWatch.stop();
+            if ( overallWatch.getTime() > 100 ) {
+                if ( log.isInfoEnabled() )
+                    log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms for " + ees.size()
+                            + " EEs, found " + cachedResults.size() + " results in cache; must still search "
+                            + eesToSearch.size() );
+            }
+            overallWatch.reset();
+            overallWatch.start();
+        } else {
+            eesToSearch.addAll( ees );
         }
-        overallWatch.stop();
-        if ( overallWatch.getTime() > 100 ) {
-            if ( log.isInfoEnabled() )
-                log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms for " + ees.size()
-                        + " EEs, found " + cachedResults.size() + " results in cache; must still search "
-                        + eesToSearch.size() );
-        }
-        overallWatch.reset();
-        overallWatch.start();
 
         if ( eesToSearch.size() > 0 ) {
 
