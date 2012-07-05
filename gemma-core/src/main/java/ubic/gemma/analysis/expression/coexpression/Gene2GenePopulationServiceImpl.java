@@ -610,13 +610,13 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 if ( timer.getTime() > 60000 ) {
 
                     // log.info( getMemoryInfoString( this.getClass().getSimpleName(), this ) );
-                    // log.info( getMemoryInfoString( "Memory status: Experiments", expressionExperiments ) );
+                    log.info( getMemoryInfoString( "Memory status: Experiments", expressionExperiments ) );
                     // log.info( getMemoryInfoString( "Memory status: toUseGenes", toUseGenes ) );
-                    // if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
+                    if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
                     // log.info( getMemoryInfoString( "Memory status: Node degrees: ", this.allGeneNodeDegrees ) );
                     //
-                    // timer.reset();
-                    // timer.start();
+                    timer.reset();
+                    timer.start();
 
                 }
             }
