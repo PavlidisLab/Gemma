@@ -69,8 +69,6 @@ import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
 
-import com.javamex.classmexer.MemoryUtil;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -1622,7 +1620,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( timer.getTime() > 100 ) {
             log.info( "Gene2Cs Cache check: " + timer.getTime() + "ms" );
-            log.info( "Cache memory: " + MemoryUtil.deepMemoryUsageOf( gene2CsCache ) + " bytes." );
         }
         timer.reset();
         timer.start();
