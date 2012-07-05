@@ -607,17 +607,21 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
-                if ( timer.getTime() > 60000 ) {
+                if ( timer.getTime() > 10 * 60 * 1000 ) {
 
-                    // log.info( getMemoryInfoString( this.getClass().getSimpleName(), this ) );
-                    log.info( getMemoryInfoString( "Memory status: Experiments", expressionExperiments ) );
+                    /*
+                     * None of these are the culprits.
+                     */
+
+                    // log.info( getMemoryInfoString( "Memory status: Experiments", expressionExperiments ) );
                     // log.info( getMemoryInfoString( "Memory status: toUseGenes", toUseGenes ) );
-                    if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
+                    // if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
                     // log.info( getMemoryInfoString( "Memory status: Node degrees: ", this.allGeneNodeDegrees ) );
                     //
                     timer.reset();
                     timer.start();
-
+                    log.info( "Processed " + processedGenes.size() + "/" + toUseGenes.size() + " genes so far, "
+                            + totalLinks + " links in total" );
                 }
             }
 

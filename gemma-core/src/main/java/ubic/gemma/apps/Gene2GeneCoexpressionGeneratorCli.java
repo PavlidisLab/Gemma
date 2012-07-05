@@ -131,7 +131,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
 
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
-        ( this.getBean( Probe2ProbeCoexpressionCache.class ) ).setEnabled( false );
+        this.getBean( Probe2ProbeCoexpressionCache.class ).setEnabled( false );
 
         if ( this.nodeDegreeOnly ) {
             log.info( "CLI configured to only update 'node degrees'" );

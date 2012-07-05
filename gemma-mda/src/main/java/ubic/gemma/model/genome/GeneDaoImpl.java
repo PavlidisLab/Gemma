@@ -1526,7 +1526,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         addResult( coexpressions, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
 
         /*
-         * Cache the result.
+         * Cache the result. Note that this will be disabled during 'large' analyses.
          */
         if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
