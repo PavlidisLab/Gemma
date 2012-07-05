@@ -1528,19 +1528,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         /*
          * Cache the result. Note that this will be disabled during 'large' analyses.
          */
-        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
-            CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-            coExVOForCache.setQueryGene( queryGene );
-            coExVOForCache.setCoexpressedGene( coexpressedGene );
-            coExVOForCache.setExpressionExperiment( eeID );
-            coExVOForCache.setScore( score );
-            coExVOForCache.setPvalue( pvalue );
-            coExVOForCache.setQueryProbe( queryProbe );
-            coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-            if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-
-            this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
-        }
+        // if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
+        // CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
+        // coExVOForCache.setQueryGene( queryGene );
+        // coExVOForCache.setCoexpressedGene( coexpressedGene );
+        // coExVOForCache.setExpressionExperiment( eeID );
+        // coExVOForCache.setScore( score );
+        // coExVOForCache.setPvalue( pvalue );
+        // coExVOForCache.setQueryProbe( queryProbe );
+        // coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+        // if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
+        //
+        // this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
+        // }
 
     }
 
@@ -1656,19 +1656,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         timer.reset();
         timer.start();
 
-        for ( Long csid : newitems.keySet() ) {
-            gene2CsCache.put( new Element( csid, newitems.get( csid ) ) );
-        }
+        // for ( Long csid : newitems.keySet() ) {
+        // gene2CsCache.put( new Element( csid, newitems.get( csid ) ) );
+        // }
 
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Gene2Cs cache fill " + newitems.size() + " elements: " + timer.getTime() + "ms" );
-            try {
-                log.info( gene2CsCache.getMemoryStoreSize() + " items in cache memory; " );
-            } catch ( Exception e ) {
-                // no big deal.
-                log.info( "Was unable to get Gene2CS cache stats:  " + e.getMessage() );
-            }
-        }
+        // if ( timer.getTime() > 1000 ) {
+        // log.info( "Gene2Cs cache fill " + newitems.size() + " elements: " + timer.getTime() + "ms" );
+        // try {
+        // log.info( gene2CsCache.getMemoryStoreSize() + " items in cache memory; " );
+        // } catch ( Exception e ) {
+        // // no big deal.
+        // log.info( "Was unable to get Gene2CS cache stats:  " + e.getMessage() );
+        // }
+        // }
 
     }
 

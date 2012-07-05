@@ -30,16 +30,15 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
- * @versio n$Id$
+ * @version $Id$
  * @author paul
  */
 @Service
-public class Probe2ProbeCoexpressionServiceImpl extends
-        ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase {
+public class Probe2ProbeCoexpressionServiceImpl extends Probe2ProbeCoexpressionServiceBase {
 
     @Override
-    public java.util.Collection<ProbeLink> getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon ) {
+    public java.util.Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment,
+            java.lang.String taxon ) {
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
     }
 
