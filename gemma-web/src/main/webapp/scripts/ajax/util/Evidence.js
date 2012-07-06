@@ -32,6 +32,22 @@ Gemma.decodeEvidenceCode = function(evidenceCode) {
 		'IGI': {
 			displayText: Gemma.EvidenceCodes.igiText,
 			tooltipText: Gemma.EvidenceCodes.igiTT
+		},
+		'IED': {
+			displayText: Gemma.EvidenceCodes.iedText,
+			tooltipText: Gemma.EvidenceCodes.iedTT
+		},
+		'IAGP': {
+			displayText: Gemma.EvidenceCodes.iagpText,
+			tooltipText: Gemma.EvidenceCodes.iagpTT
+		},
+		'IPM': {
+			displayText: Gemma.EvidenceCodes.ipmText,
+			tooltipText: Gemma.EvidenceCodes.ipmTT
+		},
+		'QTM': {
+			displayText: Gemma.EvidenceCodes.qtmText,
+			tooltipText: Gemma.EvidenceCodes.qtmTT
 		}
 	};
 	
