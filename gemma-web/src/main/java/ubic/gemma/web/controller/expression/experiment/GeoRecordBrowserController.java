@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,7 @@ import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
 @Component
 public class GeoRecordBrowserController {
 
+    private static Logger log = LoggerFactory.getLogger( GeoRecordBrowserController.class );
     @Autowired
     private GeoBrowserService geoBrowserService;
 
@@ -62,6 +65,8 @@ public class GeoRecordBrowserController {
             skip = 10000;
         }
         int startPage = ( ( start + skip ) / count ) + 1;
+        log.info( "Start page =" + startPage );
+
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
         return geoRecords;
     }

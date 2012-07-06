@@ -44,18 +44,18 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
     proceed : function(s) {
         this.store.load({
-                    params : [this.start + this.count, this.count, s ? s : 0]
+                    params : [this.start + this.count, this.count, Number(s) > 0 ? Number(s) : 0]
                 });
 
-        this.start = s ? this.start + s : this.start;
+        this.start = Number(s) > 0 ? this.start + Number(s) : this.start;
     },
 
     back : function(s) {
         this.store.load({
-                    params : [Math.max(this.start - this.count, 0), this.count, s ? s : 0]
+                    params : [Math.max(this.start - this.count, 0), this.count, Number(s) > 0 ? Number(s) : 0]
                 });
 
-        this.start = s ? Math.max(this.start - s, 0) : this.start;
+        this.start = Number(s) > 0 ? Math.max(this.start - Number(s), 0) : this.start;
     },
 
     start : 0,
@@ -134,7 +134,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     // there must be a better way of doing this.
                     Ext.DomHelper.overwrite(Ext.getDom('numRecords'), "<span id='numRecords'>" + records.length
                                     + "</span>");
-                    this.start = this.start + this.count;
+                    this.start = Number(this.start) + Number(this.count);
 
                 }, this);
 
