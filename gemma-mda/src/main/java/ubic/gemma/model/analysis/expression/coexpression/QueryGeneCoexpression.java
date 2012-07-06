@@ -52,7 +52,7 @@ public class QueryGeneCoexpression {
     private double postProcessSeconds;
     private double dbQuerySeconds;
 
-    private Collection<Long> eesQueryTestedIn;
+    private Collection<Long> eesQueryTestedIn = null;
 
     private String errorState;
 
@@ -76,7 +76,6 @@ public class QueryGeneCoexpression {
         this.supportThreshold = supportThreshold;
         geneCoexpressionData = new QueryGeneCoexpressionsDetails( queryGene, supportThreshold );
         queryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
-        this.eesQueryTestedIn = new HashSet<Long>();
     }
 
     public void add( CoexpressedGenePairValueObject vo ) {
@@ -277,7 +276,7 @@ public class QueryGeneCoexpression {
 
     /**
      * Given a list of probes to genes adds this information to the crossHybridizingQueryProbes allowing for the
-     * specificty of the queried gene to be determined on a expression experiment level.
+     * specificity of the queried gene to be determined on a expression experiment level.
      * 
      * @param probe2GeneMap
      */
@@ -328,14 +327,15 @@ public class QueryGeneCoexpression {
     }
 
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) )
-            this.geneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
+        // if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) ) {
+        this.geneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
+        // }
     }
 
     private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) )
-            this.geneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
-
+        // if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) ) {
+        this.geneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+        // }
     }
 
 }

@@ -50,9 +50,9 @@ import org.springframework.stereotype.Repository;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -713,8 +713,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( genes.size() == 1 ) {
             Gene soleQueryGene = genes.iterator().next();
-            QueryGeneCoexpression coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees,
-                    stringency );
+            QueryGeneCoexpression coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees, stringency );
             coexpressions.put( soleQueryGene, coexpressedGenes );
             return coexpressions;
         }
@@ -767,19 +766,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param gene to use as the query
      * @param ees Data sets to restrict the search to.
      * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
-     * @return Collection of CoexpressionCollectionValueObjects. This needs to be 'postprocessed' before it has all the
-     *         data needed for web display.
+     * @return Collection of QueryGeneCoexpression. This needs to be 'postprocessed' before it has all the data needed
+     *         for web display.
      */
     @Override
-    protected QueryGeneCoexpression handleGetCoexpressedGenes( final Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency ) {
+    protected QueryGeneCoexpression handleGetCoexpressedGenes( final Gene gene, Collection<? extends BioAssaySet> ees,
+            Integer stringency ) {
 
         log.debug( "Gene: " + gene.getName() );
 
         final String p2pClassName = getP2PClassName( gene );
 
-        final QueryGeneCoexpression coexpressions = new QueryGeneCoexpression( gene.getId(),
-                stringency );
+        final QueryGeneCoexpression coexpressions = new QueryGeneCoexpression( gene.getId(), stringency );
 
         if ( ees.size() == 0 ) {
             log.debug( "No experiments selected" );
@@ -1117,8 +1115,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param geneType
      * @param coexpressedProbe
      */
-    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Gene queryGene,
-            Long queryProbe, Double pvalue, Double score, Long coexpressedGene, Long coexpressedProbe ) {
+    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Gene queryGene, Long queryProbe,
+            Double pvalue, Double score, Long coexpressedGene, Long coexpressedProbe ) {
         CoexpressedGenePairValueObject coExVO;
 
         // add the gene (if not already seen)

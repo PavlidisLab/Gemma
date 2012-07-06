@@ -34,10 +34,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * The details about coexpression for multiple target genes with respect to a query gene. The bulk of the information is
- * stored as a collection of CoexpressionValeuObjects.
- * <p>
- * All the genes should be of the same subclass (known genes, predicted genes or probe aligned regions). Thus we usually
- * have three instances of this for each query gene.
+ * stored as a collection of CoexpressionValeuObjects. This is the "top-level" coexpression result object we use when
+ * querying at the probe level.
  * 
  * @see CoexpressionValueObject
  * @author klc
@@ -45,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class QueryGeneCoexpressionsDetails {
 
-    private static Log log = LogFactory.getLog( QueryGeneCoexpressionsDetails.class.getName() );
+    private static Log log = LogFactory.getLog( QueryGeneCoexpressionsDetails.class );
     /**
      * Details for each gene. Map of gene id to vos.
      */
@@ -95,31 +93,11 @@ public class QueryGeneCoexpressionsDetails {
 
     private boolean warned = false;
 
-    @Override
-    public void finalize() {
-        expressionExperiments.clear();
-
-        for ( Long l : coexpressionData.keySet() ) {
-            coexpressionData.get( l ).finalize();
-        }
-        for ( Long l : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
-            queryGeneExpressionExperimentProbe2GeneMaps.get( l ).clear();
-        }
-        for ( Long l : expressionExperimentProbe2GeneMaps.keySet() ) {
-            expressionExperimentProbe2GeneMaps.get( l ).clear();
-        }
-
-        this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
-        this.expressionExperimentProbe2GeneMaps.clear();
-        this.coexpressionData.clear();
-        this.expressionExperimentHasSpecificProbeForQueryGene.clear();
-    }
-
     /**
      * @param queryGene
      * @param supportThreshold
      */
-    public QueryGeneCoexpressionsDetails( Long queryGene, int supportThreshold ) {
+    QueryGeneCoexpressionsDetails( Long queryGene, int supportThreshold ) {
 
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
@@ -139,7 +117,7 @@ public class QueryGeneCoexpressionsDetails {
      * @param value
      * @return
      */
-    public CoexpressedGenePairValueObject add( CoexpressedGenePairValueObject value ) {
+    CoexpressedGenePairValueObject add( CoexpressedGenePairValueObject value ) {
         if ( coexpressionData.containsKey( value.getGeneId() ) ) {
             // FIXME this seems like it would be an error.
             if ( log.isDebugEnabled() ) log.debug( "Clobbering when adding " + value );
@@ -153,7 +131,7 @@ public class QueryGeneCoexpressionsDetails {
      * @param eeID
      * @param probe2geneMap populated from cs2gene query.
      */
-    public void addQuerySpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
+    void addQuerySpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
         this.queryGeneExpressionExperimentProbe2GeneMaps.put( eeID, probe2geneMap );
     }
 
@@ -164,7 +142,7 @@ public class QueryGeneCoexpressionsDetails {
      * @param eeID
      * @param probe2geneMap
      */
-    public void addTargetSpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
+    void addTargetSpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
         if ( !this.expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {
             this.expressionExperimentProbe2GeneMaps.put( eeID, new HashMap<Long, Collection<Long>>() );
         }
@@ -191,22 +169,14 @@ public class QueryGeneCoexpressionsDetails {
             private Long i;
             private CoexpressedGenePairValueObject v;
 
-            public Vk( Long i, CoexpressedGenePairValueObject v ) {
+            private Vk( Long i, CoexpressedGenePairValueObject v ) {
                 this.i = i;
                 this.v = v;
             }
 
-            /*
-             * (non-Javadoc)
-             * 
-             * @see java.lang.Object#hashCode()
-             */
             @Override
-            public int hashCode() {
-                final int prime = 31;
-                int result = 1;
-                result = prime * result + ( ( v == null ) ? 0 : v.hashCode() );
-                return result;
+            public int compareTo( Vk o ) {
+                return o.getV().compareTo( this.v );
             }
 
             /*
@@ -226,17 +196,25 @@ public class QueryGeneCoexpressionsDetails {
                 return true;
             }
 
-            @Override
-            public int compareTo( Vk o ) {
-                return o.getV().compareTo( this.v );
-            }
-
-            public Long getI() {
+            private Long getI() {
                 return i;
             }
 
-            public CoexpressedGenePairValueObject getV() {
+            private CoexpressedGenePairValueObject getV() {
                 return v;
+            }
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see java.lang.Object#hashCode()
+             */
+            @Override
+            public int hashCode() {
+                final int prime = 31;
+                int result = 1;
+                result = prime * result + ( ( v == null ) ? 0 : v.hashCode() );
+                return result;
             }
         }
 
@@ -280,11 +258,31 @@ public class QueryGeneCoexpressionsDetails {
 
     }
 
+    @Override
+    public void finalize() {
+        expressionExperiments.clear();
+
+        for ( Long l : coexpressionData.keySet() ) {
+            coexpressionData.get( l ).finalize();
+        }
+        for ( Long l : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
+            queryGeneExpressionExperimentProbe2GeneMaps.get( l ).clear();
+        }
+        for ( Long l : expressionExperimentProbe2GeneMaps.keySet() ) {
+            expressionExperimentProbe2GeneMaps.get( l ).clear();
+        }
+
+        this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
+        this.expressionExperimentProbe2GeneMaps.clear();
+        this.coexpressionData.clear();
+        this.expressionExperimentHasSpecificProbeForQueryGene.clear();
+    }
+
     /**
      * @param geneId
      * @return
      */
-    public CoexpressedGenePairValueObject get( Long geneId ) {
+    CoexpressedGenePairValueObject get( Long geneId ) {
         return this.coexpressionData.get( geneId );
     }
 
@@ -316,7 +314,7 @@ public class QueryGeneCoexpressionsDetails {
      * @param probeID
      * @return a collection of gene IDs that the probe is predicted to detect
      */
-    public Collection<Long> getGenesForProbe( Long eeID, Long probeID ) {
+    private Collection<Long> getGenesForProbe( Long eeID, Long probeID ) {
         Map<Long, Collection<Long>> map = expressionExperimentProbe2GeneMaps.get( eeID );
         if ( map == null ) {
             return new HashSet<Long>();
@@ -329,7 +327,7 @@ public class QueryGeneCoexpressionsDetails {
      * @param probeID
      * @return
      */
-    public Collection<Long> getGenesForQueryProbe( Long eeID, Long probeID ) {
+    private Collection<Long> getGenesForQueryProbe( Long eeID, Long probeID ) {
         return queryGeneExpressionExperimentProbe2GeneMaps.get( eeID ).get( probeID );
     }
 
@@ -357,16 +355,8 @@ public class QueryGeneCoexpressionsDetails {
     /**
      * @return the number of StringencyGenes
      */
-    public int getNumberOfGenes() {
+    int getNumberOfGenes() {
         return this.coexpressionData.size();
-    }
-
-    /**
-     * @return
-     */
-    public int getNumberOfUsedExpressionExperiments() {
-        return expressionExperimentProbe2GeneMaps.keySet().size();
-
     }
 
     /**
@@ -387,6 +377,10 @@ public class QueryGeneCoexpressionsDetails {
         }
 
         return expressionExperimentsRawLinkCounts.get( id );
+    }
+
+    boolean hasExpressionExperiment( Long eeID ) {
+        return this.expressionExperiments.containsKey( eeID );
     }
 
     /**
@@ -586,17 +580,21 @@ public class QueryGeneCoexpressionsDetails {
         setNegativeStringencyLinkCount( negativeLinkCount );
     }
 
+    void setHasProbeSpecificForQueryGene( Long eeID ) {
+        expressionExperimentHasSpecificProbeForQueryGene.put( eeID, true );
+    }
+
     /**
      * @param stringencyLinkCount the stringencyLinkCount to set
      */
-    public void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
+    private void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
         this.negativeStringencyLinkCount = stringencyLinkCount;
     }
 
     /**
      * @param stringencyLinkCount the stringencyLinkCount to set
      */
-    public void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
+    private void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
         this.positiveStringencyLinkCount = stringencyLinkCount;
     }
 
@@ -726,18 +724,6 @@ public class QueryGeneCoexpressionsDetails {
                 this.expressionExperiments.remove( eeID );
             }
         }
-    }
-
-    public boolean hasExpressionExperiment( Long eeID ) {
-        return this.expressionExperiments.containsKey( eeID );
-    }
-
-    public boolean getHasProbeSpecificForQueryGene( Long eeID ) {
-        return expressionExperimentHasSpecificProbeForQueryGene.containsKey( eeID );
-    }
-
-    public void setHasProbeSpecificForQueryGene( Long eeID ) {
-        expressionExperimentHasSpecificProbeForQueryGene.put( eeID, true );
     }
 
 }
