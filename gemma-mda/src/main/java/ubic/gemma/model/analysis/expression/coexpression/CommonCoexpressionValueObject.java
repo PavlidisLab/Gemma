@@ -40,9 +40,9 @@ public class CommonCoexpressionValueObject {
 
     private Gene gene;
 
-    private Collection<Gene> commonCoexpressedQueryGenes;
-    private Collection<Gene> commonPositiveCoexpressedQueryGenes;
-    private Collection<Gene> commonNegativeCoexpressedQueryGenes;
+    private Collection<Long> commonCoexpressedQueryGenes;
+    private Collection<Long> commonPositiveCoexpressedQueryGenes;
+    private Collection<Long> commonNegativeCoexpressedQueryGenes;
 
     private Collection<Long> positiveExperimentIds;
     private Collection<Long> negativeExperimentIds;
@@ -56,9 +56,9 @@ public class CommonCoexpressionValueObject {
     public CommonCoexpressionValueObject( Gene gene ) {
         this.gene = gene;
 
-        commonCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
-        commonPositiveCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
-        commonNegativeCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
+        commonCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Long>() );
+        commonPositiveCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Long>() );
+        commonNegativeCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Long>() );
 
         positiveExperimentIds = Collections.synchronizedSet( new HashSet<Long>() );
         negativeExperimentIds = Collections.synchronizedSet( new HashSet<Long>() );
@@ -98,21 +98,21 @@ public class CommonCoexpressionValueObject {
     /**
      * @return the collection of query genes this gene was coexpressed with
      */
-    public Collection<Gene> getCommonCoexpressedQueryGenes() {
+    public Collection<Long> getCommonCoexpressedQueryGenes() {
         return commonCoexpressedQueryGenes;
     }
 
     /**
      * @return the collection of query genes this gene was positively coexpressed with
      */
-    public Collection<Gene> getCommonNegativeCoexpressedQueryGenes() {
+    public Collection<Long> getCommonNegativeCoexpressedQueryGenes() {
         return commonNegativeCoexpressedQueryGenes;
     }
 
     /**
      * @return the collection of query genes this gene was positively coexpressed with
      */
-    public Collection<Gene> getCommonPositiveCoexpressedQueryGenes() {
+    public Collection<Long> getCommonPositiveCoexpressedQueryGenes() {
         return commonPositiveCoexpressedQueryGenes;
     }
 

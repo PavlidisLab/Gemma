@@ -303,7 +303,12 @@
 		<body-content>empty</body-content>
 		<attribute>
 			<name>databaseEntry</name>
-			<required>true</required>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>databaseEntryValueObject</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>

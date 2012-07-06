@@ -260,10 +260,8 @@ public class BioMaterialController {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping( { "/showBioMaterial.html", "/" })
+    @RequestMapping({ "/showBioMaterial.html", "/" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-
-        log.debug( request.getParameter( "id" ) );
 
         Long id = null;
 
@@ -284,10 +282,9 @@ public class BioMaterialController {
         }
         bioMaterialService.thaw( bioMaterial );
 
-        request.setAttribute( "id", id );
+        request.setAttribute( "id", id ); // / ??
         ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial ).addObject(
-                "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) ).addObject( "message",
-                "biomaterial with id " + id + " found" );
+                "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
 
         return mnv;
     }

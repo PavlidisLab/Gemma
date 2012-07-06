@@ -33,7 +33,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * The details about coexpression for multiple target genes with respect to a query gene. The bulk of the information is
@@ -79,17 +78,30 @@ public class CoexpressedGenesDetails {
     /**
      * The gene used to search from.
      */
-    private Gene queryGene;
+    private Long queryGene;
 
     private final int supportThreshold;
 
     private boolean warned = false;
 
+    @Override
+    public void finalize() {
+        expressionExperiments.clear();
+        this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
+        this.expressionExperimentProbe2GeneMaps.clear();
+        for ( Long l : coexpressionData.keySet() ) {
+            coexpressionData.get( l ).finalize();
+        }
+
+        this.coexpressionData.clear();
+
+    }
+
     /**
      * @param queryGene
      * @param supportThreshold
      */
-    public CoexpressedGenesDetails( Gene queryGene, int supportThreshold ) {
+    public CoexpressedGenesDetails( Long queryGene, int supportThreshold ) {
 
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
@@ -417,31 +429,6 @@ public class CoexpressedGenesDetails {
         return eeVo.getRawCoexpressionLinkCount();
     }
 
-    // /**
-    // * @return
-    // */
-    // private Collection<Long> getExpressionExperimentsWithSpecificProbeForQueryGene() {
-    // assert !queryGeneExpressionExperimentProbe2GeneMaps.isEmpty();
-    // Collection<Long> result = new HashSet<Long>();
-    //
-    // for ( Long eeID : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
-    //
-    // Map<Long, Collection<Long>> probe2geneMap = queryGeneExpressionExperimentProbe2GeneMaps.get( eeID );
-    //
-    // for ( Long probeID : probe2geneMap.keySet() ) {
-    // Collection<Long> genes = probe2geneMap.get( probeID );
-    // Integer genecount = genes.size();
-    // if ( genecount == 1 ) {
-    // result.add( eeID );
-    // break;
-    // }
-    // }
-    // }
-    //
-    // return result;
-    //
-    // }
-
     /**
      * This computes the support for each link from a single query gene, as well as updating information on specificity
      * of probes. Terminology:
@@ -560,14 +547,13 @@ public class CoexpressedGenesDetails {
                             log.debug( "EEID=" + eeID + " Probe=" + coexpressedProbe + " Gene=" + geneID );
                         }
 
-                        if ( geneID.equals( queryGene.getId() ) ) {
+                        if ( geneID.equals( queryGene ) ) {
                             /*
                              * Case 3.1
                              */
                             if ( log.isDebugEnabled() ) {
-                                log.debug( "Crosshyb with query gene id=" + queryGene.getId() + ": ee=" + eeID
-                                        + " , probe=" + coexpressedProbe + " hits genes="
-                                        + StringUtils.join( genesForProbe, "," ) );
+                                log.debug( "Crosshyb with query gene id=" + queryGene + ": ee=" + eeID + " , probe="
+                                        + coexpressedProbe + " hits genes=" + StringUtils.join( genesForProbe, "," ) );
                             }
 
                             /*

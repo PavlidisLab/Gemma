@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Perform gene-to-gene coexpression link analysis ("TMM-style"), based on stored probe-probe coexpression.
@@ -141,7 +142,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             /*
              * Finish the postprocessing.
              */
-            coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+            coexpressions.setEesQueryGeneTestedIn( EntityUtils.getIds( eesQueryTestedIn ) );
             if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
                 continue;
             }
@@ -182,7 +183,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 gene, ees, false );
 
         if ( eesQueryTestedIn.size() == 0 ) {
-            CoexpressionCollectionValueObject r = new CoexpressionCollectionValueObject( gene, stringency );
+            CoexpressionCollectionValueObject r = new CoexpressionCollectionValueObject( gene.getId(), stringency );
             r.setErrorState( "No experiments have coexpression data for  " + gene.getOfficialSymbol() );
             return r;
         }
@@ -199,7 +200,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          */
         StopWatch timer = new StopWatch();
         timer.start();
-        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+        coexpressions.setEesQueryGeneTestedIn( EntityUtils.getIds( eesQueryTestedIn ) );
         if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
             return coexpressions;
         }
@@ -458,7 +459,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param numQueryGeneGOTerms
      * @param coexpressionData
      */
-    private void computeGoOverlap( Gene queryGene, int numQueryGeneGOTerms,
+    private void computeGoOverlap( Long queryGene, int numQueryGeneGOTerms,
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> overlapIds = new HashSet<Long>();
         int i = 0;
@@ -488,7 +489,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
 
         log.debug( "Computing GO stats" );
 
-        Gene queryGene = coexpressions.getQueryGene();
+        Long queryGene = coexpressions.getQueryGene();
         int numQueryGeneGOTerms = geneOntologyService.getGOTerms( queryGene ).size();
         coexpressions.setQueryGeneGoTermCount( numQueryGeneGOTerms );
         if ( numQueryGeneGOTerms == 0 ) return;

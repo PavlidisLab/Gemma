@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
@@ -278,6 +279,39 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return overlap;
     }
 
+    @Override
+    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds ) {
+        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
+        if ( queryGene == null ) return null;
+        if ( geneIds.size() == 0 ) return overlap;
+
+        Collection<OntologyTerm> queryGeneTerms = getGOTerms( queryGene );
+
+        overlap.put( queryGene, queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
+        // with itself!
+
+        Collection<Gene> genes = this.geneService.loadMultiple( geneIds );
+
+        for ( Object obj : genes ) {
+            Gene gene = ( Gene ) obj;
+            if ( queryGeneTerms.isEmpty() ) {
+                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                continue;
+            }
+
+            Collection<OntologyTerm> comparisonOntos = getGOTerms( gene );
+
+            if ( comparisonOntos == null || comparisonOntos.isEmpty() ) {
+                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                continue;
+            }
+
+            overlap.put( gene.getId(), computeOverlap( queryGeneTerms, comparisonOntos ) );
+        }
+
+        return overlap;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -478,6 +512,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return getGOTerms( gene, true, null );
     }
 
+    @Override
+    public Collection<OntologyTerm> getGOTerms( Long geneId ) {
+        return getGOTerms( geneId, true, null );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -486,6 +525,18 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
         return getGOTerms( gene, includePartOf, null );
+    }
+
+    /**
+     * FIXME it might be better to avoid the fetch.
+     * 
+     * @param gene
+     * @param includePartOf
+     * @param goAspect
+     * @return
+     */
+    public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
+        return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );
     }
 
     /*

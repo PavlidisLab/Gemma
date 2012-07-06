@@ -26,6 +26,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
+import com.j_spaces.obf.an;
+
 /**
  * @author paul
  * @version $Id$
@@ -47,6 +49,8 @@ public interface GeneOntologyService extends InitializingBean {
      *          will be empty when there is no overlap.
      */
     public abstract Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds );
+
+    public abstract Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds );
 
     /**
      * @param queryGene1
@@ -139,6 +143,8 @@ public interface GeneOntologyService extends InitializingBean {
      * @param geneOntologyTerms
      */
     public abstract Collection<OntologyTerm> getGOTerms( Gene gene );
+
+    public abstract Collection<OntologyTerm> getGOTerms( Long geneId );
 
     /**
      * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via

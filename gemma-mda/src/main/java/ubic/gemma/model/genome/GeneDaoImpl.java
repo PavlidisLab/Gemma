@@ -723,7 +723,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Map<Long, Gene> queryGenes = new HashMap<Long, Gene>();
         for ( Gene g : genes ) {
             queryGenes.put( g.getId(), g );
-            coexpressions.put( g, new CoexpressionCollectionValueObject( g, stringency ) );
+            coexpressions.put( g, new CoexpressionCollectionValueObject( g.getId(), stringency ) );
         }
 
         /*
@@ -779,7 +779,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         final String p2pClassName = getP2PClassName( gene );
 
-        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene, stringency );
+        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene.getId(),
+                stringency );
 
         if ( ees.size() == 0 ) {
             log.debug( "No experiments selected" );
@@ -829,7 +830,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
 
             Session session = this.getSession( false );
-            org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, queryString );
+            Query queryObject = setCoexpQueryParameters( session, gene, queryString );
 
             // This is the actual business of querying the database.
             processCoexpQuery( gene, queryObject, coexpressions );

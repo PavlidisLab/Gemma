@@ -18,16 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Collection;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
@@ -36,91 +32,54 @@ import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
  * @version $Id$
  * @author pavlidis
  */
-@Controller
+@Component
 public class GeoRecordBrowserController {
-
-    private static final int DEFAULT_BATCH_SIZE = 50;
-    private static final int DEFAULT_START_PAGE = 1;
 
     @Autowired
     private GeoBrowserService geoBrowserService;
 
-    @RequestMapping("/admin/geoBrowser/showBatch.html")
-    @SuppressWarnings("unused")
-    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        boolean next = request.getParameter( "next" ) != null;
-        boolean prev = request.getParameter( "prev" ) != null;
-
-        
-        int start = 1;
-        String startSt = request.getParameter( "start" );
-        if ( StringUtils.isNotBlank( startSt ) ) {
-            try {
-                start = Integer.parseInt( startSt );
-            } catch ( NumberFormatException e ) {
-                //
-            }
+    /**
+     * AJAX
+     * 
+     * @param start
+     * @param count
+     * @param skip
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     */
+    public Collection<GeoRecord> browse( int start, int count, int skip ) throws IOException, ParseException {
+        if ( count == 0 ) {
+            count = 20; // sorry.
         }
-
-        int count = DEFAULT_BATCH_SIZE;
-        int startPage = DEFAULT_START_PAGE;
-
-        String batchSize = request.getParameter( "count" );
-        if ( StringUtils.isNotBlank( batchSize ) ) {
-            try {
-                count = Integer.parseInt( batchSize );
-            } catch ( NumberFormatException e ) {
-                //
-            }
+        if ( start < 0 ) {
+            start = 0;
         }
-
-        int skip = 0;
-
-        String skipSize = request.getParameter( "skip" );
-        if ( StringUtils.isNotBlank( skipSize ) ) {
-            try {
-                skip = Integer.parseInt( skipSize );
-            } catch ( NumberFormatException e ) {
-                //
-            }
+        if ( skip < 0 ) {
+            skip = 0;
         }
-
-        String minSamplesS = request.getParameter( "minsam" );
-        if ( StringUtils.isNotBlank( skipSize ) ) {
-            try {
-                skip = Integer.parseInt( skipSize );
-            } catch ( NumberFormatException e ) {
-                //
-            }
+        if ( skip > 10000 ) {
+            skip = 10000;
         }
-
-        String taxonS = request.getParameter( "taxon" );
-
-        if ( next ) {
-            start += count;
-        } else if ( prev ) {
-            start = Math.max( 0, start -= count );
-        }
-        start = start + skip;
-
-        startPage = (start/count) + 1;
+        int startPage = ( ( start + skip ) / count ) + 1;
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
-
-        ModelAndView mav = new ModelAndView( "/admin/geoRecordBrowser" );
-
-        mav.addObject( "start", start );
-        if ( geoRecords != null ) {
-            mav.addObject( "geoRecords", geoRecords );
-            mav.addObject( "numGeoRecords", geoRecords.size() );
-        } else {
-            mav.addObject( "numGeoRecords", 0 );
-        }
-        return mav;
+        return geoRecords;
     }
 
-    public void setGeoBrowserService( GeoBrowserService geoBrowserService ) {
-        this.geoBrowserService = geoBrowserService;
+    /**
+     * @param accession
+     * @return
+     */
+    public String getDetails( String accession ) {
+        return geoBrowserService.getDetails( accession );
+    }
+
+    /**
+     * @param accession
+     * @return
+     */
+    public boolean toggleUsability( String accession ) {
+        return geoBrowserService.toggleUsability( accession );
     }
 
 }

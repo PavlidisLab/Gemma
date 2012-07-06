@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.bioAssay;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,12 +30,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -80,30 +87,11 @@ public class BioAssayController extends AbstractTaskService {
     @Autowired
     private BioAssayService bioAssayService;
 
-    /**
-     * @param request
-     * @param response
-     * @return taskId
-     * @deprecated in favor of ajax call
-     */
-    @Deprecated
-    @RequestMapping("markBioAssayOutlier.html")
-    public String markBioAssayOutlier( HttpServletRequest request, HttpServletResponse response ) {
-        String stringId = request.getParameter( "id" );
-        if ( stringId == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( "Must provide an id" );
-        }
+    @Autowired
+    private ExpressionExperimentService eeService;
 
-        Long id = null;
-        try {
-            id = Long.parseLong( stringId );
-        } catch ( NumberFormatException e ) {
-            throw new EntityNotFoundException( "Identifier was invalid" );
-        }
-
-        return markOutlier( id );
-    }
+    @Autowired
+    private AuditEventService auditEventService;
 
     /**
      * AJAX
@@ -147,7 +135,33 @@ public class BioAssayController extends AbstractTaskService {
         bioAssayService.thaw( bioAssay );
 
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", bioAssay );
+        return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", new BioAssayValueObject( bioAssay ) );
+    }
+
+    /**
+     * @param eeId
+     * @return
+     */
+    public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
+        ExpressionExperiment ee = eeService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
+        }
+
+        ee = eeService.thawLite( ee );
+        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+        for ( BioAssay assay : ee.getBioAssays() ) {
+
+            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
+
+            bioAssayValueObject.setOutlier( auditEventService.hasEvent( assay, SampleRemovalEvent.class ) );
+
+            result.add( bioAssayValueObject );
+        }
+
+        log.info( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+
+        return result;
     }
 
     /**

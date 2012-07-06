@@ -267,8 +267,8 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					tooltip: "Import from GEO or ArrayExpress"
 				}, {
 					text: 'Browse GEO',
-					href : "/Gemma/admin/geoBrowser/showBatch.html",
-					tooltip: "Browse GEO"
+					href : "/Gemma/admin/geoRecordBrowser.html",
+					tooltip: "Browse data sets in GEO"
 				}, {
 					text: 'Search Annotations',
 					href : "/Gemma/characteristicBrowser.html",

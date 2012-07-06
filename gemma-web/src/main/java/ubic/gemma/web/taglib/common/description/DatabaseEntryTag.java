@@ -24,10 +24,10 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
- * @jsp.tag name="databaseEntry" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -40,16 +40,16 @@ public class DatabaseEntryTag extends TagSupport {
 
     private static Log log = LogFactory.getLog( DatabaseEntryTag.class );
 
-    private DatabaseEntry databaseEntry;
+    private DatabaseEntryValueObject databaseEntry;
 
     /**
-     * @jsp.attribute description="The databaseEntry" required="true" rtexprvalue="true"
      * @param databaseEntry
      */
     public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
+        this.databaseEntry = new DatabaseEntryValueObject( databaseEntry );
+    }
 
-        log.debug( "set databaseEntry: " + databaseEntry );
-
+    public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntry ) {
         this.databaseEntry = databaseEntry;
     }
 
@@ -91,11 +91,10 @@ public class DatabaseEntryTag extends TagSupport {
                             + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + accession
                             + "'><img src='/Gemma/images/logo/geoTiny.png' /></a>" );
                 } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
-                    buf
-                            .append( accession
-                                    + "&nbsp;<a title='ArrayExpress page for this entry'"
-                                    + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                                    + accession + "'><img src='/Gemma/images/logo/arrayExpressTiny.png' /></a>" );
+                    buf.append( accession
+                            + "&nbsp;<a title='ArrayExpress page for this entry'"
+                            + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
+                            + accession + "'><img src='/Gemma/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
                     buf.append( accession + "(" + databaseEntry.getExternalDatabase().getName() + ":" + ")" );
                 }

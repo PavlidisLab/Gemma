@@ -33,8 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @version $Id$
  * @see com.dumbster.smtp.SimpleSmtpServer
  */
-@ContextConfiguration(loader = WebContextLoader.class, locations = { "classpath*:WEB-INF/gemma-servlet.xml",
-        "classpath*:ubic/gemma/applicationContext-validation.xml" }, inheritLocations = true)
+@ContextConfiguration(loader = WebContextLoader.class, locations = { "classpath*:WEB-INF/gemma-servlet.xml" }, inheritLocations = true)
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     protected static final int MAIL_PORT = 2525;

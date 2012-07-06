@@ -37,18 +37,18 @@ public class MultipleCoexpressionTypeValueObject {
     public static final String GENE_IMPL = "GeneImpl";
     private Map<Long, ExpressionExperimentValueObject> expressionExperiments;
 
-    private Map<Gene, CommonCoexpressionValueObject> geneToQueries;
+    private Map<Long, CommonCoexpressionValueObject> geneToQueries;
     private Map<Long, Gene> geneLookup;
 
     public MultipleCoexpressionTypeValueObject() {
 
-        geneToQueries = Collections.synchronizedMap( new HashMap<Gene, CommonCoexpressionValueObject>() );
+        geneToQueries = Collections.synchronizedMap( new HashMap<Long, CommonCoexpressionValueObject>() );
         geneLookup = Collections.synchronizedMap( new HashMap<Long, Gene>() );
 
         expressionExperiments = Collections.synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
     }
 
-    public void addCoexpressionCollection( Gene queryGene, CoexpressedGenesDetails coexpressionType ) {
+    public void addCoexpressionCollection( Long queryGene, CoexpressedGenesDetails coexpressionType ) {
         synchronized ( this ) {
             for ( CoexpressionValueObject coexpressed : coexpressionType.getCoexpressionData( 0 ) ) {
                 getQueriesForGene( getGene( coexpressed ) ).add(
@@ -123,10 +123,10 @@ public class MultipleCoexpressionTypeValueObject {
      */
     public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
         synchronized ( this ) {
-            CommonCoexpressionValueObject queries = geneToQueries.get( gene );
+            CommonCoexpressionValueObject queries = geneToQueries.get( gene.getId() );
             if ( queries == null ) {
                 queries = new CommonCoexpressionValueObject( gene );
-                geneToQueries.put( gene, queries );
+                geneToQueries.put( gene.getId(), queries );
             }
             return queries;
         }

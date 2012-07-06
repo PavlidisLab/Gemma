@@ -82,9 +82,16 @@ public class GeoBrowser {
             throw new RuntimeException( "Invalid URL " + url, e );
         }
 
-        URLConnection conn = url.openConnection();
-        conn.connect();
-        InputStream is = conn.getInputStream();
+        InputStream is = null;
+
+        try {
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            is = conn.getInputStream();
+        } catch ( IOException e ) {
+            log.error( e, e );
+            throw e;
+        }
 
         // We are getting a tab delimited file.
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );

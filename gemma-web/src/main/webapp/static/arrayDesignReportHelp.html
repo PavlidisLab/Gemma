@@ -1,64 +1,41 @@
 <html>
 
 
-	<head>
-		<title>Platform / Array Design Report Help</title>
-	</head>
-	<body>
+<head>
+<title>Platform / Array Design Report Help</title>
+</head>
+<body>
 
-		<p>
-			The platform/array design page shows a summary of our gene assignment analysis for the 
-			current platform. This summary is broken down into categories described below.
-		</p>
-		<p>
-			A "probe" refers to a feature or a set of features on the array that form the primary analytical unit
-			and may in fact be made up of a set of probes (e.g. Affymetrix arrays). 
-		</p>
-		<p>
-			A "gene" can be a known gene, a predicted gene, or a potential gene represented only by an alignment 
-			(a "probe-aligned region" or PAR). A PAR is only assigned to a probe if it does not map to a known
-			or predicted gene.
-		</p>
-		
-		<ul>
-			<li>
-				<p>
-				Probes with sequences:
-				</p>
-				<p>
-				The number of probes that have a provided sequence. For some platforms, sequences are missing
-				for some or all of its probes. Probes without sequences are excluded from further analysis.
-				</p>
-			</li>
-			<li>
-				<p>
-				Probes with genome alignments:
-				</p>
-				<p>
-				The number of probes whose sequences provide an alignment to the genome. Some probe-genome alignments do not
-				necessarily meet stringency requirements and are not included in the database.
-				</p>
-			</li>
-			<li>
-				<p>
-				Probes mapping to genes:
-				</p>
-				<p>
-				Of probes with alignments, how many are mapped to known genes, predicted genes, and probe-aligned regions
-				(a breakdown is provided). The details of the criteria used for determining if an alignment corresponds to 
-				a gene (or predicted gene, or a PAR) will be documented elsewhere.
-				</p>
-			</li>
-			<li>
-				<p> 
-				Unique genes represented
-				</p>
-				<p>
-				The number of distinct known genes, predicted genes, and probea-aligned regions represented in the array.
-				This number can be higher or lower than the number of probes mapping because some probes can map to 
-				multiple genes, and some genes have more than one probe mapping.
-				</p>
-			</li>
-		</ul>
-	</body>
+	<p>The platform/array design page shows a summary of our gene assignment analysis for the current platform. This
+		summary is broken down into categories described below.</p>
+	<p>A "probe" refers to a feature or a set of features on the array that form the primary analytical unit and may in
+		fact be made up of a set of probes (e.g. Affymetrix arrays).</p>
+	<p>A "gene" can be a known gene, a predicted gene, or a potential gene represented only by an alignment (a
+		"probe-aligned region" or PAR). A PAR is only assigned to a probe if it does not map to a known or predicted gene.</p>
+
+	<ul>
+		<li>
+			<p>Probes with sequences:</p>
+			<p>The number of probes that have a provided sequence. For some platforms, sequences are missing for some or all
+				of its probes. Probes without sequences are excluded from further analysis.</p>
+		</li>
+		<li>
+			<p>Probes with genome alignments:</p>
+			<p>The number of probes whose sequences provide an alignment to the genome. Some probe-genome alignments do not
+				necessarily meet stringency requirements and are not included in the database.</p>
+		</li>
+		<li>
+			<p>Probes mapping to genes:</p>
+			<p>Of probes with alignments, how many are mapped to known genes, predicted genes, and probe-aligned regions (a
+				breakdown is provided). The details of the criteria used for determining if an alignment corresponds to a gene (or
+				predicted gene, or a PAR) will be documented elsewhere.</p>
+		</li>
+		<li>
+			<p>Unique genes represented</p>
+			<p>The number of distinct known genes, predicted genes, and probea-aligned regions represented in the array. This
+				number can be higher or lower than the number of probes mapping because some probes can map to multiple genes, and
+				some genes have more than one probe mapping.</p>
+		</li>
+	</ul>
+</body>
 </html>

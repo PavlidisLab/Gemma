@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,7 +26,6 @@ import java.util.Map;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  * @author lukem
  */
-public class BioMaterialValueObject {
+public class BioMaterialValueObject implements Serializable {
 
     private long id;
     private String name;

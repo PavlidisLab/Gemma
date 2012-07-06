@@ -215,7 +215,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         log.info( "Initializing gene link analysis ... " );
 
         Taxon taxon = toUseGenes.iterator().next().getTaxon(); // assume it is same for all genes ...
-        Collection<GeneCoexpressionAnalysis> oldAnalyses = findExistingAnalysis( taxon );
+        Collection<GeneCoexpressionAnalysis> oldAnalyses = null;
+        if ( useDB ) {
+            oldAnalyses = findExistingAnalysis( taxon );
+        }
 
         GeneCoexpressionAnalysis analysis = null;
         if ( useDB ) {
@@ -229,7 +232,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         doAnalysis( expressionExperiments, toUseGenes, stringency, analysis );
 
         if ( useDB ) {
-
             // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
             // definitely have a problem. Ideally there would be a transaction here...but it would be far too large.
             disableOldAnalyses( oldAnalyses );
@@ -896,9 +898,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         // persist it or write out
 
         StopWatch timer = new StopWatch();
+        timer.start();
         int usedLinks = 0;
         if ( analysis != null ) {
-            timer.start();
+
             List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions, analysis,
                     genesToAnalyzeMap, processedGenes, stringency );
             usedLinks = created.size();
@@ -919,7 +922,9 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 usedLinks++;
                 System.out.println( format( co ) );
             }
-            if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
+            if ( usedLinks > 0 )
+                log.info( usedLinks + " links printed for " + queryGene.getOfficialSymbol() + " (" + timer.getTime()
+                        + "ms)" );
         }
 
         computeNodeDegree( queryGene, usedLinks, expressionExperiments );

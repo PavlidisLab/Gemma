@@ -175,7 +175,6 @@ public class SpringContextUtil {
         try {
             if ( isWebapp ) {
                 paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/gemma-servlet.xml" );
-                paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
             }
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );

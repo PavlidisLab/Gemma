@@ -139,6 +139,10 @@ BioAssayController._path = '/Gemma/dwr';
 BioAssayController.markOutlier = function(p0, callback) {
 	dwr.engine._execute(BioAssayController._path, 'BioAssayController', 'markOutlier', p0, callback);
 }
+BioAssayController.getBioAssays = function(p0, callback) {
+	dwr.engine._execute(BioAssayController._path, 'BioAssayController', 'getBioAssays', p0, callback);
+}
+
 // ====================================================================================
 if (BioMaterialController == null)
 	var BioMaterialController = {};
@@ -713,14 +717,17 @@ GenePickerController.getGeneSetByGOId = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGeneSetByGOId', p0, p1, callback);
 }
 // ====================================================================================
-if (GeoBrowserService == null)
-	var GeoBrowserService = {};
-GeoBrowserService._path = '/Gemma/dwr';
-GeoBrowserService.getDetails = function(p0, callback) {
-	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'getDetails', p0, callback);
+if (GeoRecordBrowserController == null)
+	var GeoRecordBrowserController = {};
+GeoRecordBrowserController._path = '/Gemma/dwr';
+GeoRecordBrowserController.browse = function(p0, p1, p2, callback) {
+	dwr.engine._execute(GeoRecordBrowserController._path, 'GeoRecordBrowserController', 'browse', p0, p1, p2, callback);
 }
-GeoBrowserService.toggleUsability = function(p0, callback) {
-	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'toggleUsability', p0, callback);
+GeoRecordBrowserController.getDetails = function(p0, callback) {
+	dwr.engine._execute(GeoRecordBrowserController._path, 'GeoRecordBrowserController', 'getDetails', p0, callback);
+}
+GeoRecordBrowserController.toggleUsability = function(p0, callback) {
+	dwr.engine._execute(GeoRecordBrowserController._path, 'GeoRecordBrowserController', 'toggleUsability', p0, callback);
 }
 // ====================================================================================
 if (SecurityController == null)

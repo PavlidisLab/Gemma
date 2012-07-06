@@ -26,9 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneImpl;
 
 /**
@@ -42,16 +40,23 @@ import ubic.gemma.model.genome.GeneImpl;
 public class CoexpressionCollectionValueObject {
     public static final String GENE_IMPL = GeneImpl.class.getSimpleName();
 
+    @Override
+    public void finalize() {
+        this.eesQueryTestedIn.clear();
+        this.queryProbes.clear();
+        geneCoexpressionData.finalize();
+    }
+
     private double postProcessSeconds;
     private double dbQuerySeconds;
 
-    private Collection<BioAssaySet> eesQueryTestedIn;
+    private Collection<Long> eesQueryTestedIn;
 
     private String errorState;
 
-    private CoexpressedGenesDetails GeneCoexpressionData;
+    private CoexpressedGenesDetails geneCoexpressionData;
 
-    private Gene queryGene;
+    private Long queryGene;
     private int queryGeneGoTermCount;
 
     /**
@@ -64,16 +69,16 @@ public class CoexpressionCollectionValueObject {
     /**
      * 
      */
-    public CoexpressionCollectionValueObject( Gene queryGene, int supportThreshold ) {
+    public CoexpressionCollectionValueObject( Long queryGene, int supportThreshold ) {
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
-        GeneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
+        geneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
         queryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
-        this.eesQueryTestedIn = new HashSet<BioAssaySet>();
+        this.eesQueryTestedIn = new HashSet<Long>();
     }
 
     public void add( CoexpressionValueObject vo ) {
-        this.GeneCoexpressionData.add( vo );
+        this.geneCoexpressionData.add( vo );
     }
 
     /**
@@ -84,7 +89,7 @@ public class CoexpressionCollectionValueObject {
         /*
          * Maintain a list of which expression experiments participate in which type of coexpression
          */
-        this.GeneCoexpressionData.addExpressionExperiment( eevo );
+        this.geneCoexpressionData.addExpressionExperiment( eevo );
     }
 
     /**
@@ -92,7 +97,7 @@ public class CoexpressionCollectionValueObject {
      * @return
      */
     public boolean contains( Long coexpressedGeneId ) {
-        return GeneCoexpressionData.containsKey( coexpressedGeneId );
+        return geneCoexpressionData.containsKey( coexpressedGeneId );
     }
 
     /**
@@ -104,8 +109,8 @@ public class CoexpressionCollectionValueObject {
 
         CoexpressionValueObject result = null;
 
-        if ( GeneCoexpressionData.containsKey( coexpressedGeneId ) ) {
-            result = GeneCoexpressionData.get( coexpressedGeneId );
+        if ( geneCoexpressionData.containsKey( coexpressedGeneId ) ) {
+            result = geneCoexpressionData.get( coexpressedGeneId );
         }
 
         return result;
@@ -118,7 +123,7 @@ public class CoexpressionCollectionValueObject {
      */
     public List<CoexpressionValueObject> getAllGeneCoexpressionData( int stringency ) {
         List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
-        result.addAll( this.GeneCoexpressionData.getCoexpressionData( stringency ) );
+        result.addAll( this.geneCoexpressionData.getCoexpressionData( stringency ) );
         Collections.sort( result );
         return result;
     }
@@ -135,7 +140,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return
      */
-    public Collection<BioAssaySet> getEesQueryTestedIn() {
+    public Collection<Long> getEesQueryTestedIn() {
         return eesQueryTestedIn;
     }
 
@@ -147,7 +152,7 @@ public class CoexpressionCollectionValueObject {
      * Only searches the given geneType for the specified EE. if not found return null.
      */
     public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-        return GeneCoexpressionData.getExpressionExperiment( eeID );
+        return geneCoexpressionData.getExpressionExperiment( eeID );
     }
 
     /**
@@ -155,7 +160,7 @@ public class CoexpressionCollectionValueObject {
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         Collection<ExpressionExperimentValueObject> all = new HashSet<ExpressionExperimentValueObject>();
-        all.addAll( this.GeneCoexpressionData.getExpressionExperiments() );
+        all.addAll( this.geneCoexpressionData.getExpressionExperiments() );
         return all;
 
     }
@@ -164,7 +169,7 @@ public class CoexpressionCollectionValueObject {
      * @return the CoexpressedGenesDetails for standard genes
      */
     public CoexpressedGenesDetails getGeneCoexpression() {
-        return this.GeneCoexpressionData;
+        return this.geneCoexpressionData;
     }
 
     /**
@@ -172,21 +177,21 @@ public class CoexpressionCollectionValueObject {
      */
     @SuppressWarnings("hiding")
     public List<CoexpressionValueObject> getGeneCoexpressionData( int supportThreshold ) {
-        return this.GeneCoexpressionData.getCoexpressionData( supportThreshold );
+        return this.geneCoexpressionData.getCoexpressionData( supportThreshold );
     }
 
     /**
      * @return the number of Genes coexpressed with the query
      */
     public int getNumGenes() {
-        return this.GeneCoexpressionData.getNumberOfGenes();
+        return this.geneCoexpressionData.getNumberOfGenes();
     }
 
     /**
      * @return the numStringencyGenes - for genes.
      */
     public int getNumStringencyGenes() {
-        return this.GeneCoexpressionData.getNumberOfGenes();
+        return this.geneCoexpressionData.getNumberOfGenes();
     }
 
     public double getPostProcessSeconds() {
@@ -196,7 +201,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the queryGene
      */
-    public Gene getQueryGene() {
+    public Long getQueryGene() {
         return queryGene;
     }
 
@@ -267,7 +272,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @param eesQueryTestedIn
      */
-    public void setEesQueryGeneTestedIn( Collection<BioAssaySet> eesQueryTestedIn ) {
+    public void setEesQueryGeneTestedIn( Collection<Long> eesQueryTestedIn ) {
         this.eesQueryTestedIn = eesQueryTestedIn;
     }
 
@@ -322,10 +327,10 @@ public class CoexpressionCollectionValueObject {
                  * If the probe maps to just one gene, then we're okay. Note that this check is a little paranoid: if
                  * there is only one gene, then it had better be the query gene!
                  */
-                if ( genes.size() == 1 && genes.iterator().next().equals( queryGene.getId() ) ) {
+                if ( genes.size() == 1 && genes.iterator().next().equals( queryGene ) ) {
 
-                    if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.GeneCoexpressionData.getExpressionExperiment( eeID )
+                    if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.geneCoexpressionData.getExpressionExperiment( eeID )
                                 .setHasProbeSpecificForQueryGene( true );
 
                 }
@@ -341,13 +346,13 @@ public class CoexpressionCollectionValueObject {
     }
 
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.GeneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
+        if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.geneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
     }
 
     private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.GeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.GeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+        if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.geneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
 
     }
 

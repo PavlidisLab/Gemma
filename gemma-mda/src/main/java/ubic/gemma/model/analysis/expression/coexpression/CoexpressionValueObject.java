@@ -46,6 +46,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     private static Log log = LogFactory.getLog( CoexpressionValueObject.class.getName() );
 
+    @Override
+    public void finalize() {
+        this.expressionExperimentValueObjects.clear();
+        this.datasetsTestedIn.clear();
+        this.crossHybridizingGenes.clear();
+        this.datasetsTestedInBytes = null;
+    }
+
     /**
      * Genes that were predicted to cross-hybridize with the target gene
      */

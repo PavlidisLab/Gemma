@@ -28,13 +28,13 @@ import ubic.gemma.model.genome.Gene;
 public class MultipleCoexpressionCollectionValueObject {
 
     private int minimumCommonQueryGenes;
-    private Collection<Gene> queryGenes;
+    private Collection<Long> queryGenes;
     private MultipleCoexpressionTypeValueObject geneCoexpressionData;
     private double elapsedWallSeconds;
 
     public MultipleCoexpressionCollectionValueObject() {
         minimumCommonQueryGenes = 2;
-        queryGenes = Collections.synchronizedCollection( new ArrayList<Gene>() );
+        queryGenes = Collections.synchronizedCollection( new ArrayList<Long>() );
         geneCoexpressionData = new MultipleCoexpressionTypeValueObject();
     }
 
@@ -95,7 +95,7 @@ public class MultipleCoexpressionCollectionValueObject {
     /**
      * @return the query genes
      */
-    public Collection<Gene> getQueryGenes() {
+    public Collection<Long> getQueryGenes() {
         // return queries.keySet();
         return queryGenes;
     }

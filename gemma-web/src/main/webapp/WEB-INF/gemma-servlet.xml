@@ -4,14 +4,14 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
-
+	
 	xsi:schemaLocation="http://www.springframework.org/schema/beans 
-        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-        http://www.springframework.org/schema/context 
-        http://www.springframework.org/schema/context/spring-context-3.0.xsd 
-        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
-		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
-		http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
 
 	<context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.util.BeanNameGenerator" />
 
@@ -53,7 +53,6 @@
 				<prop key="/checkJobProgress.html">taskCompletionController</prop>
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
 				<prop key="/gene/*">geneController</prop>
-				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 				<prop key="/blatTrack.html">blatResultTrackController</prop>
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
@@ -80,6 +79,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/geoRecordBrowser.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/contactUs.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/analysesResultsSearch.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
@@ -180,10 +180,7 @@
 		</property>
 		<property name="persisterHelper">
 			<ref bean="persisterHelper" />
-		</property>
-		<property name="validator">
-			<ref bean="expressionExperimentValidator" />
-		</property>
+		</property> 
 		<property name="quantitationTypeService">
 			<ref bean="quantitationTypeService" />
 		</property>
@@ -196,8 +193,7 @@
 		</bean> -->
 	<bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer" />
 
-	<bean id="arrayDesignSequenceAddValidator" class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
-
+ 
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 
 		<property name="commandName">
@@ -217,51 +213,8 @@
 			<ref bean="arrayDesignService" />
 		</property>
 	</bean>
-
-	<!-- ==================================================== -->
-	<!-- Validation settings. The validator factory is defined in applicationContext-validation.xml -->
-	<!-- ==================================================== -->
-	<!-- Use this if the command class is a command object that has Xdoclet validation tags in the source. -->
-	<bean id="genericBeanValidator" class="org.springmodules.validation.commons.DefaultBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-	</bean>
-
-	<!-- Use this type of validator if you use a data model object as the command object . Each of these corresonds to a form 
-		declared in validation-global.xml (which gets merged into validation.xml) -->
-	<!-- FIXME these aren't used much, we need to update our validation setup -->
-	<bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>user</value>
-		</property>
-	</bean>
-
-	<bean id="simpleExpressionExperimentLoadValidator" class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
-
-
-	<bean id="databaseEntryValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>databaseEntry</value>
-		</property>
-	</bean>
-
-	<bean id="fileUploadValidator" class="ubic.gemma.web.validation.auditAndSecurity.FileUploadValidator" />
-
-	<bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>expressionExperiment</value>
-		</property>
-	</bean>
+ 
+  
 
 	<!-- ============================================ -->
 	<!-- DWR CONFIGURATION -->
@@ -451,6 +404,7 @@
 	<bean id="bioAssayController" class="ubic.gemma.web.controller.expression.bioAssay.BioAssayController">
 		<dwr:remote javascript="BioAssayController">
 			<dwr:include method="markOutlier" />
+			<dwr:include method="getBioAssays" />
 		</dwr:remote>
 	</bean>
 
@@ -642,13 +596,14 @@
 			<dwr:include method="addAuditEvent" />
 		</dwr:remote>
 	</bean>
-
-	<bean id="geoBrowserService" class="ubic.gemma.loader.expression.geo.service.GeoBrowserServiceImpl">
-		<dwr:remote javascript="GeoBrowserService">
+	
+	<bean id="geoBrowserController" class="ubic.gemma.web.controller.expression.experiment.GeoRecordBrowserController">
+		<dwr:remote javascript="GeoRecordBrowserController">
+			<dwr:include method="browse" />
 			<dwr:include method="getDetails" />
 			<dwr:include method="toggleUsability" />
 		</dwr:remote>
-	</bean>
+	</bean> 
 
 	<bean id="dEDVController" class="ubic.gemma.web.controller.expression.experiment.DEDVController">
 		<dwr:remote javascript="DEDVController">
@@ -665,15 +620,15 @@
 	</bean>
 
 	<bean id="systemMonitorController" class="ubic.gemma.web.controller.monitoring.SystemMonitorController">
-    	<dwr:remote javascript="SystemMonitorController">
-      		<dwr:include method="getHibernateStatus" />   
-      		<dwr:include method="getCacheStatus" />   
-      		<dwr:include method="getSpaceStatus" />   
-      		<dwr:include method="clearCache" />   
-      		<dwr:include method="clearAllCaches" />   
-      		<dwr:include method="resetHibernateStatus" />   
-      		<dwr:include method="enableStatistics" />
-      		<dwr:include method="disableStatistics" />
+		<dwr:remote javascript="SystemMonitorController">
+			<dwr:include method="getHibernateStatus" />   
+			<dwr:include method="getCacheStatus" />   
+			<dwr:include method="getSpaceStatus" />   
+			<dwr:include method="clearCache" />   
+			<dwr:include method="clearAllCaches" />   
+			<dwr:include method="resetHibernateStatus" />   
+			<dwr:include method="enableStatistics" />
+			<dwr:include method="disableStatistics" />
 		</dwr:remote>
 	</bean>
 
@@ -803,6 +758,12 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
+		
+		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoRecord" >
+			<dwr:exclude method="getContact"/>
+		</dwr:convert>
+		<!-- don't really need this, but can't seem to get rid off warnings -->
+		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoContact"  />
 
 		<dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />
 
@@ -833,6 +794,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterialValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.bioAssay.BioAssayValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.job.progress.ProgressData" />
@@ -860,7 +822,7 @@
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
 		
-			<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand">
+		<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand">
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
 
