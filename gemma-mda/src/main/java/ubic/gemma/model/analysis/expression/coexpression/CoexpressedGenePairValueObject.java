@@ -40,9 +40,9 @@ import ubic.basecode.ontology.model.OntologyTerm;
  * @author klc
  * @version $Id$
  */
-public class CoexpressionValueObject implements Comparable<CoexpressionValueObject> {
+public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGenePairValueObject> {
 
-    private static Log log = LogFactory.getLog( CoexpressionValueObject.class.getName() );
+    private static Log log = LogFactory.getLog( CoexpressedGenePairValueObject.class.getName() );
 
     @Override
     public void finalize() {
@@ -50,6 +50,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.datasetsTestedIn.clear();
         this.crossHybridizingGenes.clear();
         this.datasetsTestedInBytes = null;
+        this.negPvalues.clear();
+        this.negativeScores.clear();
+        this.positiveScores.clear();
+        this.posPvalues.clear();
     }
 
     /**
@@ -57,9 +61,15 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
 
+    /**
+     * Datasets in which this link was tested.
+     */
     private Collection<Long> datasetsTestedIn = new HashSet<Long>();
-    // the expression experiments that this coexpression was involved in. The number of these will total the 'support'
-    // (pos+neg correlations, minus # of experiments that support both + and -)
+
+    /**
+     * the expression experiments that this coexpression was involved in. The number of these will total the 'support'
+     * (pos+neg correlations, minus # of experiments that support both + and -)
+     */
     private Collection<Long> datasetsSupporting;
 
     private byte[] datasetsTestedInBytes = null;
@@ -78,11 +88,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * Official symbol of the coexpressed gene
      */
     private String geneOfficialName;
-
-    /**
-     * Gene type fo the coexpressed gene
-     */
-    private String geneType = null;
 
     /**
      * Number of GO terms this gene shares with the query gene.
@@ -145,7 +150,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     private String abaGeneUrl;
 
-    public CoexpressionValueObject() {
+    public CoexpressedGenePairValueObject() {
         geneName = "";
         geneId = null;
         geneOfficialName = null;
@@ -223,7 +228,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     @Override
-    public int compareTo( CoexpressionValueObject o ) {
+    public int compareTo( CoexpressedGenePairValueObject o ) {
         int o1Size = this.getMaxLinkCount();
         int o2Size = o.getMaxLinkCount();
         if ( o1Size > o2Size ) {
@@ -268,7 +273,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         if ( this == obj ) return true;
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
-        CoexpressionValueObject other = ( CoexpressionValueObject ) obj;
+        CoexpressedGenePairValueObject other = ( CoexpressedGenePairValueObject ) obj;
         if ( geneId == null ) {
             if ( other.geneId != null ) return false;
         } else if ( !geneId.equals( other.geneId ) ) return false;
@@ -347,13 +352,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     public String getGeneOfficialName() {
         return geneOfficialName;
-    }
-
-    /**
-     * @return the geneType (known gene, predicted, or probe-aligned region) of the coexpressed gene
-     */
-    public String getGeneType() {
-        return geneType;
     }
 
     /**
@@ -667,13 +665,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     public void setGeneOfficialName( String geneOfficialName ) {
         this.geneOfficialName = geneOfficialName;
-    }
-
-    /**
-     * @param geneType the geneType to set
-     */
-    public void setGeneType( String geneType ) {
-        this.geneType = geneType;
     }
 
     /**

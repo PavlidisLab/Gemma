@@ -17,7 +17,7 @@ package ubic.gemma.analysis.expression.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 
@@ -34,10 +34,10 @@ public interface ProbeLinkCoexpressionAnalyzer {
      *        be silently used.
      * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
-     * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
+     * @see ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
-    public abstract Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
+    public abstract Map<Gene, QueryGeneCoexpression> linkAnalysis( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, int stringency, boolean interGenesOnly, int limit );
 
     /**
@@ -47,10 +47,10 @@ public interface ProbeLinkCoexpressionAnalyzer {
      *        will be silently used.
      * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
-     * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
+     * @see ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
-    public abstract CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
+    public abstract QueryGeneCoexpression linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
             int inputStringency, int limit );
 
 }

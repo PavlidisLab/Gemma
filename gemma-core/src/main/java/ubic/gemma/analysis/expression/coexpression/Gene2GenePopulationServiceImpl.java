@@ -49,8 +49,8 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
@@ -672,7 +672,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param co
      * @return
      */
-    private String format( CoexpressionValueObject co ) {
+    private String format( CoexpressedGenePairValueObject co ) {
         StringBuilder buf = new StringBuilder();
 
         buf.append( co.getQueryGene() + "\t" );
@@ -748,7 +748,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return
      */
     private List<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
-            CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
+            QueryGeneCoexpression toPersist, GeneCoexpressionAnalysis analysis,
             final Map<Long, Gene> genesToAnalyze, final Collection<Long> alreadyPersisted, int stringency ) {
 
         assert analysis != null;
@@ -758,7 +758,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         List<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
 
-        for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {
+        for ( CoexpressedGenePairValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {
 
             if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
                 if ( log.isDebugEnabled() )
@@ -879,7 +879,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Map<Long, Integer> eeIdOrder,
             Collection<Long> processedGenes, int stringency, Gene queryGene ) {
         // Do it
-        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
+        QueryGeneCoexpression coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
                 expressionExperiments, stringency, 0 );
 
         // persist it or write out
@@ -897,8 +897,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 log.info( "Persist " + usedLinks + " links: " + timer.getTime() + "ms" );
             }
         } else {
-            List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-            for ( CoexpressionValueObject co : coexps ) {
+            List<CoexpressedGenePairValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+            for ( CoexpressedGenePairValueObject co : coexps ) {
                 if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
                     continue;
                 }

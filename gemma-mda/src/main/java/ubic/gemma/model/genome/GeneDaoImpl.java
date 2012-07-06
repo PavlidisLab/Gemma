@@ -50,9 +50,9 @@ import org.springframework.stereotype.Repository;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -702,18 +702,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * java.lang.Integer, boolean)
      */
     @Override
-    protected Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( final Collection<Gene> genes,
+    protected Map<Gene, QueryGeneCoexpression> handleGetCoexpressedGenes( final Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) {
 
         if ( genes.size() == 0 || ees.size() == 0 ) {
             throw new IllegalArgumentException( "nothing to search" );
         }
 
-        final Map<Gene, CoexpressionCollectionValueObject> coexpressions = new HashMap<Gene, CoexpressionCollectionValueObject>();
+        final Map<Gene, QueryGeneCoexpression> coexpressions = new HashMap<Gene, QueryGeneCoexpression>();
 
         if ( genes.size() == 1 ) {
             Gene soleQueryGene = genes.iterator().next();
-            CoexpressionCollectionValueObject coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees,
+            QueryGeneCoexpression coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees,
                     stringency );
             coexpressions.put( soleQueryGene, coexpressedGenes );
             return coexpressions;
@@ -722,7 +722,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Map<Long, Gene> queryGenes = new HashMap<Long, Gene>();
         for ( Gene g : genes ) {
             queryGenes.put( g.getId(), g );
-            coexpressions.put( g, new CoexpressionCollectionValueObject( g.getId(), stringency ) );
+            coexpressions.put( g, new QueryGeneCoexpression( g.getId(), stringency ) );
         }
 
         /*
@@ -752,7 +752,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     + "ms;\n Query was: " + queryObject.getQueryString() );
         }
 
-        for ( CoexpressionCollectionValueObject coexp : coexpressions.values() ) {
+        for ( QueryGeneCoexpression coexp : coexpressions.values() ) {
             postProcessSpecificity( coexp );
         }
 
@@ -771,14 +771,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      *         data needed for web display.
      */
     @Override
-    protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( final Gene gene,
+    protected QueryGeneCoexpression handleGetCoexpressedGenes( final Gene gene,
             Collection<? extends BioAssaySet> ees, Integer stringency ) {
 
         log.debug( "Gene: " + gene.getName() );
 
         final String p2pClassName = getP2PClassName( gene );
 
-        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene.getId(),
+        final QueryGeneCoexpression coexpressions = new QueryGeneCoexpression( gene.getId(),
                 stringency );
 
         if ( ees.size() == 0 ) {
@@ -1104,7 +1104,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Generically add a coexpression record to the results set.
+     * Generically add a coexpression record to the results set. This means the evidence for coexpression between a pair
+     * of genes, based on a pair of probes, in a single experiment.
      * 
      * @param coexpressions
      * @param eeID
@@ -1116,15 +1117,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param geneType
      * @param coexpressedProbe
      */
-    private void addResult( CoexpressionCollectionValueObject coexpressions, Long eeID, Gene queryGene,
+    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Gene queryGene,
             Long queryProbe, Double pvalue, Double score, Long coexpressedGene, Long coexpressedProbe ) {
-        CoexpressionValueObject coExVO;
+        CoexpressedGenePairValueObject coExVO;
 
         // add the gene (if not already seen)
         if ( coexpressions.contains( coexpressedGene ) ) {
             coExVO = coexpressions.get( coexpressedGene );
         } else {
-            coExVO = new CoexpressionValueObject();
+            coExVO = new CoexpressedGenePairValueObject();
             coExVO.setQueryGene( queryGene.getId() );
             coExVO.setGeneId( coexpressedGene );
             coexpressions.add( coExVO );
@@ -1387,7 +1388,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      * @param cachedResults
      */
-    private void mergeCachedCoexpressionResults( CoexpressionCollectionValueObject coexpressions,
+    private void mergeCachedCoexpressionResults( QueryGeneCoexpression coexpressions,
             Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults ) {
         for ( Long eeid : cachedResults.keySet() ) {
             Collection<CoexpressionCacheValueObject> cache = cachedResults.get( eeid );
@@ -1414,12 +1415,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      *        Performance notes: Empirically this rarely takes very long, definitely less than 1s in vast majority of
      *        cases. I changed the logging to trigger at 250ms get a bit better resolution - PP feb 2010
      */
-    private void postProcess( CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcess( QueryGeneCoexpression coexpressions ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        CoexpressedGenesDetails geneCoexpression = coexpressions.getGeneCoexpression();
+        QueryGeneCoexpressionsDetails geneCoexpression = coexpressions.getGeneCoexpression();
         geneCoexpression.postProcess();
         watch.stop();
         Long elapsed = watch.getTime();
@@ -1435,7 +1436,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @param coexpressions
      */
-    private void postProcessSpecificity( final CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcessSpecificity( final QueryGeneCoexpression coexpressions ) {
         // fill in information about the query gene
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1462,7 +1463,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param geneMap
      * @param queryObject
      */
-    private void processCoexpQuery( Gene queryGene, Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
+    private void processCoexpQuery( Gene queryGene, Query queryObject, QueryGeneCoexpression coexpressions ) {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( scroll.next() ) {
             processCoexpQueryResult( queryGene, scroll, coexpressions );
@@ -1476,7 +1477,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     private void processCoexpQuery( Map<Long, Gene> queryGenes, Query queryObject,
-            Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
+            Map<Gene, QueryGeneCoexpression> coexpressions ) {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( scroll.next() ) {
             processCoexpQueryResult( queryGenes, scroll, coexpressions );
@@ -1494,7 +1495,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @see getFastNativeQueryString for the parameterization of the query output.
      */
     private void processCoexpQueryResult( Gene queryGene, ScrollableResults resultSet,
-            CoexpressionCollectionValueObject coexpressions ) {
+            QueryGeneCoexpression coexpressions ) {
 
         Long coexpressedGene = resultSet.getLong( 0 );
 
@@ -1534,7 +1535,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     private void processCoexpQueryResult( Map<Long, Gene> queryGenes, ScrollableResults resultSet,
-            Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
+            Map<Gene, QueryGeneCoexpression> coexpressions ) {
 
         Long coexpressedGene = resultSet.getLong( 0 );
         Long eeID = resultSet.getLong( 1 );
@@ -1551,7 +1552,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         Gene queryGene = queryGenes.get( queryGeneId );
         assert queryGene != null : queryGeneId + " did not match given queries";
-        CoexpressionCollectionValueObject ccvo = coexpressions.get( queryGene );
+        QueryGeneCoexpression ccvo = coexpressions.get( queryGene );
         assert ccvo != null;
         addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
 

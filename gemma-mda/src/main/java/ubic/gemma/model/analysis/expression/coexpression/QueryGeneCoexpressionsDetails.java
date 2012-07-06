@@ -43,13 +43,13 @@ import org.apache.commons.logging.LogFactory;
  * @author klc
  * @version $Id$
  */
-public class CoexpressedGenesDetails {
+public class QueryGeneCoexpressionsDetails {
 
-    private static Log log = LogFactory.getLog( CoexpressedGenesDetails.class.getName() );
+    private static Log log = LogFactory.getLog( QueryGeneCoexpressionsDetails.class.getName() );
     /**
      * Details for each gene. Map of gene id to vos.
      */
-    private Map<Long, CoexpressionValueObject> coexpressionData;
+    private Map<Long, CoexpressedGenePairValueObject> coexpressionData;
 
     /**
      * Map of EE -> Probes -> Genes for the coexpressed genes.
@@ -66,14 +66,23 @@ public class CoexpressedGenesDetails {
      */
     private Map<Long, Integer> expressionExperiments;
 
+    /**
+     * Includes links that did not meet the threshold
+     */
     private Map<Long, Integer> expressionExperimentsRawLinkCounts;
 
+    /**
+     * 
+     */
     private Map<Long, Boolean> expressionExperimentHasSpecificProbeForQueryGene;
 
+    /**
+     * Number of links that passed the stringency requirements, with negative correlations
+     */
     private int negativeStringencyLinkCount;
 
     /**
-     * Number of links that passed the stringency requirements
+     * Number of links that passed the stringency requirements, with positive correlations
      */
     private int positiveStringencyLinkCount;
 
@@ -103,14 +112,14 @@ public class CoexpressedGenesDetails {
         this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
         this.expressionExperimentProbe2GeneMaps.clear();
         this.coexpressionData.clear();
-
+        this.expressionExperimentHasSpecificProbeForQueryGene.clear();
     }
 
     /**
      * @param queryGene
      * @param supportThreshold
      */
-    public CoexpressedGenesDetails( Long queryGene, int supportThreshold ) {
+    public QueryGeneCoexpressionsDetails( Long queryGene, int supportThreshold ) {
 
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
@@ -118,7 +127,7 @@ public class CoexpressedGenesDetails {
         positiveStringencyLinkCount = 0;
         negativeStringencyLinkCount = 0;
 
-        coexpressionData = new HashMap<Long, CoexpressionValueObject>();
+        coexpressionData = new HashMap<Long, CoexpressedGenePairValueObject>();
         expressionExperiments = new HashMap<Long, Integer>();
         expressionExperimentsRawLinkCounts = new HashMap<Long, Integer>();
         expressionExperimentProbe2GeneMaps = new HashMap<Long, Map<Long, Collection<Long>>>();
@@ -130,22 +139,12 @@ public class CoexpressedGenesDetails {
      * @param value
      * @return
      */
-    public CoexpressionValueObject add( CoexpressionValueObject value ) {
+    public CoexpressedGenePairValueObject add( CoexpressedGenePairValueObject value ) {
         if ( coexpressionData.containsKey( value.getGeneId() ) ) {
             // FIXME this seems like it would be an error.
             if ( log.isDebugEnabled() ) log.debug( "Clobbering when adding " + value );
         }
         return coexpressionData.put( value.getGeneId(), value );
-    }
-
-    /**
-     * Add an expression experiment to the list
-     * 
-     * @param vo
-     */
-    public void addExpressionExperiment( Long vo ) {
-
-        this.expressionExperiments.put( vo, 0 );
     }
 
     /**
@@ -158,6 +157,13 @@ public class CoexpressedGenesDetails {
         this.queryGeneExpressionExperimentProbe2GeneMaps.put( eeID, probe2geneMap );
     }
 
+    /**
+     * Populate information about probe -> gene relationships for a single probe, for the coexpressed (target) gene's
+     * probe.
+     * 
+     * @param eeID
+     * @param probe2geneMap
+     */
     public void addTargetSpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
         if ( !this.expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {
             this.expressionExperimentProbe2GeneMaps.put( eeID, new HashMap<Long, Collection<Long>>() );
@@ -183,9 +189,9 @@ public class CoexpressedGenesDetails {
         // we need to sort this map by the values.
         class Vk implements Comparable<Vk> {
             private Long i;
-            private CoexpressionValueObject v;
+            private CoexpressedGenePairValueObject v;
 
-            public Vk( Long i, CoexpressionValueObject v ) {
+            public Vk( Long i, CoexpressedGenePairValueObject v ) {
                 this.i = i;
                 this.v = v;
             }
@@ -229,7 +235,7 @@ public class CoexpressedGenesDetails {
                 return i;
             }
 
-            public CoexpressionValueObject getV() {
+            public CoexpressedGenePairValueObject getV() {
                 return v;
             }
         }
@@ -240,7 +246,7 @@ public class CoexpressedGenesDetails {
         int revisedNegLinks = 0;
 
         for ( Long l : coexpressionData.keySet() ) {
-            CoexpressionValueObject link = coexpressionData.get( l );
+            CoexpressedGenePairValueObject link = coexpressionData.get( l );
 
             vks.add( new Vk( l, link ) );
         }
@@ -278,7 +284,7 @@ public class CoexpressedGenesDetails {
      * @param geneId
      * @return
      */
-    public CoexpressionValueObject get( Long geneId ) {
+    public CoexpressedGenePairValueObject get( Long geneId ) {
         return this.coexpressionData.get( geneId );
     }
 
@@ -286,9 +292,9 @@ public class CoexpressedGenesDetails {
      * @param supportThreshold
      * @return the coexpressionData sorted in order of decreasing support.
      */
-    public List<CoexpressionValueObject> getCoexpressionData( int threshold ) {
-        List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
-        for ( CoexpressionValueObject o : coexpressionData.values() ) {
+    public List<CoexpressedGenePairValueObject> getCoexpressionData( int threshold ) {
+        List<CoexpressedGenePairValueObject> result = new ArrayList<CoexpressedGenePairValueObject>();
+        for ( CoexpressedGenePairValueObject o : coexpressionData.values() ) {
             if ( o.getNegativeLinkSupport() >= threshold || o.getPositiveLinkSupport() >= threshold ) {
                 result.add( o );
             }
@@ -434,12 +440,12 @@ public class CoexpressedGenesDetails {
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
 
-        Set<CoexpressionValueObject> toRemove = new HashSet<CoexpressionValueObject>();
+        Set<CoexpressedGenePairValueObject> toRemove = new HashSet<CoexpressedGenePairValueObject>();
 
         /*
          * Iterate over all the coexpression data (per target gene)
          */
-        coexp: for ( CoexpressionValueObject coExValObj : getCoexpressionData( 0 ) ) {
+        coexp: for ( CoexpressedGenePairValueObject coExValObj : getCoexpressionData( 0 ) ) {
 
             Map<Long, Collection<ProbePair>> links = coExValObj.getLinks();
 
@@ -453,7 +459,7 @@ public class CoexpressedGenesDetails {
             for ( Long eeID : coExValObj.getExpressionExperiments() ) {
 
                 /*
-                 * Fill in 'experiment has sepcific probes' information.
+                 * Fill in 'experiment has specific probes' information.
                  */
                 processLinksForSpecificity( coExValObj, links, eeID );
 
@@ -570,7 +576,7 @@ public class CoexpressedGenesDetails {
 
         }
 
-        for ( CoexpressionValueObject cvo : toRemove ) {
+        for ( CoexpressedGenePairValueObject cvo : toRemove ) {
             if ( log.isDebugEnabled() ) log.debug( "Removing gene: " + cvo.getGeneId() );
             this.coexpressionData.remove( cvo.getGeneId() );
         }
@@ -599,7 +605,7 @@ public class CoexpressedGenesDetails {
         StringBuilder buf = new StringBuilder();
         buf.append( this.coexpressionData.size() + " coexpressions with " + this.queryGene + ":\n" );
 
-        for ( CoexpressionValueObject cvo : this.coexpressionData.values() ) {
+        for ( CoexpressedGenePairValueObject cvo : this.coexpressionData.values() ) {
             buf.append( cvo.toString() + "\n-------------------\n" );
         }
         return buf.toString();
@@ -614,7 +620,7 @@ public class CoexpressedGenesDetails {
 
         for ( Long eeID : contributingEEs ) {
 
-            if ( expressionExperiments == null ) {
+            if ( !expressionExperiments.containsKey( eeID ) ) {
                 expressionExperiments.put( eeID, 1 );
             } else {
                 expressionExperiments.put( eeID, expressionExperiments.get( eeID ) + 1 );
@@ -632,7 +638,7 @@ public class CoexpressedGenesDetails {
     private void incrementRawEEContributions( Collection<Long> contributingEEs ) {
         for ( Long eeID : contributingEEs ) {
 
-            if ( expressionExperimentsRawLinkCounts.get( eeID ) == null ) {
+            if ( !expressionExperimentsRawLinkCounts.containsKey( eeID ) ) {
                 expressionExperimentsRawLinkCounts.put( eeID, 1 );
             } else {
                 expressionExperimentsRawLinkCounts.put( eeID, expressionExperimentsRawLinkCounts.get( eeID ) + 1 );
@@ -647,7 +653,7 @@ public class CoexpressedGenesDetails {
      * @param links
      * @param eeID
      */
-    private void processLinksForSpecificity( CoexpressionValueObject coExValObj,
+    private void processLinksForSpecificity( CoexpressedGenePairValueObject coExValObj,
             Map<Long, Collection<ProbePair>> links, Long eeID ) {
         Collection<ProbePair> rawLinks = links.get( eeID );
 

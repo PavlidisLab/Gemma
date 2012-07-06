@@ -23,7 +23,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -163,7 +163,7 @@ public interface GeneService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
+    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
 
     /**
@@ -177,7 +177,7 @@ public interface GeneService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public CoexpressionCollectionValueObject getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
+    public QueryGeneCoexpression getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
             Integer stringency );
 
     /**

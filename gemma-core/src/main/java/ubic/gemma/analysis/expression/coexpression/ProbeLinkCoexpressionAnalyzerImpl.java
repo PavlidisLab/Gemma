@@ -37,9 +37,9 @@ import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -116,13 +116,13 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * java.util.Collection, int, boolean, int)
      */
     @Override
-    public Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
+    public Map<Gene, QueryGeneCoexpression> linkAnalysis( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, int stringency, boolean interGenesOnly, int limit ) {
 
         /*
          * Start with raw results
          */
-        Map<Gene, CoexpressionCollectionValueObject> result = geneService.getCoexpressedGenes( genes, ees, stringency,
+        Map<Gene, QueryGeneCoexpression> result = geneService.getCoexpressedGenes( genes, ees, stringency,
                 interGenesOnly );
 
         /*
@@ -130,7 +130,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          */
         for ( Gene gene : genes ) {
 
-            CoexpressionCollectionValueObject coexpressions = result.get( gene );
+            QueryGeneCoexpression coexpressions = result.get( gene );
 
             /*
              * Identify data sets the query gene is expressed in - this is fast (?) and provides an upper bound for EEs
@@ -168,8 +168,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * .Gene, java.util.Collection, int, int)
      */
     @Override
-    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
-            int inputStringency, int limit ) {
+    public QueryGeneCoexpression linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees, int inputStringency,
+            int limit ) {
 
         int stringency = inputStringency <= 0 ? 1 : inputStringency;
 
@@ -183,7 +183,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 gene, ees, false );
 
         if ( eesQueryTestedIn.size() == 0 ) {
-            CoexpressionCollectionValueObject r = new CoexpressionCollectionValueObject( gene.getId(), stringency );
+            QueryGeneCoexpression r = new QueryGeneCoexpression( gene.getId(), stringency );
             r.setErrorState( "No experiments have coexpression data for  " + gene.getOfficialSymbol() );
             return r;
         }
@@ -192,8 +192,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          * Perform the coexpression search, some postprocessing done. If eesQueryTestedIn is empty, this returns real
          * quick.
          */
-        CoexpressionCollectionValueObject coexpressions = geneService.getCoexpressedGenes( gene, eesQueryTestedIn,
-                stringency );
+        QueryGeneCoexpression coexpressions = geneService.getCoexpressedGenes( gene, eesQueryTestedIn, stringency );
 
         /*
          * Finish the postprocessing.
@@ -296,11 +295,10 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      *        analyzing a single CoexpressionCollectionValueObject, but faster (and more memory-intensive) if many are
      *        going to be looked at (as in the case of a bulk Gene2Gene analysis).
      */
-    private void computeEesTestedIn( Collection<? extends BioAssaySet> ees,
-            CoexpressionCollectionValueObject coexpressions, Collection<? extends BioAssaySet> eesQueryTestedIn,
-            int stringency, int limit ) {
+    private void computeEesTestedIn( Collection<? extends BioAssaySet> ees, QueryGeneCoexpression coexpressions,
+            Collection<? extends BioAssaySet> eesQueryTestedIn, int stringency, int limit ) {
 
-        List<CoexpressionValueObject> coexpressionData = coexpressions.getGeneCoexpressionData( stringency );
+        List<CoexpressedGenePairValueObject> coexpressionData = coexpressions.getGeneCoexpressionData( stringency );
 
         if ( limit == 0 ) {
             // when we expect to be analyzing many query genes. Note that we pass in the full set of experiments, not
@@ -326,15 +324,15 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      *      done for many genes, so cache is built first time.
      */
     private void computeEesTestedIn( Collection<? extends BioAssaySet> eesQueryTestedIn,
-            List<CoexpressionValueObject> coexpressionData ) {
+            List<CoexpressedGenePairValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
         StopWatch timer = new StopWatch();
         timer.start();
         int i = 0;
-        Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
+        Map<Long, CoexpressedGenePairValueObject> gmap = new HashMap<Long, CoexpressedGenePairValueObject>();
 
-        for ( CoexpressionValueObject o : coexpressionData ) {
+        for ( CoexpressedGenePairValueObject o : coexpressionData ) {
             coexGeneIds.add( o.getGeneId() );
             gmap.put( o.getGeneId(), o );
             i++;
@@ -345,15 +343,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         Map<Long, Collection<BioAssaySet>> eesTestedIn = probe2ProbeCoexpressionService
                 .getExpressionExperimentsTestedIn( coexGeneIds, eesQueryTestedIn, false );
         for ( Long g : eesTestedIn.keySet() ) {
-            CoexpressionValueObject cvo = gmap.get( g );
+            CoexpressedGenePairValueObject cvo = gmap.get( g );
             assert cvo != null;
             assert eesTestedIn.get( g ).size() <= eesQueryTestedIn.size();
 
-            Collection<Long> ids = new HashSet<Long>();
-            for ( BioAssaySet ee : eesTestedIn.get( g ) ) {
-                Long eeid = ee.getId();
-                ids.add( eeid );
-            }
+            Collection<Long> ids = EntityUtils.getIds( eesTestedIn.get( g ) );
             cvo.setDatasetsTestedIn( ids );
         }
         timer.stop();
@@ -371,7 +365,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param coexpressionData to check, the query gene must be the same for each of them.
      */
     private void computeEesTestedInBatch( Collection<? extends BioAssaySet> ees,
-            List<CoexpressionValueObject> coexpressionData ) {
+            List<CoexpressedGenePairValueObject> coexpressionData ) {
 
         if ( coexpressionData.isEmpty() ) return;
 
@@ -391,7 +385,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         /*
          * Save some computation in the inner loop by assuming the query gene is constant.
          */
-        CoexpressionValueObject initializer = coexpressionData.iterator().next();
+        CoexpressedGenePairValueObject initializer = coexpressionData.iterator().next();
         Long queryGeneId = initializer.getQueryGene();
 
         byte[] queryGeneEETestStatusBytes;
@@ -410,7 +404,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          * it gets warmed up)
          */
         int loopcount = 0; // for performance statistics
-        for ( CoexpressionValueObject cvo : coexpressionData ) {
+        for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
 
             Long coexGeneId = cvo.getGeneId();
             if ( !queryGeneId.equals( cvo.getQueryGene() ) ) {
@@ -460,10 +454,10 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param coexpressionData
      */
     private void computeGoOverlap( Long queryGene, int numQueryGeneGOTerms,
-            List<CoexpressionValueObject> coexpressionData ) {
+            List<CoexpressedGenePairValueObject> coexpressionData ) {
         Collection<Long> overlapIds = new HashSet<Long>();
         int i = 0;
-        for ( CoexpressionValueObject cvo : coexpressionData ) {
+        for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
             overlapIds.add( cvo.getGeneId() );
             cvo.setNumQueryGeneGOTerms( numQueryGeneGOTerms );
             if ( i++ > MAX_GENES_TO_COMPUTE_GOOVERLAP ) break;
@@ -472,7 +466,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         Map<Long, Collection<OntologyTerm>> overlap = geneOntologyService
                 .calculateGoTermOverlap( queryGene, overlapIds );
 
-        for ( CoexpressionValueObject cvo : coexpressionData ) {
+        for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
             cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
         }
     }
@@ -480,7 +474,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     /**
      * @param coexpressions
      */
-    private void computeGoStats( CoexpressionCollectionValueObject coexpressions, int stringency ) {
+    private void computeGoStats( QueryGeneCoexpression coexpressions, int stringency ) {
 
         // don't compute this if we aren't loading GO into memory.
         if ( !geneOntologyService.isGeneOntologyLoaded() ) {
@@ -496,7 +490,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
 
         if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) return;
 
-        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions.getGeneCoexpressionData( stringency );
+        List<CoexpressedGenePairValueObject> knownGeneCoexpressionData = coexpressions
+                .getGeneCoexpressionData( stringency );
         computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
 
         // Only known genes have GO terms, so we don't need to look at Predicted and PARs.
@@ -544,11 +539,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     /**
      * @param coexpressions
      */
-    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
+    private void fillInEEInfo( QueryGeneCoexpression coexpressions ) {
         Collection<Long> eeIds = new HashSet<Long>();
         log.debug( "Filling in EE info" );
 
-        CoexpressedGenesDetails coexps = coexpressions.getGeneCoexpression();
+        QueryGeneCoexpressionsDetails coexps = coexpressions.getGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
     }
@@ -558,8 +553,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param eeIds
      * @param coexps
      */
-    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
-            CoexpressedGenesDetails coexps ) {
+    private void fillInEEInfo( QueryGeneCoexpression coexpressions, Collection<Long> eeIds,
+            QueryGeneCoexpressionsDetails coexps ) {
 
         eeIds.addAll( coexpressions.getExpressionExperiments() );
         Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
@@ -588,9 +583,9 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param stringency
      * @param coexpressions
      */
-    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
+    private void fillInGeneInfo( int stringency, QueryGeneCoexpression coexpressions ) {
         log.debug( "Filling in Gene info" );
-        CoexpressedGenesDetails coexp = coexpressions.getGeneCoexpression();
+        QueryGeneCoexpressionsDetails coexp = coexpressions.getGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
     }
@@ -600,13 +595,13 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param coexpressions
      * @param coexp
      */
-    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
-            CoexpressedGenesDetails coexp ) {
+    private void fillInGeneInfo( int stringency, QueryGeneCoexpression coexpressions,
+            QueryGeneCoexpressionsDetails coexp ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        List<CoexpressionValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
+        List<CoexpressedGenePairValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
         Collection<Long> geneIds = new HashSet<Long>();
-        for ( CoexpressionValueObject cod : coexpressionData ) {
+        for ( CoexpressedGenePairValueObject cod : coexpressionData ) {
             geneIds.add( cod.getGeneId() );
         }
 
@@ -615,11 +610,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         for ( Gene g : genes ) {
             gm.put( g.getId(), g );
         }
-        for ( CoexpressionValueObject cod : coexpressionData ) {
+
+        for ( CoexpressedGenePairValueObject cod : coexpressionData ) {
             Gene g = gm.get( cod.getGeneId() );
             cod.setGeneName( g.getName() );
             cod.setGeneOfficialName( g.getOfficialName() );
-            cod.setGeneType( g.getClass().getSimpleName() );
             cod.setTaxonId( g.getTaxon().getId() );
             coexpressions.add( cod );
         }
@@ -634,8 +629,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param limit
      * @param stringency
      */
-    private void filter( CoexpressionCollectionValueObject coexpressions, int limit, int stringency ) {
-        CoexpressedGenesDetails coexps = coexpressions.getGeneCoexpression();
+    private void filter( QueryGeneCoexpression coexpressions, int limit, int stringency ) {
+        QueryGeneCoexpressionsDetails coexps = coexpressions.getGeneCoexpression();
         coexps.filter( limit, stringency );
     }
 

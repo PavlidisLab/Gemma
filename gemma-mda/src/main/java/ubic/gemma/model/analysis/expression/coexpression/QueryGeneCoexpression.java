@@ -26,18 +26,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.GeneImpl;
 
 /**
  * The coexpressioncollectionValueObject is used for storing all the results of a coexpression search for one query
- * gene.
+ * gene, across multiple experiments.
  * 
  * @author jsantos
  * @author klc
  * @version $Id$
  */
-public class CoexpressionCollectionValueObject {
+public class QueryGeneCoexpression {
     public static final String GENE_IMPL = GeneImpl.class.getSimpleName();
 
     @Override
@@ -57,7 +56,7 @@ public class CoexpressionCollectionValueObject {
 
     private String errorState;
 
-    private CoexpressedGenesDetails geneCoexpressionData;
+    private QueryGeneCoexpressionsDetails geneCoexpressionData;
 
     private Long queryGene;
     private int queryGeneGoTermCount;
@@ -72,26 +71,16 @@ public class CoexpressionCollectionValueObject {
     /**
      * 
      */
-    public CoexpressionCollectionValueObject( Long queryGene, int supportThreshold ) {
+    public QueryGeneCoexpression( Long queryGene, int supportThreshold ) {
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
-        geneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
+        geneCoexpressionData = new QueryGeneCoexpressionsDetails( queryGene, supportThreshold );
         queryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
         this.eesQueryTestedIn = new HashSet<Long>();
     }
 
-    public void add( CoexpressionValueObject vo ) {
+    public void add( CoexpressedGenePairValueObject vo ) {
         this.geneCoexpressionData.add( vo );
-    }
-
-    /**
-     * Maintain a list of which expression experiments participate in which type of coexpression
-     * 
-     * @param geneType
-     * @param eevo
-     */
-    public void addExpressionExperiment( ExpressionExperimentValueObject eevo ) {
-        this.geneCoexpressionData.addExpressionExperiment( eevo.getId() );
     }
 
     /**
@@ -106,10 +95,10 @@ public class CoexpressionCollectionValueObject {
      * @param coexpressedGeneId
      * @return coexpression results pertaining to the given gene, if any; or null otherwise
      */
-    public CoexpressionValueObject get( Long coexpressedGeneId ) {
+    public CoexpressedGenePairValueObject get( Long coexpressedGeneId ) {
         if ( !this.contains( coexpressedGeneId ) ) return null;
 
-        CoexpressionValueObject result = null;
+        CoexpressedGenePairValueObject result = null;
 
         if ( geneCoexpressionData.containsKey( coexpressedGeneId ) ) {
             result = geneCoexpressionData.get( coexpressedGeneId );
@@ -123,8 +112,8 @@ public class CoexpressionCollectionValueObject {
      * @param stringency enter 0 to get everything (entering 1 would have the same effect).
      * @return the standard Genes CoexpressionDataValueObjects for all types of genes, sorted by decreasing support
      */
-    public List<CoexpressionValueObject> getAllGeneCoexpressionData( int stringency ) {
-        List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
+    public List<CoexpressedGenePairValueObject> getAllGeneCoexpressionData( int stringency ) {
+        List<CoexpressedGenePairValueObject> result = new ArrayList<CoexpressedGenePairValueObject>();
         result.addAll( this.geneCoexpressionData.getCoexpressionData( stringency ) );
         Collections.sort( result );
         return result;
@@ -160,14 +149,14 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the CoexpressedGenesDetails for standard genes
      */
-    public CoexpressedGenesDetails getGeneCoexpression() {
+    public QueryGeneCoexpressionsDetails getGeneCoexpression() {
         return this.geneCoexpressionData;
     }
 
     /**
      * @return the coexpressionData for genes in order of decreasing support
      */
-    public List<CoexpressionValueObject> getGeneCoexpressionData( int s ) {
+    public List<CoexpressedGenePairValueObject> getGeneCoexpressionData( int s ) {
         return this.geneCoexpressionData.getCoexpressionData( s );
     }
 
@@ -226,8 +215,8 @@ public class CoexpressionCollectionValueObject {
      */
     public Collection<Long> getTargetGeneProbes() {
         Collection<Long> result = new HashSet<Long>();
-        List<CoexpressionValueObject> data = this.getAllGeneCoexpressionData( 0 );
-        for ( CoexpressionValueObject coVo : data ) {
+        List<CoexpressedGenePairValueObject> data = this.getAllGeneCoexpressionData( 0 );
+        for ( CoexpressedGenePairValueObject coVo : data ) {
             for ( Long ee : coVo.getExpressionExperiments() ) {
                 result.addAll( coVo.getProbes( ee ) );
             }
@@ -267,6 +256,9 @@ public class CoexpressionCollectionValueObject {
         this.eesQueryTestedIn = eesQueryTestedIn;
     }
 
+    /**
+     * @param errorState
+     */
     public void setErrorState( String errorState ) {
         this.errorState = errorState;
     }

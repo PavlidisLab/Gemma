@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
@@ -459,7 +459,7 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
+    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
             final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
         return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
     }
@@ -468,7 +468,7 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
+    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene,
             final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
         return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }

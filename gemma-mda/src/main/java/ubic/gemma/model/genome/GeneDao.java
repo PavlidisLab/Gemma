@@ -21,7 +21,7 @@ package ubic.gemma.model.genome;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -123,7 +123,7 @@ public interface GeneDao extends BaseDao<Gene> {
      *        gene is entered
      * @return
      */
-    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
+    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes(
             Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
             java.lang.Integer stringency, boolean interGeneOnly );
 
@@ -133,7 +133,7 @@ public interface GeneDao extends BaseDao<Gene> {
      * CoexpressionCollectionValueObject.
      * </p>
      */
-    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+    public QueryGeneCoexpression getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
             java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**

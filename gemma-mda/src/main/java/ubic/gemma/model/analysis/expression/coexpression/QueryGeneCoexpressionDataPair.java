@@ -20,9 +20,9 @@ package ubic.gemma.model.analysis.expression.coexpression;
 public class QueryGeneCoexpressionDataPair {
 
     private Long queryGene;
-    private CoexpressionValueObject coexpressionData;
+    private CoexpressedGenePairValueObject coexpressionData;
 
-    public QueryGeneCoexpressionDataPair( Long queryGene, CoexpressionValueObject coexpressionData ) {
+    public QueryGeneCoexpressionDataPair( Long queryGene, CoexpressedGenePairValueObject coexpressionData ) {
         this.queryGene = queryGene;
         this.coexpressionData = coexpressionData;
     }
@@ -30,7 +30,7 @@ public class QueryGeneCoexpressionDataPair {
     /**
      * @return the coexpressionData
      */
-    public CoexpressionValueObject getCoexpressionData() {
+    public CoexpressedGenePairValueObject getCoexpressionData() {
         return coexpressionData;
     }
 

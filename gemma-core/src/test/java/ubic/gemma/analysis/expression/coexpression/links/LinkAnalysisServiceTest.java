@@ -37,9 +37,9 @@ import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.Sing
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -115,9 +115,9 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         boolean foundOne = false;
         for ( Gene gene : geneService.loadAll() ) {
 
-            CoexpressionCollectionValueObject links = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, ees, 1, 100 );
+            QueryGeneCoexpression links = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, ees, 1, 100 );
 
-            List<CoexpressionValueObject> coexps = links.getAllGeneCoexpressionData( 0 );
+            List<CoexpressedGenePairValueObject> coexps = links.getAllGeneCoexpressionData( 0 );
 
             if ( coexps.isEmpty() ) {
                 continue;
@@ -130,7 +130,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             }
 
             log.info( coexps.size() + " hits for " + gene );
-            for ( CoexpressionValueObject coex : coexps ) {
+            for ( CoexpressedGenePairValueObject coex : coexps ) {
                 log.debug( coex );
                 assertNotNull( coex.getQueryGene() );
             }

@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -232,7 +232,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
      * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
+    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
             final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGeneOnly ) {
 
         return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
@@ -243,7 +243,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
      * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
+    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene,
             final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
         return this.handleGetCoexpressedGenes( gene, ees, stringency );
     }
@@ -445,13 +445,13 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
      */
     protected abstract Gene handleFindByOfficialSymbol( String symbol, Taxon taxon );
 
-    protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
+    protected abstract Map<Gene, QueryGeneCoexpression> handleGetCoexpressedGenes( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly );
 
     /**
      * Performs the core logic for {@link #getCoexpressedGenes(Gene, Collection, Integer, boolean)}
      */
-    protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( Gene gene,
+    protected abstract QueryGeneCoexpression handleGetCoexpressedGenes( Gene gene,
             Collection<? extends BioAssaySet> ees, Integer stringency );
 
     /**

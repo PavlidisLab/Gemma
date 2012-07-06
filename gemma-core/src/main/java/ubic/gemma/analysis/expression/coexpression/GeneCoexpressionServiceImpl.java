@@ -42,9 +42,9 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.protein.ProteinLinkOutFormatter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -180,7 +180,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             geneIds.add( gene.getId() );
         }
 
-        Map<Gene, CoexpressionCollectionValueObject> allCoexpressions = new HashMap<Gene, CoexpressionCollectionValueObject>();
+        Map<Gene, QueryGeneCoexpression> allCoexpressions = new HashMap<Gene, QueryGeneCoexpression>();
 
         if ( genes.size() == 1 ) {
             Gene soleQueryGene = genes.iterator().next();
@@ -200,7 +200,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             allUsedGenes.add( queryGene.getId() );
 
-            CoexpressionCollectionValueObject coexpressions = allCoexpressions.get( queryGene );
+            QueryGeneCoexpression coexpressions = allCoexpressions.get( queryGene );
 
             result.setErrorState( coexpressions.getErrorState() );
 
@@ -411,11 +411,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param proteinInteractionsForQueryGene map keyed on geneid of string url for protein interaction
      */
     private void addExtCoexpressionValueObjects( Gene queryGene, List<ExpressionExperimentValueObject> eevos,
-            CoexpressedGenesDetails coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds,
+            QueryGeneCoexpressionsDetails coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds,
             Collection<CoexpressionValueObjectExt> results, Collection<CoexpressionDatasetValueObject> datasetResults,
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionsForQueryGene ) {
 
-        for ( CoexpressionValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
+        for ( CoexpressedGenePairValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
             if ( queryGenesOnly && !geneIds.contains( cvo.getGeneId() ) ) continue;
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
