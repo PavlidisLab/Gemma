@@ -41,12 +41,14 @@ public class QueryGeneCoexpression {
 
     @Override
     public void finalize() {
-        this.eesQueryTestedIn.clear();
-        for ( Long l : queryProbes.keySet() ) {
-            queryProbes.get( l ).clear();
+        if ( this.eesQueryTestedIn != null ) this.eesQueryTestedIn.clear();
+        if ( this.queryProbes != null ) {
+            for ( Long l : queryProbes.keySet() ) {
+                queryProbes.get( l ).clear();
+            }
+            this.queryProbes.clear();
         }
-        this.queryProbes.clear();
-        geneCoexpressionData.finalize();
+        if ( geneCoexpressionData != null ) geneCoexpressionData.finalize();
     }
 
     private double postProcessSeconds;
