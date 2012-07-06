@@ -43,6 +43,9 @@ public class CoexpressionCollectionValueObject {
     @Override
     public void finalize() {
         this.eesQueryTestedIn.clear();
+        for ( Long l : queryProbes.keySet() ) {
+            queryProbes.get( l ).clear();
+        }
         this.queryProbes.clear();
         geneCoexpressionData.finalize();
     }
@@ -175,9 +178,8 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the coexpressionData for genes in order of decreasing support
      */
-    @SuppressWarnings("hiding")
-    public List<CoexpressionValueObject> getGeneCoexpressionData( int supportThreshold ) {
-        return this.geneCoexpressionData.getCoexpressionData( supportThreshold );
+    public List<CoexpressionValueObject> getGeneCoexpressionData( int s ) {
+        return this.geneCoexpressionData.getCoexpressionData( s );
     }
 
     /**

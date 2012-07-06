@@ -87,12 +87,19 @@ public class CoexpressedGenesDetails {
     @Override
     public void finalize() {
         expressionExperiments.clear();
-        this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
-        this.expressionExperimentProbe2GeneMaps.clear();
+
         for ( Long l : coexpressionData.keySet() ) {
             coexpressionData.get( l ).finalize();
         }
+        for ( Long l : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
+            queryGeneExpressionExperimentProbe2GeneMaps.get( l ).clear();
+        }
+        for ( Long l : expressionExperimentProbe2GeneMaps.keySet() ) {
+            expressionExperimentProbe2GeneMaps.get( l ).clear();
+        }
 
+        this.queryGeneExpressionExperimentProbe2GeneMaps.clear();
+        this.expressionExperimentProbe2GeneMaps.clear();
         this.coexpressionData.clear();
 
     }
@@ -307,46 +314,6 @@ public class CoexpressedGenesDetails {
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         return expressionExperiments.values();
-    }
-
-    /**
-     * @return map of gene ids to a collection of expression experiment IDs that each contained <strong>at least one
-     *         specific</strong> probes (probes that hit only 1 gene) for the gene. The gene ids are for the
-     *         <em>coexpressed</em> genes, not the query.
-     *         <p>
-     *         If an EE has two (or more) probes that hit the same gene, and one probe is specific for the target gene,
-     *         even if some of the other(s) are not, the EE is considered specific and will still be included.
-     * @deprecated
-     */
-    @Deprecated
-    public Map<Long, Collection<Long>> getExpressionExperimentsWithSpecificProbeForCoexpressedGenes() {
-
-        Map<Long, Collection<Long>> result = new HashMap<Long, Collection<Long>>();
-        for ( Long eeID : expressionExperimentProbe2GeneMaps.keySet() ) {
-
-            // this is a map for ALL the probes from this data set that came up.
-            Map<Long, Collection<Long>> probe2geneMap = expressionExperimentProbe2GeneMaps.get( eeID );
-
-            for ( Long probeID : probe2geneMap.keySet() ) {
-                Collection<Long> genes = probe2geneMap.get( probeID );
-                Integer genecount = genes.size();
-                if ( genecount > 1 ) {
-                    continue;
-                }
-                Long geneId = genes.iterator().next();
-                if ( !this.coexpressionData.containsKey( geneId ) ) {
-                    continue;
-                }
-
-                if ( !result.containsKey( geneId ) ) {
-                    result.put( geneId, new HashSet<Long>() );
-                }
-
-                result.get( geneId ).add( eeID );
-            }
-        }
-
-        return result;
     }
 
     /**

@@ -219,6 +219,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             summary.setLinksMetPositiveStringency( coexpressions.getGeneCoexpression().getPositiveStringencyLinkCount() );
             summary.setLinksMetNegativeStringency( coexpressions.getGeneCoexpression().getNegativeStringencyLinkCount() );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
+            coexpressions.finalize();
         }
 
         Collection<Long> allSupportingDatasets = new HashSet<Long>();

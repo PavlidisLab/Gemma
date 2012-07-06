@@ -77,9 +77,6 @@ import cern.jet.random.engine.DRand;
 import cern.jet.random.engine.RandomEngine;
 import cern.jet.stat.Descriptive;
 
-import com.javamex.classmexer.MemoryUtil;
-import com.javamex.classmexer.MemoryUtil.VisibilityFilter;
-
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
  * (including node degree). The results are tied to a specific Analysis that can be referred to by clients. In practice
@@ -158,15 +155,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             if ( asBools[i] ) ids.add( positionToIDMap.get( i ) );
         }
         return ids;
-    }
-
-    /**
-     * @param message
-     * @param obj
-     * @return
-     */
-    private static String getMemoryInfoString( String message, Object obj ) {
-        return message + " " + MemoryUtil.deepMemoryUsageOf( obj, VisibilityFilter.ALL ) + " bytes";
     }
 
     @Autowired
@@ -607,6 +595,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             StopWatch timer = new StopWatch();
             timer.start();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
+                log.info( "Starting: " + queryGene );
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
                 if ( timer.getTime() > 10 * 60 * 1000 ) {
@@ -931,6 +920,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         processedGenes.add( queryGene.getId() );
 
+        coexpressions.finalize();
+        coexpressions = null;
         return usedLinks;
     }
 }
