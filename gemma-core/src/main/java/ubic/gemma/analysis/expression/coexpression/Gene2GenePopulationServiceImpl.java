@@ -675,10 +675,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     private String format( CoexpressionValueObject co ) {
         StringBuilder buf = new StringBuilder();
 
-        buf.append( co.getQueryGene().getId() + "\t" );
-        buf.append( co.getQueryGene().getOfficialSymbol() + "\t" );
+        buf.append( co.getQueryGene() + "\t" );
         buf.append( co.getGeneId() + "\t" );
-        buf.append( co.getGeneName() + "\t" ); // this is not populated.
         buf.append( co.getNumDatasetsTestedIn() + "\t" );
         buf.append( co.getPositiveLinkSupport() + "\t" );
         buf.append( co.getNegativeLinkSupport() + "\t" );

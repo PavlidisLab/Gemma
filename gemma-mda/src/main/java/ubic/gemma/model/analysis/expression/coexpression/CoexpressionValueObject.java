@@ -29,8 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * The results for one gene that is coexpressed with a query gene, across multiple expression experiments; possibly with
@@ -48,7 +46,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     @Override
     public void finalize() {
-        this.expressionExperimentValueObjects.clear();
+        this.datasetsSupporting.clear();
         this.datasetsTestedIn.clear();
         this.crossHybridizingGenes.clear();
         this.datasetsTestedInBytes = null;
@@ -62,7 +60,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Collection<Long> datasetsTestedIn = new HashSet<Long>();
     // the expression experiments that this coexpression was involved in. The number of these will total the 'support'
     // (pos+neg correlations, minus # of experiments that support both + and -)
-    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+    private Collection<Long> datasetsSupporting;
 
     private byte[] datasetsTestedInBytes = null;
 
@@ -116,7 +114,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     private Map<Long, Map<Long, Double>> posPvalues;
 
-    private Gene queryGene;
+    private Long queryGene;
 
     private Double queryGeneNodeDegree;
 
@@ -151,7 +149,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         geneName = "";
         geneId = null;
         geneOfficialName = null;
-        expressionExperimentValueObjects = new HashMap<Long, ExpressionExperimentValueObject>();
+        datasetsSupporting = new HashSet<Long>();
         positiveScores = new HashMap<Long, Map<Long, Double>>();
         negativeScores = new HashMap<Long, Map<Long, Double>>();
         posPvalues = new HashMap<Long, Map<Long, Double>>();
@@ -211,12 +209,12 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * 
      * @param eeVo
      */
-    public void addSupportingExperiment( ExpressionExperimentValueObject eeVo ) {
-        if ( expressionExperimentValueObjects.containsKey( eeVo.getId() ) ) {
+    public void addSupportingExperiment( Long eeVo ) {
+        if ( datasetsSupporting.contains( eeVo ) ) {
             // I guess this happens if there are two probes for the same gene.
             if ( log.isDebugEnabled() ) log.debug( "Already have seen this experiment" );
         }
-        this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
+        this.datasetsSupporting.add( eeVo );
     }
 
     /*
@@ -541,7 +539,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     /**
      * @return the query gene
      */
-    public Gene getQueryGene() {
+    public Long getQueryGene() {
         return queryGene;
     }
 
@@ -701,7 +699,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.numQueryGeneGOTerms = numQueryGeneGOTerms;
     }
 
-    public void setQueryGene( Gene queryGene ) {
+    public void setQueryGene( Long queryGene ) {
         this.queryGene = queryGene;
     }
 

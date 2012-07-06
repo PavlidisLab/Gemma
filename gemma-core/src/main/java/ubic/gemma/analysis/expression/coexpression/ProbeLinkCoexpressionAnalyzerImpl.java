@@ -392,7 +392,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          * Save some computation in the inner loop by assuming the query gene is constant.
          */
         CoexpressionValueObject initializer = coexpressionData.iterator().next();
-        Long queryGeneId = initializer.getQueryGene().getId();
+        Long queryGeneId = initializer.getQueryGene();
 
         byte[] queryGeneEETestStatusBytes;
         if ( geneTestStatusByteCache.containsKey( queryGeneId ) ) {
@@ -413,7 +413,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         for ( CoexpressionValueObject cvo : coexpressionData ) {
 
             Long coexGeneId = cvo.getGeneId();
-            if ( !queryGeneId.equals( cvo.getQueryGene().getId() ) ) {
+            if ( !queryGeneId.equals( cvo.getQueryGene() ) ) {
                 throw new IllegalArgumentException( "All coexpression value objects must have the same query gene here" );
             }
 
@@ -560,29 +560,28 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      */
     private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
             CoexpressedGenesDetails coexps ) {
-        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
-            eeIds.add( evo.getId() );
-        }
+
+        eeIds.addAll( coexpressions.getExpressionExperiments() );
         Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
         Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject evo : ees ) {
             em.put( evo.getId(), evo );
         }
 
-        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
-            em.put( evo.getId(), evo );
-        }
-        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
-            ExpressionExperimentValueObject ee = em.get( evo.getId() );
-            evo.setShortName( ee.getShortName() );
-            evo.setName( ee.getName() );
-        }
-
-        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
-            ExpressionExperimentValueObject ee = em.get( evo.getId() );
-            evo.setShortName( ee.getShortName() );
-            evo.setName( ee.getName() );
-        }
+        // for ( Long evo : coexps.getExpressionExperimentIds() ) {
+        // em.put( evo.getId(), evo );
+        // }
+        // for ( Long evo : coexpressions.getExpressionExperiments() ) {
+        // ExpressionExperimentValueObject ee = em.get( evo.getId() );
+        // evo.setShortName( ee.getShortName() );
+        // evo.setName( ee.getName() );
+        // }
+        //
+        // for ( Long evo : coexps.getExpressionExperimentIds() ) {
+        // ExpressionExperimentValueObject ee = em.get( evo.getId() );
+        // evo.setShortName( ee.getShortName() );
+        // evo.setName( ee.getName() );
+        // }
     }
 
     /**

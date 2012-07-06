@@ -492,17 +492,15 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() )
                     || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
-            ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
-            if ( coexpEevo == null ) continue;
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
-            ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
-            ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
+            ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( eevo.getId() ) );
+            ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( eevo.getId() ) );
 
             // NOTE should be accurate (probe-level query) but we won't show it.
             // See bug 1564
-            ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
+            // ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             datasetResults.add( ecdvo );

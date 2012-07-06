@@ -65,7 +65,7 @@ public class GeoRecordBrowserController {
             skip = 10000;
         }
         int startPage = ( ( start + skip ) / count ) + 1;
-        log.info( "Start page =" + startPage );
+        log.debug( "Start page = " + startPage );
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
         return geoRecords;

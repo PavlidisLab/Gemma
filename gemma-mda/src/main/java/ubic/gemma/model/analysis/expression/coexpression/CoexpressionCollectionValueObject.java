@@ -85,14 +85,13 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
+     * Maintain a list of which expression experiments participate in which type of coexpression
+     * 
      * @param geneType
      * @param eevo
      */
     public void addExpressionExperiment( ExpressionExperimentValueObject eevo ) {
-        /*
-         * Maintain a list of which expression experiments participate in which type of coexpression
-         */
-        this.geneCoexpressionData.addExpressionExperiment( eevo );
+        this.geneCoexpressionData.addExpressionExperiment( eevo.getId() );
     }
 
     /**
@@ -152,20 +151,10 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * Only searches the given geneType for the specified EE. if not found return null.
-     */
-    public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-        return geneCoexpressionData.getExpressionExperiment( eeID );
-    }
-
-    /**
      * @return
      */
-    public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
-        Collection<ExpressionExperimentValueObject> all = new HashSet<ExpressionExperimentValueObject>();
-        all.addAll( this.geneCoexpressionData.getExpressionExperiments() );
-        return all;
-
+    public Collection<Long> getExpressionExperiments() {
+        return this.geneCoexpressionData.getExpressionExperimentIds();
     }
 
     /**
@@ -331,9 +320,8 @@ public class CoexpressionCollectionValueObject {
                  */
                 if ( genes.size() == 1 && genes.iterator().next().equals( queryGene ) ) {
 
-                    if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.geneCoexpressionData.getExpressionExperiment( eeID )
-                                .setHasProbeSpecificForQueryGene( true );
+                    if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) )
+                        this.geneCoexpressionData.setHasProbeSpecificForQueryGene( eeID );
 
                 }
             }
@@ -348,12 +336,12 @@ public class CoexpressionCollectionValueObject {
     }
 
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
+        if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) )
             this.geneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
     }
 
     private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
+        if ( this.geneCoexpressionData.hasExpressionExperiment( eeID ) )
             this.geneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
 
     }

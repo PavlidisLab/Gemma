@@ -58,7 +58,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.CommonQueries;
@@ -1066,7 +1065,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          */
         boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = false;
-        int maxElements = 100000;
+        int maxElements = 500000;
         boolean eternal = false;
         boolean overFlowToDisk = false;
         int diskExpiryThreadIntervalSeconds = 600;
@@ -1105,23 +1104,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * @param coexpressions
-     * @param eeID
-     * @param geneType
-     * @return
-     */
-    private ExpressionExperimentValueObject addExpressionExperimentToCoexpressions(
-            CoexpressionCollectionValueObject coexpressions, Long eeID ) {
-        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
-        if ( eeVo == null ) {
-            eeVo = new ExpressionExperimentValueObject();
-            eeVo.setId( eeID );
-            coexpressions.addExpressionExperiment( eeVo ); // unorganized.
-        }
-        return eeVo;
-    }
-
-    /**
      * Generically add a coexpression record to the results set.
      * 
      * @param coexpressions
@@ -1143,18 +1125,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coExVO = coexpressions.get( coexpressedGene );
         } else {
             coExVO = new CoexpressionValueObject();
-            coExVO.setQueryGene( queryGene );
+            coExVO.setQueryGene( queryGene.getId() );
             coExVO.setGeneId( coexpressedGene );
             coexpressions.add( coExVO );
         }
 
-        // log.info( "EE=" + eeID + " in Probe=" + queryProbe + " out Probe=" + coexpressedProbe + " gene="
-        // + coexpressedGene + " score=" + String.format( "%.3f", score ) );
-        // add the expression experiment.
-        ExpressionExperimentValueObject eeVo = addExpressionExperimentToCoexpressions( coexpressions, eeID );
-
         // add the ee here so we know it is associated with this specific gene.
-        coExVO.addSupportingExperiment( eeVo );
+        coExVO.addSupportingExperiment( eeID );
 
         coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
 
