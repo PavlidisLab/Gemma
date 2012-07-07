@@ -483,7 +483,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      */
     private void fillInEEInfo( QueryGeneCoexpression coexpressions, Collection<Long> eeIds ) {
 
-        eeIds.addAll( coexpressions.getExpressionExperiments() );
+        eeIds.addAll( coexpressions.getDataSetsWithCoexpressionForQueryGene() );
         Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
         Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject evo : ees ) {

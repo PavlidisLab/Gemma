@@ -38,25 +38,6 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGenePairValueObject> {
 
-    @Override
-    public void finalize() {
-        this.datasetsTestedIn.clear();
-        this.crossHybridizingGenes.clear();
-        this.datasetsTestedInBytes = null;
-        this.negativeScores.clear();
-        this.positiveScores.clear();
-        for ( Long l : links.keySet() ) {
-            links.get( l ).clear();
-        }
-        links.clear();
-    }
-
-    public CoexpressedGenePairValueObject( Long queryGene, Long coexpressedGene ) {
-        this();
-        this.queryGene = queryGene;
-        this.coexpressedGene = coexpressedGene;
-    }
-
     /**
      * Genes that were predicted to cross-hybridize with the target gene
      */
@@ -99,33 +80,25 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
 
     private Double foundGeneNodeDegree;
 
-    public Double getQueryGeneNodeDegree() {
-        return queryGeneNodeDegree;
-    }
-
-    public void setQueryGeneNodeDegree( Double queryGeneNodeDegree ) {
-        this.queryGeneNodeDegree = queryGeneNodeDegree;
-    }
-
-    public Double getFoundGeneNodeDegree() {
-        return foundGeneNodeDegree;
-    }
-
-    public void setFoundGeneNodeDegree( Double foundGeneNodeDegree ) {
-        this.foundGeneNodeDegree = foundGeneNodeDegree;
-    }
-
     /**
      * Map of eeId -> probe IDs for the _query_. Each experiment added is a supporting experiment.
      */
     private Map<Long, Collection<Long>> queryProbeInfo;
 
-    public CoexpressedGenePairValueObject() {
+    /**
+     * Note that most of the fields of this are not populated at construction time.
+     * 
+     * @param queryGene
+     * @param coexpressedGene
+     */
+    public CoexpressedGenePairValueObject( Long queryGene, Long coexpressedGene ) {
         coexpressedGene = null;
         positiveScores = new HashMap<Long, Map<Long, Double>>();
         negativeScores = new HashMap<Long, Map<Long, Double>>();
         queryProbeInfo = new HashMap<Long, Collection<Long>>();
         nonspecificEEs = new HashSet<Long>();
+        this.queryGene = queryGene;
+        this.coexpressedGene = coexpressedGene;
     }
 
     /**
@@ -201,6 +174,26 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         return true;
     }
 
+    @Override
+    public void finalize() {
+        this.datasetsTestedIn.clear();
+        this.crossHybridizingGenes.clear();
+        this.datasetsTestedInBytes = null;
+        this.negativeScores.clear();
+        this.positiveScores.clear();
+        for ( Long l : links.keySet() ) {
+            links.get( l ).clear();
+        }
+        links.clear();
+    }
+
+    /**
+     * @return the geneId of the coexpressed gene
+     */
+    public Long getCoexpressedGeneId() {
+        return coexpressedGene;
+    }
+
     /**
      * @return IDs of genes that may be crosshybridizing with the target gene for this.
      */
@@ -250,18 +243,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         return eeIDs;
     }
 
-    /**
-     * @return the geneId of the coexpressed gene
-     */
-    public Long getCoexpressedGeneId() {
-        return coexpressedGene;
-    }
-
-    /**
-     * @return the links
-     */
-    protected Map<Long, Collection<ProbePair>> getLinks() {
-        return links;
+    public Double getFoundGeneNodeDegree() {
+        return foundGeneNodeDegree;
     }
 
     /**
@@ -274,20 +257,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         int negativeLinks = this.getNegativeLinkSupport();
         return Math.max( positiveLinks, negativeLinks );
     }
-
-    // /**
-    // * @return
-    // */
-    // public String getImageMapName() {
-    // StringBuffer buf = new StringBuffer();
-    // buf.append( "map." );
-    // buf.append( geneType );
-    // buf.append( ".gene" );
-    // buf.append( geneId );
-    // buf.append( ".taxon" );
-    // buf.append( taxonId );
-    // return buf.toString();
-    // }
 
     /**
      * @param eeId
@@ -335,6 +304,20 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     public Map<Long, Map<Long, Double>> getNegativeScores() {
         return negativeScores;
     }
+
+    // /**
+    // * @return
+    // */
+    // public String getImageMapName() {
+    // StringBuffer buf = new StringBuffer();
+    // buf.append( "map." );
+    // buf.append( geneType );
+    // buf.append( ".gene" );
+    // buf.append( geneId );
+    // buf.append( ".taxon" );
+    // buf.append( taxonId );
+    // return buf.toString();
+    // }
 
     /**
      * @return the nonspecificEE
@@ -412,6 +395,10 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         return queryGene;
     }
 
+    public Double getQueryGeneNodeDegree() {
+        return queryGeneNodeDegree;
+    }
+
     /**
      * @return Map of eeId -> probe IDs for the _query_.
      */
@@ -483,6 +470,13 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
 
     }
 
+    /**
+     * @param geneId the geneId to set
+     */
+    public void setCoexpressedGene( Long geneId ) {
+        this.coexpressedGene = geneId;
+    }
+
     public void setDatasetsTestedIn( Collection<Long> datasetsTestedIn ) {
         this.datasetsTestedIn = datasetsTestedIn;
     }
@@ -491,11 +485,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         this.datasetsTestedInBytes = datasetsTestedInBytes;
     }
 
-    /**
-     * @param geneId the geneId to set
-     */
-    public void setCoexpressedGene( Long geneId ) {
-        this.coexpressedGene = geneId;
+    public void setFoundGeneNodeDegree( Double foundGeneNodeDegree ) {
+        this.foundGeneNodeDegree = foundGeneNodeDegree;
     }
 
     /**
@@ -509,6 +500,10 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
 
     public void setQueryGene( Long queryGene ) {
         this.queryGene = queryGene;
+    }
+
+    public void setQueryGeneNodeDegree( Double queryGeneNodeDegree ) {
+        this.queryGeneNodeDegree = queryGeneNodeDegree;
     }
 
     @Override
@@ -543,6 +538,13 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         }
 
         return buf.toString();
+    }
+
+    /**
+     * @return the links
+     */
+    protected Map<Long, Collection<ProbePair>> getLinks() {
+        return links;
     }
 
 }

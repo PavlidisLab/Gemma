@@ -50,7 +50,6 @@ import org.springframework.stereotype.Repository;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -1098,33 +1097,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Generically add a coexpression record to the results set. This means the evidence for coexpression between a pair
-     * of genes, based on a pair of probes, in a single experiment.
-     * 
-     * @param coexpressions
-     * @param eeID
-     * @param queryGene
-     * @param queryProbe
-     * @param score
-     * @param coexpressedGene
-     * @param geneType
-     * @param coexpressedProbe
-     */
-    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Long queryGene, Long queryProbe,
-            Double score, Long coexpressedGene, Long coexpressedProbe ) {
-        CoexpressedGenePairValueObject coExVO;
-
-        // add the gene (if not already seen)
-        if ( coexpressions.contains( coexpressedGene ) ) {
-            coExVO = coexpressions.get( coexpressedGene );
-        } else {
-            coExVO = new CoexpressedGenePairValueObject( queryGene, coexpressedGene );
-            coexpressions.add( coExVO );
-        }
-        coExVO.addScore( eeID, score, queryProbe, coexpressedProbe );
-    }
-
-    /**
      * @param results
      */
     private void debug( List<Gene> results ) {
@@ -1361,8 +1333,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     // (shouldn't happen)
                     continue;
                 }
-                addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(),
-                        cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getCoexpressedProbe() );
+
+                coexpressions.addLink( eeid, cachedCVO.getScore(), cachedCVO.getQueryProbe(),
+                        cachedCVO.getCoexpressedGene(), cachedCVO.getCoexpressedProbe() );
 
                 assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
@@ -1444,7 +1417,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Double score = resultSet.getDouble( 2 );
         Long queryProbe = resultSet.getLong( 3 );
         Long coexpressedProbe = resultSet.getLong( 4 );
-        addResult( coexpressions, eeID, queryGene.getId(), queryProbe, score, coexpressedGene, coexpressedProbe );
+        coexpressions.addLink( eeID, score, queryProbe, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result. Note that this will be disabled during 'large' analyses.
@@ -1487,7 +1460,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         assert queryGene != null : queryGeneId + " did not match given queries";
         QueryGeneCoexpression ccvo = coexpressions.get( queryGene );
         assert ccvo != null;
-        addResult( ccvo, eeID, queryGene.getId(), queryProbe, score, coexpressedGene, coexpressedProbe );
+        ccvo.addLink( eeID, score, queryProbe, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result.
@@ -1496,7 +1469,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
             coExVOForCache.setQueryGene( queryGene.getId() );
             coExVOForCache.setCoexpressedGene( coexpressedGene );
-            // coExVOForCache.setGeneType( geneType );
             coExVOForCache.setExpressionExperiment( eeID );
             coExVOForCache.setScore( score );
             coExVOForCache.setQueryProbe( queryProbe );

@@ -29,7 +29,6 @@ public class CoexpressionDatasetValueObject {
     private Boolean probeSpecificForQueryGene;
     private Integer arrayDesignCount;
     private Integer bioAssayCount;
-    private Integer coexpressionLinkCount;
 
     public Long getId() {
         return id;
@@ -69,14 +68,6 @@ public class CoexpressionDatasetValueObject {
 
     public void setBioAssayCount( Integer bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
-    }
-
-    public Integer getCoexpressionLinkCount() {
-        return coexpressionLinkCount;
-    }
-
-    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-        this.coexpressionLinkCount = coexpressionLinkCount;
     }
 
 }

@@ -43,9 +43,11 @@ public class GeneValueObject implements java.io.Serializable {
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiGeneId(), g
-                    .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
-                    .getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
+            GeneValueObject geneValueObject = new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ),
+                    g.getNcbiGeneId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
+                            .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName() );
+            converted.add( geneValueObject );
+
         }
 
         return converted;
@@ -97,7 +99,7 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String officialName;
 
     private java.lang.String officialSymbol;
-    
+
     private Collection<CharacteristicValueObject> phenotypes;
 
     private Double score; // This is for genes in genesets might have a rank or a score associated with them.
@@ -125,6 +127,8 @@ public class GeneValueObject implements java.io.Serializable {
      */
     private Integer associatedExperimentCount = 0;
 
+    private int numProducts;
+
     public GeneValueObject() {
     }
 
@@ -139,6 +143,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
         this.aliases = getAliasStrings( gene );
+        this.numProducts = gene.getProducts().size();
     }
 
     /**
@@ -268,6 +273,10 @@ public class GeneValueObject implements java.io.Serializable {
         return numGoTerms;
     }
 
+    public int getNumProducts() {
+        return numProducts;
+    }
+
     /**
      * 
      */
@@ -280,6 +289,10 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public java.lang.String getOfficialSymbol() {
         return this.officialSymbol;
+    }
+
+    public Collection<CharacteristicValueObject> getPhenotypes() {
+        return phenotypes;
     }
 
     public Double getScore() {
@@ -349,12 +362,20 @@ public class GeneValueObject implements java.io.Serializable {
         this.numGoTerms = numGoTerms;
     }
 
+    public void setNumProducts( int numProducts ) {
+        this.numProducts = numProducts;
+    }
+
     public void setOfficialName( java.lang.String officialName ) {
         this.officialName = officialName;
     }
 
     public void setOfficialSymbol( java.lang.String officialSymbol ) {
         this.officialSymbol = officialSymbol;
+    }
+
+    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+        this.phenotypes = phenotypes;
     }
 
     public void setScore( Double score ) {
@@ -375,14 +396,5 @@ public class GeneValueObject implements java.io.Serializable {
     public void setTaxonScientificName( java.lang.String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
     }
-
-    public Collection<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
-    }
-
-    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
-        this.phenotypes = phenotypes;
-    }
-
 
 }

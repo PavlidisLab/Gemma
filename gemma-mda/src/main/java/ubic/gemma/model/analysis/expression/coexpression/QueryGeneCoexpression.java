@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The coexpressioncollectionValueObject is used for storing all the results of a coexpression search for one query
- * gene, across multiple experiments.
+ * Stores all the results of a coexpression search for one query gene, with multiple other genes, across multiple
+ * experiments.
  * 
  * @author jsantos
  * @author klc
@@ -50,7 +50,7 @@ public class QueryGeneCoexpression {
      * EE -> Probes -> Genes for the query gene. This is a map of probes to multiple genes to deal with the case where
      * the probe might be nonspecific; one of the genes 'has to' be this.queryGene.
      */
-    private Map<Long, Map<Long, Collection<Long>>> queryProbes;
+    private Map<Long, Map<Long, Collection<Long>>> experiment2QueryProbes;
 
     /**
      * Details for each gene coexpressed with this one. Map of gene id to vos.
@@ -60,12 +60,7 @@ public class QueryGeneCoexpression {
     /**
      * Map of EE -> Probes -> Genes for the coexpressed genes.
      */
-    private Map<Long, Map<Long, Collection<Long>>> expressionExperimentProbe2GeneMaps;
-
-    /**
-     * the expression experiments that show up in the results - they contribute links. Value is the number of links.
-     */
-    private Map<Long, Integer> expressionExperiments;
+    private Map<Long, Map<Long, Collection<Long>>> experiment2CoexpressedProbes;
 
     /**
      * Number of links that passed the stringency requirements, with negative correlations
@@ -92,27 +87,14 @@ public class QueryGeneCoexpression {
     public QueryGeneCoexpression( Long queryGene, int supportThreshold ) {
         this.queryGene = queryGene;
         this.supportThreshold = supportThreshold;
-        queryProbes = new HashMap<Long, Map<Long, Collection<Long>>>();
+        experiment2QueryProbes = new HashMap<Long, Map<Long, Collection<Long>>>();
 
         positiveStringencyLinkCount = 0;
         negativeStringencyLinkCount = 0;
 
         coexpressionData = new HashMap<Long, CoexpressedGenePairValueObject>();
-        expressionExperiments = new HashMap<Long, Integer>();
-        expressionExperimentProbe2GeneMaps = new HashMap<Long, Map<Long, Collection<Long>>>();
+        experiment2CoexpressedProbes = new HashMap<Long, Map<Long, Collection<Long>>>();
 
-    }
-
-    /**
-     * @param vo
-     * @return
-     */
-    public void add( CoexpressedGenePairValueObject vo ) {
-        if ( coexpressionData.containsKey( vo.getCoexpressedGeneId() ) ) {
-            // FIXME this seems like it would be an error.
-            if ( log.isDebugEnabled() ) log.debug( "Clobbering when adding " + vo );
-        }
-        coexpressionData.put( vo.getCoexpressedGeneId(), vo );
     }
 
     /**
@@ -230,23 +212,22 @@ public class QueryGeneCoexpression {
 
     @Override
     public void finalize() {
-        if ( this.queryProbes != null ) {
-            for ( Long l : queryProbes.keySet() ) {
-                queryProbes.get( l ).clear();
+        if ( this.experiment2QueryProbes != null ) {
+            for ( Long l : experiment2QueryProbes.keySet() ) {
+                experiment2QueryProbes.get( l ).clear();
             }
-            this.queryProbes.clear();
+            this.experiment2QueryProbes.clear();
         }
-        expressionExperiments.clear();
 
         for ( Long l : coexpressionData.keySet() ) {
             coexpressionData.get( l ).finalize();
         }
 
-        for ( Long l : expressionExperimentProbe2GeneMaps.keySet() ) {
-            expressionExperimentProbe2GeneMaps.get( l ).clear();
+        for ( Long l : experiment2CoexpressedProbes.keySet() ) {
+            experiment2CoexpressedProbes.get( l ).clear();
         }
 
-        this.expressionExperimentProbe2GeneMaps.clear();
+        this.experiment2CoexpressedProbes.clear();
         this.coexpressionData.clear();
     }
 
@@ -288,27 +269,6 @@ public class QueryGeneCoexpression {
     }
 
     /**
-     * @return
-     */
-    public Collection<Long> getExpressionExperiments() {
-        return expressionExperiments.keySet();
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    public Integer getLinkCountForEE( Long id ) {
-
-        Integer eeVo = expressionExperiments.get( id );
-
-        if ( eeVo == null ) return 0;
-
-        return eeVo;
-
-    }
-
-    /**
      * @return the stringencyLinkCount
      */
     public int getNegativeStringencyLinkCount() {
@@ -320,10 +280,6 @@ public class QueryGeneCoexpression {
      */
     public int getNumberOfGenes() {
         return this.coexpressionData.size();
-    }
-
-    public int getNumDatasetsQueryGeneTestedIn() {
-        return this.getExpressionExperiments().size();
     }
 
     /**
@@ -394,7 +350,7 @@ public class QueryGeneCoexpression {
      * above cases the concern is that the issue is not kept track of. Only two seriously problematic cases (2.1 and
      * 3.1) result in data removal.
      * 
-     * @param targetSpecificity
+     * @param targetSpecificity Map of probes to genes.
      * @param querySpecificity
      */
     public void postProcess( Map<Long, Collection<Long>> querySpecificity, Map<Long, Collection<Long>> targetSpecificity ) {
@@ -445,8 +401,8 @@ public class QueryGeneCoexpression {
                     log.debug( "Query probes in " + eeID + ": " + StringUtils.join( qp, "," ) );
 
                 // For each probe ...
-                Collection<Long> coexpressedProbes = coExValObj.getProbes( eeID );
-                probe: for ( Long coexpressedProbe : coexpressedProbes ) {
+                Collection<Long> cp = coExValObj.getProbes( eeID );
+                probe: for ( Long coexpressedProbe : cp ) {
 
                     Collection<Long> genesForProbe = getGenesForQueryProbe( eeID, coexpressedProbe );
                     if ( genesForProbe == null || genesForProbe.isEmpty() ) {
@@ -522,14 +478,12 @@ public class QueryGeneCoexpression {
             if ( coExValObj.getPositiveLinkSupport() != 0
                     && coExValObj.getPositiveLinkSupport() >= this.supportThreshold ) {
                 positiveLinkCount++;
-                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks() );
                 keep = true;
             }
 
             if ( coExValObj.getNegativeLinkSupport() != 0
                     && coExValObj.getNegativeLinkSupport() >= this.supportThreshold ) {
                 negativeLinkCount++;
-                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks() );
                 keep = true;
             }
 
@@ -571,8 +525,8 @@ public class QueryGeneCoexpression {
     public Collection<Long> getQueryGeneProbes() {
         Collection<Long> results = new HashSet<Long>();
 
-        for ( Long eeID : queryProbes.keySet() ) {
-            results.addAll( queryProbes.get( eeID ).keySet() );
+        for ( Long eeID : experiment2QueryProbes.keySet() ) {
+            results.addAll( experiment2QueryProbes.get( eeID ).keySet() );
         }
 
         return results;
@@ -589,14 +543,14 @@ public class QueryGeneCoexpression {
         /*
          * For each experiment, for each probe
          */
-        for ( Long eeID : queryProbes.keySet() ) {
+        for ( Long eeID : experiment2QueryProbes.keySet() ) {
 
             /*
              * Store the details.
              */
-            addQuerySpecificityData( eeID, probe2GeneMap );
+            addQuerySpecificityInfo( eeID, probe2GeneMap );
 
-            Map<Long, Collection<Long>> probe2genes = queryProbes.get( eeID );
+            Map<Long, Collection<Long>> probe2genes = experiment2QueryProbes.get( eeID );
             for ( Long probeID : probe2genes.keySet() ) {
                 Collection<Long> genes = probe2genes.get( probeID );
 
@@ -614,8 +568,8 @@ public class QueryGeneCoexpression {
     }
 
     private void setTargetGeneSpecificityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
-        for ( Long eeID : queryProbes.keySet() ) {
-            addTargetSpecificityData( eeID, probe2GeneMap );
+        for ( Long eeID : experiment2CoexpressedProbes.keySet() ) {
+            addTargetSpecificityInfo( eeID, probe2GeneMap );
         }
     }
 
@@ -637,7 +591,8 @@ public class QueryGeneCoexpression {
      * @param probe2geneMap populated from cs2gene query.
      */
     void addQuerySpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
-        this.queryProbes.put( eeID, probe2geneMap );
+        assert this.experiment2QueryProbes.containsKey( eeID );
+        this.experiment2QueryProbes.put( eeID, probe2geneMap );
     }
 
     /**
@@ -648,22 +603,8 @@ public class QueryGeneCoexpression {
      * @param probe2geneMap
      */
     void addTargetSpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
-        if ( !this.expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {
-            this.expressionExperimentProbe2GeneMaps.put( eeID, new HashMap<Long, Collection<Long>>() );
-        }
-        this.expressionExperimentProbe2GeneMaps.get( eeID ).putAll( probe2geneMap );
-    }
-
-    boolean hasExpressionExperiment( Long eeID ) {
-        return this.expressionExperiments.containsKey( eeID );
-    }
-
-    private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        this.addQuerySpecificityInfo( eeID, probe2GeneMap );
-    }
-
-    private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        this.addTargetSpecificityInfo( eeID, probe2GeneMap );
+        assert this.experiment2CoexpressedProbes.containsKey( eeID );
+        this.experiment2CoexpressedProbes.get( eeID ).putAll( probe2geneMap );
     }
 
     /**
@@ -672,7 +613,7 @@ public class QueryGeneCoexpression {
      * @return a collection of gene IDs that the probe is predicted to detect
      */
     private Collection<Long> getGenesForProbe( Long eeID, Long probeID ) {
-        Map<Long, Collection<Long>> map = expressionExperimentProbe2GeneMaps.get( eeID );
+        Map<Long, Collection<Long>> map = experiment2CoexpressedProbes.get( eeID );
         if ( map == null ) {
             return new HashSet<Long>();
         }
@@ -685,25 +626,7 @@ public class QueryGeneCoexpression {
      * @return
      */
     private Collection<Long> getGenesForQueryProbe( Long eeID, Long probeID ) {
-        return queryProbes.get( eeID ).get( probeID );
-    }
-
-    /**
-     * Counting up how many support-threshold exceeding links each data set contributed.
-     * 
-     * @param contributingEEs
-     */
-    private void incrementEEContributions( Collection<Long> contributingEEs ) {
-
-        for ( Long eeID : contributingEEs ) {
-
-            if ( !expressionExperiments.containsKey( eeID ) ) {
-                expressionExperiments.put( eeID, 1 );
-            } else {
-                expressionExperiments.put( eeID, expressionExperiments.get( eeID ) + 1 );
-            }
-
-        }
+        return experiment2QueryProbes.get( eeID ).get( probeID );
     }
 
     /**
@@ -775,15 +698,14 @@ public class QueryGeneCoexpression {
      * @param probeID
      */
     private void removeProbeDataForEE( Long eeID, Long probeID ) {
-        Map<Long, Collection<Long>> eeData = this.expressionExperimentProbe2GeneMaps.get( eeID );
+        Map<Long, Collection<Long>> eeData = this.experiment2CoexpressedProbes.get( eeID );
         if ( eeData != null ) {
             eeData.remove( probeID );
             if ( eeData.size() == 0 ) {
                 /*
-                 * This includes 'low-stringency' data so usually this doesn't really happen.
+                 * Completely remove the EE. Does this happen?
                  */
-                this.expressionExperimentProbe2GeneMaps.remove( eeID );
-                this.expressionExperiments.remove( eeID );
+                this.experiment2CoexpressedProbes.remove( eeID );
             }
         }
     }
@@ -800,6 +722,98 @@ public class QueryGeneCoexpression {
      */
     private void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
         this.positiveStringencyLinkCount = stringencyLinkCount;
+    }
+
+    /**
+     * Filling in the information needed to be able to get this is done as a postprocessing step.
+     * 
+     * @return
+     */
+    public int getNumDataSetsQueryGeneTestedIn() {
+        // protect against calling this too early.
+        assert experimentsQueryGeneTestedIn.size() > 0;
+        return this.experimentsQueryGeneTestedIn.size();
+    }
+
+    private Set<Long> experimentsQueryGeneTestedIn = new HashSet<Long>();
+
+    /**
+     * @return
+     */
+    public Set<Long> getDataSetsWithCoexpressionForQueryGene() {
+        // protect against calling this too early.
+        assert experiment2QueryProbes.size() > 0;
+        return this.experiment2QueryProbes.keySet();
+    }
+
+    public Set<Long> getDataSetsQueryGeneTestedIn() {
+        // protect against calling this too early.
+        assert experimentsQueryGeneTestedIn.size() > 0;
+        return experimentsQueryGeneTestedIn;
+    }
+
+    /**
+     * @return
+     */
+    public int getNumDataSetsWithCoexpressionForQueryGene() {
+        // protect against calling this too early.
+        assert experiment2QueryProbes.size() > 0;
+
+        /*
+         * This works because we add a key to this hash for each experiment that supports some coexpression
+         */
+        return this.experiment2QueryProbes.size();
+    }
+
+    /**
+     * @param eeIDs
+     */
+    public void setExperimentsQueryGeneTestedIn( Collection<Long> eeIDs ) {
+        this.experimentsQueryGeneTestedIn.addAll( eeIDs );
+    }
+
+    /**
+     * @param cod
+     */
+    public void add( CoexpressedGenePairValueObject cod ) {
+        this.coexpressionData.put( cod.getCoexpressedGeneId(), cod );
+
+    }
+
+    /**
+     * For this query gene, add a link for a coexpressedGene in a particular experiment, supported by a pair of probes.
+     * 
+     * @param eeID
+     * @param score
+     * @param queryProbe
+     * @param coexpressedGene
+     * @param coexpressedProbe
+     */
+    public void addLink( Long eeID, Double score, Long queryProbe, Long coexpressedGene, Long coexpressedProbe ) {
+        CoexpressedGenePairValueObject coExVO;
+
+        // add the gene (if not already seen)
+        if ( contains( coexpressedGene ) ) {
+            coExVO = get( coexpressedGene );
+        } else {
+            coExVO = new CoexpressedGenePairValueObject( queryGene, coexpressedGene );
+            this.coexpressionData.put( coexpressedGene, coExVO );
+        }
+
+        coExVO.addScore( eeID, score, queryProbe, coexpressedProbe );
+
+        if ( !this.experiment2QueryProbes.containsKey( eeID ) )
+            this.experiment2QueryProbes.put( eeID, new HashMap<Long, Collection<Long>>() );
+
+        if ( !this.experiment2CoexpressedProbes.containsKey( eeID ) )
+            this.experiment2CoexpressedProbes.put( eeID, new HashMap<Long, Collection<Long>>() );
+
+        /*
+         * This does not provide an accurate count in the end. We have to add the ones which were tested, but had no
+         * links.
+         */
+        // experimentsQueryGeneTestedIn.add( eeID );
+
     }
 
 }

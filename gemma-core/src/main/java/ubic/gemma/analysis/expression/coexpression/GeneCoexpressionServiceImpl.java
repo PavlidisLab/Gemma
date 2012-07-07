@@ -212,7 +212,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
             summary.setDatasetsAvailable( eevos.size() );
-            summary.setDatasetsTested( coexpressions.getNumDatasetsQueryGeneTestedIn() );
+            summary.setDatasetsTested( coexpressions.getNumDataSetsQueryGeneTestedIn() );
             summary.setLinksFound( coexpressions.getNumberOfGenes() );
             summary.setLinksMetPositiveStringency( coexpressions.getPositiveStringencyLinkCount() );
             summary.setLinksMetNegativeStringency( coexpressions.getNegativeStringencyLinkCount() );
@@ -492,12 +492,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         }
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            if ( !coexp.getExpressionExperiments().contains( eevo.getId() )
-                    || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
+            if ( !coexp.getDataSetsQueryGeneTestedIn().contains( eevo.getId() ) ) continue;
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
-            ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( eevo.getId() ) );
 
             // NOTE should be accurate (probe-level query) but we won't show it.
             // See bug 1564 FIXME
@@ -616,7 +614,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
-            ecdvo.setCoexpressionLinkCount( supportCount.get( eevo.getId() ) );
             ecdvo.setProbeSpecificForQueryGene( true ); // we shouldn't display
                                                         // this. See bug 1564.
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
