@@ -393,10 +393,16 @@ public class QueryGeneCoexpression {
      * "query gene" might really be something else; likewise for the coexpressed gene. In other words, for most of the
      * above cases the concern is that the issue is not kept track of. Only two seriously problematic cases (2.1 and
      * 3.1) result in data removal.
+     * 
+     * @param targetSpecificity
+     * @param querySpecificity
      */
-    public void postProcess() {
+    public void postProcess( Map<Long, Collection<Long>> querySpecificity, Map<Long, Collection<Long>> targetSpecificity ) {
         StopWatch watch = new StopWatch();
         watch.start();
+
+        setQueryGeneSpecifityInfo( querySpecificity );
+        setTargetGeneSpecificityInfo( targetSpecificity );
 
         /*
          * Believe it or not, this is some of the trickiest and most important code in Gemma. Don't modify it without
@@ -461,9 +467,6 @@ public class QueryGeneCoexpression {
                         for ( Long queryProbe : qp ) {
                             Collection<Long> genesForQueryProbe = getGenesForProbe( eeID, queryProbe );
                             if ( genesForQueryProbe != null && genesForQueryProbe.contains( geneID ) ) {
-                                /*
-                                 * Note: the coexpressedProbe is often the same as the queryID
-                                 */
                                 this.removeProbeDataForEE( eeID, coexpressedProbe );
                                 toRemove.add( coExValObj );
                                 continue probe;
@@ -581,7 +584,7 @@ public class QueryGeneCoexpression {
      * 
      * @param probe2GeneMap
      */
-    public void setQueryGeneSpecifityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
+    private void setQueryGeneSpecifityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
 
         /*
          * For each experiment, for each probe
@@ -610,7 +613,7 @@ public class QueryGeneCoexpression {
         }
     }
 
-    public void setTargetGeneSpecificityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
+    private void setTargetGeneSpecificityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
         for ( Long eeID : queryProbes.keySet() ) {
             addTargetSpecificityData( eeID, probe2GeneMap );
         }

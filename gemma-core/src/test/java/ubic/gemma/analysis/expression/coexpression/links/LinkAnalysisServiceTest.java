@@ -133,6 +133,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             for ( CoexpressedGenePairValueObject coex : coexps ) {
                 assertNotNull( coex.getQueryGene() );
                 assertNotNull( coex.getCoexpressedGeneId() );
+                assertNotNull( coex.getDatasetsTestedInBytes() );
             }
             foundOne = true;
             break;

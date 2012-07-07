@@ -529,25 +529,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     }
 
     /**
-     * @param datasetsTestedIn
-     * @param eeIdOrder
-     * @return
-     */
-    private byte[] computeTestedDatasetVector( Collection<Long> datasetsTestedIn, Map<Long, Integer> eeIdOrder ) {
-        // initialize.
-        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
-        for ( int i = 0, j = result.length; i < j; i++ ) {
-            result[i] = 0x0;
-        }
-
-        for ( Long id : datasetsTestedIn ) {
-            BitUtil.set( result, eeIdOrder.get( id ) );
-        }
-        assert BitUtil.count( result ) == datasetsTestedIn.size();
-        return result;
-    }
-
-    /**
      * @param expressionExperiments
      * @param toUseGenes
      * @return
@@ -595,20 +576,15 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             StopWatch timer = new StopWatch();
             timer.start();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
+
+                if ( queryGene.getProducts().isEmpty() ) {
+                    continue;
+                }
+
                 log.info( "Starting: " + queryGene );
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
                 if ( timer.getTime() > 10 * 60 * 1000 ) {
-
-                    /*
-                     * None of these are the culprits.
-                     */
-
-                    // log.info( getMemoryInfoString( "Memory status: Experiments", expressionExperiments ) );
-                    // log.info( getMemoryInfoString( "Memory status: toUseGenes", toUseGenes ) );
-                    // if ( analysis != null ) log.info( getMemoryInfoString( "analysis", analysis ) );
-                    // log.info( getMemoryInfoString( "Memory status: Node degrees: ", this.allGeneNodeDegrees ) );
-                    //
                     timer.reset();
                     timer.start();
                     log.info( "Processed " + processedGenes.size() + "/" + toUseGenes.size() + " genes so far, "

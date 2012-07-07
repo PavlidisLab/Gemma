@@ -1187,7 +1187,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * @param css
-     * @return @
+     * @return map
      */
     private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) {
         Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
@@ -1198,23 +1198,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         int CHUNK_SIZE = 1000;
         Session session = this.getSession();
 
-        if ( css.size() <= CHUNK_SIZE ) {
-            processCS2GeneChunk( csId2geneIds, css, session );
-            return csId2geneIds;
-        }
-
-        Collection<Long> batch = new HashSet<Long>();
-
-        for ( Long csId : css ) {
-            batch.add( csId );
-            if ( batch.size() == CHUNK_SIZE ) {
-                processCS2GeneChunk( csId2geneIds, batch, session );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
-            processCS2GeneChunk( csId2geneIds, batch, session );
+        for ( Collection<Long> chunk : new BatchIterator<Long>( css, CHUNK_SIZE ) ) {
+            csId2geneIds.putAll( processCS2GeneChunk( chunk, session ) );
         }
 
         return csId2geneIds;
@@ -1387,7 +1372,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * Fill in specificity information.
      * <p>
-     * Performance notes: This seems to rarely take more than 1 sec.
+     * Performance notes: This seems to rarely take more than 1 sec. But this is also the site of a major memory leak.
      * 
      * @param coexpressions
      */
@@ -1405,9 +1390,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             log.info( "Specificity postprocess CS2GeneMap: " + timer.getTime() + "ms" );
         }
 
-        coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
-        coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
-        coexpressions.postProcess();
+        coexpressions.postProcess( querySpecificity, targetSpecificity );
     }
 
     /**
@@ -1528,9 +1511,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param csIdChunk
      * @param session
      */
-    private void processCS2GeneChunk( Map<Long, Collection<Long>> csId2geneIds, Collection<Long> csIdChunk,
-            Session session ) {
+    private Map<Long, Collection<Long>> processCS2GeneChunk( Collection<Long> csIdChunk, Session session ) {
         assert csIdChunk.size() > 0;
+        Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1549,7 +1532,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         if ( neededCs.size() == 0 ) {
-            return;
+            return csId2geneIds;
         }
 
         if ( timer.getTime() > 100 ) {
@@ -1603,7 +1586,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 log.info( "Was unable to get Gene2CS cache stats:  " + e.getMessage() );
             }
         }
-
+        return csId2geneIds;
     }
 
     /**
