@@ -92,7 +92,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
      * @param coexpressedGene
      */
     public CoexpressedGenePairValueObject( Long queryGene, Long coexpressedGene ) {
-        coexpressedGene = null;
+        assert queryGene != null;
+        assert coexpressedGene != null;
         positiveScores = new HashMap<Long, Map<Long, Double>>();
         negativeScores = new HashMap<Long, Map<Long, Double>>();
         queryProbeInfo = new HashMap<Long, Collection<Long>>();
@@ -155,7 +156,7 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         } else if ( o1Size < o2Size ) {
             return 1;
         } else {
-            return this.getCoexpressedGeneId().compareTo( o.getCoexpressedGeneId() );
+            return this.coexpressedGene.compareTo( o.getCoexpressedGeneId() );
         }
     }
 
