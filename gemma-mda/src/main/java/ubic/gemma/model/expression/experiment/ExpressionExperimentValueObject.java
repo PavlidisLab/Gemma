@@ -148,8 +148,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Integer pubmedId;
 
-    private Integer rawCoexpressionLinkCount = null;
-
     private Collection<AuditEventValueObject> sampleRemovedFlags;
 
     private String shortName;
@@ -201,14 +199,13 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
                 otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(),
                 otherBean.getDateCreated(), otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
                         .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
-                otherBean.getDateLinkAnalysis(), otherBean.getRawCoexpressionLinkCount(), otherBean
-                        .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
-                        .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
-                otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
-                otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(), otherBean.getAutoTagDate(),
-                otherBean.getDifferentialExpressionAnalyses(), otherBean.getDateBatchFetch(), otherBean
-                        .getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(), otherBean.getBatchFetchEventType(),
-                otherBean.getTroubleDetails() );
+                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(), otherBean
+                        .getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(), otherBean
+                        .getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
+                otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
+                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(), otherBean
+                        .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
+                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -220,9 +217,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
             String investigators, String owner, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
             String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
-            Date dateLinkAnalysis, Integer rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
-            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated,
-            Date dateCached, Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
+            Date dateLinkAnalysis, Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
+            Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
+            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
             Long experimentalDesign, Date autoTagDate,
             Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
             Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails ) {
@@ -261,7 +258,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
         this.missingValueAnalysisEventType = missingValueAnalysisEventType;
         this.dateLinkAnalysis = dateLinkAnalysis;
-        this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
         this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
         this.dateMissingValueAnalysis = dateMissingValueAnalysis;
         this.processedExpressionVectorCount = processedExpressionVectorCount;
@@ -281,9 +277,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
     }
 
     @Override
-    public String toString(){
-        return this.getShortName()+" (id = "+this.getId()+")";
+    public String toString() {
+        return this.getShortName() + " (id = " + this.getId() + ")";
     }
+
     /**
      * @param sampleRemovedFlags
      */
@@ -335,7 +332,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
             this.setProcessedDataVectorComputationEventType( otherBean.getProcessedDataVectorComputationEventType() );
             this.setMissingValueAnalysisEventType( otherBean.getMissingValueAnalysisEventType() );
             this.setDateLinkAnalysis( otherBean.getDateLinkAnalysis() );
-            this.setRawCoexpressionLinkCount( otherBean.getRawCoexpressionLinkCount() );
             this.setDateProcessedDataVectorComputation( otherBean.getDateProcessedDataVectorComputation() );
             this.setDateMissingValueAnalysis( otherBean.getDateMissingValueAnalysis() );
             this.setProcessedExpressionVectorCount( otherBean.getProcessedExpressionVectorCount() );
@@ -626,16 +622,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
      */
     public Integer getPubmedId() {
         return this.pubmedId;
-    }
-
-    /**
-     * <p>
-     * The amount of raw links that the EE contributed to any of the coexpressed genes. by raw we mean before
-     * filtering/stringency was applied.
-     * </p>
-     */
-    public Integer getRawCoexpressionLinkCount() {
-        return this.rawCoexpressionLinkCount;
     }
 
     /**
@@ -936,10 +922,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     public void setPubmedId( Integer pubmedId ) {
         this.pubmedId = pubmedId;
-    }
-
-    public void setRawCoexpressionLinkCount( Integer rawCoexpressionLinkCount ) {
-        this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
 
     public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {

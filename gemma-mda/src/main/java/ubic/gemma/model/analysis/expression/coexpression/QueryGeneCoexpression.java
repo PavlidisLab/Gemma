@@ -63,19 +63,9 @@ public class QueryGeneCoexpression {
     private Map<Long, Map<Long, Collection<Long>>> expressionExperimentProbe2GeneMaps;
 
     /**
-     * the expression experiments that show up in the results - they contribute raw links. Value is the number of links.
+     * the expression experiments that show up in the results - they contribute links. Value is the number of links.
      */
     private Map<Long, Integer> expressionExperiments;
-
-    /**
-     * Includes links that did not meet the threshold
-     */
-    private Map<Long, Integer> expressionExperimentsRawLinkCounts;
-
-    /**
-     * 
-     */
-    private Map<Long, Boolean> expressionExperimentHasSpecificProbeForQueryGene;
 
     /**
      * Number of links that passed the stringency requirements, with negative correlations
@@ -109,9 +99,7 @@ public class QueryGeneCoexpression {
 
         coexpressionData = new HashMap<Long, CoexpressedGenePairValueObject>();
         expressionExperiments = new HashMap<Long, Integer>();
-        expressionExperimentsRawLinkCounts = new HashMap<Long, Integer>();
         expressionExperimentProbe2GeneMaps = new HashMap<Long, Map<Long, Collection<Long>>>();
-        expressionExperimentHasSpecificProbeForQueryGene = new HashMap<Long, Boolean>();
 
     }
 
@@ -260,7 +248,6 @@ public class QueryGeneCoexpression {
 
         this.expressionExperimentProbe2GeneMaps.clear();
         this.coexpressionData.clear();
-        this.expressionExperimentHasSpecificProbeForQueryGene.clear();
     }
 
     /**
@@ -351,19 +338,6 @@ public class QueryGeneCoexpression {
      */
     public Long getQueryGene() {
         return queryGene;
-    }
-
-    /**
-     * @param id
-     * @return an int representing the raw number of links a given ee contributed to the coexpression search
-     */
-    public Integer getRawLinkCountForEE( Long id ) {
-
-        if ( expressionExperimentsRawLinkCounts.get( id ) == null ) {
-            return 0;
-        }
-
-        return expressionExperimentsRawLinkCounts.get( id );
     }
 
     /**
@@ -558,8 +532,6 @@ public class QueryGeneCoexpression {
 
             if ( !keep ) {
                 toRemove.add( coExValObj );
-            } else {
-                incrementRawEEContributions( coExValObj.getExpressionExperiments() );
             }
 
             assert coExValObj.getExpressionExperiments().size() <= coExValObj.getPositiveLinkSupport()
@@ -634,17 +606,7 @@ public class QueryGeneCoexpression {
                     genes.add( g );
                 }
 
-                /*
-                 * If the probe maps to just one gene, then we're okay. Note that this check is a little paranoid: if
-                 * there is only one gene, then it had better be the query gene!
-                 */
-                if ( genes.size() == 1 && genes.iterator().next().equals( queryGene ) ) {
-
-                    this.setHasProbeSpecificForQueryGene( eeID );
-
-                }
             }
-
         }
     }
 
@@ -693,10 +655,6 @@ public class QueryGeneCoexpression {
         return this.expressionExperiments.containsKey( eeID );
     }
 
-    void setHasProbeSpecificForQueryGene( Long eeID ) {
-        expressionExperimentHasSpecificProbeForQueryGene.put( eeID, true );
-    }
-
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
         this.addQuerySpecificityInfo( eeID, probe2GeneMap );
     }
@@ -742,23 +700,6 @@ public class QueryGeneCoexpression {
                 expressionExperiments.put( eeID, expressionExperiments.get( eeID ) + 1 );
             }
 
-        }
-    }
-
-    /**
-     * Counting up how many links each data set contributed (including links that did not meet the stringency
-     * threshold).
-     * 
-     * @param contributingEEs
-     */
-    private void incrementRawEEContributions( Collection<Long> contributingEEs ) {
-        for ( Long eeID : contributingEEs ) {
-
-            if ( !expressionExperimentsRawLinkCounts.containsKey( eeID ) ) {
-                expressionExperimentsRawLinkCounts.put( eeID, 1 );
-            } else {
-                expressionExperimentsRawLinkCounts.put( eeID, expressionExperimentsRawLinkCounts.get( eeID ) + 1 );
-            }
         }
     }
 

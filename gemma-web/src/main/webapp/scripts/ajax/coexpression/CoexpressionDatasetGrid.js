@@ -28,9 +28,6 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "name",
 				type : "string"
 			}, {
-				name : "rawCoexpressionLinkCount",
-				type : "int"
-			}, {
 				name : "coexpressionLinkCount",
 				type : "int"
 			}, {
@@ -103,14 +100,7 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						hidden : true,					
 						sortable : true
 
-					}, {
-						header : " Raw Links ",
-						dataIndex : "rawCoexpressionLinkCount",
-						tooltip : "# of possible links for the query gene in this data set",
-						hidden : true,
-						align: 'center',
-						sortable : true
-					}, {
+					} , {
 						header : " Contributing Links ",
 						dataIndex : "coexpressionLinkCount",
 						tooltip : "# contributions to confirmed links",			

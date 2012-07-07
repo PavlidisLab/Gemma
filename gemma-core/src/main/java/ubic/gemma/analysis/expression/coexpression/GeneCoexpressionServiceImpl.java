@@ -498,7 +498,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( eevo.getId() ) );
-            ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( eevo.getId() ) );
 
             // NOTE should be accurate (probe-level query) but we won't show it.
             // See bug 1564 FIXME
@@ -618,7 +617,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( supportCount.get( eevo.getId() ) );
-            ecdvo.setRawCoexpressionLinkCount( null ); // not available
             ecdvo.setProbeSpecificForQueryGene( true ); // we shouldn't display
                                                         // this. See bug 1564.
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );

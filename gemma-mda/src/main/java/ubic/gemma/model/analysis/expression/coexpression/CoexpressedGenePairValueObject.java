@@ -83,7 +83,7 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     private Map<Long, Map<Long, Double>> negativeScores;
 
     /**
-     * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
+     * Expression Experiments which have evidence for coexpression of this gene with the query, but the probes are not
      * specific for the target gene.
      */
     private Collection<Long> nonspecificEEs;

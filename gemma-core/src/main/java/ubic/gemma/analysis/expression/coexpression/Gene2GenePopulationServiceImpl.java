@@ -677,7 +677,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         buf.append( co.getQueryGene() + "\t" );
         buf.append( co.getCoexpressedGeneId() + "\t" );
-        buf.append( co.getNumDatasetsTestedIn() + "\t" );
         buf.append( co.getPositiveLinkSupport() + "\t" );
         buf.append( co.getNegativeLinkSupport() + "\t" );
         buf.append( BitUtil.prettyPrint( co.getDatasetsTestedInBytes() ) );
