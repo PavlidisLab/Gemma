@@ -34,17 +34,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.BitUtil;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -57,7 +54,6 @@ import ubic.gemma.util.EntityUtils;
 public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzerImpl.class.getName() );
-    private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 25;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
 
     /**
@@ -90,9 +86,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
 
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-
-    @Autowired
-    private GeneOntologyService geneOntologyService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -142,7 +135,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             /*
              * Finish the postprocessing.
              */
-            coexpressions.setEesQueryGeneTestedIn( EntityUtils.getIds( eesQueryTestedIn ) );
             if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
                 continue;
             }
@@ -152,7 +144,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 filter( coexpressions, limit, stringency ); // remove excess
                 fillInEEInfo( coexpressions ); // do first...
                 fillInGeneInfo( stringency, coexpressions );
-                computeGoStats( coexpressions, stringency );
             }
 
             computeEesTestedIn( ees, coexpressions, eesQueryTestedIn, stringency, limit );
@@ -199,7 +190,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
          */
         StopWatch timer = new StopWatch();
         timer.start();
-        coexpressions.setEesQueryGeneTestedIn( EntityUtils.getIds( eesQueryTestedIn ) );
         if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
             return coexpressions;
         }
@@ -209,7 +199,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             filter( coexpressions, limit, stringency ); // remove excess
             fillInEEInfo( coexpressions ); // do first...
             fillInGeneInfo( stringency, coexpressions );
-            computeGoStats( coexpressions, stringency );
         }
 
         computeEesTestedIn( ees, coexpressions, eesQueryTestedIn, stringency, limit );
@@ -218,16 +207,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         if ( timer.getTime() > 1000 ) {
             log.info( "All Post-Postprocessing: " + timer.getTime() + "ms" );
         }
-
-        // if ( RandomUtils.nextBoolean() ) {
-        // log.info( "Memory status: \n" );
-        // log.info( "geneTestStatusByteCache: "
-        // + MemoryUtil.deepMemoryUsageOf( geneTestStatusByteCache, VisibilityFilter.ALL ) + " bytes" );
-        // log.info( "genesTestedIn: " + MemoryUtil.deepMemoryUsageOf( genesTestedIn, VisibilityFilter.ALL )
-        // + " bytes" );
-        // // log.info( "expressionExperimentService: "
-        // // + MemoryUtil.deepMemoryUsageOf( expressionExperimentService, VisibilityFilter.ALL ) + " bytes" );
-        // }
 
         log.debug( "Analysis completed" );
 
@@ -298,7 +277,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
     private void computeEesTestedIn( Collection<? extends BioAssaySet> ees, QueryGeneCoexpression coexpressions,
             Collection<? extends BioAssaySet> eesQueryTestedIn, int stringency, int limit ) {
 
-        List<CoexpressedGenePairValueObject> coexpressionData = coexpressions.getGeneCoexpressionData( stringency );
+        List<CoexpressedGenePairValueObject> coexpressionData = coexpressions.getCoexpressionData( stringency );
 
         if ( limit == 0 ) {
             // when we expect to be analyzing many query genes. Note that we pass in the full set of experiments, not
@@ -333,8 +312,8 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         Map<Long, CoexpressedGenePairValueObject> gmap = new HashMap<Long, CoexpressedGenePairValueObject>();
 
         for ( CoexpressedGenePairValueObject o : coexpressionData ) {
-            coexGeneIds.add( o.getGeneId() );
-            gmap.put( o.getGeneId(), o );
+            coexGeneIds.add( o.getCoexpressedGeneId() );
+            gmap.put( o.getCoexpressedGeneId(), o );
             i++;
             if ( i >= MAX_GENES_TO_COMPUTE_EESTESTEDIN ) break;
         }
@@ -406,7 +385,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         int loopcount = 0; // for performance statistics
         for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
 
-            Long coexGeneId = cvo.getGeneId();
+            Long coexGeneId = cvo.getCoexpressedGeneId();
             if ( !queryGeneId.equals( cvo.getQueryGene() ) ) {
                 throw new IllegalArgumentException( "All coexpression value objects must have the same query gene here" );
             }
@@ -430,7 +409,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 answer[i] = ( byte ) ( targetGeneEETestStatus[i] & queryGeneEETestStatusBytes[i] );
                 loopcount++;
             }
-
             cvo.setDatasetsTestedInBytes( answer );
         }
 
@@ -446,55 +424,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                     + " bytes total" );
         }
 
-    }
-
-    /**
-     * @param queryGene
-     * @param numQueryGeneGOTerms
-     * @param coexpressionData
-     */
-    private void computeGoOverlap( Long queryGene, int numQueryGeneGOTerms,
-            List<CoexpressedGenePairValueObject> coexpressionData ) {
-        Collection<Long> overlapIds = new HashSet<Long>();
-        int i = 0;
-        for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
-            overlapIds.add( cvo.getGeneId() );
-            cvo.setNumQueryGeneGOTerms( numQueryGeneGOTerms );
-            if ( i++ > MAX_GENES_TO_COMPUTE_GOOVERLAP ) break;
-        }
-
-        Map<Long, Collection<OntologyTerm>> overlap = geneOntologyService
-                .calculateGoTermOverlap( queryGene, overlapIds );
-
-        for ( CoexpressedGenePairValueObject cvo : coexpressionData ) {
-            cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
-        }
-    }
-
-    /**
-     * @param coexpressions
-     */
-    private void computeGoStats( QueryGeneCoexpression coexpressions, int stringency ) {
-
-        // don't compute this if we aren't loading GO into memory.
-        if ( !geneOntologyService.isGeneOntologyLoaded() ) {
-            return;
-        }
-
-        log.debug( "Computing GO stats" );
-
-        Long queryGene = coexpressions.getQueryGene();
-        int numQueryGeneGOTerms = geneOntologyService.getGOTerms( queryGene ).size();
-        coexpressions.setQueryGeneGoTermCount( numQueryGeneGOTerms );
-        if ( numQueryGeneGOTerms == 0 ) return;
-
-        if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) return;
-
-        List<CoexpressedGenePairValueObject> knownGeneCoexpressionData = coexpressions
-                .getGeneCoexpressionData( stringency );
-        computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
-
-        // Only known genes have GO terms, so we don't need to look at Predicted and PARs.
     }
 
     /**
@@ -543,8 +472,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         Collection<Long> eeIds = new HashSet<Long>();
         log.debug( "Filling in EE info" );
 
-        QueryGeneCoexpressionsDetails coexps = coexpressions.getGeneCoexpression();
-        fillInEEInfo( coexpressions, eeIds, coexps );
+        fillInEEInfo( coexpressions, eeIds );
 
     }
 
@@ -553,8 +481,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param eeIds
      * @param coexps
      */
-    private void fillInEEInfo( QueryGeneCoexpression coexpressions, Collection<Long> eeIds,
-            QueryGeneCoexpressionsDetails coexps ) {
+    private void fillInEEInfo( QueryGeneCoexpression coexpressions, Collection<Long> eeIds ) {
 
         eeIds.addAll( coexpressions.getExpressionExperiments() );
         Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
@@ -563,31 +490,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
             em.put( evo.getId(), evo );
         }
 
-        // for ( Long evo : coexps.getExpressionExperimentIds() ) {
-        // em.put( evo.getId(), evo );
-        // }
-        // for ( Long evo : coexpressions.getExpressionExperiments() ) {
-        // ExpressionExperimentValueObject ee = em.get( evo.getId() );
-        // evo.setShortName( ee.getShortName() );
-        // evo.setName( ee.getName() );
-        // }
-        //
-        // for ( Long evo : coexps.getExpressionExperimentIds() ) {
-        // ExpressionExperimentValueObject ee = em.get( evo.getId() );
-        // evo.setShortName( ee.getShortName() );
-        // evo.setName( ee.getName() );
-        // }
-    }
-
-    /**
-     * @param stringency
-     * @param coexpressions
-     */
-    private void fillInGeneInfo( int stringency, QueryGeneCoexpression coexpressions ) {
-        log.debug( "Filling in Gene info" );
-        QueryGeneCoexpressionsDetails coexp = coexpressions.getGeneCoexpression();
-        fillInGeneInfo( stringency, coexpressions, coexp );
-
     }
 
     /**
@@ -595,14 +497,13 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param coexpressions
      * @param coexp
      */
-    private void fillInGeneInfo( int stringency, QueryGeneCoexpression coexpressions,
-            QueryGeneCoexpressionsDetails coexp ) {
+    private void fillInGeneInfo( int stringency, QueryGeneCoexpression coexpressions ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        List<CoexpressedGenePairValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
+        List<CoexpressedGenePairValueObject> coexpressionData = coexpressions.getCoexpressionData( stringency );
         Collection<Long> geneIds = new HashSet<Long>();
         for ( CoexpressedGenePairValueObject cod : coexpressionData ) {
-            geneIds.add( cod.getGeneId() );
+            geneIds.add( cod.getCoexpressedGeneId() );
         }
 
         Collection<Gene> genes = geneService.loadMultiple( geneIds ); // this can be slow if there are a lot.
@@ -612,10 +513,6 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
         }
 
         for ( CoexpressedGenePairValueObject cod : coexpressionData ) {
-            Gene g = gm.get( cod.getGeneId() );
-            cod.setGeneName( g.getName() );
-            cod.setGeneOfficialName( g.getOfficialName() );
-            cod.setTaxonId( g.getTaxon().getId() );
             coexpressions.add( cod );
         }
         timer.stop();
@@ -630,8 +527,7 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
      * @param stringency
      */
     private void filter( QueryGeneCoexpression coexpressions, int limit, int stringency ) {
-        QueryGeneCoexpressionsDetails coexps = coexpressions.getGeneCoexpression();
-        coexps.filter( limit, stringency );
+        coexpressions.filter( limit, stringency );
     }
 
 }

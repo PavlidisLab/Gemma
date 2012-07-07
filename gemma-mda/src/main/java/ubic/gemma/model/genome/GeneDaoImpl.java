@@ -52,7 +52,6 @@ import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -838,17 +837,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             log.info( "Raw query: " + overallWatch.getTime() + "ms" );
         }
 
-        coexpressions.setDbQuerySeconds( overallWatch.getTime() );
-        overallWatch.reset();
-        overallWatch.start();
         if ( cachedResults.size() > 0 ) {
+            overallWatch.reset();
+            overallWatch.start();
             mergeCachedCoexpressionResults( coexpressions, cachedResults );
             overallWatch.stop();
             if ( overallWatch.getTime() > 100 ) {
                 log.info( "Merge " + cachedResults.size() + " cached results in: " + overallWatch.getTime() + "ms" );
             }
-            overallWatch.reset();
-            overallWatch.start();
         }
 
         if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
@@ -1109,33 +1105,23 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param eeID
      * @param queryGene
      * @param queryProbe
-     * @param pvalue
      * @param score
      * @param coexpressedGene
      * @param geneType
      * @param coexpressedProbe
      */
-    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Gene queryGene, Long queryProbe,
-            Double pvalue, Double score, Long coexpressedGene, Long coexpressedProbe ) {
+    private void addResult( QueryGeneCoexpression coexpressions, Long eeID, Long queryGene, Long queryProbe,
+            Double score, Long coexpressedGene, Long coexpressedProbe ) {
         CoexpressedGenePairValueObject coExVO;
 
         // add the gene (if not already seen)
         if ( coexpressions.contains( coexpressedGene ) ) {
             coExVO = coexpressions.get( coexpressedGene );
         } else {
-            coExVO = new CoexpressedGenePairValueObject();
-            coExVO.setQueryGene( queryGene.getId() );
-            coExVO.setGeneId( coexpressedGene );
+            coExVO = new CoexpressedGenePairValueObject( queryGene, coexpressedGene );
             coexpressions.add( coExVO );
         }
-
-        // add the ee here so we know it is associated with this specific gene.
-        coExVO.addSupportingExperiment( eeID );
-
-        coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
-
-        coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
-
+        coExVO.addScore( eeID, score, queryProbe, coexpressedProbe );
     }
 
     /**
@@ -1271,20 +1257,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * 
          * <pre>
          * 0 Geneid
-         * 1 exper
-         * 2 pvalue
-         * 3 score
-         * 4 csin
-         * 5 csout
-         * 6 queryGene id
+         * 1 exper 
+         * 2 score
+         * 3 csin
+         * 4 csout
+         * 5 queryGene id
          * </pre>
          */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcIn.GENE as queryGeneId FROM GENE2CS gcIn STRAIGHT_JOIN "
-                + p2pClass
-                + " coexp ON gcIn.CS=coexp."
-                + inKey
-                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
+                + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
                 + outKey + " WHERE " + eeClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
 
         if ( log.isDebugEnabled() ) log.debug( query );
@@ -1316,20 +1298,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * 
          * <pre>
          * 0 Geneid
-         * 1 exper
-         * 2 pvalue
-         * 3 score
-         * 4 csin
-         * 5 csout
+         * 1 exper 
+         * 2 score
+         * 3 csin
+         * 4 csout
          * </pre>
          */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut FROM GENE2CS gcIn STRAIGHT_JOIN "
-                + p2pClass
-                + " coexp ON gcIn.CS=coexp."
-                + inKey
-                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
-                + outKey
+        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper,  coexp.SCORE as score, "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut FROM GENE2CS gcIn STRAIGHT_JOIN " + p2pClass
+                + " coexp ON gcIn.CS=coexp." + inKey + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey
                 + " WHERE " + eeClause + " gcIn.GENE=:id ";
 
         // AND gcOut.GENE <> :id // Omit , see below!
@@ -1394,37 +1371,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             for ( CoexpressionCacheValueObject cachedCVO : cache ) {
                 assert cachedCVO.getQueryProbe() != null;
                 assert cachedCVO.getCoexpressedProbe() != null;
-                if ( cachedCVO.getQueryGene().getId().equals( cachedCVO.getCoexpressedGene() ) ) {
+                if ( cachedCVO.getQueryGene().equals( cachedCVO.getCoexpressedGene() ) ) {
                     // defensive check against self-links being in the cache
                     // (shouldn't happen)
                     continue;
                 }
                 addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(),
-                        cachedCVO.getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(),
-                        cachedCVO.getCoexpressedProbe() );
+                        cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getCoexpressedProbe() );
 
                 assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
         }
-    }
-
-    /**
-     * @param coexpressions <p>
-     *        Performance notes: Empirically this rarely takes very long, definitely less than 1s in vast majority of
-     *        cases. I changed the logging to trigger at 250ms get a bit better resolution - PP feb 2010
-     */
-    private void postProcess( QueryGeneCoexpression coexpressions ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        QueryGeneCoexpressionsDetails geneCoexpression = coexpressions.getGeneCoexpression();
-        geneCoexpression.postProcess();
-        watch.stop();
-        Long elapsed = watch.getTime();
-        coexpressions.setPostProcessTime( elapsed );
-
-        if ( elapsed > 250 ) log.info( "Specificity check: " + elapsed + "ms." );
     }
 
     /**
@@ -1450,8 +1407,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
         coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
-
-        postProcess( coexpressions );
+        coexpressions.postProcess();
     }
 
     /**
@@ -1502,22 +1458,20 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         Long eeID = resultSet.getLong( 1 );
-        Double pvalue = resultSet.getDouble( 2 );
-        Double score = resultSet.getDouble( 3 );
-        Long queryProbe = resultSet.getLong( 4 );
-        Long coexpressedProbe = resultSet.getLong( 5 );
-        addResult( coexpressions, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
+        Double score = resultSet.getDouble( 2 );
+        Long queryProbe = resultSet.getLong( 3 );
+        Long coexpressedProbe = resultSet.getLong( 4 );
+        addResult( coexpressions, eeID, queryGene.getId(), queryProbe, score, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result. Note that this will be disabled during 'large' analyses.
          */
         if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-            coExVOForCache.setQueryGene( queryGene );
+            coExVOForCache.setQueryGene( queryGene.getId() );
             coExVOForCache.setCoexpressedGene( coexpressedGene );
             coExVOForCache.setExpressionExperiment( eeID );
             coExVOForCache.setScore( score );
-            coExVOForCache.setPvalue( pvalue );
             coExVOForCache.setQueryProbe( queryProbe );
             coExVOForCache.setCoexpressedProbe( coexpressedProbe );
             if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
@@ -1537,12 +1491,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         Long coexpressedGene = resultSet.getLong( 0 );
         Long eeID = resultSet.getLong( 1 );
-        Double pvalue = resultSet.getDouble( 2 );
-        Double score = resultSet.getDouble( 3 );
-        Long queryProbe = resultSet.getLong( 4 );
-        Long coexpressedProbe = resultSet.getLong( 5 );
-        // String geneType = resultSet.getString( 6 );
-        Long queryGeneId = resultSet.getLong( 6 );
+        Double score = resultSet.getDouble( 2 );
+        Long queryProbe = resultSet.getLong( 3 );
+        Long coexpressedProbe = resultSet.getLong( 4 );
+        Long queryGeneId = resultSet.getLong( 5 );
 
         if ( queryGeneId.equals( coexpressedGene ) ) {
             return;
@@ -1552,19 +1504,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         assert queryGene != null : queryGeneId + " did not match given queries";
         QueryGeneCoexpression ccvo = coexpressions.get( queryGene );
         assert ccvo != null;
-        addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
+        addResult( ccvo, eeID, queryGene.getId(), queryProbe, score, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result.
          */
         if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-            coExVOForCache.setQueryGene( queryGene );
+            coExVOForCache.setQueryGene( queryGene.getId() );
             coExVOForCache.setCoexpressedGene( coexpressedGene );
             // coExVOForCache.setGeneType( geneType );
             coExVOForCache.setExpressionExperiment( eeID );
             coExVOForCache.setScore( score );
-            coExVOForCache.setPvalue( pvalue );
             coExVOForCache.setQueryProbe( queryProbe );
             coExVOForCache.setCoexpressedProbe( coexpressedProbe );
             if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
@@ -1669,7 +1620,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject = session.createSQLQuery( queryString ); // for native query.
         queryObject.addScalar( "id", new LongType() ); // gene out.
         queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "pvalue", new DoubleType() );
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
@@ -1692,7 +1642,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         queryObject.addScalar( "id", new LongType() ); // gene out.
         queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "pvalue", new DoubleType() );
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );

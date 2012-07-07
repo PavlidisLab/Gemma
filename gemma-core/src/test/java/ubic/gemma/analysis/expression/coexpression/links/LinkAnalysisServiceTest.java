@@ -37,10 +37,10 @@ import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.Sing
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -131,8 +131,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
             log.info( coexps.size() + " hits for " + gene );
             for ( CoexpressedGenePairValueObject coex : coexps ) {
-                log.debug( coex );
                 assertNotNull( coex.getQueryGene() );
+                assertNotNull( coex.getCoexpressedGeneId() );
             }
             foundOne = true;
             break;

@@ -69,26 +69,6 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
 
     private Boolean enabled = true;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#isEnabled()
-     */
-    @Override
-    public Boolean isEnabled() {
-        return enabled;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#setEnabled(java.lang.Boolean)
-     */
-    @Override
-    public void setEnabled( Boolean enabled ) {
-        this.enabled = enabled;
-    }
-
     private Cache cache;
 
     /*
@@ -104,62 +84,16 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
             return;
         }
         Long eeID = coExVOForCache.getExpressionExperiment();
-        Gene queryGene = coExVOForCache.getQueryGene();
+        Long queryGene = coExVOForCache.getQueryGene();
 
-        Collection<CoexpressionCacheValueObject> existingCache = get( eeID, queryGene.getId() );
+        Collection<CoexpressionCacheValueObject> existingCache = get( eeID, queryGene );
         if ( existingCache != null ) {
             existingCache.add( coExVOForCache );
         } else {
             Collection<CoexpressionCacheValueObject> cachedValues = new HashSet<CoexpressionCacheValueObject>();
             cachedValues.add( coExVOForCache );
-            cache.put( new Element( new CacheKey( eeID, queryGene.getId() ), cachedValues ) );
+            cache.put( new Element( new CacheKey( eeID, queryGene ), cachedValues ) );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache()
-     */
-    @Override
-    public void clearCache() {
-        cache.removeAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache(java.lang.Long)
-     */
-    @Override
-    public void clearCache( Long eeid ) {
-        for ( Object o : cache.getKeys() ) {
-            CacheKey k = ( CacheKey ) o;
-            if ( k.eeid.equals( eeid ) ) {
-                cache.remove( k );
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#get(ubic.gemma.model.expression.experiment
-     * .BioAssaySet, ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    public Collection<CoexpressionCacheValueObject> get( BioAssaySet ee, Gene g ) {
-        Long eeid = ee.getId();
-        Long geneid = g.getId();
-        return get( eeid, geneid );
-    }
-
-    private Collection<CoexpressionCacheValueObject> get( Long eeid, Long geneid ) {
-        assert cache != null;
-        Element element = cache.get( new CacheKey( eeid, geneid ) );
-        if ( element == null ) return null;
-        return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
     }
 
     /**
@@ -224,6 +158,77 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         }
 
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache()
+     */
+    @Override
+    public void clearCache() {
+        cache.removeAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#clearCache(java.lang.Long)
+     */
+    @Override
+    public void clearCache( Long eeid ) {
+        for ( Object o : cache.getKeys() ) {
+            CacheKey k = ( CacheKey ) o;
+            if ( k.eeid.equals( eeid ) ) {
+                cache.remove( k );
+            }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#get(ubic.gemma.model.expression.experiment
+     * .BioAssaySet, ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    public Collection<CoexpressionCacheValueObject> get( BioAssaySet ee, Gene g ) {
+        Long eeid = ee.getId();
+        Long geneid = g.getId();
+        return get( eeid, geneid );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#isEnabled()
+     */
+    @Override
+    public Boolean isEnabled() {
+        return enabled;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache#setEnabled(java.lang.Boolean)
+     */
+    @Override
+    public void setEnabled( Boolean enabled ) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * @param eeid
+     * @param geneid
+     * @return
+     */
+    private Collection<CoexpressionCacheValueObject> get( Long eeid, Long geneid ) {
+        assert cache != null;
+        Element element = cache.get( new CacheKey( eeid, geneid ) );
+        if ( element == null ) return null;
+        return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
+    }
 }
 
 class CacheKey implements Serializable {
@@ -241,15 +246,6 @@ class CacheKey implements Serializable {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
-        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
-        return result;
-    }
-
-    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( obj == null ) return false;
@@ -262,6 +258,15 @@ class CacheKey implements Serializable {
             if ( other.geneId != null ) return false;
         } else if ( !geneId.equals( other.geneId ) ) return false;
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
     }
 
 }

@@ -42,11 +42,10 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.protein.ProteinLinkOutFormatter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpressionsDetails;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
 import ubic.gemma.model.association.TfGeneAssociation;
@@ -208,16 +207,15 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionsForQueryGene = this
                     .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
-            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getGeneCoexpression(), stringency,
-                    queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets(),
-                    proteinInteractionsForQueryGene );
+            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions, stringency, queryGenesOnly, geneIds,
+                    result.getKnownGeneResults(), result.getKnownGeneDatasets(), proteinInteractionsForQueryGene );
 
             CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
             summary.setDatasetsAvailable( eevos.size() );
-            summary.setDatasetsTested( coexpressions.getEesQueryTestedIn().size() );
-            summary.setLinksFound( coexpressions.getNumGenes() );
-            summary.setLinksMetPositiveStringency( coexpressions.getGeneCoexpression().getPositiveStringencyLinkCount() );
-            summary.setLinksMetNegativeStringency( coexpressions.getGeneCoexpression().getNegativeStringencyLinkCount() );
+            summary.setDatasetsTested( coexpressions.getNumDatasetsQueryGeneTestedIn() );
+            summary.setLinksFound( coexpressions.getNumberOfGenes() );
+            summary.setLinksMetPositiveStringency( coexpressions.getPositiveStringencyLinkCount() );
+            summary.setLinksMetNegativeStringency( coexpressions.getNegativeStringencyLinkCount() );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
             coexpressions.finalize();
         }
@@ -411,29 +409,33 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param proteinInteractionsForQueryGene map keyed on geneid of string url for protein interaction
      */
     private void addExtCoexpressionValueObjects( Gene queryGene, List<ExpressionExperimentValueObject> eevos,
-            QueryGeneCoexpressionsDetails coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds,
+            QueryGeneCoexpression coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds,
             Collection<CoexpressionValueObjectExt> results, Collection<CoexpressionDatasetValueObject> datasetResults,
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionsForQueryGene ) {
 
+        Collection<Long> coexpIds = new HashSet<Long>();
         for ( CoexpressedGenePairValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
-            if ( queryGenesOnly && !geneIds.contains( cvo.getGeneId() ) ) continue;
+            coexpIds.add( cvo.getCoexpressedGeneId() );
+        }
+        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjects( coexpIds ) );
+
+        for ( CoexpressedGenePairValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
+            if ( queryGenesOnly && !geneIds.contains( cvo.getCoexpressedGeneId() ) ) continue;
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( new GeneValueObject( queryGene ) );
-            ecvo.setFoundGene( new GeneValueObject( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName(),
-                    queryGene.getTaxon() ) );
+            ecvo.setFoundGene( coexpedGenes.get( cvo.getCoexpressedGeneId() ) ); // FIXME too slow,
 
             ecvo.setPosSupp( cvo.getPositiveLinkSupport() );
             ecvo.setNegSupp( cvo.getNegativeLinkSupport() );
             ecvo.setSupportKey( 10 * Math.max( ecvo.getPosSupp(), ecvo.getNegSupp() ) );
 
             // if there are some protein protein interactions for this gene see
-            // if the given coexpreesed gene is in the
-            // map of interaactions
-            // and if so get the value for the url.
+            // if the given coexpressed gene is in the
+            // map of interactions and if so get the value for the URL.
             if ( proteinInteractionsForQueryGene != null && !( proteinInteractionsForQueryGene.isEmpty() ) ) {
                 Gene2GeneProteinAssociation proteinProteinInteraction = proteinInteractionsForQueryGene.get( cvo
-                        .getGeneId() );
+                        .getCoexpressedGeneId() );
                 this.addProteinDetailsToValueObject( proteinProteinInteraction, ecvo );
             }
             /*
@@ -448,9 +450,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             ecvo.setNumTestedIn( cvo.getNumDatasetsTestedIn() );
 
-            ecvo.setGoSim( cvo.getGoOverlap() != null ? cvo.getGoOverlap().size() : 0 );
-            ecvo.setMaxGoSim( cvo.getPossibleOverlap() );
-
             StringBuilder datasetVector = new StringBuilder();
             Collection<Long> supportingEEs = new ArrayList<Long>();
 
@@ -458,6 +457,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
 
                 Long eeid = eevo.getId();
+
+                // this information will not be filled in if the cvo was built in 'batch' mode, but that's not the case,
+                // here.
                 boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eeid );
 
                 assert cvo.getExpressionExperiments().size() <= cvo.getPositiveLinkSupport()
@@ -490,7 +492,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         }
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() )
+            if ( !coexp.getExpressionExperiments().contains( eevo.getId() )
                     || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
             ecdvo.setId( eevo.getId() );
@@ -499,7 +501,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( eevo.getId() ) );
 
             // NOTE should be accurate (probe-level query) but we won't show it.
-            // See bug 1564
+            // See bug 1564 FIXME
             // ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
@@ -509,9 +511,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     /**
      * Adds the protein protein interaction data to the value object, that is the url link for string the evidence for
-     * that interaction and the confidenence score.
+     * that interaction and the confidence score.
      * 
-     * @param proteinProteinInteraction Protein Protein interactin for the coexpression link
+     * @param proteinProteinInteraction Protein Protein interaction for the coexpression link
      * @param cvo The value object used to display coexpression data
      */
     private void addProteinDetailsToValueObject( Gene2GeneProteinAssociation proteinProteinInteraction,
@@ -555,7 +557,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     /**
      * This is necessary in case there is more than one gene2gene analysis in the system. The common case is when a new
-     * analysis is in progress. Only one analysis should be enableed at any given time.
+     * analysis is in progress. Only one analysis should be enabled at any given time.
      * 
      * @param queryGenes
      * @return
@@ -659,7 +661,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     /**
      * Get coexpression results using a pure gene2gene query (without visiting the probe2probe tables. This is generally
-     * faster, probably even if we're only interested in data from a subset of the exeriments.
+     * faster, probably even if we're only interested in data from a subset of the experiments.
      * 
      * @param baseSet
      * @param eeIds Experiments to limit the results to (must not be null, and should already be security-filtered)

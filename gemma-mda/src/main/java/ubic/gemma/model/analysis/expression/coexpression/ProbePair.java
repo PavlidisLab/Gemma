@@ -18,28 +18,14 @@ import java.io.Serializable;
  */
 public class ProbePair implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     private Long queryProbeId;
     private Long targetProbeId;
-    private double score;
-    private double pvalue;
 
-    public ProbePair( Long queryProbeId, Long targetProbeId, double score, double pvalue ) {
+    public ProbePair( Long queryProbeId, Long targetProbeId ) {
         super();
         this.queryProbeId = queryProbeId;
         this.targetProbeId = targetProbeId;
-        this.score = score;
-        this.pvalue = pvalue;
-    }
-
-    /**
-     * @return the pvalue
-     */
-    protected double getPvalue() {
-        return pvalue;
     }
 
     /**
@@ -50,13 +36,6 @@ public class ProbePair implements Serializable {
     }
 
     /**
-     * @return the score
-     */
-    protected double getScore() {
-        return score;
-    }
-
-    /**
      * @return the targetProbeId
      */
     protected Long getTargetProbeId() {
@@ -64,24 +43,10 @@ public class ProbePair implements Serializable {
     }
 
     /**
-     * @param pvalue the pvalue to set
-     */
-    protected void setPvalue( double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    /**
      * @param queryProbeId the queryProbeId to set
      */
     protected void setQueryProbeId( Long queryProbeId ) {
         this.queryProbeId = queryProbeId;
-    }
-
-    /**
-     * @param score the score to set
-     */
-    protected void setScore( double score ) {
-        this.score = score;
     }
 
     /**

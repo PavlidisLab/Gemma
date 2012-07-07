@@ -25,35 +25,36 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.ontology.model.OntologyTerm;
 
 /**
  * The results for one gene that is coexpressed with a query gene, across multiple expression experiments; possibly with
  * multiple probes per expression experiment.
  * <p>
- * Keeps track of specificity, pValues, Scores, goTerms, GO overlap with the query, stringency value. Information about
- * positive and negative correlations are stored, separately.
+ * Keeps track of specificity, pValues, Scores, stringency value. Information about positive and negative correlations
+ * are stored, separately.
  * 
  * @author klc
  * @version $Id$
  */
 public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGenePairValueObject> {
 
-    private static Log log = LogFactory.getLog( CoexpressedGenePairValueObject.class.getName() );
-
     @Override
     public void finalize() {
-        this.datasetsSupporting.clear();
         this.datasetsTestedIn.clear();
         this.crossHybridizingGenes.clear();
         this.datasetsTestedInBytes = null;
-        this.negPvalues.clear();
         this.negativeScores.clear();
         this.positiveScores.clear();
-        this.posPvalues.clear();
+        for ( Long l : links.keySet() ) {
+            links.get( l ).clear();
+        }
+        links.clear();
+    }
+
+    public CoexpressedGenePairValueObject( Long queryGene, Long coexpressedGene ) {
+        this();
+        this.queryGene = queryGene;
+        this.coexpressedGene = coexpressedGene;
     }
 
     /**
@@ -66,39 +67,20 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
      */
     private Collection<Long> datasetsTestedIn = new HashSet<Long>();
 
-    /**
-     * the expression experiments that this coexpression was involved in. The number of these will total the 'support'
-     * (pos+neg correlations, minus # of experiments that support both + and -)
-     */
-    private Collection<Long> datasetsSupporting;
-
     private byte[] datasetsTestedInBytes = null;
 
     /**
      * ID of the coexpressed gene.
      */
-    private Long geneId;
-
-    /**
-     * Name of the coexpressed gene
-     */
-    private String geneName;
-
-    /**
-     * Official symbol of the coexpressed gene
-     */
-    private String geneOfficialName;
-
-    /**
-     * Number of GO terms this gene shares with the query gene.
-     */
-    private Collection<OntologyTerm> goOverlap;
+    private Long coexpressedGene;
 
     private Map<Long, Collection<ProbePair>> links = new HashMap<Long, Collection<ProbePair>>();
 
+    /**
+     * Maps of Expression Experiment IDs to maps of Probe IDs to scores that are in support of this coexpression, with
+     * negative correlations.
+     */
     private Map<Long, Map<Long, Double>> negativeScores;
-
-    private Map<Long, Map<Long, Double>> negPvalues;
 
     /**
      * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
@@ -107,17 +89,9 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     private Collection<Long> nonspecificEEs;
 
     /**
-     * Number of GO terms the query gene has. This is the highest possible overlap
-     */
-    private int numQueryGeneGOTerms;
-
-    /**
-     * Maps of Expression Experiment IDs to maps of Probe IDs to scores/pvalues that are in support of this
-     * coexpression.
+     * Maps of Expression Experiment IDs to maps of Probe IDs to scores that are in support of this coexpression.
      */
     private Map<Long, Map<Long, Double>> positiveScores;
-
-    private Map<Long, Map<Long, Double>> posPvalues;
 
     private Long queryGene;
 
@@ -142,46 +116,36 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     }
 
     /**
-     * Map of eeId -> probe IDs for the _query_.
+     * Map of eeId -> probe IDs for the _query_. Each experiment added is a supporting experiment.
      */
     private Map<Long, Collection<Long>> queryProbeInfo;
 
-    private Long taxonId;
-
-    private String abaGeneUrl;
-
     public CoexpressedGenePairValueObject() {
-        geneName = "";
-        geneId = null;
-        geneOfficialName = null;
-        datasetsSupporting = new HashSet<Long>();
+        coexpressedGene = null;
         positiveScores = new HashMap<Long, Map<Long, Double>>();
         negativeScores = new HashMap<Long, Map<Long, Double>>();
-        posPvalues = new HashMap<Long, Map<Long, Double>>();
-        negPvalues = new HashMap<Long, Map<Long, Double>>();
         queryProbeInfo = new HashMap<Long, Collection<Long>>();
         nonspecificEEs = new HashSet<Long>();
-        numQueryGeneGOTerms = 0;
     }
 
     /**
      * @param geneid of gene that is predicted to cross-hybridize with this gene
      */
     public void addCrossHybridizingGene( Long geneid ) {
-        if ( geneid.equals( this.geneId ) ) return;
+        if ( geneid.equals( this.coexpressedGene ) ) return;
         this.crossHybridizingGenes.add( geneid );
     }
 
     /**
      * @param eeID
-     * @param score
-     * @param pvalue
-     * @param probeID
-     * @param outputProbeId
+     * @param score - all we care about is the sign.
+     * @param queryProbe
+     * @param coexpressedProbe
      */
-    public void addScore( Long eeID, Double score, Double pvalue, Long queryProbe, Long coexpressedProbe ) {
-
+    public void addScore( Long eeID, Double score, Long queryProbe, Long coexpressedProbe ) {
+        assert queryProbe != null;
         assert !queryProbe.equals( coexpressedProbe );
+        assert queryProbeInfo != null;
         if ( !queryProbeInfo.containsKey( eeID ) ) {
             queryProbeInfo.put( eeID, new HashSet<Long>() );
         }
@@ -191,35 +155,17 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
             this.links.put( eeID, new HashSet<ProbePair>() );
         }
 
-        this.links.get( eeID ).add( new ProbePair( queryProbe, coexpressedProbe, score, pvalue ) );
+        this.links.get( eeID ).add( new ProbePair( queryProbe, coexpressedProbe ) );
 
         if ( score < 0 ) {
             if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
-            if ( !negPvalues.containsKey( eeID ) ) negPvalues.put( eeID, new HashMap<Long, Double>() );
-            negPvalues.get( eeID ).put( coexpressedProbe, pvalue );
             negativeScores.get( eeID ).put( coexpressedProbe, score );
-
         } else {
             if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
-            if ( !posPvalues.containsKey( eeID ) ) posPvalues.put( eeID, new HashMap<Long, Double>() );
-            posPvalues.get( eeID ).put( coexpressedProbe, pvalue );
             positiveScores.get( eeID ).put( coexpressedProbe, score );
 
         }
 
-    }
-
-    /**
-     * Add another experiment that supports this coexpression.
-     * 
-     * @param eeVo
-     */
-    public void addSupportingExperiment( Long eeVo ) {
-        if ( datasetsSupporting.contains( eeVo ) ) {
-            // I guess this happens if there are two probes for the same gene.
-            if ( log.isDebugEnabled() ) log.debug( "Already have seen this experiment" );
-        }
-        this.datasetsSupporting.add( eeVo );
     }
 
     /*
@@ -236,36 +182,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         } else if ( o1Size < o2Size ) {
             return 1;
         } else {
-            return this.getGeneName().compareTo( o.getGeneName() );
+            return this.getCoexpressedGeneId().compareTo( o.getCoexpressedGeneId() );
         }
-    }
-
-    /**
-     * FIXME just returning zero for now.
-     * <p>
-     * Compute a combined pvalue for the scores.
-     * 
-     * @param mean
-     * @param size
-     * @param values
-     * @return
-     */
-    private double computePvalue( Collection<Map<Long, Double>> values ) {
-        return 0.0;
-        // double mean = 0.0;
-        // int size = 0;
-        // for ( Map<Long, Double> scores : values ) {
-        // for ( Double score : scores.values() ) {
-        // if ( score.doubleValue() == 0 ) {
-        // score = Constants.SMALL;
-        // }
-        // mean += Math.log( score );
-        // size++;
-        // }
-        // }
-        // assert size > 0;
-        //
-        // return Math.exp( mean / size );
     }
 
     @Override
@@ -274,14 +192,13 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         CoexpressedGenePairValueObject other = ( CoexpressedGenePairValueObject ) obj;
-        if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
-        } else if ( !geneId.equals( other.geneId ) ) return false;
+        if ( this.queryGene != null && other.queryGene != null && !this.queryGene.equals( other.queryGene ) ) {
+            return false;
+        }
+        if ( coexpressedGene == null ) {
+            if ( other.coexpressedGene != null ) return false;
+        } else if ( !coexpressedGene.equals( other.coexpressedGene ) ) return false;
         return true;
-    }
-
-    public String getAbaGeneUrl() {
-        return abaGeneUrl;
     }
 
     /**
@@ -336,29 +253,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     /**
      * @return the geneId of the coexpressed gene
      */
-    public Long getGeneId() {
-        return geneId;
-    }
-
-    /**
-     * @return the geneName of the coexpressed gene
-     */
-    public String getGeneName() {
-        return geneName;
-    }
-
-    /**
-     * @return the geneOfficialName of the coexpressed gene
-     */
-    public String getGeneOfficialName() {
-        return geneOfficialName;
-    }
-
-    /**
-     * @return Gene Ontology similarity of the coexpressed gene with the query gene.
-     */
-    public Collection<OntologyTerm> getGoOverlap() {
-        return goOverlap;
+    public Long getCoexpressedGeneId() {
+        return coexpressedGene;
     }
 
     /**
@@ -441,16 +337,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     }
 
     /**
-     * @return geometric mean of the pvalues for the supporting links.
-     */
-    public double getNegPValue() {
-        if ( negPvalues.size() == 0 ) return 0.0;
-
-        Collection<Map<Long, Double>> values = negPvalues.values();
-        return computePvalue( values );
-    }
-
-    /**
      * @return the nonspecificEE
      */
     public Collection<Long> getNonspecificEE() {
@@ -509,21 +395,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     }
 
     /**
-     * @return geometric mean of the pvalues for the supporting links.
-     */
-    public double getPosPValue() {
-        if ( posPvalues.size() == 0 ) return 0.0;
-        return computePvalue( this.posPvalues.values() );
-    }
-
-    /**
-     * @return
-     */
-    public int getPossibleOverlap() {
-        return numQueryGeneGOTerms;
-    }
-
-    /**
      * @param eeId
      * @return
      */
@@ -548,18 +419,12 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         return queryProbeInfo;
     }
 
-    /**
-     * @return
-     */
-    public Long getTaxonId() {
-        return taxonId;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        result = prime * result + ( ( queryGene == null ) ? 0 : queryGene.hashCode() );
+        result = prime * result + ( ( coexpressedGene == null ) ? 0 : coexpressedGene.hashCode() );
         return result;
     }
 
@@ -595,14 +460,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
                 this.positiveScores.remove( eeId );
             }
 
-            Map<Long, Double> map2 = this.posPvalues.get( eeId );
-            if ( map2.containsKey( probeId ) ) {
-                map2.remove( probeId );
-            }
-
-            if ( map2.size() == 0 ) {
-                this.posPvalues.remove( eeId );
-            }
         }
 
         /*
@@ -617,14 +474,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
                 this.negativeScores.remove( eeId );
             }
 
-            Map<Long, Double> map2 = this.negPvalues.get( eeId );
-            if ( map2.containsKey( probeId ) ) {
-                map2.remove( probeId );
-            }
-
-            if ( map2.size() == 0 ) {
-                this.negPvalues.remove( eeId );
-            }
         }
 
         if ( this.positiveScores.size() == 0 && this.negativeScores.size() == 0 ) {
@@ -632,10 +481,6 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         }
         return true;
 
-    }
-
-    public void setAbaGeneUrl( String abaGeneUrl ) {
-        this.abaGeneUrl = abaGeneUrl;
     }
 
     public void setDatasetsTestedIn( Collection<Long> datasetsTestedIn ) {
@@ -649,29 +494,8 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
     /**
      * @param geneId the geneId to set
      */
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
-    /**
-     * @param geneName the geneName to set
-     */
-    public void setGeneName( String geneName ) {
-        this.geneName = geneName;
-    }
-
-    /**
-     * @param geneOfficialName the geneOfficialName to set
-     */
-    public void setGeneOfficialName( String geneOfficialName ) {
-        this.geneOfficialName = geneOfficialName;
-    }
-
-    /**
-     * @param goOverlap of this gene with the query gene
-     */
-    public void setGoOverlap( Collection<OntologyTerm> goOverlap ) {
-        this.goOverlap = goOverlap;
+    public void setCoexpressedGene( Long geneId ) {
+        this.coexpressedGene = geneId;
     }
 
     /**
@@ -683,29 +507,15 @@ public class CoexpressedGenePairValueObject implements Comparable<CoexpressedGen
         this.nonspecificEEs = nonspecificEEs;
     }
 
-    /**
-     * @param numQueryGeneGOTerms
-     */
-    public void setNumQueryGeneGOTerms( int numQueryGeneGOTerms ) {
-        this.numQueryGeneGOTerms = numQueryGeneGOTerms;
-    }
-
     public void setQueryGene( Long queryGene ) {
         this.queryGene = queryGene;
-    }
-
-    /**
-     * @param taxonId
-     */
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
     }
 
     @Override
     public String toString() {
         // return StringUtils.isBlank( geneName ) ? "Gene " + geneId : geneName;
         StringBuilder buf = new StringBuilder();
-        buf.append( "Coexpression value object: query=" + queryGene + " target=" + geneId + " " + geneName + "\n" );
+        buf.append( "Coexpression value object: query=" + queryGene + " target=" + coexpressedGene + "\n" );
         buf.append( "Tested in " + datasetsTestedIn.size() + ": " + StringUtils.join( datasetsTestedIn, ',' ) + "\n" );
         if ( positiveScores.size() > 0 ) {
             buf.append( "Positive correlation support=" + positiveScores.size() + "\n" );

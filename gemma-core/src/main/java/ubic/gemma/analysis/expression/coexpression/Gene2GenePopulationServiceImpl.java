@@ -49,11 +49,11 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenePairValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
@@ -676,7 +676,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         StringBuilder buf = new StringBuilder();
 
         buf.append( co.getQueryGene() + "\t" );
-        buf.append( co.getGeneId() + "\t" );
+        buf.append( co.getCoexpressedGeneId() + "\t" );
         buf.append( co.getNumDatasetsTestedIn() + "\t" );
         buf.append( co.getPositiveLinkSupport() + "\t" );
         buf.append( co.getNegativeLinkSupport() + "\t" );
@@ -748,8 +748,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return
      */
     private List<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
-            QueryGeneCoexpression toPersist, GeneCoexpressionAnalysis analysis,
-            final Map<Long, Gene> genesToAnalyze, final Collection<Long> alreadyPersisted, int stringency ) {
+            QueryGeneCoexpression toPersist, GeneCoexpressionAnalysis analysis, final Map<Long, Gene> genesToAnalyze,
+            final Collection<Long> alreadyPersisted, int stringency ) {
 
         assert analysis != null;
 
@@ -760,15 +760,15 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         for ( CoexpressedGenePairValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {
 
-            if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
+            if ( !genesToAnalyze.containsKey( co.getCoexpressedGeneId() ) ) {
                 if ( log.isDebugEnabled() )
-                    log.debug( "coexpressed Gene " + co.getGeneId() + " " + co.getGeneName()
+                    log.debug( "coexpressed Gene " + co.getCoexpressedGeneId()
                             + " is not among the genes selected for analysis, so it will be skipped (while analyzing "
                             + firstGene.getOfficialSymbol() + ")" );
                 continue;
             }
 
-            Gene secondGene = genesToAnalyze.get( co.getGeneId() );
+            Gene secondGene = genesToAnalyze.get( co.getCoexpressedGeneId() );
 
             // note we just check the id to avoid any problems with thaw etc.
             if ( secondGene.getId().equals( firstGene.getId() ) ) {
@@ -785,16 +785,12 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
              */
             if ( !SINGLE_QUERY_FOR_LINKS && alreadyPersisted.contains( secondGene.getId() ) ) continue;
 
-            if ( log.isDebugEnabled() )
-                log.debug( firstGene.getName() + " link to " + secondGene.getName() + " tested in "
-                        + co.getDatasetsTestedIn().size() + " datasets" );
+            if ( log.isDebugEnabled() ) log.debug( firstGene.getName() + " link to " + secondGene.getName() );
 
             byte[] testedInVector = co.getDatasetsTestedInBytes();
-            if ( testedInVector == null ) {
-                testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
-            }
-
+            assert testedInVector != null;
             byte[] specificityVector = computeSpecificityVector( co.getNonspecificEE(), eeIdOrder );
+            assert specificityVector != null;
 
             /*
              * Note that we are storing the 'raw' link support, which includes 'non-specific' probes. These can be
@@ -807,7 +803,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 g2gCoexpression.setSourceAnalysis( analysis );
                 g2gCoexpression.setFirstGene( firstGene );
                 g2gCoexpression.setSecondGene( secondGene );
-                g2gCoexpression.setPvalue( co.getNegPValue() );
 
                 Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
                 assert contributing2NegativeLinks.size() == co.getNegativeLinkSupport();
@@ -830,7 +825,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 g2gCoexpression.setSourceAnalysis( analysis );
                 g2gCoexpression.setFirstGene( firstGene );
                 g2gCoexpression.setSecondGene( secondGene );
-                g2gCoexpression.setPvalue( co.getPosPValue() );
 
                 Collection<Long> contributing2PositiveLinks = co.getEEContributing2PositiveLinks();
                 assert contributing2PositiveLinks.size() == co.getPositiveLinkSupport();
@@ -899,10 +893,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         } else {
             List<CoexpressedGenePairValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
             for ( CoexpressedGenePairValueObject co : coexps ) {
-                if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                if ( !genesToAnalyzeMap.containsKey( co.getCoexpressedGeneId() ) ) {
                     continue;
                 }
-                Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                Gene secondGene = genesToAnalyzeMap.get( co.getCoexpressedGeneId() );
                 if ( processedGenes.contains( secondGene ) ) {
                     continue;
                 }

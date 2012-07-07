@@ -28,11 +28,8 @@ public class CoexpressionCacheValueObject implements Serializable {
     private Long coexpressedGene;
     private Long coexpressedProbe;
     private Long expressionExperiment;
-    private String geneType;
 
-    private double pvalue;
-
-    private Gene queryGene;
+    private Long queryGene;
 
     private Long queryProbe;
 
@@ -79,15 +76,7 @@ public class CoexpressionCacheValueObject implements Serializable {
         return expressionExperiment;
     }
 
-    public String getGeneType() {
-        return geneType;
-    }
-
-    public double getPvalue() {
-        return pvalue;
-    }
-
-    public Gene getQueryGene() {
+    public Long getQueryGene() {
         return queryGene;
     }
 
@@ -128,15 +117,7 @@ public class CoexpressionCacheValueObject implements Serializable {
         this.expressionExperiment = expressionExperiment;
     }
 
-    public void setGeneType( String geneType ) {
-        this.geneType = geneType;
-    }
-
-    public void setPvalue( double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public void setQueryGene( Gene queryGene ) {
+    public void setQueryGene( Long queryGene ) {
         this.queryGene = queryGene;
     }
 
