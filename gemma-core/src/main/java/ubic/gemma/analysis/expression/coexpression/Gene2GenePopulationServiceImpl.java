@@ -576,9 +576,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             StopWatch timer = new StopWatch();
             timer.start();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
-                if ( geneService.loadValueObject( queryGene.getId() ).getNumProducts() == 0 ) {
-                    continue;
-                }
 
                 log.info( "Starting: " + queryGene );
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
