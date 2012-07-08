@@ -1,9 +1,7 @@
-#!/usr/bin/groovy
-
 package ubic.gemma.script.example
 
-import ubic.gemma.script.framework.GemmaCliBuilder;
-import ubic.gemma.script.framework.SpringSupport;
+import ubic.gemma.script.framework.GemmaCliBuilder
+import ubic.gemma.script.framework.SpringSupport
 
 def cli = new GemmaCliBuilder(usage: 'groovy EEDelete [opts] <eeid>')
 

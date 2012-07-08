@@ -7,7 +7,7 @@ def cli = new GemmaCliBuilder(usage : "groovy GeneFinder [opts] <gene symbol> [m
 
 def opt = cli.parse(args)
 
-sx = new SpringSupport(useName : opt.u, password : opt.p);
+sx = new SpringSupport();
 gs = sx.getBean("geneService")
 
 for (gene in opt.arguments()) {
