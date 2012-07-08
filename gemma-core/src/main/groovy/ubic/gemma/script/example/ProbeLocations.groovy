@@ -18,7 +18,7 @@ def bss = sx.getBean("bioSequenceService")
 
 def array = ars.findByShortName(opt.arguments()[0])
 
-println("# ${array}")
+// println("# ${array}")
 
 ars.getBioSequences(array).each{
     def cs = it.key
