@@ -284,7 +284,7 @@ Gemma.Metaheatmap.ConditionLabel.constructDrawLabelFunction = function (ctx, ite
 		height = item.display.pxlSize;
 		highlightBox = {
 				width : maxSize.width,
-				height : 14,
+				height : 17,
 				x : 0,
 				y : Math.max (0, y + height/2 - 7),
 				color : item.isSelected ? 'red': 'white',
@@ -297,7 +297,7 @@ Gemma.Metaheatmap.ConditionLabel.constructDrawLabelFunction = function (ctx, ite
 		width  = item.display.pxlSize; 
 		height = size;
 		highlightBox = {
-				width : 14,
+				width : 17,
 				height : maxSize.height,
 				x : Math.max (0, x + width/2 - 7),
 				y : 0,
