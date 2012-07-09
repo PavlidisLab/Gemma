@@ -7,6 +7,8 @@ Gemma.Constants.DifferentialExpressionQvalueThreshold = 0.05;
 
 Gemma.Metaheatmap.Config = {};
 
+Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT = true;
+
 // Sizes
 Gemma.Metaheatmap.Config.cellWidth = 14;
 Gemma.Metaheatmap.Config.cellHeight = 10;
