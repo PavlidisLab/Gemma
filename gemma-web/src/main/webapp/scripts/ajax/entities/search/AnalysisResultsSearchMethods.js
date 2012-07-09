@@ -593,8 +593,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			 * this trimmed list or re-enter your gene query(ies) and "+ "use
 			 * the edit tool to manually trim your selection(s).";
 			 */
-			this.fireEvent('warning',"You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY +
-					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
+			this.fireEvent('warning',"Coexpression searches are limited to " + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY +
+					" query genes. Your query has been trimmed.<br>");
 			return "";
 
 		} else {
