@@ -527,7 +527,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				{
 					header: 'Admin',
 					id: 'admin',
-					width: 0.13,
+					width: 0.3,
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
