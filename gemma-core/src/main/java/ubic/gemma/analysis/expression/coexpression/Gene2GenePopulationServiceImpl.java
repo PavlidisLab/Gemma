@@ -577,6 +577,11 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             timer.start();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
 
+                if ( this.geneService.loadValueObject( queryGene.getId() ).getNumProducts() == 0 ) {
+                    log.debug( "Gene has no products, skipping: " + queryGene );
+                    continue;
+                }
+
                 log.info( "Starting: " + queryGene );
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );
@@ -821,8 +826,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             batch.clear();
         }
 
-        if ( all.size() > 0 ) {
-            log.info( "Persisted " + all.size() + " links for " + firstGene.getOfficialSymbol() + " "
+        if ( log.isDebugEnabled() && all.size() > 0 ) {
+            log.debug( "Persisted " + all.size() + " links for " + firstGene.getOfficialSymbol() + " "
                     + firstGene.getOfficialName() );
         }
         return all;
