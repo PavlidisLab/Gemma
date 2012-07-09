@@ -22,7 +22,7 @@
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
 					<td class="slideTextTD">
-						Over <b>3000</b> curated expression studies
+						Over <b>4000</b> curated expression studies
 					</td>
 				</tr>
 			</table>
