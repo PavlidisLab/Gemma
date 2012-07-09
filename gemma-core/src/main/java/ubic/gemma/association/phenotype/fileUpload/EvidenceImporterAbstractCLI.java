@@ -1,12 +1,17 @@
 package ubic.gemma.association.phenotype.fileUpload;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -15,6 +20,7 @@ import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.ontology.OntologyService;
@@ -32,15 +38,23 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
     protected NIFSTDOntologyService nifstdOntologyService = null;
     protected ObiService obiService = null;
     protected FMAOntologyService fmaOntologyService = null;
+    protected TaxonService taxonService = null;
+
+    protected String errorMessage = "";
+    protected String warningMessage = "";
+    protected BufferedWriter logger = null;
+    protected HashMap<String, Integer> mapColumns = new HashMap<String, Integer>();
 
     // input file path
     protected String inputFile = "";
     protected BufferedReader br = null;
     protected boolean createInDatabase = false;
     protected boolean prodDatabase = false;
+    protected String geneNcbiIdMissingUsingTaxon = "";
 
     protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
     protected final String LITERATURE_EVIDENCE = "LITERATURE";
+    protected final String GENERIC_EVIDENCE = "GENERIC";
     protected final String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
     protected final String BIOSOURCE = "BioSource";
     protected final String ORGANISM_PART = "OrganismPart";
@@ -69,6 +83,10 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
         Option prodOption = OptionBuilder.withDescription( "Using production database (false or true)" ).hasArg()
                 .withArgName( "indicate if Prod database" ).isRequired().create( "e" );
         addOption( prodOption );
+        @SuppressWarnings("static-access")
+        Option geneNcbiOption = OptionBuilder.withDescription( "If the gene BCBI is missing what taxon are we using" )
+                .hasArg().withArgName( "if we are using the symbol to identify the gene" ).isRequired().create( "n" );
+        addOption( geneNcbiOption );
     }
 
     @Override
@@ -77,12 +95,13 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
         this.inputFile = getOptionValue( 'f' );
         this.createInDatabase = new Boolean( getOptionValue( 'c' ) );
         this.prodDatabase = new Boolean( getOptionValue( 'e' ) );
+        this.geneNcbiIdMissingUsingTaxon = getOptionValue( 'n' );
     }
 
     protected EvidenceSourceValueObject makeEvidenceSource( String databaseID, String externalDatabaseName ) {
 
         EvidenceSourceValueObject evidenceSourceValueObject = null;
-        if ( !databaseID.isEmpty() && !externalDatabaseName.isEmpty() ) {
+        if ( databaseID != null && externalDatabaseName != null && !externalDatabaseName.isEmpty() ) {
             ExternalDatabaseValueObject externalDatabase = new ExternalDatabaseValueObject();
             externalDatabase.setName( externalDatabaseName );
             evidenceSourceValueObject = new EvidenceSourceValueObject( databaseID, externalDatabase );
@@ -96,6 +115,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
         this.phenotypeAssociationService = this.getBean( PhenotypeAssociationManagerService.class );
 
         this.geneService = this.getBean( GeneService.class );
+        this.taxonService = this.getBean( TaxonService.class );
 
         this.ontologyService = this.getBean( OntologyService.class );
 
@@ -161,26 +181,225 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
 
     protected String findTypeOfEvidence() throws Exception {
 
-        // lets check what type of evidence when have on the sheet
-        // 16 columns == EXPERIMENTAL
-        // 9 columns == LITERATURE
-        // other values == ERROR
-        int numOfColums = this.br.readLine().split( "\t" ).length;
+        // lets check what type of evidence when have on the sheet, each header can have any position but must use
+        // strict syntax
+        String[] headers = this.br.readLine().split( "\t" );
 
-        if ( numOfColums == 9 ) {
-            System.out.println( "The type of Evidence found is: " + this.LITERATURE_EVIDENCE );
-            loadServices( false );
-            return this.LITERATURE_EVIDENCE;
+        int index = 0;
 
-        } else if ( numOfColums >= 16 ) {
+        // all possible headers
+        for ( String header : headers ) {
+            if ( header.equalsIgnoreCase( "GeneSymbol" ) ) {
+                this.mapColumns.put( "GeneSymbol", index );
+            } else if ( header.equalsIgnoreCase( "GeneId" ) ) {
+                this.mapColumns.put( "GeneId", index );
+            } else if ( header.equalsIgnoreCase( "EvidenceCode" ) ) {
+                this.mapColumns.put( "EvidenceCode", index );
+            } else if ( header.equalsIgnoreCase( "Comments" ) ) {
+                this.mapColumns.put( "Comments", index );
+            } else if ( header.equalsIgnoreCase( "IsNegative" ) ) {
+                this.mapColumns.put( "IsNegative", index );
+            } else if ( header.equalsIgnoreCase( "ExternalDatabase" ) ) {
+                this.mapColumns.put( "ExternalDatabase", index );
+            } else if ( header.equalsIgnoreCase( "DatabaseLink" ) ) {
+                this.mapColumns.put( "DatabaseLink", index );
+            } else if ( header.equalsIgnoreCase( "Phenotypes" ) ) {
+                this.mapColumns.put( "Phenotypes", index );
+            } else if ( header.equalsIgnoreCase( "PrimaryPubMed" ) ) {
+                this.mapColumns.put( "PrimaryPubMed", index );
+            } else if ( header.equalsIgnoreCase( "OtherPubMed" ) ) {
+                this.mapColumns.put( "OtherPubMed", index );
+            } else if ( header.equalsIgnoreCase( "Score" ) ) {
+                this.mapColumns.put( "Score", index );
+            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
+                this.mapColumns.put( "ScoreType", index );
+            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
+                this.mapColumns.put( "Strength", index );
+            } else if ( header.equalsIgnoreCase( "DevelopmentalStage" ) ) {
+                this.mapColumns.put( "DevelopmentalStage", index );
+            } else if ( header.equalsIgnoreCase( "BioSource" ) ) {
+                this.mapColumns.put( "BioSource", index );
+            } else if ( header.equalsIgnoreCase( "OrganismPart" ) ) {
+                this.mapColumns.put( "OrganismPart", index );
+            } else if ( header.equalsIgnoreCase( "ExperimentDesign" ) ) {
+                this.mapColumns.put( "ExperimentDesign", index );
+            } else if ( header.equalsIgnoreCase( "Treatment" ) ) {
+                this.mapColumns.put( "Treatment", index );
+            } else if ( header.equalsIgnoreCase( "Experiment" ) ) {
+                this.mapColumns.put( "Experiment", index );
+            } else {
+                throw new Exception( "header not found: " + header );
+            }
+            index++;
+        }
+
+        // Minimum fields any evidence should have
+        if ( !( this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "GeneId" )
+                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
+                && this.mapColumns.containsKey( "IsNegative" ) && this.mapColumns.containsKey( "Phenotypes" ) ) ) {
+
+            throw new Exception( "Headers not set correctly" );
+        }
+
+        // score set ???
+        if ( this.mapColumns.containsKey( "Score" ) && this.mapColumns.containsKey( "ScoreType" )
+                && this.mapColumns.containsKey( "Strength" ) ) {
+            System.out.println( "Found a score on the evidence" );
+        } else {
+            System.out.println( "No score on the evidence" );
+        }
+
+        // using an external database ???
+        if ( this.mapColumns.containsKey( "ExternalDatabase" ) && this.mapColumns.containsKey( "DatabaseLink" ) ) {
+            System.out.println( "External database link to evidence" );
+        } else {
+            System.out.println( "No external database" );
+        }
+
+        // rules to be an experimentalEvidence
+        if ( this.mapColumns.containsKey( "Experiment" ) && this.mapColumns.containsKey( "Treatment" )
+                && this.mapColumns.containsKey( "ExperimentDesign" ) && this.mapColumns.containsKey( "OrganismPart" )
+                && this.mapColumns.containsKey( "BioSource" ) && this.mapColumns.containsKey( "DevelopmentalStage" )
+                && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMed" ) ) {
+
             System.out.println( "The type of Evidence found is: " + this.EXPERIMENTAL_EVIDENCE );
             loadServices( true );
             return this.EXPERIMENTAL_EVIDENCE;
-
-        } else {
-            throw new Exception( "Cannot determine the type of evidence found: " + numOfColums + " columns" );
+        } else if ( this.mapColumns.containsKey( "PrimaryPubMed" ) ) {
+            System.out.println( "The type of Evidence found is: " + this.LITERATURE_EVIDENCE );
+            loadServices( false );
+            return this.LITERATURE_EVIDENCE;
         }
 
+        System.out.println( "The type of Evidence found is: " + this.GENERIC_EVIDENCE );
+        loadServices( false );
+        return this.GENERIC_EVIDENCE;
+
+    }
+
+    /**
+     * find the exact term of a search term in a Collection of Ontology terms
+     * 
+     * @param ontologyTerms Collection of ontologyTerms
+     * @param search The value we are interested in finding
+     * @return OntologyTerm the exact match value found
+     * @throws IOException
+     * @throws Exception
+     */
+    protected OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) throws IOException {
+
+        // list of OntologyTerms found
+        Collection<OntologyTerm> ontologyKept = new HashSet<OntologyTerm>();
+        OntologyTerm termFound = null;
+
+        for ( OntologyTerm ot : ontologyTerms ) {
+            if ( ot.getLabel() != null ) {
+                if ( ot.getLabel().equalsIgnoreCase( search ) ) {
+                    ontologyKept.add( ot );
+                    termFound = ot;
+                }
+            }
+        }
+
+        // if we have more than 1 result, hardcode the one to choose
+        if ( ontologyKept.size() > 1 ) {
+
+            if ( search.equalsIgnoreCase( "juvenile" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/PATO#PATO_0001190" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "adult" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_681" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "newborn" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_699" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "prenatal" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_7014" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "infant" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_695" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "elderly" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_691" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "spondyloepiphyseal dysplasia congenita" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/DOID#DOID_14789" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "polycystic kidney disease" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/DOID#DOID_898" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            }
+        }
+
+        if ( ontologyKept.size() > 1 ) {
+            writeError( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
+
+            for ( OntologyTerm o : ontologyKept ) {
+                writeError( o.getLabel() + " " + o.getUri() );
+            }
+        }
+
+        return termFound;
+    }
+
+    protected void writeWarning( String message ) throws IOException {
+
+        System.out.println( message );
+        this.warningMessage += "\n" + message;
+        this.logger.write( "\n" + message );
+        this.logger.flush();
+    }
+
+    protected void writeError( String message ) throws IOException {
+
+        System.err.println( message );
+        this.errorMessage += "\n" + message;
+        this.logger.write( "\n" + message );
+        this.logger.flush();
     }
 
 }
