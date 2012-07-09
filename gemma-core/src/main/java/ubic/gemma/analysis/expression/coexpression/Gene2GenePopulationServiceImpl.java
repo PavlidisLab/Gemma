@@ -577,11 +577,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             timer.start();
             for ( Gene queryGene : genesToAnalyzeMap.values() ) {
 
-                if ( this.geneService.loadValueObject( queryGene.getId() ).getNumProducts() == 0 ) {
-                    log.debug( "Gene has no products, skipping: " + queryGene );
-                    continue;
-                }
-
                 log.info( "Starting: " + queryGene );
                 totalLinks += processGene( expressionExperiments, genesToAnalyzeMap, analysis, eeIdOrder,
                         processedGenes, stringency, queryGene );

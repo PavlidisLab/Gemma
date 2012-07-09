@@ -36,7 +36,7 @@ public class GeneValueObject implements java.io.Serializable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7098036090107647318L;
-
+    
     /**
      * @param genes
      * @return
@@ -49,8 +49,7 @@ public class GeneValueObject implements java.io.Serializable {
         for ( Gene g : genes ) {
             GeneValueObject geneValueObject = new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ),
                     g.getNcbiGeneId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
-                            .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(), g
-                            .getProducts().size() );
+                            .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName() );
             converted.add( geneValueObject );
 
         }
@@ -132,8 +131,6 @@ public class GeneValueObject implements java.io.Serializable {
      */
     private Integer associatedExperimentCount = 0;
 
-    private int numProducts;
-
     public GeneValueObject() {
     }
 
@@ -148,7 +145,6 @@ public class GeneValueObject implements java.io.Serializable {
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
         this.aliases = getAliasStrings( gene );
-        this.numProducts = gene.getProducts().size();
     }
 
     /**
@@ -162,7 +158,7 @@ public class GeneValueObject implements java.io.Serializable {
                 otherBean.getGene().getNcbiGeneId(), otherBean.getGene().getOfficialSymbol(), otherBean.getGene()
                         .getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean
                         .getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
-                        .getGene().getTaxon().getCommonName(), -1 );
+                        .getGene().getTaxon().getCommonName() );
     }
 
     /**
@@ -174,13 +170,12 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), otherBean.getAliases(), otherBean.getNcbiId(), otherBean
                 .getOfficialSymbol(), otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(),
-                otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName(), otherBean
-                        .getNumProducts() );
+                otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
     }
 
     public GeneValueObject( Long id, String name, Collection<java.lang.String> aliases, Integer ncbiId,
             java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
-            Long taxonId, String taxonScientificName, String taxonCommonName, int numProducts ) {
+            Long taxonId, String taxonScientificName, String taxonCommonName ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -192,7 +187,6 @@ public class GeneValueObject implements java.io.Serializable {
         this.taxonScientificName = taxonScientificName;
         this.taxonCommonName = taxonCommonName;
         this.aliases = aliases;
-        this.numProducts = numProducts;
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
@@ -280,10 +274,6 @@ public class GeneValueObject implements java.io.Serializable {
         return numGoTerms;
     }
 
-    public int getNumProducts() {
-        return numProducts;
-    }
-
     /**
      * 
      */
@@ -367,10 +357,6 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setNumGoTerms( Integer numGoTerms ) {
         this.numGoTerms = numGoTerms;
-    }
-
-    public void setNumProducts( int numProducts ) {
-        this.numProducts = numProducts;
     }
 
     public void setOfficialName( java.lang.String officialName ) {

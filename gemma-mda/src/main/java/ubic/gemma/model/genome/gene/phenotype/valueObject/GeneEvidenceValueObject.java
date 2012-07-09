@@ -53,7 +53,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
             java.lang.String description, Double score, Long taxonId, String taxonScientificName,
             String taxonCommonName, Collection<EvidenceValueObject> evidence ) {
         super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
-                taxonScientificName, taxonCommonName, -1 );
+                taxonScientificName, taxonCommonName );
         this.evidence = evidence;
     }
 
