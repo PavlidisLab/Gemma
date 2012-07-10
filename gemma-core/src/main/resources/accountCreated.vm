@@ -1,17 +1,10 @@
+Dear ${username},
 
-Congratulations ${username},
+Thank you for registering for Gemma ($siteurl).
 
-${message}
-
-Thanks you for registering to use Gemma.  We hope you enjoy your experience. 
 Please confirm your registration by clicking on the following link:
 
 ${confirmLink}
-
-Here are some useful links to help you get started. 
-General information about Gemma : ${overviewURL}
-Frequently asked questions (FAQ) : ${faqURL}
-Latest news about Gemma (wiki): ${wikiURL}
 
 Please feel free to contact us: gemma@chibi.ubc.ca
 

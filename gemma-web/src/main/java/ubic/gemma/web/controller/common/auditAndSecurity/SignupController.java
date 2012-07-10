@@ -30,7 +30,6 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,8 +40,8 @@ import ubic.gemma.security.authentication.LoginDetailsValueObject;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.util.JSONUtil;
+import ubic.gemma.web.controller.BaseController;
 
 /**
  * Controller to signup new users. See also the {@see UserListController}.
@@ -198,37 +197,23 @@ public class SignupController extends BaseController {
      */
     private void sendSignupConfirmationEmail( HttpServletRequest request, UserDetailsImpl u ) {
 
-        // Send an account information e-mail
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
-        mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
         try {
             Map<String, Object> model = new HashMap<String, Object>();
             model.put( "username", u.getUsername() );
-
-            model.put( "password", "" );
-
+            model.put( "siteurl", ConfigUtils.getBaseUrl() );
             model.put( "confirmLink", ConfigUtils.getBaseUrl() + "confirmRegistration.html?key=" + u.getSignupToken()
                     + "&username=" + u.getUsername() );
-            model.put( "message", getText( "signup.email.message", request.getLocale() ) );
-            model.put( "overviewURL", ConfigUtils.getBaseUrl() + "static/about.html" );
-            model.put( "faqURL", ConfigUtils.getBaseUrl() + "resources/faq.html" );
-            model.put( "wikiURL", ConfigUtils.getBaseUrl() + "faculty/pavlidis/wiki/display/gemma" );
 
-            /*
-             * FIXME: make the template name configurable.
-             */
             String templateName = "accountCreated.vm";
-            sendEmail( u.getUsername(), u.getEmail(), "Successful registration for Gemma", templateName, model );
+            sendEmail( u.getUsername(), u.getEmail(), getText( "signup.email.subject", request.getLocale() ),
+                    templateName, model );
 
             // See if this comes from AjaxRegister.js, if it does don't save confirmation message
             String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
 
             if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
-
                 this.saveMessage( request, "signup.email.sent", u.getEmail(),
                         "A confirmation email was sent. Please check your mail and click the link it contains" );
-
             }
 
         } catch ( Exception e ) {
