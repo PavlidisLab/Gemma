@@ -76,7 +76,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Create a new array design based on the genes for the organism", args );
+        super.processCommandLine( "Create a new 'platform' based on the genes for the organism", args );
 
         ExternalDatabase genbank = externalDatabaseService.find( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.find( "Ensembl" );
@@ -96,7 +96,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         // common name
         arrayDesign.setPrimaryTaxon( taxon );
-        arrayDesign.setName( "Generic array for " + taxon.getScientificName() );
+        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() );
         arrayDesign.setDescription( "Created by Gemma" );
         // arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT);
 
@@ -123,6 +123,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             gene = geneService.thaw( gene );
             Collection<GeneProduct> products = gene.getProducts();
             for ( GeneProduct geneProduct : products ) {
+                // FIXME this doesn't include other types?
                 if ( GeneProductType.RNA.equals( geneProduct.getType() ) ) {
                     /*
                      * Name is usually the genbank or ensembl accession
@@ -134,6 +135,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     bioSequence.setName( name );
                     bioSequence.setTaxon( taxon );
                     bioSequence.setPolymerType( PolymerType.RNA );
+
+                    // FIXME miRNAs (though, we don't really use this)
                     bioSequence.setType( SequenceType.mRNA );
 
                     BioSequence existing = null;

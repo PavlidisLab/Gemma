@@ -42,7 +42,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationService;
 
 /**
@@ -136,7 +135,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             return persisterHelper;
         }
         assert ctx != null : "Spring context was not initialized";
-        return ( PersisterHelper ) ctx.getBean( "persisterHelper" );
+        return ( Persister ) ctx.getBean( "persisterHelper" );
     }
 
     /**
