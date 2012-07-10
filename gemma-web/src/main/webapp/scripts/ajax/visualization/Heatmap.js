@@ -197,10 +197,12 @@ var Heatmap = function() {
 			 * up, we don't try drawing details we can't see -- fewer squares to draw means less time. Note we allow
 			 * fractional values here, so the heatmap is the same exact width as before.
 			 */
-				while (boxWidth < 1) {
+				var mergedBoxWidth = boxWidth;
+				while (mergedBoxWidth < 1) {
 					increment++;
-					boxWidth += boxWidth; // DO NOT adjust heatmapwidth now.
+					mergedBoxWidth = boxWidth * increment; 
 				}
+				boxWidth = mergedBoxWidth;
 				
 			}
 			else {
@@ -339,6 +341,7 @@ var Heatmap = function() {
 					var factorValueByLocation = []; //[row][column]
 					// over-column boxes
 
+					var adjacentColumnsDrawnAsOne = 0;
 					for ( j = 0; j < conditionLabels.length; j++) {
 						for ( factorCategory in conditionLabels[j]) {
 
@@ -346,16 +349,16 @@ var Heatmap = function() {
 							var value = factorValueArr[0];
 							var colour = factorValueArr[1];
 							
-							var adjacentColumnsDrawnAsOne = 0;
+							adjacentColumnsDrawnAsOne = 0;
 							
 							if (increment > 1) {
 								var colours = [colour];
 								// take the mode of adjacent columns.
 								for (var k = 1; k < increment && j + k < conditionLabels.length - 1; k++) {
 									
-									var factorValueArr = conditionLabels[j+k][factorCategory];
-									var value = factorValueArr[0];
-									var colour = factorValueArr[1];
+									factorValueArr = conditionLabels[j+k][factorCategory];
+									value = factorValueArr[0];
+									colour = factorValueArr[1];
 									colours.push(colour);
 									adjacentColumnsDrawnAsOne++;
 									
@@ -450,6 +453,7 @@ var Heatmap = function() {
 					last = a;
 					
 				}
+
 				
 				if (config.label) {
 					// Add row label FIXME let these have more room if the heatmap fits okay, instead of
