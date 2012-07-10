@@ -195,7 +195,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                      * For now, only associate with a single transcript. Later we will refine our definition of
                      * transcripts and fix this.
                      */
-                    log.info( cs );
+                    log.debug( cs );
                     hasTranscript = true;
                     break;
                 }
@@ -204,14 +204,13 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 log.debug( "No transcript for " + gene );
             }
 
-            if ( ++count % 10 == 0 ) log.info( count + " genes processed; " + gp2bs.size() + " transcripts so far" );
+            if ( ++count % 100 == 0 ) log.info( count + " genes processed; " + gp2bs.size() + " transcripts so far" );
         }
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
-
-        log.info( "Array design has " + arrayDesign.getCompositeSequences().size() + " 'probes'" );
+        log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
+                + " 'probes' associated with genes." );
 
         return null;
 
