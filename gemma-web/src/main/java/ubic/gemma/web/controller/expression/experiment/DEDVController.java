@@ -223,7 +223,7 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
-        if ( ees == null || ees.isEmpty() ) return null;
+        if ( ees == null || ees.isEmpty() ) return  new VisualizationValueObject[0];
 
         Gene queryGene = geneService.load( queryGeneId );
         Gene coexpressedGene = geneService.load( coexpressedGeneId );
@@ -232,7 +232,7 @@ public class DEDVController {
         genes.add( queryGeneId );
         genes.add( coexpressedGeneId );
 
-        if ( genes.isEmpty() ) return null;
+        if ( genes.isEmpty() ) return  new VisualizationValueObject[0];
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
@@ -248,7 +248,7 @@ public class DEDVController {
         if ( dedvs.size() == 0 ) {
             log.warn( "No expression profiles (DEDVs) were available for the experiments:  " + eeIds + " and genes(s) "
                     + queryGene.getOfficialSymbol() + ", " + coexpressedGene.getOfficialSymbol() );
-            return null;
+            return new VisualizationValueObject[0];
         }
 
         if ( time > 1000 ) {
