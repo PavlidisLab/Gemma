@@ -188,14 +188,9 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( "<br/>" );
             for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
                 // id : 'ee-details-panel - declared in ExpressionExperimentPage.js
-                String linkText = "<span style='cursor:pointer' onClick=\"Ext.getCmp('ee-details-panel').visualizePcaHandler("
-                        + this.eeid
-                        + ","
-                        + ( i + 1 )
-                        + ","
-                        + 100
-                        + ")\" title=\"Click to visualize top loaded probes for component "
-                        + ( i + 1 )
+                String linkText = "<span style='cursor:pointer' onClick=\"Ext.getCmp('eemanager').visualizePcaHandler("
+                        + this.eeid + "," + ( i + 1 ) + "," + 100
+                        + ")\" title=\"Click to visualize top loaded probes for component " + ( i + 1 )
                         + "\"><img src=\"/Gemma/images/icons/chart_curve.png\"></span>";
                 buf.append( linkText + "&nbsp;" );
             }
