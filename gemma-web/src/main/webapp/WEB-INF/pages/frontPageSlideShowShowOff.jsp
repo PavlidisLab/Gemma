@@ -63,6 +63,23 @@
 				</tr>
 			</table>
 		</div>
+		<div title="5">
+			<table>
+				<tr>
+					<td class="slideImageTD">
+						<img src="/Gemma/images/slideShow/neurocarta.png" style="padding:15px">
+					</td>
+					<td class="slideTextTD">
+						<div>
+							<img src="/Gemma/images/slideShow/neurocartaLogo30.png" 
+							style="vertical-align:middle;padding-bottom:5px"> 
+							<span style="font-size:18pt">Neurocarta</span>
+						</div>
+						Browse over 20,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
+					</td>
+				</tr>
+			</table>
+		</div>
 	</div>
 </div>
 <script type="text/javascript">
