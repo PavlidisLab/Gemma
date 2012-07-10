@@ -65,12 +65,17 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     private AnnotationAssociationService annotationAssociationService;
     private ExternalDatabaseService externalDatabaseService;
 
+    private boolean useNCBIIds = false;
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
                 .withDescription( "Taxon of the genes" ).withLongOpt( "taxon" ).isRequired().create( 't' );
         addOption( taxonOption );
+
+        addOption( OptionBuilder.withDescription( "use NCBI numeric IDs as the identifiers instead of gene symbols" )
+                .create( "ncbiids" ) );
 
     }
 
@@ -87,18 +92,21 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         /*
          * Create the stub array design for the organism. The name and etc. are generated automatically.
          */
+        String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
-            arrayDesign.setShortName( "Generic_" + taxon.getScientificName().replaceAll( " ", "_" ) );
+            arrayDesign.setShortName( "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" )
+                    + ncbiIdSuffix );
         } else {
-            arrayDesign.setShortName( "Generic_" + taxon.getCommonName().replaceAll( " ", "_" ) );
+            arrayDesign.setShortName( "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" )
+                    + ncbiIdSuffix );
         }
 
         // common name
         arrayDesign.setPrimaryTaxon( taxon );
-        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() );
+        String ncbiIDNameExtra = useNCBIIds ? ", indexed by NCBI IDs" : "";
+        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + ncbiIDNameExtra );
         arrayDesign.setDescription( "Created by Gemma" );
-        // arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT);
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
             log.info( "Array design for " + taxon + " already exists." );
@@ -123,7 +131,6 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             gene = geneService.thaw( gene );
             Collection<GeneProduct> products = gene.getProducts();
             for ( GeneProduct geneProduct : products ) {
-                // FIXME this doesn't include other types?
                 if ( GeneProductType.RNA.equals( geneProduct.getType() ) ) {
                     /*
                      * Name is usually the genbank or ensembl accession
@@ -136,7 +143,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     bioSequence.setTaxon( taxon );
                     bioSequence.setPolymerType( PolymerType.RNA );
 
-                    // FIXME miRNAs (though, we don't really use this)
+                    // FIXME miRNAs (though, we don't really use this field.)
                     bioSequence.setType( SequenceType.mRNA );
 
                     BioSequence existing = null;
@@ -179,7 +186,15 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     gp2bs.put( geneProduct, bioSequence );
 
                     CompositeSequence cs = CompositeSequence.Factory.newInstance();
-                    cs.setName( gene.getOfficialSymbol() );
+
+                    if ( useNCBIIds ) {
+                        if ( gene.getNcbiGeneId() == null ) {
+                            continue;
+                        }
+                        cs.setName( gene.getNcbiGeneId().toString() );
+                    } else {
+                        cs.setName( gene.getOfficialSymbol() );
+                    }
                     cs.setArrayDesign( arrayDesign );
                     cs.setBiologicalCharacteristic( bioSequence );
                     cs.setDescription( "Generic expression element for " + gene );
@@ -233,6 +248,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             if ( taxon == null ) {
                 log.error( "ERROR: Cannot find taxon " + taxonName );
             }
+        }
+        if ( hasOption( "ncbiids" ) ) {
+            this.useNCBIIds = true;
         }
     }
 
