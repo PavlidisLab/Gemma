@@ -232,9 +232,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // add all homologue evidence
         evidenceValueObjects.addAll( findHomologueEvidence( geneId, evidenceFilter ) );
 
-        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = groupCommonEvidences( evidenceValueObjects );
+        flagEvidence( evidenceValueObjects, phenotypesValuesUri );
 
-        flagEvidence( evidenceValueObjectsRegrouped, phenotypesValuesUri );
+        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = groupCommonEvidences( evidenceValueObjects );
 
         return evidenceValueObjectsRegrouped;
     }
@@ -1130,7 +1130,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
             }
             if ( relevantEvidence ) {
-                evidenceVO.setRelevance( new Double( 1.0 ) );
+                evidenceVO.setContainQueryPhenotype( true );
             }
         }
 

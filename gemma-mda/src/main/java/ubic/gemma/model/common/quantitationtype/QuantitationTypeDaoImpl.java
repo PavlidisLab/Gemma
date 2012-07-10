@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,6 +91,15 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
             sb.append( object + "\n" );
         }
         log.error( sb.toString() );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<QuantitationType> loadByDescription( String description ) {
+        final String query = "from QuantitationTypeImpl q where q.description like :description";
+        org.hibernate.Query queryObject = this.getSession().createQuery( query );
+        queryObject.setParameter( "description", description );
+        return queryObject.list();
     }
 
 }

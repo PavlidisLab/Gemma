@@ -21,6 +21,7 @@ package ubic.gemma.association.phenotype;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -50,6 +51,8 @@ import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -86,6 +89,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
@@ -152,6 +158,24 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
+        }
+
+        if ( !evidenceValueObject.getScoreValueObject().getScoreName().equals( "" ) ) {
+
+            // find the score, we use the description which is : NeuroCarta + ScoreName
+            List<QuantitationType> quantitationTypes = this.quantitationTypeService.loadByDescription( "NeuroCarta "
+                    + evidenceValueObject.getScoreValueObject().getScoreName() );
+
+            if ( quantitationTypes.size() != 1 ) {
+                throw new EntityNotFoundException( "Could not locate Score used in database using description: "
+                        + "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+            }
+
+            phe.setScoreType( quantitationTypes.iterator().next() );
+            phe.setScore( evidenceValueObject.getScoreValueObject().getScoreValue() );
+            phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
+        } else if ( !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
+            phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
         }
     }
 

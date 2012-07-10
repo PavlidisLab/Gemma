@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -121,6 +122,11 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
      */
     protected ubic.gemma.model.common.quantitationtype.QuantitationTypeDao getQuantitationTypeDao() {
         return this.quantitationTypeDao;
+    }
+
+    @Override
+    public List<QuantitationType> loadByDescription( String description ) {
+        return this.quantitationTypeDao.loadByDescription( description );
     }
 
 }

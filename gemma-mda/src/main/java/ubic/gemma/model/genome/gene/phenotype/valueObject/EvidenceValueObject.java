@@ -98,8 +98,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     private SortedSet<CharacteristicValueObject> phenotypes = null;
     private EvidenceSourceValueObject evidenceSource = null;
 
-    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
-    private Double relevance = new Double( 0 );
     private String externalUrl = "";
 
     // last modified date of the evidence
@@ -114,6 +112,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     private String geneOfficialName = "";
     private String taxonCommonName = "";
     private boolean isHomologueEvidence = false;
+
+    private boolean containQueryPhenotype = false;
+
+    private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
     public EvidenceValueObject() {
         super();
@@ -148,6 +150,11 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();
         this.geneOfficialName = phenotypeAssociation.getGene().getOfficialName();
 
+        if ( phenotypeAssociation.getScoreType() != null ) {
+            this.scoreValueObject = new ScoreValueObject( phenotypeAssociation.getStrength(),
+                    phenotypeAssociation.getScore(), phenotypeAssociation.getScoreType().getName(),
+                    phenotypeAssociation.getScoreType().getDescription() );
+        }
     }
 
     protected EvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
@@ -209,12 +216,12 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.className = className;
     }
 
-    public Double getRelevance() {
-        return this.relevance;
+    public ScoreValueObject getScoreValueObject() {
+        return this.scoreValueObject;
     }
 
-    public void setRelevance( Double relevance ) {
-        this.relevance = relevance;
+    public void setScoreValueObject( ScoreValueObject scoreValueObject ) {
+        this.scoreValueObject = scoreValueObject;
     }
 
     public void setDescription( String description ) {
@@ -305,6 +312,14 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.geneOfficialName = geneOfficialName;
     }
 
+    public boolean isContainQueryPhenotype() {
+        return this.containQueryPhenotype;
+    }
+
+    public void setContainQueryPhenotype( boolean containQueryPhenotype ) {
+        this.containQueryPhenotype = containQueryPhenotype;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -355,10 +370,16 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     protected int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
         if ( this == evidenceValueObject ) return 0;
 
+        if ( this.containQueryPhenotype && !evidenceValueObject.isContainQueryPhenotype() ) {
+            return -1;
+        } else if ( !this.containQueryPhenotype && evidenceValueObject.isContainQueryPhenotype() ) {
+            return 1;
+        }
+
         if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence ) return -1;
         if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence ) return 1;
 
-        int comparison = this.relevance.compareTo( evidenceValueObject.relevance );
+        int comparison = this.scoreValueObject.compareTo( evidenceValueObject.getScoreValueObject() );
         if ( comparison != 0 ) return comparison;
 
         if ( ( this.phenotypes != null && this.phenotypes.size() > 0 )

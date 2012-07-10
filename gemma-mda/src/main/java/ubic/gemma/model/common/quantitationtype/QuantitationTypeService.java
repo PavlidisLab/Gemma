@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.List;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -29,7 +31,7 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public QuantitationType create( QuantitationType quantitationType );
 
     /**
@@ -40,7 +42,7 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public QuantitationType findOrCreate( QuantitationType quantitationType );
 
     /**
@@ -56,13 +58,16 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void remove( QuantitationType quantitationType );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    public List<QuantitationType> loadByDescription( String description );
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.List;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -34,5 +36,7 @@ public interface QuantitationTypeDao extends BaseDao<QuantitationType> {
      * 
      */
     public QuantitationType findOrCreate( QuantitationType quantitationType );
+
+    public List<QuantitationType> loadByDescription( String description );
 
 }

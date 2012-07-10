@@ -28,7 +28,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private static String[] initArguments() {
 
         // specify what is the name of the imported file
-        String fileName = "IDGene.tsv";
+        String fileName = "AlzGene.tsv";
 
         String[] args = new String[12];
         // user
@@ -52,7 +52,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // then it will use the taxon and official symbol to find the gene NBCI, let it know the taxon
         // possible values are : "human","mouse","rat" and "" ( if we have the NCBI gene id )
         args[10] = "-n";
-        args[11] = "";
+        args[11] = "human";
 
         return args;
     }
@@ -204,7 +204,18 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setPhenotypes( phenotypes );
         evidence.setIsNegativeEvidence( isNegativeEvidence );
 
-        // TODO add the score here
+        if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
+                && this.mapColumns.get( "Strength" ) != null ) {
+
+            String score = tokens[this.mapColumns.get( "Score" )].trim();
+            String scoreName = tokens[this.mapColumns.get( "ScoreType" )].trim();
+            String strength = tokens[this.mapColumns.get( "Strength" )].trim();
+
+            // score
+            evidence.getScoreValueObject().setScoreValue( score );
+            evidence.getScoreValueObject().setScoreName( scoreName );
+            evidence.getScoreValueObject().setStrength( new Double( strength ) );
+        }
     }
 
     private GenericEvidenceValueObject convertFileLine2GenericValueObjects( String[] tokens ) throws IOException {

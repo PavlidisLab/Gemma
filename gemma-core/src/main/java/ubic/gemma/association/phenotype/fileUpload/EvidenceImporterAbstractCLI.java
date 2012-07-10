@@ -189,6 +189,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
 
         // all possible headers
         for ( String header : headers ) {
+
+            header = header.trim();
+
             if ( header.equalsIgnoreCase( "GeneSymbol" ) ) {
                 this.mapColumns.put( "GeneSymbol", index );
             } else if ( header.equalsIgnoreCase( "GeneId" ) ) {
@@ -227,6 +230,12 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
                 this.mapColumns.put( "Treatment", index );
             } else if ( header.equalsIgnoreCase( "Experiment" ) ) {
                 this.mapColumns.put( "Experiment", index );
+            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
+                this.mapColumns.put( "Strength", index );
+            } else if ( header.equalsIgnoreCase( "Score" ) ) {
+                this.mapColumns.put( "Score", index );
+            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
+                this.mapColumns.put( "ScoreType", index );
             } else {
                 throw new Exception( "header not found: " + header );
             }

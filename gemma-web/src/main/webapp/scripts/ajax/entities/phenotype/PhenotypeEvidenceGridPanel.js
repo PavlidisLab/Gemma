@@ -226,7 +226,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		        fields: [
 			        // for EvidenceValueObject
 					'id', 'className', 'description', 'evidenceCode', 'evidenceSecurityValueObject',
-		        	'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes', 'relevance',
+		        	'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes', 'containQueryPhenotype',
 		        	// for GroupEvidenceValueObject
 		        	'literatureEvidences',
 		        	// for ExperimentalEvidenceValueObject
@@ -347,8 +347,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						}
 		            }
 		        ]
-		    }),
-			sortInfo: {	field: 'relevance', direction: 'DESC' }
+		    })
+//			sortInfo: {	field: 'relevance', direction: 'DESC' }
 		});
 
 		Ext.apply(this, {
@@ -360,10 +360,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					header: '<img style="vertical-align: bottom;" ext:qwidth="198" ext:qtip="'+
 							Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.specificallyRelatedTT+
 							'" width="16" height="16" src="/Gemma/images/icons/bullet_red.png">',
-					dataIndex: 'relevance',
+					dataIndex: 'containQueryPhenotype',
 					width: 0.12,
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						if (value == 1) {
+						if (value == true) {
 							return this.header;
 						} else {
 							return '';
