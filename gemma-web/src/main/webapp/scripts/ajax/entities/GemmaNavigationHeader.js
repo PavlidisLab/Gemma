@@ -31,9 +31,13 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                 html : '<div style="margin:10px;padding:5px;"><p>Gemma is a web site, database and a set of tools for the meta-analysis, re-use and '
                         + 'sharing of genomics data, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands '
                         + 'of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential'
-                        + ' expression results</p><p>Gemma was developed by the Pavlidis group at UBC. '
-                        + 'For more information see <a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">the credits page&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>'
-                        + '</p></div>.'
+                        + ' expression results. For more information, see the '
+                        + '<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/" target="_blank">help and documentation.&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>'
+                        + '</p><p>Gemma was developed by the Pavlidis group at UBC '
+                        + '(<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">credits&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>). '
+                        + 'To cite Gemma, please use '
+                        + '<a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">this publication.&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>'
+                        + '</p></div>'
             }],
             buttons : [{
 
