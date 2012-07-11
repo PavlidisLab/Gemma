@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2012 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.analysis.expression.diff;
 
 import java.io.IOException;
@@ -8,6 +22,10 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+/**
+ * @author Paul
+ * @version $Id$
+ */
 public interface DifferentialExpressionAnalyzerService {
 
     public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
@@ -59,14 +77,6 @@ public interface DifferentialExpressionAnalyzerService {
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors );
 
     /**
-     * @param expressionExperiment
-     * @param config
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
-
-    /**
      * Run differential expression on the {@link ExpressionExperiment} using the given factor(s) and analysis type.
      * 
      * @param expressionExperiment
@@ -79,17 +89,25 @@ public interface DifferentialExpressionAnalyzerService {
 
     /**
      * @param expressionExperiment
+     * @param config
+     * @return
+     */
+    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
+
+    /**
+     * @param expressionExperiment
      * @return
      */
     public abstract Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiment
-     * @param config
+     * @param diffExpressionAnalysis
      * @return
      */
-    public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis diffExpressionAnalysis );
 
     /**
      * Run the differential expression analysis, attempting to identify the appropriate analysis automatically. First
@@ -123,6 +141,14 @@ public interface DifferentialExpressionAnalyzerService {
      */
     public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type );
+
+    /**
+     * @param expressionExperiment
+     * @param config
+     * @return
+     */
+    public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
 
     /**
      * @param ee

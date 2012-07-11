@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -664,12 +665,17 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return results;
     }
 
-    /**
-     * @param expressionExperiment; it is possible that the analysis is on a subset of the given experiment.
-     * @param diffExpressionAnalysis
-     * @return saved results.
+    /*
+     * This method is transactional to avoid problems with replication lag during the different processing steps.
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#persistAnalysis(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
-    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+    @Override
+    @Transactional
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis diffExpressionAnalysis ) {
 
         assert expressionExperiment.getId() != null;
