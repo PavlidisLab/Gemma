@@ -138,8 +138,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     linkAnalysisRenderer : function(ee) {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                + panelId
-                + 'eemanager\').doLinks('
+                + id
+                + '-eemanager\').doLinks('
                 + id
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
         if (ee.dateLinkAnalysis) {
@@ -167,8 +167,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     missingValueAnalysisRenderer : function(ee) {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                + panelId
-                + 'eemanager\').doMissingValues('
+                + id
+                + +'-eemanager\').doMissingValues('
                 + id
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
@@ -202,8 +202,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     processedVectorCreateRenderer : function(ee) {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                + panelId
-                + 'eemanager\').doProcessedVectors('
+                + id
+                + +'-eemanager\').doProcessedVectors('
                 + id
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
 
@@ -306,7 +306,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var currentPrimaryCitation = e.primaryCitation;
         var manager = new Gemma.EEManager({
                     editable : this.editable,
-                    id : panelId + "eemanager"
+                    id : e.id + '-eemanager'
                 });
         this.manager = manager;
 
@@ -382,7 +382,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
          */
         new Gemma.MGEDCombo({});
 
-        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + panelId + 'eemanager\').tagger('
+        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + e.id + '-eemanager\').tagger('
                 + e.id + ',' + e.taxonId + ',' + this.editable + ',' + (e.validatedAnnotations !== null)
                 + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 

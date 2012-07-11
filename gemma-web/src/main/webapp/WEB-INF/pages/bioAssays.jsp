@@ -33,19 +33,16 @@
 </head>
 <h2>
 	<fmt:message key="bioAssays.title" />
-	for <a
-		href='<c:url value="showExpressionExperiment.html" />?id=${expressionExperiment.id }'>${expressionExperiment.shortName}</a>
+	for <a href='<c:url value="showExpressionExperiment.html" />?id=${expressionExperiment.id }'>${expressionExperiment.shortName}</a>
 </h2>
 <p>
-	View the <a
-		href='<c:url value="/experimentalDesign/showExperimentalDesign.html?eeid=${expressionExperiment.id }" />'>Experimental
+	View the <a href='<c:url value="/experimentalDesign/showExperimentalDesign.html?eeid=${expressionExperiment.id }" />'>Experimental
 		design</a>
 </p>
 
-<Gemma:expressionQC ee="${expressionExperiment.id}"
-	hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
-	hasPCA="${hasPCA}" numFactors="${numFactors}" size="small"
-	hasPvalueDist="false" hasCorrDist="false" />
+<Gemma:expressionQC ee="${expressionExperiment.id}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
+	hasPCA="${hasPCA}" numFactors="${numFactors}" size="small" hasPvalueDist="false" hasCorrDist="false"
+	eeManagerId="eemanager" />
 
 <div style="padding: 20px; margin: 10px;" id="bioAssayTable" />
 

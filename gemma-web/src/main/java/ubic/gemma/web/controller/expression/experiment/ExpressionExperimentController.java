@@ -694,6 +694,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public String getQCTagHTML( ExpressionExperiment ee ) {
         ExperimentQCTag qc = new ExperimentQCTag();
         qc.setEe( ee.getId() );
+        qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
@@ -1884,7 +1885,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
                 .loadValueObjects( ids, true );
 
-        
         if ( SecurityServiceImpl.isUserLoggedIn() ) {
             Map<Long, Boolean> canEdit = new HashMap<Long, Boolean>();
             Map<Long, Boolean> owns = new HashMap<Long, Boolean>();
