@@ -1,6 +1,10 @@
 
 Ext.namespace('Gemma.HelpText','Gemma.StatusText');
 
+Gemma.CITATION = "Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.";
+
+Gemma.CITATION_DIRECTIONS = "If you use this file for your research, please cite: {0}" + Gemma.CITATION ;
+
 // TT = tooltip
 Gemma.EvidenceCodes = {
 	expText: 'Inferred from Experiment',
