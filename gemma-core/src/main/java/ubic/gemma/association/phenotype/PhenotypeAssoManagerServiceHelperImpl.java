@@ -160,22 +160,27 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             populateEvidenceSource( phe, evidenceValueObject );
         }
 
-        if ( !evidenceValueObject.getScoreValueObject().getScoreName().equals( "" ) ) {
+        if ( evidenceValueObject.getScoreValueObject() != null ) {
 
-            // find the score, we use the description which is : NeuroCarta + ScoreName
-            List<QuantitationType> quantitationTypes = this.quantitationTypeService.loadByDescription( "NeuroCarta "
-                    + evidenceValueObject.getScoreValueObject().getScoreName() );
+            if ( evidenceValueObject.getScoreValueObject().getScoreName() != null
+                    && !evidenceValueObject.getScoreValueObject().getScoreName().equals( "" ) ) {
 
-            if ( quantitationTypes.size() != 1 ) {
-                throw new EntityNotFoundException( "Could not locate Score used in database using description: "
-                        + "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+                // find the score, we use the description which is : NeuroCarta + ScoreName
+                List<QuantitationType> quantitationTypes = this.quantitationTypeService
+                        .loadByDescription( "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+
+                if ( quantitationTypes.size() != 1 ) {
+                    throw new EntityNotFoundException( "Could not locate Score used in database using description: "
+                            + "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+                }
+
+                phe.setScoreType( quantitationTypes.iterator().next() );
+                phe.setScore( evidenceValueObject.getScoreValueObject().getScoreValue() );
+                phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
+            } else if ( evidenceValueObject.getScoreValueObject().getStrength() != null
+                    && !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
+                phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
             }
-
-            phe.setScoreType( quantitationTypes.iterator().next() );
-            phe.setScore( evidenceValueObject.getScoreValueObject().getScoreValue() );
-            phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
-        } else if ( !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
-            phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
         }
     }
 
