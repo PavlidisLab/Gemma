@@ -160,28 +160,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             populateEvidenceSource( phe, evidenceValueObject );
         }
 
-        if ( evidenceValueObject.getScoreValueObject() != null ) {
-
-            if ( evidenceValueObject.getScoreValueObject().getScoreName() != null
-                    && !evidenceValueObject.getScoreValueObject().getScoreName().equals( "" ) ) {
-
-                // find the score, we use the description which is : NeuroCarta + ScoreName
-                List<QuantitationType> quantitationTypes = this.quantitationTypeService
-                        .loadByDescription( "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
-
-                if ( quantitationTypes.size() != 1 ) {
-                    throw new EntityNotFoundException( "Could not locate Score used in database using description: "
-                            + "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
-                }
-
-                phe.setScoreType( quantitationTypes.iterator().next() );
-                phe.setScore( evidenceValueObject.getScoreValueObject().getScoreValue() );
-                phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
-            } else if ( evidenceValueObject.getScoreValueObject().getStrength() != null
-                    && !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
-                phe.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
-            }
-        }
+        setScoreInformation( evidenceValueObject, phe );
     }
 
     /*
@@ -225,6 +204,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phenotypeAssociation.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phenotypeAssociation.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phenotypeAssociation.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
+
+        setScoreInformation( evidenceValueObject, phenotypeAssociation );
 
         // 2- modify specific values depending on evidence type
         if ( phenotypeAssociation instanceof LiteratureEvidence ) {
@@ -564,6 +545,31 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     @Override
     public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
         this.ontologyHelper = ontologyHelper;
+    }
+
+    private void setScoreInformation( EvidenceValueObject evidenceValueObject, PhenotypeAssociation phenotypeAssociation ) {
+        if ( evidenceValueObject.getScoreValueObject() != null ) {
+
+            if ( evidenceValueObject.getScoreValueObject().getScoreName() != null
+                    && !evidenceValueObject.getScoreValueObject().getScoreName().equals( "" ) ) {
+
+                // find the score, we use the description which is : NeuroCarta + ScoreName
+                List<QuantitationType> quantitationTypes = this.quantitationTypeService
+                        .loadByDescription( "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+
+                if ( quantitationTypes.size() != 1 ) {
+                    throw new EntityNotFoundException( "Could not locate Score used in database using description: "
+                            + "NeuroCarta " + evidenceValueObject.getScoreValueObject().getScoreName() );
+                }
+
+                phenotypeAssociation.setScoreType( quantitationTypes.iterator().next() );
+                phenotypeAssociation.setScore( evidenceValueObject.getScoreValueObject().getScoreValue() );
+                phenotypeAssociation.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
+            } else if ( evidenceValueObject.getScoreValueObject().getStrength() != null
+                    && !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
+                phenotypeAssociation.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
+            }
+        }
     }
 
 }
