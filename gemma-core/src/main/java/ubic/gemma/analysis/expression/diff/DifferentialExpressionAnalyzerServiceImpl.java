@@ -748,7 +748,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                                                                */);
             out.write( "# Gemma: differential expression statistics - " + extraSuffix + "\n" );
             out.write( "# Generated=" + ( new Date() ) + "\n" );
-            out.write( "# If you use this file for your research, please cite the Gemma web site\n" );
+            out.write( "# If you use this file for your research, please cite: \n" +
+            		        "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. " +
+            		        "Bioinformatics, 2012. \n" );
             out.write( "# exp=" + expressionExperiment.getId() + " " + expressionExperiment.getShortName() + " "
                     + expressionExperiment.getName() + " \n" );
 

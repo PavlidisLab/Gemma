@@ -62,8 +62,9 @@ public class ExpressionDataWriterUtils {
                     + experiment.getId() + "\n" );
         }
 
-        buf.append( "# If you use this file for your research, please cite the Gemma web site: "
-                + ExpressionDataWriterUtils.WEBSITE + "\n" );
+        buf.append( "# If you use this file for your research, please cite: \n" +
+                "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. " +
+                "Bioinformatics, 2012. \n" );
 
     }
 

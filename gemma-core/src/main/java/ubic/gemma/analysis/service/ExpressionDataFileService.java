@@ -37,7 +37,9 @@ public interface ExpressionDataFileService {
     public static final String JSON_FILE_SUFFIX = ".data.json.gz";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
-    public static final String DISCLAIMER = "# If you use this file for your research, please cite the Gemma web site\n";
+    public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n" +
+            "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. " +
+            "Bioinformatics, 2012. \n";
 
     /**
      * @param ee
