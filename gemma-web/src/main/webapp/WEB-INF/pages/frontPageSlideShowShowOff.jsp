@@ -71,9 +71,7 @@
 					</td>
 					<td class="slideTextTD">
 						<div>
-							<img src="/Gemma/images/slideShow/neurocartaLogo30.png" 
-							style="vertical-align:middle;padding-bottom:5px"> 
-							<span style="font-size:18pt">Neurocarta</span>
+							<img src="/Gemma/images/slideShow/neurocartaLogoWord.png">
 						</div>
 						Browse over 20,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
 					</td>

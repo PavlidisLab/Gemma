@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg6456"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   width="814.9715"
+   height="180.02347"
+   sodipodi:docname="logoWord.svg"
+   inkscape:export-filename="/home/tvrossum/Documents/slideshow/neurocarta/logoWord.png"
+   inkscape:export-xdpi="15.01893"
+   inkscape:export-ydpi="15.01893">
+  <metadata
+     id="metadata6462">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs6460">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       id="perspective6464" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath6480">
+      <path
+         sodipodi:type="star"
+         style="fill:#f1c0bc;fill-opacity:1;stroke:none"
+         id="path6482"
+         sodipodi:sides="6"
+         sodipodi:cx="170.83333"
+         sodipodi:cy="1041.5288"
+         sodipodi:r1="79.179825"
+         sodipodi:r2="68.571739"
+         sodipodi:arg1="-2.6120031"
+         sodipodi:arg2="-2.0884043"
+         inkscape:flatsided="true"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         d="m 102.49999,1001.5288 68.80768,-39.1784 68.33334,40 -0.47435,79.1784 -68.80768,39.1784 -68.33333,-40 0.47434,-79.1784 z"
+         transform="matrix(1.1332216,0,0,1.1368218,-98.592016,-230.00386)" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1494"
+     inkscape:window-height="924"
+     id="namedview6458"
+     showgrid="false"
+     showborder="false"
+     inkscape:zoom="0.97035431"
+     inkscape:cx="407.6123"
+     inkscape:cy="91.233048"
+     inkscape:window-x="273"
+     inkscape:window-y="44"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg6456" />
+  <image
+     xlink:href="file:///home/tvrossum/Documents/slideshow/neurocarta/logo.png"
+     width="186"
+     height="198"
+     id="image6466"
+     x="0"
+     y="854.36218"
+     inkscape:export-filename="/home/tvrossum/Documents/slideshow/neurocarta/logoWord.png"
+     inkscape:export-xdpi="20"
+     inkscape:export-ydpi="20"
+     clip-path="url(#clipPath6480)"
+     transform="translate(-17.02565,-864.01706)" />
+  <flowRoot
+     xml:space="preserve"
+     id="flowRoot6468"
+     style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+     transform="matrix(0.82752399,0,0,0.82752399,13.482201,-30.369379)"
+     inkscape:export-filename="/home/tvrossum/Documents/slideshow/neurocarta/logoWord.png"
+     inkscape:export-xdpi="20"
+     inkscape:export-ydpi="20"><flowRegion
+       id="flowRegion6470"><rect
+         id="rect6472"
+         width="849.88983"
+         height="269.31357"
+         x="177.86441"
+         y="55.372883"
+         style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans" /></flowRegion><flowPara
+       id="flowPara6474"
+       style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">Neurocarta</flowPara></flowRoot></svg>
