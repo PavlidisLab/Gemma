@@ -98,7 +98,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 NetUtils.checkForFile( this.ftpClient, seekFile );
             } catch ( FileNotFoundException e ) {
                 // that's okay, just return.
-                log.info( "There is apparently no raw data archive for " + identifier );
+                log.info( "There is apparently no raw data archive for " + identifier + "(sought: " + seekFile + ")" );
                 newDir.delete(); // nothing there.
                 this.ftpClient.disconnect(); // important to do this!
                 return null;
