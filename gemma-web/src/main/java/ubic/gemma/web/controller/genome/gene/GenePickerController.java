@@ -51,7 +51,7 @@ import ubic.gemma.web.persistence.SessionListManager;
 @Controller
 public class GenePickerController {
 
-    //private static Log log = LogFactory.getLog( GenePickerController.class );
+    // private static Log log = LogFactory.getLog( GenePickerController.class );
 
     @Autowired
     private GeneService geneService = null;
@@ -68,10 +68,8 @@ public class GenePickerController {
     @Autowired
     private GeneCoreService geneCoreService;
 
-
     @Autowired
     private SessionListManager sessionListManager;
-
 
     /**
      * AJAX
@@ -113,11 +111,9 @@ public class GenePickerController {
         if ( !StringUtils.isBlank( goId ) && goId.toUpperCase().startsWith( "GO" ) ) {
 
             return geneSearchService.getGenesByGOId( goId, taxonId );
-            
         }
 
         return new HashSet<GeneValueObject>();
-
     }
 
     /**
@@ -126,7 +122,7 @@ public class GenePickerController {
      * @return a collection of the taxa in gemma (whether usable or not)
      */
     public Collection<TaxonValueObject> getTaxa() {
-        
+
         return taxonService.loadAllValueObjects();
     }
 
@@ -136,8 +132,18 @@ public class GenePickerController {
      * @return Taxon that are species. (only returns usable taxa)
      */
     public Collection<TaxonValueObject> getTaxaSpecies() {
-        
+
         return taxonService.getTaxaSpecies();
+    }
+
+    /**
+     * AJAX
+     * 
+     * @return Taxon that are on NeuroCarta evidence
+     */
+    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence() {
+
+        return this.taxonService.getTaxaSpeciesUsedInEvidence();
     }
 
     /**
@@ -146,7 +152,7 @@ public class GenePickerController {
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-        
+
         return taxonService.getTaxaWithGenes();
     }
 
@@ -156,7 +162,7 @@ public class GenePickerController {
      * @return collection of taxa that have expression experiments available.
      */
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        
+
         return taxonService.getTaxaWithDatasets();
     }
 
@@ -166,7 +172,7 @@ public class GenePickerController {
      * @return List of taxa with array designs in gemma
      */
     public Collection<TaxonValueObject> getTaxaWithArrays() {
-        
+
         return taxonService.getTaxaWithArrays();
     }
 
@@ -190,7 +196,7 @@ public class GenePickerController {
      * @return Collection of SearchResultDisplayObject
      */
     public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
-        
+
         // get any session-bound groups
 
         Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ? sessionListManager
@@ -208,15 +214,14 @@ public class GenePickerController {
         }
 
         Collections.sort( sessionSets );
-                
+
         // maintain order: session sets first
         Collection<SearchResultDisplayObject> results = new ArrayList<SearchResultDisplayObject>();
         results.addAll( sessionSets );
-        results.addAll( geneSearchService.searchGenesAndGeneGroups(query, taxonId ) );
+        results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
         return results;
 
     }
-
 
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.

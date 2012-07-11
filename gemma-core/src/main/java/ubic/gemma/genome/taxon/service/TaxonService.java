@@ -41,7 +41,7 @@ public interface TaxonService {
 
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public Taxon findOrCreate( Taxon taxon );
 
     public Taxon load( Long id );
@@ -50,11 +50,10 @@ public interface TaxonService {
 
     public Collection<Taxon> loadAll();
 
-
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void remove( Taxon taxon );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( Taxon taxon );
 
     public void thaw( Taxon taxon );
@@ -63,24 +62,34 @@ public interface TaxonService {
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<Taxon> loadAllTaxaWithGenes();
-    
+
     public Collection<TaxonValueObject> loadAllValueObjects();
+
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
     public Collection<TaxonValueObject> getTaxaSpecies();
+
+    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence();
+
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes();
+
     /**
      * @return collection of taxa that have expression experiments available.
      */
-    public Collection<TaxonValueObject> getTaxaWithDatasets(); 
+    public Collection<TaxonValueObject> getTaxaWithDatasets();
 
     /**
      * @return List of taxa with array designs in gemma
      */
     public Collection<TaxonValueObject> getTaxaWithArrays();
+
+    /**
+     * @return Taxon that are on NeuroCarta evidence
+     */
+    public java.util.Collection<Taxon> loadTaxonWithEvidence();
 
 }

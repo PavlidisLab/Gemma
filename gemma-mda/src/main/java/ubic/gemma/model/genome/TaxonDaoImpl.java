@@ -234,6 +234,13 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
         return this.findByScientificName( "from TaxonImpl t where t.scientificName=:scientificName ", scientificName );
     }
 
+    @Override
+    public Collection<Taxon> findTaxonUsedInEvidence() {
+        String query = "select distinct taxon from GeneImpl as g join g.phenotypeAssociations as evidence join g.taxon as taxon";
+        Collection<Taxon> taxons = ( Collection<Taxon> ) ( this.getHibernateTemplate().find( query ) );
+        return taxons;
+    }
+
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String, java.lang.String)
      */

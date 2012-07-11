@@ -66,4 +66,6 @@ public interface TaxonDao extends BaseDao<Taxon> {
      */
     public void thaw( Taxon taxon );
 
+    public Collection<Taxon> findTaxonUsedInEvidence();
+
 }

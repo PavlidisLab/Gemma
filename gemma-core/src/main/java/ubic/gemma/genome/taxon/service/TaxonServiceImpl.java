@@ -45,16 +45,16 @@ import ubic.gemma.model.genome.TaxonDao;
 public class TaxonServiceImpl implements TaxonService {
 
     private static Log log = LogFactory.getLog( TaxonServiceImpl.class );
-    
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-  
+
     @Autowired
     private ArrayDesignService arrayDesignService;
-    
+
     @Autowired
     private TaxonDao taxonDao;
-    
+
     private static Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
         @Override
         public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
@@ -68,22 +68,22 @@ public class TaxonServiceImpl implements TaxonService {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
         }
     };
-     
+
     @Override
-    public TaxonValueObject loadValueObject( Long id ){
+    public TaxonValueObject loadValueObject( Long id ) {
         return TaxonValueObject.fromEntity( load( id ) );
     }
-    
+
     @Override
-    public Collection<TaxonValueObject> loadAllValueObjects( ){
+    public Collection<TaxonValueObject> loadAllValueObjects() {
         Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
-        for(Taxon tax : loadAll()){
-            result.add( TaxonValueObject.fromEntity( tax ));
+        for ( Taxon tax : loadAll() ) {
+            result.add( TaxonValueObject.fromEntity( tax ) );
         }
-        
+
         return result;
     }
-    
+
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
@@ -97,7 +97,22 @@ public class TaxonServiceImpl implements TaxonService {
         }
         return taxaSpecies;
     }
-    
+
+    /**
+     * @return Taxon that are on NeuroCarta evidence
+     */
+    @Override
+    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence() {
+
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : loadTaxonWithEvidence() ) {
+            if ( taxon.getIsSpecies() ) {
+                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaSpecies;
+    }
+
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
@@ -142,7 +157,6 @@ public class TaxonServiceImpl implements TaxonService {
         }
         return taxaWithDatasets;
     }
-    
 
     /**
      * @return List of taxa with array designs in gemma
@@ -152,14 +166,13 @@ public class TaxonServiceImpl implements TaxonService {
         Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
         for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
-            //taxonService.thaw( taxon );
+            // taxonService.thaw( taxon );
             taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
         }
 
         log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
         return taxaWithArrays;
     }
-    
 
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#find(ubic.gemma.model.genome.Taxon)
@@ -272,6 +285,19 @@ public class TaxonServiceImpl implements TaxonService {
     }
 
     /**
+     * Taxon that are on NeuroCarta evidence
+     */
+    @Override
+    public java.util.Collection<Taxon> loadTaxonWithEvidence() {
+        try {
+            return ( Collection<Taxon> ) this.getTaxonDao().findTaxonUsedInEvidence();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findTaxonUsedInEvidence()' --> " + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#remove(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -285,12 +311,12 @@ public class TaxonServiceImpl implements TaxonService {
         }
     }
 
-//    /**
-//     * Sets the reference to <code>taxon</code>'s DAO.
-//     */
-//    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
-//        this.taxonDao = taxonDao;
-//    }
+    // /**
+    // * Sets the reference to <code>taxon</code>'s DAO.
+    // */
+    // public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
+    // this.taxonDao = taxonDao;
+    // }
 
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
@@ -305,21 +331,21 @@ public class TaxonServiceImpl implements TaxonService {
                             + th, th );
         }
     }
-    
+
     /**
      * thaws taxon
      */
     @Override
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            this.getTaxonDao().thaw( taxon );        
+            this.getTaxonDao().thaw( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
                             + th, th );
         }
-    }    
-    
+    }
+
     /**
      * Gets the reference to <code>taxon</code>'s DAO.
      */
