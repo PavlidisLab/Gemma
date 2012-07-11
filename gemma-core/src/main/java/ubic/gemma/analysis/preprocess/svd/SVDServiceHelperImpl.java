@@ -168,6 +168,12 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         ees.add( ee );
         Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, p );
+
+        if ( vect.isEmpty() ) {
+            log.warn( "No vectors came back from the call; check the Gene2CS table?" );
+            return result;
+        }
+
         // note that this might have come from a cache.
 
         /*
@@ -198,7 +204,8 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         }
 
         if ( result.isEmpty() ) {
-            log.warn( "No results, something went wrong" );
+            log.warn( "No results, something went wrong; there were " + vect.size()
+                    + " vectors to start but they all got filtered out." );
         }
 
         return result;
