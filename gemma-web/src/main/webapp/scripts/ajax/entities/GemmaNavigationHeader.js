@@ -35,7 +35,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                         + '<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/" target="_blank">help and documentation.&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>'
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '
                         + '(<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">credits&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>). '
-                        + 'To cite Gemma, please use '
+                        + '<br>To cite Gemma, please use '
                         + '<a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">this publication.&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/></a>'
                         + '</p></div>'
             }],
