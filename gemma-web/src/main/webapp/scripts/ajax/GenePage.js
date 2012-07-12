@@ -146,7 +146,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 	initPhenotypeTab : function( geneId ){
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
-			iconCls: 'icon-inactive-neurocarta',			
+			iconCls: 'icon-neurocarta',			
 			itemId: 'phenotypes',
 			hasRelevanceColumn: false,
 			deferLoadToRender: true,

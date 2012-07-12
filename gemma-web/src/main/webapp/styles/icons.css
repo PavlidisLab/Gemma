@@ -3,7 +3,7 @@
 .x-tab-strip-over .icon-neurocarta, .x-tab-strip-active .icon-neurocarta {
 	background-image:url(/Gemma/images/logo/neurocarta-icon.png) ! important;
 }
-.icon-inactive-neurocarta {
+.icon-neurocarta {
 	background-image:url(/Gemma/images/logo/neurocarta-icon-inactive.png) ! important;
 }
 
