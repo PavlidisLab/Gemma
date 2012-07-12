@@ -189,7 +189,9 @@ Ext.Panel, {
 				this.display.disableQueryGenesOnly(false);
 			}      	
         	
-        	this.coexpressionGraphData = new Gemma.CoexpressionGraphData(this.coexpressionSearchData);        	
+        	this.coexpressionGraphData = new Gemma.CoexpressionGraphData(this.coexpressionSearchData);
+        	this.display.updateStringency(this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+        	this.fireEvent('stringencyUpdateFromCoexpressionViz', this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
         	
         	this.showUserMessageBarAfterNewData();        	
         	
@@ -227,6 +229,8 @@ Ext.Panel, {
         		            stringency: resultsStringency,
         		            displayStringency: this.coexpressionSearchData.coexGridCoexCommand.displayStringency
         		        });
+        		
+        		this.display.updateStringency(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
         	}
         	
         }, this);
@@ -263,7 +267,7 @@ Ext.Panel, {
     searchForCytoscapeData : function(){
     	
     	this.loadMask.show();
-		this.display.updateStringency(this.coexpressionSearchData.coexGridCoexCommand.displayStringency);
+		
     	this.coexpressionSearchData.searchForCytoscapeData();
     	
     },
