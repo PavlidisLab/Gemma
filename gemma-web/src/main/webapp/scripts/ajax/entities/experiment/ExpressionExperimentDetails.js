@@ -203,7 +203,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
                 + id
-                + +'-eemanager\').doProcessedVectors('
+                + '-eemanager\').doProcessedVectors('
                 + id
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
 
