@@ -168,7 +168,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
                 + id
-                + +'-eemanager\').doMissingValues('
+                + '-eemanager\').doMissingValues('
                 + id
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
