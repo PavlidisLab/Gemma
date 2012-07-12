@@ -593,7 +593,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				{ 
 					header: 'Updated',
 					dataIndex: 'lastUpdated',
-					width: 0.13,
+					width: 0.15,
 					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 						var date = new Date(value);
 						
