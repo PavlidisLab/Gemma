@@ -29,6 +29,7 @@
 		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
 		<s:logout logout-success-url="/login.jsp" />

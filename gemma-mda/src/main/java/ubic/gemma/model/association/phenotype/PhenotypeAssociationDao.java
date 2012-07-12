@@ -40,6 +40,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
+    /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit );
+    
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
 

@@ -50,6 +50,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	isDisplayTaxonSpecies : false,
 	isDisplayTaxonWithGenes : false,
 	isDisplayTaxonWithDatasets : false,
+	isDisplayTaxonWithEvidence : false,
 
 	record : TaxonRecord,
 
@@ -82,6 +83,8 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithGenes);
 		} else if (this.isDisplayTaxaWithArrays) {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithArrays);
+		} else if (this.isDisplayTaxonWithEvidence) {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithEvidence);
 		} else {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxa);
 		}

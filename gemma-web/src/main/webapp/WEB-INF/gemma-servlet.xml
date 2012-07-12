@@ -259,6 +259,7 @@
 			<dwr:include method="getTaxaWithGenes" />
 			<dwr:include method="getTaxaWithDatasets" />
 			<dwr:include method="getTaxaWithArrays" />
+			<dwr:include method="getTaxaWithEvidence" />
 			<dwr:include method="getGenes" />
 			<dwr:include method="getGenesByGOId" />
 			<dwr:include method="searchGenes" />
@@ -365,6 +366,7 @@
 
 	<bean id="phenotypeController" class="ubic.gemma.web.controller.PhenotypeController">
 		<dwr:remote javascript="PhenotypeController">
+			<dwr:include method="findEvidenceByFilters" />
 			<dwr:include method="findCandidateGenes" />
 			<dwr:include method="findExperimentMgedCategory" />
 			<dwr:include method="findExperimentOntologyValue" />

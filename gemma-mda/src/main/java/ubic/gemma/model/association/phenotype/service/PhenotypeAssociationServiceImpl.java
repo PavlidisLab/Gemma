@@ -139,6 +139,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.create( p );
     }
 
+    /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
+	@Override
+	public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit ) {
+		return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids, taxonId, limit );
+	}
+
     /** find all PhenotypeAssociation for a specific gene id */
     @Override
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {

@@ -102,7 +102,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that are on NeuroCarta evidence
      */
     @Override
-    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence() {
+    public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadTaxonWithEvidence() ) {

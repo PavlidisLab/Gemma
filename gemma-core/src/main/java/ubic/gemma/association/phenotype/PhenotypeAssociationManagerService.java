@@ -45,6 +45,15 @@ public interface PhenotypeAssociationManagerService {
     public abstract ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
 
     /**
+     * Return evidence satisfying the specified filters
+     * 
+     * @param taxonId taxon id
+     * @param limit number of evidence to return
+     * @return evidence satisfying the specified filters
+     */
+    public abstract Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit );
+
+    /**
      * Return all evidence for a specific gene NCBI
      * 
      * @param geneNCBI The Evidence id

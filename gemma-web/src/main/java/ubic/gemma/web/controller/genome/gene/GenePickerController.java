@@ -141,9 +141,9 @@ public class GenePickerController {
      * 
      * @return Taxon that are on NeuroCarta evidence
      */
-    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence() {
+    public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
-        return this.taxonService.getTaxaSpeciesUsedInEvidence();
+        return this.taxonService.getTaxaWithEvidence();
     }
 
     /**

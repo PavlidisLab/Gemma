@@ -1,5 +1,12 @@
 /*  
 // Icon Classes */
+.x-tab-strip-over .icon-neurocarta, .x-tab-strip-active .icon-neurocarta {
+	background-image:url(/Gemma/images/logo/neurocarta-icon.png) ! important;
+}
+.icon-inactive-neurocarta {
+	background-image:url(/Gemma/images/logo/neurocarta-icon-inactive.png) ! important;
+}
+
 .icon-graph {
 	background-image:url(/Gemma/images/icons/chart_curve.png) ! important;
 }

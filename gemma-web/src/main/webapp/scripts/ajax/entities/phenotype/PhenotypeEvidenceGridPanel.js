@@ -8,6 +8,8 @@ Ext.namespace('Gemma');
 
 // evidenceStoreProxy should be overridden if used outside of Gemma. 
 Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
+	storeAutoLoad: false,
+	storeSortInfo: { field: 'containQueryPhenotype', direction: 'DESC' },
 	evidenceStoreProxy: null,
 	allowCreateOnlyWhenGeneSpecified: true,
 	title: 'Evidence',
@@ -18,7 +20,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     viewConfig: {
         forceFit: true
     },
+	hasOwnerColumns: false,	
 	hasRelevanceColumn: true,
+	extraColumns: null,
     currentPhenotypes: null,
     currentGene: null,
 	deferLoadToRender: false,
@@ -27,6 +31,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			Gemma.HelpText.WidgetDefaults.PhenotypePanel.viewBibliographicReferenceOutsideOfGemmaText);
 	},
     initComponent: function() {
+		var RELEVANCE_COLUMNS_START_INDEX = 1;
+
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
 
 		if (!Gemma.isRunningOutsideOfGemma()) {   		
@@ -204,6 +210,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		}.createDelegate(this);	
 	
 		var evidenceStore = new Ext.data.Store({
+			autoLoad: this.storeAutoLoad,
 			proxy: this.evidenceStoreProxy == null ?
 						new Ext.data.DWRProxy({
 					        apiActionToHandlerMap: {
@@ -347,15 +354,203 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						}
 		            }
 		        ]
-		    })
-//			sortInfo: {	field: 'relevance', direction: 'DESC' }
+		    }),
+			sortInfo: this.storeSortInfo
 		});
 
-		Ext.apply(this, {
-			store: evidenceStore,
-			plugins: rowExpander,
-			columns:[
-				rowExpander,
+		
+		var columns = [
+			rowExpander,
+			{
+				header: "Phenotypes",
+				dataIndex: 'phenotypes',
+				width: 0.35,
+				renderer: this.evidencePhenotypeColumnRenderer,					
+				sortable: false
+			},
+			{
+				header: "Type",
+				dataIndex: 'className',
+				width: 1,
+				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+					var externalSource = '';
+				
+					if (record.data.evidenceSource != null && record.data.evidenceSource.externalDatabase != null) {
+						externalSource = 'External Source [' + record.data.evidenceSource.externalDatabase.name + ']';
+					}
+					
+					var typeColumnHtml = '';
+					
+					switch (value) {
+						case 'DiffExpressionEvidenceValueObject' :
+							typeColumnHtml = 'Differential Expression';
+							break;
+						
+						case 'ExperimentalEvidenceValueObject' :
+							var experimentValues = '';
+							var experimentCharacteristics = record.data.experimentCharacteristics;
+							
+				        	if (experimentCharacteristics != null) {
+								for (var i = 0; i < experimentCharacteristics.length; i++) {
+									if (experimentCharacteristics[i].category == 'Experiment') {
+										experimentValues += experimentCharacteristics[i].value + " | "; 
+									}
+								}
+								if (experimentValues.length > 0) {
+									experimentValues = ' [ ' + experimentValues.substr(0, experimentValues.length - 3) + ' ]'; // remove ' | ' at the end
+								}
+				        	}
+						
+				        	typeColumnHtml = 'Experimental' + experimentValues;
+							break;
+				
+						case 'GenericEvidenceValueObject' :
+							if (record.data.evidenceSource == null) {
+								typeColumnHtml = 'Note';
+							} else {
+								typeColumnHtml = externalSource;
+							}
+							break;
+				
+						case 'GroupEvidenceValueObject' : 
+							typeColumnHtml = '<b>' + record.data.literatureEvidences.length + 'x</b> Literature';
+							break;
+
+						case 'LiteratureEvidenceValueObject' : 
+							typeColumnHtml = 'Literature';
+							break;
+				
+						case 'UrlEvidenceValueObject' : 
+							typeColumnHtml = 'Url';
+							break;
+					}
+				
+					if (value !== 'GenericEvidenceValueObject' && externalSource !== '') {
+						typeColumnHtml += ' from ' + externalSource;
+					}
+				
+					typeColumnHtml = 
+						(record.data.isNegativeEvidence ? 
+							"<img ext:qwidth='200' ext:qtip='" +
+								Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT+
+								"' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " :
+							"") +
+						typeColumnHtml;
+					
+					return '<span style="white-space: normal;">' + typeColumnHtml +'</span>'					
+				},
+				sortable: true
+			},
+			{
+				header: "Evidence Code",
+				dataIndex: 'evidenceCode',
+				width: 0.33,
+	            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+					var columnRenderer;
+					if (record.data.homologueEvidence) {
+						columnRenderer = '<span ext:qwidth="200" ext:qtip="' + 
+							'Inferred from homology with the ' + record.data.taxonCommonName + ' gene ' + record.data.geneOfficialSymbol + '.' + 
+							'">' +
+							'Inferred from ' + record.data.geneOfficialSymbol + ' [' + record.data.taxonCommonName + ']' + '</span>';
+					} else {
+						var evidenceCode = Gemma.decodeEvidenceCode(value);						
+		            	
+						columnRenderer = '<span ext:qwidth="200" ext:qtip="' + evidenceCode.tooltipText + '">' + evidenceCode.displayText + '</span>';
+					}
+					return columnRenderer; 
+	            },
+				sortable: true
+			},
+			{
+				header: "Link Out",
+				dataIndex: 'evidenceSource',
+				width: 0.2,
+				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+					var linkOutHtml = '';
+				
+					switch (record.data.className) {
+						case 'DiffExpressionEvidenceValueObject' :
+							break;
+						
+						case 'ExperimentalEvidenceValueObject' :
+				        	if (record.data.primaryPublicationCitationValueObject != null) {
+								linkOutHtml += generatePublicationLinks(null,
+									record.data.primaryPublicationCitationValueObject.pubmedURL);
+							}
+							break;
+				
+						case 'GenericEvidenceValueObject' : 
+							break;
+				
+						case 'GroupEvidenceValueObject' :
+							var pubmedURL = record.data.literatureEvidences[0].citationValueObject.pubmedURL;
+							for (var i = 1; i < record.data.literatureEvidences.length; i++) {
+								pubmedURL += ',' + record.data.literatureEvidences[i].citationValueObject.pubmedAccession;
+							}
+							
+							linkOutHtml += generatePublicationLinks(null, pubmedURL);
+							break;
+				
+						case 'LiteratureEvidenceValueObject' : 
+				        	if (record.data.citationValueObject != null) {
+				        		linkOutHtml += generatePublicationLinks(null,
+				        			record.data.citationValueObject.pubmedURL);
+				        	}
+							break;
+				
+						case 'UrlEvidenceValueObject' : 
+							break;
+					}
+				
+					if (value != null && value.externalDatabase.name != null && value.externalUrl != null) {
+						if (linkOutHtml !== '') {
+							linkOutHtml += ' ';
+						}
+						linkOutHtml += convertToExternalDatabaseAnchor(value.externalDatabase.name, value.externalUrl, true);
+					}
+					
+					return '<span style="white-space: normal;">' + linkOutHtml +'</span>'					
+				},	
+				sortable: false
+			},
+			{
+				header: 'Admin',
+				id: 'admin',
+				width: 0.3,
+	            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+	            	var adminLinks = '';
+	            	
+					if (!this.hidden) {		            	
+						adminLinks += Gemma.SecurityManager.getSecurityLink(
+							'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
+							record.data.id,
+							record.data.evidenceSecurityValueObject.public,
+							record.data.evidenceSecurityValueObject.shared,
+							record.data.evidenceSecurityValueObject.currentUserIsOwner,
+							null,
+							null,
+							'Phenotype Association'); // Evidence name for the title in Security dialog.
+
+						if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
+						 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
+	            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
+							record.data.evidenceSource == null) {
+		            		adminLinks += ' ' +
+								generateLink('showCreateWindow(' + record.data.id + ');', '/Gemma/images/icons/add.png', 'Clone evidence') + ' ' +			            		
+            					generateLink('showEditWindow(' + record.data.id + ');', '/Gemma/images/icons/pencil.png', 'Edit evidence') + ' ' +
+								generateLink('removeEvidence(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove evidence');
+	            		}
+	            	}
+	            	
+					return adminLinks;
+	            },
+				hidden: Ext.get("hasUser") == null || (!Ext.get("hasUser").getValue()),
+				sortable: true
+			}
+		];
+
+		if (this.hasRelevanceColumn) {
+			columns.splice(RELEVANCE_COLUMNS_START_INDEX, 0, 
 				{
 					header: '<img style="vertical-align: bottom;" ext:qwidth="198" ext:qtip="'+
 							Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.specificallyRelatedTT+
@@ -371,194 +566,48 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            },
 		            hidden: !this.hasRelevanceColumn,
 					sortable: true
-				},
-				{
-					header: "Phenotypes",
-					dataIndex: 'phenotypes',
-					width: 0.35,
-					renderer: this.evidencePhenotypeColumnRenderer,					
-					sortable: false
-				},
-				{
-					header: "Type",
-					dataIndex: 'className',
-					width: 1,
-					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						var externalSource = '';
-					
-						if (record.data.evidenceSource != null && record.data.evidenceSource.externalDatabase != null) {
-							externalSource = 'External Source [' + record.data.evidenceSource.externalDatabase.name + ']';
-						}
-						
-						var typeColumnHtml = '';
-						
-						switch (value) {
-							case 'DiffExpressionEvidenceValueObject' :
-								typeColumnHtml = 'Differential Expression';
-								break;
-							
-							case 'ExperimentalEvidenceValueObject' :
-								var experimentValues = '';
-								var experimentCharacteristics = record.data.experimentCharacteristics;
-								
-					        	if (experimentCharacteristics != null) {
-									for (var i = 0; i < experimentCharacteristics.length; i++) {
-										if (experimentCharacteristics[i].category == 'Experiment') {
-											experimentValues += experimentCharacteristics[i].value + " | "; 
-										}
-									}
-									if (experimentValues.length > 0) {
-										experimentValues = ' [ ' + experimentValues.substr(0, experimentValues.length - 3) + ' ]'; // remove ' | ' at the end
-									}
-					        	}
-							
-					        	typeColumnHtml = 'Experimental' + experimentValues;
-								break;
-					
-							case 'GenericEvidenceValueObject' :
-								if (record.data.evidenceSource == null) {
-									typeColumnHtml = 'Note';
-								} else {
-									typeColumnHtml = externalSource;
-								}
-								break;
-					
-							case 'GroupEvidenceValueObject' : 
-								typeColumnHtml = '<b>' + record.data.literatureEvidences.length + 'x</b> Literature';
-								break;
+				}
+			);
+		}
 
-							case 'LiteratureEvidenceValueObject' : 
-								typeColumnHtml = 'Literature';
-								break;
-					
-							case 'UrlEvidenceValueObject' : 
-								typeColumnHtml = 'Url';
-								break;
-						}
-					
-						if (value !== 'GenericEvidenceValueObject' && externalSource !== '') {
-							typeColumnHtml += ' from ' + externalSource;
-						}
-					
-						typeColumnHtml = 
-							(record.data.isNegativeEvidence ? 
-								"<img ext:qwidth='200' ext:qtip='" +
-									Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT+
-									"' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " :
-								"") +
-							typeColumnHtml;
-						
-						return '<span style="white-space: normal;">' + typeColumnHtml +'</span>'					
+		if (this.extraColumns) {
+			Ext.each(this.extraColumns, function(columnInfo, columnInfoIndex) {
+				Ext.each(columnInfo.columns, function(column, columnIndex) {
+					// The number of items to be removed is 0.
+					columns.splice(columnInfo.startIndex + columnIndex, 0, column);
+				});
+			});
+		}
+		
+		if (this.hasOwnerColumns) {
+			columns.splice(columns.length - 1, 0, 
+				{ 
+					header: 'Owner',
+					dataIndex: 'evidenceSecurityValueObject',
+					width: 0.15,
+					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+						return value.owner;
 					},
 					sortable: true
 				},
-				{
-					header: "Evidence Code",
-					dataIndex: 'evidenceCode',
-					width: 0.33,
-		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						var columnRenderer;
-						if (record.data.homologueEvidence) {
-							columnRenderer = '<span ext:qwidth="200" ext:qtip="' + 
-								'Inferred from homology with the ' + record.data.taxonCommonName + ' gene ' + record.data.geneOfficialSymbol + '.' + 
-								'">' +
-								'Inferred from ' + record.data.geneOfficialSymbol + ' [' + record.data.taxonCommonName + ']' + '</span>';
-						} else {
-							var evidenceCode = Gemma.decodeEvidenceCode(value);						
-			            	
-							columnRenderer = '<span ext:qwidth="200" ext:qtip="' + evidenceCode.tooltipText + '">' + evidenceCode.displayText + '</span>';
-						}
-						return columnRenderer; 
-		            },
-					sortable: true
-				},
-				{
-					header: "Link Out",
-					dataIndex: 'evidenceSource',
-					width: 0.2,
+				{ 
+					header: 'Updated',
+					dataIndex: 'lastUpdated',
+					width: 0.13,
 					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						var linkOutHtml = '';
-					
-						switch (record.data.className) {
-							case 'DiffExpressionEvidenceValueObject' :
-								break;
-							
-							case 'ExperimentalEvidenceValueObject' :
-					        	if (record.data.primaryPublicationCitationValueObject != null) {
-									linkOutHtml += generatePublicationLinks(null,
-										record.data.primaryPublicationCitationValueObject.pubmedURL);
-								}
-								break;
-					
-							case 'GenericEvidenceValueObject' : 
-								break;
-					
-							case 'GroupEvidenceValueObject' :
-								var pubmedURL = record.data.literatureEvidences[0].citationValueObject.pubmedURL;
-								for (var i = 1; i < record.data.literatureEvidences.length; i++) {
-									pubmedURL += ',' + record.data.literatureEvidences[i].citationValueObject.pubmedAccession;
-								}
-								
-								linkOutHtml += generatePublicationLinks(null, pubmedURL);
-								break;
-					
-							case 'LiteratureEvidenceValueObject' : 
-					        	if (record.data.citationValueObject != null) {
-					        		linkOutHtml += generatePublicationLinks(null,
-					        			record.data.citationValueObject.pubmedURL);
-					        	}
-								break;
-					
-							case 'UrlEvidenceValueObject' : 
-								break;
-						}
-					
-						if (value != null && value.externalDatabase.name != null && value.externalUrl != null) {
-							if (linkOutHtml !== '') {
-								linkOutHtml += ' ';
-							}
-							linkOutHtml += convertToExternalDatabaseAnchor(value.externalDatabase.name, value.externalUrl, true);
-						}
+						var date = new Date(value);
 						
-						return '<span style="white-space: normal;">' + linkOutHtml +'</span>'					
-					},	
-					sortable: false
-				},
-				{
-					header: 'Admin',
-					id: 'admin',
-					width: 0.3,
-		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-		            	var adminLinks = '';
-		            	
-						if (!this.hidden) {		            	
-							adminLinks += Gemma.SecurityManager.getSecurityLink(
-								'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
-								record.data.id,
-								record.data.evidenceSecurityValueObject.public,
-								record.data.evidenceSecurityValueObject.shared,
-								record.data.evidenceSecurityValueObject.currentUserIsOwner,
-								null,
-								null,
-								'Phenotype Association'); // Evidence name for the title in Security dialog.
-
-							if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
-							 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
-		            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
-								record.data.evidenceSource == null) {
-			            		adminLinks += ' ' +
-									generateLink('showCreateWindow(' + record.data.id + ');', '/Gemma/images/icons/add.png', 'Clone evidence') + ' ' +			            		
-	            					generateLink('showEditWindow(' + record.data.id + ');', '/Gemma/images/icons/pencil.png', 'Edit evidence') + ' ' +
-									generateLink('removeEvidence(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove evidence');
-		            		}
-		            	}
-		            	
-						return adminLinks;
-		            },
-					hidden: Ext.get("hasUser") == null || (!Ext.get("hasUser").getValue()),
+						return date.format("y/M/d");
+					},
 					sortable: true
 				}
-			],
+			);
+		}
+
+		Ext.apply(this, {
+			store: evidenceStore,
+			plugins: rowExpander,
+			columns: columns,
 			tbar: [
 				createPhenotypeAssociationButton
 			],
@@ -593,13 +642,19 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				}                	
 		    },
 			loadGene: function(geneId) {
-		    	evidenceStore.reload({
-		    		params: {
-						taxonCommonName: '',
-						showOnlyEditable: false,
-		    			geneId: geneId
-		    		}
-		    	});
+				// Defer the call. Otherwise, the loading mask does not show.
+				Ext.defer(
+					function() {
+				    	evidenceStore.reload({
+				    		params: {
+								taxonCommonName: '',
+								showOnlyEditable: false,
+				    			geneId: geneId
+				    		}
+				    	});
+					},
+					1,
+					this);
 			},
 			showCreateWindow: function(id) {			
 				var data = getFormWindowData(id);

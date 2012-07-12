@@ -70,7 +70,7 @@ public interface TaxonService {
      */
     public Collection<TaxonValueObject> getTaxaSpecies();
 
-    public Collection<TaxonValueObject> getTaxaSpeciesUsedInEvidence();
+    public Collection<TaxonValueObject> getTaxaWithEvidence();
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used

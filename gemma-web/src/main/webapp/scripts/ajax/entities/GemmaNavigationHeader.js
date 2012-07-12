@@ -158,6 +158,10 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                                             text : 'My Data Sets',
                                             href : "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
                                             tooltip : "Curate your data"
+										}, {
+											text: 'My Phenotype Associations',
+											href: "/Gemma/phenotypeAssociationManager.html",
+											tooltip: "Modify your phenotype-gene associations"
                                         }, '-', {
                                             text : 'User Groups',
                                             href : "/Gemma/manageGroups.html",
@@ -461,7 +465,16 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                         href : '/Gemma/home.html',
                         cn : '<img src="/Gemma/images/logo/gemma-sm230x52_text.png" style="padding-left:10px"/>'
                     }
-                }, '->', {
+				}, {
+					xtype: 'box',
+					autoEl: {
+						tag: 'img',
+						src: '/Gemma/images/logo/neurocarta.png',
+						style: 'padding-left:10px'
+					},
+					hidden: window.location.pathname.indexOf('/Gemma/phenotypes.html') < 0 &&
+							window.location.pathname.indexOf('/Gemma/phenotypeAssociationManager.html') < 0
+				}, '->', {
                     ref : 'navToolbar',
                     xtype : 'toolbar',
                     height : 23,

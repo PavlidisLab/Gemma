@@ -707,6 +707,9 @@ GenePickerController.getTaxaWithDatasets = function(callback) {
 GenePickerController.getTaxaWithArrays = function(callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithArrays', callback);
 }
+GenePickerController.getTaxaWithEvidence = function(callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithEvidence', callback);
+}
 GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback);
 }
@@ -1025,6 +1028,9 @@ LinkOutController.getAllenBrainAtlasLink = function(p0, callback) {
 if (PhenotypeController == null)
 	var PhenotypeController = {};
 PhenotypeController._path = '/Gemma/dwr';
+PhenotypeController.findEvidenceByFilters = function(p0, p1, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findEvidenceByFilters', p0, p1, callback);
+}
 PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2, callback);
 }

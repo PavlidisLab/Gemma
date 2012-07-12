@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,14 +23,17 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -93,7 +97,40 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return phenotypeAssociationsFound;
     }
 
-    @Override
+
+	@Override
+    /** find PhenotypeAssociation satisfying the given filters: ids, taxonId and limit */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit ) {
+        if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
+        if ( limit == 0 ) return new ArrayList<PhenotypeAssociation>();
+        Session s = this.getSession();
+        String queryString =
+        	"select p from PhenotypeAssociationImpl p " +
+        	"join p.status s " +
+        	(ids != null || taxonId != null ?
+        		"where " :
+        		"") +		
+        	(ids == null ?
+        		"" : 
+        		"p.id in (:ids) " + (taxonId == null ?
+        			"" :
+        			"and ")) + 
+        	(taxonId == null ?
+        		"" : 
+        		"p.gene.taxon.id = " + taxonId) + " " + 
+        	"order by s.lastUpdateDate " + (limit < 0 ?
+        		"asc" :
+        		"desc");
+        
+        Query q = s.createQuery( queryString );
+        if ( ids != null ) {
+        	q.setParameterList( "ids", ids );
+        }
+        q.setMaxResults( Math.abs( limit ) );
+        return q.list();
+	}
+
+	@Override
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 

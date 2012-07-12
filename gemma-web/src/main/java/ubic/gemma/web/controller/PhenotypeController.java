@@ -80,6 +80,15 @@ public class PhenotypeController extends BaseController {
         return mav;
     }
 
+    @RequestMapping(value = "/phenotypeAssociationManager.html", method = RequestMethod.GET)
+    public ModelAndView showPhenotypeAssociationManager( ) {
+        return new ModelAndView( "phenotypeAssociationManager" );
+    }
+
+    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit ) {
+        return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit );
+    }
+
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName, boolean showOnlyEditable ) {
         return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonCommonName,
                 showOnlyEditable ) );
