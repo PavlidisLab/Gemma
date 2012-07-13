@@ -2087,11 +2087,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 orderBy = "taxon";
             } else if ( o.equals( "troubled" ) ) {
                 orderBy = "troubled";
-            } else if ( o.equals( "dateLastUpdated" ) ) {
+            } else if ( o.equals( "dateLastUpdated" ) || o.equals("modDate") ) {
                 orderBy = "dateLastUpdated";
                 descending = !descending;
             } else {
-                throw new IllegalArgumentException( "Unknown sort field: " + o );
+                log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: "+orderBy);
             }
 
             if ( ids != null ) {
