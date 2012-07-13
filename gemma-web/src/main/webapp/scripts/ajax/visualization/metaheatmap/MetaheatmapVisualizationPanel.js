@@ -319,6 +319,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	},
 	
 	redraw : function (wasHeatmapChanged) {
+		// Hide hover window to prevent it being integrated into the layout.
+		this.hoverWindow.hide();
+		
 		if (wasHeatmapChanged) {
 			this.updateVisibleScores();
 		}
@@ -341,6 +344,10 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		this.doLayout();
 		
 		this.draw();
+		
+		if (this.hoverWindow.isDocked) {
+			this.hoverWindow.show();
+		}		
 	},
 		
 	draw : function () {		
