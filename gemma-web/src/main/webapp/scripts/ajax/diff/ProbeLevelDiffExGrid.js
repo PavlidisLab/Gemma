@@ -27,6 +27,10 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	convertEF : function(s) {
 		return s[0].name;
 	},
+	
+	getEEName : function( v, record ){
+		return record.expressionExperiment.name;
+	},
 
 	initComponent : function() {
 
@@ -36,6 +40,9 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 								sortType : this.convertEE
 							}, {
 								name : "gene"
+							}, {
+								name : "expressionExperimentName",
+								convert: this.getEEName
 							}, {
 								name : "probe"
 							}, {
@@ -214,7 +221,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			var obj = r.data;
 			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName)
 					|| value.match(obj.experimentalFactors[0].name);
-		}
+		};
 	},
 
 	getEEIds : function() {
