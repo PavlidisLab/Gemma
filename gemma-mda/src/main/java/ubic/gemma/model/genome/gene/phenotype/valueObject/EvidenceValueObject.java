@@ -152,8 +152,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
         if ( phenotypeAssociation.getScoreType() != null ) {
             this.scoreValueObject = new ScoreValueObject( phenotypeAssociation.getStrength(),
-                    phenotypeAssociation.getScore(), phenotypeAssociation.getScoreType().getName(),
-                    phenotypeAssociation.getScoreType().getDescription() );
+                    phenotypeAssociation.getScore(), phenotypeAssociation.getScoreType().getName() );
         }
     }
 

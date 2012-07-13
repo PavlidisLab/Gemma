@@ -14,7 +14,7 @@ public class ScoreValueObject implements Comparable<ScoreValueObject> {
 
     }
 
-    public ScoreValueObject( Double strength, String scoreValue, String scoreName, String scoreDescription ) {
+    public ScoreValueObject( Double strength, String scoreValue, String scoreName) {
         super();
         this.strength = strength;
         this.scoreValue = scoreValue;
