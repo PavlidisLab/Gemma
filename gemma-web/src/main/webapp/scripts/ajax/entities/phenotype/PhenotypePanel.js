@@ -29,14 +29,17 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				showOnlyEditable: false
 			};			
 
-			var phenotypePanelToolbar = new Gemma.PhenotypePanelToolbar({
-				listeners: {
-					filterApplied: function(filters) {
-						currentFilters = filters;
-						reloadWholePanel();	
+			// Don't display toolbar if it is running outside of Gemma.  
+			var phenotypePanelToolbar = Gemma.isRunningOutsideOfGemma() ?
+				null :
+				new Gemma.PhenotypePanelToolbar({
+					listeners: {
+						filterApplied: function(filters) {
+							currentFilters = filters;
+							reloadWholePanel();	
+						}
 					}
-				}
-			});
+				});
 
 			var phenotypeTabPanel = new Gemma.PhenotypeTabPanel({			
 				region: "west",
