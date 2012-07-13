@@ -1244,9 +1244,8 @@ public class DEDVController {
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
-            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( vvoMap.get( ee2P.getEEId() ) ) ) {
-                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( vvoMap
-                        .get( ee2P.getEEId() ) );
+            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( ee2P.getEEId()  ) ) {
+                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee2P.getEEId() );
                 this.prepareFactorsForFrontEndDisplay( vvo, layout );
             }
 
