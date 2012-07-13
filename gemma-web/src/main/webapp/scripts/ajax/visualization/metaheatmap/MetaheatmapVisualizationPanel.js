@@ -210,6 +210,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					y: 0,
 					title: 'Fold change & q-value',
 					cellSize: 14,
+					isShown : false,
 					
 					foldChangeLabels: ["Down, >2 fold", "Down, <2 fold", "Up, <2 fold", "Up, >2 fold"],
 					foldChangeValues: [-3, -1, 1, 3],
@@ -321,6 +322,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	redraw : function (wasHeatmapChanged) {
 		// Hide hover window to prevent it being integrated into the layout.
 		this.hoverWindow.hide();
+		this.variableWidthCol.colorLegend.hide();
 		
 		if (wasHeatmapChanged) {
 			this.updateVisibleScores();
@@ -348,6 +350,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		if (this.hoverWindow.isDocked) {
 			this.hoverWindow.show();
 		}		
+		if (this.variableWidthCol.colorLegend.isShown) {			
+			this.variableWidthCol.colorLegend.show();
+		}
 	},
 		
 	draw : function () {		

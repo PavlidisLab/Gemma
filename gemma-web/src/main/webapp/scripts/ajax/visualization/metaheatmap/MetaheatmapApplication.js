@@ -230,8 +230,11 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						toggleHandler: function(btn, pressed){
 									if (pressed) {
 										this.visualizationPanel.variableWidthCol.colorLegend.show();
+										this.visualizationPanel.variableWidthCol.colorLegend.isShown = true;
+										
 									} else {
 										this.visualizationPanel.variableWidthCol.colorLegend.hide();
+										this.visualizationPanel.variableWidthCol.colorLegend.isShown = false;
 									}
 								},
 								scope: this
