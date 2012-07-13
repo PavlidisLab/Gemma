@@ -181,7 +181,7 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param externalDatabaseName
      */
-    public abstract void removeEvidencesWithExternalDatabaseName( String externalDatabaseName );
+    public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName );
 
     /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree

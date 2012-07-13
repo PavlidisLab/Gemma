@@ -4,7 +4,7 @@ public class ScoreValueObject implements Comparable<ScoreValueObject> {
 
     // possible values: 0, 0.2, 0.4, 0.6, 0.8, 1
     // indicate the strength of the evidence
-    private Double strength = new Double( 0 );
+    private Double strength = null;
 
     // original value from what the strength came from
     private String scoreValue = "";

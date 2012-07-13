@@ -767,13 +767,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param externalDatabaseName
      */
     @Override
-    public void removeEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
+    public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
-
-        for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
-            remove( phenotypeAssociation.getId() );
-        }
+                
+        return this.convert2ValueObjects( phenotypeAssociations );
     }
 
     /**
