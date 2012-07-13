@@ -118,12 +118,12 @@ public class GeneController extends BaseController {
     /**
      * used to show gene info in the phenotype tab
      */
-    public Collection<EvidenceValueObject> loadGeneEvidence( String taxonCommonName, boolean showOnlyEditable,
+    public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
             Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId(
                 geneId,
                 phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
-                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonCommonName, showOnlyEditable ) );
+                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonId, showOnlyEditable ) );
     }
 
     /**

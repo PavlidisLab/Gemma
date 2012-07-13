@@ -17,25 +17,25 @@ package ubic.gemma.model.genome.gene.phenotype;
 /** Used to filter values received depending on taxon and privacy chosen */
 public class EvidenceFilter {
 
-    private String taxonCommonName = "";
+    private Long taxonId = 0L;
     private boolean showOnlyEditable = false;
 
     public EvidenceFilter() {
         super();
     }
 
-    public EvidenceFilter( String taxonCommonName, boolean showOnlyEditable ) {
+    public EvidenceFilter( Long taxonId, boolean showOnlyEditable ) {
         super();
-        this.taxonCommonName = taxonCommonName;
+        this.taxonId = taxonId;
         this.showOnlyEditable = showOnlyEditable;
     }
 
-    public String getTaxonCommonName() {
-        return this.taxonCommonName;
+    public Long getTaxonId() {
+        return this.taxonId;
     }
 
-    public void setTaxonCommonName( String taxonCommonName ) {
-        this.taxonCommonName = taxonCommonName;
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
     public boolean isShowOnlyEditable() {

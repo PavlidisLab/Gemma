@@ -81,7 +81,7 @@ public class PhenotypeController extends BaseController {
     }
 
     @RequestMapping(value = "/phenotypeAssociationManager.html", method = RequestMethod.GET)
-    public ModelAndView showPhenotypeAssociationManager( ) {
+    public ModelAndView showPhenotypeAssociationManager() {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
@@ -89,8 +89,8 @@ public class PhenotypeController extends BaseController {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit );
     }
 
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( String taxonCommonName, boolean showOnlyEditable ) {
-        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonCommonName,
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable ) {
+        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
                 showOnlyEditable ) );
     }
 
@@ -100,9 +100,8 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public Collection<GeneValueObject> findCandidateGenes( String taxonCommonName, boolean showOnlyEditable,
-            String[] phenotypes ) {
-        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonCommonName,
+    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable, String[] phenotypes ) {
+        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
                 showOnlyEditable ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
     }
 

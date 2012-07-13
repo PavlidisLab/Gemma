@@ -50,36 +50,29 @@ public class PhenotypeWebService {
     @GET
     @Path("/load-all-phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree(
-    		@QueryParam("taxonCommonName") String taxonCommonName,
-    		@QueryParam("showOnlyEditable") boolean showOnlyEditable) {
-    	return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree(
-      		  new EvidenceFilter(taxonCommonName, showOnlyEditable));
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("showOnlyEditable") boolean showOnlyEditable ) {
+        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
+                showOnlyEditable ) );
     }
 
     @GET
     @Path("/find-candidate-genes")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneValueObject> findCandidateGenes(
-    		@QueryParam("taxonCommonName") String taxonCommonName,
-    		@QueryParam("showOnlyEditable") boolean showOnlyEditable,
-    		@QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
-        return this.phenotypeAssociationManagerService.findCandidateGenes(
-        		new EvidenceFilter(taxonCommonName, showOnlyEditable),
-        		new HashSet<String>(phenotypeValueUris));
+    public Collection<GeneValueObject> findCandidateGenes( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("showOnlyEditable") boolean showOnlyEditable,
+            @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
+        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
+                showOnlyEditable ), new HashSet<String>( phenotypeValueUris ) );
     }
 
     @GET
     @Path("/find-evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidence(
-    		@QueryParam("taxonCommonName") String taxonCommonName,
-    		@QueryParam("showOnlyEditable") boolean showOnlyEditable,
-    		@QueryParam("geneId") Long geneId,
+    public Collection<EvidenceValueObject> findEvidence( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("showOnlyEditable") boolean showOnlyEditable, @QueryParam("geneId") Long geneId,
             @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
-        return this.phenotypeAssociationManagerService.findEvidenceByGeneId(
-        		geneId,
-        		new HashSet<String>(phenotypeValueUris),
-        		new EvidenceFilter(taxonCommonName, showOnlyEditable));
+        return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, new HashSet<String>(
+                phenotypeValueUris ), new EvidenceFilter( taxonId, showOnlyEditable ) );
     }
 }

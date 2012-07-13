@@ -183,23 +183,24 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param limit number of evidence to return
      * @return evidence satisfying the specified filters
      */
-	@Override
-	public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit ) {
-		final Collection<EvidenceValueObject> evidenceValueObjects;
-		
-		final Set<Long> ids = findUserOwnedEvidenceIds();
-		
-		// If the current user is admin, ids will be null.
-		if (ids == null || ids.size() > 0) {
-			Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService.findPhenotypeAssociationWithIds( ids, taxonId, limit );
+    @Override
+    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit ) {
+        final Collection<EvidenceValueObject> evidenceValueObjects;
 
-	        evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
-		} else {
-			evidenceValueObjects = new HashSet<EvidenceValueObject>();
-		}
+        final Set<Long> ids = findUserOwnedEvidenceIds();
+
+        // If the current user is admin, ids will be null.
+        if ( ids == null || ids.size() > 0 ) {
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                    .findPhenotypeAssociationWithIds( ids, taxonId, limit );
+
+            evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
+        } else {
+            evidenceValueObjects = new HashSet<EvidenceValueObject>();
+        }
 
         return evidenceValueObjects;
-	}
+    }
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -283,8 +284,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         boolean showOnlyEditable = false;
 
         if ( evidenceFilter != null ) {
-            if ( evidenceFilter.getTaxonCommonName() != null && !evidenceFilter.getTaxonCommonName().equals( "" ) ) {
-                taxon = this.taxonService.findByCommonName( evidenceFilter.getTaxonCommonName() );
+            if ( evidenceFilter.getTaxonId() != null && evidenceFilter.getTaxonId() > 0 ) {
+                taxon = this.taxonService.load( evidenceFilter.getTaxonId() );
             }
             showOnlyEditable = evidenceFilter.isShowOnlyEditable();
         }
@@ -863,8 +864,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         boolean showOnlyEditable = false;
 
         if ( evidenceFilter != null ) {
-            if ( evidenceFilter.getTaxonCommonName() != null && !evidenceFilter.getTaxonCommonName().equals( "" ) ) {
-                taxon = this.taxonService.findByCommonName( evidenceFilter.getTaxonCommonName() );
+            if ( evidenceFilter.getTaxonId() != null && evidenceFilter.getTaxonId() > 0 ) {
+                taxon = this.taxonService.load( evidenceFilter.getTaxonId() );
             }
             showOnlyEditable = evidenceFilter.isShowOnlyEditable();
         }
@@ -1179,7 +1180,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private Collection<EvidenceValueObject> convert2ValueObjects( Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-    	Collection<EvidenceValueObject> returnEvidenceVO = new HashSet<EvidenceValueObject>();
+        Collection<EvidenceValueObject> returnEvidenceVO = new HashSet<EvidenceValueObject>();
 
         if ( phenotypeAssociations != null ) {
 
@@ -1195,7 +1196,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
         return returnEvidenceVO;
     }
-    
+
     /** Determine permissions for an PhenotypeAssociation */
     private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
 
@@ -1569,28 +1570,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return homologueEvidenceValueObjects;
     }
 
-    /** Find ids of evidence owned by the current user.
-     *  If the current user has not logged in, empty container is returned.
-     *  If the current user is admin, null is returned. 
+    /**
+     * Find ids of evidence owned by the current user. If the current user has not logged in, empty container is
+     * returned. If the current user is admin, null is returned.
      */
     private Set<Long> findUserOwnedEvidenceIds() {
-		final Set<Long> ids;
+        final Set<Long> ids;
 
-		if ( SecurityServiceImpl.isUserLoggedIn() ) {
-			if ( SecurityServiceImpl.isUserAdmin() ) {
-				ids = null;
-			} else {
-				ids = new HashSet<Long>();
-		
-			    String userName = this.userManager.getCurrentUsername();
-			    Collection<String> groups = this.userManager.findAllGroups();
-			
-			    ids.addAll( this.associationService.findPrivateEvidenceId( userName, groups ) );
-			}
-		} else {
-			ids = new HashSet<Long>();
-		}
-    	
-		return ids;
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+            if ( SecurityServiceImpl.isUserAdmin() ) {
+                ids = null;
+            } else {
+                ids = new HashSet<Long>();
+
+                String userName = this.userManager.getCurrentUsername();
+                Collection<String> groups = this.userManager.findAllGroups();
+
+                ids.addAll( this.associationService.findPrivateEvidenceId( userName, groups ) );
+            }
+        } else {
+            ids = new HashSet<Long>();
+        }
+
+        return ids;
     }
 }
