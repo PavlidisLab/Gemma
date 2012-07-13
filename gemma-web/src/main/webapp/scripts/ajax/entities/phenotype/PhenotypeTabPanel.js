@@ -59,19 +59,19 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				syncDestinationStoresOnSourceStoreLoad(activeTabStore, this.items.items);	
 				
 				
-				var taxonCommonName;
+				var taxonId;
 				var showOnlyEditable; 
 				
 				if (filters == null) {
-					taxonCommonName = '';
+					taxonId = '-1';
 					showOnlyEditable = false; 
 				} else {
-					taxonCommonName = filters.taxonCommonName;
+					taxonId = filters.taxonId;
 					showOnlyEditable = filters.showOnlyEditable;
 				}
 				activeTabStore.reload({
 					params: {
-						taxonCommonName: taxonCommonName,
+						taxonId: taxonId,
 						showOnlyEditable: showOnlyEditable
 					}
 				});

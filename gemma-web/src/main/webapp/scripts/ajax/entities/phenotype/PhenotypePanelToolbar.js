@@ -10,10 +10,9 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
     initComponent: function() {
     	var DEFAULT_FILTERS_TITLE = 'Filters';
     	var MY_ANNOTATIONS_ONLY_TITLE = 'My annotations only';
-    	var SPECIES_RADIO_GROUP_NAME = 'species';
 
 		var currentFilters = {
-			taxonCommonName: '',
+			taxonId: '-1',
 			showOnlyEditable: false
 		};			
 
@@ -52,14 +51,14 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 										thisCheckbox.setValue(false);
 										
 										Gemma.Application.currentUser.on("logIn",
-												function(userName, isAdmin) {	
-													Ext.getBody().unmask();
-												},
-												this,
-												{
-													single: true
-												});
-					                	}
+											function(userName, isAdmin) {	
+												Ext.getBody().unmask();
+											},
+											this,
+											{
+												single: true
+											});
+					                }
 				                }
 				            });
 						}
@@ -68,35 +67,32 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 			}
 		});
 
-		var speciesRadioGroup =  new Ext.form.RadioGroup({
-			fieldLabel: 'Species',
-			items: [
-				{ boxLabel: 'All', inputValue: '', name: SPECIES_RADIO_GROUP_NAME, checked: true },
-				{ boxLabel: 'Human', inputValue: 'human', name: SPECIES_RADIO_GROUP_NAME },
-				{ boxLabel: 'Mouse', inputValue: 'mouse', name: SPECIES_RADIO_GROUP_NAME },
-				{ boxLabel: 'Rat', inputValue: 'rat', name: SPECIES_RADIO_GROUP_NAME }
-			]
+		var taxonCombo = new Gemma.TaxonCombo({
+			isDisplayTaxonWithEvidence : true,
+			fieldLabel: 'Taxon',
+			// don't remember taxon value if user navigates away then comes back
+			stateId : null, 
+			emptyText : "Filter by taxon",
+			allTaxa : true, // want an 'All taxa' option
+			value: currentFilters.taxonId,
+			// We must have this. Otherwise, the menu closes when combo box's item is selected.			
+			getListParent: function() {
+			    return this.el.up('.x-menu');
+			}
 		});
+		taxonCombo.getStore().on('doneLoading', function() {
+			// Initialize it.
+			taxonCombo.setValue(taxonCombo.value);
+		}, this);				
 
-    	var menu = new Ext.menu.Menu({
+		var menu = new Ext.menu.Menu({
     		listeners: {
     			hide: function(thisMenu) {
 					showOnlyEditableCheckbox.suspendEvents();
 					showOnlyEditableCheckbox.setValue(currentFilters.showOnlyEditable);
 					showOnlyEditableCheckbox.resumeEvents();
 
-					if (thisMenu.rendered) {
-						// Reset radio buttons using currentFilters' values because users
-						// may change radio buttons without pressing the Apply button.
-						speciesRadioGroup.items.each(function(currRadio) {
-							// Check if currRadio has been rendered and is the same as the current species filter.
-							if (currRadio.el && currRadio.inputValue === currentFilters.taxonCommonName) {
-								currRadio.suspendEvents();
-								currRadio.setValue(true);
-								currRadio.resumeEvents();
-							}
-						});
-					}
+					taxonCombo.setValue(currentFilters.taxonId);
     			}
     		},
     		items: [
@@ -107,7 +103,7 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 					labelWidth: 120,
 					items: [
 						showOnlyEditableCheckbox,
-						speciesRadioGroup
+						taxonCombo
 					],
 					buttonAlign: 'right',
 					buttons: [
@@ -117,7 +113,7 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 						    handler: function() {
 								this.fireEvent('filterApplied', {
 									showOnlyEditable: showOnlyEditableCheckbox.getValue(),
-									taxonCommonName: speciesRadioGroup.getValue().inputValue
+									taxonId: taxonCombo.getValue()
 								});
 								
 								updateFiltersStatus();
@@ -137,18 +133,18 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 		});
 		
 		var updateFiltersStatus = function() {
-			currentFilters.taxonCommonName = speciesRadioGroup.getValue().inputValue;
+			currentFilters.taxonId = taxonCombo.getValue();
 			currentFilters.showOnlyEditable = showOnlyEditableCheckbox.getValue();
 			
 			var filtersApplied = '';
 			if (showOnlyEditableCheckbox.getValue()) {
 				filtersApplied += '<b>' + MY_ANNOTATIONS_ONLY_TITLE + '</b>';
 			}
-			if (speciesRadioGroup.getValue().inputValue !== '') {
+			if (taxonCombo.getValue() !== '-1') {
 				if (filtersApplied !== '') {
 					filtersApplied += ' + '
 				}
-				filtersApplied += '<b>' + speciesRadioGroup.getValue().boxLabel + '</b>';
+				filtersApplied += '<b>' + taxonCombo.getTaxon().data.commonName + '</b>';
 			}
 			filterButton.setText((filtersApplied === '') ?
 				DEFAULT_FILTERS_TITLE :

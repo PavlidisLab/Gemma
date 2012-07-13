@@ -120,7 +120,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					    	        read: {
 					        	        dwrFunction: PhenotypeController.findCandidateGenes,
 					            	    getDwrArgsFunction: function(request){
-				            	    	return [ request.params['taxonCommonName'],
+				            	    	return [ request.params['taxonId'],					            	    	
 				            	    			 request.params['showOnlyEditable'],
 				            	    			 request.params["phenotypeValueUris"] 
 				            	    		   ];
@@ -196,7 +196,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				renderToolTip: true,
 				sortable: true
 			},{
-				header: "Species",
+				header: "Taxon",
 				dataIndex: 'taxonCommonName',
 				width: 100,
 				sortable: true
@@ -263,7 +263,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 					this.getStore().reload({
 			    		params: {
-							taxonCommonName: currentFilters.taxonCommonName,
+			    			taxonId: currentFilters.taxonId,
 							showOnlyEditable: currentFilters.showOnlyEditable,
 			    			phenotypeValueUris: currentPhenotypeValueUris
 			    		}

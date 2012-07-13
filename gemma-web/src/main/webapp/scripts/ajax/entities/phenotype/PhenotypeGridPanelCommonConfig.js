@@ -34,7 +34,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 				    	        read: {
 				        	        dwrFunction: PhenotypeController.loadAllPhenotypesByTree,
 				            	    getDwrArgsFunction: function(request) {
-				            	    	return [ request.params['taxonCommonName'],
+				            	    	return [ request.params['taxonId'],
 				            	    			 request.params['showOnlyEditable'] ];
 					                }.createDelegate(this)
 				    	        }
@@ -50,7 +50,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			},
 			getBaseParams: function() {
 				return {
-			    	taxonCommonName: '',
+					taxonId: '-1',
 			    	showOnlyEditable: false
 				};
 			},

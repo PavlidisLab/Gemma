@@ -218,7 +218,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				        	        dwrFunction: GeneController.loadGeneEvidence,
 				            	    getDwrArgsFunction: function(request){
 				            	    	return [
-											request.params['taxonCommonName'],
+											request.params['taxonId'],
 				            	    		request.params['showOnlyEditable'],
 				            	    		request.params["geneId"],
 					            	    	request.params["phenotypeValueUris"]
@@ -529,7 +529,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							record.data.evidenceSecurityValueObject.currentUserIsOwner,
 							null,
 							null,
-							'Phenotype Association'); // Evidence name for the title in Security dialog.
+							'Phenotype Association', // Evidence name for the title in Security dialog.
+							record.data.evidenceSecurityValueObject.currentUserIsOwner); 
 
 						if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
 						 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
@@ -628,7 +629,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								    	
 					evidenceStore.reload({
 						params: {
-							taxonCommonName: currentFilters.taxonCommonName,
+							taxonId: currentFilters.taxonId,
 							showOnlyEditable: currentFilters.showOnlyEditable,
 							geneId: currentGene.id,
 							phenotypeValueUris: phenotypeValueUris		    			
@@ -647,7 +648,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					function() {
 				    	evidenceStore.reload({
 				    		params: {
-								taxonCommonName: '',
+								taxonId: '-1',
 								showOnlyEditable: false,
 				    			geneId: geneId
 				    		}
