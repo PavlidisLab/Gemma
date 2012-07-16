@@ -143,7 +143,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		}
 
 		// Note: it should be called when all form values are valid.
-		var generateEvidenceValueObject = function(validatedPhenotypeValueUris) {
+		var generateEvidenceValueObject = function(validatedPhenotypes) {
 			var evidenceType = evidenceTypeComboBox.getValue();
 
 			var evidenceValueObject;
@@ -166,7 +166,19 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		
 			if (evidenceValueObject != null) {
 				evidenceValueObject.geneNCBI = geneSearchComboBox.getValue();
-				evidenceValueObject.phenotypes = validatedPhenotypeValueUris;
+
+				var phenotypes = [];
+				Ext.each(validatedPhenotypes, function(validatedPhenotype, index) {
+					var characteristicValueObject = new CharacteristicValueObject();
+					characteristicValueObject.id = validatedPhenotype.id;
+					characteristicValueObject.urlId = validatedPhenotype.urlId;
+					characteristicValueObject.value = validatedPhenotype.value;
+					characteristicValueObject.valueUri = validatedPhenotype.valueUri;
+
+					phenotypes.push(characteristicValueObject);
+				});
+				evidenceValueObject.phenotypes = phenotypes;
+				
 				evidenceValueObject.className = evidenceType;
 				evidenceValueObject.isNegativeEvidence = isNegativeEvidenceCheckbox.getValue();
 				evidenceValueObject.description = descriptionTextArea.getValue();
@@ -511,9 +523,9 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					}
 					
 					if (evidenceType !== '' && geneSearchComboBox.getValue() !== '') {
-						var phenotypeValueUris = phenotypesSearchPanel.getSelectedPhenotypes();					
+						var selectedPhenotypes = phenotypesSearchPanel.getSelectedPhenotypes();					
 										
-						if (phenotypeValueUris != null && phenotypeValueUris.length > 0) {
+						if (selectedPhenotypes != null && selectedPhenotypes.length > 0) {
 							var isValid = false;
 	
 							if (evidenceType === 'ExperimentalEvidenceValueObject') {
@@ -527,7 +539,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							}
 							
 							if (isValid && evidenceCodeComboBox.getValue() !== '') {
-								var evidenceValueObject = generateEvidenceValueObject(phenotypeValueUris);
+								var evidenceValueObject = generateEvidenceValueObject(selectedPhenotypes);
 									
 								// Ask the controller to validate only after all fields are filled.
 								PhenotypeController.validatePhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
