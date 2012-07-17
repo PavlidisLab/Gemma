@@ -250,6 +250,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             for ( Characteristic cha : experiment.getCharacteristics() ) {
 
                 VocabCharacteristic experimentCharacteristic = ( VocabCharacteristic ) cha;
+                CharacteristicValueObject experimentCharacteristicVO = new CharacteristicValueObject(
+                        experimentCharacteristic );
 
                 CharacteristicValueObject updatedCharacteristic = updatedCharacteristicsMap
                         .get( experimentCharacteristic.getId() );
@@ -258,9 +260,12 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                 if ( updatedCharacteristic != null ) {
 
                     // same values as before
-                    if ( updatedCharacteristic.equals( experimentCharacteristic ) ) {
+                    if ( updatedCharacteristic.equals( experimentCharacteristicVO ) ) {
                         finalCharacteristics.add( experimentCharacteristic );
                     } else {
+                        
+                        System.out.println("Should never go there");
+                        
                         // different values found
                         VocabCharacteristic vocabCharacteristic = this.ontologyHelper
                                 .characteristicValueObject2Characteristic( updatedCharacteristic );

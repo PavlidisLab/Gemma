@@ -378,9 +378,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence ) return -1;
         if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence ) return 1;
 
-        int comparison = this.scoreValueObject.compareTo( evidenceValueObject.getScoreValueObject() );
-        if ( comparison != 0 ) return comparison;
-
         if ( ( this.phenotypes != null && this.phenotypes.size() > 0 )
                 && ( evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0 ) ) {
             return -1;
@@ -390,6 +387,8 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
                 && ( evidenceValueObject.phenotypes != null && evidenceValueObject.phenotypes.size() > 0 ) ) {
             return 1;
         }
+
+        int comparison = 0;
 
         if ( this.phenotypes != null && evidenceValueObject.phenotypes != null ) {
             Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();

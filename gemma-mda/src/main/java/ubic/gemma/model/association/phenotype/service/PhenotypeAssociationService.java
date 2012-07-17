@@ -121,9 +121,13 @@ public interface PhenotypeAssociationService {
     /** find mged category term that were used in the database, used to annotated Experiments */
     public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
 
-    /** delete all evidences from a specific external database */
+    /** find all evidences from a specific external database */
     @Secured({ "GROUP_ADMIN" })
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+    
+    /** find all evidences with no external database */
+    @Secured({ "GROUP_ADMIN" })
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,

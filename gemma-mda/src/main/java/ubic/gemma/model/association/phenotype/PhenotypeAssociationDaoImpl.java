@@ -33,7 +33,6 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -175,6 +174,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** delete all evidences from a specific external database */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
@@ -182,6 +182,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
                 .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
 
+        return geneQueryCriteria.list();
+    }
+    
+    
+    /** find all evidence that doesn't come from an external course */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName(){
+        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).add( Restrictions.isNull( "evidenceSource" ));
+        
         return geneQueryCriteria.list();
     }
 

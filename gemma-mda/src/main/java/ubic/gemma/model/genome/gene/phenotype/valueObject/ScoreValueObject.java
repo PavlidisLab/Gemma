@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-public class ScoreValueObject implements Comparable<ScoreValueObject> {
+public class ScoreValueObject {
 
     // possible values: 0, 0.2, 0.4, 0.6, 0.8, 1
     // indicate the strength of the evidence
@@ -14,7 +14,7 @@ public class ScoreValueObject implements Comparable<ScoreValueObject> {
 
     }
 
-    public ScoreValueObject( Double strength, String scoreValue, String scoreName) {
+    public ScoreValueObject( Double strength, String scoreValue, String scoreName ) {
         super();
         this.strength = strength;
         this.scoreValue = scoreValue;
@@ -43,11 +43,6 @@ public class ScoreValueObject implements Comparable<ScoreValueObject> {
 
     public void setScoreName( String scoreName ) {
         this.scoreName = scoreName;
-    }
-
-    @Override
-    public int compareTo( ScoreValueObject o ) {
-        return this.strength.compareTo( o.strength );
     }
 
 }

@@ -176,12 +176,16 @@ public interface PhenotypeAssociationManagerService {
             String categoryUri, Long taxonId );
 
     /**
-     * This method can be used if we want to reimport data from a specific external Database, this method will remove
-     * from the database ALL evidences link to the given external database
+     * This method can be used if we want to reimport data from a specific external Database
      * 
      * @param externalDatabaseName
      */
     public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName );
+
+    /**
+     * find all evidence that doesn't come from an external source
+     */
+    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName();
 
     /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree

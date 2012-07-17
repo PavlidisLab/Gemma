@@ -761,8 +761,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * this method can be used if we want to reimport data from a specific external Database, this method will remove
-     * from the database ALL evidences link to the given external database
+     * this method can be used if we want to reimport data from a specific external Database
      * 
      * @param externalDatabaseName
      */
@@ -773,6 +772,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 
         return this.convert2ValueObjects( phenotypeAssociations );
     }
+    
+    
+    
+    /**
+     * find all evidence that doesn't come from an external source
+     * 
+     */
+    @Override
+    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName( ) {
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findEvidencesWithoutExternalDatabaseName( );
+                
+        return this.convert2ValueObjects( phenotypeAssociations );
+    }
+
 
     /**
      * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,

@@ -168,6 +168,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
     }
+    
+    /** find all evidence that doesn't come from an external course */
+    @Override
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName(){
+        return this.phenotypeAssociationDao.findEvidencesWithoutExternalDatabaseName();
+    }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override

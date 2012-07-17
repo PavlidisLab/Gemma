@@ -54,6 +54,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all evidences from a specific external database */
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+    
+    /** find all evidence that doesn't come from an external course */
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
