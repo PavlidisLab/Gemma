@@ -264,8 +264,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                         finalCharacteristics.add( experimentCharacteristic );
                     } else {
                         
-                        System.out.println("Should never go there");
-                        
                         // different values found
                         VocabCharacteristic vocabCharacteristic = this.ontologyHelper
                                 .characteristicValueObject2Characteristic( updatedCharacteristic );
