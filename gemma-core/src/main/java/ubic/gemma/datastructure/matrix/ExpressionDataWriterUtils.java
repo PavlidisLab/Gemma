@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -62,9 +63,7 @@ public class ExpressionDataWriterUtils {
                     + experiment.getId() + "\n" );
         }
 
-        buf.append( "# If you use this file for your research, please cite: \n" +
-                "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. " +
-                "Bioinformatics, 2012. \n" );
+        buf.append( ExpressionDataFileService.DISCLAIMER );
 
     }
 
@@ -107,10 +106,11 @@ public class ExpressionDataWriterUtils {
      * @return
      */
     private static String constructRCompatibleBioAssayName( String colName ) {
-        colName = StringUtils.replaceChars( colName, ':', '.' );
-        colName = StringUtils.replaceChars( colName, '|', '.' );
-        colName = StringUtils.replaceChars( colName, '-', '.' );
-        return colName;
+        String colNameMod = colName;
+        colNameMod = StringUtils.replaceChars( colNameMod, ':', '.' );
+        colNameMod = StringUtils.replaceChars( colNameMod, '|', '.' );
+        colNameMod = StringUtils.replaceChars( colNameMod, '-', '.' );
+        return colNameMod;
     }
 
     /**
