@@ -185,7 +185,13 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 		        	}
 		        ],
 				listeners: {
-					'phenotypeAssociationChanged': reloadWholePanel,
+					phenotypeAssociationChanged: function(phenotypes, gene) {
+						if (phenotypes != null && gene != null) {
+							currentPhenotypes = phenotypes;
+							currentGene = gene;
+						}
+						reloadWholePanel();
+					},
 					scope: this
 				}
 			});

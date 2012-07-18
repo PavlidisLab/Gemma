@@ -45,7 +45,7 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 		
 		Ext.apply(this, {
 			listeners: {
-				phenotypeAssociationChanged: function() {
+				phenotypeAssociationChanged: function(phenotypes, gene) {
 					this.close();
 				},
 				scope: this
@@ -492,7 +492,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 
 						if (validateEvidenceValueObject == null) {	
 			            	Ext.Msg.alert('Phenotype association ' + (isCreating ? 'added' : 'updated'), 'Phenotype association has been ' + (isCreating ? 'added' : 'updated') + '.');
-							this.fireEvent('phenotypeAssociationChanged');			
+							this.fireEvent('phenotypeAssociationChanged', evidenceValueObject.phenotypes,
+								geneSearchComboBox.getStore().getById(evidenceValueObject.geneNCBI).data); 
 			            } else {
 			            	var title = 'Cannot ' + (isCreating ? 'add' : 'edit') + ' phenotype association';
 
