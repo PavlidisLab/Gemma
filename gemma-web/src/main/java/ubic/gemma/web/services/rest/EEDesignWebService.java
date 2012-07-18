@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,7 +44,7 @@ import com.sun.jersey.api.NotFoundException;
  * 
  * @author anton
  */
-@Component
+@Service
 @Path("/eedesign")
 public class EEDesignWebService {
 
