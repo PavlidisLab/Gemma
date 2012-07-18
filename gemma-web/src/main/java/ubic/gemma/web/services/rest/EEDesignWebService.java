@@ -32,8 +32,13 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -51,6 +56,36 @@ public class EEDesignWebService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private BioMaterialDao bioMaterialDao;
+    
+    @GET
+    @Path("/findByExternalAccession/{gsmId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, String> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
+    	
+    	BioMaterial queryObject = new BioMaterialImpl();
+    	DatabaseEntry dbEntry = new DatabaseEntryImpl();
+    	dbEntry.setAccession(gsmId);
+    	queryObject.setExternalAccession(dbEntry);
+    	
+    	BioMaterial foundBioMaterial = this.bioMaterialDao.find(queryObject);
+    	if (foundBioMaterial == null) throw new NotFoundException( "Sample not found." );
+    	
+    	Map<String, String> annotations = new HashMap<String, String>();
+    	
+        for ( FactorValue factorValue : foundBioMaterial.getFactorValues() ) {
+            if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+                // skip batch
+            } else {
+                annotations.put( factorValue.getExperimentalFactor().getName(),
+                        getFactorValueString( factorValue ) );
+            }
+        }
+
+    	return annotations;
+    }
+    
     @GET
     @Path("/findByShortName/{shortName}")
     @Produces(MediaType.APPLICATION_JSON)
