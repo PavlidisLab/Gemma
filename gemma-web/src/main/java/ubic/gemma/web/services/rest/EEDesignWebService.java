@@ -35,6 +35,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
@@ -57,35 +58,42 @@ public class EEDesignWebService {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private BioMaterialDao bioMaterialDao;
+    private BioAssayDao bioAssayDao;
     
     @GET
-    @Path("/findByExternalAccession/{gsmId}")
+    @Path("/findByAccession/{gsmId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, String> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
-    	
-    	BioMaterial queryObject = new BioMaterialImpl();
-    	DatabaseEntry dbEntry = new DatabaseEntryImpl();
-    	dbEntry.setAccession(gsmId);
-    	queryObject.setExternalAccession(dbEntry);
-    	
-    	BioMaterial foundBioMaterial = this.bioMaterialDao.find(queryObject);
-    	if (foundBioMaterial == null) throw new NotFoundException( "Sample not found." );
-    	
-    	Map<String, String> annotations = new HashMap<String, String>();
-    	
-        for ( FactorValue factorValue : foundBioMaterial.getFactorValues() ) {
-            if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
-                // skip batch
-            } else {
-                annotations.put( factorValue.getExperimentalFactor().getName(),
-                        getFactorValueString( factorValue ) );
-            }
-        }
+    public Map<String,Map<String, String>> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
 
-    	return annotations;
+    	Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
+
+    	Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession(gsmId);
+    	if (foundBioAssays.isEmpty()) throw new NotFoundException( "Sample not found." );
+
+    	for ( BioAssay bioAssay : foundBioAssays ) { // Should have one!
+
+    		String accession = bioAssay.getAccession().getAccession();
+
+    		for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {// Should be just one.
+
+    			Map<String, String> annotations = new HashMap<String, String>();
+
+    			for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
+    				if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+    					// skip batch
+    				} else {
+    					annotations.put( factorValue.getExperimentalFactor().getName(),
+    							getFactorValueString( factorValue ) );
+    				}
+    			}
+
+    			result.put( accession, annotations );
+
+    		}
+    	}
+    	return result;
     }
-    
+
     @GET
     @Path("/findByShortName/{shortName}")
     @Produces(MediaType.APPLICATION_JSON)
