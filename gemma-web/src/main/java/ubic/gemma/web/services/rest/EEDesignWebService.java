@@ -65,33 +65,10 @@ public class EEDesignWebService {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String,Map<String, String>> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
 
-    	Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-
     	Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession(gsmId);
     	if (foundBioAssays.isEmpty()) throw new NotFoundException( "Sample not found." );
 
-    	for ( BioAssay bioAssay : foundBioAssays ) { // Should have one!
-
-    		String accession = bioAssay.getAccession().getAccession();
-
-    		for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {// Should be just one.
-
-    			Map<String, String> annotations = new HashMap<String, String>();
-
-    			for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-    				if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
-    					// skip batch
-    				} else {
-    					annotations.put( factorValue.getExperimentalFactor().getName(),
-    							getFactorValueString( factorValue ) );
-    				}
-    			}
-
-    			result.put( accession, annotations );
-
-    		}
-    	}
-    	return result;
+    	return prepareEEAnnotations( foundBioAssays );
     }
 
     @GET
@@ -99,12 +76,22 @@ public class EEDesignWebService {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, String>> getAnnotations( @PathParam("shortName") String shortName ) {
 
-        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-
         ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
         if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
+        Collection<BioAssay> bioAssays = experiment.getBioAssays();
+        
+        return prepareEEAnnotations( bioAssays );
+    }
 
-        for ( BioAssay bioAssay : experiment.getBioAssays() ) {
+    /**
+     * @param bioAssays
+     * @return
+     */
+    private Map<String, Map<String, String>> prepareEEAnnotations( Collection<BioAssay> bioAssays ) {
+        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
+
+        if ( bioAssays.isEmpty() ) throw new NotFoundException( "BioAssays not found" );
+        for ( BioAssay bioAssay : bioAssays ) {
 
             String accession = bioAssay.getAccession().getAccession();
 
