@@ -167,6 +167,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
             this.taskResult = searchResult;
+            
+            log.info("Finished DiffExpSearchTask.");
             return searchResult;
         }
 
