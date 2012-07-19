@@ -720,6 +720,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 for ( ContrastResult cr : deaResult.getContrasts() ) {
                     FactorValue factorValue = cr.getFactorValue();
                     assert factorValue != null : "Null factor value for contrast with id=" + cr.getId();
+                    if (factorValue == null) {
+                    	log.error("Data Integrity: Null factor value for contrast with id=" + cr.getId());
+                    	continue; 
+                    }
                     String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
                             resultSet.getId(), factorValue.getId() );
                     searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(), numberOfProbes,
