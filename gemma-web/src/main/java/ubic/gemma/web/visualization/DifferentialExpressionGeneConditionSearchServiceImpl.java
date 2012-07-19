@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.visualization;
 
+import java.lang.Exception;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
