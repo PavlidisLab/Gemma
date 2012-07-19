@@ -724,6 +724,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 }
 
             }
+            log.info("Done processing hits for result sets.");
         }
 
         /**
