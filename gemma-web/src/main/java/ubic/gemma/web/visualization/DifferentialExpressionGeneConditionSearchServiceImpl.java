@@ -729,7 +729,6 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
             }
             } catch (Exception e) {
             	log.error(e.getMessage());
-            	throw e;
             }
             log.info("Done processing hits for result sets.");
         }
