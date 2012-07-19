@@ -683,6 +683,7 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 Map<Long, DiffExprGeneSearchResult> geneToProbeResult, ExpressionAnalysisResultSet resultSet ) {
             // No database calls.
             log.info("Start processing hits for result sets.");
+            try {
             for ( Long geneId : geneToProbeResult.keySet() ) {
                 DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
@@ -724,6 +725,10 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                             numberOfProbesDiffExpressed, uncorrectedPvalue );
                 }
 
+            }
+            } catch (Exception e) {
+            	log.error(e.getMessage());
+            	throw e;
             }
             log.info("Done processing hits for result sets.");
         }
