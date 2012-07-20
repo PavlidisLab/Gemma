@@ -22,12 +22,15 @@ def array = ars.findByShortName(opt.arguments()[0])
 
 ars.getBioSequences(array).each{
     def cs = it.key
-    def bs = bss.thaw(it.value)
-    bs.getBioSequence2GeneProduct().each{
-        def bl = bas.thaw(it.getBlatResult())
+    if (it.value == null) return
+        def bs = bss.thaw(it.value)
+    bas.findByBioSequence(bs).each {
+        def bl = bas.thaw(it)
         def s = BlatResult2Psl.blatResult2Psl(bl)
-        print("${cs.name}\t${cs.id}\t${s}")
+        def score = bl.score()
+        print("${cs.name}\t${cs.id}\t${score}\t${s}")
     }
 }
 
 sx.shutdown()
+
