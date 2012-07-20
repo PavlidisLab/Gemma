@@ -91,11 +91,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     String fileName = null;
 
     /**
-     * Include predicted genes and probe aligned regions in the output
-     */
-    boolean includePredictedGenes = false;
-
-    /**
      * Clobber existing file, if any.
      */
     boolean overWrite = false;
@@ -121,15 +116,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" )
                 .withDescription( "The name of the Annotation file to be generated [Default = Accession number]" )
                 .withLongOpt( "annotation" ).create( 'f' );
-
-        Option genesIncludedOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Genes to include" )
-                .withDescription(
-                        "The type of genes that will be included: all or standard."
-                                + " All includes predicted genes and probe aligned regions. "
-                                + "Standard mode only includes known genes [Default = standard]" )
-                .withLongOpt( "genes" ).create( 'g' );
 
         Option annotationType = OptionBuilder
                 .hasArg()
@@ -174,7 +160,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         addOption( annotationFileOption );
         addOption( annotationType );
         addOption( fileLoading );
-        addOption( genesIncludedOption );
         addOption( batchLoading );
         addOption( overWriteOption );
 
@@ -204,8 +189,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 processGenesForTaxon();
             } else {
                 if ( this.arrayDesignsToProcess.isEmpty() ) {
-                    throw new IllegalArgumentException(
-                            "You must specify a platform, a taxon, gene file, or batch." );
+                    throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
                 }
                 for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
                     if ( doAllTypes ) {
@@ -274,8 +258,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     protected void processAllADs() throws IOException {
 
         Collection<ArrayDesign> allADs = this.arrayDesignService.loadAll();
-
-        this.includePredictedGenes = false;
 
         for ( ArrayDesign ad : allADs ) {
 
@@ -409,8 +391,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             }
         }
 
-        if ( this.hasOption( 'g' ) ) processGenesIncluded( this.getOptionValue( 'g' ) );
-
         if ( this.hasOption( 'o' ) ) this.overWrite = true;
 
         super.processOptions();
@@ -456,7 +436,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
 
         int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
-                outputType, !this.includePredictedGenes );
+                outputType );
 
         log.info( "Finished processing platform: " + arrayDesign.getName() );
 
@@ -520,16 +500,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
                 type );
         log.info( "Processed " + numProcessed + " genes that were found" );
-    }
-
-    /**
-     * @param genesToInclude
-     */
-    private void processGenesIncluded( String genesToInclude ) {
-        includePredictedGenes = false;
-
-        if ( genesToInclude.equalsIgnoreCase( "all" ) ) includePredictedGenes = true;
-
     }
 
     /**

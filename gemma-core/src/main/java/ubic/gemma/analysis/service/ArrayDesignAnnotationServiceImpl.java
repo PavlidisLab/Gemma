@@ -47,6 +47,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -60,24 +61,8 @@ import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.util.DateUtil;
 
 /**
- * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
- * generate annotation files used for ermineJ, for eexample. The file format:
- * <ul>
- * <li>The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.</li>
- * <li>There is a one-line header included in the file for readability.</li>
- * <li>The first column contains the probe identifier</li>
- * <li>The second column contains a gene symbol(s). Clusters are delimited by '|' and genes within clusters are
- * delimited by ','</li>
- * <li>The third column contains the gene names (or description). Clusters are delimited by '|' and names within
- * clusters are delimited by '$'</li>
- * <li>The fourth column contains a delimited list of GO identifiers. These include the "GO:" prefix. Thus they read
- * "GO:00494494" and not "494494". Delimited by '|'.</li>
- * </ul>
- * <p>
- * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
- * </p>
- * 
- * @author paul
+ * @see ArrayDesignAnnotationService
+ * @author Paul
  * @version $Id$
  */
 @Component
@@ -323,8 +308,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      */
     @Override
     public int generateAnnotationFile( Writer writer,
-            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty,
-            boolean knownGenesOnly ) throws IOException {
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
+            throws IOException {
 
         int compositeSequencesProcessed = 0;
 
@@ -346,9 +331,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 // common case, do it quickly.
                 BioSequence2GeneProduct b2g = geneclusters.iterator().next();
                 Gene g = b2g.getGeneProduct().getGene();
-                if ( knownGenesOnly ) {
-                    continue;
-                }
                 Collection<OntologyTerm> goTerms = getGoTerms( g, ty );
                 String gemmaId = g.getId() == null ? "" : g.getId().toString();
                 String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
@@ -366,9 +348,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
-                if ( knownGenesOnly ) {
-                    continue;
-                }
 
                 genes.add( g.getOfficialSymbol() );
                 geneDescriptions.add( g.getOfficialName() );

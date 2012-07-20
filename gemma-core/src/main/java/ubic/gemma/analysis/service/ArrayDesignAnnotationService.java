@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2012 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.analysis.service;
 
 import java.io.File;
@@ -13,6 +27,27 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 
+/**
+ * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
+ * generate annotation files used for ermineJ, for eexample. The file format:
+ * <ul>
+ * <li>The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.</li>
+ * <li>There is a one-line header included in the file for readability.</li>
+ * <li>The first column contains the probe identifier</li>
+ * <li>The second column contains a gene symbol(s). Clusters are delimited by '|' and genes within clusters are
+ * delimited by ','</li>
+ * <li>The third column contains the gene names (or description). Clusters are delimited by '|' and names within
+ * clusters are delimited by '$'</li>
+ * <li>The fourth column contains a delimited list of GO identifiers. These include the "GO:" prefix. Thus they read
+ * "GO:00494494" and not "494494". Delimited by '|'.</li>
+ * </ul>
+ * <p>
+ * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
+ * </p>
+ * 
+ * @author paul
+ * @version $Id$
+ */
 public interface ArrayDesignAnnotationService {
 
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
@@ -43,13 +78,12 @@ public interface ArrayDesignAnnotationService {
      * @param genesWithSpecificity map of cs ->* physical location ->* ( blat association ->* gene product -> gene)
      * @param ty whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
      *        'standard' output (OutputType.SHORT).
-     * @param knownGenesOnly Whether output should include PARs and predicted genes. If true, they will be excluded.
      * @return number processed.
      * @throws IOException
      */
     public abstract int generateAnnotationFile( Writer writer,
-            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty,
-            boolean knownGenesOnly ) throws IOException;
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
+            throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
