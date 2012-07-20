@@ -10,7 +10,7 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
 	allowBlank: false,
 	forceSelection: true,				
     store: new Ext.data.JsonStore({
-		proxy: new Ext.data.DWRProxy(GenePickerController.searchGenes),
+		proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesWithNCBIId),
 		fields: [ 'id', 'ncbiId', 'officialSymbol', 'officialName', 'taxonCommonName', 'taxonId', {
    			name: 'comboText',
 	    	convert: function(value, record) {
