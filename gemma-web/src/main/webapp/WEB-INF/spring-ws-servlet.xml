@@ -229,8 +229,7 @@
 		<description>
 
 		</description>
-		<property name="expressionExperimentService" ref="expressionExperimentService" />
-		<property name="geneService" ref="geneService" />
+		<property name="expressionExperimentService" ref="expressionExperimentService" />		
 		<property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 	</bean>
