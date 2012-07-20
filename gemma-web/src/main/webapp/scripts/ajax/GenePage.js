@@ -149,6 +149,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			iconCls: 'icon-neurocarta',			
 			itemId: 'phenotypes',
 			hasRelevanceColumn: false,
+			displayEvidenceCodeFullName: true,
 			deferLoadToRender: true,
 			currentGene: {
 	    		id: this.geneId,

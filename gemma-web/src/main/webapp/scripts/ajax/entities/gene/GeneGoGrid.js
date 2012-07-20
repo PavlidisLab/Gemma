@@ -39,7 +39,7 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										header : "Evidence Code",
 										dataIndex : "evidenceCode",
 										renderer: function( value, metaData, record, rowIndex, colIndex, store ){
-											return Gemma.EvidenceCodes[record.get('evidenceCode')];
+											return Gemma.EvidenceCodeInfo[record.get('evidenceCode')].name;
 										}
 									}],
 

@@ -329,6 +329,22 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				this.superclass().initComponent.call(this);
 		    }
 		});
+		
+		var evidenceCodesForComboBox = [ 'EXP', 'IAGP', 'IC', 'IED', 'IEP', 'IGI', 'IMP', 'IPM', 'QTM', 'TAS' ];		
+		var evidenceCodeComboBoxStoreData = [];
+		var qtipWidth;
+		Ext.each(evidenceCodesForComboBox, function(evidenceCode, index) {
+			var evidenceCodeInfo = Gemma.EvidenceCodeInfo[evidenceCode];
+			var qtipInfo = Gemma.EvidenceCodeInfo.getQtipInfo(evidenceCode, evidenceCodeInfo);
+			
+			if (!qtipWidth) {
+				qtipWidth = qtipInfo.width;
+			}
+			
+			evidenceCodeComboBoxStoreData.push([
+				evidenceCode, evidenceCode + ' (' + evidenceCodeInfo.name + ')', qtipInfo.text
+			]);
+		});
 
 		var evidenceCodeComboBox = new Ext.form.ComboBox({
 			valueField: 'evidenceCode',
@@ -339,20 +355,14 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			editable: false,  			
 			mode: 'local',
 			store: new Ext.data.ArrayStore({
-				fields:  ['evidenceCode', 'evidenceCodeDisplayText'],
-				data: [
-						['EXP', Gemma.EvidenceCodes.expText],
-						['IC', Gemma.EvidenceCodes.icText],
-						['TAS', Gemma.EvidenceCodes.tasText],
-						['IEP', Gemma.EvidenceCodes.iepText],
-						['IMP', Gemma.EvidenceCodes.impText],
-						['IGI', Gemma.EvidenceCodes.igiText]
-					  ]
+				fields:  ['evidenceCode', 'displayText', 'qtip' ],
+				data: evidenceCodeComboBoxStoreData
 			}),
+			tpl: new Ext.XTemplate('<tpl for="."><div ext:qtip="{qtip}" ext:qwidth="' + qtipWidth + '" class="x-combo-list-item">{displayText}</div></tpl>'),
 			value: 'IC',
 			forceSelection: true,				
-			displayField:'evidenceCodeDisplayText',
-			width: 200,
+			displayField:'displayText',
+			width: qtipWidth,
 			typeAhead: true,
 			triggerAction: 'all',
 			selectOnFocus:true,
@@ -419,19 +429,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							fieldLabel: "Evidence Code",
 						    autoWidth: true,
 						    items: [
-						    	evidenceCodeComboBox,
-								{
-									xtype: 'displayfield',
-									value: '<img src="/Gemma/images/help.png" ext:qtip="' +
-											'<b>' + Gemma.EvidenceCodes.expText + '</b><br />' + Gemma.EvidenceCodes.expTT + '<br /><br />' + 
-											'<b>' + Gemma.EvidenceCodes.icText + '</b><br />' + Gemma.EvidenceCodes.icTT + '<br /><br />' + 
-											'<b>' + Gemma.EvidenceCodes.tasText + '</b><br />' + Gemma.EvidenceCodes.tasTT + '<br /><br />' + 
-											'<b>' + Gemma.EvidenceCodes.iepText + '</b><br />' + Gemma.EvidenceCodes.iepTT + '<br /><br />' + 
-											'<b>' + Gemma.EvidenceCodes.impText + '</b><br />' + Gemma.EvidenceCodes.impTT + '<br /><br />' + 
-											'<b>' + Gemma.EvidenceCodes.igiText + '</b><br />' + Gemma.EvidenceCodes.igiTT + '<br /><br />' + 
-											'" />',
-									margins: '4 0 0 0'			
-								}
+						    	evidenceCodeComboBox
 						    ]
 						}					
 					]

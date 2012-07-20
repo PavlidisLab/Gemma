@@ -6,49 +6,118 @@ Gemma.CITATION = "Zoubarev, A., et al., Gemma: A resource for the re-use, sharin
 Gemma.CITATION_DIRECTIONS = "If you use this file for your research, please cite: {0}" + Gemma.CITATION ;
 
 // TT = tooltip
-Gemma.EvidenceCodes = {
-	expText: 'Inferred from Experiment',
-	expTT: 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.',
-	icText: 'Inferred by Curator',
-	icTT: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.',
-	tasText: 'Traceable Author Statement',
-	tasTT: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.',
-    iepText: 'Inferred from Expression Pattern',
-    iepTT: 'The association between the gene and phenotype is inferred from the timing or location of expression of a gene.',
-    impText: 'Inferred from Mutant Phenotype',
-    impTT: 'The association between the gene and phenotype is inferred based on differences in the function, process, or cellular localization between two different alleles of the corresponding gene.',
-    igiText: 'Inferred from Genetic Interaction',
-    igiTT: 'The association between the gene and phenotype is inferred based on a mutation in another gene.',
-    iedText: 'Inferred from experimental data',
-    iedTT: 'The association between the gene and phenotype is inferred based on association studies comparing case and control groups.',
-    iagpText: 'Inferred from association of genotype and phenotype',
-    iagpTT: 'The association between the gene and phenotype is inferred based on association studies comparing case and control groups.',
-    ipmText: 'Inferred from phenotype manipulation',
-    ipmTT: 'The association between the gene and phenotype is inferred based on phenotype manipulation in model organisms.',
-    qtmText: 'Quantitative Trait Measurement',
-    qtmTT: 'The association between the gene and phenotype is inferred based on correlation between genotype and severity of the phenotype.',
-	EXP: 'Inferred from Experiment',
-	IC: 'Inferred by Curator',
-	TAS: 'Traceable Author Statement',
-	IDA: 'Direct Assay',
-	IPI: 'Physical Interaction',
-	IMP: 'Mutant Phenotype',
-	IGI: 'Genetic Interaction',
-	IEP: 'Expression Pattern',
-	ISS: 'Sequence or Structural Similarity',
-	ISO: 'Sequence Orthology',
-	ISA: 'Sequence Alignment',
-	ISM: 'Sequence Model',
-	IGC: 'Genomic Context',
-	IBA: 'Biological aspect of Ancestor',
-	IBD: 'Biological aspect of Descendant',
-	IKR: 'Key Residues',
-	IRD: 'Rapid Divergence',
-	RCA: 'Reviewed Computational Analysis',
-	NAS: 'Non-traceable Author Statement',
-	ND: 'No biological Data available',
-	IEA: 'Electronic Annotation',
-	NR: 'Not Recorded'
+
+Gemma.EvidenceCodeInfo = {
+	getQtipInfo: function(code, evidenceCodeInfo) {
+		return {
+			text: '<b>' + code + ': ' + evidenceCodeInfo.name + '</b><br />' + evidenceCodeInfo.description,
+			width: 370
+		};
+	},
+	EXP: { 
+		name: 'Inferred from Experiment',
+		description: 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.'
+	},
+	IAGP: {
+		name: 'Inferred from Association of Genotype and Phenotype',
+		description: 'The association between the gene and phenotype is inferred based on association studies comparing case and control groups.'
+	},
+	IBA: {
+		name: 'Inferred from Biological aspect of Ancestor',
+		description: ''
+	},
+	IBD: {
+		name: 'Inferred from Biological aspect of Descendant',
+		description: ''
+	},
+	IC: {
+		name: 'Inferred by Curator',
+		description: 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.'
+	},
+	IDA: {
+		name: 'Inferred from Direct Assay',
+		description: ''
+	}, 
+	IEA: {
+		name: 'Inferred from Electronic Annotation',
+		description: ''
+	},
+	IED: {
+		name: 'Inferred from Experimental Data',
+		description: 'The association between the gene and phenotype is inferred based on association studies comparing case and control groups.'
+	},
+	IEP: {
+		name: 'Inferred from Expression Pattern',
+		description: 'The association between the gene and phenotype is inferred from the timing or location of expression of a gene.'
+	},
+	IGC: {
+		name: 'Inferred from Genomic Context',
+		description: ''
+	},
+	IGI: {
+		name: 'Inferred from Genetic Interaction',
+		description: 'The association between the gene and phenotype is inferred based on a mutation in another gene.'
+	},
+	IKR: {
+		name: 'Inferred from Key Residues',
+		description: ''
+	},
+	IMP: {
+		name: 'Inferred from Mutant Phenotype',
+		description: 'The association between the gene and phenotype is inferred based on differences in the function, process, or cellular localization between two different alleles of the corresponding gene.'
+	},
+	IPI: {
+		name: 'Inferred from Physical Interaction',
+		description: ''
+	},
+	IPM: {
+		name: 'Inferred from Phenotype Manipulation',
+		description: 'The association between the gene and phenotype is inferred based on phenotype manipulation in model organisms.'
+	},
+	IRD: {
+		name: 'Inferred from Rapid Divergence',
+		description: ''
+	},
+	ISA: {
+		name: 'Inferred from Sequence Alignment',
+		description: ''
+	},
+	ISM: {
+		name: 'Inferred from Sequence Model',
+		description: ''
+	},
+	ISO: {
+		name: 'Inferred from Sequence Orthology',
+		description: ''
+	}, 
+	ISS: {
+		name: 'Inferred from Sequence or Structural Similarity',
+		description: ''
+	},
+	NAS: {
+		name: 'Non-traceable Author Statement',
+		description: ''
+	},
+	ND: {
+		name: 'No biological Data available',
+		description: ''
+	},
+	NR: {
+		name: 'Not Recorded',
+		description: ''
+	},
+	QTM: {
+		name: 'Quantitative Trait Measurement',
+		description: 'The association between the gene and phenotype is inferred based on correlation between genotype and severity of the phenotype.'
+	},
+	RCA: {
+		name: 'inferred from Reviewed Computational Analysis',
+		description: ''
+	},
+	TAS: {
+		name: 'Traceable Author Statement',
+		description: 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.'
+	} 
 };
 
 Gemma.StatusText = {

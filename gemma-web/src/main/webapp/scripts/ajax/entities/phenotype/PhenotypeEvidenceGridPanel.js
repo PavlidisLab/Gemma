@@ -12,6 +12,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	storeSortInfo: { field: 'containQueryPhenotype', direction: 'DESC' },
 	evidenceStoreProxy: null,
 	allowCreateOnlyWhenGeneSpecified: true,
+	displayEvidenceCodeFullName: false,
 	title: 'Evidence',
     autoScroll: true,
     stripeRows: true,
@@ -445,19 +446,27 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				header: "Evidence Code",
 				dataIndex: 'evidenceCode',
 				width: 0.33,
-	            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-					var columnRenderer;
-					if (record.data.homologueEvidence) {
-						columnRenderer = '<span ext:qwidth="200" ext:qtip="' + 
-							'Inferred from homology with the ' + record.data.taxonCommonName + ' gene ' + record.data.geneOfficialSymbol + '.' + 
-							'">' +
-							'Inferred from ' + record.data.geneOfficialSymbol + ' [' + record.data.taxonCommonName + ']' + '</span>';
-					} else {
-						var evidenceCode = Gemma.decodeEvidenceCode(value);						
+	            renderer: {
+	            	fn: function(value, metadata, record, rowIndex, colIndex, store) {
+						var columnRenderer;
+						if (record.data.homologueEvidence) {
+							columnRenderer = '<span ext:qwidth="200" ext:qtip="' + 
+								'Inferred from homology with the ' + record.data.taxonCommonName + ' gene ' + record.data.geneOfficialSymbol + '.' + 
+								'">' +
+								'Inferred from ' + record.data.geneOfficialSymbol + ' [' + record.data.taxonCommonName + ']' + '</span>';
+						} else {
+							var evidenceCodeInfo = Gemma.EvidenceCodeInfo[value];
+							var qtipInfo = Gemma.EvidenceCodeInfo.getQtipInfo(value, evidenceCodeInfo);
 		            	
-						columnRenderer = '<span ext:qwidth="200" ext:qtip="' + evidenceCode.tooltipText + '">' + evidenceCode.displayText + '</span>';
-					}
-					return columnRenderer; 
+							columnRenderer = '<span ext:qwidth="' + qtipInfo.width + '" ext:qtip="' + qtipInfo.text + '">' +
+								(this.displayEvidenceCodeFullName ?
+									evidenceCodeInfo.name : 
+									value) +
+								'</span>';
+						}
+						return columnRenderer;
+	            	},
+	            	scope: this
 	            },
 				sortable: true
 			},

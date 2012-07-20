@@ -6,54 +6,6 @@ Gemma.isRunningOutsideOfGemma = function() {
 	return hostname.indexOf('chibi.ubc.ca') < 0 && hostname.indexOf('localhost') < 0;
 }
 
-// It returns display and tooltip text for the evidence the given evidence code represents.
-Gemma.decodeEvidenceCode = function(evidenceCode) {
-	var EVIDENCE_TEXT = {
-		'EXP': {
-			displayText: Gemma.EvidenceCodes.expText,
-			tooltipText: Gemma.EvidenceCodes.expTT
-		},
-		'IC': {
-			displayText: Gemma.EvidenceCodes.icText,
-			tooltipText: Gemma.EvidenceCodes.icTT
-		},
-		'TAS': {
-			displayText: Gemma.EvidenceCodes.tasText,
-			tooltipText: Gemma.EvidenceCodes.tasTT
-		},
-		'IEP': {
-			displayText: Gemma.EvidenceCodes.iepText,
-			tooltipText: Gemma.EvidenceCodes.iepTT
-		},
-		'IMP': {
-			displayText: Gemma.EvidenceCodes.impText,
-			tooltipText: Gemma.EvidenceCodes.impTT
-		},
-		'IGI': {
-			displayText: Gemma.EvidenceCodes.igiText,
-			tooltipText: Gemma.EvidenceCodes.igiTT
-		},
-		'IED': {
-			displayText: Gemma.EvidenceCodes.iedText,
-			tooltipText: Gemma.EvidenceCodes.iedTT
-		},
-		'IAGP': {
-			displayText: Gemma.EvidenceCodes.iagpText,
-			tooltipText: Gemma.EvidenceCodes.iagpTT
-		},
-		'IPM': {
-			displayText: Gemma.EvidenceCodes.ipmText,
-			tooltipText: Gemma.EvidenceCodes.ipmTT
-		},
-		'QTM': {
-			displayText: Gemma.EvidenceCodes.qtmText,
-			tooltipText: Gemma.EvidenceCodes.qtmTT
-		}
-	};
-	
-	return EVIDENCE_TEXT[evidenceCode];
-};
-
 Gemma.convertToEvidenceError = function(validateEvidenceValueObject) {
 	var isWarning = false;
 	var errorMessage = '';
