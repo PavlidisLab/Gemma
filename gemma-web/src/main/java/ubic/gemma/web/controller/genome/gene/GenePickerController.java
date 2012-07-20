@@ -189,6 +189,28 @@ public class GenePickerController {
     }
 
     /**
+     * AJAX (used by neurocarta)
+     * 
+     * @param query
+     * @param taxonId
+     * @return Collection of Gene entity objects
+     */
+    public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
+
+        Collection<GeneValueObject> geneValueObjects = this.geneCoreService.searchGenes( query, taxonId );
+
+        Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<GeneValueObject>();
+
+        for ( GeneValueObject geneValueObject : geneValueObjects ) {
+            if ( geneValueObject.getNcbiId() != null ) {
+                geneValueObjectWithNCBIId.add( geneValueObject );
+            }
+        }
+
+        return geneValueObjectWithNCBIId;
+    }
+
+    /**
      * AJAX (used by GeneAndGeneGroupCombo.js)
      * 
      * @param query
