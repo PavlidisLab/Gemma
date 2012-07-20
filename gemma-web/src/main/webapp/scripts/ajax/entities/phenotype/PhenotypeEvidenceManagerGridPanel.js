@@ -15,8 +15,10 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
     	        dwrFunction: PhenotypeController.findEvidenceByFilters,
         	    getDwrArgsFunction: function(request) {
 					return [
-						request.params.taxonId,
-						request.params.limit == null ?
+						request.params.taxonId === '-1' ?
+							null :
+							request.params.taxonId,
+						request.params.limit == null ? // It is undefined when the widget is first loaded.
 							50 :
 							request.params.limit
 					];
@@ -45,56 +47,52 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
 				}]
 	}],
 	initComponent: function() {
-		Gemma.PhenotypeEvidenceManagerGridPanel.superclass.initComponent.call(this);
-
 		var taxonCombo = new Gemma.TaxonCombo({
 			isDisplayTaxonWithEvidence : true,
-			stateId : null, // don't remember taxon value if
-			// user navigates away then comes
-			// back
+			stateId : null, // don't remember taxon value if user navigates away then comes back
 			emptyText : "Filter by taxon",
 			allTaxa : true, // want an 'All taxa' option
-			value: '-1'			
+			value: '-1',
+			listeners : {
+				select: function(combo, record, index) {
+					reloadStore();
+				}
+			}
 		});
 		taxonCombo.getStore().on('doneLoading', function() {
-			if (this.taxonid) {
-				taxonCombo.setValue(this.taxonid);
-			} else {
-				this.taxonid = (taxonCombo.getStore().getAt(0)) ?
-					taxonCombo.getStore().getAt(0).get('id') :
-					"-1";
-				taxonCombo.setValue(this.taxonid);
-			}
-		}, this);				
-		taxonCombo.on({
-			select: function(combo, record, index) {
-				reloadStore();
-			},
-			scope: this
+			// I have to do this. Otherwise, the combo box will display -1.
+			taxonCombo.setValue(taxonCombo.getValue());
 		});
 		
-		var dataFilterCombo = new Gemma.DataFilterCombo();
-		dataFilterCombo.on({
-			select: function(combo, record, index) {
-				reloadStore();
+		var dataFilterCombo = new Gemma.DataFilterCombo({
+			value: 50,
+			listeners : {
+				select: function(combo, record, index) {
+					reloadStore();
+				}
 			}
 		});
-		dataFilterCombo.setValue(50);
 		
 		var reloadStore = function() {
 			this.getStore().reload({
 	    		params: {
-					taxonId: taxonCombo.getValue() === '-1' ?
-								null :
-								taxonCombo.getValue(),
+	    			taxonId: taxonCombo.getValue(),
 					limit: dataFilterCombo.getValue()
 	    		}
 	    	});
 		}.createDelegate(this);
 
+		Ext.apply(this, {
+			listeners: {
+				phenotypeAssociationChanged: function(phenotypes, gene) {
+					reloadStore();
+				}
+			}
+		});
+		
+		Gemma.PhenotypeEvidenceManagerGridPanel.superclass.initComponent.call(this);
+
 		this.getTopToolbar().addButton(taxonCombo);
 		this.getTopToolbar().addButton(dataFilterCombo);
-		
-		var columnModel = this.getColumnModel();
 	}
 });

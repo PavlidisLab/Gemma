@@ -8,7 +8,7 @@
 Ext.namespace('Gemma');
 
 Gemma.DataFilterCombo = Ext.extend(Ext.form.ComboBox, {
-    typeAhead : true,
+	editable : false,
     width : 150,
     triggerAction : 'all',
     lazyRender : true,
