@@ -277,13 +277,21 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
         return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
     }
-
+    
     /**
      * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByBioAssay(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    @Override
+    public ExpressionExperiment findByBioAssay( final ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
+        return this.expressionExperimentDao.findByBioAssay( ba );
     }
 
     /**

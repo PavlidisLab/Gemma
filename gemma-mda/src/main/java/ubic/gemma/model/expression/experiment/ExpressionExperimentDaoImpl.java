@@ -736,6 +736,25 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
+    protected ExpressionExperiment handleFindByBioAssay( BioAssay ba ) {
+
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.bioAssays as ba "
+                + "where ba = :ba";
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ba", ba );
+        if ( list.size() == 0 ) {
+            log.warn( "No expression experiment for " + ba );
+            return null;
+        }
+        if ( list.size() > 1 ) {
+            /*
+             * This really shouldn't happen!
+             */
+            log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba + " Only 1 returned." );
+        }
+        return ( ExpressionExperiment ) list.iterator().next();
+    }
+    
+    @Override
     protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) {
 
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "

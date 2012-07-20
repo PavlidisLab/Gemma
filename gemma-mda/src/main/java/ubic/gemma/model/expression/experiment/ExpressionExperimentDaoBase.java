@@ -32,6 +32,7 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -106,10 +107,16 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     public Collection<ExpressionExperiment> findByBibliographicReference( final Long bibRefID ) {
         return this.handleFindByBibliographicReference( bibRefID );
     }
-
+    
     @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
         return this.handleFindByBioMaterial( bm );
+        
+    }
+
+    @Override
+    public ExpressionExperiment findByBioAssay( final ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
+        return this.handleFindByBioAssay( ba );
 
     }
 
@@ -784,5 +791,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
 
     protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment,
             boolean thawVectors );
+
+    protected abstract ExpressionExperiment handleFindByBioAssay( BioAssay ba );
 
 }

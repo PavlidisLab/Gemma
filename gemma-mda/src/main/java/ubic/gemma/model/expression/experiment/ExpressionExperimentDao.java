@@ -26,6 +26,7 @@ import java.util.Map;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -348,5 +349,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
 
     public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
+
+    ExpressionExperiment findByBioAssay( BioAssay ba );
 
 }

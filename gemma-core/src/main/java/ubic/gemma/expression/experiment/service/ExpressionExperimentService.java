@@ -124,12 +124,18 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
-
+    
     /**
      * Given a bioMaterial returns an expressionExperiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
+
+    /**
+     * Given a bioAssay returns an expressionExperiment
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay ba );
 
     /**
      * @param bioMaterials
