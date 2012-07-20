@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
@@ -43,6 +44,7 @@ import ubic.basecode.ontology.providers.BirnLexOntologyService;
 import ubic.basecode.ontology.providers.CellTypeOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -202,6 +204,8 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     private CharacteristicService characteristicService;
 
+    private ExperimentalFactorOntologyService experimentalFactorOntologyService;
+
     @Autowired
     private ExpressionExperimentService eeService;
 
@@ -238,6 +242,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
         this.mgedOntologyService = new MgedOntologyService();
         this.humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
+        this.experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
         this.obiService = new ObiService();
 
         this.ontologyServices.add( this.birnLexOntologyService );
@@ -252,6 +257,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.mammalianPhenotypeOntologyService );
         this.ontologyServices.add( this.humanPhenotypeOntologyService );
         this.ontologyServices.add( this.obiService );
+        this.ontologyServices.add( this.experimentalFactorOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );
@@ -448,6 +454,11 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public DiseaseOntologyService getDiseaseOntologyService() {
         return diseaseOntologyService;
+    }
+
+    @Override
+    public ExperimentalFactorOntologyService getExperimentalFactorOntologyService() {
+        return experimentalFactorOntologyService;
     }
 
     /*

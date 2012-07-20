@@ -24,6 +24,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.BirnLexOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
@@ -97,6 +98,11 @@ public interface OntologyService extends InitializingBean {
      * @return the diseaseOntologyService
      */
     public abstract DiseaseOntologyService getDiseaseOntologyService();
+
+    /**
+     * @return the experimentalFactorOntologyService
+     */
+    public abstract ExperimentalFactorOntologyService getExperimentalFactorOntologyService();
 
     /**
      * @return the fmaOntologyService
