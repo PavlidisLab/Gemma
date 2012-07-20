@@ -764,10 +764,8 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
 		
 		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoRecord" >
-			<dwr:exclude method="getContact"/>
+			<dwr:exclude method="contact"/>
 		</dwr:convert>
-		<!-- don't really need this, but can't seem to get rid off warnings -->
-		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoContact"  />
 
 		<dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />
 
