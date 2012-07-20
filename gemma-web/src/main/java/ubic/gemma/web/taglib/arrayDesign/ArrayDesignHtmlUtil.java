@@ -34,43 +34,26 @@ public class ArrayDesignHtmlUtil {
      */
     public static String getSummaryHtml( ArrayDesignValueObject object ) {
         return "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<tr><td>Probes</td><td align=\"right\" >"
+                + "<tr><td>Elements</td><td align=\"right\" >"
                 + object.getDesignElementCount()
                 + "</td></tr>"
-                + "<tr><td title=\"Number of probes with sequences\">"
+                + "<tr><td title=\"Number of elements with sequences\">"
                 + "With seq"
                 + "</td><td align=\"right\" >"
                 + object.getNumProbeSequences()
                 + "</td></tr>"
-                + "<tr><td title=\"Number of probes with at least one genome alignment\">"
+                + "<tr><td title=\"Number of elements with at least one genome alignment (if available)\">"
                 + "With align"
                 + "</td>"
                 + "<td align=\"right\" >"
                 + object.getNumProbeAlignments()
                 + "</td></tr>"
-                + "<tr><td title=\"Number of probes mapped to genes (including predicted and anonymous locations)\">"
+                + "<tr><td title=\"Number of elements mapped to genes\">"
                 + "Mapped to known genes"
                 + "</td><td align=\"right\" >"
                 + object.getNumProbesToKnownGenes()
                 + "</td></tr>"
-                +
-                /*
-                "<tr><td  title=\"Number of probes mapping to known genes\">"
-                + "&nbsp;&nbsp;Known"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToKnownGenes()
-                + "</td></tr>"
-                +
-               
-                 * "<tr><td title=\"Number of probes mapping to predicted genes\">" + "&nbsp;&nbsp;Pred." +
-                 * "</td><td align=\"right\" >" + object.getNumProbesToPredictedGenes() + "</td></tr>" +
-                 * 
-                 * "<tr><td  title=\"Number of probes mapping to non-gene locations in the genome\">" +
-                 * "&nbsp;&nbsp;Unknown" + "</td><td align=\"right\" >" + object.getNumProbesToProbeAlignedRegions() +
-                 * "</td></tr>" +
-                 */
-
-                "<tr><td title=\"Number of unique genes represented on the array\" >"
+                + "<tr><td title=\"Number of unique genes represented on the platform\" >"
                 + "Unique genes"
                 + "</td><td align=\"right\" >"
                 + object.getNumGenes()
