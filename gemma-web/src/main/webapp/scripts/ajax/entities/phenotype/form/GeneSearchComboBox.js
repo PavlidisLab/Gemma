@@ -39,8 +39,6 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
     tpl: new Ext.XTemplate('<tpl for="."><div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ' +
 							'ext:qtip="{officialSymbol}: {officialName} ({taxonCommonName})"><b>{officialSymbol}</b>: {officialName} <span style="color:grey">({taxonCommonName})</span></div></tpl>'),
     initComponent: function() {
-		var originalGeneSelection = null;
-
 		var geneSelectedLabel = new Ext.form.Label();
     	
 		Ext.apply(this, {
@@ -72,12 +70,10 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
 			    scope: this
 			},
 			selectGene: function(geneSelection) {
-				originalGeneSelection = geneSelection;
-
 				if (geneSelection == null) {
 					geneSelectedLabel.setText("", false);
 					this.setValue('');
-					this.superclass().reset.call(this);  // If I don't have this line, I always see the invalid red border around the component.
+					this.reset(); // If I don't have this line, I always see the invalid red border around the component.
 					this.clearInvalid();
 				} else {
 					this.getStore().loadData([{
@@ -91,9 +87,6 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
 					this.setValue(geneSelection.ncbiId);
 					geneSelectedLabel.setText(this.getStore().getAt(0).data.comboText, false);
 				}    	
-			},
-			reset: function() {
-				this.selectGene(originalGeneSelection);
 			}
 		});
 		
