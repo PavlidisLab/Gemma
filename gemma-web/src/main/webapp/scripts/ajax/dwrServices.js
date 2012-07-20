@@ -1,3 +1,4 @@
+
 /**
  * dwrServices.js
  * 
@@ -691,6 +692,9 @@ GenePickerController.searchGenesAndGeneGroups= function(p0, p1, callback) {
 }
 GenePickerController.searchGenesAndGeneGroupsGetIds= function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroupsGetIds', p0, p1, callback);
+}
+GenePickerController.searchGenesWithNCBIId= function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesWithNCBIId', p0, p1, callback);
 }
 GenePickerController.getTaxa = function(callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxa', callback);

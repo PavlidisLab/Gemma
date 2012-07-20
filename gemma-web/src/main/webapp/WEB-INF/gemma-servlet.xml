@@ -265,6 +265,7 @@
 			<dwr:include method="searchGenes" />
 			<dwr:include method="searchGenesAndGeneGroups" />
 			<dwr:include method="searchGenesAndGeneGroupsGetIds" />
+			<dwr:include method="searchGenesWithNCBIId" />
 			<dwr:include method="searchMultipleGenes" />
 			<dwr:include method="searchMultipleGenesGetMap" />
 			<dwr:include method="getGeneSetByGOId" />
