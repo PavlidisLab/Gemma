@@ -98,7 +98,7 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
                 discontinuedGenes.put( taxonInt, new HashMap<String, String>() );
             }
 
-            discontinuedGenes.get( taxonId ).put( discontinuedSymbol, discontinuedGeneId );
+            discontinuedGenes.get( taxonInt ).put( discontinuedSymbol, discontinuedGeneId );
             return null;
         }
 
