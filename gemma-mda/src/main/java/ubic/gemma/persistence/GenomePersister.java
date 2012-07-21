@@ -295,21 +295,7 @@ abstract public class GenomePersister extends CommonPersister {
         geneDao.update( existingGene );
 
         if ( !toRemove.isEmpty() ) {
-            Collection<? extends BlatAssociation> associations = blatAssociationDao.find( toRemove );
-            if ( !associations.isEmpty() ) {
-                log.info( "Removing " + associations.size() + " blat associations with " + toRemove.size()
-                        + " products." );
-                blatAssociationDao.remove( associations );
-            }
-
-            Collection<AnnotationAssociation> annotationAssociations = annotationAssociationDao.find( toRemove );
-            if ( !associations.isEmpty() ) {
-                log.info( "Removing " + associations.size() + " annotationAssociations with " + toRemove.size()
-                        + " products." );
-                annotationAssociationDao.remove( annotationAssociations );
-            }
-
-            geneProductDao.remove( toRemove );
+            removeGeneProducts( toRemove );
         }
 
         if ( existingGene.getProducts().isEmpty() ) {
@@ -317,6 +303,27 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         return existingGene;
+    }
+
+    /**
+     * @param toRemove
+     */
+    protected void removeGeneProducts( Collection<GeneProduct> toRemove ) {
+        Collection<? extends BlatAssociation> associations = blatAssociationDao.find( toRemove );
+        if ( !associations.isEmpty() ) {
+            log.info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
+                    + " products." );
+            blatAssociationDao.remove( associations );
+        }
+
+        Collection<AnnotationAssociation> annotationAssociations = annotationAssociationDao.find( toRemove );
+        if ( !annotationAssociations.isEmpty() ) {
+            log.info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
+                    + toRemove.size() + " products." );
+            annotationAssociationDao.remove( annotationAssociations );
+        }
+
+        geneProductDao.remove( toRemove );
     }
 
     /**
