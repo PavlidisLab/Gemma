@@ -101,79 +101,84 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Gene find( Gene gene ) {
 
-        try {
-            Criteria queryObject = super.getSession().createCriteria( Gene.class );
+        Criteria queryObject = super.getSession().createCriteria( Gene.class );
 
-            BusinessKey.checkKey( gene );
+        BusinessKey.checkKey( gene );
 
-            BusinessKey.createQueryObject( queryObject, gene );
+        BusinessKey.createQueryObject( queryObject, gene );
 
-            java.util.List<Gene> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
+        java.util.List<Gene> results = queryObject.list();
+        Object result = null;
 
-                    /*
-                     * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put
-                     * in place to help in the cleanup of duplicated genes. But this can happen fairly routinely when
-                     * NCBI information changes in messy ways.
-                     * 
-                     * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call
-                     * from a read-write method.
-                     */
-                    Collection<Gene> toDelete = new HashSet<Gene>();
-                    for ( Gene foundGene : results ) {
-                        try {
-                            if ( gene.getNcbiGeneId().equals( Integer.parseInt( foundGene.getPreviousNcbiId() ) ) ) {
-                                toDelete.add( foundGene );
-                            }
-                        } catch ( NumberFormatException e ) {
-                            // no action
-                        }
+        if ( results.isEmpty() ) {
+
+            Gene nearMatch = findByOfficialSymbol( gene.getOfficialSymbol(), gene.getTaxon() );
+            if ( nearMatch != null ) {
+                log.warn( "Strict find did not locate the gene, but match by symbol:" + gene + " matches " + nearMatch );
+            }
+
+            return null;
+
+        } else if ( results.size() > 1 ) {
+
+            /*
+             * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put in
+             * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
+             * information changes in messy ways.
+             * 
+             * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
+             * read-write method.
+             */
+            Collection<Gene> toDelete = new HashSet<Gene>();
+            for ( Gene foundGene : results ) {
+                try {
+                    if ( gene.getNcbiGeneId().equals( Integer.parseInt( foundGene.getPreviousNcbiId() ) ) ) {
+                        toDelete.add( foundGene );
                     }
-
-                    if ( !toDelete.isEmpty() ) {
-                        assert toDelete.size() < results.size(); // it shouldn't be everything!
-                        log.warn( "Deleting gene(s) that use a deprecated NCBI ID: "
-                                + StringUtils.join( toDelete, " | " ) );
-                        this.remove( toDelete ); // WARNING this might fail due to constraints.
-                    }
-                    results.removeAll( toDelete );
-
-                    for ( Gene foundGene : results ) {
-                        if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null
-                                && foundGene.getNcbiGeneId().equals( gene.getNcbiGeneId() ) ) {
-                            return foundGene;
-                        }
-                    }
-
-                    /*
-                     * This should be quite a rare situation if the database is kept tidy.
-                     */
-                    if ( results.size() > 1 ) {
-                        log.error( "Multiple genes found for " + gene + ":" );
-                        debug( results );
-
-                        Collections.sort( results, new Comparator<Gene>() {
-                            @Override
-                            public int compare( Gene arg0, Gene arg1 ) {
-                                return arg0.getId().compareTo( arg1.getId() );
-                            }
-                        } );
-                        result = results.iterator().next();
-                        log.error( "Returning arbitrary gene: " + result );
-                    } else {
-                        result = results.iterator().next();
-                    }
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
+                } catch ( NumberFormatException e ) {
+                    // no action
                 }
             }
-            return ( Gene ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+
+            if ( !toDelete.isEmpty() ) {
+                assert toDelete.size() < results.size(); // it shouldn't be everything!
+                log.warn( "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
+                this.remove( toDelete ); // WARNING this might fail due to constraints.
+            }
+            results.removeAll( toDelete );
+
+            for ( Gene foundGene : results ) {
+                if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null
+                        && foundGene.getNcbiGeneId().equals( gene.getNcbiGeneId() ) ) {
+                    return foundGene;
+                }
+            }
+
+            /*
+             * This should be quite a rare situation if the database is kept tidy.
+             */
+            if ( results.size() > 1 ) {
+                log.error( "Multiple genes found for " + gene + ":" );
+                debug( results );
+
+                Collections.sort( results, new Comparator<Gene>() {
+                    @Override
+                    public int compare( Gene arg0, Gene arg1 ) {
+                        return arg0.getId().compareTo( arg1.getId() );
+                    }
+                } );
+                result = results.iterator().next();
+                log.error( "Returning arbitrary gene: " + result );
+            } else {
+                result = results.get( 0 );
+            }
+
+        } else {
+            result = results.get( 0 );
         }
+
+        return ( Gene ) result;
+
     }
 
     /*
