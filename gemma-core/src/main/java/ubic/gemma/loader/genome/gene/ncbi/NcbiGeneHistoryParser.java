@@ -21,6 +21,7 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
@@ -38,7 +39,33 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
 
     private static final int GENE_HISTORY_FILE_NUM_FIELDS = 5;
 
-    Map<String, NcbiGeneHistory> id2history = new HashMap<String, NcbiGeneHistory>();
+    private Map<String, NcbiGeneHistory> id2history = new HashMap<String, NcbiGeneHistory>();
+
+    private Map<Integer, Map<String, String>> discontinuedGenes = new HashMap<Integer, Map<String, String>>();
+
+    @Override
+    public boolean containsKey( String key ) {
+        return id2history.containsKey( key );
+    }
+
+    /**
+     * @param geneSymbol
+     * @return null, or the NCBI ID of the gene that was discontinued.
+     */
+    public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
+        if ( !discontinuedGenes.containsKey( taxonId ) ) return null;
+        return discontinuedGenes.get( taxonId ).get( geneSymbol );
+    }
+
+    @Override
+    public NcbiGeneHistory get( String key ) {
+        return id2history.get( key );
+    }
+
+    @Override
+    public Collection<String> getKeySet() {
+        return id2history.keySet();
+    }
 
     @Override
     public Collection<NcbiGeneHistory> getResults() {
@@ -58,15 +85,22 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
                     + GENE_HISTORY_FILE_NUM_FIELDS + ", got " + fields.length + " in line=" + line );
         }
 
-        // String taxonId = fields[0];
         String geneId = fields[1];
         String discontinuedGeneId = fields[2];
 
         if ( StringUtils.isBlank( geneId ) || geneId.equals( "-" ) ) {
+            String taxonId = fields[0];
+            String discontinuedSymbol = fields[3];
+
+            Integer taxonInt = Integer.parseInt( taxonId );
+
+            if ( !( discontinuedGenes.containsKey( taxonInt ) ) ) {
+                discontinuedGenes.put( taxonInt, new HashMap<String, String>() );
+            }
+
+            discontinuedGenes.get( taxonId ).put( discontinuedSymbol, discontinuedGeneId );
             return null;
         }
-
-        // String discontinuedSymbol = fields[3];
 
         NcbiGeneHistory his;
         if ( id2history.containsKey( discontinuedGeneId ) ) {
@@ -82,23 +116,8 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
     }
 
     @Override
-    public boolean containsKey( String key ) {
-        return id2history.containsKey( key );
-    }
-
-    @Override
-    public NcbiGeneHistory get( String key ) {
-        return id2history.get( key );
-    }
-
-    @Override
     protected String getKey( NcbiGeneHistory newItem ) {
         return newItem.getCurrentId();
-    }
-
-    @Override
-    public Collection<String> getKeySet() {
-        return id2history.keySet();
     }
 
     @Override

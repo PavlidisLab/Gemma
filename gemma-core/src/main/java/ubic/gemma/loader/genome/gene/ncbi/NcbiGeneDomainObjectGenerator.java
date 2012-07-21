@@ -220,6 +220,12 @@ public class NcbiGeneDomainObjectGenerator {
             NcbiGeneHistory history = historyParser.get( geneInfo.getGeneId() );
             geneInfo.setHistory( history );
 
+            if ( history == null ) {
+                String discontinuedIdForGene = historyParser.discontinuedIdForSymbol( geneInfo.getDefaultSymbol(),
+                        geneInfo.getTaxId() );
+                geneInfo.setDiscontinuedId( discontinuedIdForGene );
+            }
+
             if ( geneEnsemblFile != null ) {
                 String ensemblId = ensemblParser.get( geneInfo.getGeneId() );
                 geneInfo.setEnsemblId( ensemblId );

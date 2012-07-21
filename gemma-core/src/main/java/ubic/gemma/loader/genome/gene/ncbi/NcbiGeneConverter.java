@@ -109,6 +109,10 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             if ( previousId != null ) {
                 gene.setPreviousNcbiId( previousId );
             }
+        } else if ( info.getDiscontinuedId() != null ) {
+            log.info( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
+                    + info.getDiscontinuedId() );
+            gene.setPreviousNcbiId( info.getDiscontinuedId() );
         }
 
         gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );

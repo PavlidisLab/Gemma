@@ -412,7 +412,11 @@ abstract public class GenomePersister extends CommonPersister {
             }
         }
 
-        log.debug( "New gene: " + gene );
+        /*
+         * We log this at INFO to help track cases where genes are added. But this can be very annoying the first time a
+         * genome is added.
+         */
+        log.info( "New gene: " + gene );
 
         if ( gene.getAccessions().size() > 0 ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {

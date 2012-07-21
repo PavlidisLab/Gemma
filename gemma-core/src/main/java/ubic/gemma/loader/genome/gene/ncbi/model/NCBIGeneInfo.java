@@ -146,6 +146,7 @@ public class NCBIGeneInfo {
     private NcbiGeneHistory history;
 
     private String ensemblId;
+    private String discontinuedIdForGene;
 
     /**
      * @param dbName
@@ -340,6 +341,15 @@ public class NCBIGeneInfo {
     }
 
     /**
+     * @return The NCBI gene ID that was 'discontinued' for the gene that matches this symbol and taxon. These
+     *         correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
+     *         only on the symbol+taxon, we have to be a bit careful using it.
+     */
+    public String getDiscontinuedId() {
+        return discontinuedIdForGene;
+    }
+
+    /**
      * @param symbolIsFromAuthority The symbolIsFromAuthority to set.
      */
     public void setSymbolIsFromAuthority( boolean symbolIsFromAuthority ) {
@@ -351,6 +361,10 @@ public class NCBIGeneInfo {
      */
     public void setTaxId( int taxId ) {
         this.taxId = taxId;
+    }
+
+    public void setDiscontinuedId( String discontinuedIdForGene ) {
+        this.discontinuedIdForGene = discontinuedIdForGene;
     }
 
 }
