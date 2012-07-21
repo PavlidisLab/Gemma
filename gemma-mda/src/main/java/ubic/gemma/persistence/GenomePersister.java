@@ -30,9 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.ChromosomeDao;
+import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonDao;
@@ -40,10 +41,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.model.genome.GeneDao;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
-import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -76,9 +75,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     @Autowired
     protected BlatAssociationDao blatAssociationDao;
-
-    @Autowired
-    protected BlastAssociationDao blastAssociationDao;
 
     @Autowired
     protected BlatResultDao blatResultDao;
@@ -299,6 +295,20 @@ abstract public class GenomePersister extends CommonPersister {
         geneDao.update( existingGene );
 
         if ( !toRemove.isEmpty() ) {
+            Collection<? extends BlatAssociation> associations = blatAssociationDao.find( toRemove );
+            if ( !associations.isEmpty() ) {
+                log.info( "Removing " + associations.size() + " blat associations with " + toRemove.size()
+                        + " products." );
+                blatAssociationDao.remove( associations );
+            }
+
+            Collection<AnnotationAssociation> annotationAssociations = annotationAssociationDao.find( toRemove );
+            if ( !associations.isEmpty() ) {
+                log.info( "Removing " + associations.size() + " annotationAssociations with " + toRemove.size()
+                        + " products." );
+                annotationAssociationDao.remove( annotationAssociations );
+            }
+
             geneProductDao.remove( toRemove );
         }
 
@@ -348,22 +358,10 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
             return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
-        } else if ( bioSequence2GeneProduct instanceof BlastAssociation ) {
-            return persistBlastAssociation( ( BlastAssociation ) bioSequence2GeneProduct );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to deal with "
-                    + bioSequence2GeneProduct.getClass().getName() );
         }
+        throw new UnsupportedOperationException( "Don't know how to deal with "
+                + bioSequence2GeneProduct.getClass().getName() );
 
-    }
-
-    /**
-     * @param association
-     */
-    protected BioSequence2GeneProduct persistBlastAssociation( BlastAssociation association ) {
-        BlastResult blastResult = association.getBlastResult();
-        persistBlastResult( blastResult );
-        return blastAssociationDao.create( association );
     }
 
     /**
