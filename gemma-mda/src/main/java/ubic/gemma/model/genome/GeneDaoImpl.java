@@ -112,10 +112,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( results.isEmpty() ) {
 
-            Gene nearMatch = findByOfficialSymbol( gene.getOfficialSymbol(), gene.getTaxon() );
-            if ( nearMatch != null ) {
-                log.warn( "Strict find did not locate the gene, but match by symbol:" + gene + " matches " + nearMatch );
-            }
+            // Gene nearMatch = findByOfficialSymbol( gene.getOfficialSymbol(), gene.getTaxon() );
+            // if ( nearMatch != null ) {
+            // log.warn( "Strict find did not locate the gene, but match by symbol:" + gene + " matches " + nearMatch );
+            // }
 
             return null;
 
