@@ -49,7 +49,6 @@ function handleIndexSuccess(data) {
 
 function index(event) {
 
-	var dh = Ext.DomHelper;
 	var callParams = [];
 
 	var commandObj = {
@@ -149,8 +148,20 @@ var indexForm = function() {
 	simple.add(new Ext.Button({
 				text : "index",
 				handler : function(event) {
-					index(event);
-				}
+					Ext.Msg.show({
+						title : Gemma.HelpText.CommonWarnings.ReIndexing.title,
+						msg : String.format(Gemma.HelpText.CommonWarnings.ReIndexing.text,'ontology'),
+						buttons : Ext.Msg.YESNO,
+						fn : function(btn, text) {
+							if (btn == 'yes') {
+								index(event);
+							}
+						},
+						scope : this,
+						icon : Ext.MessageBox.WARNING
+					});
+				},
+				scope: this
 			}));
 	simple.render('index-form');
 };

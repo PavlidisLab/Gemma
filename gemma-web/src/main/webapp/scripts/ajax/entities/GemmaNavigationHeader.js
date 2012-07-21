@@ -318,6 +318,9 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                                         }, {
                                             text : 'Index Gemma Database',
                                             href : "/Gemma/admin/indexer.html"
+                                        },{
+                                            text : 'Re-Index Gemma Ontologies',
+                                            href : "/Gemma/admin/reIndexOntologies.html"
                                         }, {
                                             text : 'Manage Maintenance Mode',
                                             href : "/Gemma/admin/maintenanceMode.html"
