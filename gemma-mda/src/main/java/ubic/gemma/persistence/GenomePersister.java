@@ -437,7 +437,15 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         // attach the products.
-        return geneDao.create( gene );
+        try {
+            return geneDao.create( gene );
+        } catch ( Exception e ) {
+            log.error( "Error while creating gene: " + gene + "; products:" );
+            for ( GeneProduct gp : gene.getProducts() ) {
+                System.err.println( gp );
+            }
+            throw new RuntimeException( e );
+        }
     }
 
     /**
