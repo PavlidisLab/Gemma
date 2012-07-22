@@ -19,17 +19,25 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 
 /**
  * @see ubic.gemma.model.genome.gene.GeneProductService
  */
 @Service
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
+
+    private static Logger log = LoggerFactory.getLogger( GeneProductServiceImpl.class );
 
     @Override
     protected Integer handleCountAll() {
@@ -125,11 +133,37 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     @Override
     public void remove( Collection<GeneProduct> toRemove ) {
+        Collection<? extends BlatAssociation> associations = this.getBlatAssociationDao().find( toRemove );
+        if ( !associations.isEmpty() ) {
+            log.info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
+                    + " products." );
+            this.getBlatAssociationDao().remove( associations );
+        }
 
-        this.getBlatAssociationDao().remove( this.getBlatAssociationDao().find( toRemove ) );
-        this.getAnnotationAssociationDao().remove( this.getAnnotationAssociationDao().find( toRemove ) );
+        Collection<AnnotationAssociation> annotationAssociations = this.getAnnotationAssociationDao().find( toRemove );
+        if ( !annotationAssociations.isEmpty() ) {
+            log.info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
+                    + toRemove.size() + " products." );
+            this.getAnnotationAssociationDao().remove( annotationAssociations );
+        }
 
-        this.getGeneProductDao().remove( toRemove );
+        // might need to add referenceAssociations also.
+
+        // remove associations to database entries that are still associated with sequences.
+        for ( GeneProduct gp : toRemove ) {
+            GeneProduct tgp = this.thaw( gp );
+            Collection<DatabaseEntry> accessions = tgp.getAccessions();
+            Collection<DatabaseEntry> toRelease = new HashSet<DatabaseEntry>();
+            for ( DatabaseEntry de : accessions ) {
+                if ( this.getBioSequenceDao().findByAccession( de ) != null ) {
+                    toRelease.add( de );
+                }
+            }
+            tgp.getAccessions().removeAll( toRelease );
+            this.getGeneProductDao().remove( tgp );
+
+        }
+
     }
 
     @Override
