@@ -41,7 +41,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao;
@@ -309,19 +308,6 @@ abstract public class GenomePersister extends CommonPersister {
      * @param toRemove
      */
     protected void removeGeneProducts( Collection<GeneProduct> toRemove ) {
-        Collection<? extends BlatAssociation> associations = blatAssociationDao.find( toRemove );
-        if ( !associations.isEmpty() ) {
-            log.info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
-                    + " products." );
-            blatAssociationDao.remove( associations );
-        }
-
-        Collection<AnnotationAssociation> annotationAssociations = annotationAssociationDao.find( toRemove );
-        if ( !annotationAssociations.isEmpty() ) {
-            log.info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
-                    + toRemove.size() + " products." );
-            annotationAssociationDao.remove( annotationAssociations );
-        }
 
         geneProductDao.remove( toRemove );
     }
