@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao;
@@ -305,11 +306,41 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * FIXME this duplicates some code from GeneProductService, but we're using the DAOs here.
+     * 
      * @param toRemove
      */
     protected void removeGeneProducts( Collection<GeneProduct> toRemove ) {
+        Collection<? extends BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
+        if ( !associations.isEmpty() ) {
+            log.info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
+                    + " products." );
+            this.blatAssociationDao.remove( associations );
+        }
 
-        geneProductDao.remove( toRemove );
+        Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationDao.find( toRemove );
+        if ( !annotationAssociations.isEmpty() ) {
+            log.info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
+                    + toRemove.size() + " products." );
+            this.annotationAssociationDao.remove( annotationAssociations );
+        }
+
+        // might need to add referenceAssociations also.
+
+        // remove associations to database entries that are still associated with sequences.
+        for ( GeneProduct gp : toRemove ) {
+            Collection<DatabaseEntry> accessions = gp.getAccessions();
+            Collection<DatabaseEntry> toRelease = new HashSet<DatabaseEntry>();
+            for ( DatabaseEntry de : accessions ) {
+                if ( this.bioSequenceDao.findByAccession( de ) != null ) {
+                    toRelease.add( de );
+                }
+            }
+            gp.getAccessions().removeAll( toRelease );
+            this.geneProductDao.remove( gp );
+
+        }
+        // geneProductDao.remove( toRemove );
     }
 
     /**
