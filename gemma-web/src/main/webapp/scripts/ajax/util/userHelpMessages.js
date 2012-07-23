@@ -152,6 +152,11 @@ Gemma.HelpText.CommonWarnings = {
 		title: 'Comfirm Deletion',
 		text: "Are you sure you want to delete this {0}? This cannot be undone."
 	},
+	ReIndexing: {
+		title: 'Comfirm Re-Indexing',
+		text: "Are you sure you want to rebuild the {0} indicies? This will delete current indicies."+
+				" <br>(Do not run this as part of a website test.)"
+	},
 	DuplicateName: {
 		title: "Duplicate Name",
 		text: "Please provide a previously unused name for the group"
