@@ -214,6 +214,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( userName != null && !userName.isEmpty() ) {
             sqlQuery += "and acl_sid.sid = '" + userName + "' ";
         }
+        
+        System.out.println(sqlQuery);
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
@@ -245,8 +247,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             sqlQuery += ") ";
         }
-
-        sqlQuery += "and PHENOTYPE_ASSOCIATION.ID not in (select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id = CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_entry.mask = 1 and acl_entry.sid = 4)";
+        
+        sqlQuery += "and PHENOTYPE_ASSOCIATION.ID not in (select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id = CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_entry.mask = 1 and acl_entry.sid = 4 and acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl'))";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
 
