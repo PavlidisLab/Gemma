@@ -143,7 +143,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		});
 		return diffExGrid;
 	},
-	initPhenotypeTab : function( geneId ){
+	initPhenotypeTab : function( geneId ) {
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes',
 			iconCls: 'icon-neurocarta',			
@@ -166,6 +166,11 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, geneId);
 				}					
 				return phenotypesHtml;
+			},
+			listeners: {
+				phenotypeAssociationChanged: function(phenotypes, gene) {
+					this.getStore().reload();
+				}
 			}
 		});
 		// In PhenotypePanel, when a user logs in, PhenotypeGridPanel will be reloaded first, followed by  
@@ -173,8 +178,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		// be done in PhenotypeEvidenceGridPanel. Otherwise, PhenotypeEvidenceGridPanel would be reloaded twice.
 		Gemma.Application.currentUser.on("logIn", 
 			function(userName, isAdmin) {
-				var phenotypeEvidenceGridStore = phenotypeEvidenceGridPanel.getStore();
-				phenotypeEvidenceGridStore.reload(phenotypeEvidenceGridStore.lastOptions);
+				phenotypeEvidenceGridPanel.getStore().reload();
 			},
 			this);
 		
