@@ -359,11 +359,15 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					},
 					getBaseline : function(resultSet) {
 						// get baseline info
+						var base = '';
 						if (resultSet.baselineGroup) {
-							return ' with baseline&nbsp;=&nbsp;'
-									+ resultSet.baselineGroup.value;
+							base = (resultSet.baselineGroup.value != null) ? 
+									' with baseline&nbsp;=&nbsp;'+ resultSet.baselineGroup.value
+									: (resultSet.baselineGroup.factorValue != null) ? 
+											' with baseline&nbsp;=&nbsp;'+ resultSet.baselineGroup.factorValue
+											: '';
 						}
-						return '';
+						return base;
 					},
 					getDeleteLink: function( analysis ){
 						// prepare download link
