@@ -107,27 +107,33 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 		pubMedStore.on({
 		    'load': {
 		        fn: function(store, records, options) {
-					statusDisplayField.hide();
-					bibliographicReferenceDetailsPanel.loadMask.hide();
-
-		        	// Because it takes time to reload the store, update PudMed details
-		        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
-					if (options.params.pubMedId === pubMedIdField.getValue()) {					
-			        	if (pubMedStore.getTotalCount() > 0) {
-							pubMedIdField.clearInvalid();
-							
-							bibliographicReferenceDetailsPanel.updateFields(pubMedStore.getAt(0), this.evidenceId);
-							bibliographicReferenceDetailsPanel.show();
-			        	} else {
-							pubMedIdField.markInvalid("PubMed Id is not valid");
-							
-							bibliographicReferenceDetailsPanel.hide();
+		        	// If the cursor is in PubMed Id field and then the user presses the
+		        	// Cancel button to close the form, the user will get javascript error:
+					// 		this.dom is undefined
+		        	// To fix this problem, we proceed only when statusDisplayField.ownerCt is defined. 
+					if (statusDisplayField.ownerCt) {
+						statusDisplayField.hide();
+						bibliographicReferenceDetailsPanel.loadMask.hide();
+	
+			        	// Because it takes time to reload the store, update PudMed details
+			        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+						if (options.params.pubMedId === pubMedIdField.getValue()) {					
+				        	if (pubMedStore.getTotalCount() > 0) {
+								pubMedIdField.clearInvalid();
+								
+								bibliographicReferenceDetailsPanel.updateFields(pubMedStore.getAt(0), this.evidenceId);
+								bibliographicReferenceDetailsPanel.show();
+				        	} else {
+								pubMedIdField.markInvalid("PubMed Id is not valid");
+								
+								bibliographicReferenceDetailsPanel.hide();
+				        	}
 			        	}
-		        	}
-
-					if (options.params.shouldFireEvent) {
-						this.fireEvent('pubMedIdStoreLoad', this, store, records, options);
-					}					
+	
+						if (options.params.shouldFireEvent) {
+							this.fireEvent('pubMedIdStoreLoad', this, store, records, options);
+						}
+					}
 		        },
 		        scope:this
 		    }
