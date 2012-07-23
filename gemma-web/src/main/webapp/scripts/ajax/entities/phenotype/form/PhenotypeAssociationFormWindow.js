@@ -72,7 +72,7 @@ Gemma.PhenotypeAssociationForm.Window = Ext.extend(Ext.Window, {
 			items: [
 				formPanel			
 			]});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.Window.superclass.initComponent.call(this);
 	}
 });
 
@@ -631,6 +631,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			]		
 		});
 		
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.Panel.superclass.initComponent.call(this);
     }
 });

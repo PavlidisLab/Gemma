@@ -230,6 +230,6 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 	        ]
 		});
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.LiteraturePanel.superclass.initComponent.call(this);
     }
 });

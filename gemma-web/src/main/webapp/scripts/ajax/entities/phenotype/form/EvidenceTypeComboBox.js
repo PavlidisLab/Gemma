@@ -44,6 +44,6 @@ Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox = Ext.extend(Ext.form.ComboB
 			}
 		});
 		
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox.superclass.initComponent.call(this);
     }
 });

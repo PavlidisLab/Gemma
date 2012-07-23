@@ -81,7 +81,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				phenotypeGrid
 			]
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeTabPanel.superclass.initComponent.call(this);
 
 		syncDestinationStoresOnSourceStoreLoad(phenotypeTreeGridPanel.getStore(), [ phenotypeGrid ]);
 

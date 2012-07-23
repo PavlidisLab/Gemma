@@ -104,6 +104,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
 				}
 			}
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox.superclass.initComponent.call(this);
     }
 });

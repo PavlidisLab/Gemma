@@ -164,6 +164,6 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
             ]
 		});
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypePanelToolbar.superclass.initComponent.call(this);
     }
 });

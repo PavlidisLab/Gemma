@@ -74,6 +74,6 @@ Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox = Ext.extend(Ext.form.Com
 			    idProperty: 'valueUri'
 			})
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.PhenotypeSearchComboBox.superclass.initComponent.call(this);
     }
 });

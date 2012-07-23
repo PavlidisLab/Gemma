@@ -304,6 +304,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 				}
 	    	]
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.ExperimentTagsPanel.superclass.initComponent.call(this);
     }
 });

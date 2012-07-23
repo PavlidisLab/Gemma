@@ -59,6 +59,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagCategoryComboBox = Ext.extend(Ext.fo
 				return selectedRecord;
 			}
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.ExperimentTagCategoryComboBox.superclass.initComponent.call(this);
     }
 });

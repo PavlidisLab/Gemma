@@ -99,7 +99,7 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			]
 		});
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeGridPanel.superclass.initComponent.call(this);
 		
 		this.getStore().on('load',
 			function(store, records, options) {

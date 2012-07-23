@@ -35,7 +35,7 @@ Gemma.PhenotypeAssociationForm.ErrorPanel = Ext.extend(Ext.Panel, {
 			},
 			hide: function() {
 				errorDisplayField.setValue('');
-				this.superclass().hide.call(this);
+				Gemma.PhenotypeAssociationForm.ErrorPanel.superclass.hide.call(this);
 				this.ownerCt.doLayout();
 			},
 		    showError: function(message) {
@@ -45,6 +45,6 @@ Gemma.PhenotypeAssociationForm.ErrorPanel = Ext.extend(Ext.Panel, {
 		    	showMessageInColor(message, 'orange');
 		    }
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.ErrorPanel.superclass.initComponent.call(this);
 	}
 });

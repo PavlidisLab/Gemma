@@ -202,6 +202,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				}
 	    	]
 		});
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel.superclass.initComponent.call(this);
     }
 });

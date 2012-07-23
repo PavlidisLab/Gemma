@@ -245,7 +245,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 			]
 		});
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeTreeGridPanel.superclass.initComponent.call(this);
 
 		this.getStore().on('load', 
 			function(store, records, options) {

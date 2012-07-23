@@ -210,7 +210,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			}
     	}
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypePanel.superclass.initComponent.call(this);
     }
 });
 
@@ -235,7 +235,7 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
             this.hasSearch = false;
 			this.fireEvent('filterRemoved');
         }
-        this.superclass().onTrigger1Click.call(this);
+        Gemma.PhenotypePanelSearchField.superclass.onTrigger1Click.call(this);
     },
     onTrigger2Click: function() {
         var typedString = this.getRawValue().toLowerCase();
@@ -257,7 +257,7 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
 		}
 		this.fireEvent('filterApplied', recordFilter);
 
-        this.superclass().onTrigger2Click.call(this);
+        Gemma.PhenotypePanelSearchField.superclass.onTrigger2Click.call(this);
     },
     applyCurrentFilter: function() {
     	this.onTrigger2Click();

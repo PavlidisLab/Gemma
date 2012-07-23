@@ -283,6 +283,6 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			}
 		});
 
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeGeneGridPanel.superclass.initComponent.call(this);
     }
 });

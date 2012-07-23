@@ -90,6 +90,6 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
 			}
 		});
 		
-		this.superclass().initComponent.call(this);
+		Gemma.PhenotypeAssociationForm.GeneSearchComboBox.superclass.initComponent.call(this);
     }
 });
