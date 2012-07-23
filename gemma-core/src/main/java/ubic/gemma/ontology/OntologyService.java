@@ -196,4 +196,11 @@ public interface OntologyService extends InitializingBean {
      */
     public abstract void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
+    /**
+     * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
+     * of possible choices
+     */
+    public abstract Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
+            boolean useNeuroCartaOntology );
+
 }

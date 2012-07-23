@@ -746,12 +746,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
 
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = this.taxonService.load( taxonId );
-        }
-
-        return this.ontologyService.findExactTermValueObject( givenQueryString, categoryUri, taxon );
+        // TODO new method created, will we use categoryUri and taxon ???
+        return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
     @Override
@@ -769,24 +765,20 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
-                
-        return this.convert2ValueObjects( phenotypeAssociations );
-    }
-    
-    
-    
-    /**
-     * find all evidence that doesn't come from an external source
-     * 
-     */
-    @Override
-    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName( ) {
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                .findEvidencesWithoutExternalDatabaseName( );
-                
+
         return this.convert2ValueObjects( phenotypeAssociations );
     }
 
+    /**
+     * find all evidence that doesn't come from an external source
+     */
+    @Override
+    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName() {
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                .findEvidencesWithoutExternalDatabaseName();
+
+        return this.convert2ValueObjects( phenotypeAssociations );
+    }
 
     /**
      * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
