@@ -150,7 +150,7 @@ var indexForm = function() {
 				handler : function(event) {
 					Ext.Msg.show({
 						title : Gemma.HelpText.CommonWarnings.ReIndexing.title,
-						msg : String.format(Gemma.HelpText.CommonWarnings.ReIndexing.text,'ontology'),
+						msg : String.format(Gemma.HelpText.CommonWarnings.ReIndexing.text,'database'),
 						buttons : Ext.Msg.YESNO,
 						fn : function(btn, text) {
 							if (btn == 'yes') {
