@@ -301,7 +301,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							break;
 						case 5:
 							analysisDesc = 'Five-way ANOVA';
-							beak;
+							break;
 						case 6:
 							analysisDesc = 'Six-way ANOVA';
 							break;
