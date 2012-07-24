@@ -13,7 +13,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
     experimentDetails: null,
     border: false,
-    tbar: new Ext.Toolbar,
+    tbar: new Ext.Toolbar(),
 	defaultType:'box',
     defaults:{
 		border:false
@@ -22,7 +22,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
     initComponent: function(){
         Gemma.ExpressionExperimentTools.superclass.initComponent.call(this);
         var manager = new Gemma.EEManager({
-            editable: this.editable,
+            editable: this.editable
         });
         manager.on('reportUpdated', function(){
         	this.fireEvent('reloadNeeded');
