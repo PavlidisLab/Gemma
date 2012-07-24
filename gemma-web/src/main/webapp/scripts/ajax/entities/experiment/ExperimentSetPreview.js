@@ -89,7 +89,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 				this.selectedSetValueObject.id +
 				'">' +
 				this.selectedSetValueObject.name +
-				'</a>'
+				'</a>';
 				
 			} else {
 				name = this.selectedSetValueObject.name;

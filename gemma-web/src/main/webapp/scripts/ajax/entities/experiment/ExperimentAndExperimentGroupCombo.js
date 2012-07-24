@@ -159,7 +159,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				renderItem: function(values){
 					if (values.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
 						if (values.userOwned) {
-							return userOwnedDbSetTpl.apply(values)
+							return userOwnedDbSetTpl.apply(values);
 						} else {
 							return dbSetTpl.apply(values);
 						}

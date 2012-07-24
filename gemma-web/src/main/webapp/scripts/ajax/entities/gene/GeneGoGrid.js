@@ -59,12 +59,12 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				if (!this.deferLoadToRender) {
 					this.getStore().load({
 						params: [this.geneid]
-					})
+					});
 				} else {
 					this.on('render',function(){
 						this.getStore().load({
 							params: [this.geneid]
-						})
+						});
 					});
 				}
 			}

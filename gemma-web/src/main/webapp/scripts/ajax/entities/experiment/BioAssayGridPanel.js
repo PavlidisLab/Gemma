@@ -115,7 +115,7 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 }
 
                 return "<span class=\"link\" onClick=\"Ext.getCmp('eemanager').markOutlierBioAssay(" + record.get('id')
-                        + ")\"><img title=\"Click to mark as an outlier\" src=\"/Gemma/images/icons/ok.png\"/></span>"
+                        + ")\"><img title=\"Click to mark as an outlier\" src=\"/Gemma/images/icons/ok.png\"/></span>";
             }
 
         });
