@@ -38,7 +38,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		var statusString = "";
 		if (!e.modifiable) {
 			statusString += "<img src='/Gemma/images/icons/shield.png' height='16' width='16' "+
-				"title='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />&nbsp;"
+				"title='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />&nbsp;";
 		}
 		var sl = Gemma.SecurityManager.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", 
 					e.id, e.publik, e.shared,e.currentUserHasWritePermission, null, null, null, e.currentUserIsOwner);
