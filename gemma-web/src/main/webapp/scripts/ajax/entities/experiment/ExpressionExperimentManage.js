@@ -159,7 +159,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
         return function(r, id) {
             var obj = r.data;
             return value.match(obj.name) || value.match(obj.shortName);
-        }
+        };
     },
 
     refresh : function() {
@@ -293,7 +293,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
                 }, this);
 
         store.on('aftersort', function() {
-                    this.loadMask.hide()
+                    this.loadMask.hide();
                 }, this);
 
         // if the user is an admin, show the "refresh all" button
@@ -802,7 +802,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
         return function(r, id) {
             var obj = r.data;
             return value.match(obj.name) || value.match(obj.shortName);
-        }
+        };
     },
 
     refresh : function() {
@@ -823,7 +823,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
         if (record.get('commonName') == "All taxa") {
             this.taxonid = null;
         } else {
-            this.taxonid = record.get('id')
+            this.taxonid = record.get('id');
         }
 
         this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);

@@ -185,7 +185,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				renderItem: function(values){
 					if (values.resultValueObject instanceof DatabaseBackedGeneSetValueObject) {
 						if (values.userOwned) {
-							return userOwnedDbGeneSetTpl.apply(values)
+							return userOwnedDbGeneSetTpl.apply(values);
 						} else {
 							return dbGeneSetTpl.apply(values);
 						}
