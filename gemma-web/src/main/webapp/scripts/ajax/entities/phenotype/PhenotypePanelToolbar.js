@@ -20,7 +20,7 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 
     	if (!Gemma.isRunningOutsideOfGemma()) {
 			var loggedInDom = Ext.getDom('loggedIn');
-			loggedIn = (loggedInDom && loggedInDom.value === "true")
+			loggedIn = (loggedInDom && loggedInDom.value === "true");
 
 			Gemma.Application.currentUser.on("logIn", function() {
 				loggedIn = true;
@@ -142,14 +142,14 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 			}
 			if (taxonCombo.getValue() !== '-1') {
 				if (filtersApplied !== '') {
-					filtersApplied += ' + '
+					filtersApplied += ' + ';
 				}
 				filtersApplied += '<b>' + taxonCombo.getTaxon().data.commonName + '</b>';
 			}
 			filterButton.setText((filtersApplied === '') ?
 				DEFAULT_FILTERS_TITLE :
 				DEFAULT_FILTERS_TITLE + ': ' + filtersApplied);
-		}			
+		};		
 
 		Ext.apply(this, {
 			setShowOnlyEditableCheckbox: function(status) {

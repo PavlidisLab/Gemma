@@ -141,7 +141,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 						this.getStore().load({
 							params : [this.auditable]
 						});
-					})
+					});
 				}
 
 				this.on('rowdblclick', function(grid, row, event) {

@@ -158,7 +158,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					phenotypesHtml += '<br />';
 				}					
 				return phenotypesHtml;
-		    }
+		    };
 		}
 
 		var getGeneLink = this.getGeneLink;
@@ -184,7 +184,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 											record.data.relevantPublicationsCitationValueObjects[0].pubmedAccession :
 											null,
 					experimentCharacteristics: record.data.experimentCharacteristics
-				}
+				};
 			}
 			
 			if (data != null) {
@@ -438,7 +438,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							"") +
 						typeColumnHtml;
 					
-					return '<span style="white-space: normal;">' + typeColumnHtml +'</span>'					
+					return '<span style="white-space: normal;">' + typeColumnHtml +'</span>';		
 				},
 				sortable: true
 			},
@@ -518,7 +518,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						linkOutHtml += convertToExternalDatabaseAnchor(value.externalDatabase.name, value.externalUrl, true);
 					}
 					
-					return '<span style="white-space: normal;">' + linkOutHtml +'</span>'					
+					return '<span style="white-space: normal;">' + linkOutHtml +'</span>';	
 				},	
 				sortable: false
 			},

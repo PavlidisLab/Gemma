@@ -15,7 +15,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
     	
 		var generateGeneCountHTML = function(width, geneCountText) {
 			return '<span style="float: right; text-align: right; width: ' + width + 'px;">' + geneCountText + '</span>';
-		}
+		};
 
 		Ext.apply(this, {
 			resetSelectionConfig: function() {

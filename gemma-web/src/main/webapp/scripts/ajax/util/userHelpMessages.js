@@ -256,7 +256,7 @@ Gemma.HelpText.WidgetDefaults = {
 						
 			coex2Text: "Protein localization to the synapse (human)",
 			coex2TT: 'Search for coexpression patterns in human brain experiments based on genes the &quot;Protein localization to the synapse&quot;'+
-						' GO group (human)',
+						' GO group (human)'
 							
 		}
 	},

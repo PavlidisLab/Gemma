@@ -60,7 +60,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				}
 			},
 			scope: this
-		})
+		});
 		
 		var statusDisplayField = new Ext.form.DisplayField({
 			value: 'Searching for publication ...',
