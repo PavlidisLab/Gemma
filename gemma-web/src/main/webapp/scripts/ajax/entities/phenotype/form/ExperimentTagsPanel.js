@@ -111,7 +111,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 						Gemma.PhenotypeAssociationForm.ExperimentTagCategories.push({
 							categoryUri: characteristicValueObjects[i].categoryUri,
 							category: characteristicValueObjects[i].category
-						})
+						});
 					}
 					
 					for (var i = 0; i < rowsPanel.items.length; i++) {
@@ -138,7 +138,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 				currRowPanel.getCategoryComboBox().allowBlank = !isVisible;
 				currRowPanel.getValueComboBox().allowBlank = !isVisible;			    
 			}
-		}
+		};
 
 		Ext.apply(this, {
 			selectExperimentTags: function(experimentTagSelections, geneSelection) {
