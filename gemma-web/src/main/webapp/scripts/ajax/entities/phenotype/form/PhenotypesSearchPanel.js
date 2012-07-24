@@ -13,9 +13,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
     initComponent: function() {
 		var errorMessages = [];
     	
-		var originalPhenotypeSelections = null;
-		var originalGeneSelection = null;
-
 		var comboBoxCount = 0;
 		var currentGeneNcbiId = null;
 
@@ -124,9 +121,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 			selectPhenotypes: function(phenotypeSelections, geneSelection) {
-				originalPhenotypeSelections = phenotypeSelections;
-				originalGeneSelection = geneSelection;
-				
 				if (geneSelection == null) {
 					currentGeneNcbiId = null;
 				} else {
@@ -171,9 +165,6 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 				}
 
 				return selectedPhenotypes;
-			},
-			reset: function() {
-				this.selectPhenotypes(originalPhenotypeSelections, originalGeneSelection);
 			},
 			setCurrentGeneNcbiId: function(newCurrentGeneNcbiId) {
 				currentGeneNcbiId = newCurrentGeneNcbiId;

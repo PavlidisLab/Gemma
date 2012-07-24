@@ -116,7 +116,7 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 						bibliographicReferenceDetailsPanel.loadMask.hide();
 	
 			        	// Because it takes time to reload the store, update PudMed details
-			        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+			        	// only when PudMed Id has not been changed.
 						if (options.params.pubMedId === pubMedIdField.getValue()) {					
 				        	if (pubMedStore.getTotalCount() > 0) {
 								pubMedIdField.clearInvalid();
@@ -200,7 +200,6 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 				// Don't use !== because pubMedId is a string while pubMedIdField.getValue() is a number.
 				if (pubMedIdField.getValue() != pubMedId) {
 					pubMedIdField.setValue(pubMedId);
-					pubMedIdField.originalValue = pubMedId;
 					
 					updateBibliographicReferenceDetailsPanel(false);
 				}
@@ -214,9 +213,6 @@ Gemma.PhenotypeAssociationForm.LiteraturePanel = Ext.extend(Ext.Panel, {
 			},
 			setEvidenceId: function(evidenceId) {
 				this.evidenceId = evidenceId;
-			},
-			reset: function() {
-				this.setPubMedId(pubMedIdField.originalValue);
 			},
 			showAnnotationError: function(evidenceIds, errorColor) {
 				bibliographicReferenceDetailsPanel.showAnnotationError(evidenceIds, errorColor);

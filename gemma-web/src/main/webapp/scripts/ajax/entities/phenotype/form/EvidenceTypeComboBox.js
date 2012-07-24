@@ -26,21 +26,14 @@ Gemma.PhenotypeAssociationForm.EvidenceTypeComboBox = Ext.extend(Ext.form.ComboB
 	triggerAction: 'all',
 	selectOnFocus:true,
     initComponent: function() {
-		var originalEvidenceClassName = null;
-    	
 		Ext.apply(this, {
 			selectEvidenceType: function(evidenceClassName) {
-				originalEvidenceClassName = evidenceClassName;
-
 				if (evidenceClassName == null) {
 				    this.setValue('');
 					this.clearInvalid();
 				} else {
 					this.setValue(evidenceClassName);
 				}    	
-			},
-			reset: function() {
-			    this.selectEvidenceType(originalEvidenceClassName);
 			}
 		});
 		

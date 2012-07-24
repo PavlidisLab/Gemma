@@ -84,14 +84,14 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 		};
 		var pubMedIdStoreLoadHandler = function(literaturePanel, store, records, options) {
 	      	// Because it takes time to reload the store, show errors
-	       	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+	       	// only when PudMed Id has not been changed
 			if (options.params.pubMedId === literaturePanel.getPubMedId()) {
 				 if (store.getTotalCount() > 0) {
 				 	updatePubMedIdsValidity(false, literaturePanel, true);
 				 } else {
 		    		updatePubMedIdsValidity(false, literaturePanel, false);
 		    	}
-			}			    	
+			}
 		};
 
 		var primaryLiteraturePanel = new Gemma.PhenotypeAssociationForm.LiteraturePanel({
@@ -176,11 +176,6 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 						[ secondaryCitationValueObject ],
 					experimentCharacteristics: experimentTagsPanel.getSelectedExperimentTags()
 				};
-			},
-			reset: function() {
-				primaryLiteraturePanel.reset();
-				secondaryLiteraturePanel.reset();
-				experimentTagsPanel.reset();
 			},
 			setCurrentGeneTaxonId: function(newCurrentGeneTaxonId) {
 				experimentTagsPanel.setCurrentGeneTaxonId(newCurrentGeneTaxonId);

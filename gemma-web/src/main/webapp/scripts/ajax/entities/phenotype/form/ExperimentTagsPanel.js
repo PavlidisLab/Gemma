@@ -16,9 +16,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 	border: false,
 	layout: 'form',
     initComponent: function() {
-		var originalExperimentTagSelections = null;
-		var originalGeneSelection = null;
-
 		var comboBoxCount = 0;
 		var currentGeneTaxonId = null;
 
@@ -145,9 +142,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 			selectExperimentTags: function(experimentTagSelections, geneSelection) {
-				originalExperimentTagSelections = experimentTagSelections;
-				originalGeneSelection = geneSelection;
-				
 				if (geneSelection == null) {
 					currentGeneTaxonId = null;
 				} else {
@@ -250,12 +244,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 					}
 				}
 				return hasDuplicate;
-			},
-			reset: function() {
-				this.selectExperimentTags(originalExperimentTagSelections, originalGeneSelection);
-				if (originalExperimentTagSelections == null) {
-					this.hide();
-				}
 			},
 			setCurrentGeneTaxonId: function(newCurrentGeneTaxonId) {
 				currentGeneTaxonId = newCurrentGeneTaxonId;

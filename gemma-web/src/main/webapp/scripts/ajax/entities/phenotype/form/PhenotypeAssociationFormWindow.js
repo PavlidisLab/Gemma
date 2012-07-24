@@ -267,7 +267,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				},
 				pubMedIdStoreLoad: function(thisLiteraturePanel, store, records, options) {
 		        	// Because it takes time to reload the store, show errors
-		        	// only when PudMed Id has not been changed (e.g. by clicking the Reset button).
+		        	// only when PudMed Id has not been changed.
 					if (options.params.pubMedId === thisLiteraturePanel.getPubMedId()) {
 				    	if (store.getTotalCount() > 0) {
 							literatureErrorMessages = [];
@@ -350,8 +350,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			valueField: 'evidenceCode',
 			allowBlank: false,
 			// If editable is not set to false, then users are able to type an
-			// invalid value which makes the store has no records. When users press
-			// the Reset button, the combo box will display the default value 'IC'.
+			// invalid value which makes the store has no records.
 			editable: false,  			
 			mode: 'local',
 			store: new Ext.data.ArrayStore({
@@ -597,20 +596,6 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 					} 
 				} // if (!hasLocalErrorMessages)
 			},
-// TODO: should remove all reset() methods in each field's class			
-//			resetForm: function(shouldValidate) {
-//				geneSearchComboBox.reset();
-//				phenotypesSearchPanel.reset();
-//				evidenceTypeComboBox.reset();	
-//				isNegativeEvidenceCheckbox.setValue(false);
-//			    literaturePanel.reset();
-//				experimentalPanel.reset();
-//				descriptionTextArea.reset();
-//				evidenceCodeComboBox.reset();
-//				if (shouldValidate) {				
-//					this.validateForm(false);
-//				}
-//			},	
 			buttonAlign: 'right',
 			buttons: [
 				{
