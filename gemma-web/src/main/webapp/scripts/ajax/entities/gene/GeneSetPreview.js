@@ -97,7 +97,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 				name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.phenotypePage +
 				this.selectedSetValueObject.phenotypeName +
 				'">' +
-				 this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
+				 this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description +
 				'</a>';
 				
 			} else if (this.selectedSetValueObject instanceof GOGroupValueObject) {
