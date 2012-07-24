@@ -134,7 +134,7 @@ Gemma.ArrayDesignsStore = Ext.extend(Ext.data.Store, {
 				return v;
 			}
 		},{
-			name: "dateCached",
+			name: "dateCached"
 		},{
 			name: 'cannotBeDeleted',
 			convert: function(v,record){
