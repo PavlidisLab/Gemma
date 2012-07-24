@@ -96,7 +96,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					selectedPhenotypes = null;
 				}
 				phenotypeGrid.fireEvent('phenotypeSelectionChange', selectedPhenotypes);
-			}
+			};
 
 			var selectRecordsOnLoad = function(gridPanel, fieldName, recordIds, callback) {
 				gridPanel.getStore().on('load', 
@@ -131,7 +131,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					{
 						single: true,
 						delay: 500  // Delay the handler. Otherwise, the current record is selected but not viewable in FireFox as of 2012-02-01 if it is not in the first page of the grid. There is no such issue in Chrome.
-					})
+					});
 			};		
 			
 			var reloadWholePanel = function() {
@@ -254,7 +254,7 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
 				}
 			}
 		    return false;
-		}
+		};
 		this.fireEvent('filterApplied', recordFilter);
 
         Gemma.PhenotypePanelSearchField.superclass.onTrigger2Click.call(this);
