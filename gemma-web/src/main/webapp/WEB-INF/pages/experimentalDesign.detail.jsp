@@ -73,8 +73,14 @@
 		</tr>
 		<tr>
 			<td class="label"><fmt:message key="databaseEntry.title" /></td>
-			<td><Gemma:databaseEntry
-					databaseEntry="${expressionExperiment.accession}" /></td>
+			
+			<td><c:choose>
+					<c:when test="${not empty expressionExperiment.accession}">
+						<Gemma:databaseEntry
+							databaseEntry="${expressionExperiment.accession }" />
+					</c:when>
+					<c:otherwise>(Database entry not available)</c:otherwise>
+				</c:choose></td>
 		</tr>
 		<tr>
 			<td class="label"><fmt:message key="pubMed.publication" /></td>

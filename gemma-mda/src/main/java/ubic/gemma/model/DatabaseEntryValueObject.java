@@ -53,6 +53,7 @@ public class DatabaseEntryValueObject {
     }
 
     public DatabaseEntryValueObject( DatabaseEntry de ) {
+        if( de == null ) throw new NullPointerException("Database entry is null");
         this.accession = de.getAccession();
         this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
     }
