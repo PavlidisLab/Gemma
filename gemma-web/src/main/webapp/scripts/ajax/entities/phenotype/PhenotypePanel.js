@@ -46,8 +46,20 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				phenotypeStoreProxy: this.phenotypeStoreProxy,
 				listeners: {
 					phenotypeSelectionChange: function(selectedPhenotypes) {
-						geneGrid.setCurrentPhenotypes(currentFilters, selectedPhenotypes);						
-						currentPhenotypes = selectedPhenotypes;
+						var uniquePhenotypes = [];
+												
+						for (var i = 0; i < selectedPhenotypes.length; i++) {
+							var isUniquePhenotype = true;
+							for (var j = 0; isUniquePhenotype && j < uniquePhenotypes.length; j++) {
+								isUniquePhenotype = (uniquePhenotypes[j].urlId !== selectedPhenotypes[i].urlId);
+							}
+							if (isUniquePhenotype) {
+								uniquePhenotypes.push(Ext.apply({}, selectedPhenotypes[i]));
+							}
+						}
+						
+						geneGrid.setCurrentPhenotypes(currentFilters, uniquePhenotypes);						
+						currentPhenotypes = uniquePhenotypes;
         			}
 				}
 			});
@@ -83,18 +95,15 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			// phenotypes have been previously selected. Thus, selection event should
 			// be fired manually.
 			var fireEventOnPhenotypeSelectionChange = function(phenotypeGrid) {
-				var selectedPhenotypes;
+				var selectedPhenotypes = [];
 				var selectionModel = phenotypeGrid.getSelectionModel();
 				if (selectionModel.hasSelection()) {
-					selectedPhenotypes = [];
-					
 					var selections = selectionModel.getSelections();
 				    for (var i = 0; i < selections.length; i++) {
 						selectedPhenotypes.push(Ext.apply({}, selections[i].data));
 					}
-				} else {
-					selectedPhenotypes = null;
 				}
+
 				phenotypeGrid.fireEvent('phenotypeSelectionChange', selectedPhenotypes);
 			};
 
@@ -109,11 +118,13 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			            	
 					        for (var i = 0; i < recordIds.length; i++) {
 								var currRowIndex = store.findExact(fieldName, recordIds[i]);
-					        	if (i === 0) {
-					        		firstRowIndex = currRowIndex; 
-					        	}
+
 					        	// Note that we may not be able to find the record after load.
 					        	if (currRowIndex >= 0) {
+									if (!firstRowIndex) {
+										firstRowIndex = currRowIndex; 
+									}
+
 					            	selModel.selectRow(currRowIndex, true); // true to keep existing selections
 									gridPanel.getView().focusRow(currRowIndex);
 					        	}

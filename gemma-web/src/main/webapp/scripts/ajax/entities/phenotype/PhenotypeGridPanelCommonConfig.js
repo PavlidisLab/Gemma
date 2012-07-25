@@ -93,13 +93,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 					
 					clickedSelections = newSelections;
 				    for (var i = 0; i < clickedSelections.length; i++) {
-						var isUniquePhenotype = true;
-						for (var j = 0; isUniquePhenotype && j < selectedPhenotypes.length; j++) {
-							isUniquePhenotype = (selectedPhenotypes[j].urlId !== clickedSelections[i].data.urlId);
-						}
-						if (isUniquePhenotype) {
-							selectedPhenotypes.push(Ext.apply({}, clickedSelections[i].data));
-						}
+				    	selectedPhenotypes.push(Ext.apply({}, clickedSelections[i].data));
 					}
 					gridPanel.fireEvent('phenotypeSelectionChange', selectedPhenotypes);						
 				}
