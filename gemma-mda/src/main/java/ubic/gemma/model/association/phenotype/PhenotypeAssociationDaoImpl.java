@@ -214,8 +214,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( userName != null && !userName.isEmpty() ) {
             sqlQuery += "and acl_sid.sid = '" + userName + "' ";
         }
-        
-        System.out.println(sqlQuery);
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
