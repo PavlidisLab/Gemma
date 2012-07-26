@@ -96,40 +96,28 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return phenotypeAssociationsFound;
     }
 
-
-	@Override
+    @Override
     /** find PhenotypeAssociation satisfying the given filters: ids, taxonId and limit */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit ) {
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+            Integer limit ) {
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
         if ( limit == 0 ) return new ArrayList<PhenotypeAssociation>();
         Session s = this.getSession();
-        String queryString =
-        	"select p from PhenotypeAssociationImpl p " +
-        	"join p.status s " +
-        	(ids != null || taxonId != null ?
-        		"where " :
-        		"") +		
-        	(ids == null ?
-        		"" : 
-        		"p.id in (:ids) " + (taxonId == null ?
-        			"" :
-        			"and ")) + 
-        	(taxonId == null ?
-        		"" : 
-        		"p.gene.taxon.id = " + taxonId) + " " + 
-        	"order by s.lastUpdateDate " + (limit < 0 ?
-        		"asc" :
-        		"desc");
-        
+        String queryString = "select p from PhenotypeAssociationImpl p " + "join p.status s "
+                + ( ids != null || taxonId != null ? "where " : "" )
+                + ( ids == null ? "" : "p.id in (:ids) " + ( taxonId == null ? "" : "and " ) )
+                + ( taxonId == null ? "" : "p.gene.taxon.id = " + taxonId ) + " " + "order by s.lastUpdateDate "
+                + ( limit < 0 ? "asc" : "desc" );
+
         Query q = s.createQuery( queryString );
         if ( ids != null ) {
-        	q.setParameterList( "ids", ids );
+            q.setParameterList( "ids", ids );
         }
         q.setMaxResults( Math.abs( limit ) );
         return q.list();
-	}
+    }
 
-	@Override
+    @Override
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
@@ -184,15 +172,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return geneQueryCriteria.list();
     }
-    
-    
+
     /** find all evidence that doesn't come from an external course */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName(){
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
         Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).add( Restrictions.isNull( "evidenceSource" ));
-        
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+                .add( Restrictions.isNull( "evidenceSource" ) );
+
         return geneQueryCriteria.list();
     }
 
@@ -245,7 +233,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             sqlQuery += ") ";
         }
-        
+
         sqlQuery += "and PHENOTYPE_ASSOCIATION.ID not in (select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id = CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_entry.mask = 1 and acl_entry.sid = 4 and acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl'))";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
@@ -306,6 +294,65 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
 
         return genesWithPhenotypes.values();
+    }
+
+    @Override
+    /** find private evidence id that the user can modifiable or own */
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups ) {
+
+        Set<Long> ids = new HashSet<Long>();
+
+        // owned by user
+        String sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
+        sqlQuery += "and acl_sid.sid = '" + userName + "' ";
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        while ( results.next() ) {
+            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+            ids.add( geneId );
+        }
+
+        // shared to user
+        if ( !groups.isEmpty() ) {
+
+            sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
+            sqlQuery += "and acl_entry.mask = 2 ";
+            sqlQuery += addGroupsToQuery( "and", groups );
+
+            results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+            while ( results.next() ) {
+                Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+                ids.add( geneId );
+            }
+        }
+        results.close();
+        return ids;
+    }
+
+    @Override
+    /** return the list of the owners that have evidence in the system */
+    public Collection<String> findEvidenceOwners() {
+
+        Set<String> owners = new HashSet<String>();
+
+        String sqlQuery = "select distinct acl_sid.sid from acl_object_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        while ( results.next() ) {
+            String owner = ( String ) results.get( 0 );
+            owners.add( owner );
+        }
+
+        return owners;
     }
 
     private void findPhenotypesGenesAssociationsSharedToUser( String sqlSelectQuery, Collection<String> groups,
@@ -450,45 +497,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
         }
         results.close();
-    }
-
-    @Override
-    /** find private evidence id that the user can modifiable or own */
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups ) {
-
-        Set<Long> ids = new HashSet<Long>();
-
-        // owned by user
-        String sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
-        sqlQuery += "and acl_sid.sid = '" + userName + "' ";
-
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        while ( results.next() ) {
-            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            ids.add( geneId );
-        }
-
-        // shared to user
-        if ( !groups.isEmpty() ) {
-
-            sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
-            sqlQuery += "and acl_entry.mask = 2 ";
-            sqlQuery += addGroupsToQuery( "and", groups );
-
-            results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-            while ( results.next() ) {
-                Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-                ids.add( geneId );
-            }
-        }
-        results.close();
-        return ids;
     }
 
     private String groupToSql( Collection<String> groups ) {

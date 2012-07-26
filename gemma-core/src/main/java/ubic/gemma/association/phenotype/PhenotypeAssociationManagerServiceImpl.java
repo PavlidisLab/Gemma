@@ -750,12 +750,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
-    @Override
-    public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
-        this.ontologyHelper = ontologyHelper;
-        this.phenotypeAssoManagerServiceHelper.setOntologyHelper( this.ontologyHelper );
-    }
-
     /**
      * this method can be used if we want to reimport data from a specific external Database
      * 
@@ -778,6 +772,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .findEvidencesWithoutExternalDatabaseName();
 
         return this.convert2ValueObjects( phenotypeAssociations );
+    }
+
+    /** return the list of the owners that have evidence in the system */
+    @Override
+    public Collection<String> findEvidenceOwners() {
+        return this.associationService.findEvidenceOwners();
     }
 
     /**

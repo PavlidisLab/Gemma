@@ -140,10 +140,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
-	@Override
-	public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit ) {
-		return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids, taxonId, limit );
-	}
+    @Override
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+            Integer limit ) {
+        return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids, taxonId, limit );
+    }
 
     /** find all PhenotypeAssociation for a specific gene id */
     @Override
@@ -168,10 +169,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
     }
-    
+
     /** find all evidence that doesn't come from an external course */
     @Override
-    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName(){
+    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
         return this.phenotypeAssociationDao.findEvidencesWithoutExternalDatabaseName();
     }
 
@@ -193,6 +194,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
             Set<String> valuesUri, String userName, Collection<String> groups ) {
         return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, userName, groups );
+    }
+
+    /** return the list of the owners that have evidence in the system */
+    @Override
+    public Collection<String> findEvidenceOwners() {
+        return this.phenotypeAssociationDao.findEvidenceOwners();
     }
 
 }

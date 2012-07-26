@@ -205,6 +205,7 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
 
-    public abstract void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper );
+    /** return the list of the owners that have evidence in the system */
+    public  Collection<String> findEvidenceOwners();
 
 }

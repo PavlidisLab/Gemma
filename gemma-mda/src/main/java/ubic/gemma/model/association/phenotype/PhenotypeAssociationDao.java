@@ -68,5 +68,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
+    
+    /** return the list of the owners that have evidence in the system */
+    public Collection<String> findEvidenceOwners();
 
 }
