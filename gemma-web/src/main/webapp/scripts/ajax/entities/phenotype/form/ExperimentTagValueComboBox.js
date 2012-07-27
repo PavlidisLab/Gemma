@@ -19,7 +19,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
     typeAhead: false,
     loadingText: 'Searching...',
     emptyText: 'Enter term',
-    minChars: 2,
+    minChars: 3,
     width: 200,
     listWidth: 320,
     pageSize: 0,
