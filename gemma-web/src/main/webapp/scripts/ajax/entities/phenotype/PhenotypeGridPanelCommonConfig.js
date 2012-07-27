@@ -11,6 +11,8 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 	constructor: function() {
 		var clickedSelections = [];
 
+		var phenotypeAssociationFormWindow;
+
 		var phenotypeStoreProxy = null;
     	
 		var generateGeneCountHTML = function(width, geneCountText) {
@@ -136,9 +138,11 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 								Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
 						} :
 						function() {
-							var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+							if (!phenotypeAssociationFormWindow || (phenotypeAssociationFormWindow && phenotypeAssociationFormWindow.isDestroyed)) {
+								phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+								gridPanel.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+							}
 
-							gridPanel.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 							phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
 								{
 									gene: gridPanel.currentGene,

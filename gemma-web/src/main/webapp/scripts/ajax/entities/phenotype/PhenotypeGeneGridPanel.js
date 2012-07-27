@@ -20,6 +20,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				
 		var titleText = this.title; // Contains the title's text without any HTML code whereas title may contain HTML code.
 		
+		var phenotypeAssociationFormWindow;
+
 		var currentStoreData = [];
     	
     	var downloadButton = new Ext.Button({
@@ -94,9 +96,11 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
 				} :
 				function() {
-					var phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+					if (!phenotypeAssociationFormWindow || (phenotypeAssociationFormWindow && phenotypeAssociationFormWindow.isDestroyed)) {
+						phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+						this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
+					}
 					
-					this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
 					phenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
 						{
 							gene: null,

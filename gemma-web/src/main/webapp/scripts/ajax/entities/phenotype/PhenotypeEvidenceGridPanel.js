@@ -35,6 +35,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var RELEVANCE_COLUMNS_START_INDEX = 1;
 
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
+   		
+   		var phenotypeAssociationFormWindow;
 
 		if (!Gemma.isRunningOutsideOfGemma()) {   		
 	   		// Show Admin column after user logs in. 
@@ -99,6 +101,15 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 			return html;
 		};
+		
+		var showPhenotypeAssociationFormWindow = function(action, data) {
+			if (!phenotypeAssociationFormWindow || (phenotypeAssociationFormWindow && phenotypeAssociationFormWindow.isDestroyed)) {
+				phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
+				this.relayEvents(phenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);
+			}
+
+			phenotypeAssociationFormWindow.showWindow(action, data);
+		}.createDelegate(this);
 
     	var createPhenotypeAssociationButton = new Ext.Button({
 			disabled: this.allowCreateOnlyWhenGeneSpecified ?
@@ -110,10 +121,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						Gemma.HelpText.WidgetDefaults.PhenotypePanel.modifyPhenotypeAssociationOutsideOfGemmaText);
 				} :
 				function() {
-					var createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-					
-					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-					createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
+					showPhenotypeAssociationFormWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE,
 						{
 							gene: this.currentGene,
 							phenotypes: this.currentPhenotypes
@@ -674,20 +682,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					data.evidenceId = null;
 					data.lastUpdated = null;
 					
-					var createPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-					this.relayEvents(createPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-			
-					createPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE, data);
+					showPhenotypeAssociationFormWindow(Gemma.PhenotypeAssociationForm.ACTION_CREATE, data);
 				}
 			},			
 			showEditWindow: function(id) {			
 				var data = getFormWindowData(id);
 			
 				if (data != null) {
-					var editPhenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window();
-					this.relayEvents(editPhenotypeAssociationFormWindow, ['phenotypeAssociationChanged']);	
-			
-					editPhenotypeAssociationFormWindow.showWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT, data);
+					showPhenotypeAssociationFormWindow(Gemma.PhenotypeAssociationForm.ACTION_EDIT, data);
 				}
 			},			
 			removeEvidence: function(id) {
