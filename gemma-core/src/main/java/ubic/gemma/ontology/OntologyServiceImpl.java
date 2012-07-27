@@ -277,7 +277,7 @@ public class OntologyServiceImpl implements OntologyService {
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
         if ( searchQuery == null || searchQuery.length() < 3 ) {
-            return null;
+            return new HashSet<CharacteristicValueObject>();
         }
 
         // this will do like %search%
