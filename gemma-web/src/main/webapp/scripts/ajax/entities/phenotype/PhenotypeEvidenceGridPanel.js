@@ -11,6 +11,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	storeAutoLoad: false,
 	storeSortInfo: { field: 'containQueryPhenotype', direction: 'DESC' },
 	evidenceStoreProxy: null,
+	evidencePhenotypeColumnRenderer: null,
+	displayPhenotypeAsLink: false, // It will be ignored if evidencePhenotypeColumnRenderer is specified. 
 	allowCreateOnlyWhenGeneSpecified: true,
 	displayEvidenceCodeFullName: false,
 	title: 'Evidence',
@@ -153,20 +155,29 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var rowExpander = new MyRowExpander();    	
     	
 		if (this.evidencePhenotypeColumnRenderer == null) {
-			this.evidencePhenotypeColumnRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-				var phenotypesHtml = '';
-				for (var i = 0; i < value.length; i++) {
-					if (value[i].child || value[i].root) {					
-						phenotypesHtml += '<span style="font-weight: bold; color: red;">' +
-												value[i].value +
-										  '</span>';
-					} else {
-						phenotypesHtml += value[i].value;
-					}
-					phenotypesHtml += '<br />';
-				}					
-				return phenotypesHtml;
-		    };
+			this.evidencePhenotypeColumnRenderer = {
+				fn: function(value, metadata, record, rowIndex, colIndex, store) {
+					var phenotypesHtml = '';
+					for (var i = 0; i < value.length; i++) {
+						if (this.displayPhenotypeAsLink) {
+							phenotypesHtml += String.format('<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>',
+								value[i].urlId, value[i].value, record.data.geneId);
+						} else {
+							if (value[i].child || value[i].root) {					
+								phenotypesHtml += '<span style="font-weight: bold; color: red;">' +
+														value[i].value +
+												  '</span>';
+							} else {
+								phenotypesHtml += value[i].value;
+							}
+						}
+					
+						phenotypesHtml += '<br />';
+					}					
+					return phenotypesHtml;
+				},
+				scope: this
+			};
 		}
 
 		var getGeneLink = this.getGeneLink;

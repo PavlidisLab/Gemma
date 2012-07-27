@@ -26,6 +26,7 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
 			}
 		}
 	}),
+	displayPhenotypeAsLink: true,
 	// Set it to false so that we can create evidence without specifying currentGene in the parent class.
 	allowCreateOnlyWhenGeneSpecified: false,
 	title: 'Phenotype Association Manager',
@@ -37,6 +38,12 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
 					header: 'Gene',
 					dataIndex: 'geneOfficialSymbol',
 					width: 0.15,
+					renderer: function(value, metadata, record, row, col, ds) {
+		            	var geneLink = '/Gemma/gene/showGene.html?id=' + record.data.geneId;
+						
+						return String.format("{0} <a target='_blank' href='" + geneLink + "' ext:qtip='Go to {0} Details (in new window)'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a> ",
+							value);
+					},					
 					sortable: true
 				},
 				{ 

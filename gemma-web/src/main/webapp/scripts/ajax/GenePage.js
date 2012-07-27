@@ -149,6 +149,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			iconCls: 'icon-neurocarta',			
 			itemId: 'phenotypes',
 			hasRelevanceColumn: false,
+			displayPhenotypeAsLink: true,    		
 			displayEvidenceCodeFullName: true,
 			deferLoadToRender: true,
 			currentGene: {
@@ -159,14 +160,6 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 	    		taxonCommonName: this.geneTaxonName,
 	    		taxonId: this.geneTaxonId
     		},
-			evidencePhenotypeColumnRenderer: function(value, metadata, record, row, col, ds) {
-				var phenotypesHtml = '';
-				for (var i = 0; i < record.data.phenotypes.length; i++) {
-					phenotypesHtml += String.format('<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a><br />',
-						record.data.phenotypes[i].urlId, record.data.phenotypes[i].value, geneId);
-				}					
-				return phenotypesHtml;
-			},
 			listeners: {
 				phenotypeAssociationChanged: function(phenotypes, gene) {
 					this.getStore().reload();
