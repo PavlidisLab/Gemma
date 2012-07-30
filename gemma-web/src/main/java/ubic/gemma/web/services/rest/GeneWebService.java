@@ -26,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.sun.jersey.api.NotFoundException;
+
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -107,7 +109,10 @@ public class GeneWebService {
     	// Construct query object
     	PhysicalLocation region = new PhysicalLocationImpl();
     	Taxon taxon = taxonService.findByCommonName("human");
+    	
     	Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
+        if ( chromosomes.isEmpty() ) throw new NotFoundException( "Chromosome "+chromosomeName+" not found." );
+
     	Chromosome chromosome = chromosomes.iterator().next();
     	region.setChromosome( chromosome );
     	region.setNucleotide( start );
