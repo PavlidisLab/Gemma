@@ -23,7 +23,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     viewConfig: {
         forceFit: true
     },
-	hasOwnerColumns: false,	
 	hasRelevanceColumn: true,
 	extraColumns: null,
     currentPhenotypes: null,
@@ -40,22 +39,37 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
    		
    		var phenotypeAssociationFormWindow;
 
+   		var loggedInColumns = [
+   			{ columnId: 'owner', isAdminColumn: true },
+   			{ columnId: 'lastUpdated', isAdminColumn: false },
+   			{ columnId: 'adminLinks', isAdminColumn: false }
+   		];
+   		var setColumnsVisible = function(isAdmin, isVisible) {
+			var columnModel = this.getColumnModel();
+
+			Ext.each(loggedInColumns, function(column, index) {
+				if ((!isVisible) ||
+					(column.isAdminColumn && isAdmin) ||
+				    (!column.isAdminColumn)) {
+					columnModel.setHidden(columnModel.getIndexById(column.columnId), !isVisible);
+				} else {
+					columnModel.setHidden(columnModel.getIndexById(column.columnId), true);
+				}
+			});
+   		}.createDelegate(this);
+   		
 		if (!Gemma.isRunningOutsideOfGemma()) {   		
 	   		// Show Admin column after user logs in. 
 			Gemma.Application.currentUser.on("logIn", 
-				function(userName, isAdmin) {	
-					var columnModel = this.getColumnModel();
-					// Show Admin column for all logged-in users.
-					columnModel.setHidden(columnModel.getIndexById('admin'), false);
+				function(userName, isAdmin) {
+					setColumnsVisible(isAdmin, true);
 				},
 				this);
 			   		
 	   		// Hide Admin column after user logs out. 
 			Gemma.Application.currentUser.on("logOut", 
 				function() {	
-					var columnModel = this.getColumnModel();
-					// Hide Admin column when users log out.
-					columnModel.setHidden(columnModel.getIndexById('admin'), true);
+					setColumnsVisible(false, false);					
 				},
 				this);
 		}
@@ -378,7 +392,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			sortInfo: this.storeSortInfo
 		});
 
-		
+		var hasUserLoggedIn = function() {
+			return Ext.get("hasUser") != null && Ext.get("hasUser").getValue();
+		};
+
+		var hasAdminUserLoggedIn = function() {
+			return Ext.get("hasAdmin") != null && Ext.get("hasAdmin").getValue();
+		};
+
 		var columns = [
 			rowExpander,
 			{
@@ -541,13 +562,36 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				},	
 				sortable: false
 			},
+			{ 
+				header: 'Owner',
+				id: 'owner', // Used by my function setColumnsVisible() to locate this column
+				dataIndex: 'evidenceSecurityValueObject',
+				width: 0.15,
+				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+					return value.owner;					
+				},
+				hidden: !hasAdminUserLoggedIn(),
+				sortable: true
+			},
+			{ 
+				header: 'Updated',
+				id: 'lastUpdated', // Used by my function setColumnsVisible() to locate this column
+				dataIndex: 'lastUpdated',
+				width: 0.15,
+				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+					return new Date(value).format("y/M/d");
+				},
+				hidden: !hasUserLoggedIn(),
+				sortable: true
+			},
 			{
 				header: 'Admin',
-				id: 'admin',
+				id: 'adminLinks', // Used by my function setColumnsVisible() to locate this column
 				width: 0.3,
 	            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 	            	var adminLinks = '';
 	            	
+	            	// Don't display anything if this column is hidden because users can still show this column manually.
 					if (!this.hidden) {		            	
 						adminLinks += Gemma.SecurityManager.getSecurityLink(
 							'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
@@ -573,7 +617,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	            	
 					return adminLinks;
 	            },
-				hidden: Ext.get("hasUser") == null || (!Ext.get("hasUser").getValue()),
+				hidden: !hasUserLoggedIn(),
 				sortable: true
 			}
 		];
@@ -608,31 +652,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			});
 		}
 		
-		if (this.hasOwnerColumns) {
-			columns.splice(columns.length - 1, 0, 
-				{ 
-					header: 'Owner',
-					dataIndex: 'evidenceSecurityValueObject',
-					width: 0.15,
-					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						return value.owner;
-					},
-					sortable: true
-				},
-				{ 
-					header: 'Updated',
-					dataIndex: 'lastUpdated',
-					width: 0.15,
-					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						var date = new Date(value);
-						
-						return date.format("y/M/d");
-					},
-					sortable: true
-				}
-			);
-		}
-
 		Ext.apply(this, {
 			store: evidenceStore,
 			plugins: rowExpander,

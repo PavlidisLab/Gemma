@@ -30,7 +30,6 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
 	// Set it to false so that we can create evidence without specifying currentGene in the parent class.
 	allowCreateOnlyWhenGeneSpecified: false,
 	title: 'Phenotype Association Manager',
-	hasOwnerColumns: true,
 	hasRelevanceColumn: false,
 	extraColumns: [{
 		startIndex: 2,
