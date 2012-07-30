@@ -52,7 +52,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			},
 			getBaseParams: function() {
 				return {
-					taxonId: '-1',
+					taxonId: null,
 			    	showOnlyEditable: false
 				};
 			},

@@ -25,7 +25,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 			var currentGene = null;
 			
 			var currentFilters = {
-				taxonId: '-1',
+				taxonId: null,
 				showOnlyEditable: false
 			};			
 

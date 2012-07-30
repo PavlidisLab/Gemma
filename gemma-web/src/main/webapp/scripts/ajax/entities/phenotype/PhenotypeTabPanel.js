@@ -63,7 +63,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				var showOnlyEditable; 
 				
 				if (filters == null) {
-					taxonId = '-1';
+					taxonId = null;
 					showOnlyEditable = false; 
 				} else {
 					taxonId = filters.taxonId;

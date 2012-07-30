@@ -113,7 +113,9 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 						    handler: function() {
 								this.fireEvent('filterApplied', {
 									showOnlyEditable: showOnlyEditableCheckbox.getValue(),
-									taxonId: taxonCombo.getValue()
+									taxonId: taxonCombo.getValue() === '-1' ?
+										null : 
+										taxonCombo.getValue()
 								});
 								
 								updateFiltersStatus();
