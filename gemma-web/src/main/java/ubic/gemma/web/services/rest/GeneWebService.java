@@ -28,6 +28,15 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
+import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.ChromosomeImpl;
+import ubic.gemma.model.genome.ChromosomeService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.PhysicalLocationImpl;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 
@@ -43,10 +52,19 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 public class GeneWebService {
 
     @Autowired
-    private GeneCoreService geneCoreService = null;
+    private GeneCoreService geneCoreService;
 
     @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService = null;
+    private GeneService geneService;
+
+    @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
+    private ChromosomeService chromosomeService;
+    
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @GET
     @Path("/find-gene-details")
@@ -60,11 +78,49 @@ public class GeneWebService {
 
         return valueObjects;
     }
-
+    
     @GET
     @Path("/find-genes-with-evidence")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
         return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
     }
+
+        
+    /**
+     * Find genes located in a given region. Genes that overlap the query region are returned. 
+     * 
+     * @param chromosomeName - eg:  2, 3, X
+     * @param strand - eg: +, -   (currently disabled)
+     * @param start - start of the region
+     * @param size - size of the region
+     * @return GeneValue objects of the genes in the region.
+     */    
+    @GET
+    @Path("/find-genes-by-genomic-location")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<GeneValueObject> findGeneDetails( @QueryParam("chromosome") String chromosomeName,
+    		@QueryParam("strand") String strand,    		
+    		@QueryParam("start") Long start,
+    		@QueryParam("size") Integer size ) {
+    
+    	// Construct query object
+    	PhysicalLocation region = new PhysicalLocationImpl();
+    	Taxon taxon = taxonService.findByCommonName("human");
+    	Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
+    	Chromosome chromosome = chromosomes.iterator().next();
+    	region.setChromosome( chromosome );
+    	region.setNucleotide( start );
+    	region.setNucleotideLength( size );
+    	//region.setStrand( strand );
+    	
+    	// Do the search
+    	Collection<Gene> genes = geneService.find(region);
+ 
+    	// Convert to value objects
+    	Collection<GeneValueObject> valueObjects = GeneValueObject.convert2ValueObjects(genes);
+ 
+        return valueObjects;
+    }
+
 }
