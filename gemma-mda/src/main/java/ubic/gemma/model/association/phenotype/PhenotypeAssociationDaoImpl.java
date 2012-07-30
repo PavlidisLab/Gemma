@@ -371,10 +371,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         if ( showOnlyEditable ) {
             // write acces
-            sqlQuery += "where acl_entry.mask = 2 ";
+            sqlQuery += "and acl_entry.mask = 2 ";
         } else {
             // read acces
-            sqlQuery += "where acl_entry.mask = 1 ";
+            sqlQuery += "and acl_entry.mask = 1 ";
         }
 
         sqlQuery += addTaxonToQuery( "and", taxon );
