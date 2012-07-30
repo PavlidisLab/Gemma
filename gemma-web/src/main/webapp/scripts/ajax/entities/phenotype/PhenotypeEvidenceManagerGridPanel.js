@@ -15,8 +15,8 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
     	        dwrFunction: PhenotypeController.findEvidenceByFilters,
         	    getDwrArgsFunction: function(request) {
 					return [
-						request.params.taxonId === '-1' ?
-							null :
+						request.params.taxonId == null ? // It is undefined when the widget is first loaded.
+							'-1' : // Use string instead of number for consistency.
 							request.params.taxonId,
 						request.params.limit == null ? // It is undefined when the widget is first loaded.
 							50 :
