@@ -41,8 +41,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
     /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit );
-    
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+            Integer limit );
+
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
 
@@ -54,7 +55,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all evidences from a specific external database */
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
-    
+
     /** find all evidence that doesn't come from an external course */
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
@@ -64,11 +65,11 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups );
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
-    
+
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
 

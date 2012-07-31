@@ -900,7 +900,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 // show all private owned by the user or shared by a group
                 privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
-                        taxon, null, userName, groups );
+                        taxon, null, userName, groups, showOnlyEditable );
             }
             // default case to build the tree
             else {
@@ -912,11 +912,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 if ( isAdmin ) {
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
-                            .findPrivatePhenotypesGenesAssociations( taxon, null, null, null );
+                            .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false );
                 } else {
                     // show all private owned by the user or shared by a group
                     privatePhenotypesGenesAssociations = this.associationService
-                            .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups );
+                            .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false );
                 }
             }
         }

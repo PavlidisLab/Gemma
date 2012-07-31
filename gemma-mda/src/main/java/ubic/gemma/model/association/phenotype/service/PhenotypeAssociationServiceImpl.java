@@ -192,8 +192,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups ) {
-        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, userName, groups );
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable ) {
+        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
+                showOnlyEditable );
     }
 
     /** return the list of the owners that have evidence in the system */

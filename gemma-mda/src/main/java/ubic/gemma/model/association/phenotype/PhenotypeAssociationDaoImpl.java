@@ -192,7 +192,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
 
         // rule to find public
         sqlQuery += "and acl_entry.mask = 1 and acl_entry.sid = 4 ";
@@ -211,29 +211,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups ) {
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
-
-        if ( userName != null && !userName.isEmpty() ) {
-            sqlQuery += "and (acl_sid.sid = '" + userName + "' ";
-
-            if ( groups != null && !groups.isEmpty() ) {
-                // find what acl group the user is in
-                sqlQuery += "or (acl_entry.sid in (";
-                sqlQuery += "select acl_sid.id from USER_GROUP ";
-                sqlQuery += "join GROUP_AUTHORITY on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
-                sqlQuery += "join acl_sid on acl_sid.sid=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
-                sqlQuery += "where USER_GROUP.name in(" + groupToSql( groups ) + ") ";
-                sqlQuery += ") and acl_entry.mask = 2) ";
-            }
-
-            sqlQuery += ") ";
-        }
-
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
         sqlQuery += "and PHENOTYPE_ASSOCIATION.ID not in (select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK join TAXON on TAXON.id = CHROMOSOME_FEATURE.TAXON_FK join acl_object_identity on PHENOTYPE_ASSOCIATION.id = acl_object_identity.object_id_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_entry.mask = 1 and acl_entry.sid = 4 and acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl'))";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
@@ -260,33 +244,14 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, TAXON.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
 
-        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false );
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery();
 
         sqlQuery += addValuesUriToQuery( "and", phenotypesValueUri );
 
         // admin can see all there is no specific condition on security
 
-        // not log on
-        if ( userName == null || userName.equals( "" ) ) {
-            // show public only
-            sqlQuery += "and acl_entry.sid = 4 and mask = 1 ";
-        }
-        // logging user
-        else if ( !isAdmin ) {
-
-            if ( showOnlyEditable ) {
-                // only show what is owned by the user + group shared write permission
-                sqlQuery += "and acl_sid.sid = '" + userName + "' ";
-            } else {
-                // show public + owned
-                sqlQuery += " and ((acl_entry.sid = 4 and mask = 1) or acl_sid.sid='" + userName + "') ";
-            }
-
-            if ( groups != null && !groups.isEmpty() ) {
-                // find the evidence the user has group permission, genesWithPhenotypes will be populate
-                findPhenotypesGenesAssociationsSharedToUser( sqlSelectQuery, groups, taxon, showOnlyEditable,
-                        genesWithPhenotypes );
-            }
+        if ( !isAdmin ) {
+            sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, true );
         }
 
         sqlQuery += addTaxonToQuery( "and", taxon );
@@ -302,10 +267,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<Long> ids = new HashSet<Long>();
 
-        // owned by user
         String sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
-        sqlQuery += "and acl_sid.sid = '" + userName + "' ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+
+        sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
@@ -316,21 +281,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             ids.add( geneId );
         }
 
-        // shared to user
-        if ( !groups.isEmpty() ) {
-
-            sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
-            sqlQuery += "and acl_entry.mask = 2 ";
-            sqlQuery += addGroupsToQuery( "and", groups );
-
-            results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-            while ( results.next() ) {
-                Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-                ids.add( geneId );
-            }
-        }
         results.close();
         return ids;
     }
@@ -355,36 +305,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return owners;
     }
 
-    private void findPhenotypesGenesAssociationsSharedToUser( String sqlSelectQuery, Collection<String> groups,
-            Taxon taxon, boolean showOnlyEditable, HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
-
-        String sqlQuery = sqlSelectQuery;
-        sqlQuery += buildQueryPhenotypesAssoSharedToUser( showOnlyEditable, taxon, groups );
-
-        populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
-    }
-
-    private String buildQueryPhenotypesAssoSharedToUser( boolean showOnlyEditable, Taxon taxon,
-            Collection<String> groups ) {
-
-        String sqlQuery = getPhenotypesGenesAssociationsBeginQuery( true );
-
-        if ( showOnlyEditable ) {
-            // write acces
-            sqlQuery += "and acl_entry.mask = 2 ";
-        } else {
-            // read acces
-            sqlQuery += "and acl_entry.mask = 1 ";
-        }
-
-        sqlQuery += addTaxonToQuery( "and", taxon );
-
-        sqlQuery += addGroupsToQuery( "and", groups );
-
-        return sqlQuery;
-    }
-
-    private String getPhenotypesGenesAssociationsBeginQuery( boolean withGroup ) {
+    /** basic sql command to deal with security */
+    private String getPhenotypesGenesAssociationsBeginQuery() {
         String queryString = "";
 
         queryString += "from CHARACTERISTIC ";
@@ -395,11 +317,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         queryString += "join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id ";
         queryString += "join acl_class on acl_class.id = acl_object_identity.object_id_class ";
         queryString += "join acl_sid on acl_sid.id = acl_object_identity.owner_sid ";
-        if ( withGroup ) {
-            queryString += "join GROUP_AUTHORITY on acl_sid.sid = CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
-            queryString += "join USER_GROUP on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
-        }
-
         queryString += "where acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
 
         return queryString;
@@ -428,6 +345,50 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         results.close();
     }
 
+    /**
+     * rules to find private evidence
+     * 
+     * @param showOnlyEditable show only what the user have write access
+     * @param showPublic also show public evidence (wont work if showOnlyEditable is true)
+     */
+    private String addGroupAndUserNameRestriction( String userName, Collection<String> groups,
+            boolean showOnlyEditable, boolean showPublic ) {
+
+        String sqlQuery = "";
+
+        if ( userName != null && !userName.isEmpty() ) {
+
+            if ( showPublic && !showOnlyEditable ) {
+                sqlQuery += "and ((acl_sid.sid = '" + userName + "' ";
+            } else {
+                sqlQuery += "and (acl_sid.sid = '" + userName + "' ";
+            }
+
+            if ( groups != null && !groups.isEmpty() ) {
+                // find what acl group the user is in
+                sqlQuery += "or (acl_entry.sid in (";
+                sqlQuery += "select acl_sid.id from USER_GROUP ";
+                sqlQuery += "join GROUP_AUTHORITY on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
+                sqlQuery += "join acl_sid on acl_sid.sid=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
+                sqlQuery += "where USER_GROUP.name in(" + groupToSql( groups ) + ") ";
+                if ( showOnlyEditable ) {
+                    sqlQuery += ") and acl_entry.mask = 2) ";
+                } else {
+                    sqlQuery += ") and (acl_entry.mask = 1 or acl_entry.mask = 2)) ";
+                }
+            }
+            sqlQuery += ") ";
+
+            if ( showPublic && !showOnlyEditable ) {
+                sqlQuery += "or (acl_entry.sid = 4 and mask = 1)) ";
+            }
+        } else if ( showPublic && !showOnlyEditable ) {
+            sqlQuery += "and (acl_entry.sid = 4 and mask = 1) ";
+        }
+
+        return sqlQuery;
+    }
+
     private String addTaxonToQuery( String keyWord, Taxon taxon ) {
         String taxonSqlQuery = "";
 
@@ -446,21 +407,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             for ( String value : valuesUri ) {
                 query += "'" + value + "',";
-            }
-            query = query.substring( 0, query.length() - 1 ) + ") ";
-        }
-        return query;
-    }
-
-    private String addGroupsToQuery( String keyWord, Collection<String> groups ) {
-
-        String query = "";
-
-        if ( groups != null && !groups.isEmpty() ) {
-            query = keyWord + " USER_GROUP.name in (";
-
-            for ( String group : groups ) {
-                query += "'" + group + "',";
             }
             query = query.substring( 0, query.length() - 1 ) + ") ";
         }
@@ -508,7 +454,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             for ( String group : groups ) {
                 sqlGroup += "'" + group + "',";
             }
-
             sqlGroup = sqlGroup.substring( 0, sqlGroup.length() - 1 );
         }
         return sqlGroup;

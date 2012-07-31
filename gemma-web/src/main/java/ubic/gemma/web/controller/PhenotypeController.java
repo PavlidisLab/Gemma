@@ -21,6 +21,8 @@ import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
@@ -46,6 +49,8 @@ import ubic.gemma.security.authentication.UserManager;
  */
 @Controller
 public class PhenotypeController extends BaseController {
+
+    private static Log logNeurocarta = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
@@ -65,6 +70,8 @@ public class PhenotypeController extends BaseController {
         } else {
             // If type of throwable is not known, log it.
             this.log.error( throwable.getMessage(), throwable );
+            // put it also in neuroCarta logs
+            logNeurocarta.error( throwable.getMessage(), throwable );
         }
 
         return validateEvidenceValueObject;

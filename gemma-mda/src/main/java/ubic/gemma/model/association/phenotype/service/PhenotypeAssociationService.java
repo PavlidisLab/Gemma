@@ -108,8 +108,9 @@ public interface PhenotypeAssociationService {
 
     /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId, Integer limit );
-    
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+            Integer limit );
+
     /** find all PhenotypeAssociation for a specific gene id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
@@ -124,7 +125,7 @@ public interface PhenotypeAssociationService {
     /** find all evidences from a specific external database */
     @Secured({ "GROUP_ADMIN" })
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
-    
+
     /** find all evidences with no external database */
     @Secured({ "GROUP_ADMIN" })
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
@@ -138,8 +139,8 @@ public interface PhenotypeAssociationService {
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups );
-    
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable );
+
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
 
