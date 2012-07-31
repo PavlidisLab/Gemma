@@ -1163,7 +1163,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 evidenceVO.setContainQueryPhenotype( true );
             }
         }
-
     }
 
     /** Change a searchQuery to make it search in the Ontology using * and AND */
@@ -1173,6 +1172,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
+        newSearchQuery = newSearchQuery.replaceAll( "-", " " );
+        
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
     }
 
