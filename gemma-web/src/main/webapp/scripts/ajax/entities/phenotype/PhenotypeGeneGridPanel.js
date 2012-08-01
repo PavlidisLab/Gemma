@@ -12,7 +12,9 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
     stripeRows: true,
 	loadMask: true,
     viewConfig: {
-        forceFit: true
+        forceFit: true,
+		deferEmptyText: false,
+		emptyText: 'No phenotype has been selected.'
     },
     currentPhenotypes: null,
     initComponent: function() {

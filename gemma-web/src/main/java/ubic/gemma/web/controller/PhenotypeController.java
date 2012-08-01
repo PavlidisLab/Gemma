@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 
 /**
  * Controller for phenotype
@@ -92,8 +93,8 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
-    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit ) {
-        return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit );
+    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
+        return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
 
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable ) {
@@ -155,6 +156,22 @@ public class PhenotypeController extends BaseController {
             String categoryUri, Long taxonId ) {
         return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
                 taxonId );
+    }
+    
+    /**
+     * Returns a collection of users who own evidence. Note that a collection 
+     * of value objects instead of strings is returned for front end convenience.
+     * @return a collection of users who own evidence
+     */
+    public Collection<UserValueObject> findEvidenceOwners() {
+    	Collection<UserValueObject> userVOs = new ArrayList<UserValueObject>();
+    	
+    	for (String userName : this.phenotypeAssociationManagerService.findEvidenceOwners()) {
+    		UserValueObject userVO = new UserValueObject();
+    		userVO.setUserName(userName);
+    		userVOs.add( userVO );
+    	}
+        return userVOs;
     }
 
     public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {

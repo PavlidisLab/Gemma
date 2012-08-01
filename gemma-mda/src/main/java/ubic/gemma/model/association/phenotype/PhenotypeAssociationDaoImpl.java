@@ -97,21 +97,21 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    /** find PhenotypeAssociation satisfying the given filters: ids, taxonId and limit */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+    /** find PhenotypeAssociation satisfying the given filters: paIds, taxonId and limit */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds, Long taxonId,
             Integer limit ) {
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
-        if ( limit == 0 ) return new ArrayList<PhenotypeAssociation>();
+        if ( limit == 0 || ( paIds != null && paIds.size() == 0 )) return new ArrayList<PhenotypeAssociation>();
         Session s = this.getSession();
         String queryString = "select p from PhenotypeAssociationImpl p " + "join p.status s "
-                + ( ids != null || taxonId != null ? "where " : "" )
-                + ( ids == null ? "" : "p.id in (:ids) " + ( taxonId == null ? "" : "and " ) )
+                + ( paIds != null || taxonId != null ? "where " : "" )
+                + ( paIds == null ? "" : "p.id in (:paIds) " + ( taxonId == null ? "" : "and " ) )
                 + ( taxonId == null ? "" : "p.gene.taxon.id = " + taxonId ) + " " + "order by s.lastUpdateDate "
                 + ( limit < 0 ? "asc" : "desc" );
 
         Query q = s.createQuery( queryString );
-        if ( ids != null ) {
-            q.setParameterList( "ids", ids );
+        if ( paIds != null ) {
+            q.setParameterList( "paIds", paIds );
         }
         q.setMaxResults( Math.abs( limit ) );
         return q.list();

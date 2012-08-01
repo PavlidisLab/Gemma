@@ -14,9 +14,6 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 	loadMask: true,
 	master_column_id: 'value', // for using maximgb's GridPanel
 	autoExpandColumn: 'value', // for using maximgb's GridPanel
-    viewConfig: {
-        forceFit: true
-    },
     initComponent: function() {
 		var DISABLED_CLASS = 'x-item-disabled';
 	 	var PHENOTYPE_COLUMN_INDEX = 1;
@@ -186,6 +183,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 		var commonConfig = new Gemma.PhenotypeGridPanelCommonConfig();
 
 		Ext.apply(this, {
+			viewConfig: commonConfig.getViewConfig(),
 			store: new Ext.ux.maximgb.tg.AdjacencyListStore({
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
 				baseParams: commonConfig.getBaseParams(),

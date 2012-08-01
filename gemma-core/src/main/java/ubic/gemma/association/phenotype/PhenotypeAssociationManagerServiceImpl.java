@@ -177,27 +177,38 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Return evidence satisfying the specified filters
+     * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
+     * returned.
      * 
      * @param taxonId taxon id
-     * @param limit number of evidence to return
+     * @param limit number of evidence value objects to return
+     * @param userName user name
      * @return evidence satisfying the specified filters
      */
     @Override
-    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit ) {
+    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
 
-        final Set<Long> ids = findUserOwnedEvidenceIds();
-
-        // If the current user is admin, ids will be null.
-        if ( ids == null || ids.size() > 0 ) {
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                    .findPhenotypeAssociationWithIds( ids, taxonId, limit );
-
-            evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
-        } else {
-            evidenceValueObjects = new HashSet<EvidenceValueObject>();
-        }
+		if ( SecurityServiceImpl.isUserLoggedIn() ) {
+			final Set<Long> paIds;
+			
+			if (userName == null) {
+		        if ( SecurityServiceImpl.isUserAdmin() ) {
+		            paIds = null;
+		        } else {
+		            paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
+		            		this.userManager.findAllGroups() );
+		        }
+			} else {
+		        paIds = this.associationService.findPrivateEvidenceId( userName,
+		        		this.userManager.findAllGroups() );
+			}
+		
+			Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService.findPhenotypeAssociationWithIds( paIds, taxonId, limit );
+			evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
+		} else {
+			evidenceValueObjects = new HashSet<EvidenceValueObject>();
+		}
 
         return evidenceValueObjects;
     }
@@ -1573,30 +1584,5 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return homologueEvidenceValueObjects;
-    }
-
-    /**
-     * Find ids of evidence owned by the current user. If the current user has not logged in, empty container is
-     * returned. If the current user is admin, null is returned.
-     */
-    private Set<Long> findUserOwnedEvidenceIds() {
-        final Set<Long> ids;
-
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
-            if ( SecurityServiceImpl.isUserAdmin() ) {
-                ids = null;
-            } else {
-                ids = new HashSet<Long>();
-
-                String userName = this.userManager.getCurrentUsername();
-                Collection<String> groups = this.userManager.findAllGroups();
-
-                ids.addAll( this.associationService.findPrivateEvidenceId( userName, groups ) );
-            }
-        } else {
-            ids = new HashSet<Long>();
-        }
-
-        return ids;
     }
 }

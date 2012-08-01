@@ -45,13 +45,15 @@ public interface PhenotypeAssociationManagerService {
     public abstract ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
 
     /**
-     * Return evidence satisfying the specified filters
+     * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
+     * returned.
      * 
      * @param taxonId taxon id
-     * @param limit number of evidence to return
+     * @param limit number of evidence value objects to return
+     * @param userName user name
      * @return evidence satisfying the specified filters
      */
-    public abstract Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit );
+    public abstract Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
 
     /**
      * Return all evidence for a specific gene NCBI

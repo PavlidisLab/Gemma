@@ -106,9 +106,9 @@ public interface PhenotypeAssociationService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedId );
 
-    /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
+    /** find PhenotypeAssociations satisfying the given filters: paIds, taxonId and limit */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds, Long taxonId,
             Integer limit );
 
     /** find all PhenotypeAssociation for a specific gene id */

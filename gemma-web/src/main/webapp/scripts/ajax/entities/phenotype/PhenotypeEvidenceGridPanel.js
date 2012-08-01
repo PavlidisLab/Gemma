@@ -21,7 +21,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	loadMask: true,
 	disableSelection: true,
     viewConfig: {
-        forceFit: true
+        forceFit: true,
+		deferEmptyText: false,
+		emptyText: 'No gene has been selected.'
     },
 	hasRelevanceColumn: true,
 	extraColumns: null,
@@ -31,6 +33,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	showDialogViewBibliographicReferenceOutsideOfGemma: function() {
 		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.viewBibliographicReferenceOutsideOfGemmaTitle,
 			Gemma.HelpText.WidgetDefaults.PhenotypePanel.viewBibliographicReferenceOutsideOfGemmaText);
+	},
+	hasUserLoggedIn: function() {
+		return Ext.get("hasUser") != null && Ext.get("hasUser").getValue();
+	},
+	hasAdminLoggedIn: function() {
+		return Ext.get("hasAdmin") != null && Ext.get("hasAdmin").getValue();
 	},
     initComponent: function() {
 		var RELEVANCE_COLUMNS_START_INDEX = 1;
@@ -392,14 +400,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			sortInfo: this.storeSortInfo
 		});
 
-		var hasUserLoggedIn = function() {
-			return Ext.get("hasUser") != null && Ext.get("hasUser").getValue();
-		};
-
-		var hasAdminUserLoggedIn = function() {
-			return Ext.get("hasAdmin") != null && Ext.get("hasAdmin").getValue();
-		};
-
 		var columns = [
 			rowExpander,
 			{
@@ -570,7 +570,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 					return value.owner;					
 				},
-				hidden: !hasAdminUserLoggedIn(),
+				hidden: !this.hasAdminLoggedIn(),
 				sortable: true
 			},
 			{ 
@@ -581,7 +581,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 					return new Date(value).format("y/M/d");
 				},
-				hidden: !hasUserLoggedIn(),
+				hidden: !this.hasUserLoggedIn(),
 				sortable: true
 			},
 			{
@@ -617,7 +617,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	            	
 					return adminLinks;
 	            },
-				hidden: !hasUserLoggedIn(),
+				hidden: !this.hasUserLoggedIn(),
 				sortable: true
 			}
 		];

@@ -12,9 +12,6 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
     autoScroll: true,
     stripeRows: true,
 	loadMask: true,
-    viewConfig: {
-        forceFit: true
-    },
     initComponent: function() {
 		var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
 			dataIndex: 'isChecked',
@@ -68,6 +65,7 @@ Gemma.PhenotypeGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var commonConfig = new Gemma.PhenotypeGridPanelCommonConfig();
 
 		Ext.apply(this, {
+			viewConfig: commonConfig.getViewConfig(),
 			store: new Ext.data.Store({
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
 				baseParams: commonConfig.getBaseParams(),				

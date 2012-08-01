@@ -26,6 +26,13 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 				// is a better way to implement this situation.
 				clickedSelections = null;
 			},
+			getViewConfig: function() {
+				return {
+			        forceFit: true,
+					deferEmptyText: false,
+					emptyText: 'You have not created any phenotype association yet.'
+			    };
+			},
 			getStoreProxy: function(defaultProxy) {
 				var proxyToBeReturned;
 
