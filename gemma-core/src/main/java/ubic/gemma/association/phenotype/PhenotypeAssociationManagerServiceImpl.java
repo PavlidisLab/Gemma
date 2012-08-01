@@ -823,7 +823,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // Phenotype ---> Genes
         HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
-                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null );
+                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false );
 
         // for each Ontoly Term find in the search
         for ( OntologyTerm ontologyTerm : ontologyTermsFound ) {
@@ -896,7 +896,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 // show public owned by the user
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
-                        taxon, null, userName );
+                        taxon, null, userName, groups, showOnlyEditable );
 
                 // show all private owned by the user or shared by a group
                 privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
@@ -907,7 +907,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 // all public evidences
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
-                        taxon, null, null );
+                        taxon, null, null, groups, false );
 
                 if ( isAdmin ) {
                     // show all private since admin
@@ -924,7 +924,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         else if ( !showOnlyEditable ) {
 
             publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
-                    null, null );
+                    null, null, null, false );
         }
 
         for ( String phenotype : privatePhenotypesGenesAssociations.keySet() ) {
@@ -1173,7 +1173,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
         newSearchQuery = newSearchQuery.replaceAll( "-", " " );
-        
+
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
     }
 

@@ -187,7 +187,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName ) {
+            String userName, Collection<String> groups, boolean showOnlyEditable ) {
 
         HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
 
@@ -196,11 +196,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         // rule to find public
         sqlQuery += "and acl_entry.mask = 1 and acl_entry.sid = 4 ";
+
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
 
-        if ( userName != null && !userName.isEmpty() ) {
-            sqlQuery += "and acl_sid.sid = '" + userName + "' ";
+        if ( showOnlyEditable ) {
+            sqlQuery += "and PHENOTYPE_ASSOCIATION.id in ( select PHENOTYPE_ASSOCIATION.id ";
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+            sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
+            sqlQuery += ") ";
         }
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
