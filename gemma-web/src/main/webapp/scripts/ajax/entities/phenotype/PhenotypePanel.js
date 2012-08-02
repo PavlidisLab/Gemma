@@ -236,7 +236,16 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
     hasSearch: false,
 	listeners: {
 		keyup: function(field, e) {
-            this.onTrigger2Click();
+			var typedStringLength = this.getRawValue().length;
+
+			// Start searching after users have typed at least two characters. 
+			// If they remove all characters, call onTrigger1Click() to
+			// remove the clear button.
+			if (typedStringLength >= 2) {
+	            this.onTrigger2Click();
+	        } else if (typedStringLength < 1) {
+	        	this.onTrigger1Click();
+	        }
 		}
 	},
     onTrigger1Click: function() {
