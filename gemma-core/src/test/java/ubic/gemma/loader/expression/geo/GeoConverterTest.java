@@ -586,6 +586,30 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertMultiTaxonPlatformGSE28843() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE28843.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE28843" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+        Taxon primaryTaxon = ees.iterator().next().getBioAssays().iterator().next().getArrayDesignUsed()
+                .getPrimaryTaxon();
+        assertEquals( "salmonid", primaryTaxon.getCommonName() );
+    }
+
+    /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
      * @throws Exception

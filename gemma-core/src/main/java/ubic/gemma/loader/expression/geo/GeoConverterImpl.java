@@ -35,10 +35,12 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.aspectj.util.LangUtil.ProcessController.Thrown;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
@@ -46,16 +48,16 @@ import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoDataset.ExperimentType;
+import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoReplication;
+import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.expression.geo.model.GeoValues;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
-import ubic.gemma.loader.expression.geo.model.GeoDataset.ExperimentType;
-import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
-import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
@@ -513,15 +515,18 @@ public class GeoConverterImpl implements GeoConverter {
             // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
             Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
 
-            for ( String probeTaxon : probeTaxa ) {
-                // reset each iteration so if no probes already processed set to 1
-                Integer counter = 1;
-                if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
-                    counter = taxonProbeNumberList.get( probeTaxon ) + 1;
+            if ( probeTaxa != null ) {
+                for ( String probeTaxon : probeTaxa ) {
+                    // reset each iteration so if no probes already processed set to 1
+                    Integer counter = 1;
+                    if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
+                        counter = taxonProbeNumberList.get( probeTaxon ) + 1;
+                        taxonProbeNumberList.put( probeTaxon, counter );
+                    }
                     taxonProbeNumberList.put( probeTaxon, counter );
                 }
-                taxonProbeNumberList.put( probeTaxon, counter );
             }
+
             String primaryTaxonName = "";
             Integer highestScore = 0;
             for ( String taxon : taxonProbeNumberList.keySet() ) {
@@ -1452,13 +1457,13 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * Retrieve full taxon details for a platform given the organisms scientific name in GEO. If multiple organisms are
+     * Retrieve full taxon details for a platform given the organism's scientific name in GEO. If multiple organisms are
      * recorded against an array only first taxon details are returned. Warning is given when no column is found to give
-     * the taxons for the probes
+     * the taxa for the probes
      * 
      * @param platform GEO platform details
-     * @param probeTaxonColumnName Column name of probe taxons
-     * @return List of taxons on platform
+     * @param probeTaxonColumnName Column name of probe taxa
+     * @return List of taxa on platform
      */
     private Collection<Taxon> convertPlatformOrganisms( GeoPlatform platform, String probeTaxonColumnName ) {
         Collection<String> organisms = platform.getOrganisms();
@@ -1483,8 +1488,23 @@ public class GeoConverterImpl implements GeoConverter {
         // multiple organisms are found on the platform yet there is no column defined to represent taxon for the
         // probes.
         if ( platformTaxa.size() > 1 && probeTaxonColumnName == null ) {
-            throw new IllegalArgumentException( platformTaxa.size() + " taxon found on platform" + taxaOnPlatform
-                    + " but there is no probe specific taxon Column found for platform " + platform );
+            /*
+             * This is okay if all the platformTaxa have the same parent. Here we're just doing a check.
+             */
+            Taxon parentTaxon = null;
+            for ( Taxon taxon : platformTaxa ) {
+                this.taxonService.thaw( taxon );
+                if ( taxon.getParentTaxon() != null ) {
+                    if ( parentTaxon != null && !parentTaxon.equals( taxon.getParentTaxon() ) ) {
+                        throw new IllegalArgumentException( platformTaxa.size() + " taxon found on platform"
+                                + taxaOnPlatform + " but there is no probe specific taxon Column found for platform "
+                                + platform + " and the parentTaxon is not the same for the taxa." );
+                    }
+                    parentTaxon = taxon.getParentTaxon();
+
+                }
+            }
+
         }
         // no platform organism given
         if ( platformTaxa.size() == 0 ) {
