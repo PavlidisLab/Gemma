@@ -1183,7 +1183,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
-        newSearchQuery = newSearchQuery.replaceAll( "-", " " );
+        // TODO what to do with character -
+        // newSearchQuery = newSearchQuery.replaceAll( "-", " " );
 
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );
     }
