@@ -194,6 +194,7 @@ public class NcbiGeneLoader {
         while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
 
             try {
+                // the converted genes.
                 Gene gene = geneQueue.poll();
                 if ( gene == null ) {
                     continue;

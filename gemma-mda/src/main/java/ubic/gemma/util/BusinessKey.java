@@ -271,19 +271,23 @@ public class BusinessKey {
             /*
              * These are unambiguous identifiers.
              */
+
             if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
-                /*
-                 * Check to see if the new gene used to use an id that is in the system. This is needed to deal with the
-                 * case where NCBI changes a gene id (which is common, from gene_history).
-                 */
                 Collection<Integer> ncbiIds = new HashSet<Integer>();
                 ncbiIds.add( gene.getNcbiGeneId() );
-                try {
-                    ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
+                for ( String previousId : StringUtils.split( gene.getPreviousNcbiId(), "," ) ) {
+                    /*
+                     * Check to see if the new gene used to use an id that is in the system. This is needed to deal with
+                     * the case where NCBI changes a gene id (which is common, from gene_history).
+                     */
+                    try {
+                        ncbiIds.add( Integer.parseInt( previousId ) );
+                    } catch ( NumberFormatException e ) {
+                        log.warn( "Previous Ncbi id wasn't parseable to an int: " + previousId );
+                    }
                 }
                 queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
+
             } else {
                 queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
             }

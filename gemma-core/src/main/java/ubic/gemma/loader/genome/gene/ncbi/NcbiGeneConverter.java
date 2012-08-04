@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2012 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,18 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -100,15 +104,20 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         gene.setOfficialName( info.getDescription() );
         gene.setEnsemblId( info.getEnsemblId() );
 
+        /*
+         * NOTE we allow multiple discontinued or previous ids, separated by commas. This is a hack to account for cases
+         * uncovered recently...
+         */
         if ( info.getHistory() != null ) {
             if ( info.getHistory().getCurrentId() != null ) {
                 assert info.getGeneId().equals( info.getHistory().getCurrentId() );
             }
 
-            String previousId = info.getHistory().getPreviousId();
-            if ( previousId != null ) {
-                gene.setPreviousNcbiId( previousId );
+            if ( !info.getHistory().getPreviousIds().isEmpty() ) {
+                String previousIds = StringUtils.join( info.getHistory().getPreviousIds(), "," );
+                gene.setPreviousNcbiId( previousIds );
             }
+
         } else if ( info.getDiscontinuedId() != null ) {
             log.info( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
                     + info.getDiscontinuedId() );
@@ -303,6 +312,19 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return gene;
     }
 
+    /**
+     * 
+     */
+    private Map<Gene, NcbiGeneHistory> multiIdGenes = new ConcurrentHashMap<Gene, NcbiGeneHistory>();
+
+    /**
+     * @param g
+     * @return
+     */
+    public NcbiGeneHistory getHistory( Gene g ) {
+        return multiIdGenes.get( g );
+    }
+
     /*
      * Threaded conversion of domain objects to Gemma objects.
      */
@@ -325,7 +347,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         if ( data == null ) {
                             continue;
                         }
-                        geneQueue.put( convert( data ) );
+                        Gene converted = convert( data );
+                        // It is at this point that we might need to hold on to the ncbigenedata for a mo.
+                        if ( data.getGeneInfo().getHistory().getPreviousIds().size() > 1 ) {
+                            multiIdGenes.put( converted, data.getGeneInfo().getHistory() );
+                        }
+                        geneQueue.put( converted );
 
                     } catch ( InterruptedException e ) {
                         log.warn( "Interrupted" );

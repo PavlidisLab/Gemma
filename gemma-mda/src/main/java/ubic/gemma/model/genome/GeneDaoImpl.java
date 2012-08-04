@@ -131,12 +131,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
              */
             Collection<Gene> toDelete = new HashSet<Gene>();
             for ( Gene foundGene : results ) {
-                try {
-                    if ( gene.getNcbiGeneId().equals( Integer.parseInt( foundGene.getPreviousNcbiId() ) ) ) {
-                        toDelete.add( foundGene );
+                if ( StringUtils.isBlank( foundGene.getPreviousNcbiId() ) ) continue;
+                // Note hack we used to allow multiple previous ids.
+                for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiId(), "," ) ) {
+                    try {
+                        if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
+                            toDelete.add( foundGene );
+                            continue;
+                        }
+                    } catch ( NumberFormatException e ) {
+                        // no action
                     }
-                } catch ( NumberFormatException e ) {
-                    // no action
                 }
             }
 

@@ -150,11 +150,27 @@ abstract public class GenomePersister extends CommonPersister {
         if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
             log.info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
 
-            String previousId = newGeneInfo.getPreviousNcbiId(); // this _should_ be recorded!
-            if ( previousId != null && !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
-                throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
-                        + " has changed and the previous NCBI id on record with NCBI ("
-                        + newGeneInfo.getPreviousNcbiId() + ") doesn't match." );
+            String previousIdString = newGeneInfo.getPreviousNcbiId();
+            if ( StringUtils.isNotBlank( previousIdString ) ) {
+                /*
+                 * Unfortunately, we need to check multiple 'previous' genes. The example I have run across is MTUS2-AS1
+                 * (human) which was created by merging two previous genes, LOC728437 and LOC731614; only the former was
+                 * in Gemma with its gene product GI:22268051. It also has a product we don't have, GI:14676690. This
+                 * comma-delimited set thing is a hack.
+                 */
+                String[] previousIds = StringUtils.split( previousIdString, "," );
+                boolean found = false;
+                for ( String previousId : previousIds ) {
+                    if ( previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
+                        found = true;
+                    }
+                }
+
+                if ( !found ) {
+                    throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
+                            + " has changed and the previous NCBI id on record with NCBI ("
+                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match." );
+                }
             }
 
             // swap
@@ -168,6 +184,7 @@ abstract public class GenomePersister extends CommonPersister {
              * merge them, so one of the genes has to be deprecated. Such 'relics' are deleted by the DAO, because it
              * results in more than one gene being found.
              */
+
         }
 
         /*
@@ -449,6 +466,12 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
 
         for ( GeneProduct product : tempGeneProduct ) {
+            GeneProduct existingProduct = geneProductDao.find( product );
+            if ( existingProduct != null ) {
+                throw new IllegalStateException( "Gene product: " + product
+                        + " is already associated with a gene, cannot associate with " + gene );
+            }
+
             product.setGene( gene );
         }
 
@@ -717,6 +740,11 @@ abstract public class GenomePersister extends CommonPersister {
         }
     }
 
+    /**
+     * @param physicalLocation
+     * @param t
+     * @return
+     */
     private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation, Taxon t ) {
         physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome(), t ) );
 

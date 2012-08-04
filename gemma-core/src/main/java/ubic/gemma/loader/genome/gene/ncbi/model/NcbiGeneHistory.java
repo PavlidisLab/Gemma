@@ -18,7 +18,9 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi.model;
 
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -35,6 +37,13 @@ public class NcbiGeneHistory {
     public NcbiGeneHistory( String startingId ) {
         history = new LinkedList<String>();
         history.add( startingId );
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getPreviousIds() {
+        return Collections.unmodifiableList( history );
     }
 
     public String getCurrentId() {

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * <p>
  * See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README
@@ -364,7 +366,11 @@ public class NCBIGeneInfo {
     }
 
     public void setDiscontinuedId( String discontinuedIdForGene ) {
-        this.discontinuedIdForGene = discontinuedIdForGene;
+        if ( StringUtils.isNotBlank( this.discontinuedIdForGene ) ) {
+            this.discontinuedIdForGene = this.discontinuedIdForGene + "," + discontinuedIdForGene;
+        } else {
+            this.discontinuedIdForGene = discontinuedIdForGene;
+        }
     }
 
 }
