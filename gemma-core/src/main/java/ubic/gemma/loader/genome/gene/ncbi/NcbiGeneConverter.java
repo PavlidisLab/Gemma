@@ -20,9 +20,7 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
@@ -31,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -119,7 +116,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 gene.setPreviousNcbiId( previousIds );
             }
 
-        } else if ( info.getDiscontinuedId() != null ) {
+        } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
             log.info( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
                     + info.getDiscontinuedId() );
             gene.setPreviousNcbiId( info.getDiscontinuedId() );
@@ -313,18 +310,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return gene;
     }
 
-    /**
-     * 
-     */
-    private Map<Gene, NcbiGeneHistory> multiIdGenes = new ConcurrentHashMap<Gene, NcbiGeneHistory>();
-
-    /**
-     * @param g
-     * @return
-     */
-    public NcbiGeneHistory getHistory( Gene g ) {
-        return multiIdGenes.get( g );
-    }
 
     /*
      * Threaded conversion of domain objects to Gemma objects.
@@ -349,10 +334,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                             continue;
                         }
                         Gene converted = convert( data );
-                        // It is at this point that we might need to hold on to the ncbigenedata for a mo.
-                        if ( data.getGeneInfo().getHistory().getPreviousIds().size() > 1 ) {
-                            multiIdGenes.put( converted, data.getGeneInfo().getHistory() );
-                        }
+                    
                         geneQueue.put( converted );
 
                     } catch ( InterruptedException e ) {
