@@ -598,6 +598,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );
         }
+
+        log.info( finalResult.size() + " sequences found" );
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         return finalResult;
