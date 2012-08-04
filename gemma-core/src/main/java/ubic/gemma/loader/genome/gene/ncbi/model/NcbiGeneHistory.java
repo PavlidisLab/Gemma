@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class NcbiGeneHistory {
 
-    LinkedList<String> history;
+    LinkedList<String> history = new LinkedList<String>();
 
     public NcbiGeneHistory( String startingId ) {
         history = new LinkedList<String>();

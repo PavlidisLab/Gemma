@@ -147,8 +147,8 @@ public class NCBIGeneInfo {
 
     private NcbiGeneHistory history;
 
-    private String ensemblId;
-    private String discontinuedIdForGene;
+    private String ensemblId = null;
+    private String discontinuedIdForGene = null;
 
     /**
      * @param dbName

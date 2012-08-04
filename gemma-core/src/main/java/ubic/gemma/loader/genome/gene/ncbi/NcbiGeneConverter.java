@@ -113,6 +113,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 assert info.getGeneId().equals( info.getHistory().getCurrentId() );
             }
 
+            assert info.getHistory().getPreviousIds() != null;
             if ( !info.getHistory().getPreviousIds().isEmpty() ) {
                 String previousIds = StringUtils.join( info.getHistory().getPreviousIds(), "," );
                 gene.setPreviousNcbiId( previousIds );
@@ -356,6 +357,9 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
                     } catch ( InterruptedException e ) {
                         log.warn( "Interrupted" );
+                        break;
+                    } catch ( Exception e ) {
+                        log.error( e, e );
                         break;
                     }
                 }
