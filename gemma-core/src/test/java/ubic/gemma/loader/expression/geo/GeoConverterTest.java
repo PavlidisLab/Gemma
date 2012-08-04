@@ -67,9 +67,14 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
+    private static boolean doneSetup = false;
+
     @Before
     public void setUp() throws Exception {
+        if ( doneSetup ) return;
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+
+        doneSetup = true;
     }
 
     /**
