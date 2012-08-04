@@ -633,6 +633,10 @@ public class OntologyServiceImpl implements OntologyService {
         if ( t != null ) {
             Collection<OntologyTerm> parents = t.getParents( false );
             for ( OntologyTerm p : parents ) {
+                if ( StringUtils.isBlank( p.getUri() ) ) {
+                    log.info( "URI is blank for " + p );
+                    continue;
+                }
                 if ( p.getUri().equals( "http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" ) ) {
                     return true;
                 }
