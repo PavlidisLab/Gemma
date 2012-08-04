@@ -101,12 +101,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     private static Log log = LogFactory.getLog( LinearModelAnalyzer.class );
 
-    /**
-     * Threshold below which contrasts will be stored for a given Result.
-     */
-    public static final double PVALUE_CONTRAST_SELECT_THRESHOLD = ConfigUtils
-            .getDouble( "gemma.linearmodels.pvaluethresh" );
-
     private static final boolean USE_R = ConfigUtils.getBoolean( "gemma.linearmodels.useR" );
 
     /**
@@ -824,7 +818,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     assert factorNames.length == factorsForName.size();
                     overallPValue = lm.getInteractionEffectP( factorNames );
 
-                    if ( overallPValue != null && overallPValue <= PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                    if ( overallPValue != null ) {
 
                         Map<String, Double> interactionContrastTStats = lm.getContrastTStats( factorName );
                         Map<String, Double> interactionContrastCoeffs = lm.getContrastCoefficients( factorName );
@@ -833,10 +827,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                         for ( String term : interactionContrastPValues.keySet() ) {
                             Double contrastPvalue = interactionContrastPValues.get( term );
 
-                            if ( contrastPvalue <= PVALUE_CONTRAST_SELECT_THRESHOLD ) {
-                                makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
-                                        interactionContrastTStats, interactionContrastCoeffs );
-                            }
+                            makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
+                                    interactionContrastTStats, interactionContrastCoeffs );
+
                         }
                     }
 
@@ -863,31 +856,22 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                         overallPValue = lm.getMainEffectP( factorName );
                     }
 
-                    if ( overallPValue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                    /*
+                     * Add contrasts, one for each FactorValue which is "significant."
+                     */
 
-                        /*
-                         * Add contrasts, one for each FactorValue which is "significant."
-                         */
+                    Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
 
-                        Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
+                    Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
+                    Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
-                        Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
-                        Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
+                    for ( String term : mainEffectContrastPvalues.keySet() ) {
 
-                        for ( String term : mainEffectContrastPvalues.keySet() ) {
+                        Double contrastPvalue = mainEffectContrastPvalues.get( term );
 
-                            /*
-                             * TODO Idea from limma: retain contrast if the f statistic is significant if you set all
-                             * larger t stats to the same value as this one
-                             */
+                        makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
+                                mainEffectContrastTStats, mainEffectContrastCoeffs );
 
-                            Double contrastPvalue = mainEffectContrastPvalues.get( term );
-
-                            if ( contrastPvalue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {
-                                makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
-                                        mainEffectContrastTStats, mainEffectContrastCoeffs );
-                            }
-                        }
                     }
 
                 }

@@ -45,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
-import ubic.gemma.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
@@ -73,6 +72,8 @@ import ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueOb
 @Component
 public class DifferentialExpressionGeneConditionSearchServiceImpl implements
         DifferentialExpressionGeneConditionSearchService {
+
+    private static final Double PVALUE_CONTRAST_SELECT_THRESHOLD = 0.05;
 
     public static class TaskProgress {
         private double progressPercent;
@@ -168,8 +169,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
 
             fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
             this.taskResult = searchResult;
-            
-            log.info("Finished DiffExpSearchTask.");
+
+            log.info( "Finished DiffExpSearchTask." );
             return searchResult;
         }
 
@@ -567,9 +568,8 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                     continue;
                 }
 
-                // Here I am trying to avoid fetching them when there is no hope.
-                if ( r.getCorrectedPvalue() == null
-                        || r.getCorrectedPvalue() > LinearModelAnalyzer.PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                // Here I am trying to avoid fetching them when there is no hope that the results will be interesting.
+                if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() > PVALUE_CONTRAST_SELECT_THRESHOLD ) {
                     // Then it won't have contrasts; no need to fetch.
                     continue;
                 }
@@ -683,59 +683,59 @@ public class DifferentialExpressionGeneConditionSearchServiceImpl implements
                 Map<Long, DifferentialExpressionAnalysisResult> detailedResults,
                 Map<Long, DiffExprGeneSearchResult> geneToProbeResult, ExpressionAnalysisResultSet resultSet ) {
             // No database calls.
-            log.info("Start processing hits for result sets.");
+            log.info( "Start processing hits for result sets." );
             try {
-            for ( Long geneId : geneToProbeResult.keySet() ) {
-                DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
+                for ( Long geneId : geneToProbeResult.keySet() ) {
+                    DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
-                Double correctedPvalue = diffExprGeneSearchResult.getCorrectedPvalue();
-                Double uncorrectedPvalue = diffExprGeneSearchResult.getPvalue();
+                    Double correctedPvalue = diffExprGeneSearchResult.getCorrectedPvalue();
+                    Double uncorrectedPvalue = diffExprGeneSearchResult.getPvalue();
 
-                // this means we got a 'dummy' value, indicating missing data.
-                if ( correctedPvalue == null ) continue;
-                assert uncorrectedPvalue != null;
+                    // this means we got a 'dummy' value, indicating missing data.
+                    if ( correctedPvalue == null ) continue;
+                    assert uncorrectedPvalue != null;
 
-                // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.
-                if ( correctedPvalue < TINY_QVALUE ) {
-                    correctedPvalue = TINY_QVALUE;
-                }
-
-                if ( uncorrectedPvalue < TINY_PVALUE ) {
-                    uncorrectedPvalue = TINY_PVALUE;
-                }
-
-                int numberOfProbes = diffExprGeneSearchResult.getNumberOfProbes();
-                int numberOfProbesDiffExpressed = diffExprGeneSearchResult.getNumberOfProbesDiffExpressed();
-
-                markCellsBlack( resultSet, geneId, searchResult, correctedPvalue, uncorrectedPvalue, numberOfProbes,
-                        numberOfProbesDiffExpressed );
-
-                Long probeResultId = diffExprGeneSearchResult.getResultId();
-                if ( !detailedResults.containsKey( probeResultId ) ) {
-                    continue;
-                }
-
-                DifferentialExpressionAnalysisResult deaResult = detailedResults.get( probeResultId );
-
-                for ( ContrastResult cr : deaResult.getContrasts() ) {
-                    FactorValue factorValue = cr.getFactorValue();
-                    assert factorValue != null : "Null factor value for contrast with id=" + cr.getId();
-                    if (factorValue == null) {
-                    	log.error("Data Integrity: Null factor value for contrast with id=" + cr.getId());
-                    	continue; 
+                    // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.
+                    if ( correctedPvalue < TINY_QVALUE ) {
+                        correctedPvalue = TINY_QVALUE;
                     }
-                    String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
-                            resultSet.getId(), factorValue.getId() );
-                    searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(), numberOfProbes,
-                            numberOfProbesDiffExpressed, uncorrectedPvalue );
-                }
 
+                    if ( uncorrectedPvalue < TINY_PVALUE ) {
+                        uncorrectedPvalue = TINY_PVALUE;
+                    }
+
+                    int numberOfProbes = diffExprGeneSearchResult.getNumberOfProbes();
+                    int numberOfProbesDiffExpressed = diffExprGeneSearchResult.getNumberOfProbesDiffExpressed();
+
+                    markCellsBlack( resultSet, geneId, searchResult, correctedPvalue, uncorrectedPvalue,
+                            numberOfProbes, numberOfProbesDiffExpressed );
+
+                    Long probeResultId = diffExprGeneSearchResult.getResultId();
+                    if ( !detailedResults.containsKey( probeResultId ) ) {
+                        continue;
+                    }
+
+                    DifferentialExpressionAnalysisResult deaResult = detailedResults.get( probeResultId );
+
+                    for ( ContrastResult cr : deaResult.getContrasts() ) {
+                        FactorValue factorValue = cr.getFactorValue();
+                        assert factorValue != null : "Null factor value for contrast with id=" + cr.getId();
+                        if ( factorValue == null ) {
+                            log.error( "Data Integrity: Null factor value for contrast with id=" + cr.getId() );
+                            continue;
+                        }
+                        String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
+                                resultSet.getId(), factorValue.getId() );
+                        searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(),
+                                numberOfProbes, numberOfProbesDiffExpressed, uncorrectedPvalue );
+                    }
+
+                }
+            } catch ( Exception e ) {
+                log.error( e.toString() );
+                e.printStackTrace();
             }
-            } catch (Exception e) {
-            	log.error(e.toString());
-            	e.printStackTrace();
-            }
-            log.info("Done processing hits for result sets.");
+            log.info( "Done processing hits for result sets." );
         }
 
         /**
