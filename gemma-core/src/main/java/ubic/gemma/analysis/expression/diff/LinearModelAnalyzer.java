@@ -50,6 +50,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DesignMatrix;
 import ubic.basecode.math.LeastSquaresFit;
+import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.r.type.LinearModelSummary;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -118,6 +119,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
         Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
 
+        double maxThreshold = MathUtil.max( qValueThresholdsForHitLists );
+
         assert probeToGeneMap != null;
 
         Collection<Gene> allGenes = new HashSet<Gene>();
@@ -138,7 +141,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         for ( DifferentialExpressionAnalysisResult r : results ) {
 
             Double corrP = r.getCorrectedPvalue();
-            if ( corrP == null ) continue;
+            if ( corrP == null || corrP > maxThreshold ) {
+                continue;
+            }
 
             CompositeSequence probe = r.getProbe();
             Collection<Gene> genesForProbe = probeToGeneMap.get( probe );
@@ -152,9 +157,18 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Collection<ContrastResult> crs = r.getContrasts();
             boolean up = false;
             boolean down = false;
+
+            /*
+             * We set up and down to be true (either or both) if at least on contrast is shown.
+             */
             for ( ContrastResult cr : crs ) {
                 Double lf = cr.getLogFoldChange();
-                if ( lf < 0 ) {
+                if ( lf == null ) {
+                    /*
+                     * A contrast which is actually not valid, so it won't be counted in the hit list.
+                     */
+                    continue;
+                } else if ( lf < 0 ) {
                     down = true;
                 } else if ( lf > 0 ) {
                     up = true;
@@ -1175,6 +1189,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         Double contrastTstat = tstats.get( term );
         Double coefficient = coeffs.get( term );
+
+        // no reason to store this.
+        if ( coefficient == null || contrastTstat == null ) {
+            return;
+        }
+
         ContrastResult contrast = ContrastResult.Factory.newInstance();
         contrast.setPvalue( nan2Null( contrastPvalue ) );
         contrast.setTstat( nan2Null( contrastTstat ) );
