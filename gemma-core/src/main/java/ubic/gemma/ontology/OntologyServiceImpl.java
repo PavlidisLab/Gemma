@@ -632,6 +632,7 @@ public class OntologyServiceImpl implements OntologyService {
         OntologyTerm t = this.getTerm( uri );
         if ( t != null ) {
             Collection<OntologyTerm> parents = t.getParents( false );
+            assert parents != null;
             for ( OntologyTerm p : parents ) {
                 if ( StringUtils.isBlank( p.getUri() ) ) {
                     log.info( "URI is blank for " + p );
