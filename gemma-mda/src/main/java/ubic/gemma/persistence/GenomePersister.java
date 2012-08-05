@@ -455,6 +455,8 @@ abstract public class GenomePersister extends CommonPersister {
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
         gene.setProducts( null );
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
+        fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
+        fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
 
         log.info( "New gene: " + gene );
         gene = geneDao.create( gene );
@@ -485,9 +487,6 @@ abstract public class GenomePersister extends CommonPersister {
         for ( GeneProduct gp : gene.getProducts() ) {
             fillInGeneProductAssociations( gp );
         }
-
-        fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
-        fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
 
         try {
             geneDao.update( gene );
@@ -724,7 +723,8 @@ abstract public class GenomePersister extends CommonPersister {
      */
     private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t ) {
         if ( chromosomeLocation == null ) return;
-        chromosomeLocation.setChromosome( persistChromosome( chromosomeLocation.getChromosome(), t ) );
+        Chromosome chromosome = persistChromosome( chromosomeLocation.getChromosome(), t );
+        chromosomeLocation.setChromosome( chromosome );
     }
 
     /**
@@ -968,7 +968,8 @@ abstract public class GenomePersister extends CommonPersister {
         chromosome = chromosomeDao.findOrCreate( chromosome.getName(), ct );
 
         seenChromosomes.put( key, chromosome );
-
+        if ( chromosome == null || chromosome.getId() == null )
+            throw new IllegalStateException( "Failed to get a persistent chromosome instance" );
         return chromosome;
 
     }
