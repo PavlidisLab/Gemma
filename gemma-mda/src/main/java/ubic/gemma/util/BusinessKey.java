@@ -607,9 +607,9 @@ public class BusinessKey {
      * @param gene
      */
     public static void checkKey( Gene gene ) {
-        if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null
-                && gene.getProducts() == null && gene.getProducts().size() == 0 )
-                && gene.getNcbiGeneId() == null ) {
+        if ( gene == null ) throw new IllegalArgumentException( "Gene cannot be null" );
+        if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null && ( gene
+                .getProducts() == null || gene.getProducts().isEmpty() ) ) && gene.getNcbiGeneId() == null ) {
             throw new IllegalArgumentException(
                     "No valid key for "
                             + gene
@@ -707,10 +707,13 @@ public class BusinessKey {
             ok = true;
 
         if ( !ok ) {
-            throw new IllegalArgumentException( "GeneProduct did not have a valid key" );
+            throw new IllegalArgumentException( "GeneProduct did not have a valid key - requires name or NCBI GI" );
         }
 
-        checkKey( geneProduct.getGene() );
+        if ( geneProduct.getGene() != null ) {
+            checkKey( geneProduct.getGene() );
+        }
+
     }
 
     /**
