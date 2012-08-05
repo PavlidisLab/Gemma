@@ -209,9 +209,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         for ( double thresh : qValueThresholdsForHitLists ) {
-            assert !( allGenes.size() < upCountGenes.get( thresh ) || allGenes.size() < downCountGenes.get( thresh ) || allGenes
-                    .size() < eitherCountGenes.get( thresh ) ) : "There were more genes differentially expressed than exist in the experment";
-
             // Ensure we don't set values to null.
             Integer up = upCounts.get( thresh ) == null ? 0 : upCounts.get( thresh );
             Integer down = downCounts.get( thresh ) == null ? 0 : downCounts.get( thresh );
@@ -220,6 +217,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Integer upGenes = upCountGenes.get( thresh ) == null ? 0 : upCountGenes.get( thresh );
             Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
             Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
+
+            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes || allGenes.size() < eitherGenes ) : "There were more genes differentially expressed than exist in the experment";
 
             HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
             HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
