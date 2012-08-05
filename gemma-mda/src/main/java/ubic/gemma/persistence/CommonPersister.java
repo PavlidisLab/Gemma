@@ -282,7 +282,13 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
-        database = externalDatabaseDao.findOrCreate( database );
+        database = externalDatabaseDao.find( database );
+
+        // don't use findOrCreate to avoid flush.
+        if ( database == null ) {
+            database = externalDatabaseDao.create( database );
+        }
+
         seenDatabases.put( database.getName(), database );
         return database;
     }

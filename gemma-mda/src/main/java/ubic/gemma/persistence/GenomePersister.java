@@ -731,11 +731,6 @@ abstract public class GenomePersister extends CommonPersister {
      * @param geneProduct
      */
     private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
-        if ( geneProduct.getAccessions() != null ) {
-            for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-                de.setExternalDatabase( persistExternalDatabase( de.getExternalDatabase() ) );
-            }
-        }
 
         if ( geneProduct.getPhysicalLocation() != null ) {
             geneProduct.getPhysicalLocation().setChromosome(
@@ -746,6 +741,12 @@ abstract public class GenomePersister extends CommonPersister {
         if ( geneProduct.getExons() != null ) {
             for ( PhysicalLocation exon : geneProduct.getExons() ) {
                 exon.setChromosome( persistChromosome( exon.getChromosome(), geneProduct.getGene().getTaxon() ) );
+            }
+        }
+
+        if ( geneProduct.getAccessions() != null ) {
+            for ( DatabaseEntry de : geneProduct.getAccessions() ) {
+                de.setExternalDatabase( persistExternalDatabase( de.getExternalDatabase() ) );
             }
         }
     }
