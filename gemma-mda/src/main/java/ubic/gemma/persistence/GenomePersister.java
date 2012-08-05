@@ -456,42 +456,44 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setProducts( null );
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
 
+        log.info( "New gene: " + gene );
+        gene = geneDao.create( gene );
+
+        Collection<GeneProduct> geneProductsForNewGene = new HashSet<GeneProduct>();
+        for ( GeneProduct product : tempGeneProduct ) {
+            GeneProduct existingProduct = geneProductDao.find( product );
+            if ( existingProduct != null ) {
+                /*
+                 * A geneproduct is being moved to a gene that didn't exist in the system already
+                 */
+                Gene previousGeneForProduct = existingProduct.getGene();
+                previousGeneForProduct.getProducts().remove( existingProduct );
+                product.setGene( null ); // we aren't going to make it, this isn't really necessary.
+                existingProduct.setGene( gene );
+                geneProductsForNewGene.add( existingProduct );
+
+                log.warn( "While creating new gene: Gene product: [New=" + product
+                        + "] is already associated with a gene [Old=" + existingProduct
+                        + "], will move to associate with new gene: " + gene );
+            } else {
+                product.setGene( gene );
+                geneProductsForNewGene.add( product );
+            }
+        }
+        // attach the products.
+        gene.setProducts( geneProductsForNewGene );
+        for ( GeneProduct gp : gene.getProducts() ) {
+            fillInGeneProductAssociations( gp );
+        }
+
         fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
         fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
+
         try {
-            log.info( "New gene: " + gene );
-            gene = geneDao.create( gene );
-
-            Collection<GeneProduct> geneProductsForNewGene = new HashSet<GeneProduct>();
-            for ( GeneProduct product : tempGeneProduct ) {
-                GeneProduct existingProduct = geneProductDao.find( product );
-                if ( existingProduct != null ) {
-                    /*
-                     * A geneproduct is being moved to a gene that didn't exist in the system already
-                     */
-                    Gene previousGeneForProduct = existingProduct.getGene();
-                    previousGeneForProduct.getProducts().remove( existingProduct );
-                    product.setGene( null ); // we aren't going to make it, this isn't really necessary.
-                    existingProduct.setGene( gene );
-                    geneProductsForNewGene.add( existingProduct );
-
-                    log.warn( "While creating new gene: Gene product: [New=" + product
-                            + "] is already associated with a gene [Old=" + existingProduct
-                            + "], will move to associate with new gene: " + gene );
-                } else {
-                    product.setGene( gene );
-                    geneProductsForNewGene.add( product );
-                }
-            }
-            // attach the products.
-            gene.setProducts( geneProductsForNewGene );
-            for ( GeneProduct gp : gene.getProducts() ) {
-                fillInGeneProductAssociations( gp );
-            }
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {
-            log.error( "Error while creating gene: " + gene + "; products:" );
+            log.error( "**** Error while creating gene: " + gene + "; products:" );
             for ( GeneProduct gp : gene.getProducts() ) {
                 System.err.println( gp );
             }
