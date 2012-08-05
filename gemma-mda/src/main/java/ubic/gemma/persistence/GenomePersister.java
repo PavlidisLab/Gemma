@@ -446,12 +446,6 @@ abstract public class GenomePersister extends CommonPersister {
             }
         }
 
-        /*
-         * We log this at INFO to help track cases where genes are added. But this can be very annoying the first time a
-         * genome is added.
-         */
-        log.info( "New gene: " + gene );
-
         if ( gene.getAccessions().size() > 0 ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
                 fillInDatabaseEntry( de );
@@ -468,8 +462,16 @@ abstract public class GenomePersister extends CommonPersister {
         for ( GeneProduct product : tempGeneProduct ) {
             GeneProduct existingProduct = geneProductDao.find( product );
             if ( existingProduct != null ) {
-                throw new IllegalStateException( "Gene product: " + product
-                        + " is already associated with a gene, cannot associate with " + gene );
+                /*
+                 * Switch it over.
+                 */
+                Gene previousGeneForProduct = existingProduct.getGene();
+                previousGeneForProduct.getProducts().remove( existingProduct );
+                geneDao.update( previousGeneForProduct );
+
+                log.warn( "While creating new gene: Gene product: [New=" + product
+                        + "] is already associated with a gene [Old=" + existingProduct
+                        + "], will move to associate with new gene: " + gene );
             }
 
             product.setGene( gene );
@@ -482,6 +484,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // attach the products.
         try {
+            log.info( "New gene: " + gene );
             return geneDao.create( gene );
         } catch ( Exception e ) {
             log.error( "Error while creating gene: " + gene + "; products:" );
