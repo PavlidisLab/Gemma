@@ -17,6 +17,7 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,13 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
         super.setSessionFactory( sessionFactory );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.description.ExternalDatabaseDao#find(ubic.gemma.model.common.description.ExternalDatabase
+     * )
+     */
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
 
@@ -46,6 +54,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
 
         Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
         queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
+        queryObject.setFlushMode( FlushMode.COMMIT );
         java.util.List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
