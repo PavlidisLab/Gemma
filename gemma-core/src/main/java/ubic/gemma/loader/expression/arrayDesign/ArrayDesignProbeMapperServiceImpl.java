@@ -36,7 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ProbeMapper;
@@ -69,7 +70,7 @@ import ubic.gemma.persistence.Persister;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapperService {
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
@@ -366,6 +367,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
+    @Transactional
     public Map<String, Collection<BlatAssociation>> processCompositeSequence( ProbeMapperConfig config, Taxon taxon,
             GoldenPathSequenceAnalysis goldenPathDb, CompositeSequence compositeSequence ) {
         BioSequence bs = compositeSequence.getBiologicalCharacteristic();
