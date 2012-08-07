@@ -151,13 +151,7 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
      */
     @Override
     public void thaw( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
-        try {
-            this.handleThaw( blatAssociation );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao.thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
-                            + th, th );
-        }
+        this.handleThaw( blatAssociation );
     }
 
     /**
@@ -196,13 +190,11 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<BlatAssociation> blatAssociations )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<BlatAssociation> blatAssociations );
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
 
 }
