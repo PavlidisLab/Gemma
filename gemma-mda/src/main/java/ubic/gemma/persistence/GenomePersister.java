@@ -489,6 +489,10 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         try {
+            // // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
+            // products are not persistent until the session is flushed, later. There might be a better way around this,
+            // but so far as I know this is the only place this happens.
+            gene.setProducts( ( Collection<GeneProduct> ) geneProductDao.create( gene.getProducts() ) );
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {

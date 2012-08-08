@@ -129,8 +129,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         g = this.geneService.load( g.getId() );
         g = this.geneService.thaw( g );
 
-        // should have create only.
-        assertEquals( 1, g.getAuditTrail().getEvents().size() );
+        // should have create only, normally, but the persist method calls both create and update.
+        assertEquals( 2, g.getAuditTrail().getEvents().size() );
 
         GeneProduct gp = GeneProduct.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 );
@@ -141,7 +141,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertNotNull( g.getAuditTrail() );
 
         // should have create and 1 updates, because we update to add the gene product.
-        assertEquals( 2, g.getAuditTrail().getEvents().size() );
+        assertEquals( 3, g.getAuditTrail().getEvents().size() );
 
         Session session = sessionFactory.openSession();
         session.update( g );
@@ -162,7 +162,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         this.geneService.update( g );
         this.geneService.update( g );
 
-        assertEquals( 5, g.getAuditTrail().getEvents().size() );
+        assertEquals( 6, g.getAuditTrail().getEvents().size() );
 
         /*
          * Check we didn't get any extra events added to children.
@@ -184,10 +184,12 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         g = this.geneService.load( g.getId() );
         g = this.geneService.thaw( g );
 
-        // should have create and 1 because we update to add the gene product.
-        assertEquals( 1, g.getAuditTrail().getEvents().size() );
-
         assertEquals( 1, g.getProducts().size() );
+
+        assertNotNull( g.getProducts().iterator().next().getId() );
+
+        // should have create and 1 because we update to add the gene product.
+        assertEquals( 2, g.getAuditTrail().getEvents().size() );
 
         for ( GeneProduct prod : g.getProducts() ) {
             assertNotNull( prod.getAuditTrail() );
