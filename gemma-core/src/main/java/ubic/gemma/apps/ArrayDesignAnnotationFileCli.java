@@ -261,6 +261,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         for ( ArrayDesign ad : allADs ) {
 
+            ad = arrayDesignService.thawLite( ad );
             if ( ad.getStatus().getTroubled() ) {
                 log.warn( "Troubled: " + ad + " (skipping)" );
                 continue;
