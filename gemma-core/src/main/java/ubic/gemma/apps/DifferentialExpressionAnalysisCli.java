@@ -243,6 +243,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( subsetFactor == null )
                 throw new IllegalArgumentException( "Didn't find factor for provided subset factor name" );
 
+            return subsetFactor;
+
         } else if ( this.subsetFactorId != null ) {
             subsetFactor = efs.load( subsetFactorId );
             if ( subsetFactor == null ) {
@@ -352,7 +354,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                  */
                 ExperimentalFactor subsetFactor = getSubsetFactor( ee );
 
-                log.info( "Using " + factors.size() + "factors provided as arguments" );
+                log.info( "Using " + factors.size() + " factors provided as arguments" );
 
                 if ( subsetFactor != null ) {
                     if ( factors.contains( subsetFactor ) ) {
