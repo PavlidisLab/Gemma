@@ -378,7 +378,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     config.getInteractionsToInclude().add( factors );
                 }
 
-                this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
 
             } else {
                 /*
