@@ -111,6 +111,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
+        // always try to use the interactions.
         AnalysisType analyzer = determineAnalysis( expressionExperiment, factors, null, true );
 
         if ( analyzer == null ) {
@@ -178,7 +179,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         if ( config.getAnalysisType() == null ) {
-            return determineAnalysis( expressionExperiment, config.getFactorsToInclude(), null, true );
+            return determineAnalysis( expressionExperiment, config.getFactorsToInclude(), config.getSubsetFactor(),
+                    true );
         }
 
         if ( config.getSubsetFactor() != null ) {
@@ -344,7 +346,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                     okForInteraction = false;
                 }
             }
-            /* Check for block design and execute two way anova (with or without interactions). */
+            /* Check for block design and execute two way ANOVA (with or without interactions). */
             if ( !includeInteractionsIfPossible
                     || !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, experimentalFactors )
                     || !okForInteraction ) {

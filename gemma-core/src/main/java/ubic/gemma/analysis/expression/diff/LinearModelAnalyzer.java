@@ -946,7 +946,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors
      * 
-     * @param factors the factors that will be incluced
+     * @param factors the factors that will be included
      * @param config
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
      *         involve the given factors.

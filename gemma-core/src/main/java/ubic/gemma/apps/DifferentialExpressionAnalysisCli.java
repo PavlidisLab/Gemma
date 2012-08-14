@@ -95,15 +95,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean delete = false;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
-     */
-    @Override
-    public String getShortDesc() {
-        return "Analyze expression data sets for differentially expressed genes.";
-    }
+    private Long subsetFactorId;
+
+    private String subsetFactorName;
 
     /*
      * (non-Javadoc)
@@ -138,6 +132,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .withDescription( "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
 
         super.addOption( factors );
+
+        Option subsetFactor = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "ID number or name of the factor to use for subsetting the analysis; must also use with -factors" )
+                .create( "subset" );
+        super.addOption( subsetFactor );
 
         Option analysisType = OptionBuilder
                 .hasArg()
@@ -207,6 +208,51 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for differentially expressed genes.";
+    }
+
+    private ExperimentalFactor getSubsetFactor( ExpressionExperiment ee ) {
+        ExperimentalFactorService efs = this.getBean( ExperimentalFactorService.class );
+        ExperimentalFactor subsetFactor = null;
+        if ( StringUtils.isNotBlank( this.subsetFactorName ) ) {
+            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+
+                // has already implemented way of figuring out human-friendly name of factor value.
+                ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
+
+                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                    log.info( "Ignoring batch factor:" + experimentalFactor );
+                    continue;
+                }
+
+                if ( subsetFactorName.equals( experimentalFactor.getName() ) ) {
+                    subsetFactor = experimentalFactor;
+                } else if ( fvo.getCategory() != null && subsetFactorName.equals( fvo.getCategory() ) ) {
+                    subsetFactor = experimentalFactor;
+                }
+            }
+
+            if ( subsetFactor == null )
+                throw new IllegalArgumentException( "Didn't find factor for provided subset factor name" );
+
+        } else if ( this.subsetFactorId != null ) {
+            subsetFactor = efs.load( subsetFactorId );
+            if ( subsetFactor == null ) {
+                throw new IllegalArgumentException( "No factor for id=" + subsetFactorId );
+            }
+            return subsetFactor;
+        }
+        return null;
+    }
+
     /**
      * Determine which factors to use if given from the command line. Only applicable if analysis is on a single data
      * set.
@@ -214,7 +260,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param ee
      * @return
      */
-    protected Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
+    private Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
 
         ExperimentalFactorService efs = this.getBean( ExperimentalFactorService.class );
@@ -304,14 +350,34 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 /*
                  * Manual selection of factors
                  */
+                ExperimentalFactor subsetFactor = getSubsetFactor( ee );
+
                 log.info( "Using " + factors.size() + "factors provided as arguments" );
-                if ( this.type != null ) {
-                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
-                            factors, type );
-                } else {
-                    results = this.differentialExpressionAnalyzerService
-                            .runDifferentialExpressionAnalyses( ee, factors );
+
+                if ( subsetFactor != null ) {
+                    if ( factors.contains( subsetFactor ) ) {
+                        throw new IllegalArgumentException(
+                                "Subset factor cannot also be included as factor to analyze" );
+                    }
+                    log.info( "Subsetting by " + subsetFactor );
+
                 }
+
+                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+                config.setAnalysisType( this.type );
+                config.setFactorsToInclude( factors );
+                config.setSubsetFactor( subsetFactor );
+
+                /*
+                 * FIXME I am pretty sure this is the right thing to do here, to get iterations included by default.
+                 * It's actually only complicated if there is a subset factor.
+                 */
+                if ( type == null && factors.size() == 2 ) {
+                    config.getInteractionsToInclude().add( factors );
+                }
+
+                this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+
             } else {
                 /*
                  * Automagically
@@ -422,6 +488,25 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
             }
             this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        }
+
+        if ( hasOption( "subset" ) ) {
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the subset factor when analyzing a single experiment" );
+            }
+
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
+            }
+
+            String subsetFactor = getOptionValue( "subset" );
+            try {
+                this.subsetFactorId = Long.parseLong( subsetFactor );
+
+            } catch ( NumberFormatException e ) {
+                this.subsetFactorName = subsetFactor;
+            }
         }
 
         if ( hasOption( "usebatch" ) ) {
