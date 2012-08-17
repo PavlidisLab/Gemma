@@ -64,8 +64,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation )
-            throws Exception {
+    protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }

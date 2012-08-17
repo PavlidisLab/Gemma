@@ -20,7 +20,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.SortedSet;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 
 /**
@@ -32,12 +32,12 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
     // TODO need to populate this as an valueObject...
-    private DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult = null;
+    private GeneDifferentialExpressionMetaAnalysisResult differentialExpressionAnalysisResult = null;
 
     public DiffExpressionEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource,
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
+            GeneDifferentialExpressionMetaAnalysisResult differentialExpressionAnalysisResult ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
         this.differentialExpressionAnalysisResult = differentialExpressionAnalysisResult;
     }
@@ -47,7 +47,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         super( differentialExpressionEvidence );
 
         this.differentialExpressionAnalysisResult = differentialExpressionEvidence
-                .getDifferentialExpressionAnalysisResult();
+                .getGeneDifferentialExpressionMetaAnalysisResult();
     }
 
     public DiffExpressionEvidenceValueObject() {

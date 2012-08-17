@@ -552,6 +552,6 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
 								Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 			});
 	this.visDiffWindow.show({
-		params : [ eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD ]
+		params : [ diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD ]
 	});
 };

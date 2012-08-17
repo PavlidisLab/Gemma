@@ -223,7 +223,7 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
-        if ( ees == null || ees.isEmpty() ) return  new VisualizationValueObject[0];
+        if ( ees == null || ees.isEmpty() ) return new VisualizationValueObject[0];
 
         Gene queryGene = geneService.load( queryGeneId );
         Gene coexpressedGene = geneService.load( coexpressedGeneId );
@@ -232,7 +232,7 @@ public class DEDVController {
         genes.add( queryGeneId );
         genes.add( coexpressedGeneId );
 
-        if ( genes.isEmpty() ) return  new VisualizationValueObject[0];
+        if ( genes.isEmpty() ) return new VisualizationValueObject[0];
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
@@ -410,18 +410,14 @@ public class DEDVController {
     /**
      * AJAX exposed method
      * 
-     * @param eeid The experiment we need to visualize DEPRECATED because we don't use it.
      * @param resultSetId The resultset we're specifically interested. Note that this is what is used to choose the
      *        vectors, since it could be a subset of an experiment.
      * @param threshold for 'significance'
      * @return collection of visualization value objects
      */
-    public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long eeId, Long resultSetId,
-            Double givenThreshold ) {
+    public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId, Double givenThreshold ) {
 
         if ( resultSetId == null ) return null;
-
-        if ( eeId == null ) return null;
 
         double threshold = DEFAULT_THRESHOLD;
 
@@ -837,7 +833,10 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
         ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
-        if ( ar == null ) return null;
+        if ( ar == null ) {
+            log.warn( "No diff ex result set with ID=" + resultSetId );
+            return null;
+        }
 
         differentialExpressionResultService.thawLite( ar );
 
@@ -957,7 +956,7 @@ public class DEDVController {
     private Map<Long, GeneValueObject> getGeneValueObjectsUsed( Collection<DoubleVectorValueObject> vectors ) {
         Set<Long> usedGeneIds = new HashSet<Long>();
         for ( DoubleVectorValueObject vec : vectors ) {
-            if( vec == null || vec.getGenes() == null) continue;
+            if ( vec == null || vec.getGenes() == null ) continue;
             usedGeneIds.addAll( vec.getGenes() );
         }
         Map<Long, GeneValueObject> gmap = EntityUtils.getIdMap( geneService.loadValueObjects( usedGeneIds ) );
@@ -1244,8 +1243,9 @@ public class DEDVController {
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
-            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( ee2P.getEEId()  ) ) {
-                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee2P.getEEId() );
+            if ( layouts != null && !layouts.isEmpty() && layouts.containsKey( ee2P.getEEId() ) ) {
+                LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts
+                        .get( ee2P.getEEId() );
                 this.prepareFactorsForFrontEndDisplay( vvo, layout );
             }
 
@@ -1474,7 +1474,7 @@ public class DEDVController {
                     factorsMissingValues.add( factor.getName() );
                     continue;
                 }
-                
+
                 if ( !seenFactors.contains( factor ) && factor.getType().equals( FactorType.CATEGORICAL ) ) {
                     for ( FactorValue fv : factor.getFactorValues() ) {
                         fvs.put( fv.getId(), fv );

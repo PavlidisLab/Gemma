@@ -40,13 +40,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      */
     @Override
     public Collection<T> findByInvestigation( final Investigation investigation ) {
-        try {
-            return this.handleFindByInvestigation( investigation );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigation(Investigation investigation)' --> "
-                            + th, th );
-        }
+        return this.handleFindByInvestigation( investigation );
     }
 
     /**
@@ -54,13 +48,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      */
     @Override
     public Map<Investigation, Collection<T>> findByInvestigations( final Collection<Investigation> investigations ) {
-        try {
-            return this.handleFindByInvestigations( investigations );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigations(java.util.Collection investigators)' --> "
-                            + th, th );
-        }
+        return this.handleFindByInvestigations( investigations );
     }
 
     /**
@@ -68,13 +56,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      */
     @Override
     public Collection<T> findByParentTaxon( final Taxon taxon ) {
-        try {
-            return this.handleFindByParentTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleFindByParentTaxon( taxon );
     }
 
     /**
@@ -82,34 +64,28 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      */
     @Override
     public Collection<T> findByTaxon( final Taxon taxon ) {
-        try {
-            return this.handleFindByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
+        return this.handleFindByTaxon( taxon );
     }
 
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
      */
-    protected abstract Collection<T> handleFindByInvestigation( Investigation investigation ) throws Exception;
+    protected abstract Collection<T> handleFindByInvestigation( Investigation investigation );
 
     /**
      * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
      */
     protected abstract Map<Investigation, Collection<T>> handleFindByInvestigations(
-            Collection<Investigation> investigatons ) throws Exception;
+            Collection<Investigation> investigatons );
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon ) throws Exception;
+    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon );
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract Collection<T> handleFindByTaxon( Taxon taxon ) throws Exception;
+    protected abstract Collection<T> handleFindByTaxon( Taxon taxon );
 
 }

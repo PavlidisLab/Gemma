@@ -230,8 +230,8 @@ DEDVController.getDEDVForVisualization = function(p0, p1, callback) {
 DEDVController.getVectorData = function(p0, callback) {
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getVectorData', p0, callback);
 }
-DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, p2, callback) {
-	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, p2,
+DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1,  callback) {
+	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, 
 			callback);
 }
 DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {

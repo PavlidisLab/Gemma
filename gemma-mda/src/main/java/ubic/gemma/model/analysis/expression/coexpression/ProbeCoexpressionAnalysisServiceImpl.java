@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.Investigation;
@@ -34,8 +35,15 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  */
 @Service
-public class ProbeCoexpressionAnalysisServiceImpl extends
-        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceBase {
+public class ProbeCoexpressionAnalysisServiceImpl implements
+        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService {
+
+    @Autowired
+    private ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
+
+    public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
+        return probeCoexpressionAnalysisDao;
+    }
 
     @Override
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
@@ -51,46 +59,46 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createDatabaseEntity(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis handleCreate(
+    public ProbeCoexpressionAnalysis create(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
     }
 
     @Override
-    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) {
+    public void delete( ProbeCoexpressionAnalysis toDelete ) {
         this.getProbeCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
+    public Collection<ProbeCoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Investigation, Collection<ProbeCoexpressionAnalysis>> handleFindByInvestigations(
+    public Map<Investigation, Collection<ProbeCoexpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigations(
                 ( Collection<Investigation> ) investigations );
     }
 
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleFindByName( String name ) {
+    public Collection<ProbeCoexpressionAnalysis> findByName( String name ) {
         return this.getProbeCoexpressionAnalysisDao().findByName( name );
     }
 
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+    public Collection<ProbeCoexpressionAnalysis> findByParentTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
+    public Collection<ProbeCoexpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @Override
-    protected ProbeCoexpressionAnalysis handleLoad( Long id ) {
+    public ProbeCoexpressionAnalysis load( Long id ) {
         return this.getProbeCoexpressionAnalysisDao().load( id );
     }
 
@@ -98,7 +106,7 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
     @Override
-    protected Collection<ProbeCoexpressionAnalysis> handleLoadAll() {
+    public Collection<ProbeCoexpressionAnalysis> loadAll() {
         return ( Collection<ProbeCoexpressionAnalysis> ) this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
@@ -113,8 +121,7 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
+    public ProbeCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;
         }

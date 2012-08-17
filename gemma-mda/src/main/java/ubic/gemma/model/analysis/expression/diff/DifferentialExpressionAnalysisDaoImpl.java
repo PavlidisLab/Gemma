@@ -141,7 +141,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * @return
      */
     private Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
-
+        if ( investigation == null ) throw new IllegalArgumentException( "Investigation must not be null" );
         Long id = investigation.getId();
 
         return getAnalysesForExperiment( id );

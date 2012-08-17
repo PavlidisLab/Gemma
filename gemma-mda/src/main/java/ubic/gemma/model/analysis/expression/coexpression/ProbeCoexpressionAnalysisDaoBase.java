@@ -79,7 +79,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
 
     @Override
     public java.util.Collection<ProbeCoexpressionAnalysis> findByName( final java.lang.String name ) {
-        return this.findByName( "select a from AnalysisImpl as a where a.name like :name", name );
+        return this.findByName( "select a from ProbeCoexpressionAnalysisImpl as a where a.name = :name", name );
     }
 
     @Override

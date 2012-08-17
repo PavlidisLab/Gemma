@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2010 University of British Columbia
+ * Copyright (c) 2006-2012 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,16 @@
  * This is only generated once! It will never be overwritten.
  * You can (and have to!) safely modify it by hand.
  */
-package ubic.gemma.model.analysis;
+package ubic.gemma.model.analysis.expression.diff;
 
 /**
- * @see ubic.gemma.model.analysis.ContrastResult
+ * @see ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis
  */
-public class ContrastResultImpl extends ubic.gemma.model.analysis.expression.diff.ContrastResult {
+public class GeneDifferentialExpressionMetaAnalysisImpl extends
+        ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = 5200377592403068104L;
-
-    /**
-     * @see ubic.gemma.model.analysis.ContrastResult#toString()
-     */
-    @Override
-    public java.lang.String toString() {
-        // @todo implement public java.lang.String toString()
-        return null;
-    }
+    private static final long serialVersionUID = 5017600984177975657L;
 
 }

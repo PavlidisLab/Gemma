@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.Investigation;
@@ -37,8 +38,14 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class DifferentialExpressionAnalysisServiceImpl extends
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase {
+public class DifferentialExpressionAnalysisServiceImpl implements
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
+
+    @Autowired
+    ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+
+    @Autowired
+    private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Override
     public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
@@ -57,26 +64,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     }
 
-    @Override
-    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
-        return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
-        return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
-    }
-
-    @Override
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
-        return null;
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis handleCreate(
+    public ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis create(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis ) {
         return this.getDifferentialExpressionAnalysisDao().create( analysis );
     }
@@ -85,30 +77,35 @@ public class DifferentialExpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
     @Override
-    protected void handleDelete( DifferentialExpressionAnalysis toDelete ) {
+    public void delete( DifferentialExpressionAnalysis toDelete ) {
         this.getDifferentialExpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
+    public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) {
         return this.getDifferentialExpressionAnalysisDao().find( gene, resultSet, threshold );
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
+        return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( investigation );
     }
 
     @Override
-    protected Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
             Collection<Long> investigationIds ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigationIds( investigationIds );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigations(
                 ( Collection<Investigation> ) investigations );
@@ -117,26 +114,25 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.AnalysisServiceBase#handleFindByName(java.lang.String)
+     * @see ubic.gemma.model.analysis.AnalysisServiceBase#findByName(java.lang.String)
      */
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByName( String name ) {
+    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
         return this.getDifferentialExpressionAnalysisDao().findByName( name );
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+    public Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon ) {
         return this.getDifferentialExpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
+    public Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @Override
-    protected DifferentialExpressionAnalysis handleFindByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
+    public DifferentialExpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;
         }
@@ -149,59 +145,17 @@ public class DifferentialExpressionAnalysisServiceImpl extends
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFindExperimentsWithAnalyses
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#findExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene ) {
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
         return this.getDifferentialExpressionAnalysisDao().findExperimentsWithAnalyses( gene );
     }
 
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
-     */
     @Override
-    protected DifferentialExpressionAnalysis handleLoad( java.lang.Long id ) {
-        return this.getDifferentialExpressionAnalysisDao().load( id );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
-     */
-    @Override
-    protected java.util.Collection<DifferentialExpressionAnalysis> handleLoadAll() {
-        return ( Collection<DifferentialExpressionAnalysis> ) this.getDifferentialExpressionAnalysisDao().loadAll();
-    }
-
-    @Override
-    protected void handleThaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        this.getDifferentialExpressionAnalysisDao().thaw( expressionAnalyses );
-    }
-
-    @Override
-    protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
-        return this.loadAll();
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
-        return this.loadAll();
-    }
-
-    @Override
-    public void update( DifferentialExpressionAnalysis o ) {
-        this.getDifferentialExpressionAnalysisDao().update( o );
-    }
-
-    @Override
-    public void update( ExpressionAnalysisResultSet a ) {
-        this.getExpressionAnalysisResultSetDao().update( a );
-
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
+        return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
     }
 
     /*
@@ -217,14 +171,80 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> experimentIds ) {
+        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentIds );
+    }
+
+    @Override
     public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
         return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentId );
     }
 
+    /**
+     * Gets the reference to <code>differentialExpressionAnalysis</code>'s DAO.
+     */
+    public ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+        return this.differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @return the expressionAnalysisResultSetDao
+     */
+    public ExpressionAnalysisResultSetDao getExpressionAnalysisResultSetDao() {
+        return expressionAnalysisResultSetDao;
+    }
+
     @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
-            Collection<Long> experimentIds ) {
-        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentIds );
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
+        return null;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
+     */
+    @Override
+    public DifferentialExpressionAnalysis load( java.lang.Long id ) {
+        return this.getDifferentialExpressionAnalysisDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
+     */
+    @Override
+    public java.util.Collection<DifferentialExpressionAnalysis> loadAll() {
+        return ( Collection<DifferentialExpressionAnalysis> ) this.getDifferentialExpressionAnalysisDao().loadAll();
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
+        return this.loadAll();
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
+        return this.loadAll();
+    }
+
+    @Override
+    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        this.getDifferentialExpressionAnalysisDao().thaw( expressionAnalyses );
+    }
+
+    @Override
+    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
+    }
+
+    @Override
+    public void update( DifferentialExpressionAnalysis o ) {
+        this.getDifferentialExpressionAnalysisDao().update( o );
+    }
+
+    @Override
+    public void update( ExpressionAnalysisResultSet a ) {
+        this.getExpressionAnalysisResultSetDao().update( a );
+
     }
 
 }

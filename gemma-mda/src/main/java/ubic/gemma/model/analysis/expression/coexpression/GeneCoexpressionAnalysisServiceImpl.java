@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.Investigation;
@@ -34,8 +35,11 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class GeneCoexpressionAnalysisServiceImpl extends
-        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceBase {
+public class GeneCoexpressionAnalysisServiceImpl implements
+        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
+
+    @Autowired
+    private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     /*
      * (non-Javadoc)
@@ -45,6 +49,13 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     @Override
     public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
         return loadEnabled();
+    }
+
+    /**
+     * Gets the reference to <code>geneCoexpressionAnalysis</code>'s DAO.
+     */
+    protected GeneCoexpressionAnalysisDao getGeneCoexpressionAnalysisDao() {
+        return this.geneCoexpressionAnalysisDao;
     }
 
     /*
@@ -63,30 +74,30 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * )
      */
     @Override
-    protected GeneCoexpressionAnalysis handleCreate( GeneCoexpressionAnalysis analysis ) {
+    public GeneCoexpressionAnalysis create( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().create( analysis );
     }
 
     @Override
-    protected void handleDelete( GeneCoexpressionAnalysis toDelete ) {
+    public void delete( GeneCoexpressionAnalysis toDelete ) {
         this.getGeneCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
-    protected Collection<GeneCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
+    public Collection<GeneCoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
         return this.getGeneCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Investigation, Collection<GeneCoexpressionAnalysis>> handleFindByInvestigations(
+    public Map<Investigation, Collection<GeneCoexpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return this.getGeneCoexpressionAnalysisDao()
                 .findByInvestigations( ( Collection<Investigation> ) investigations );
     }
 
     @Override
-    protected Collection<GeneCoexpressionAnalysis> handleFindByName( String name ) {
+    public Collection<GeneCoexpressionAnalysis> findByName( String name ) {
         return this.getGeneCoexpressionAnalysisDao().findByName( name );
     }
 
@@ -98,7 +109,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * .Taxon)
      */
     @Override
-    protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+    public Collection<GeneCoexpressionAnalysis> findByParentTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
@@ -109,14 +120,13 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
+    public Collection<GeneCoexpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected GeneCoexpressionAnalysis handleFindByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
+    public GeneCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
 
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> anas = this.getGeneCoexpressionAnalysisDao()
                 .findByInvestigations( ( Collection<Investigation> ) investigations );
@@ -144,17 +154,17 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Collection<ExpressionExperiment> handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
+    public Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getDatasetsAnalyzed( analysis );
     }
 
     @Override
-    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
+    public int getNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getNumDatasetsAnalyzed( analysis );
     }
 
     @Override
-    protected GeneCoexpressionAnalysis handleLoad( Long id ) {
+    public GeneCoexpressionAnalysis load( Long id ) {
         return this.getGeneCoexpressionAnalysisDao().load( id );
     }
 
@@ -164,18 +174,18 @@ public class GeneCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
      */
     @Override
-    protected Collection<GeneCoexpressionAnalysis> handleLoadAll() {
+    public Collection<GeneCoexpressionAnalysis> loadAll() {
         return ( Collection<GeneCoexpressionAnalysis> ) this.getGeneCoexpressionAnalysisDao().loadAll();
     }
 
     @Override
-    protected void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
+    public void thaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().thaw( geneCoexpressionAnalysis );
 
     }
 
     @Override
-    protected void handleUpdate( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
+    public void update( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
     }
 
