@@ -457,6 +457,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
 
+        /*
+         * TODO For Rat, we now have to use RGD genes, as the knownGene track
+         * "The Old Known Genes track shows genes from the 2006 Known Genes build. RGD Genes has now replaced Known Genes as the main gene track for rat."
+         */
+
         Collection<GeneProduct> result = new HashSet<GeneProduct>();
         /*
          * Many known genes map to refseq genes. We use those gene symbols instead. Use kgXRef only to get the
