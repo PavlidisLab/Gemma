@@ -48,7 +48,7 @@ public class NCBIGene2GOAssociationLoader {
     private static final int QUEUE_SIZE = 60000;
     private static final int BATCH_SIZE = 12000;
 
-    private Persister  persisterHelper;
+    private Persister persisterHelper;
 
     private NCBIGene2GOAssociationParser parser = null;
 
@@ -72,6 +72,11 @@ public class NCBIGene2GOAssociationLoader {
 
         load( inputStream );
 
+        try {
+            inputStream.close();
+        } catch ( IOException e ) {
+            log.warn( e, e );
+        }
     }
 
     /**
@@ -190,7 +195,7 @@ public class NCBIGene2GOAssociationLoader {
     /**
      * @param persisterHelper The persisterHelper to set.
      */
-    public void setPersisterHelper( Persister  persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
