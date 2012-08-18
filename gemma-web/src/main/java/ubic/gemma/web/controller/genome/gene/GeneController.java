@@ -41,12 +41,15 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.image.aba.AllenBrainAtlasService;
 import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
@@ -75,6 +78,9 @@ public class GeneController extends BaseController {
     @Autowired
     private GeneService geneService = null;
 
+    @Autowired
+    private TaxonService taxonService;
+    
     @Autowired
     private GeneSetService geneSetService = null;
 
@@ -144,55 +150,66 @@ public class GeneController extends BaseController {
 
         String idString = request.getParameter( "id" );
         String ncbiId = request.getParameter( "ncbiid" );
+        String geneName = request.getParameter( "name" );
+        String taxonName = request.getParameter( "taxon" );        
+        String ensemblId = request.getParameter( "ensemblId" );        
 
-        if ( idString == null && ncbiId == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene" } );
-            return new ModelAndView( "index" );
-        }
-
-        Long id = null;
-
-        GeneValueObject gene = null;
+        GeneValueObject geneVO = null;
 
         try {
-            id = Long.parseLong( idString );
-            assert id != null;
-            gene = geneService.loadValueObject( id );
-            if ( gene == null ) {
-                addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-                return new ModelAndView( "index" );
-            }
+        	if (StringUtils.isNotBlank( idString )) {
+        		Long id = Long.parseLong( idString );
+        		assert id != null;
+        		
+        		geneVO = geneService.loadValueObject( id );
+        		
+        		if ( geneVO == null ) {
+        			addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+        			return new ModelAndView( "index" );
+        		}
+        	} else if ( StringUtils.isNotBlank( ncbiId ) ) {
+        		
+        		geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
+        	
+        	} else if (StringUtils.isNotBlank( ensemblId )) {    
+        		Collection<Gene> foundGenes = (Collection<Gene>) geneService.findByEnsemblId(ensemblId);
+        	
+        		if (foundGenes.size() == 1) {
+        			Gene gene = foundGenes.iterator().next();
+        			if (gene != null) {
+        				geneVO = geneService.loadValueObject( gene.getId() );                        	
+        			}                    	
+        		}
+        	} else if (StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName )) {
+        		Taxon taxon = taxonService.findByCommonName( taxonName );
+        		if (taxon != null) {
+        			Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
+        			if (gene != null) {
+        				geneVO = geneService.loadValueObject( gene.getId() );                        	
+        			}
+        		}
+        	}
+
         } catch ( NumberFormatException e ) {
-            ncbiId = request.getParameter( "ncbiid" );
-
-            if ( StringUtils.isNotBlank( ncbiId ) ) {
-                try {
-                    gene = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
-                } catch ( NumberFormatException e1 ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene" } );
-                    return new ModelAndView( "index" );
-                }
-            } else {
-                addMessage( request, "object.notfound", new Object[] { "Gene" } );
-                return new ModelAndView( "index" );
-            }
+        	addMessage( request, "object.notfound", new Object[] { "Gene" } );
+        	return new ModelAndView( "index" );        	
         }
 
-        if ( gene == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-            return new ModelAndView( "index" );
+        if ( geneVO == null ) {
+        	addMessage( request, "object.notfound", new Object[] { "Gene"} );
+        	return new ModelAndView( "index" );
         }
 
-        id = gene.getId();
+        Long id = geneVO.getId();
 
         assert id != null;
         ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "geneId", id );
-        mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
-        mav.addObject( "geneOfficialName", gene.getOfficialName() );
-        mav.addObject( "geneNcbiId", gene.getNcbiId() );
-        mav.addObject( "geneTaxonCommonName", gene.getTaxonCommonName() );
-        mav.addObject( "geneTaxonId", gene.getTaxonId() );
+        mav.addObject( "geneOfficialSymbol", geneVO.getOfficialSymbol() );
+        mav.addObject( "geneOfficialName", geneVO.getOfficialName() );
+        mav.addObject( "geneNcbiId", geneVO.getNcbiId() );
+        mav.addObject( "geneTaxonCommonName", geneVO.getTaxonCommonName() );
+        mav.addObject( "geneTaxonId", geneVO.getTaxonId() );
 
         return mav;
     }
