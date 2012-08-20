@@ -143,11 +143,11 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     @Override
     public int compareTo( SimpleTreeValueObject o ) {
 
-        if ( !this.valueUri.equalsIgnoreCase( o.valueUri ) ) {
-            return this.valueUri.compareToIgnoreCase( o.valueUri );
-        }
         if ( !this.value.equalsIgnoreCase( o.value ) ) {
             return this.value.compareToIgnoreCase( o.value );
+        }
+        if ( !this.valueUri.equalsIgnoreCase( o.valueUri ) ) {
+            return this.valueUri.compareToIgnoreCase( o.valueUri );
         }
         return this._parent.compareToIgnoreCase( o._parent );
     }

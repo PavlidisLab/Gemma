@@ -189,26 +189,26 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
 
-		if ( SecurityServiceImpl.isUserLoggedIn() ) {
-			final Set<Long> paIds;
-			
-			if (userName == null) {
-		        if ( SecurityServiceImpl.isUserAdmin() ) {
-		            paIds = null;
-		        } else {
-		            paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
-		            		this.userManager.findAllGroups() );
-		        }
-			} else {
-		        paIds = this.associationService.findPrivateEvidenceId( userName,
-		        		this.userManager.findAllGroups() );
-			}
-		
-			Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService.findPhenotypeAssociationWithIds( paIds, taxonId, limit );
-			evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
-		} else {
-			evidenceValueObjects = new HashSet<EvidenceValueObject>();
-		}
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+            final Set<Long> paIds;
+
+            if ( userName == null ) {
+                if ( SecurityServiceImpl.isUserAdmin() ) {
+                    paIds = null;
+                } else {
+                    paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
+                            this.userManager.findAllGroups() );
+                }
+            } else {
+                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups() );
+            }
+
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                    .findPhenotypeAssociationWithIds( paIds, taxonId, limit );
+            evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
+        } else {
+            evidenceValueObjects = new HashSet<EvidenceValueObject>();
+        }
 
         return evidenceValueObjects;
     }
@@ -986,11 +986,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        // remove all nodes in the trees found in the Ontology but not in the database
-        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-            tc.removeUnusedPhenotypes( tc.getValueUri() );
-        }
-
         if ( withParentTerms ) {
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
 
@@ -1008,6 +1003,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // set the private count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.countPrivateGeneForEachNode( privatePhenotypesGenesAssociations );
+        }
+
+        // remove all nodes in the trees found in the Ontology but not in the database
+        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+            tc.removeUnusedPhenotypes();
         }
 
         return treesPhenotypes;

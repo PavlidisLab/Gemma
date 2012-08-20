@@ -119,30 +119,23 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database */
-    public void removeUnusedPhenotypes( String rootValueUri ) {
+    public void removeUnusedPhenotypes() {
 
-        TreeSet<TreeCharacteristicValueObject> newRealChilds = new TreeSet<TreeCharacteristicValueObject>();
-        findRealChild( newRealChilds, rootValueUri );
-        this.children = newRealChilds;
+        TreeSet<TreeCharacteristicValueObject> newChildren = new TreeSet<TreeCharacteristicValueObject>();
 
-        if ( this.children.isEmpty() ) {
-            this.set_is_leaf( true );
-        }
+        for ( TreeCharacteristicValueObject child : this.children ) {
 
-        for ( TreeCharacteristicValueObject tc : this.children ) {
-            tc.removeUnusedPhenotypes( rootValueUri );
-        }
-    }
+            long count = child.getPrivateGeneCount() + child.getPublicGeneCount();
 
-    private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds, String rootValueUri ) {
-
-        for ( TreeCharacteristicValueObject t : this.children ) {
-            if ( t.isDbPhenotype() ) {
-                t.setRootOfTree( rootValueUri );
-                newRealChilds.add( t );
-            } else {
-                t.findRealChild( newRealChilds, rootValueUri );
+            if ( count != 0 ) {
+                newChildren.add( child );
             }
+        }
+
+        this.children = newChildren;
+
+        for ( TreeCharacteristicValueObject child : this.children ) {
+            child.removeUnusedPhenotypes();
         }
     }
 
