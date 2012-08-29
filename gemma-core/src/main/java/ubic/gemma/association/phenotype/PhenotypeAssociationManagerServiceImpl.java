@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1182,11 +1181,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return searchQuery;
         }
 
-        String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
-        // TODO what to do with character -
-        // newSearchQuery = newSearchQuery.replaceAll( "-", " " );
+        String newSearchQuery = searchQuery;
 
-        return StringUtils.join( newSearchQuery.split( " " ), " AND " );
+        // special case when we have character '-' replace it with a blank
+        if ( searchQuery.length() > 2 ) {
+
+            String part1 = searchQuery.substring( 0, 2 );
+            String part2 = searchQuery.substring( 2, searchQuery.length() ).replaceAll( "-", " " );
+            newSearchQuery = part1 + part2;
+        }
+
+        newSearchQuery = newSearchQuery + "*";
+
+        return newSearchQuery;
     }
 
     /**
