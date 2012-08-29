@@ -135,7 +135,7 @@ public interface DifferentialExpressionResultService {
     public Collection<ExperimentalFactor> getExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
-    public ExpressionAnalysisResultSet loadAnalysisResult( Long analysisResultId );
+    public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId );
 
     public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 

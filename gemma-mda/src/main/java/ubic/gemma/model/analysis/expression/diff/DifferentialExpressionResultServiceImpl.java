@@ -102,8 +102,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public ExpressionAnalysisResultSet loadAnalysisResult( Long analysisResultId ) {
-        return this.getExpressionAnalysisResultSetDao().load( analysisResultId );
+    public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId ) {
+        return this.getExpressionAnalysisResultSetDao().load( analysisResultSetId );
     }
 
     @Override

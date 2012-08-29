@@ -832,7 +832,7 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
+        ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResultSet( resultSetId );
         if ( ar == null ) {
             log.warn( "No diff ex result set with ID=" + resultSetId );
             return null;
