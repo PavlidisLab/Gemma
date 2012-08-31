@@ -150,9 +150,16 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();
         this.geneOfficialName = phenotypeAssociation.getGene().getOfficialName();
 
-        if ( phenotypeAssociation.getScoreType() != null ) {
+        if ( phenotypeAssociation.getScoreType() != null || phenotypeAssociation.getStrength() != null ) {
+
+            String scoreTypeName = "";
+
+            if ( phenotypeAssociation.getScoreType() != null ) {
+                scoreTypeName = phenotypeAssociation.getScoreType().getName();
+            }
+
             this.scoreValueObject = new ScoreValueObject( phenotypeAssociation.getStrength(),
-                    phenotypeAssociation.getScore(), phenotypeAssociation.getScoreType().getName() );
+                    phenotypeAssociation.getScore(), scoreTypeName );
         }
     }
 
