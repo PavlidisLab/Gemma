@@ -17,7 +17,9 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
         align : 'middle'
     },
     doSearchQuery : function() {
+    	if (this.inMenuSearchField.getValue().length> 1){
         location.href = '/Gemma/searcher.html?query=' + this.inMenuSearchField.getValue(); // + '&scope=EG'
+    	}
     },
 
     showAbout : function() {
@@ -59,6 +61,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                     flex : 1,
                     enableKeyEvents : true,
                     emptyText : 'Search',
+                    minLength : 2,
                     listeners : {
                         specialkey : function(formField, e) {
                             // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
