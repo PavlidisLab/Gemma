@@ -23,9 +23,12 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var autoLoadParams = false;
 			if (this.form.restoreState()) {
 				var settings = this.getSearchSettings();
-				autoLoadParams = {
-					params : settings.params
-				};
+				
+				if (settings!=null) {
+					autoLoadParams = {
+							params : settings.params
+					};
+				}
 			}
 			
 			this.resultGrid = new Gemma.SearchGrid({
@@ -94,7 +97,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 
 		getSearchSettings : function() {
 			if (!this.form.getForm().findField('query').isValid()) {
-				return;
+				return null;
 			}
 			var query = Ext.getCmp('search-text-field').getValue();
 			var searchProbes = Ext.getCmp('search-prbs-chkbx').getValue();
@@ -179,6 +182,9 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 		 */
 		search : search = function(t, event) {
 			var settings = this.getSearchSettings();
+			
+			if (!settings) return;
+			
 			var params = settings.params;
 			var query = settings.query;
 			var scopes = settings.scopes;
