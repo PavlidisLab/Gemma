@@ -53,6 +53,8 @@ Ext.onReady(function() {
 	this.diffVisualizer = null;
 
 	searchPanel.render("analysis-results-search-form");
+	
+	searchPanel.checkUrlParams();
 			
 	// panel to hold all results of searches 
 	this.resultsPanel = new Ext.TabPanel({
@@ -73,6 +75,8 @@ Ext.onReady(function() {
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
 	//Ext.EventManager.onWindowResize(resultsPanel.doLayout, resultsPanel); 
 
+	
+	
 	// get ready to show results
 	searchPanel.on("beforesearch",function(panel){
 		

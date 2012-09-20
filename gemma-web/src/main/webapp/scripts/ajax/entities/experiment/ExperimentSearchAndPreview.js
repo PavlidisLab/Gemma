@@ -126,6 +126,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					hideTrigger: true
 					
 				});
+		
 		this.experimentCombo.on('select', function(combo, record, index) {
 
 					// if the EE has changed taxon, reset the experiment combo

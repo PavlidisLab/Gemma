@@ -173,6 +173,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				});
 		loadMask.show();
 		var text = e.geneNames;
+		
 		GenePickerController.searchMultipleGenesGetMap(text, taxonId, {
 
 			callback : function(queryToGenes) {
@@ -278,6 +279,136 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				Ext.Msg.alert('There was an error', e);
 			}
 		});
+		this.fireEvent('select');
+	},
+	
+	getGenesFromUrl : function() {
+		var urlparams = Ext.urlDecode(location.search.substring(1));
+		
+		
+		if (isNaN(urlparams.taxon)) {
+			Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title, Gemma.HelpText.CommonErrors.MissingInput.taxon);
+			return;
+		}
+				
+		this.geneCombo.disable().hide();
+		this.helpBtn.hide();
+		this.symbolListButton.hide();
+		this.fireEvent('madeFirstSelection');
+		this.doLayout();
+		
+		
+		var loadMask = new Ext.LoadMask(this.getEl(), {
+			msg : Gemma.StatusText.Loading.genes
+		});
+		loadMask.show();
+								
+		
+		
+		var splitTextArray = urlparams.geneList.split(",");
+		var geneList="";
+		var j;
+		for (j = 0; j < splitTextArray.length; j++) {
+			
+			splitTextArray[j] = splitTextArray[j].replace(/^\s+|\s+$/g,'');
+			
+			if (splitTextArray[j].length < 2) continue;
+
+			geneList = geneList + splitTextArray[j]+"\n";
+		}
+		
+		
+		
+				
+		GenePickerController.searchMultipleGenesGetMap(geneList, urlparams.taxon, {
+
+			callback : function(queryToGenes) {
+				var i;
+				var geneData = [];
+				var warned = false;
+				this.maskGenePreview();
+
+				var geneIds = [];
+				
+				var queriesWithNoResults = [];
+				var query;
+				var allGenes = [];
+
+				// for each query
+				for (query in queryToGenes) {
+					var genes = queryToGenes[query];
+					// for each result of that query
+
+					// if a query matched more than one result, store for
+					// notifying user
+					if (genes.length > 1) {
+						queriesWithMoreThanOneResult.push(query);
+					}
+
+					// if a query matched no results, store for notifying user
+					if (genes.length === 0) {
+						queriesWithNoResults.push(query);
+					}
+
+					for (i = 0; i < genes.length; i++) {
+						// store all ids
+						geneIds.push(genes[i].id);
+						allGenes.push(genes[i]);
+					}
+				}
+
+				this.searchForm.geneIds = geneIds;
+				this.geneIds = geneIds;
+				
+				this.makeSessionBoundGeneSet(geneIds, urlparams.taxon, 'From URL', 'Group made from gene symbols in URL.');
+
+				// if some genes weren't found or some gene matches were
+				// inexact,
+				// prepare a msg for the user
+
+				var msgMany = "";
+				var msgNone = "";
+				
+				if (queriesWithNoResults.length > 0) {
+					msgNone = queriesWithNoResults.length +
+							((queriesWithNoResults.length === 1) ? " query" : " queries") +
+							" did not match any genes in Gemma:<br><br>";
+					// for each query
+					query = '';
+					for (i = 0; i < queriesWithNoResults.length; i++) {
+						query = queriesWithNoResults[i];
+						msgNone += " - " + query + "<br>";
+					}
+				}
+
+				// reset the gene preview panel content
+				this.resetGenePreview();
+
+
+				this.preview.setTaxonId(urlparams.taxon);
+				this.preview.loadGenePreviewFromGenes(allGenes);
+				
+				
+				if (queriesWithNoResults.length > 0) {
+
+					this.preview.insertMessage(String.format(Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone));
+				}
+				
+				this.preview.show();
+
+				loadMask.hide();
+				
+				this.fireEvent('geneListUrlSelectionComplete');
+
+			}.createDelegate(this),
+
+			errorHandler : function(e) {
+				//this.getEl().unmask();
+				Ext.Msg.alert('There was an error', e);
+			}
+		});
+		
+		
 		this.fireEvent('select');
 	},
 	/**
@@ -438,6 +569,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			}, this.preview]
 		});
 				
+		this.addEvents('geneListUrlSelectionComplete');
+		
 		Gemma.GeneSearchAndPreview.superclass.initComponent.call(this);
 
 	}

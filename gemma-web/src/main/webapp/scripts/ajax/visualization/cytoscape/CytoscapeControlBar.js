@@ -81,6 +81,14 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     this.display.reRunSearchWithSelectedNodesHandler();
                 },
                 scope: this
+            }, {
+                itemId: 'applyGeneListOverlayButton',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.applyGeneListOverlayText,
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.applyGeneListOverlayTT,                
+                handler: function () {
+                    //TODO launch some sort of widget
+                },
+                scope: this
             }]
         });
 
@@ -257,6 +265,9 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
     searchForText : function(button, keyev) {
 		this.display.selectSearchMatchesFromControlBar(this.searchInCytoscapeBox.getValue());
 		
+	},
+	applyGeneListOverlay : function(button, keyev) {
+		this.display.applyGeneListOverlay(this.applyGeneListOverlayBox.getValue());		
 	}
 
 });

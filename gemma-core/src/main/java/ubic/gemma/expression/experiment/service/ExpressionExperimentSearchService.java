@@ -42,5 +42,7 @@ public interface ExpressionExperimentSearchService {
      * @return Collection of SearchResultDisplayObjects
      */
     public abstract List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId );
+    
+    public abstract List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId );
 
 }

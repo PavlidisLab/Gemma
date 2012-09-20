@@ -48,7 +48,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         }, {
             name: 'nodeDegreeBin',
             type: 'string'
-        }, {
+        },{
             name: 'officialName',
             type: 'string'
         }, {
@@ -212,7 +212,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
                         id: knowngenes[i].queryGene.officialSymbol,
                         label: knowngenes[i].queryGene.officialSymbol,
                         geneid: knowngenes[i].queryGene.id,
-                        queryflag: isQueryGene,
+                        queryflag: isQueryGene,                        
                         officialName: Gemma.CytoscapePanelUtil.ttSubstring(knowngenes[i].queryGene.officialName),
                         ncbiId: knowngenes[i].queryGene.ncbiId,
                         nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(knowngenes[i].queryGeneNodeDegree),
@@ -550,6 +550,25 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     selectSearchMatchesFromControlBar: function(text){
     	this.fireEvent('searchTextBoxMatch', text);
     	this.selectSearchMatches(text);
+    },
+    
+    applyGeneListOverlay:function(text){
+    	var nodeIdsToOverlay = this.controller.getMatchingGeneIdsByText(text);
+    	
+    	var bypass = { nodes: { }, edges: { } };
+    	
+    	var nodes = this.visualization.nodes();
+    	
+    	for (var i=0; i< nodes.length;i++){
+    		
+    		if (nodeIdsToOverlay.indexOf(nodes[i].data.id)!== -1){
+    			bypass["nodes"][nodes[i].data.id]= Gemma.CytoscapeSettings.secondGeneListBypassOverlay;
+    		}
+    		
+    	}
+    	
+    	this.visualization.visualStyleBypass(bypass);
+    	
     },
     
     selectSearchMatches : function(text){   	

@@ -148,6 +148,34 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         return displayResults;
     }
+    
+    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
+        
+        List<SearchResultDisplayObject> setResults = new LinkedList<SearchResultDisplayObject>();
+        
+        Taxon taxon = taxonService.load(taxonId);
+        
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName("All "+taxon.getCommonName());
+        SearchResultDisplayObject newSRDO = null;
+        for ( ExpressionExperimentSet set : sets ) {
+            expressionExperimentSetService.thaw( set );
+            if ( set.getTaxon().getId().equals( taxonId ) ) {
+                DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService
+                        .getValueObject( set.getId() );
+                newSRDO = new SearchResultDisplayObject( eevo );
+                newSRDO.setUserOwned( securityService.isPrivate( set ) );
+                ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() ).setPublik( securityService
+                        .isPublic( set ) );
+                setResults.add( newSRDO );
+            }
+        }
+
+        
+
+        Collections.sort( setResults );        
+
+        return setResults;
+    }
 
     /*
      * (non-Javadoc)

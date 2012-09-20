@@ -288,6 +288,8 @@ Gemma.HelpText.WidgetDefaults = {
 		extendNodeTT: 'Extend the graph by finding new results for selected genes',
 		searchWithSelectedText: 'Search with Selected Nodes',
 		searchWithSelectedTT: 'Start a new search with selected nodes',
+		applyGeneListOverlayText: 'Apply Gene List Overlay',
+		applyGeneListOverlayTT: 'Apply a visual overlay to graph gene nodes contained in a gene list',
 		stringencySpinnerTT: 'Add/remove genes with more/less dataset support that confirms coexpression',
 		widgetHelpTT: 'Click here for documentation on how to use this visualizer.',
 		saveAsImageTT: 'Open a window with this graph as a PNG image',

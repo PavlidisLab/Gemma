@@ -303,6 +303,7 @@
 			<dwr:include method="find" />
 			<dwr:include method="searchExpressionExperiments" />
 			<dwr:include method="searchExperimentsAndExperimentGroups" />
+			<dwr:include method="getAllTaxonExperimentGroup" />
 			<dwr:include method="updateReport" />
 			<dwr:include method="updateAllReports" />
 			<dwr:include method="updateBasics" />

@@ -343,7 +343,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					autoDestroy : true
 				});
 		this.experimentChooserIndex = -1;
-		this.addExperimentChooser();
+		this.initialExperimentChooser = this.addExperimentChooser();
 
 		// gene chooser panels
 		this.geneChoosers = new Ext.Panel({
@@ -356,7 +356,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					autoDestroy : true
 				});
 		this.geneChooserIndex = -1;
-		this.addGeneChooser();
+		
+			
+		this.initialGeneChooser = this.addGeneChooser();
+		
 
 		/**
 		 * ***** BUTTONS ******
@@ -487,6 +490,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							single: true
 						});
 					}
+        
 				},
 				items: [{
 					layout: 'table', // needs to be table so panel stretches with content growth
@@ -521,7 +525,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip:'Run the search',
 							scale: 'medium',
 							listeners: {
-								click: function(){
+								click: function(){									
 									this.runningExampleQuery = false;
 									this.runSearch();
 								}.createDelegate(this, [], false)
@@ -542,6 +546,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 
 		Gemma.AnalysisResultsSearchForm.superclass.initComponent.call(this);
+		
+		
 		
 		this.on('queryUpdateFromCoexpressionViz', function (genesToPreview, genesToPreviewIds, taxonId, taxonName) {			
 			
@@ -575,8 +581,54 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		this.addEvents('beforesearch', 'aftersearch', 'showDiffExResults', 'showCoexResults');
 
+		
+		this.relayEvents(this.initialExperimentChooser.experimentCombo, ['experimentGroupUrlSelectionComplete']);
+		this.relayEvents(this.initialGeneChooser, ['geneListUrlSelectionComplete']);
+		
+		this.on('experimentGroupUrlSelectionComplete', function(){
+			
+			this.experimentGroupUrlSelectionComplete=true;
+			this.initiateSearch();
+			
+		}, this);
+		
+		this.on('geneListUrlSelectionComplete', function(){
+			
+			this.geneListUrlSelectionComplete=true;
+			this.initiateSearch();
+			
+		}, this);
+		
 		this.doLayout();
+		
+		
+		
+			
 
+	},
+	
+	checkUrlParams: function(){
+		var urlparams = Ext.urlDecode(location.search.substring(1));
+		
+		//if these parameters are in the URL then do a coex search
+		if (urlparams.geneList && urlparams.taxon){
+			
+			this.coexToggle.toggle(true);
+			this.diffExToggle.toggle(false);
+			this.initialGeneChooser.getGenesFromUrl();
+			this.initialExperimentChooser.experimentCombo.getAllTaxonGroup();
+			
+			//TODO initiate Search once above has finished maybe have both those fire events and after both have returned initiate the search
+			
+		}
+		
+	},
+	
+	initiateSearch: function(){
+		if (this.experimentGroupUrlSelectionComplete&&this.geneListUrlSelectionComplete){
+			this.runSearch();
+		}
+		
 	},
 	
 	reset: function(){
@@ -723,9 +775,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	addExperimentChooser : function() {
 		this.experimentChooserIndex++;
-
-		this.experimentChoosers.add({
-			xtype: 'experimentSearchAndPreview',
+		
+		var chooser = new Gemma.ExperimentSearchAndPreview({
 			searchForm: this,
 			taxonId: this.taxonId,
 			style: 'padding-top:10px;',
@@ -742,7 +793,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			}
 		});
 
+		this.experimentChoosers.add(chooser);
+
 		this.experimentChoosers.doLayout();
+		
+		return chooser;
 	},
 
 	removeExperimentChooser : function(panelId) {

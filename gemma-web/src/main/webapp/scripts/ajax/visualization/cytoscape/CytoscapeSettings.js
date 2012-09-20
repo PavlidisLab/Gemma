@@ -145,7 +145,7 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
         },
 
         color: Gemma.CytoscapeSettings.nodeColor,
-
+        
         selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
 
         selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
@@ -329,6 +329,15 @@ Gemma.CytoscapeSettings.defaultForceDirectedLayout = {
 	
 	name: "ForceDirected"    	    	
 	
+};
+
+Gemma.CytoscapeSettings.secondGeneListBypassOverlay = {color:"#4D4DFF",
+		labelGlowStrength:240,
+		labelGlowColor:"#4D4DFF",
+		labelFontColor:"#0000FF",
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
 };
 
 

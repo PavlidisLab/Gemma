@@ -69,18 +69,17 @@ Gemma.CoexValueObjectUtil = {
 	trimKnownGeneResultsForReducedGraph : function(knowngenes,
 			currentQueryGeneIds, currentStringency, stringencyTrimLimit,
 			resultsSizeLimit) {
-		
-		
+
 		var i;
 
 		var displayTrimmedStringency;
-		
+
 		var returningGeneResults = knowngenes;
 		var trimmedGeneResults = [];
 		var h;
 
 		for (h = currentStringency; h <= stringencyTrimLimit; h++) {
-			
+
 			var graphNodeIds = [];
 
 			var kglength = knowngenes.length;
@@ -92,7 +91,8 @@ Gemma.CoexValueObjectUtil = {
 				) {
 					trimmedGeneResults.push(knowngenes[i]);
 
-					// need to populate graphNodeIds appropriately in order to correctly add 'my genes only' edges					
+					// need to populate graphNodeIds appropriately in order to
+					// correctly add 'my genes only' edges
 					if (currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1
 							&& currentQueryGeneIds
 									.indexOf(knowngenes[i].queryGene.id) !== -1) {
@@ -122,7 +122,8 @@ Gemma.CoexValueObjectUtil = {
 			for (i = 0; i < kglength; i++) {
 
 				if (currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) === -1
-						&& currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) === -1
+						&& currentQueryGeneIds
+								.indexOf(knowngenes[i].queryGene.id) === -1
 						&& (knowngenes[i].posSupp > h || knowngenes[i].negSupp > h)
 						&& graphNodeIds.indexOf(knowngenes[i].foundGene.id) !== -1
 						&& graphNodeIds.indexOf(knowngenes[i].queryGene.id) !== -1) {
@@ -133,21 +134,21 @@ Gemma.CoexValueObjectUtil = {
 
 			} // end for (<kglength)
 
-			if (trimmedGeneResults.length < returningGeneResults.length){
-				displayTrimmedStringency = h; 
+			if (trimmedGeneResults.length < returningGeneResults.length) {
+				displayTrimmedStringency = h;
 			}
-			
+
 			returningGeneResults = trimmedGeneResults;
-			
+
 			if (trimmedGeneResults.length < resultsSizeLimit) {
-				break;				
+				break;
 			}
-			
+
 			trimmedGeneResults = [];
 
 		}
-		
-		var returnObject={};
+
+		var returnObject = {};
 		returnObject.geneResults = returningGeneResults;
 		returnObject.trimStringency = displayTrimmedStringency;
 
@@ -290,68 +291,70 @@ Gemma.CoexValueObjectUtil = {
 
 	},
 
-	//used by cytoscape panel to get gene node ids for highlighting
+	// used by cytoscape panel to get gene node ids for highlighting
 	filterGeneResultsByTextForNodeIds : function(text, knowngenes) {
 
-		var value = new RegExp(Ext.escapeRe(text), 'i');
 		var genesMatchingSearch = [];
 
-		var kglength = knowngenes.length;
-		var i;
-		for (i = 0; i < kglength; i++) {
+		var splitTextArray = text.split(",");
 
-			var foundGene = knowngenes[i].foundGene;
+		var j;
+		for (j = 0; j < splitTextArray.length; j++) {
+			
+			splitTextArray[j] = splitTextArray[j].replace(/^\s+|\s+$/g,'');
+			
+			if (splitTextArray[j].length < 2) continue;
 
-			var queryGene = knowngenes[i].queryGene;
+			var value = new RegExp(Ext.escapeRe(splitTextArray[j]), 'i');
 
-			if (genesMatchingSearch.indexOf(foundGene.officialSymbol) !== 1) {
+			var kglength = knowngenes.length;
+			var i;
+			for (i = 0; i < kglength; i++) {
 
-				if (value.test(foundGene.officialSymbol)) {
-					genesMatchingSearch.push(foundGene.officialSymbol);
+				var foundGene = knowngenes[i].foundGene;
+
+				var queryGene = knowngenes[i].queryGene;
+
+				if (genesMatchingSearch.indexOf(foundGene.officialSymbol) !== 1) {
+
+					if (value.test(foundGene.officialSymbol)
+							|| value.test(foundGene.officialName)) {
+						genesMatchingSearch.push(foundGene.officialSymbol);
+
+					}
+
 				}
 
-			}
+				if (genesMatchingSearch.indexOf(queryGene.officialSymbol) !== 1) {
 
-			if (genesMatchingSearch.indexOf(queryGene.officialSymbol) !== 1) {
+					if (value.test(queryGene.officialSymbol)
+							|| value.test(queryGene.officialName)) {
+						genesMatchingSearch.push(queryGene.officialSymbol);
+					}
 
-				if (value.test(queryGene.officialSymbol)) {
-					genesMatchingSearch.push(queryGene.officialSymbol);
 				}
 
-			}
+			} // end for (<kglength)
 
-			if (genesMatchingSearch.indexOf(foundGene.officialSymbol) !== 1) {
-
-				if (value.test(foundGene.officialName)) {
-					genesMatchingSearch.push(foundGene.officialSymbol);
-				}
-
-			}
-
-			if (genesMatchingSearch.indexOf(queryGene.officialSymbol) !== 1) {
-
-				if (value.test(queryGene.officialName)) {
-					genesMatchingSearch.push(queryGene.officialSymbol);
-				}
-
-			}
-
-		} // end for (<kglength)
+		}
 
 		return genesMatchingSearch;
 	},
-	
-	//used by coexpressionGrid to grab results for exporting
+
+	// used by coexpressionGrid to grab results for exporting
 	filterGeneResultsByText : function(text, knowngenes) {
 
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		var genesMatchingSearch = [];
-		
+
 		var kglength = knowngenes.length;
 		var i;
 		for (i = 0; i < kglength; i++) {
-			
-			if (value.test(knowngenes[i].foundGene.officialSymbol) || value.test(knowngenes[i].queryGene.officialSymbol) || value.test(knowngenes[i].foundGene.officialName) || value.test(knowngenes[i].queryGene.officialName)) {
+
+			if (value.test(knowngenes[i].foundGene.officialSymbol)
+					|| value.test(knowngenes[i].queryGene.officialSymbol)
+					|| value.test(knowngenes[i].foundGene.officialName)
+					|| value.test(knowngenes[i].queryGene.officialName)) {
 				genesMatchingSearch.push(knowngenes[i]);
 			}
 

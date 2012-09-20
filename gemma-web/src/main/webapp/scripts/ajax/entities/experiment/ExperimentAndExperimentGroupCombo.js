@@ -151,6 +151,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		var sessionSetTpl = dbSetTpl;
 		var defaultTpl = dbSetTpl;
+		
+		this.urlInitiatedQuery=false;
 		Ext.apply(this, {
 			// format fields to show in combo, only show size in brackets if the entry is a group
 			tpl: new Ext.XTemplate('<tpl for=".">' +
@@ -201,7 +203,14 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			// if the query for which the store is returning is not the same as the last query made with the combo
 			// clear these results and add the previous query's results
 			
-			if(this.getValue() !== query){
+			if (this.urlInitiatedQuery){
+				
+				this.fireEvent("select", this, records[0]);
+				this.urlInitiatedQuery=false;
+				this.fireEvent("experimentGroupUrlSelectionComplete");
+				
+			}			
+			else if(this.getValue() !== query ){
 				
 				// replace returned records with those of last matching query
 				store.removeAll();
@@ -230,6 +239,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				if(this.store.getCount() === 0 && (this.prevQuery === '' || this.prevQuery === null) ){
 					this.innerList.update(this.listEmptyTextBlankQuery ?''+this.listEmptyTextBlankQuery+'' : '');
 				}
+				
+				
 			}
 			
 		}, this);
@@ -249,13 +260,15 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				this.lastQuery = null; // needed for query queue fix
 			}
 		}, this);
+		
+		this.addEvents("experimentGroupUrlSelectionComplete");
 	},
 
 	reset : function() {
 		Gemma.ExperimentAndExperimentGroupCombo.superclass.reset.call(this);
 		delete this.selectedExpressionExperimentGroup;
 		this.lastQuery = null;
-
+ 
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
@@ -281,5 +294,20 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 	setTaxonId: function(id){
 		this.taxonId = id;	
+	},
+	
+	getAllTaxonGroup : function(taxon) {
+		
+		var urlparams = Ext.urlDecode(location.search.substring(1));
+		
+		this.urlInitiatedQuery = true;
+		if (isNaN(urlparams.taxon)) {
+			Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title, Gemma.HelpText.CommonErrors.MissingInput.taxon);
+			return;
+		}
+		ExpressionExperimentController.getAllTaxonExperimentGroup(urlparams.taxon, function(records){
+			this.store.loadData(records);
+		}.createDelegate(this));
+		
 	}
 });
