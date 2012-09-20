@@ -1170,7 +1170,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
         // create SearchResultDisplayObjects
-        if ( sessionResult != null && sessionResult.size() > 0 ) {
+         if ( sessionResult != null && sessionResult.size() > 0 ) {
             for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
                 SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
                 srdo.setUserOwned( true );
@@ -1185,6 +1185,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
 
         return displayResults;
+    }
+    
+    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {        
+
+        return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId ) ;
     }
 
     /**
