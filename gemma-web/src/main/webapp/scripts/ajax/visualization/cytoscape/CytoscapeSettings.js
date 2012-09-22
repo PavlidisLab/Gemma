@@ -36,7 +36,10 @@ Gemma.CytoscapeSettings = {
 
     nodeColor: "#969696",
     nodeColorFade: "#FFF7FB",
+    defaultNodeBorderWidth:0,
+    queryNodeBorderWidth: 5,
     nodeSize: 25,
+    queryNodeSize: 30,
 
     nodeQueryColorTrue: "#E41A1C",
     nodeQueryColorFalse: "#6BAED6",
@@ -68,6 +71,7 @@ Gemma.CytoscapeSettings = {
     	dark:0.2
     },
     
+    //note that high node degree means low specificity(see nodeDegreeValue above)
     nodeDegreeColor: {
     	lightest:{
     		name: "Lowest",
@@ -90,6 +94,25 @@ Gemma.CytoscapeSettings = {
     		value: "#000000"
     	},    		
     	
+    },
+    
+    nodeDegreeColorSecondGeneList: {
+    	lightest:{    		
+    		value: "#B2B2FF"
+    	},
+    	light:{    		
+    		value: "#8080FF"
+    	},
+    	moderate:{    		
+    		value: "#4D4DFF"
+    	},
+    	dark:{    		
+    		value: "#0000FF"
+    	},
+    	darkest:{    		
+    		value: "#000099"
+    	},    		
+    	
     }
     
 
@@ -108,17 +131,28 @@ Gemma.CytoscapeSettings.visualStyleRegular= {
                 attrName: "queryflag",
                 entries: [{
                     attrValue: true,
-                    value: 3
+                    value: Gemma.CytoscapeSettings.queryNodeBorderWidth
                 }, {
                     attrValue: false,
-                    value: 0
+                    value: Gemma.CytoscapeSettings.defaultNodeBorderWidth
                 }]
             }
 
         },
 
         size: {
-            defaultValue: Gemma.CytoscapeSettings.nodeSize
+        	
+        	discreteMapper: {
+                attrName: "queryflag",
+                entries: [{
+                    attrValue: true,
+                    value: Gemma.CytoscapeSettings.queryNodeSize
+                }, {
+                    attrValue: false,
+                    value: Gemma.CytoscapeSettings.nodeSize
+                }]
+            }
+            
 
         },
 
@@ -197,17 +231,26 @@ Gemma.CytoscapeSettings.visualStyleNodeDegree= {
                 attrName: "queryflag",
                 entries: [{
                     attrValue: true,
-                    value: 3
+                    value: Gemma.CytoscapeSettings.queryNodeBorderWidth
                 }, {
                     attrValue: false,
-                    value: 0
+                    value: Gemma.CytoscapeSettings.defaultNodeBorderWidth
                 }]
             }
 
         },
 
         size: {
-            defaultValue: Gemma.CytoscapeSettings.nodeSize
+        	discreteMapper: {
+                attrName: "queryflag",
+                entries: [{
+                    attrValue: true,
+                    value: Gemma.CytoscapeSettings.queryNodeSize
+                }, {
+                    attrValue: false,
+                    value: Gemma.CytoscapeSettings.nodeSize
+                }]
+            }
 
         },
 
@@ -332,13 +375,59 @@ Gemma.CytoscapeSettings.defaultForceDirectedLayout = {
 };
 
 Gemma.CytoscapeSettings.secondGeneListBypassOverlay = {color:"#4D4DFF",
-		labelGlowStrength:240,
-		labelGlowColor:"#4D4DFF",
+		labelGlowStrength:240,		
 		labelFontColor:"#0000FF",
 		labelFontStyle:"italic",
 		labelFontWeight:"bold"
 			
 };
+
+
+//cytoscapeweb doesn't allow mappers in a bypass object so we have to do it ourselves, hence the similar objects below
+Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLightest = {
+		color: Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.lightest.value,
+		labelGlowStrength:240,		
+		labelFontColor:Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.lightest.value,
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
+};
+
+Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLight = {
+		color: Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.light.value,
+		labelGlowStrength:240,		
+		labelFontColor:Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.light.value,
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
+};
+
+Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeModerate = {
+		color: Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.moderate.value,
+		labelGlowStrength:240,		
+		labelFontColor:Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.moderate.value,
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
+};
+
+Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDark = {
+		color: Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.dark.value,
+		labelGlowStrength:240,		
+		labelFontColor:Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.dark.value,
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
+};
+Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDarkest = {
+		color: Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.darkest.value,
+		labelGlowStrength:240,		
+		labelFontColor:Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.darkest.value,
+		labelFontStyle:"italic",
+		labelFontWeight:"bold"
+			
+};
+//cytoscapeweb doesn't allow mappers in a bypass object so we have to do it ourselves, erstwhile the similar objects above
 
 
 

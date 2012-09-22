@@ -485,6 +485,10 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
                 this.visualization.visualStyle(this.visualStyleNodeDegree);
                 this.nodeDegreeVisualStyleFlag=true;
             }
+            
+            if (this.controlBar.geneSetOverlayPicker){
+            	this.applyGeneListOverlay(this.controlBar.geneSetOverlayPicker.getSelectedIds());
+            }
         }
     },
 
@@ -552,21 +556,58 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     	this.selectSearchMatches(text);
     },
     
-    applyGeneListOverlay:function(text){
-    	var nodeIdsToOverlay = this.controller.getMatchingGeneIdsByText(text);
-    	
+    applyGeneListOverlay:function(geneIdsToOverlay){
+    	    	
     	var bypass = { nodes: { }, edges: { } };
     	
     	var nodes = this.visualization.nodes();
     	
+    	var nodesMatched=false;
+    	
     	for (var i=0; i< nodes.length;i++){
     		
-    		if (nodeIdsToOverlay.indexOf(nodes[i].data.id)!== -1){
-    			bypass["nodes"][nodes[i].data.id]= Gemma.CytoscapeSettings.secondGeneListBypassOverlay;
+    		if (geneIdsToOverlay.indexOf(nodes[i].data.geneid)!== -1){
+    			
+    			if (!this.nodeDegreeVisualStyleFlag) {
+    				bypass["nodes"][nodes[i].data.id]= Gemma.CytoscapeSettings.secondGeneListBypassOverlay;
+    			}else{
+    				
+    				var bypassToUse;
+    				//you cannot set mappers in visualStyleBypasses to my great dismay, looks like we will have to do some hackery
+    				switch(nodes[i].data.nodeDegreeBin){
+    				case Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name:
+    					bypassToUse=Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLightest;
+    					break;
+    				case Gemma.CytoscapeSettings.nodeDegreeColor.light.name:
+    					bypassToUse=Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLight;
+    					break;
+    				case Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name:
+    					bypassToUse=Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeModerate;
+    					break;
+    				case Gemma.CytoscapeSettings.nodeDegreeColor.dark.name:
+    					bypassToUse=Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDark;
+    					break;
+    				case Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name:
+    					bypassToUse=Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDarkest;
+    					break;
+    				
+    				}
+    				bypass["nodes"][nodes[i].data.id]= bypassToUse;
+    			}
+    			nodesMatched=true;
     		}
     		
     	}
     	
+    	this.visualization.visualStyleBypass(bypass);
+    	
+    	return nodesMatched;
+    	
+    },
+    
+    clearGeneListOverlay: function(){
+    	
+    	var bypass = { nodes: { }, edges: { } };
     	this.visualization.visualStyleBypass(bypass);
     	
     },

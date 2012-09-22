@@ -39,6 +39,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.loadMask.show();
 		}
 	},
+	
+	showTaxonCombo: true,
 
 	/**
 	 * called when a record is selected from geneAndGeneGroupCombo
@@ -454,7 +456,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	createGeneImportPanel : function(){
 		return new Gemma.GeneImportPanel({
 			height:300,
-			showTaxonCombo: true,
+			showTaxonCombo: this.showTaxonCombo,
 			listeners: {
 				'commit': {
 					fn: this.getGenesFromList.createDelegate(this),
@@ -462,7 +464,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				},
 				'show': {
 					fn: function(){
-						if (this.searchForm.getTaxonId() !== null && this.searchForm.getTaxonId() && typeof this.searchForm.getTaxonId() !== 'undefined') {
+						if (this.showTaxonCombo && this.searchForm.getTaxonId() !== null && this.searchForm.getTaxonId() && typeof this.searchForm.getTaxonId() !== 'undefined') {
 							this.symbolList._taxonCombo.setTaxonById(this.searchForm.getTaxonId());
 							this.symbolList._taxonCombo.disable();
 						}

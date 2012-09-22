@@ -28,7 +28,11 @@ Ext.Panel, {
     coexpressionSearchData: {},
 
     initComponent: function () {
-        var controlBar = new Gemma.CytoscapeControlBar();
+    	
+        var controlBar = new Gemma.CytoscapeControlBar({
+        	taxonId: this.coexpressionSearchData.coexGridCoexCommand.taxonId
+        	
+        });
 
         this.display = new Gemma.CytoscapeDisplay({
             id: 'cytoscapeweb',

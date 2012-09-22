@@ -26,16 +26,14 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
         this.visualOptionsMenu = new Ext.menu.Menu({
             items: [{
                 itemId: 'refreshLayoutButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutTT,
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,                
                 handler: function () {
                     this.display.refreshLayout();
                 },
                 scope: this
             }, {
                 itemId: 'compressGraphButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphTT,
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphText,                
                 handler: function () {
 
                     this.isLayoutCompressed = this.isLayoutCompressed ? false : true;
@@ -49,8 +47,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 scope: this
             }, {
                 itemId: 'nodeLabelsButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeLabelsTT,
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText,                
                 handler: function () {
 
                     this.isNodeLabelsVisible = this.isNodeLabelsVisible ? false : true;
@@ -65,8 +62,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
         this.actionsMenu = new Ext.menu.Menu({
             items: [{
                 itemId: 'extendSelectedNodesButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeTT,
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeText,                
                 disabled: true,
                 handler: function () {
                     this.display.extendSelectedNodesHandler();
@@ -74,8 +70,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 scope: this
             }, {
                 itemId: 'searchWithSelectedNodesButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedTT,
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedText,                
                 disabled: true,
                 handler: function () {
                     this.display.reRunSearchWithSelectedNodesHandler();
@@ -83,10 +78,27 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 scope: this
             }, {
                 itemId: 'applyGeneListOverlayButton',
-                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.applyGeneListOverlayText,
-                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.applyGeneListOverlayTT,                
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.applyGeneListOverlayText,                                
+                handler: function () {   
+                	if (!this.geneSetOverlayPicker){
+                		this.geneSetOverlayPicker = new Gemma.GeneSetOverlayPicker({
+                			display: this.display,
+                			taxonId: this.taxonId
+                		});
+                		this.relayEvents(this.geneSetOverlayPicker, ['nodesMatched']);
+                		
+                		
+                	}
+                	this.geneSetOverlayPicker.show();
+                },
+                scope: this
+            }, {
+                itemId: 'clearGeneListOverlayButton',                
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.clearGeneListOverlayText,
+                hidden: true,
                 handler: function () {
-                    //TODO launch some sort of widget
+                	this.display.clearGeneListOverlay();
+                	this.actionsMenu.getComponent('clearGeneListOverlayButton').hide();
                 },
                 scope: this
             }]
@@ -99,7 +111,6 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
         });
 
         Ext.apply(this, {
-
 
             items: [{
                 xtype: 'tbtext',
@@ -180,35 +191,35 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 menu: new Ext.menu.Menu({
                     items: [{
                         text: 'Save as PNG',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsImageTT,
+                        
                         handler: function () {
                             this.display.exportPNG();
                         },
                         scope: this
                     }, {
                         text: 'Save as GraphML',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsGraphMLTT,
+                        
                         handler: function () {
                             this.display.exportGraphML();
                         },
                         scope: this
                     }, {
                         text: 'Save as XGMML',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsXGMMLTT,
+                        
                         handler: function () {
                             this.display.exportXGMML();
                         },
                         scope: this
                     }, {
                         text: 'Save as SIF',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsSIFTT,
+                        
                         handler: function () {
                             this.display.exportSIF();
                         },
                         scope: this
                     }, {
                         text: 'Save as SVG',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsSVGTT,
+                        
                         handler: function () {
                             this.display.exportSVG();
                         },
@@ -239,9 +250,18 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
             }]
 
         });
+        
+        
 
 
         Gemma.CytoscapeControlBar.superclass.initComponent.apply(this, arguments);
+       
+        
+        this.on('nodesMatched', function () {
+        	
+        	this.actionsMenu.getComponent('clearGeneListOverlayButton').show();
+        	
+        }, this);
 
         this.getComponent('stringencySpinner').addListener('spin', function (field, e) {
             this.display.stringencyChange(this.getComponent('stringencySpinner').getValue());
@@ -265,9 +285,6 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
     searchForText : function(button, keyev) {
 		this.display.selectSearchMatchesFromControlBar(this.searchInCytoscapeBox.getValue());
 		
-	},
-	applyGeneListOverlay : function(button, keyev) {
-		this.display.applyGeneListOverlay(this.applyGeneListOverlayBox.getValue());		
 	}
 
 });
