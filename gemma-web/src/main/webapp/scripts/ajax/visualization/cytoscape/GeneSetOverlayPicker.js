@@ -9,6 +9,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	height : 300,
 	closeAction : 'hide',
 	easing : 3,
+	lastOverlayedIds: [],
 
 	initComponent : function() {
 
@@ -65,6 +66,8 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	applyOverlay : function() {
 
 		var ids = this.getSelectedIds();
+		
+		this.lastOverlayedIds = ids;
 
 		var nodesMatched = this.display.applyGeneListOverlay(ids);
 		

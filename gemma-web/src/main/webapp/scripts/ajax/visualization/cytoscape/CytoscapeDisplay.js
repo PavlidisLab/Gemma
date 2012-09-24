@@ -486,8 +486,9 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
                 this.nodeDegreeVisualStyleFlag=true;
             }
             
-            if (this.controlBar.geneSetOverlayPicker){
-            	this.applyGeneListOverlay(this.controlBar.geneSetOverlayPicker.getSelectedIds());
+            if (this.controlBar.geneSetOverlayPicker){         	
+            	
+            	this.applyGeneListOverlay(this.controlBar.geneSetOverlayPicker.lastOverlayedIds);
             }
         }
     },
@@ -609,6 +610,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     	
     	var bypass = { nodes: { }, edges: { } };
     	this.visualization.visualStyleBypass(bypass);
+    	this.controlBar.geneSetOverlayPicker.lastOverlayedIds=[];
     	
     },
     
