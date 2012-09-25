@@ -135,6 +135,10 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         Gemma.CytoscapeDisplay.superclass.initComponent.apply(this, arguments);
 
         this.addEvents('doneDrawingCytoscape', 'searchTextBoxMatch');
+        
+        this.on('doneDrawingCytoscape', function(){        	
+        	this.applyGeneListOverlayIfActive();     	
+        }, this);
 
     },
 
@@ -486,10 +490,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
                 this.nodeDegreeVisualStyleFlag=true;
             }
             
-            if (this.controlBar.geneSetOverlayPicker){         	
-            	
-            	this.applyGeneListOverlay(this.controlBar.geneSetOverlayPicker.lastOverlayedIds);
-            }
+            this.applyGeneListOverlayIfActive();
         }
     },
 
@@ -555,6 +556,12 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     selectSearchMatchesFromControlBar: function(text){
     	this.fireEvent('searchTextBoxMatch', text);
     	this.selectSearchMatches(text);
+    },
+    
+    applyGeneListOverlayIfActive: function(){
+    	if (this.controlBar.geneSetOverlayPicker){
+    		this.applyGeneListOverlay(this.controlBar.geneSetOverlayPicker.lastOverlayedIds);
+        }   	
     },
     
     applyGeneListOverlay:function(geneIdsToOverlay){
