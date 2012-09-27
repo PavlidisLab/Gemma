@@ -327,6 +327,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
             StopWatch timer = new StopWatch();
     		timer.start();
+    		log.info("Starting: "+firstQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
             Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                     new Object[] { queryGene, unseen, stringency, sourceAnalysis } );
@@ -337,6 +338,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             if ( !SINGLE_QUERY_FOR_LINKS ) {
             	timer.reset();
             	timer.start();
+            	
+            	log.info("Starting: "+secondQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
+            	
                 r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
                         new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                         new Object[] { queryGene, unseen, stringency, sourceAnalysis } ) );
@@ -428,6 +432,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         List<Gene2GeneCoexpression> r = new ArrayList<Gene2GeneCoexpression>();
 		StopWatch timer = new StopWatch();
 		timer.start();
+		
+		log.info("Starting "+queryStringFirstVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
         if ( timer.getTime() > 1000 ) {
@@ -436,6 +442,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         if ( !SINGLE_QUERY_FOR_LINKS ) {
         	timer.reset();
         	timer.start();
+        	
+        	log.info("Starting "+queryStringSecondVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
             r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                     new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
             if ( timer.getTime() > 1000 ) {
@@ -447,6 +455,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             /*
              * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
              */
+            log.info("SINGLE_QUERY_FOR_LINKS=false: starting to remove duplicates for "+r.size()+ "results " );
+            timer.reset();
+        	timer.start();
             int removed = 0;
             Set<GeneLink> allSeen = new HashSet<GeneLink>();
             for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
@@ -462,14 +473,29 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
                 allSeen.add( seen );
             }
+            
+            if ( timer.getTime() > 1000 ) {
+            	log.info("Removing duplicates took: "+timer.getTime()+"ms");
+            }
             if ( removed > 0 ) log.info( "Removed " + removed + " duplicate links" );
 
             if ( r.isEmpty() ) throw new IllegalStateException( "Removed everything!" );
         }
 
+        timer.reset();
+    	timer.start();
         Collections.sort( r, new SupportComparator() );
+        if ( timer.getTime() > 1000 ) {
+        	log.info("Sorting "+ r.size()+" results took: "+timer.getTime()+"ms");
+        }
 
+        timer.reset();
+    	timer.start();
         cacheCoexpression( genes, sourceAnalysis, r );
+        
+        if ( timer.getTime() > 1000 ) {
+        	log.info("caching "+ r.size()+" results took: "+timer.getTime()+"ms");
+        }
 
         return r;
 
