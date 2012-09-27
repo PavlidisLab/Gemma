@@ -455,7 +455,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             /*
              * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
              */
-            log.info("SINGLE_QUERY_FOR_LINKS=false: starting to remove duplicates for "+r.size()+ "results " );
+            log.info("SINGLE_QUERY_FOR_LINKS=true: starting to remove duplicates for "+r.size()+ "results " );
             timer.reset();
         	timer.start();
             int removed = 0;
