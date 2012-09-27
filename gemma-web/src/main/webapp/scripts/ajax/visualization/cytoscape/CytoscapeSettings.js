@@ -49,7 +49,7 @@ Gemma.CytoscapeSettings = {
     supportColorPositive: "#E66101",
     supportColorNegative: "#5E3C99",
 
-    selectionGlowColor: "#0000FF",
+    selectionGlowColor: "#00CC00",
 
     selectionGlowOpacity: 1,    
     
