@@ -877,8 +877,16 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
             }
+            
+            Collection<Long> geneIds = new ArrayList<Long>();
 
-            populateNodeDegree( ecvos, allUsedGenes, allTestedDataSets );
+            for (Gene g: allUsedGenes){
+            	
+            	geneIds.add(g.getId());
+            	
+            }
+            
+            populateNodeDegree( ecvos, geneIds, allTestedDataSets );
 
             if ( timer.getTime() > 1000 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
@@ -987,7 +995,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
-        Collection<Gene> allUsedGenes = new HashSet<Gene>();
+        Collection<Long> allUsedGenes = new HashSet<Long>();
+        
+        //use this to keep track of thawed genes TODO batch this up into one query later(get all of the unique found genes and get there resulting genevalueobject info at once)
+        HashMap<Long,Gene> thawedGenes = new HashMap<Long,Gene>();
 
         for ( Gene queryGene : queryGenes ) {
             timer.start();
@@ -997,7 +1008,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                         "Mismatch between taxon for expression experiment set selected and gene queries" );
             }
 
-            allUsedGenes.add( queryGene );
+            allUsedGenes.add( queryGene.getId() );
 
             /*
              * For summary statistics
@@ -1019,7 +1030,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             }
             GeneValueObject queryGeneValueObject = new GeneValueObject( queryGene );
 
-            Map<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+            Map<Long, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
             if ( timer.getTime() > 100 ) {
                 log.info( "Postprocess " + queryGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
@@ -1027,14 +1038,15 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             timer.stop();
             timer.reset();
             timer.start();
-
+            
             for ( Gene2GeneCoexpression g2g : g2gs ) {
+            	
                 StopWatch timer2 = new StopWatch();
                 timer2.start();
 
-                Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
-
-                allUsedGenes.add( foundGene );
+                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g.getFirstGene();
+                
+                allUsedGenes.add( foundGene.getId() );
 
                 // use this flag to test for a duplicate link with opposite stringency support (positive/negative)
                 boolean testForDuplicateFlag = false;
@@ -1043,27 +1055,33 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 // Keep track of the found genes that we can correctly identify
                 // duplicates.
                 // All keep the g2g object for debugging purposes.
-                if ( foundGenes.containsKey( foundGene ) ) {
-                    foundGenes.get( foundGene ).add( g2g );
+                if ( foundGenes.containsKey( foundGene.getId() ) ) {
+                    foundGenes.get( foundGene.getId() ).add( g2g );
 
                     testForDuplicateFlag = true;
 
                 }
 
-                foundGenes.put( foundGene, new ArrayList<Gene2GeneCoexpression>() );
-                foundGenes.get( foundGene ).add( g2g );
+                foundGenes.put( foundGene.getId(), new ArrayList<Gene2GeneCoexpression>() );
+                foundGenes.get( foundGene.getId() ).add( g2g );
 
-                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
-
-                /*
-                 * This Thaw is a big time sink and _should not_ be necessary.
-                 */
-                // foundGene = geneService.thawLite( foundGene ); // db hit
+                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();               
+                
+                //TODO results for the graph get trimmed on the front end, we can make this even faster if we only load the gvo after we do the trimming. Maybe move trimming into here
+                if (thawedGenes.get(foundGene.getId()) == null){
+                	
+                	//need to thaw so that new GeneValueObject( foundGene ) below works without lazy exception
+                	foundGene = geneService.thawLiter( foundGene ); // db hit
+                	thawedGenes.put(foundGene.getId(), foundGene);
+                }else{
+                	foundGene = thawedGenes.get(foundGene.getId());
+                }
 
                 cvo.setQueryGene( queryGeneValueObject );
                 cvo.setFoundGene( new GeneValueObject( foundGene ) );
 
-                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
+                //the majority of this time will be the thaw
+                if ( timer2.getTime() > 200 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
                 timer2.stop();
                 timer2.reset();
                 timer2.start();
@@ -1430,13 +1448,13 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param allUsedGenes
      * @param ees
      */
-    private void populateNodeDegree( List<CoexpressionValueObjectExt> ecvos, Collection<Gene> allUsedGenes,
+    private void populateNodeDegree( List<CoexpressionValueObjectExt> ecvos, Collection<Long> allUsedGenes,
             Collection<Long> ees ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
         Map<Gene, GeneCoexpressionNodeDegree> geneNodeDegrees = geneService
-                .getGeneCoexpressionNodeDegree( allUsedGenes );
+                .getGeneIdCoexpressionNodeDegree( allUsedGenes );
 
         Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 

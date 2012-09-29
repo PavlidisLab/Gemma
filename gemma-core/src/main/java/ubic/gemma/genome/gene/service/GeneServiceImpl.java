@@ -107,6 +107,11 @@ public class GeneServiceImpl implements GeneService {
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
+    
+    @Override
+    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
+        return this.getGeneDao().getGeneIdCoexpressionNodeDegree( geneIds );
+    }
 
     /*
      * (non-Javadoc)
@@ -236,6 +241,11 @@ public class GeneServiceImpl implements GeneService {
     @Override
     public Gene thawLite( Gene gene ) {
         return this.getGeneDao().thawLite( gene );
+    }
+    
+    @Override
+    public Gene thawLiter( Gene gene ) {
+        return this.getGeneDao().thawLiter( gene );
     }
 
     /**

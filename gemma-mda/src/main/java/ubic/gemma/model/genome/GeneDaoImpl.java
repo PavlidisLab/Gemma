@@ -410,6 +410,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         return result;
     }
+    
+    @Override
+    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
+
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "from GeneCoexpressionNodeDegreeImpl n where n.gene.id in (:g)", "g", geneIds );
+
+        Map<Gene, GeneCoexpressionNodeDegree> result = new HashMap<Gene, GeneCoexpressionNodeDegree>();
+        for ( Object o : r ) {
+            GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
+            result.put( n.getGene(), n );
+        }
+
+        return result;
+    }
 
     /*
      * (non-Javadoc)
@@ -623,6 +638,20 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Gene thawLite( final Gene gene ) {
         return this.thaw( gene );
+    }
+    
+    @Override
+    public Gene thawLiter( final Gene gene ) {
+    	if ( gene.getId() == null ) return gene;
+
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct g from GeneImpl g "                                
+                                + " left join fetch g.taxon" + " where g.id=:gid",
+                        "gid", gene.getId() );
+
+        return ( Gene ) res.iterator().next();
     }
 
     /*

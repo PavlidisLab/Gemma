@@ -194,6 +194,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         /*
          * Filter
          */
+        
+        StopWatch timer = new StopWatch();
+    	timer.start();     
         Collection<GeneLink> seen = new HashSet<GeneLink>();
         Collections.sort( rawResults, new SupportComparator() );
         for ( Gene2GeneCoexpression g2g : rawResults ) {
@@ -227,6 +230,10 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 }
                 finalResult.get( secondGene ).add( g2g );
             }
+        }
+        
+        if ( timer.getTime() > 100 ) {
+            log.info( "Filtering "+rawResults.size()+" results for genes:"+Arrays.toString(genes.toArray())+" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
         }
 
         return finalResult;
@@ -264,32 +271,41 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
+        
+        List<Long> geneIds = new ArrayList<Long>();
+        
+        for (Gene g: genes){
+        	
+        	geneIds.add(g.getId());
+        	
+        }
 
-        Collection<Gene> unseen = new HashSet<Gene>();
-        unseen.addAll( genes );
+        Collection<Long> unseen = new HashSet<Long>();        
+        
+        unseen.addAll( geneIds );
 
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
-        Collection<Gene> genesNeeded = new HashSet<Gene>();
-        for ( Gene g : genes ) {
+        Collection<Long> genesNeeded = new HashSet<Long>();
+        for ( Long gid : geneIds ) {
             Element e = this.getGene2GeneCoexpressionCache().getCache()
-                    .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
+                    .get( new GeneCached( gid, sourceAnalysis.getId() ) );
             if ( e != null ) {
                 /*
                  * find results for the cached result that include the second gene at the appropriate stringency.
                  */
                 for ( Gene2GeneCoexpression g2g : ( List<Gene2GeneCoexpression> ) e.getValue() ) {
-                    if ( genes.contains( g2g.getFirstGene() ) && genes.contains( g2g.getSecondGene() )
+                    if ( geneIds.contains( g2g.getFirstGene().getId() ) && geneIds.contains( g2g.getSecondGene().getId() )
                             && g2g.getNumDataSets() >= stringency ) rawResults.add( g2g );
                 }
             } else {
-                genesNeeded.add( g );
+                genesNeeded.add( gid );
             }
         }
 
-        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        Map<Long, Collection<Gene2GeneCoexpression>> resultById = new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
-        for ( Gene g : genes ) {
-            result.put( g, new HashSet<Gene2GeneCoexpression>() );
+        for ( Long gid : geneIds ) {
+            resultById.put( gid, new HashSet<Gene2GeneCoexpression>() );
         }
 
         /*
@@ -302,8 +318,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 Gene firstGene = g2g.getFirstGene();
                 Gene secondGene = g2g.getSecondGene();
 
-                if ( genes.contains( firstGene ) && genes.contains( secondGene ) ) {
-                    result.get( secondGene ).add( g2g );
+                if ( geneIds.contains( firstGene.getId() ) && geneIds.contains( secondGene.getId() ) ) {
+                    resultById.get( secondGene.getId() ).add( g2g );
                 }
             }
         }
@@ -313,24 +329,24 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
          * query! Doing it the dumb way is shockingly fast. For just a few genes it probably doesn't matter.
          */
         final String firstQueryString = "select g2g from " + g2gClassName
-                + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
+                + " as g2g where g2g.firstGene.id = :qgene and g2g.secondGene.id in (:genes) "
                 + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         // we only use this if not SINGLE_QUERY_FOR_LINKS
         final String secondQueryString = "select g2g from " + g2gClassName
-                + " as g2g where g2g.secondGene = :qgene and g2g.firstGene in (:genes) "
+                + " as g2g where g2g.secondGene.id = :qgene and g2g.firstGene.id in (:genes) "
                 + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
-        for ( Gene queryGene : genesNeeded ) {
+        for ( Long queryGeneId : genesNeeded ) {
 
-            log.debug( queryGene );
+            log.debug( queryGeneId );
 
             StopWatch timer = new StopWatch();
     		timer.start();
-    		log.info("Starting: "+firstQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
+    		
             Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
-                    new Object[] { queryGene, unseen, stringency, sourceAnalysis } );
+                    new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } );
             if ( timer.getTime() > 1000 ) {
                 log.info(firstQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
             }
@@ -339,21 +355,19 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             	timer.reset();
             	timer.start();
             	
-            	log.info("Starting: "+secondQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
-            	
                 r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
                         new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
-                        new Object[] { queryGene, unseen, stringency, sourceAnalysis } ) );
+                        new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } ) );
                 
                 if ( timer.getTime() > 1000 ) {
                     log.info("!SINGLE_QUERY_FOR_LINKS "+secondQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
                 }
             }
 
-            List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
-            Collections.sort( lr, new SupportComparator() );
-
-            Collection<GeneLink> seen = new HashSet<GeneLink>();
+            Collection<GeneLink> seen = new HashSet<GeneLink>(r.size()*2);
+            
+            timer.reset();
+        	timer.start();
 
             for ( Gene2GeneCoexpression g2g : r ) {
 
@@ -366,10 +380,13 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                  * all the genes are guaranteed to be in the query list. But we want them listed both ways so we count
                  * them up right later.
                  */
-                result.get( g2g.getFirstGene() ).add( g2g );
-                result.get( g2g.getSecondGene() ).add( g2g );
+                resultById.get( g2g.getFirstGene().getId() ).add( g2g );
+                resultById.get( g2g.getSecondGene().getId() ).add( g2g );
 
                 seen.add( link );
+            }
+            if ( timer.getTime() > 1000 ) {
+                log.info("Query genes only, Listing both ways loop for "+r.size()+" results and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
             }
 
             /*
@@ -378,6 +395,13 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
              */
         }
 
+        
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        
+        for (Gene g: genes){
+        	result.put(g, resultById.get(g.getId()));
+        }
+        
         return result;
 
     }
@@ -431,9 +455,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         List<Gene2GeneCoexpression> r = new ArrayList<Gene2GeneCoexpression>();
 		StopWatch timer = new StopWatch();
-		timer.start();
+		timer.start();		
 		
-		log.info("Starting "+queryStringFirstVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
         if ( timer.getTime() > 1000 ) {
@@ -441,9 +464,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         }
         if ( !SINGLE_QUERY_FOR_LINKS ) {
         	timer.reset();
-        	timer.start();
+        	timer.start();        	
         	
-        	log.info("Starting "+queryStringSecondVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId());
             r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                     new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
             if ( timer.getTime() > 1000 ) {
@@ -454,17 +476,20 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
             /*
              * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
-             */
-            log.info("SINGLE_QUERY_FOR_LINKS=true: starting to remove duplicates for "+r.size()+ "results " );
+             */           
+            
+            
             timer.reset();
         	timer.start();
             int removed = 0;
-            Set<GeneLink> allSeen = new HashSet<GeneLink>();
+            HashSet<GeneLink> allSeen = new HashSet<GeneLink>(r.size()*2);
             for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
                 Gene2GeneCoexpression g2g = iterator.next();
 
                 GeneLink seen = new GeneLink( g2g );
-
+                
+            	boolean contains = allSeen.contains( seen );
+                
                 if ( allSeen.contains( seen ) ) {
                     iterator.remove();
                     ++removed;
@@ -475,19 +500,14 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             }
             
             if ( timer.getTime() > 1000 ) {
-            	log.info("Removing duplicates took: "+timer.getTime()+"ms");
+            	log.info("Removing duplicates for "+r.size()+" results: "+timer.getTime()+"ms");
             }
             if ( removed > 0 ) log.info( "Removed " + removed + " duplicate links" );
 
             if ( r.isEmpty() ) throw new IllegalStateException( "Removed everything!" );
         }
-
-        timer.reset();
-    	timer.start();
-        Collections.sort( r, new SupportComparator() );
-        if ( timer.getTime() > 1000 ) {
-        	log.info("Sorting "+ r.size()+" results took: "+timer.getTime()+"ms");
-        }
+        
+        Collections.sort( r, new SupportComparator() );        
 
         timer.reset();
     	timer.start();
@@ -506,39 +526,53 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         /*
          * Cache all values.
          */
-        Map<Gene, List<Gene2GeneCoexpression>> forCache = new HashMap<Gene, List<Gene2GeneCoexpression>>();
+    	
+    	HashSet<Long> geneIdSet = new HashSet<Long>();
+    	for (Gene g : genes){
+    		geneIdSet.add(g.getId());    		
+    	}
+    	
+    	StopWatch timer = new StopWatch();
+        
+        timer.reset();
+    	timer.start();
+        Map<Long, List<Gene2GeneCoexpression>> forCache = new HashMap<Long, List<Gene2GeneCoexpression>>();
         for ( Gene2GeneCoexpression g2g : r ) {
 
-            Gene firstGene = g2g.getFirstGene();
-            if ( genes.contains( firstGene ) ) {
-                if ( !forCache.containsKey( firstGene ) ) {
-                    forCache.put( firstGene, new ArrayList<Gene2GeneCoexpression>() );
+            Long firstGeneId = g2g.getFirstGene().getId();
+            if ( geneIdSet.contains( firstGeneId ) ) {
+                if ( !forCache.containsKey( firstGeneId ) ) {
+                    forCache.put( firstGeneId, new ArrayList<Gene2GeneCoexpression>() );
                 }
 
-                forCache.get( firstGene ).add( g2g );
+                forCache.get( firstGeneId ).add( g2g );
             }
 
-            Gene secondGene = g2g.getSecondGene();
-            if ( genes.contains( secondGene ) ) {
-                if ( !forCache.containsKey( secondGene ) ) {
-                    forCache.put( secondGene, new ArrayList<Gene2GeneCoexpression>() );
+            Long secondGeneId = g2g.getSecondGene().getId();
+            if ( geneIdSet.contains( secondGeneId ) ) {
+                if ( !forCache.containsKey( secondGeneId ) ) {
+                    forCache.put( secondGeneId, new ArrayList<Gene2GeneCoexpression>() );
                 }
 
-                forCache.get( secondGene ).add( g2g );
+                forCache.get( secondGeneId ).add( g2g );
             }
 
+        }
+        
+        if ( timer.getTime() > 1000 ) {
+        	log.info("pre-processing "+ r.size()+" results to be cached took: "+timer.getTime()+"ms");
         }
 
         log.info("Begin caching results for "+forCache.keySet().size()+" genes ");
         int totalResultsCached=0;
-        for ( Gene gene : forCache.keySet() ) {
+        for ( Long geneId : forCache.keySet() ) {
         	
-        	List<Gene2GeneCoexpression> resultsToCache = forCache.get( gene );
+        	List<Gene2GeneCoexpression> resultsToCache = forCache.get( geneId );
         	
-        	log.info("Caching "+resultsToCache.size()+" results for gene "+gene.getOfficialSymbol()+" and sourceAnalysis "+sourceAnalysis.getId());
+        	
         	
             this.getGene2GeneCoexpressionCache().getCache()
-                    .put( new Element( new GeneCached( gene.getId(), sourceAnalysis.getId() ), resultsToCache ) );
+                    .put( new Element( new GeneCached( geneId, sourceAnalysis.getId() ), resultsToCache ) );
             
             totalResultsCached = totalResultsCached+resultsToCache.size();
         }
@@ -561,16 +595,16 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
 class GeneLink {
 
-    private Gene g1;
-    private Gene g2;
+    private Long g1;
+    private Long g2;
     private boolean positive = true;
 
     public GeneLink( Gene2GeneCoexpression link ) {
-        this( link.getFirstGene(), link.getSecondGene(), link.getEffect() > 0 );
+        this( link.getFirstGene().getId(), link.getSecondGene().getId(), link.getEffect() > 0 );
     }
 
-    public GeneLink( Gene g1, Gene g2, boolean positive ) {
-        if ( g1.getId() < g2.getId() ) {
+    public GeneLink( Long g1, Long g2, boolean positive ) {
+        if ( g1 < g2 ) {
             this.g1 = g1;
             this.g2 = g2;
         } else {
@@ -591,18 +625,13 @@ class GeneLink {
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+    public boolean equals( Object obj ) {        
         GeneLink other = ( GeneLink ) obj;
-        if ( g1 == null ) {
-            if ( other.g1 != null ) return false;
-        } else if ( !g1.equals( other.g1 ) ) return false;
-        if ( g2 == null ) {
-            if ( other.g2 != null ) return false;
-        } else if ( !g2.equals( other.g2 ) ) return false;
+        
+        if ( !g1.equals( other.g1 ) ) return false;
+        if ( !g2.equals( other.g2 ) ) return false;
         if ( positive != other.positive ) return false;
+        
         return true;
     }
 
