@@ -412,15 +412,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
     
     @Override
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
+    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
 
         List<?> r = this.getHibernateTemplate().findByNamedParam(
                 "from GeneCoexpressionNodeDegreeImpl n where n.gene.id in (:g)", "g", geneIds );
 
-        Map<Gene, GeneCoexpressionNodeDegree> result = new HashMap<Gene, GeneCoexpressionNodeDegree>();
+        Map<Long, GeneCoexpressionNodeDegree> result = new HashMap<Long, GeneCoexpressionNodeDegree>();
         for ( Object o : r ) {
             GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
-            result.put( n.getGene(), n );
+            result.put( n.getGene().getId(), n );
         }
 
         return result;
@@ -569,6 +569,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         timer.start();
         for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLite( batch ) );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
+        }
+        return result;
+    }
+    
+    @Override
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {
+        Collection<Gene> result = new HashSet<Gene>();
+
+        if ( ids.isEmpty() ) return result;
+        StopWatch timer = new StopWatch();
+        timer.start();
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
+            result.addAll( doLoadThawedLiter( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
             log.info( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
@@ -1157,6 +1173,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.getHibernateTemplate().findByNamedParam(
                 "select g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
+                        + "where g.id in (:gids)", "gids", ids );
+    }
+    
+    private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select g from GeneImpl g left "
+                        + "join fetch g.taxon t "
                         + "where g.id in (:gids)", "gids", ids );
     }
 

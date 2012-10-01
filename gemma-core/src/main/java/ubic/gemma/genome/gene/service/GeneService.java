@@ -206,7 +206,7 @@ public interface GeneService {
      */
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
     
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds );
+    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds );
 
     /**
      * Get summarized node degree
@@ -284,6 +284,8 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> loadThawed( Collection<Long> ids );
+    
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
     /**
      * @param ids
@@ -296,6 +298,8 @@ public interface GeneService {
      * @return
      */
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
+    
+    public Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids );
 
     /**
      * @param genes

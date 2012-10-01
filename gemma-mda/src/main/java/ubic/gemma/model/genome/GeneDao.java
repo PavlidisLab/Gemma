@@ -159,7 +159,7 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
     
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds);
+    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds);
 
     /**
      * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
@@ -212,6 +212,8 @@ public interface GeneDao extends BaseDao<Gene> {
      * @return
      */
     public Collection<Gene> loadThawed( Collection<Long> ids );
+    
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
     /**
      * 

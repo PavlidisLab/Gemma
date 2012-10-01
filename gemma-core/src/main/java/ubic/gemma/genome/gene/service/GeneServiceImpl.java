@@ -109,7 +109,7 @@ public class GeneServiceImpl implements GeneService {
     }
     
     @Override
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
+    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
         return this.getGeneDao().getGeneIdCoexpressionNodeDegree( geneIds );
     }
 
@@ -222,10 +222,21 @@ public class GeneServiceImpl implements GeneService {
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
         return this.getGeneDao().loadThawed( ids );
     }
+    
+    @Override
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {//maybe this isn't needed, just use value objects method
+        return this.getGeneDao().loadThawedLiter( ids );
+    }
 
     @Override
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
+        return GeneValueObject.convert2ValueObjects( g );
+    }
+    
+    @Override
+    public Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids ) {
+        Collection<Gene> g = this.getGeneDao().loadThawedLiter( ids );
         return GeneValueObject.convert2ValueObjects( g );
     }
 
