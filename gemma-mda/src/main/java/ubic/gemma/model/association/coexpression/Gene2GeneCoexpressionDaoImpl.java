@@ -395,11 +395,17 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
              */
         }
 
+        StopWatch timerMapMaker = new StopWatch();
+		timerMapMaker.start();
         
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         
         for (Gene g: genes){
         	result.put(g, resultById.get(g.getId()));
+        }
+        
+        if ( timerMapMaker.getTime() > 1000 ) {
+            log.info("Generating g2gcoex map took " + timerMapMaker.getTime() + "ms" );
         }
         
         return result;
