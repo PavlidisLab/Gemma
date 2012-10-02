@@ -115,20 +115,19 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     @Autowired
     private StatusService statusService;
-    
+
     @Autowired
     private GeneLightWeightCache geneLightWeightCache;
-    
-    
-    public GeneLightWeightCache getGeneLightWeightCache(){
-    	return geneLightWeightCache;
+
+    public GeneLightWeightCache getGeneLightWeightCache() {
+        return geneLightWeightCache;
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearch(java.util.Collection,
-     * java.util.Collection, int, int, boolean, boolean)
+     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#
+     * coexpressionSearch(java.util.Collection, java.util.Collection, int, int, boolean, boolean)
      */
     @Override
     public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Gene> genes,
@@ -275,9 +274,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.util.Collection,
-     * java.util.Collection, int, int, boolean, boolean)
+     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#
+     * coexpressionSearchQuick(java.util.Collection, java.util.Collection, int, int, boolean, boolean)
      */
     @Override
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Collection<Long> inputEeIds,
@@ -304,7 +302,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService#coexpressionSearchQuick(java.lang.Long,
+     * @see ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService# coexpressionSearchQuick(java.lang.Long,
      * java.util.Collection, int, int, boolean, boolean)
      */
     @Override
@@ -435,7 +433,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( new GeneValueObject( queryGene ) );
-            ecvo.setFoundGene( coexpedGenes.get( cvo.getCoexpressedGeneId() ) ); // FIXME too slow,
+            ecvo.setFoundGene( coexpedGenes.get( cvo.getCoexpressedGeneId() ) ); // FIXME
+                                                                                 // too
+                                                                                 // slow,
 
             ecvo.setPosSupp( cvo.getPositiveLinkSupport() );
             ecvo.setNegSupp( cvo.getNegativeLinkSupport() );
@@ -469,7 +469,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 Long eeid = eevo.getId();
 
-                // this information will not be filled in if the cvo was built in 'batch' mode, but that's not the case,
+                // this information will not be filled in if the cvo was built
+                // in 'batch' mode, but that's not the case,
                 // here.
                 boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eeid );
 
@@ -510,7 +511,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             // NOTE should be accurate (probe-level query) but we won't show it.
             // See bug 1564 FIXME
-            // ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
+            // ecdvo.setProbeSpecificForQueryGene(
+            // coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             datasetResults.add( ecdvo );
@@ -888,15 +890,15 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
             }
-            
+
             Collection<Long> geneIds = new ArrayList<Long>();
 
-            for (Gene g: allUsedGenes){
-            	
-            	geneIds.add(g.getId());
-            	
+            for ( Gene g : allUsedGenes ) {
+
+                geneIds.add( g.getId() );
+
             }
-            
+
             populateNodeDegree( ecvos, geneIds, allTestedDataSets );
 
             if ( timer.getTime() > 1000 ) {
@@ -996,98 +998,87 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
 
         Collection<Long> seenGene2Gene = new HashSet<Long>();
-        
-        queryGenes = new HashSet<Gene>();
-        
-        Collection<Long> gidsNeeded = new HashSet<Long>();
-        
-        StopWatch timerGeneLoad = new StopWatch();
-        
-        for (Gene g :  gg2gs.keySet()){
-        	
-        	Element e = this.getGeneLightWeightCache().getCache().get(g.getId());
-        	
-        	if ( e != null){
-        		queryGenes.add((Gene)e.getValue());
-        	} else {
-        		gidsNeeded.add(g.getId());
-        	}        	
-        	
-        }        
 
-        if (!gidsNeeded.isEmpty()){
-        	
-        	Collection<Gene> justLoadedGenes = geneService.loadThawedLiter( gidsNeeded );
-        	
-        	queryGenes.addAll(justLoadedGenes);
-        	
-        	for (Gene g: justLoadedGenes){
-        		this.getGeneLightWeightCache().getCache().put(new Element(g.getId(), g));
-        	}
+        queryGenes = new HashSet<Gene>();
+
+        Collection<Long> gidsNeeded = new HashSet<Long>();
+
+        StopWatch timerGeneLoad = new StopWatch();
+
+        for ( Gene g : gg2gs.keySet() ) {
+
+            Element e = this.getGeneLightWeightCache().getCache().get( g.getId() );
+
+            if ( e != null ) {
+                queryGenes.add( ( Gene ) e.getValue() );
+            } else {
+                gidsNeeded.add( g.getId() );
+            }
+
+        }
+
+        if ( !gidsNeeded.isEmpty() ) {
+
+            Collection<Gene> justLoadedGenes = geneService.loadThawedLiter( gidsNeeded );
+
+            queryGenes.addAll( justLoadedGenes );
+
+            for ( Gene g : justLoadedGenes ) {
+                this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
+            }
         }
         // return empty collection if no coexpression results
         if ( queryGenes.isEmpty() ) {
             return ecvos;
         }
-        
-        if ( timerGeneLoad.getTime() > 100 ) {
-        	//TODO make this logging more descriptive
-            log.info( "Loading and caching query genes took "
-                    + timerGeneLoad.getTime() + "ms" );
+
+        if ( timerGeneLoad.getTime() > 100 ) {            
+            log.info( "Loading and caching query genes took " + timerGeneLoad.getTime() + "ms" );
         }
-        
-        
-        
+
         timerGeneLoad.reset();
         timerGeneLoad.start();
-        
-        gidsNeeded = new HashSet<Long>();
-        
-        //Map<Long, Gene> genesForValueObjects = new HashMap<Long, Gene>();
 
-        //load all genes first
+        gidsNeeded = new HashSet<Long>();
+
+        // load all genes first
         for ( Gene queryGene : queryGenes ) {
-        	
-        	Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
-        	
-        	for ( Gene2GeneCoexpression g2g : g2gs ) {
-        		
-        		Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g.getFirstGene();
-        		
-        		 //TODO results for the graph get trimmed on the front end, we can make this even faster if we only load the gvo after we do the trimming. Maybe move trimming into here
-                if (this.getGeneLightWeightCache().getCache().get(foundGene.getId()) == null){
-                	gidsNeeded.add(foundGene.getId());
+
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+
+            for ( Gene2GeneCoexpression g2g : g2gs ) {
+
+                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g
+                        .getFirstGene();
+
+                if ( this.getGeneLightWeightCache().getCache().get( foundGene.getId() ) == null ) {
+                    gidsNeeded.add( foundGene.getId() );
                 }
-        		
-        	}
-        	
+
+            }
+
         }
-        
-        //Put all needed genes in Cache to that they are guaranteed to be there for this method call
-      //TODO results for the graph get trimmed on the front end, we can make this even faster if we only load the gvo after we do the trimming. Maybe move trimming into here
-        
-        if (!gidsNeeded.isEmpty()){
-        	
-        	//TODO change loadThawedLiter to not join the taxon table, get taxon info from a previous call
-        	Collection<Gene> forCache = geneService.loadThawedLiter(gidsNeeded);
-        	
-        	for (Gene g: forCache){
-        		this.getGeneLightWeightCache().getCache().put(new Element(g.getId(), g));      		
-        	}
-        	
+
+        // Put all needed genes in Cache to that they are guaranteed to be there
+        // for this method call
+        if ( !gidsNeeded.isEmpty() ) {
+
+            Collection<Gene> forCache = geneService.loadThawedLiter( gidsNeeded );
+
+            for ( Gene g : forCache ) {
+                this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
+            }
+
         }
         if ( timerGeneLoad.getTime() > 100 ) {
-        	//TODO make this logging more descriptive
-            log.info( "Loading and caching found genes took "
-                    + timerGeneLoad.getTime() + "ms" );
+            log.info( "Loading and caching found genes took " + timerGeneLoad.getTime() + "ms" );
         }
-        
 
-        // populate the value objects.
         StopWatch timer = new StopWatch();
         Collection<Long> allUsedGenes = new HashSet<Long>();
 
         for ( Gene queryGene : queryGenes ) {
+            timer.reset();
             timer.start();
 
             if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
@@ -1125,48 +1116,50 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             timer.stop();
             timer.reset();
             timer.start();
-            
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
-                
-                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g.getFirstGene();
-                
+
+                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g
+                        .getFirstGene();
+
                 allUsedGenes.add( foundGene.getId() );
 
-                // use this flag to test for a duplicate link with opposite stringency support (positive/negative)
+                // use this flag to test for a duplicate link with opposite
+                // stringency support (positive/negative)
                 boolean testForDuplicateFlag = false;
 
-                // duplicate found genes can occur when there is both positive and negative support for the same link
+                // duplicate found genes can occur when there is both positive
+                // and negative support for the same link
                 // Keep track of the found genes that we can correctly identify
                 // duplicates.
                 // All keep the g2g object for debugging purposes.
-                if ( foundGenes.containsKey( foundGene.getId() ) ) {                   
+                if ( foundGenes.containsKey( foundGene.getId() ) ) {
 
                     testForDuplicateFlag = true;
 
-                }else{
-                	foundGenes.put( foundGene.getId(), new ArrayList<Gene2GeneCoexpression>() );
-                }                
-                
+                } else {
+                    foundGenes.put( foundGene.getId(), new ArrayList<Gene2GeneCoexpression>() );
+                }
+
                 foundGenes.get( foundGene.getId() ).add( g2g );
 
-                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();               
-                
-                Long idToGet= foundGene.getId();
-                
-                foundGene = (Gene)this.getGeneLightWeightCache().getCache().get(idToGet).getValue();
-                
-                if (foundGene == null){
-                	log.error("Gene id:"+idToGet+" Not in the GeneLightWeightCache, something is wrong");
-                	continue;
+                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
+
+                Long idToGet = foundGene.getId();
+
+                foundGene = ( Gene ) this.getGeneLightWeightCache().getCache().get( idToGet ).getValue();
+
+                if ( foundGene == null ) {
+                    log.error( "Gene id:" + idToGet + " Not in the GeneLightWeightCache, something is wrong" );
+                    continue;
                 }
-               
 
                 cvo.setQueryGene( queryGeneValueObject );
-                cvo.setFoundGene( new GeneValueObject( foundGene ) );                
-               
+                cvo.setFoundGene( new GeneValueObject( foundGene ) );
+
                 List<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g,
                         positionToIDMap );
-                
+
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
                 cvo.setSupportingExperiments( supportingDatasets );
@@ -1174,9 +1167,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 List<Long> testingDatasets;
                 List<Long> specificDatasets;
                 if ( !skipDetails ) {
-                	
+
                     testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap );
-                    testingDatasets.retainAll( filteredEeIds );                    
+                    testingDatasets.retainAll( filteredEeIds );
 
                     /*
                      * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there
@@ -1203,19 +1196,17 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
                             relevantEEIdList ) );
-                    
+
                     if ( testForDuplicateFlag ) {
-                    	log.info("In testForDuplicateFlag");
 
                         testAndModifyDuplicateResultForOppositeStringency( ecvos, queryGene, foundGene,
                                 g2g.getEffect(), numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
 
                         continue;
 
-                    } else if ( numSupportingDatasets < stringency ) {// check in case any data sets were filtered
-                                                                      // out.(i.e., we're not interested in the full set
-                                                                      // of data sets that were used in the original
-                                                                      // analysis.
+                    } else if ( numSupportingDatasets < stringency ) {// check in case any data sets were filtered out.(i.e., we're not
+                                                                      // interested in the full set of data sets that were used in the
+                                                                      // original analysis.
                         continue;
                     }
 
@@ -1243,8 +1234,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     }
 
                     allDatasetsWithSpecificProbes.addAll( specificDatasets );
-                    
-                    
 
                 } else {
 
@@ -1273,7 +1262,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 }
 
-                cvo.setSortKey();               
+                cvo.setSortKey();
 
                 /*
                  * This check prevents links from being shown twice when we do "among query genes". We don't skip
@@ -1284,26 +1273,18 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 }
 
                 seenGene2Gene.add( g2g.getId() );
-               
 
             }
 
-            if ( timer.getTime() > 100 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + " Phase II: "
-                        + timer.getTime() + "ms" );
+            if ( timer.getTime() > 300 ) {
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol()
+                        + " Phase II: " + timer.getTime() + "ms" );
             }
             timer.stop();
-            timer.reset();
-            timer.start();
 
             Collections.sort( ecvos );
 
-            timer.stop();
-            if ( timer.getTime() > 100 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol()
-                        + " PhaseIII: " + timer.getTime() + "ms" );
-            }
-            timer.reset();
+            
         } // Over querygenes
 
         populateNodeDegree( ecvos, allUsedGenes, filteredEeIds );
@@ -1429,25 +1410,25 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         /* security will filter experiments */
         Collection<ExpressionExperiment> filteredExperiments = expressionExperimentService.loadMultiple( eeIds );
-        
-        StopWatch timerFilterTroubled = new StopWatch(); 
+
+        StopWatch timerFilterTroubled = new StopWatch();
         timerFilterTroubled.start();
         Collection<Long> filteredIds = new HashSet<Long>();
         for ( ExpressionExperiment ee : filteredExperiments ) {
 
-        	//TODO this is extremely slow, commenting it out for now, will need to ask how important it is
-            //Status eestatus = statusService.getStatus( ee );
-            //if ( eestatus.getTroubled() ) continue;
-        	
+            // TODO this is extremely slow, commenting it out for now, will need
+            // to ask how important it is
+            // Status eestatus = statusService.getStatus( ee );
+            // if ( eestatus.getTroubled() ) continue;
+
             filteredIds.add( ee.getId() );
         }
 
         if ( timerFilterTroubled.getTime() > 100 ) {
-        	//TODO make this logging more descriptive
-            log.info( "Filtering troubled experiments took "
-                    + timerFilterTroubled.getTime() + "ms" );
+            // TODO make this logging more descriptive
+            log.info( "Filtering troubled experiments took " + timerFilterTroubled.getTime() + "ms" );
         }
-        
+
         List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>(
                 expressionExperimentService.loadValueObjects( filteredIds, false ) );
 
@@ -1548,20 +1529,16 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         Map<Long, GeneCoexpressionNodeDegree> geneNodeDegrees = geneService
                 .getGeneIdCoexpressionNodeDegree( allUsedGenes );
 
-        
-
         for ( CoexpressionValueObjectExt coexp : ecvos ) {
 
-            GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get(  coexp.getQueryGene()
-                    .getId()  );
+            GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get( coexp.getQueryGene().getId() );
             if ( queryGeneNodeDegree == null ) {
                 coexp.setQueryGeneNodeDegree( -1.0 );
             } else {
                 coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getRankNumLinks() );
             }
 
-            GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get(  coexp.getFoundGene()
-                    .getId() );
+            GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( coexp.getFoundGene().getId() );
             if ( foundGeneNodeDegree == null ) {
                 coexp.setFoundGeneNodeDegree( -1.0 );
             } else {
@@ -1613,7 +1590,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     if ( supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ) {
                         ecvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
                     }
-                    // this may not be necessary, putting in just in case of a difference
+                    // this may not be necessary, putting in just in case of a
+                    // difference
                     if ( numTestedIn != null ) {
                         ecvo.setNumTestedIn( Math.max( ecvo.getNumTestedIn(), numTestedIn ) );
                     }
@@ -1624,7 +1602,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     if ( supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ) {
                         ecvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
                     }
-                    // this may not be necessary, putting in just in case of a difference
+                    // this may not be necessary, putting in just in case of a
+                    // difference
                     if ( numTestedIn != null ) {
                         ecvo.setNumTestedIn( Math.max( ecvo.getNumTestedIn(), numTestedIn ) );
                     }
