@@ -1127,10 +1127,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             timer.start();
             
             for ( Gene2GeneCoexpression g2g : g2gs ) {
-            	
-                StopWatch timer2 = new StopWatch();
-                timer2.start();
-
+                
                 Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 
                 allUsedGenes.add( foundGene.getId() );
@@ -1165,15 +1162,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                
 
                 cvo.setQueryGene( queryGeneValueObject );
-                cvo.setFoundGene( new GeneValueObject( foundGene ) );
-                
-                if ( timer2.getTime() > 100 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
-                timer2.stop();
-                timer2.reset();
-                timer2.start();
-
+                cvo.setFoundGene( new GeneValueObject( foundGene ) );                
+               
                 List<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g,
                         positionToIDMap );
+                
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
                 cvo.setSupportingExperiments( supportingDatasets );
@@ -1181,9 +1174,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 List<Long> testingDatasets;
                 List<Long> specificDatasets;
                 if ( !skipDetails ) {
-
+                	
                     testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap );
-                    testingDatasets.retainAll( filteredEeIds );
+                    testingDatasets.retainAll( filteredEeIds );                    
 
                     /*
                      * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there
@@ -1210,8 +1203,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
                             relevantEEIdList ) );
-
+                    
                     if ( testForDuplicateFlag ) {
+                    	log.info("In testForDuplicateFlag");
 
                         testAndModifyDuplicateResultForOppositeStringency( ecvos, queryGene, foundGene,
                                 g2g.getEffect(), numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
@@ -1249,6 +1243,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     }
 
                     allDatasetsWithSpecificProbes.addAll( specificDatasets );
+                    
+                    
 
                 } else {
 
@@ -1277,7 +1273,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 }
 
-                cvo.setSortKey();
+                cvo.setSortKey();               
 
                 /*
                  * This check prevents links from being shown twice when we do "among query genes". We don't skip
@@ -1288,13 +1284,12 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 }
 
                 seenGene2Gene.add( g2g.getId() );
-                
-                if ( timer2.getTime() > 100 ) log.info( "Coexp. Gene processing phase I.5:" + timer2.getTime() + "ms" );
+               
 
             }
 
             if ( timer.getTime() > 100 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + " Phase II: "
                         + timer.getTime() + "ms" );
             }
             timer.stop();

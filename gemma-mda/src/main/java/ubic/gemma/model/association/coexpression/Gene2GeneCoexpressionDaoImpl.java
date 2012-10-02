@@ -147,11 +147,18 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
          * Check cache and initialize the result data structure.
          */
         Collection<Gene> genesNeeded = new HashSet<Gene>();
+        
+        Collection<Long> allGeneIds = new HashSet<Long>();
 
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
 
         Map<Gene, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        
+        
         for ( Gene g : genes ) {
+        	
+        	allGeneIds.add(g.getId());
+        	
             Element e = this.getGene2GeneCoexpressionCache().getCache()
                     .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
             if ( e != null ) {
@@ -212,7 +219,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
 
-            if ( genes.contains( firstGene ) ) {
+            if ( allGeneIds.contains( firstGene.getId() ) ) {
 
                 if ( !finalResult.containsKey( firstGene ) ) {
                     finalResult.put( firstGene, new HashSet<Gene2GeneCoexpression>() );
@@ -221,7 +228,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 }
                 finalResult.get( firstGene ).add( g2g );
 
-            } else if ( genes.contains( secondGene ) ) {
+            } else if ( allGeneIds.contains( secondGene.getId() ) ) {
 
                 if ( !finalResult.containsKey( secondGene ) ) {
                     finalResult.put( secondGene, new HashSet<Gene2GeneCoexpression>() );
@@ -466,7 +473,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
         if ( timer.getTime() > 1000 ) {
-            log.info(queryStringFirstVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+            log.info(queryStringFirstVector +" for "+genes.size() +"genes and sourceAnalysis "+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
         }
         if ( !SINGLE_QUERY_FOR_LINKS ) {
         	timer.reset();
@@ -475,7 +482,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                     new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
             if ( timer.getTime() > 1000 ) {
-            	log.info("!SINGLE_QUERY_FOR_LINKS "+queryStringFirstVector +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+            	log.info("!SINGLE_QUERY_FOR_LINKS "+queryStringFirstVector +" for "+ genes.size() +" genes and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
             }
         } else {
             if ( r.isEmpty() ) return r;
