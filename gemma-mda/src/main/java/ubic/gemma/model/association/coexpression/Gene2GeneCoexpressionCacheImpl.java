@@ -48,8 +48,8 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
 
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
+    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 1209600;
+    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 604800;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
     private Cache cache;
