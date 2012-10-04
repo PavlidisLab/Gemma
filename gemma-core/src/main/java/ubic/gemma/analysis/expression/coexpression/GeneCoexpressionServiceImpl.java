@@ -1409,28 +1409,31 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
     private List<ExpressionExperimentValueObject> getSortedEEvos( Collection<Long> eeIds ) {
 
         /* security will filter experiments */
-        Collection<ExpressionExperiment> filteredExperiments = expressionExperimentService.loadMultiple( eeIds );
-
-        StopWatch timerFilterTroubled = new StopWatch();
-        timerFilterTroubled.start();
+        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+        
         Collection<Long> filteredIds = new HashSet<Long>();
-        for ( ExpressionExperiment ee : filteredExperiments ) {
-
-            // TODO this is extremely slow, commenting it out for now, will need
-            // to ask how important it is
-            // Status eestatus = statusService.getStatus( ee );
-            // if ( eestatus.getTroubled() ) continue;
-
+        for ( ExpressionExperiment ee : experiments ) {
             filteredIds.add( ee.getId() );
         }
-
-        if ( timerFilterTroubled.getTime() > 100 ) {
-            // TODO make this logging more descriptive
-            log.info( "Filtering troubled experiments took " + timerFilterTroubled.getTime() + "ms" );
+        List<ExpressionExperimentValueObject> securityFilteredEevos = new ArrayList<ExpressionExperimentValueObject>(
+                expressionExperimentService.loadValueObjects( filteredIds, false ) );
+        
+        List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>();
+        
+        StopWatch timerFilterTroubled = new StopWatch();
+        timerFilterTroubled.start();
+        
+        //only keep untroubled experiments
+        for (ExpressionExperimentValueObject eevo: securityFilteredEevos){
+            if(!eevo.getTroubled()){
+                eevos.add( eevo );
+            }
         }
 
-        List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>(
-                expressionExperimentService.loadValueObjects( filteredIds, false ) );
+        if ( timerFilterTroubled.getTime() > 100 ) {            
+            log.info( "Filtering troubled eevos took " + timerFilterTroubled.getTime() + "ms" );
+        }
+        
 
         Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
             @Override
