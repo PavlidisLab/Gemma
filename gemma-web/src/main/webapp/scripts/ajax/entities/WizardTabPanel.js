@@ -42,7 +42,6 @@ Gemma.WizardTabPanel = Ext.extend(Ext.TabPanel, {
 				nextButtonClicked: function(component) {
 		    		var componentIndex = findComponentIndex(component);
 
-// TODO: should it be this.items.length - 2?
 		    		if (componentIndex < this.items.length - 1) {
 		    			this.setActiveTab(componentIndex + 1);
 		    			this.getActiveTab().enable();
