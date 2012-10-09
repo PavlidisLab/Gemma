@@ -44,7 +44,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
     @Autowired
     public GeneDiffExMetaAnalysisDaoImpl( SessionFactory sessionFactory ) {
-        super( GeneDifferentialExpressionMetaAnalysis.class );
+    	super( GeneDifferentialExpressionMetaAnalysisImpl.class );
         super.setSessionFactory( sessionFactory );
     }
 

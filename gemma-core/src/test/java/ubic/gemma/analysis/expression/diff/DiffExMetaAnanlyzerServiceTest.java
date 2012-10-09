@@ -78,9 +78,9 @@ public class DiffExMetaAnanlyzerServiceTest extends BaseSpringContextTest {
         resultSets.add( rs2 );
         resultSets.add( rs3 );
         /*
-         * Perform the meta-analysis
+         * Perform the meta-analysis without saving it.
          */
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( resultSets );
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( resultSets, null, null );        
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 

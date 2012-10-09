@@ -33,7 +33,6 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 	forceLayout: true,
 	hideBorders: true,
 	bodyStyle: 'border-color:#B5B8C8; background-color:ghostwhite',
-	width: 322,
 	
 	/**
 	 * used for creating title and possibly enabling editing

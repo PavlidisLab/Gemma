@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.expression.diff.DiffExMetaAnalyzerService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -71,6 +72,12 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.Status;
@@ -274,6 +281,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
+	@Autowired
+	private DifferentialExpressionResultService differentialExpressionResultService;     
+	
+	@Autowired
+	private DiffExMetaAnalyzerService diffExMetaAnalyzerService;
+
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
 
@@ -291,6 +304,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
+
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -969,9 +985,80 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
                 false, null, true );
+        this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 
+	public Collection<GeneDifferentialExpressionMetaAnalysisValueObject> loadMyAnalyses() {
+		return this.geneDiffExMetaAnalysisService.loadMyAnalysisVOs();
+	}
+	
+	// TODO: should do something if analysis cannot be removed.
+	public void removeAnalysis(Long id) {
+		this.geneDiffExMetaAnalysisService.delete(id);
+	}
+	
+	private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet(Collection<Long> analysisResultSetIds) {
+		Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+		
+		for (Long analysisResultSetId : analysisResultSetIds) {
+			ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService.loadAnalysisResultSet(analysisResultSetId);
+			
+	        if ( expressionAnalysisResultSet == null ) {
+	            log.warn( "No diff ex result set with ID=" + analysisResultSetId );
+	            return null;
+	        }
+		
+	        resultSets.add(expressionAnalysisResultSet);
+		}
+		return resultSets;
+	}
+	
+	public GeneDifferentialExpressionMetaAnalysisValueObject saveResultSets(Collection<Long> analysisResultSetIds, String name, String description) {
+		Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet(analysisResultSetIds);
+		
+		GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze(resultSets, name, description);
+		
+		final GeneDifferentialExpressionMetaAnalysisValueObject metaAnalysisVO;
+		
+		if (metaAnalysis == null) {
+			metaAnalysisVO = null;
+		} else {
+			metaAnalysisVO = new GeneDifferentialExpressionMetaAnalysisValueObject(metaAnalysis);
+		}
+		
+		return metaAnalysisVO;
+	}
+	
+	public GeneDifferentialExpressionMetaAnalysisValueObject analyzeResultSets(Collection<Long> analysisResultSetIds, int resultSetCount) {
+		Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet(analysisResultSetIds);
+		
+		GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze(resultSets, null, null);
+	
+		final GeneDifferentialExpressionMetaAnalysisValueObject metaAnalysisVO;
+		
+		if (metaAnalysis == null) {
+			metaAnalysisVO = null;
+		} else {
+			metaAnalysisVO = new GeneDifferentialExpressionMetaAnalysisValueObject(metaAnalysis);
+	
+			// Sort by p value.
+			List<GeneDifferentialExpressionMetaAnalysisResultValueObject> results = new ArrayList<GeneDifferentialExpressionMetaAnalysisResultValueObject>(metaAnalysisVO.getResults());
+			Collections.sort( results, new Comparator<GeneDifferentialExpressionMetaAnalysisResultValueObject>(){
+		        public int compare(GeneDifferentialExpressionMetaAnalysisResultValueObject result1, GeneDifferentialExpressionMetaAnalysisResultValueObject result2) {
+		            return result1.getMetaPvalue().compareTo(result2.getMetaPvalue());
+		        }} );
+		
+			int toIndex = resultSetCount <= 0 ?
+					100 :
+					resultSetCount;
+						
+			metaAnalysisVO.setResults(results.subList(0, Math.min(results.size(), toIndex)));
+		}
+		return metaAnalysisVO;
+	}
+    
+    
     /**
      * AJAX; get a collection of experiments that have had samples removed due to outliers and experiment that have
      * possible batch effects detected
@@ -1368,6 +1455,18 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return mav;
     }
 
+    /**
+     * Show meta-analysis manager
+     * 
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+	@RequestMapping(value = { "/metaAnalysisManager.html" })
+	public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
+	    return new ModelAndView( "metaAnalysisManager" );
+	}
+    
     /**
      * shows a list of BioAssays for an expression experiment subset
      * 

@@ -299,6 +299,10 @@
 
 	<bean id="expressionExperimentController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController">
 		<dwr:remote javascript="ExpressionExperimentController">
+			<dwr:include method="analyzeResultSets" />
+			<dwr:include method="loadMyAnalyses" />
+			<dwr:include method="removeAnalysis" />
+			<dwr:include method="saveResultSets" />
 			<dwr:include method="deleteById" />
 			<dwr:include method="find" />
 			<dwr:include method="searchExpressionExperiments" />
@@ -915,6 +919,9 @@
 		<dwr:convert type="bean" class="ubic.gemma.image.LinkOutValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject$IncludedResultSetDetail" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />

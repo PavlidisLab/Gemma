@@ -27,6 +27,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 public interface DiffExMetaAnalyzerService {
 
-    public GeneDifferentialExpressionMetaAnalysis analyze (Collection<ExpressionAnalysisResultSet> resultSets) ;
+    public GeneDifferentialExpressionMetaAnalysis analyze (Collection<ExpressionAnalysisResultSet> resultSets, String name, String description);
 
 }

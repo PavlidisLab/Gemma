@@ -75,7 +75,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @see ubic.gemma.analysis.expression.diff.DiffExMetaAnalyserService#analyze(java.util.Collection)
      */
     @Override
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<ExpressionAnalysisResultSet> resultSets ) {
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<ExpressionAnalysisResultSet> resultSets, String name, String description ) {
 
         if ( resultSets.size() < 2 ) {
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
@@ -233,10 +233,18 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             return null;
         }
 
-        // FIXME might not want to save this here.
-        log.info( "Saving " + analysis.getResults().size() + " results meeting meta-qvalue of "
-                + QVALUE_FOR_STORAGE_THRESHOLD );
-        return analysisService.create( analysis );
+        // Save results only when name is specified.
+		if (name != null) {
+			analysis.setName(name);
+			analysis.setDescription(description);
+
+	        // FIXME might not want to save this here.
+	        log.info( "Saving " + analysis.getResults().size() + " results meeting meta-qvalue of "
+	                + QVALUE_FOR_STORAGE_THRESHOLD );
+			analysis = analysisService.create( analysis );
+		}
+
+        return analysis;
     }
 
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
@@ -273,7 +281,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         Double bestPvalue = Double.MAX_VALUE;
         for ( DifferentialExpressionAnalysisResult r : res ) {
             Double pvalue = r.getPvalue();
-            if ( pvalue < bestPvalue ) {
+            if ( pvalue != null && pvalue < bestPvalue ) {
                 assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
 
                 // temporary, as my test database doesn't have all contrasts computed.
@@ -283,15 +291,15 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
                 if ( upperTail ) {
                     if ( logFoldChange < 0 ) {
-                        bestPvalue = Math.min( 0.0, 1.0 - pvalue );
-                    } else {
+                        bestPvalue = 1.0 - pvalue;
+                    } else {                        
                         bestPvalue = pvalue;
                     }
                 } else {
                     if ( logFoldChange < 0 ) {
                         bestPvalue = pvalue;
                     } else {
-                        bestPvalue = Math.min( 0.0, 1.0 - pvalue );
+                        bestPvalue = 1.0 - pvalue;
                     }
                 }
 

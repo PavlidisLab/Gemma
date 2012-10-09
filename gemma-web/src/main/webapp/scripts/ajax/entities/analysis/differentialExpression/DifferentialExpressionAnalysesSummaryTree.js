@@ -32,8 +32,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					root : {
 						text : 'root'
 					},
-					// for drawing charts
-					contrastPercents : [],
 
 					listeners : {
 						afterrender : function() {
@@ -45,7 +43,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					},
 
 					initComponent : function() {
-						
+
 						this.ee = this.experimentDetails;
 						
 						// always editable by admin user
@@ -65,6 +63,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					build : function() {
 						var analyses = this.ee.differentialExpressionAnalyses;
 						Ext.apply(this, {
+							contrastPercents : [], // for drawing charts
 							totalProbes : this.ee.processedExpressionVectorCount
 						});
 
@@ -88,6 +87,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							}));
 							return;
 						}
+						
 						// var subsetTracker = {}; // used to keep subset nodes
 						// adjacent
 						var nodeId = 0; // used to keep track of nodes and give
@@ -121,7 +121,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
 							// make node for analysis
 							parentNode = new Ext.tree.TreeNode({
-								id : 'node' + (nodeId++),
+								id : 'node' + this.ee.id + '-' + (nodeId++),
 								expanded : false,
 								singleClickExpand : true,
 								text : downloadDiffDataLink,
@@ -165,6 +165,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
 								parentText = '<b>' + analysisName[0] + '</b> '
 										+ nodeText;
+
+								parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.size();
+								parentNode.attributes.resultSetId = resultSet.resultSetId;
+								if (resultSet.experimentalFactors.size() == 1) {
+									parentNode.attributes.numberOfFactorValues = resultSet.experimentalFactors[0].values.size();
+								}
 							}
 							// if analysis has >1 result set, create result set
 							// children
@@ -202,12 +208,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 									// factor node
 									var analysisNode = new Ext.tree.TreeNode(
 											{
-												id : 'node' + (nodeId++),
+												id : 'node' + this.ee.id + '-' + (nodeId++),
 												expanded : true,
 												singleClickExpand : true,
 												text : factor + nodeText,
 												numberOfFactors : resultSet.experimentalFactors
 														.size(),
+												resultSetId : resultSet.resultSetId,														
+												numberOfFactorValues : resultSet.experimentalFactors.size() == 1 ?
+													resultSet.experimentalFactors[0].values.size() :
+													null,
 												leaf : true
 											});
 
@@ -267,7 +277,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 									+ ") and selecting samples where the value was \'"
 									+ subsetFactorValue.value
 									+ '\'">'
-									+ "using a subset of the data ("
+									+ " using a subset of the data ("
 									+ subsetFactor.category
 									+ " = "
 									+ analysis.subsetFactorValue.value
@@ -394,7 +404,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 								+ '\')" ext:qtip=\"'
 								+ numbers
 								+ '\">'
-								+ '&nbsp;<canvas height=20 width=20 id="chartDiv'
+								+ '&nbsp;<canvas height=20 width=20 id="chart' + eeID + 'Div'
 								+ nodeId + '"></canvas>';
 
 						// if the number of up or downregulated probes is
@@ -478,8 +488,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					drawPieCharts : function() {
 						var ctx, diffExpressed, interesting;
 						for ( var i = 0; i < this.contrastPercents.size(); i++) {
-							if (Ext.get('chartDiv' + i)) {
-								ctx = Ext.get('chartDiv' + i).dom
+							var chartElement = Ext.get('chart' + this.ee.id + 'Div' + i);
+
+							if (chartElement) {					
+								ctx = chartElement.dom
 										.getContext("2d");
 								if (this.totalProbes === null
 										|| this.totalProbes === 0

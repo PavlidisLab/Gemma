@@ -395,6 +395,18 @@ ExpressionDataFileUploadController.validate = function(p0, callback) {
 if (ExpressionExperimentController == null)
 	var ExpressionExperimentController = {};
 ExpressionExperimentController._path = '/Gemma/dwr';
+ExpressionExperimentController.analyzeResultSets = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'analyzeResultSets', p0, p1, callback);
+};
+ExpressionExperimentController.loadMyAnalyses = function(callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadMyAnalyses', callback);
+}
+ExpressionExperimentController.removeAnalysis = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'removeAnalysis', p0, callback);
+};
+ExpressionExperimentController.saveResultSets = function(p0, p1, p2, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'saveResultSets', p0, p1, p2, callback);
+};
 ExpressionExperimentController.getAnnotation = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getAnnotation', p0,
 			callback);

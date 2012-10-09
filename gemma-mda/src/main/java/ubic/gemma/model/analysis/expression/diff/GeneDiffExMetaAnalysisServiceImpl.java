@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,5 +115,30 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
         geneDiffExMetaAnalysisDao.update( analysis );
 
     }
+    
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisValueObject> loadMyAnalysisVOs() {
+	
+    	Collection<GeneDifferentialExpressionMetaAnalysis> myAnalyses = loadMyAnalyses();
+    	
+    	Collection<GeneDifferentialExpressionMetaAnalysisValueObject> analysisVOs = new HashSet<GeneDifferentialExpressionMetaAnalysisValueObject>(myAnalyses.size());
+    	
+    	for (GeneDifferentialExpressionMetaAnalysis analysis: myAnalyses) {
+    		analysisVOs.add(new GeneDifferentialExpressionMetaAnalysisValueObject(analysis));
+    	}
+    	
+    	return analysisVOs;
+	}
 
+	@Override
+	public void delete(Long id) {
+		GeneDifferentialExpressionMetaAnalysis metaAnalysis = load( id );
+		
+		// TODO: Should throw exception if the meta-analysis cannot be deleted.
+		if (metaAnalysis != null) {
+			delete(metaAnalysis);
+		}
+	}
 }
+
+

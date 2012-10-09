@@ -6,6 +6,7 @@
 Ext.namespace('Gemma');
 
 Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
+	width: 330,
 	taxonId: null, // might be set by parent to control combo
 	listModified: false,
 	getSelectedExperimentOrExperimentSetValueObject:function(){
@@ -148,7 +149,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.newBoxTriggered = true;
 						this.helpBtn.hide();
 						// this.relayEvents(this.experimentCombo, ['select']);
-					}
+					} 
+					
 					combo.disable().hide();
 					//this.selectionTitle.update(combo.getValue());
 					this.helpBtn.hide();
@@ -192,7 +194,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			frame : false,
 			border:false,
 			hideBorders:true,
-			width: 330,
 			items: [
 			{
 				layout: 'hbox',

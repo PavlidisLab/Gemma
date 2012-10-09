@@ -1,0 +1,36 @@
+.wizardTabPanelUseCustomIcon .icon-wizard-next {
+	background-image: url(/Gemma/images/icons/arrow_right.png);
+}
+.wizardTabPanelUseCustomIcon .x-tab-strip-top .x-tab-right,
+.wizardTabPanelUseCustomIcon .x-tab-strip-top .x-tab-left,
+.wizardTabPanelUseCustomIcon .x-tab-strip-top .x-tab-strip-inner {
+	background-image: none;
+}
+
+.wizardTabPanelUseCustomIcon .x-tab-strip .x-tab-with-icon span.x-tab-strip-text {
+	padding-left: 0px;
+	padding-right: 36px;
+	background-position: right;
+}
+
+.wizardTabPanel span.link {
+	text-decoration: none;
+}
+
+/* mask() is called on the panel to make it read-only. Change the opacity so that the panel looks like 
+   read-only rather than masked. */
+.wizardTabPanel .ext-el-mask {
+	opacity: 0.15;
+}
+
+.wizardTabPanel .read-only-warning {
+	height: 16px;
+	left: 200px !important;
+	top: 2px !important;
+}
+.wizardTabPanel .read-only-warning div {
+	color: red;
+	border-color: red;
+	height: 12px;
+    padding: 1px 6px;
+}
