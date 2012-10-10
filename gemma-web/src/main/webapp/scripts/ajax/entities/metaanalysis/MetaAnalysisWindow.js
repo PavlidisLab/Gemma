@@ -33,7 +33,7 @@ Gemma.MetaAnalysisWindow = Ext.extend(Ext.Window, {
 		}
 
 		var selectFactorPanel = new Gemma.MetaAnalysisSelectFactorPanel({
-			includedResultSetDetails: (this.metaAnalysis ? this.metaAnalysis.includedResultSetDetails : null),			
+			metaAnalysis: this.metaAnalysis,			
 			listeners: {
 				nextButtonClicked: function(panel) {
 					showResultPanel.setResultSetIds(this.getSelectedResultSetIds());

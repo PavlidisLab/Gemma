@@ -14,9 +14,9 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		var nextButton = this.createNextButton();
 		nextButton.disable();
 
-		// Assume that if selectedResultSetAnalyses is not null, result sets are shown
+		// Assume that if this.metaAnalysis is not null, result sets are shown
 		// for viewing only. So, editing is not allowed. 
-		var generateExperimentComponents = function(experimentDetails, selectedResultSetAnalyses) {
+		var generateExperimentComponents = function(experimentDetails) {
 			var radioGroup = new Ext.form.RadioGroup({
 			    items: []
 			});
@@ -24,7 +24,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			var experimentTitle = '<b>' + experimentDetails.accession + ' ' + experimentDetails.name + '</b>';
 
 			var experimentTitleComponent;
-			if (selectedResultSetAnalyses) {
+			if (this.metaAnalysis) {
 				experimentTitleComponent = new Ext.form.DisplayField({
 					style: 'margin: 10px 0 0 20px;', // DisplayField instead of Label is used. Otherwise, top margin is not honored. 
 					html: experimentTitle
@@ -80,10 +80,10 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			    
 			    var generateRadio = function(text, marginLeft, notSuitableForAnalysisMessage, inputValue) {
 					var shouldRadioChecked = false;
-					if (selectedResultSetAnalyses) {
-						for (var i = 0; i < selectedResultSetAnalyses.length; i++) {
-							if (selectedResultSetAnalyses[i].experimentId == experimentDetails.id) {
-								if (selectedResultSetAnalyses[i].resultSetId == inputValue) {
+					if (this.metaAnalysis) {
+						for (var i = 0; i < this.metaAnalysis.includedResultSetDetails.length; i++) {
+							if (this.metaAnalysis.includedResultSetDetails[i].experimentId == experimentDetails.id) {
+								if (this.metaAnalysis.includedResultSetDetails[i].resultSetId == inputValue) {
 									shouldRadioChecked = true;
 								}
 								break;
@@ -95,7 +95,9 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 						boxLabel: text + (notSuitableForAnalysisMessage == null ?  
 							'' :
 							' <i>' + notSuitableForAnalysisMessage + '</i>'),
-						name: experimentDetails.id,
+						name: (this.metaAnalysis ?
+							this.metaAnalysis.id + '-' + experimentDetails.id :
+							experimentDetails.id),
 						style: 'margin-left: ' + marginLeft + 'px;',
 						disabled: notSuitableForAnalysisMessage != null,
 						inputValue: inputValue,
@@ -109,7 +111,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 							}
 						}
 					});	
-			    };
+			    }.createDelegate(this);
 			    
 			    var checkSuitableForAnalysis = function(attributes) {
 			    	var notSuitableForAnalysisMessage = null;
@@ -183,9 +185,9 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				experimentTitleComponent: experimentTitleComponent,
 				experimentResultSetsPanel: experimentResultSetsPanel
 			}
-		};
+		}.createDelegate(this);
 		
-		var showExperiments = function(expressionExperimentIds, resultSetAnalyses) {
+		var showExperiments = function(expressionExperimentIds) {
 			this.maskWindow();
 
 			analyzableExperimentsPanel.removeAll();
@@ -212,7 +214,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				var analyzableExperimentsPanelIndex = 0;
 
 				for (i = 0; i < experiments.length; i++) {
-					var experimentComponents = generateExperimentComponents(experiments[i], resultSetAnalyses);
+					var experimentComponents = generateExperimentComponents(experiments[i]);
 					
 					if (experimentComponents.hasEnabledRadioButtons) {
 						addExperimentComponentsToPanel(experimentComponents, analyzableExperimentsPanel, analyzableExperimentsPanelIndex);
@@ -301,14 +303,14 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		 }); 
 
 		var thisPanelItems;		 
-		if (this.includedResultSetDetails) {
+		if (this.metaAnalysis) {
 			var expressionExperimentIds = [];
 			
-			Ext.each(this.includedResultSetDetails, function(includedResultSetDetail, index) {
+			Ext.each(this.metaAnalysis.includedResultSetDetails, function(includedResultSetDetail, index) {
 				expressionExperimentIds.push(includedResultSetDetail.experimentId);
 			});
 			
-			showExperiments(expressionExperimentIds, this.includedResultSetDetails);
+			showExperiments(expressionExperimentIds);
 			
 			thisPanelItems = [
 				analyzableExperimentsPanel
@@ -328,7 +330,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		
 		this.on({
 			afterrender: function() {
-				if (this.includedResultSetDetails) {
+				if (this.metaAnalysis) {
 					// Defer the call. Otherwise, this panel cannot be set read-only.
 					Ext.defer(
 						function() {
@@ -344,7 +346,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		Ext.apply(this, {
 			height: 600,
 			layout: 'border',
-			title: (this.includedResultSetDetails ? 'Selected' : 'Select') + ' factors',			
+			title: (this.metaAnalysis ? 'Selected' : 'Select') + ' factors',			
 			getSelectedResultSetIds: function() {
 				var selectedResultSetIds = [];
 
@@ -366,13 +368,13 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				}
 			}],
 			setSelectedExperimentIds: function(expressionExperimentIds) {
-				showExperiments(expressionExperimentIds, null);				
+				showExperiments(expressionExperimentIds);
 			},
 			setPanelReadOnly: function(msg, msgCls) {
 				analyzableExperimentsPanel.header.mask(msg, msgCls);
 				setPanelReadOnly(analyzableExperimentsPanel, true);
 				
-				if (!this.includedResultSetDetails) {				
+				if (!this.metaAnalysis) {				
 					buttonPanel.body.mask();
 					setPanelReadOnly(nonAnalyzableExperimentsPanel, true);
 				}
