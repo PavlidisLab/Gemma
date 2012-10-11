@@ -75,7 +75,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @see ubic.gemma.analysis.expression.diff.DiffExMetaAnalyserService#analyze(java.util.Collection)
      */
     @Override
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<ExpressionAnalysisResultSet> resultSets, String name, String description ) {
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<ExpressionAnalysisResultSet> resultSets,
+            String name, String description ) {
 
         if ( resultSets.size() < 2 ) {
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
@@ -234,15 +235,15 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
 
         // Save results only when name is specified.
-		if (name != null) {
-			analysis.setName(name);
-			analysis.setDescription(description);
+        if ( name != null ) {
+            analysis.setName( name );
+            analysis.setDescription( description );
 
-	        // FIXME might not want to save this here.
-	        log.info( "Saving " + analysis.getResults().size() + " results meeting meta-qvalue of "
-	                + QVALUE_FOR_STORAGE_THRESHOLD );
-			analysis = analysisService.create( analysis );
-		}
+            // FIXME might not want to save this here.
+            log.info( "Saving " + analysis.getResults().size() + " results meeting meta-qvalue of "
+                    + QVALUE_FOR_STORAGE_THRESHOLD );
+            analysis = analysisService.create( analysis );
+        }
 
         return analysis;
     }
@@ -280,8 +281,19 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         assert !res.isEmpty();
         Double bestPvalue = Double.MAX_VALUE;
         for ( DifferentialExpressionAnalysisResult r : res ) {
+
             Double pvalue = r.getPvalue();
-            if ( pvalue != null && pvalue < bestPvalue ) {
+
+            if ( pvalue == null || Double.isNaN( pvalue ) ) {
+                continue;
+            }
+
+            /*
+             * Pvalues stored are two-sided. To convert to a one-sided value, we consider just one tail.
+             */
+            pvalue /= 2.0;
+
+            if ( pvalue < bestPvalue ) {
                 assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
 
                 // temporary, as my test database doesn't have all contrasts computed.
@@ -292,7 +304,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 if ( upperTail ) {
                     if ( logFoldChange < 0 ) {
                         bestPvalue = 1.0 - pvalue;
-                    } else {                        
+                    } else {
                         bestPvalue = pvalue;
                     }
                 } else {

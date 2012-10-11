@@ -52,7 +52,6 @@ public class DiffExMetaAnanlyzerServiceTest extends BaseSpringContextTest {
     public void testAnalyze() {
 
         ExpressionExperiment ds1 = experimentService.findByShortName( "GSE2018" );
-
         ExpressionExperiment ds2 = experimentService.findByShortName( "GSE6344" );
         ExpressionExperiment ds3 = experimentService.findByShortName( "GSE2111" );
         assertNotNull( ds1 );
@@ -80,12 +79,12 @@ public class DiffExMetaAnanlyzerServiceTest extends BaseSpringContextTest {
         /*
          * Perform the meta-analysis without saving it.
          */
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( resultSets, null, null );        
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( resultSets, null, null );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 
         // not checked by hand; may change if we fix storage of contrasts for these test data set.
-        assertEquals( 677, metaAnalysis.getResults().size() );
+        assertEquals( 358, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
