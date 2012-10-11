@@ -349,14 +349,6 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
         return f;
     }
 
-    public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
-        this.expressionDataFileService = expressionDataFileService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
     // ========================================================
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
