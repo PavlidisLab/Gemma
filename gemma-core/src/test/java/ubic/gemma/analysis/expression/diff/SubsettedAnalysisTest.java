@@ -37,10 +37,6 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Test
     public final void testWithSubset() throws Exception {
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
 
         configureMocks();
 
