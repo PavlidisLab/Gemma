@@ -69,6 +69,10 @@ public class ExpressionDataMatrixColumnSort {
         controlGroupTerms.add( "control_group" );
         controlGroupTerms.add( "wild_type" );
         controlGroupTerms.add( "wild type" );
+        controlGroupTerms.add( "reference_substance_role" );
+        controlGroupTerms.add( "reference_subject_role" );
+        controlGroupTerms.add( "baseline_participant_role" );
+        controlGroupTerms.add( "to_be_treated_with_placebo_role" );
 
         controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
                                                                                              // saline.
