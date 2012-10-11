@@ -138,9 +138,26 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 
 				resultLabel.setText('', false);
 				
-				ExpressionExperimentController.analyzeResultSets(resultSetIds, this.numResultsRequired, function(geneDifferentialExpressionMetaAnalysis) {
-					showResults(geneDifferentialExpressionMetaAnalysis);					
-				}.createDelegate(this));
+				ExpressionExperimentController.analyzeResultSets(resultSetIds, this.numResultsRequired, {
+					callback: function(geneDifferentialExpressionMetaAnalysis) {
+							showResults(geneDifferentialExpressionMetaAnalysis);					
+						}.createDelegate(this),
+					timeout: 15 * 60 * 000, // 15 minutes
+					errorHandler: function(result) {
+							Ext.Msg.show({
+								title: Gemma.HelpText.CommonWarnings.Timeout.title,
+								msg: Gemma.HelpText.CommonWarnings.Timeout.text,
+								buttons: Ext.Msg.OK,
+								fn: function(btn, text, opt) {
+									if (btn == 'ok'){
+								    	this.unmaskWindow();
+								        this.fireEvent('modifySelectionButtonClicked');
+								    }
+							   	},
+							   scope: this
+							});						
+						}.createDelegate(this)
+				});
 			}
 		});
 
