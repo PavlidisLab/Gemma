@@ -532,8 +532,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .findByInvestigation( ee );
 
         if ( oldAnalyses.size() > 1 ) {
-            throw new RuntimeException( "Experiment has too many factors to run automatically: " + ee.getShortName()
-                    + " and there is more than one old analysis on which to base the new one" );
+            throw new RuntimeException(
+                    "There is more than one old analysis on which to base the new one, cannot proceed with 'redo'" );
+        }
+
+        if ( oldAnalyses.isEmpty() ) {
+            throw new IllegalArgumentException(
+                    "There is no analysis on which to base a new one, cannot proceed with 'redo'" );
         }
 
         /*
