@@ -142,7 +142,7 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 					callback: function(geneDifferentialExpressionMetaAnalysis) {
 							showResults(geneDifferentialExpressionMetaAnalysis);					
 						}.createDelegate(this),
-					timeout: 15 * 60 * 1000, // 15 minutes
+					timeout: 900000, // = 15 * 60 * 1000 (15 minutes)
 					errorHandler: function(result) {
 							Ext.Msg.show({
 								title: Gemma.HelpText.CommonWarnings.Timeout.title,
