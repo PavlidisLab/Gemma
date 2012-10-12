@@ -102,6 +102,16 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for differentially expressed genes.";
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -159,8 +169,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( "nodb", false, "Output only to STDOUT instead of database" );
 
-        super.addOption( "redo", false, "If using automatic analysis, and there are more than 3 factors available, "
-                + "try to base the analysis on a previous analysis. Only works if there is just one old analysis." );
+        super.addOption(
+                "redo",
+                false,
+                "If using automatic analysis "
+                        + "try to base the analysis on a previous analysis. Only works if there is just one old analysis, but is okay even if there are more than three factors." );
 
         super.addOption( "delete", false,
                 "Instead of running the analyssi on the given experiments, delete the old analyses. Use with care!" );
@@ -208,14 +221,204 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         return null;
     }
 
+    /**
+     * @param ee
+     */
+    protected void processExperiment( ExpressionExperiment ee ) {
+        Collection<DifferentialExpressionAnalysis> results = null;
+        try {
+
+            ee = this.eeService.thawLite( ee );
+
+            if ( delete ) {
+                log.info( "Deleting any analyses for experiment=" + ee );
+                differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+                successObjects.add( "Deleted analysis for: " + ee.toString() );
+                return;
+            }
+
+            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            if ( experimentalFactors.size() == 0 ) {
+                if ( this.expressionExperiments.size() == 1 ) {
+                    /*
+                     * Only need to be noisy if this is the only ee. Batch processing should be less so.
+                     */
+                    throw new RuntimeException( "Experiment does not have an experimental design populated: "
+                            + ee.getShortName() );
+                }
+                log.warn( "Experiment does not have an experimental design populated: " + ee.getShortName() );
+                return;
+            }
+
+            Collection<ExperimentalFactor> factors = guessFactors( ee );
+
+            if ( factors.size() > 0 ) {
+                /*
+                 * Manual selection of factors
+                 */
+                ExperimentalFactor subsetFactor = getSubsetFactor( ee );
+
+                log.info( "Using " + factors.size() + " factors provided as arguments" );
+
+                if ( subsetFactor != null ) {
+                    if ( factors.contains( subsetFactor ) ) {
+                        throw new IllegalArgumentException(
+                                "Subset factor cannot also be included as factor to analyze" );
+                    }
+                    log.info( "Subsetting by " + subsetFactor );
+
+                }
+
+                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+                config.setAnalysisType( this.type );
+                config.setFactorsToInclude( factors );
+                config.setSubsetFactor( subsetFactor );
+
+                /*
+                 * FIXME I am pretty sure this is the right thing to do here, to get iterations included by default.
+                 * It's actually only complicated if there is a subset factor.
+                 */
+                if ( type == null && factors.size() == 2 ) {
+                    config.getInteractionsToInclude().add( factors );
+                }
+
+                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+
+            } else {
+                /*
+                 * Automagically
+                 */
+
+                if ( tryToCopyOld ) {
+                    results = tryToRedoBasedOnOldAnalysis( ee );
+                }
+
+                Collection<ExperimentalFactor> factorsToUse = new HashSet<ExperimentalFactor>();
+
+                if ( this.ignoreBatch ) {
+                    for ( ExperimentalFactor ef : experimentalFactors ) {
+                        if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+                            factorsToUse.add( ef );
+                        }
+                    }
+                } else {
+                    factorsToUse.addAll( experimentalFactors );
+                }
+
+                if ( factorsToUse.isEmpty() ) {
+                    throw new RuntimeException( "No factors available for " + ee.getShortName() );
+                }
+
+                if ( factorsToUse.size() > 3 ) {
+
+                    if ( !tryToCopyOld ) {
+                        throw new RuntimeException(
+                                "Experiment has too many factors to run automatically: "
+                                        + ee.getShortName()
+                                        + "; try using the -redo flag to base it on an old analysis, or select factors manually" );
+                    }
+                    results = tryToRedoBasedOnOldAnalysis( ee );
+
+                } else {
+                    assert !factorsToUse.isEmpty();
+                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
+                            factorsToUse );
+                }
+
+            }
+
+            if ( results == null ) {
+                throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
+            }
+
+            // expressionDataFileService.writeOrLocateDiffExpressionDataFile( results.iterator().next(), true );
+
+            successObjects.add( ee.toString() );
+
+        } catch ( Exception e ) {
+            log.error( "Error while processing " + e + ": " + e.getMessage() );
+            log.error( e, e );
+            errorObjects.add( ee + ": " + e.getMessage() );
+        }
+
+    }
+
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
-    public String getShortDesc() {
-        return "Analyze expression data sets for differentially expressed genes.";
+    protected void processOptions() {
+        super.processOptions();
+        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
+        differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
+        if ( hasOption( "type" ) ) {
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the analysis type when analyzing a single experiment" );
+            }
+
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
+            }
+            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        }
+
+        if ( hasOption( "subset" ) ) {
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the subset factor when analyzing a single experiment" );
+            }
+
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
+            }
+
+            String subsetFactor = getOptionValue( "subset" );
+            try {
+                this.subsetFactorId = Long.parseLong( subsetFactor );
+
+            } catch ( NumberFormatException e ) {
+                this.subsetFactorName = subsetFactor;
+            }
+        }
+
+        if ( hasOption( "usebatch" ) ) {
+            this.ignoreBatch = false;
+        }
+
+        if ( hasOption( "delete" ) ) {
+            this.delete = true;
+        }
+
+        this.tryToCopyOld = hasOption( "redo" );
+
+        if ( hasOption( "factors" ) ) {
+
+            if ( this.tryToCopyOld ) {
+                throw new IllegalArgumentException( "You can't specify 'redo' and 'factors' together" );
+            }
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the factors when analyzing a single experiment" );
+            }
+
+            String rawfactors = getOptionValue( "factors" );
+            String[] factorIDst = StringUtils.split( rawfactors, "," );
+            if ( factorIDst != null && factorIDst.length > 0 ) {
+                for ( String string : factorIDst ) {
+                    try {
+                        Long factorId = Long.parseLong( string );
+                        this.factorIds.add( factorId );
+                    } catch ( NumberFormatException e ) {
+                        this.factorNames.add( string );
+                    }
+                }
+            }
+        }
     }
 
     private ExperimentalFactor getSubsetFactor( ExpressionExperiment ee ) {
@@ -318,228 +521,57 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     /**
-     * @param ee
-     */
-    protected void processExperiment( ExpressionExperiment ee ) {
-        Collection<DifferentialExpressionAnalysis> results = null;
-        try {
-
-            ee = this.eeService.thawLite( ee );
-
-            if ( delete ) {
-                log.info( "Deleting any analyses for experiment=" + ee );
-                differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
-                successObjects.add( "Deleted analysis for: " + ee.toString() );
-                return;
-            }
-
-            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
-            if ( experimentalFactors.size() == 0 ) {
-                if ( this.expressionExperiments.size() == 1 ) {
-                    /*
-                     * Only need to be noisy if this is the only ee. Batch processing should be less so.
-                     */
-                    throw new RuntimeException( "Experiment does not have an experimental design populated: "
-                            + ee.getShortName() );
-                }
-                log.warn( "Experiment does not have an experimental design populated: " + ee.getShortName() );
-                return;
-            }
-
-            Collection<ExperimentalFactor> factors = guessFactors( ee );
-
-            if ( factors.size() > 0 ) {
-                /*
-                 * Manual selection of factors
-                 */
-                ExperimentalFactor subsetFactor = getSubsetFactor( ee );
-
-                log.info( "Using " + factors.size() + " factors provided as arguments" );
-
-                if ( subsetFactor != null ) {
-                    if ( factors.contains( subsetFactor ) ) {
-                        throw new IllegalArgumentException(
-                                "Subset factor cannot also be included as factor to analyze" );
-                    }
-                    log.info( "Subsetting by " + subsetFactor );
-
-                }
-
-                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-                config.setAnalysisType( this.type );
-                config.setFactorsToInclude( factors );
-                config.setSubsetFactor( subsetFactor );
-
-                /*
-                 * FIXME I am pretty sure this is the right thing to do here, to get iterations included by default.
-                 * It's actually only complicated if there is a subset factor.
-                 */
-                if ( type == null && factors.size() == 2 ) {
-                    config.getInteractionsToInclude().add( factors );
-                }
-
-                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
-
-            } else {
-                /*
-                 * Automagically
-                 */
-
-                Collection<ExperimentalFactor> factorsToUse = new HashSet<ExperimentalFactor>();
-
-                if ( this.ignoreBatch ) {
-                    for ( ExperimentalFactor ef : experimentalFactors ) {
-                        if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
-                            factorsToUse.add( ef );
-                        }
-                    }
-                } else {
-                    factorsToUse.addAll( experimentalFactors );
-                }
-
-                if ( factorsToUse.isEmpty() ) {
-                    throw new RuntimeException( "No factors available for " + ee.getShortName() );
-                }
-
-                if ( factorsToUse.size() > 3 ) {
-
-                    if ( !tryToCopyOld ) {
-                        throw new RuntimeException(
-                                "Experiment has too many factors to run automatically: "
-                                        + ee.getShortName()
-                                        + "; try using the -redo flag to base it on an old analysis, or select factors with the ." );
-                    }
-                    Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
-                            .findByInvestigation( ee );
-
-                    if ( oldAnalyses.size() > 1 ) {
-                        throw new RuntimeException( "Experiment has too many factors to run automatically: "
-                                + ee.getShortName()
-                                + " and there is more than one old analysis on which to base the new one" );
-                    }
-
-                    DifferentialExpressionAnalysis copyMe = oldAnalyses.iterator().next();
-                    differentialExpressionAnalysisService.thaw( copyMe );
-
-                    log.info( "Will base analysis on old one: " + copyMe );
-                    DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
-                    if ( copyMe.getSubsetFactorValue() != null ) {
-                        config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
-                    }
-
-                    Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
-                    Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
-                    for ( ExpressionAnalysisResultSet rs : resultSets ) {
-                        Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
-                        factorsFromOldExp.addAll( oldfactors );
-
-                        if ( oldfactors.size() == 2 ) {
-                            config.getInteractionsToInclude().add( oldfactors );
-                        }
-
-                    }
-                    if ( factorsFromOldExp.isEmpty() ) {
-                        throw new IllegalStateException( "Old analysis didn't have any factors" );
-                    }
-                    config.getFactorsToInclude().addAll( factorsFromOldExp );
-                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
-
-                } else {
-                    assert !factorsToUse.isEmpty();
-                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
-                            factorsToUse );
-                }
-
-            }
-
-            if ( results == null ) {
-                throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
-            }
-
-            // expressionDataFileService.writeOrLocateDiffExpressionDataFile( results.iterator().next(), true );
-
-            successObjects.add( ee.toString() );
-
-        } catch ( Exception e ) {
-            log.error( "Error while processing " + e + ": " + e.getMessage() );
-            log.error( e, e );
-            errorObjects.add( ee + ": " + e.getMessage() );
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
+     * Run the analysis using configuration based on an old analysis.
      * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     * @param ee
+     * @return
      */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
-        differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
-        if ( hasOption( "type" ) ) {
+    private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
+        Collection<DifferentialExpressionAnalysis> results;
+        Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( ee );
 
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "You can only specify the analysis type when analyzing a single experiment" );
-            }
-
-            if ( !hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
-            }
-            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        if ( oldAnalyses.size() > 1 ) {
+            throw new RuntimeException( "Experiment has too many factors to run automatically: " + ee.getShortName()
+                    + " and there is more than one old analysis on which to base the new one" );
         }
 
-        if ( hasOption( "subset" ) ) {
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "You can only specify the subset factor when analyzing a single experiment" );
-            }
+        /*
+         * FIXME: we don't use the baseline settings from the previous analysis, but I'm not sure we use that yet
+         * anyway.
+         */
 
-            if ( !hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
-            }
+        DifferentialExpressionAnalysis copyMe = oldAnalyses.iterator().next();
+        differentialExpressionAnalysisService.thaw( copyMe );
 
-            String subsetFactor = getOptionValue( "subset" );
-            try {
-                this.subsetFactorId = Long.parseLong( subsetFactor );
+        log.info( "Will base analysis on old one: " + copyMe );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
-            } catch ( NumberFormatException e ) {
-                this.subsetFactorName = subsetFactor;
-            }
+        if ( copyMe.getSubsetFactorValue() != null ) {
+            config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
         }
 
-        if ( hasOption( "usebatch" ) ) {
-            this.ignoreBatch = false;
-        }
+        Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
+        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
+            factorsFromOldExp.addAll( oldfactors );
 
-        if ( hasOption( "delete" ) ) {
-            this.delete = true;
-        }
-
-        this.tryToCopyOld = hasOption( "redo" );
-
-        if ( hasOption( "factors" ) ) {
-
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "You can only specify the factors when analyzing a single experiment" );
+            /*
+             * If we included the interaction before, include it again.
+             */
+            if ( oldfactors.size() == 2 ) {
+                log.info( "Including interaction term" );
+                config.getInteractionsToInclude().add( oldfactors );
             }
 
-            String rawfactors = getOptionValue( "factors" );
-            String[] factorIDst = StringUtils.split( rawfactors, "," );
-            if ( factorIDst != null && factorIDst.length > 0 ) {
-                for ( String string : factorIDst ) {
-                    try {
-                        Long factorId = Long.parseLong( string );
-                        this.factorIds.add( factorId );
-                    } catch ( NumberFormatException e ) {
-                        this.factorNames.add( string );
-                    }
-                }
-            }
         }
+        if ( factorsFromOldExp.isEmpty() ) {
+            throw new IllegalStateException( "Old analysis didn't have any factors" );
+        }
+
+        config.getFactorsToInclude().addAll( factorsFromOldExp );
+        results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+        return results;
     }
 }
