@@ -504,7 +504,8 @@ public class GeoConverterImpl implements GeoConverter {
                 Taxon platformParentTaxon = platformTaxon.getParentTaxon();
                 parentTaxa.add( platformParentTaxon );
             }
-            // check now if we only have one parent taxon adn check if no null, if a null then there was a taxon with no
+            // check now if we only have one parent taxon and check if not null, if a null then there was a taxon with
+            // no
             // parent
             if ( !( parentTaxa.contains( null ) ) && parentTaxa.size() == 1 ) {
                 log.debug( "Parent taxon found " + parentTaxa );
@@ -640,20 +641,21 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Flag as unneeded data that are not from experiments types that we support, such as ChIP.
      * 
-     * @param dataSets
+     * @param series
      * @param dataSetsToSkip
      * @param samplesToSkip
      */
-    private void checkForDataToSkip( Collection<GeoDataset> dataSets, Collection<String> dataSetsToSkip,
+    private void checkForDataToSkip( GeoSeries series, Collection<String> dataSetsToSkip,
             Collection<GeoSample> samplesToSkip ) {
-        for ( GeoDataset dataset : dataSets ) {
+
+        for ( GeoDataset dataset : series.getDatasets() ) {
             // This doesn't cover every possibility...
             if ( dataset.getExperimentType() == ExperimentType.arrayCGH
                     || dataset.getExperimentType() == ExperimentType.ChIPChip
                     || dataset.getExperimentType() == ExperimentType.geneExpressionSAGEbased ) {
                 log.warn( "Gemma does not know how to handle " + dataset.getExperimentType() );
 
-                if ( dataSets.size() == 1 ) {
+                if ( series.getDatasets().size() == 1 ) {
                     log.warn( "Because the experiment type cannot be handled, "
                             + "and there is only one data set in this series, nothing will be returned!" );
                 }
@@ -664,6 +666,32 @@ public class GeoConverterImpl implements GeoConverter {
                         + getDatasetSamples( dataset ).size() + " samples." );
             }
         }
+
+        // /*
+        // * Skip samples that are for a nonsupported taxon, when there is more than one taxon. We would still have to
+        // * split series if there are two supported taxa.
+        // */
+        // Collection<String> seriesTaxa = new HashSet<String>();
+        // for ( GeoSample sample : series.getSamples() ) {
+        // String o = sample.getOrganism();
+        // seriesTaxa.add( o );
+        // }
+        //
+        // if ( seriesTaxa.size() > 1 ) {
+        // for ( GeoSample sample : series.getSamples() ) {
+        // String o = sample.getOrganism();
+        // if ( taxonService.findByScientificName( o ) == null ) {
+        // log.info( "Skipping sample " + sample + " that has taxon=" + o );
+        // samplesToSkip.add( sample );
+        // }
+        //
+        // /*
+        // * TODO Might rarely need to worry about removing all samples from a data set.
+        // */
+        // }
+        //
+        // }
+
     }
 
     /**
@@ -824,6 +852,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
             } else {
+                // get it from the channel.
                 Taxon taxon = Taxon.Factory.newInstance();
                 taxon.setIsSpecies( true );
                 taxon.setScientificName( channel.getOrganism() );
@@ -1396,8 +1425,11 @@ public class GeoConverterImpl implements GeoConverter {
                 bs.setIsApproximateLength( false );
                 bs.setLength( new Long( bs.getSequence().length() ) );
                 bs.setType( SequenceType.DNA );
-                bs.setName( platform.getGeoAccession() + "_" + id );
-                bs.setDescription( "Sequence provided by manufacturer. "
+                // bs.setName( platform.getGeoAccession() + "_" + id );
+                bs.setName( id );
+                bs.setDescription( "Sequence from platform "
+                        + platform.getGeoAccession()
+                        + " provided by manufacturer. "
                         + ( externalAccession != null ? "Used in leiu of " + externalAccession
                                 : "No external accession provided" ) );
             } else if ( externalAccession != null && !isRefseq && !isImage && externalDb != null ) {
@@ -1714,7 +1746,7 @@ public class GeoConverterImpl implements GeoConverter {
             /*
              * In reality GEO does not have information about the samples run on each channel. We're just making it up.
              * So we need to just add the channel information to the biomaterials we have already. Note taxon is now
-             * taken from sample
+             * taken from sample FIXME this is no longer accurate; GEO has species information for each channel.
              */
             convertChannel( sample, channel, bioMaterial );
             bioAssay.getSamplesUsed().add( bioMaterial );
@@ -1739,10 +1771,10 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * Convert a GEO series into one or more ExpressionExperiments. The more than one case comes up if the are platforms
-     * from more than one organism represented in the series, ir if 'split by platform' is set. If the series is split
-     * into two or more ExpressionExperiments, each refers to a modified GEO accession such as GSE2393.1, GSE2393.2 etc
-     * for each organism/platform
+     * Convert a GEO series into one or more ExpressionExperiments. The "more than one" case comes up if the are
+     * platforms from more than one organism represented in the series, or if 'split by platform' is set, or if multiple
+     * species were run on a single platform. If the series is split into two or more ExpressionExperiments, each refers
+     * to a modified GEO accession such as GSE2393.1, GSE2393.2 etc for each organism/platform
      * <p>
      * Similarly, because there is no concept of "biomaterial" in GEO, samples that are inferred to have been run using
      * the same biomaterial. The biomaterials are given names after the GSE and the bioAssays (GSMs) such as
@@ -1759,13 +1791,23 @@ public class GeoConverterImpl implements GeoConverter {
 
         Map<String, Collection<GeoData>> organismDatasetMap = getOrganismDatasetMap( series );
         Map<GeoPlatform, Collection<GeoData>> platformDatasetMap = getPlatformDatasetMap( series );
+        Map<String, Collection<GeoSample>> organismSampleMap = getOrganismSampleMap( series );
         // get map of platform to dataset.
 
         if ( organismDatasetMap.size() > 1 ) {
-            log.warn( "**** Multiple-species dataset! This data set will be split into one data set per species. ****" );
+            log.warn( "**** Multiple-species series, with multiple datasets. This series will be split into "
+                    + organismDatasetMap.size() + " experiments. ****" );
             int i = 1;
             for ( String organism : organismDatasetMap.keySet() ) {
                 convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
+                i++;
+            }
+        } else if ( organismSampleMap.size() > 1 ) {
+            log.warn( "**** Multiple-species series. This series will be split into " + organismSampleMap.size()
+                    + " experiments. ****" );
+            int i = 1;
+            for ( String organism : organismSampleMap.keySet() ) {
+                convertSpeciesSpecificSamples( series, converted, organismSampleMap, i, organism );
                 i++;
             }
         } else if ( platformDatasetMap.size() > 1 && this.splitByPlatform ) {
@@ -1794,7 +1836,7 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<GeoDataset> dataSets = series.getDatasets();
         Collection<String> dataSetsToSkip = new HashSet<String>();
         Collection<GeoSample> samplesToSkip = new HashSet<GeoSample>();
-        checkForDataToSkip( dataSets, dataSetsToSkip, samplesToSkip );
+        checkForDataToSkip( series, dataSetsToSkip, samplesToSkip );
         if ( dataSets.size() > 0 && dataSetsToSkip.size() == dataSets.size() ) {
             return null;
         }
@@ -1886,12 +1928,14 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<String> seen = new HashSet<String>();
         for ( Iterator<Set<String>> iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
+            Set<String> correspondingSamples = iter.next();
+            if ( correspondingSamples.isEmpty() ) continue; // can happen after removing samples (multitaxon)
+
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             String bioMaterialName = getBiomaterialPrefix( series, ++numBioMaterials );
             String bioMaterialDescription = BIOMATERIAL_DESCRIPTION_PREFIX;
 
             // From the series samples, find the sample that corresponds and convert it.
-            Set<String> correspondingSamples = iter.next();
             for ( String cSample : correspondingSamples ) {
                 boolean found = false;
                 for ( GeoSample sample : allSeriesSamples ) {
@@ -2035,6 +2079,58 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setValues( series.getValues() );
 
         converted.add( convertSeries( speciesSpecific, null ) );
+    }
+
+    /**
+     * Handle the case where a single series has samples from more than one species.
+     * 
+     * @param series
+     * @param organismSampleMap the samples divvied up by organism
+     * @param converted
+     */
+    private void convertSpeciesSpecificSamples( GeoSeries series, Collection<ExpressionExperiment> converted,
+            Map<String, Collection<GeoSample>> organismSampleMap, int i, String organism ) {
+
+        GeoSeries speciesSpecific = new GeoSeries();
+
+        Collection<GeoSample> samples = organismSampleMap.get( organism );
+
+        for ( GeoSample s : samples ) {
+            speciesSpecific.addSample( s );
+        }
+
+        /*
+         * Strip out sample correspondence for samples not for this organism.
+         */
+        GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
+
+        for ( String o : organismSampleMap.keySet() ) {
+            if ( o.equals( organism ) ) {
+                continue;
+            }
+            for ( GeoSample s : organismSampleMap.get( o ) ) {
+                sampleCorrespondence.removeSample( s.getGeoAccession() );
+            }
+        }
+
+        /*
+         * Basically copy over most of the information
+         */
+        speciesSpecific.setContact( series.getContact() );
+        speciesSpecific.setContributers( series.getContributers() );
+        speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
+        speciesSpecific.setKeyWords( series.getKeyWords() );
+        speciesSpecific.setOverallDesign( series.getOverallDesign() );
+        speciesSpecific.setPubmedIds( series.getPubmedIds() );
+        speciesSpecific.setReplicates( series.getReplicates() );
+        speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
+        speciesSpecific.setSummaries( series.getSummaries() );
+        speciesSpecific.setTitle( series.getTitle() + " - " + organism );
+        speciesSpecific.setWebLinks( series.getWebLinks() );
+        speciesSpecific.setValues( series.getValues( speciesSpecific.getSamples() ) );
+
+        converted.add( convertSeries( speciesSpecific, null ) );
+
     }
 
     /**
@@ -2616,11 +2712,13 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
+
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
                 assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
                         + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
-                if ( organisms.get( organism ) == null ) {
+
+                if ( !organisms.containsKey( organism ) ) {
                     organisms.put( organism, new HashSet<GeoData>() );
                 }
                 organisms.get( organism ).add( sample.getPlatforms().iterator().next() );
@@ -2635,6 +2733,25 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
         return organisms;
+    }
+
+    /**
+     * Based on the sample organisms, not the platforms. For rare cases where more than one species is run on a platform
+     * (e.g., chimp and human run on a human platform)
+     * 
+     * @param series
+     * @return
+     */
+    private Map<String, Collection<GeoSample>> getOrganismSampleMap( GeoSeries series ) {
+        Map<String, Collection<GeoSample>> result = new HashMap<String, Collection<GeoSample>>();
+        for ( GeoSample sample : series.getSamples() ) {
+            String organism = sample.getOrganism();
+            if ( !result.containsKey( organism ) ) {
+                result.put( organism, new HashSet<GeoSample>() );
+            }
+            result.get( organism ).add( sample );
+        }
+        return result;
     }
 
     /**

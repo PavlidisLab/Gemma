@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -151,19 +152,87 @@ public class GeoValues implements Serializable {
 
     }
 
+    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
+
+    private Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<GeoPlatform, Map<Integer, Collection<String>>>();
+
     /**
-     * Some quantitation types are 'skippable' - they are easily recomputed from other values, or are not necessary in
-     * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
-     * 
-     * @param quantitationTypeName
-     * @param aggressive To be more aggressive in remove unwanted quantitation types.
-     * @return true if the name is NOT on the 'skippable' list.
+     * @param columnName
+     * @param index - the actual index of the data in the final data structure, not necessarily the column where the
+     *        data are found in the data file (as that can vary from sample to sample).
      */
-    public boolean isWantedQuantitationType( String quantitationTypeName, boolean aggressive ) {
-        if ( quantitationTypeName == null )
-            throw new IllegalArgumentException( "Quantitation type name cannot be null" );
-        return !skippableQuantitationTypes.contains( quantitationTypeName )
-                && !aggressivelyRemovedQuantitationTypes.contains( quantitationTypeName );
+    public void addQuantitationType( GeoPlatform platform, String columnName, Integer index ) {
+        if ( columnName == null ) throw new IllegalArgumentException( "Column name cannot be null" );
+
+        if ( !quantitationTypeNameMap.containsKey( platform ) ) {
+            quantitationTypeNameMap.put( platform, new HashMap<String, Integer>() );
+            quantitationTypeIndexMap.put( platform, new HashMap<Integer, Collection<String>>() );
+        }
+
+        Map<String, Integer> qtNameMapForPlatform = quantitationTypeNameMap.get( platform );
+        Map<Integer, Collection<String>> qtIndexMapForPlatform = quantitationTypeIndexMap.get( platform );
+
+        if ( qtNameMapForPlatform.containsKey( columnName )
+                && qtNameMapForPlatform.get( columnName ).intValue() != index.intValue() ) {
+            throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
+        }
+
+        qtNameMapForPlatform.put( columnName, index );
+        if ( !qtIndexMapForPlatform.containsKey( index ) ) {
+            qtIndexMapForPlatform.put( index, new HashSet<String>() );
+            qtIndexMapForPlatform.get( index ).add( columnName );
+            log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
+        }
+
+        // did we get a new column name for the same index?
+        if ( !qtIndexMapForPlatform.get( index ).contains( columnName ) ) {
+            /*
+             * This is often a bad thing -- we have to live with it. It means we already have a QT for this column, but
+             * now the name has changed. Sometimes it's just a name change - some people put the sample name as a suffix
+             * in the quantitation type, for example. In other cases, it means the data for one quantitation type will
+             * effectively be used for another; validation will fail in this case because the number of values won't
+             * match for all the vectors.
+             */
+            log.warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
+                    + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
+
+            qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
+
+        }
+
+    }
+
+    /**
+     * Only call this to add a sample for which there are no data.
+     * 
+     * @param sample
+     * @return
+     */
+    public void addSample( GeoSample sample ) {
+        GeoPlatform platform = sample.getPlatforms().iterator().next();
+
+        if ( platform.getTechnology().equals( PlatformType.MPSS )
+                || platform.getTechnology().equals( PlatformType.SAGE ) ) {
+            /*
+             * We're not going to add data for this. ALSO: exon arrays.
+             */
+            return;
+
+        } else if ( !sampleDimensions.containsKey( platform ) ) {
+            /*
+             * Problem: if this is the first sample, we don't know how many quantitation types to expect.
+             */
+            throw new UnsupportedOperationException(
+                    "Can't deal with empty samples when that sample is the first one on its platform." );
+        } else {
+
+            Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+            for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
+                LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+                sampleQtMap.add( sample );
+            }
+        }
+
     }
 
     /**
@@ -224,139 +293,27 @@ public class GeoValues implements Serializable {
     }
 
     /**
-     * Only call this to add a sample for which there are no data.
+     * Remove the data for a given platform (use to save memory)
      * 
-     * @param sample
-     * @return
+     * @param geoPlatform
      */
-    public void addSample( GeoSample sample ) {
-        GeoPlatform platform = sample.getPlatforms().iterator().next();
-
-        if ( platform.getTechnology().equals( PlatformType.MPSS )
-                || platform.getTechnology().equals( PlatformType.SAGE ) ) {
-            /*
-             * We're not going to add data for this. ALSO: exon arrays.
-             */
-            return;
-
-        } else if ( !sampleDimensions.containsKey( platform ) ) {
-            /*
-             * Problem: if this is the first sample, we don't know how many quantitation types to expect.
-             */
-            throw new UnsupportedOperationException(
-                    "Can't deal with empty samples when that sample is the first one on its platform." );
-        } else {
-
-            Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-            for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
-                LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
-                sampleQtMap.add( sample );
-            }
-        }
-
+    public void clear( GeoPlatform geoPlatform ) {
+        this.data.remove( geoPlatform );
     }
 
     /**
-     * Only needs to be called 'externally' if you know there is no data for the sample.
+     * If possible, null out the data for a quantitation type on a given platform.
      * 
-     * @param sample
+     * @param platform
+     * @param datasetSamples
      * @param quantitationTypeIndex
-     * @return
      */
-    private GeoPlatform addSample( GeoSample sample, Integer quantitationTypeIndex ) {
-        if ( sample.getPlatforms().size() > 1 ) {
-            throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
+    public void clear( GeoPlatform platform, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
+        if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
+            return; // can't really clear
         }
-
-        GeoPlatform platform = sample.getPlatforms().iterator().next();
-        if ( !sampleDimensions.containsKey( platform ) ) {
-            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
-        }
-
-        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-        if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
-            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
-        }
-
-        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
-        if ( !sampleQtMap.contains( sample ) ) {
-            sampleQtMap.add( sample );
-        }
-        return platform;
-    }
-
-    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
-    private Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<GeoPlatform, Map<Integer, Collection<String>>>();
-
-    /**
-     * @param columnName
-     * @param index - the actual index of the data in the final data structure, not necessarily the column where the
-     *        data are found in the data file (as that can vary from sample to sample).
-     */
-    public void addQuantitationType( GeoPlatform platform, String columnName, Integer index ) {
-        if ( columnName == null ) throw new IllegalArgumentException( "Column name cannot be null" );
-
-        if ( !quantitationTypeNameMap.containsKey( platform ) ) {
-            quantitationTypeNameMap.put( platform, new HashMap<String, Integer>() );
-            quantitationTypeIndexMap.put( platform, new HashMap<Integer, Collection<String>>() );
-        }
-
-        Map<String, Integer> qtNameMapForPlatform = quantitationTypeNameMap.get( platform );
-        Map<Integer, Collection<String>> qtIndexMapForPlatform = quantitationTypeIndexMap.get( platform );
-
-        if ( qtNameMapForPlatform.containsKey( columnName )
-                && qtNameMapForPlatform.get( columnName ).intValue() != index.intValue() ) {
-            throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
-        }
-
-        qtNameMapForPlatform.put( columnName, index );
-        if ( !qtIndexMapForPlatform.containsKey( index ) ) {
-            qtIndexMapForPlatform.put( index, new HashSet<String>() );
-            qtIndexMapForPlatform.get( index ).add( columnName );
-            log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
-        }
-
-        // did we get a new column name for the same index?
-        if ( !qtIndexMapForPlatform.get( index ).contains( columnName ) ) {
-            /*
-             * This is often a bad thing -- we have to live with it. It means we already have a QT for this column, but
-             * now the name has changed. Sometimes it's just a name change - some people put the sample name as a suffix
-             * in the quantitation type, for example. In other cases, it means the data for one quantitation type will
-             * effectively be used for another; validation will fail in this case because the number of values won't
-             * match for all the vectors.
-             */
-            log.warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
-                    + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
-
-            qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
-
-        }
-
-    }
-
-    /**
-     * @param columnName
-     * @return
-     */
-    public Integer getQuantitationTypeIndex( GeoPlatform platform, String columnName ) {
-        return this.quantitationTypeNameMap.get( platform ).get( columnName );
-    }
-
-    /**
-     * @param samplePlatform
-     * @return Collection of Objects representing the quantitation types for the given platform.
-     */
-    public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
-        return this.data.get( samplePlatform ).keySet();
-    }
-
-    /**
-     * @param quantitationType
-     * @param designElement
-     * @return
-     */
-    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
-        return data.get( platform ).get( quantitationType ).get( designElement );
+        log.debug( "Clearing" );
+        data.get( platform ).remove( quantitationTypeIndex );
     }
 
     /**
@@ -401,18 +358,28 @@ public class GeoValues implements Serializable {
     }
 
     /**
-     * If possible, null out the data for a quantitation type on a given platform.
-     * 
-     * @param platform
-     * @param datasetSamples
-     * @param quantitationTypeIndex
+     * @param columnName
+     * @return
      */
-    public void clear( GeoPlatform platform, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
-        if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
-            return; // can't really clear
-        }
-        log.debug( "Clearing" );
-        data.get( platform ).remove( quantitationTypeIndex );
+    public Integer getQuantitationTypeIndex( GeoPlatform platform, String columnName ) {
+        return this.quantitationTypeNameMap.get( platform ).get( columnName );
+    }
+
+    /**
+     * @param samplePlatform
+     * @return Collection of Objects representing the quantitation types for the given platform.
+     */
+    public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
+        return this.data.get( samplePlatform ).keySet();
+    }
+
+    /**
+     * @param quantitationType
+     * @param designElement
+     * @return
+     */
+    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
+        return data.get( platform ).get( quantitationType ).get( designElement );
     }
 
     /**
@@ -427,7 +394,7 @@ public class GeoValues implements Serializable {
             Integer[] indices ) {
         List<Object> result = new ArrayList<Object>();
         Map<Object, Map<String, List<Object>>> map = data.get( platform );
-        assert map != null;
+        assert map != null : "No data for platform=" + platform;
         Map<String, List<Object>> map2 = map.get( quantitationType );
         assert map2 != null : "No data for qt " + quantitationType + " on " + platform;
         List<Object> rawvals = map2.get( designElement );
@@ -458,6 +425,99 @@ public class GeoValues implements Serializable {
             }
         }
         return result;
+    }
+
+    /**
+     * Some quantitation types are 'skippable' - they are easily recomputed from other values, or are not necessary in
+     * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
+     * 
+     * @param quantitationTypeName
+     * @param aggressive To be more aggressive in remove unwanted quantitation types.
+     * @return true if the name is NOT on the 'skippable' list.
+     */
+    public boolean isWantedQuantitationType( String quantitationTypeName, boolean aggressive ) {
+        if ( quantitationTypeName == null )
+            throw new IllegalArgumentException( "Quantitation type name cannot be null" );
+        return !skippableQuantitationTypes.contains( quantitationTypeName )
+                && !aggressivelyRemovedQuantitationTypes.contains( quantitationTypeName );
+    }
+
+    /**
+     * This creates a new GeoValues that has data only for the selected samples. The quantiatation type information will
+     * be semi-deep copies. This is only needed for when we are splitting a series apart, especially when it is not
+     * along Platform lines.
+     * 
+     * @param samples
+     * @return
+     */
+    public GeoValues subset( Collection<GeoSample> samples ) {
+
+        GeoValues v = new GeoValues();
+
+        /*
+         * First, create new sampleDimensions and start setting up empty data.
+         */
+        for ( GeoSample s : samples ) {
+            GeoPlatform p = s.getPlatforms().iterator().next();
+
+            if ( !v.sampleDimensions.containsKey( p ) ) {
+                v.sampleDimensions.put( p, new HashMap<Object, LinkedHashSet<GeoSample>>() );
+
+                // deep copy.
+                for ( Object o : this.sampleDimensions.get( p ).keySet() ) {
+                    v.sampleDimensions.get( p ).put( o, new LinkedHashSet<GeoSample>() );
+                    for ( GeoSample ss : this.sampleDimensions.get( p ).get( o ) ) {
+                        v.sampleDimensions.get( p ).get( o ).add( ss ); // could use add all
+                    }
+                }
+
+                v.data.put( p, new HashMap<Object, Map<String, List<Object>>>() );
+                for ( Object o : this.data.get( p ).keySet() ) {
+                    v.data.get( p ).put( o, new HashMap<String, List<Object>>() );
+
+                    for ( String probeId : this.data.get( p ).get( o ).keySet() ) {
+                        v.data.get( p ).get( o ).put( probeId, new ArrayList<Object>() );
+                    }
+                }
+            }
+        }
+
+        /*
+         * Then, subset the data.
+         */
+        for ( GeoPlatform p : v.sampleDimensions.keySet() ) {
+            for ( Object o : v.sampleDimensions.get( p ).keySet() ) {
+                LinkedHashSet<GeoSample> dimsamples = v.sampleDimensions.get( p ).get( o );
+
+                int i = 0;
+                for ( Iterator<GeoSample> it = dimsamples.iterator(); it.hasNext(); ) {
+                    GeoSample geoSample = it.next();
+
+                    if ( samples.contains( geoSample ) ) {
+
+                        Map<String, List<Object>> newmap = v.data.get( p ).get( o );
+                        for ( String probeId : newmap.keySet() ) {
+                            newmap.get( probeId ).add( this.data.get( p ).get( o ).get( probeId ).get( i ) );
+                        }
+
+                    } else {
+                        // this is where we remove the unneded samples from the sampledimensions.
+                        it.remove();
+                    }
+
+                    i++;
+                }
+
+            }
+        }
+
+        /*
+         * The qt stuff can just be copied over, not deep copy.
+         */
+        v.quantitationTypeIndexMap.putAll( this.quantitationTypeIndexMap );
+        v.quantitationTypeNameMap.putAll( this.quantitationTypeNameMap );
+
+        return v;
     }
 
     /*
@@ -506,16 +566,11 @@ public class GeoValues implements Serializable {
             }
         }
 
-        return buf.toString();
-    }
+        if ( buf.length() == 0 ) {
+            return "No values stored";
+        }
 
-    /**
-     * Remove the data for a given platform (use to save memory)
-     * 
-     * @param geoPlatform
-     */
-    public void clear( GeoPlatform geoPlatform ) {
-        this.data.remove( geoPlatform );
+        return buf.toString();
     }
 
     /**
@@ -565,4 +620,34 @@ public class GeoValues implements Serializable {
         }
 
     }
+
+    /**
+     * Only needs to be called 'externally' if you know there is no data for the sample.
+     * 
+     * @param sample
+     * @param quantitationTypeIndex
+     * @return
+     */
+    private GeoPlatform addSample( GeoSample sample, Integer quantitationTypeIndex ) {
+        if ( sample.getPlatforms().size() > 1 ) {
+            throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
+        }
+
+        GeoPlatform platform = sample.getPlatforms().iterator().next();
+        if ( !sampleDimensions.containsKey( platform ) ) {
+            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
+        }
+
+        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+        if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
+            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
+        }
+
+        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+        if ( !sampleQtMap.contains( sample ) ) {
+            sampleQtMap.add( sample );
+        }
+        return platform;
+    }
+
 }

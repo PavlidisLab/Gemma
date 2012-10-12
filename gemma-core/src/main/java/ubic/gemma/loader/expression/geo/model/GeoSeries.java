@@ -205,6 +205,16 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * Get a subset of the values. This is only used for 'splitting' a series.
+     * 
+     * @param s Samples to include data from.
+     * @return
+     */
+    public GeoValues getValues( Collection<GeoSample> s ) {
+        return values.subset( s );
+    }
+
+    /**
      * @return Returns the variables.
      */
     public Map<Integer, GeoVariable> getVariables() {

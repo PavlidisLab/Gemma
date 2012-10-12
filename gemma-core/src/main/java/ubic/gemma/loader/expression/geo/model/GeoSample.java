@@ -418,4 +418,21 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         }
     }
 
+    /**
+     * @return organism name. This is obtained from the 'channels'.
+     * @throws exception if there are two different organisms. This is kind of temporary, it's not nice.
+     */
+    public String getOrganism() {
+        String org = null;
+        for ( GeoChannel c : getChannels() ) {
+            String o = c.getOrganism();
+            if ( org != null && o != null && !org.equals( o ) ) {
+                throw new RuntimeException( "Sample has two different organisms (on different channels)" );
+            }
+            org = o;
+        }
+        return org;
+
+    }
+
 }

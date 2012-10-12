@@ -19,7 +19,10 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -42,47 +45,8 @@ public class GeoSampleCorrespondence implements Serializable {
 
     private Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
 
-    private Map<String, String> accToTitle;
-    private Map<String, String> accToDataset;
-
-    /**
-     * @param gsmNumber
-     * @return Collection of sample accession values that correspond to the argument.
-     */
-    public Collection<String> getCorrespondingSamples( String gsmNumber ) {
-        // return this.map.get( gsmNumber );
-        for ( Set<String> set : sets ) {
-            if ( set.contains( gsmNumber ) ) {
-                return set;
-            }
-        }
-        return null; // not found!
-    }
-
-    /**
-     * Remove a sample from the maps
-     * 
-     * @param gsmNumber
-     */
-    public void removeSample( String gsmNumber ) {
-        for ( Set<String> set : sets ) {
-            set.remove( gsmNumber );
-        }
-    }
-
-    /**
-     * 
-     */
-    public Iterator<Set<String>> iterator() {
-        return sets.iterator();
-    }
-
-    /**
-     * @return the number of sets (groups of matching samples)
-     */
-    public int size() {
-        return sets.size();
-    }
+    private Map<String, String> accToTitle = new HashMap<String, String>();
+    private Map<String, String> accToDataset = new HashMap<String, String>();
 
     /**
      * @param gsmNumberA
@@ -127,22 +91,71 @@ public class GeoSampleCorrespondence implements Serializable {
 
     }
 
+    public GeoSampleCorrespondence copy() {
+        GeoSampleCorrespondence r = new GeoSampleCorrespondence();
+
+        for ( Set<String> s : sets ) {
+            Set<String> sc = new HashSet<String>();
+            sc.addAll( s );
+            r.sets.add( sc );
+        }
+
+        r.accToDataset.putAll( this.accToDataset );
+        r.accToTitle.putAll( this.accToTitle );
+
+        return r;
+    }
+
     /**
-     * Make sure only one set contains gsmNumberB
-     * 
-     * @param gsmNumberB
+     * @param gsmNumber
+     * @return Collection of sample accession values that correspond to the argument.
      */
-    private boolean sanity( String gsmNumber ) {
-        int count = 0;
+    public Collection<String> getCorrespondingSamples( String gsmNumber ) {
+        // return this.map.get( gsmNumber );
         for ( Set<String> set : sets ) {
             if ( set.contains( gsmNumber ) ) {
-                ++count;
+                return set;
             }
         }
-        if ( count != 0 ) {
-            return false;
+        return null; // not found!
+    }
+
+    /**
+     * 
+     */
+    public Iterator<Set<String>> iterator() {
+        return sets.iterator();
+    }
+
+    /**
+     * Remove a sample from the maps
+     * 
+     * @param gsmNumber
+     */
+    public void removeSample( String gsmNumber ) {
+        Collection<Set<String>> toRemove = new ArrayList<Set<String>>();
+        for ( Set<String> set : sets ) {
+            set.remove( gsmNumber );
+            if ( set.isEmpty() ) {
+                toRemove.add( set );
+            }
         }
-        return true;
+        sets.removeAll( toRemove );
+    }
+
+    public void setAccToDatasetOrPlatformMap( Map<String, String> accToDataset ) {
+        this.accToDataset = accToDataset;
+    }
+
+    public void setAccToTitleMap( Map<String, String> accToTitle ) {
+        this.accToTitle = accToTitle;
+    }
+
+    /**
+     * @return the number of sets (groups of matching samples)
+     */
+    public int size() {
+        return sets.size();
     }
 
     @Override
@@ -181,11 +194,22 @@ public class GeoSampleCorrespondence implements Serializable {
                 + ( singletons.length() > 0 ? "\nSingletons:\n" + singletons.toString() : "" );
     }
 
-    public void setAccToTitleMap( Map<String, String> accToTitle ) {
-        this.accToTitle = accToTitle;
+    /**
+     * Make sure only one set contains gsmNumberB
+     * 
+     * @param gsmNumberB
+     */
+    private boolean sanity( String gsmNumber ) {
+        int count = 0;
+        for ( Set<String> set : sets ) {
+            if ( set.contains( gsmNumber ) ) {
+                ++count;
+            }
+        }
+        if ( count != 0 ) {
+            return false;
+        }
+        return true;
     }
 
-    public void setAccToDatasetOrPlatformMap( Map<String, String> accToDataset ) {
-        this.accToDataset = accToDataset;
-    }
 }

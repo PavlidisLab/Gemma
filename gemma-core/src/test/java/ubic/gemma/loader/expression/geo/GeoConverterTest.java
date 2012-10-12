@@ -615,6 +615,44 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * See bug 3163.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertMultiTaxonDatasetGSE7540() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE7540.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE7540" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+
+        // Should get one for chimp, one for human.
+        assertEquals( 2, ees.size() );
+
+        boolean found1 = false, found2 = false;
+        for ( ExpressionExperiment ee : ees ) {
+            if ( ee.getBioAssays().size() == 15 ) {
+                found1 = true;
+            } else if ( ee.getBioAssays().size() == 22 ) {
+                found2 = true;
+            }
+        }
+
+        assertTrue( "Failed to set up the chimp data", found1 );
+        assertTrue( "Failed to set up the human data", found2 );
+
+    }
+
+    /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
      * @throws Exception
