@@ -72,7 +72,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
         if ( doneSetup ) return;
-        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
 
         doneSetup = true;
     }
@@ -844,9 +844,10 @@ public class GeoConverterTest extends BaseSpringContextTest {
             fail();
 
         } catch ( IllegalArgumentException e ) {
-            assertEquals(
-                    "Channel 1 taxon is Danio rerio Channel 2 taxon is Pomacentrus moluccensis Check that is expected for sample GSM104737",
-                    e.getMessage() );
+            assertTrue( e.getMessage().startsWith( "Sample has two different organisms; One channel taxon is" ) );
+            // assertEquals(
+            // "Channel 1 taxon is Danio rerio Channel 2 taxon is Pomacentrus moluccensis Check that is expected for sample GSM104737",
+            // e.getMessage() );
         }
     }
 
