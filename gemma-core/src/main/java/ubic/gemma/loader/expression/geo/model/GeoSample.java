@@ -427,7 +427,9 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         for ( GeoChannel c : getChannels() ) {
             String o = c.getOrganism();
             if ( org != null && o != null && !org.equals( o ) ) {
-                throw new RuntimeException( "Sample has two different organisms (on different channels)" );
+                throw new IllegalArgumentException( "Sample has two different organisms; One channel taxon is " + org
+                        + " other is " + o + " Check that is expected for sample " + this.getGeoAccession() );
+
             }
             org = o;
         }
