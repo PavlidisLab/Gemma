@@ -1522,6 +1522,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject,
                     parent );
 
+            if ( treeCharacteristicValueObject.getChildren().isEmpty() ) {
+                simpleTreeValueObject.set_is_leaf( true );
+            }
+
             simpleTreeValueObjects.add( simpleTreeValueObject );
 
             for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
