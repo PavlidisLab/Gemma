@@ -17,6 +17,7 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * @author paul
@@ -59,5 +60,13 @@ public interface GeoService {
     public abstract GeoDomainObjectGenerator getGeoDomainObjectGenerator();
 
     public abstract void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
+
+    /**
+     * For the rare cases (Exon arrays) where we load the platform in two stages.
+     * 
+     * @param targetPlatform already persistent array design.
+     * @return updated (persistent) array design
+     */
+    public abstract ArrayDesign addElements( ArrayDesign targetPlatform );
 
 }

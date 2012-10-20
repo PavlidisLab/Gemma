@@ -101,6 +101,8 @@ public class DataUpdater {
 
         ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
 
+        assert !targetPlatform.getCompositeSequences().isEmpty();
+
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
         Collection<RawExpressionDataVector> vectors = apt.processExonArrayData( ee, targetPlatform, files );
@@ -228,6 +230,10 @@ public class DataUpdater {
      */
     private ArrayDesign prepareTargetPlatformForExonArrays( Taxon primaryTaxon ) {
 
+        /*
+         * Unfortunately there is no way to get around hard-coding this, in some way; there are specific platforms we
+         * need to use.
+         */
         String targetPlatformAcc = "";
         if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
             targetPlatformAcc = "GPL6096";
@@ -247,9 +253,9 @@ public class DataUpdater {
 
             if ( targetPlatform.getCompositeSequences().isEmpty() ) {
                 /*
-                 * Ok, we have to 'reload it'.
+                 * Ok, we have to 'reload it' and add the compositeSequences.
                  */
-                geoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );
+                geoService.addElements( targetPlatform  );
             }
         } else {
             log.warn( "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );

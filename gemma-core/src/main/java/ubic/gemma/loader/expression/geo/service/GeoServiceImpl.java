@@ -85,6 +85,54 @@ public class GeoServiceImpl extends AbstractGeoService {
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
+    @Override
+    public ArrayDesign addElements( ArrayDesign targetPlatform ) {
+
+        if ( !targetPlatform.getCompositeSequences().isEmpty() ) {
+            throw new IllegalArgumentException( "Only call this if you are filling in an empty platform" );
+        }
+
+        String geoAccession = targetPlatform.getExternalReferences().iterator().next().getAccession();
+        Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
+        if ( platforms.size() == 0 ) {
+            throw new IllegalStateException();
+        }
+
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+
+        if ( this.geoDomainObjectGenerator == null ) {
+            this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        } else {
+            this.geoDomainObjectGenerator.initialize();
+        }
+
+        geoDomainObjectGenerator.setProcessPlatformsOnly( true );
+
+        geoConverter.setForceConvertElements( true );
+        Collection<Object> arrayDesigns = geoConverter.convert( platforms );
+
+        Collection<CompositeSequence> els = ( ( ArrayDesign ) arrayDesigns.iterator().next() ).getCompositeSequences();
+
+        for ( CompositeSequence cs : els ) {
+            cs.setArrayDesign( targetPlatform );
+            cs.setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
+        }
+
+        log.info( "Adding " + els.size() + " elements to " + targetPlatform );
+
+        targetPlatform.getCompositeSequences().addAll( els );
+
+        arrayDesignService.update( targetPlatform );
+
+        this.arrayDesignReportService.generateArrayDesignReport( targetPlatform.getId() );
+
+        return targetPlatform;
+
+    }
+
     /*
      * (non-Javadoc)
      * 
