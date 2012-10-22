@@ -71,6 +71,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDaoImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -125,6 +126,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+
+    @Autowired
+    private RawExpressionDataVectorDaoImpl vectorDao;
 
     @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
@@ -277,7 +281,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
         return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
     }
-    
+
     /**
      * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -915,13 +919,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         Collection<QuantitationType> toRemove = new HashSet<QuantitationType>();
-        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
+        for ( RawExpressionDataVector oldvec : vectors ) {
             toRemove.add( oldvec.getQuantitationType() );
         }
 
         eeToUpdate.getProcessedExpressionDataVectors().clear();
         eeToUpdate.getRawExpressionDataVectors().clear();
+
+        /*
+         * Have to delete the vectors here, to get the ordering of events right (can't rely on flush)
+         */
+        vectorDao.remove( vectors );
+
         for ( QuantitationType oldqt : toRemove ) {
+            // cannot do this if the vectors are left there.
             quantitationTypeDao.remove( oldqt );
         }
 
