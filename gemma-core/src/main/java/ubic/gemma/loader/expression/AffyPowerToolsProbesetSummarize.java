@@ -173,15 +173,31 @@ public class AffyPowerToolsProbesetSummarize {
                 bmap.put( bioAssay.getName(), bioAssay );
             }
 
+            if ( log.isDebugEnabled() )
+                log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                        + StringUtils.join( bmap.keySet(), "\n" ) );
+
             for ( int i = 0; i < matrix.columns(); i++ ) {
                 String columnName = matrix.getColName( i );
 
                 String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
 
                 /*
-                 * Column names are like Aud_19L.CEL
+                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
                  */
-                BioAssay assay = bmap.get( sampleName );
+                BioAssay assay = null;
+                if ( sampleName.matches( "^GSM[0-9]_.+" ) ) {
+                    String geoAcc = sampleName.split( "_" )[0];
+                    if ( bmap.containsKey( geoAcc ) ) {
+                        assay = bmap.get( geoAcc );
+                    }
+                } else {
+
+                    /*
+                     * Sometimes column names are like Aud_19L.CEL or
+                     */
+                    assay = bmap.get( sampleName );
+                }
 
                 if ( assay == null ) {
                     throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
