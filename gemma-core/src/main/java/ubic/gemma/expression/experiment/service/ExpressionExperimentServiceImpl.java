@@ -71,6 +71,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDaoImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -128,7 +129,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     @Autowired
-    private RawExpressionDataVectorDaoImpl vectorDao;
+    private RawExpressionDataVectorDao vectorDao;
 
     @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
