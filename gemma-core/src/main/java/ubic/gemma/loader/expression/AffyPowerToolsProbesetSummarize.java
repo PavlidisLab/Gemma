@@ -186,7 +186,7 @@ public class AffyPowerToolsProbesetSummarize {
                  * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
                  */
                 BioAssay assay = null;
-                if ( sampleName.matches( "^GSM[0-9]_.+" ) ) {
+                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
                     String geoAcc = sampleName.split( "_" )[0];
 
                     log.info( "Found column for " + geoAcc );
