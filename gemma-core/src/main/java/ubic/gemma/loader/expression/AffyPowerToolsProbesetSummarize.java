@@ -192,8 +192,9 @@ public class AffyPowerToolsProbesetSummarize {
                     log.info( "Found column for " + geoAcc );
                     if ( bmap.containsKey( geoAcc ) ) {
                         assay = bmap.get( geoAcc );
+                    } else {
+                        log.warn( "No bioassay for " + geoAcc );
                     }
-                    log.info( "No bioassay for " + geoAcc );
                 } else {
 
                     /*
