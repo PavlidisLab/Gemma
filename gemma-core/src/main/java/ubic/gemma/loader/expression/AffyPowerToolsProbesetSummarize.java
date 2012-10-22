@@ -173,9 +173,9 @@ public class AffyPowerToolsProbesetSummarize {
                 bmap.put( bioAssay.getName(), bioAssay );
             }
 
-            if ( log.isDebugEnabled() )
-                log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                        + StringUtils.join( bmap.keySet(), "\n" ) );
+            // if ( log.isDebugEnabled() )
+            log.info( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                    + StringUtils.join( bmap.keySet(), "\n" ) );
 
             for ( int i = 0; i < matrix.columns(); i++ ) {
                 String columnName = matrix.getColName( i );
@@ -188,9 +188,12 @@ public class AffyPowerToolsProbesetSummarize {
                 BioAssay assay = null;
                 if ( sampleName.matches( "^GSM[0-9]_.+" ) ) {
                     String geoAcc = sampleName.split( "_" )[0];
+
+                    log.info( "Found column for " + geoAcc );
                     if ( bmap.containsKey( geoAcc ) ) {
                         assay = bmap.get( geoAcc );
                     }
+                    log.info( "No bioassay for " + geoAcc );
                 } else {
 
                     /*
