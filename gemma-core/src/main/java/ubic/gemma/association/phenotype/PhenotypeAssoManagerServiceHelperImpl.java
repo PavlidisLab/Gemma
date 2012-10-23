@@ -36,6 +36,7 @@ import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
@@ -118,10 +119,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             return conversion2ExperimentalEvidence( ( ExperimentalEvidenceValueObject ) evidence );
         } else if ( evidence instanceof GenericEvidenceValueObject ) {
             return conversion2GenericEvidence( ( GenericEvidenceValueObject ) evidence );
-
         } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
-            // TODO
-            // return conversion2DifferentialExpressionEvidence (( DiffExpressionEvidenceValueObject ) evidence );
+            return conversion2DifferentialExpressionEvidence( ( DiffExpressionEvidenceValueObject ) evidence );
         }
 
         return null;
@@ -263,7 +262,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                     if ( updatedCharacteristic.equals( experimentCharacteristicVO ) ) {
                         finalCharacteristics.add( experimentCharacteristic );
                     } else {
-                        
+
                         // different values found
                         VocabCharacteristic vocabCharacteristic = this.ontologyHelper
                                 .characteristicValueObject2Characteristic( updatedCharacteristic );
@@ -302,13 +301,20 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             // relevant bibliographic references
             experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
+        }
+
+        else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
+
+            DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = ( DiffExpressionEvidenceValueObject ) evidenceValueObject;
+            DifferentialExpressionEvidence differentialExpressionEvidence = ( DifferentialExpressionEvidence ) phenotypeAssociation;
+            diffExpressionEvidenceValueObject
+                    .setGeneDifferentialExpressionMetaAnalysisResult( differentialExpressionEvidence
+                            .getGeneDifferentialExpressionMetaAnalysisResult() );
 
         } else if ( phenotypeAssociation instanceof GenericEvidence ) {
             // nothing special to do
-
-        } else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
-            // TODO
         }
+
     }
 
     /**
@@ -342,6 +348,25 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
         literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
         return literatureEvidence;
+    }
+
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2DifferentialExpressionEvidence(
+            DiffExpressionEvidenceValueObject evidenceValueObject ) {
+
+        DifferentialExpressionEvidence differentialExpressionEvidence = DifferentialExpressionEvidence.Factory
+                .newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( differentialExpressionEvidence, evidenceValueObject );
+
+        differentialExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisResult( evidenceValueObject
+                .getGeneDifferentialExpressionMetaAnalysisResult() );
+
+        return differentialExpressionEvidence;
     }
 
     /**

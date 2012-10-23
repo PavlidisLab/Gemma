@@ -82,10 +82,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
             evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
         } else if ( phe instanceof LiteratureEvidence ) {
             evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-        } else if ( phe instanceof DifferentialExpressionEvidence ) {
-            // TODO
-        }
-
+        } 
         return evidence;
     }
 

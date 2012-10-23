@@ -20,8 +20,8 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.SortedSet;
 
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 
 /**
  * TODO Document Me
@@ -31,27 +31,82 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
  */
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
-    // TODO need to populate this as an valueObject...
-    private GeneDifferentialExpressionMetaAnalysisResult differentialExpressionAnalysisResult = null;
+    private Double thresholdChosen;
 
-    public DiffExpressionEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource,
-            GeneDifferentialExpressionMetaAnalysisResult differentialExpressionAnalysisResult ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
-        this.differentialExpressionAnalysisResult = differentialExpressionAnalysisResult;
-    }
+    private GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult = null;
 
-    /** Entity to Value Object */
-    public DiffExpressionEvidenceValueObject( DifferentialExpressionEvidence differentialExpressionEvidence ) {
-        super( differentialExpressionEvidence );
-
-        this.differentialExpressionAnalysisResult = differentialExpressionEvidence
-                .getGeneDifferentialExpressionMetaAnalysisResult();
-    }
+    private Long geneDifferentialExpressionMetaAnalysisId = null;
 
     public DiffExpressionEvidenceValueObject() {
         super();
     }
+
+    public DiffExpressionEvidenceValueObject(
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
+            GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis ) {
+        super();
+        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysis.getId();
+        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
+    }
+
+    public DiffExpressionEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
+            String description, String evidenceCode, boolean isNegativeEvidence,
+            EvidenceSourceValueObject evidenceSource,
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
+            Double thresholdChosen ) {
+        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
+
+        this.thresholdChosen = thresholdChosen;
+
+        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
+    }
+
+    public GeneDifferentialExpressionMetaAnalysisResult getGeneDifferentialExpressionMetaAnalysisResult() {
+        return this.geneDifferentialExpressionMetaAnalysisResult;
+    }
+
+    public void setGeneDifferentialExpressionMetaAnalysisResult(
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult ) {
+        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
+    }
+
+    public Double getThresholdChosen() {
+        return this.thresholdChosen;
+    }
+
+    public void setThresholdChosen( Double thresholdChosen ) {
+        this.thresholdChosen = thresholdChosen;
+    }
+
+    public Long getGeneDifferentialExpressionMetaAnalysisId() {
+        return this.geneDifferentialExpressionMetaAnalysisId;
+    }
+
+    public void setGeneDifferentialExpressionMetaAnalysisId( Long geneDifferentialExpressionMetaAnalysisId ) {
+        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysisId;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime
+                * result
+                + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ? 0 : this.geneDifferentialExpressionMetaAnalysisId
+                        .hashCode() );
+        result = prime
+                * result
+                + ( ( this.geneDifferentialExpressionMetaAnalysisResult == null ) ? 0
+                        : this.geneDifferentialExpressionMetaAnalysisResult.hashCode() );
+        result = prime * result + ( ( getThresholdChosen() == null ) ? 0 : this.thresholdChosen.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        return false;
+    }
+    
+    
 
 }

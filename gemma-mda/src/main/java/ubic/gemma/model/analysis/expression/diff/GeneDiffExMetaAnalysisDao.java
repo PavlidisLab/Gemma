@@ -60,5 +60,9 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
      * @return
      */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
+    
+    
+    /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
 }

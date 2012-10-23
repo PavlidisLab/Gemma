@@ -139,6 +139,11 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
 			delete(metaAnalysis);
 		}
 	}
+	
+    @Override
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
+        return this.geneDiffExMetaAnalysisDao.loadWithResultId( idResult );
+    }
 }
 
 

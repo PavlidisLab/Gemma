@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -42,6 +43,9 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -58,6 +62,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
@@ -121,6 +126,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
@@ -742,6 +750,49 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<CharacteristicValueObject> findExperimentMgedCategory() {
         return this.associationService.findEvidenceMgedCategoryTerms();
+    }
+
+    /**
+     * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId id of the DiffExpressionMetaAnalysis
+     * @param phenotypes phenotypes chosen
+     * @param thresholdChosen threshold chosen to keep certain results
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
+    @Override
+    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
+            Double thresholdChosen ) {
+
+        GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
+                .load( geneDifferentialExpressionMetaAnalysisId );
+
+        Collection<DiffExpressionEvidenceValueObject> diffExpressionEvidenceValueObjects = new HashSet<DiffExpressionEvidenceValueObject>();
+
+        for ( GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult : geneDifferentialExpressionMetaAnalysis
+                .getResults() ) {
+
+            // TODO change TAS when we know what to put there
+            if ( geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue() <= thresholdChosen ) {
+                DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject(
+                        geneDifferentialExpressionMetaAnalysisResult.getGene().getNcbiGeneId(), phenotypes,
+                        geneDifferentialExpressionMetaAnalysis.getDescription(), "TAS", false, null,
+                        geneDifferentialExpressionMetaAnalysisResult, thresholdChosen );
+
+                diffExpressionEvidenceValueObjects.add( diffExpressionEvidenceValueObject );
+            }
+        }
+
+        for ( DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject : diffExpressionEvidenceValueObjects ) {
+
+            ValidateEvidenceValueObject validateEvidenceValueObject = makeEvidence( diffExpressionEvidenceValueObject );
+
+            if ( validateEvidenceValueObject != null ) {
+                return validateEvidenceValueObject;
+            }
+        }
+        return null;
     }
 
     /**

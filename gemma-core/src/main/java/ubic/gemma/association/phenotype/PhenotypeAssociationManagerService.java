@@ -16,6 +16,7 @@ package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -209,5 +210,17 @@ public interface PhenotypeAssociationManagerService {
 
     /** return the list of the owners that have evidence in the system */
     public  Collection<String> findEvidenceOwners();
+    
+    
+    /** creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis  
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId id of the DiffExpressionMetaAnalysis
+     * @param phenotypes phenotypes chosen
+     * @param thresholdChosen threshold chosen to keep certain results
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
+    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
+            Double thresholdChosen );
 
 }

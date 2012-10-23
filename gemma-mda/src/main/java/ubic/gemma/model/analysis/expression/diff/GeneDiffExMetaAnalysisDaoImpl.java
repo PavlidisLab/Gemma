@@ -24,7 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -124,6 +127,19 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
                         "ee", id ) );
 
         return results;
+    }
+    
+    
+    /** loads a DifferentialExpressionMetaAnalysis containing a specifc result */
+    @Override
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
+
+        Criteria geneQueryMetaAnalysis = super.getSession()
+                .createCriteria( GeneDifferentialExpressionMetaAnalysis.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "results" )
+                .add( Restrictions.like( "id", idResult ) );
+
+        return ( GeneDifferentialExpressionMetaAnalysis ) geneQueryMetaAnalysis.list().iterator().next();
     }
 
 }
