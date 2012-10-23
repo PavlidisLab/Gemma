@@ -167,6 +167,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 										+ nodeText;
 
 								parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.size();
+								parentNode.attributes.analysisId = resultSet.analysisId;
 								parentNode.attributes.resultSetId = resultSet.resultSetId;
 								if (resultSet.experimentalFactors.size() == 1) {
 									parentNode.attributes.numberOfFactorValues = resultSet.experimentalFactors[0].values.size();
@@ -214,6 +215,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 												text : factor + nodeText,
 												numberOfFactors : resultSet.experimentalFactors
 														.size(),
+												analysisId : resultSet.analysisId,
 												resultSetId : resultSet.resultSetId,														
 												numberOfFactorValues : resultSet.experimentalFactors.size() == 1 ?
 													resultSet.experimentalFactors[0].values.size() :
@@ -394,6 +396,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 										"<img src='/Gemma/images/icons/cross.png'/> &nbsp;  </span>",
 										this.ee.id, analysis.id);						
 					},
+					calculateChartId: function(eeId, nodeId) {
+						// Because this tree can be used in another window, getId() is used so that the returned id is unique across all opened windows.
+						return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div'; 
+					},
 					getActionLinks : function(resultSet, factor, eeID, nodeId) {
 						/* link for details */
 						var numbers = this.getExpressionNumbers(resultSet,
@@ -404,8 +410,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 								+ '\')" ext:qtip=\"'
 								+ numbers
 								+ '\">'
-								+ '&nbsp;<canvas height=20 width=20 id="chart' + eeID + 'Div'
-								+ nodeId + '"></canvas>';
+								+ '&nbsp;<canvas height=20 width=20 id="' + this.calculateChartId(eeID, nodeId) + '"></canvas>';
 
 						// if the number of up or downregulated probes is
 						// less than 5% of the total number of differentially
@@ -444,7 +449,25 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 								+ factor
 								+ ' (FDR threshold='
 								+ resultSet.threshold
-								+ ')">&nbsp;<img src="/Gemma/images/icons/chart_curve.png">&nbsp;</span>';
+								+ ')">&nbsp;<img src="/Gemma/images/icons/heatmap.png">&nbsp;</span>';
+
+						var pValueDistImageSize = 16;
+						var strippedFactorName = Ext.util.Format.stripTags(factor);
+						var imageUrl = '/Gemma/expressionExperiment/visualizePvalueDist.html?' 
+									+ 'id=' + eeID
+									+ '&analysisId=' + resultSet.analysisId
+									+ '&factorName=' + escape(strippedFactorName);
+						var methodWithArguments = 'showPValueDistributionWindow(\'' + factor + '\', \'' + imageUrl + '\');';
+
+						// -8px -6px is used as background-position property because the image has gray border.
+						linkText += '<div '
+							+ 'style="cursor: pointer; display: inline-block;'
+								+ 'width: ' + pValueDistImageSize + 'px;'
+								+ 'height: ' + pValueDistImageSize + 'px;'
+								+ 'background: url(' + imageUrl	+ '&size=' + pValueDistImageSize + ') no-repeat -8px -6px;" '
+							+ 'ext:qtip="Click to visualize p-value distribution for <b>' + strippedFactorName + '</b>." '
+							+ 'onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments + '"></div>';
+
 						return linkText;
 					},
 					/**
@@ -488,7 +511,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					drawPieCharts : function() {
 						var ctx, diffExpressed, interesting;
 						for ( var i = 0; i < this.contrastPercents.size(); i++) {
-							var chartElement = Ext.get('chart' + this.ee.id + 'Div' + i);
+							var chartElement = Ext.get(this.calculateChartId(this.ee.id, i));
 
 							if (chartElement) {					
 								ctx = chartElement.dom
@@ -537,6 +560,28 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
 							}
 						}
+					},
+					showPValueDistributionWindow: function(factorName, imageUrl) {
+						var eeInfoTitle =
+							"P-value distribution for " + factorName + " in: "
+							+ "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+							+ this.ee.id
+							+ "'>"
+							+ this.ee.shortName
+							+ "</a> ("
+							+ Ext.util.Format.ellipsis(this.ee.name, 35) + ")";
+						
+						new Ext.Window({
+							title: eeInfoTitle,
+							constrain: true, // Should not be modal so that other window can be opened.
+							width: 500,
+							shadow: true,
+							closeAction: 'close',
+							items: [{
+								bodyStyle: 'background-color: #EEEEEE; text-align: center; padding: 15px 60px 15px 15px;',
+								html: '<img src="' + imageUrl + '">'
+							}]
+						}).show();
 					}
 				});
 

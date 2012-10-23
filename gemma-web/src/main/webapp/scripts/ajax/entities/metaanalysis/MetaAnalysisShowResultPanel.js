@@ -33,26 +33,29 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 					
 				resultText += '<br />';
 				
+				var stringHtmlStyle = 'style="padding: 0 10px 0 10px;"'; 
+				var numberHtmlStyle = 'style="padding: 0 10px 0 10px; text-align: right;"';
+				
 				resultText += 
 					'<table>' +
 						'<tr>' +
-							'<th>Symbol</th>' +
-							'<th>Name</th>' +
-							'<th style="width: 80px">p-value</th>' +
-							'<th style="width: 80px">q-value</th>' +
-							'<th>Mean log fold change</th>' +
-							'<th>Results used</th>' +
+							'<th ' + stringHtmlStyle + '>Symbol</th>' +
+							'<th ' + stringHtmlStyle + '>Name</th>' +
+							'<th ' + numberHtmlStyle + '>p-value</th>' +
+							'<th ' + numberHtmlStyle + '>q-value</th>' +
+							'<th ' + numberHtmlStyle + '>Mean log fold change</th>' +
+							'<th ' + numberHtmlStyle + '>Results used</th>' +
 						'</tr>';
 				
 				Ext.each(geneDifferentialExpressionMetaAnalysis.results, function(result, index) {
 					resultText += 
 						'<tr>' +
-							'<td>' + result.gene.officialSymbol + '</td>' +
-							'<td>' + result.gene.officialName + '</td>' +
-							'<td>' + result.metaPvalue.toExponential(3) + '</td>' +
-							'<td>' + result.metaQvalue.toExponential(3) + '</td>' +
-							'<td>' + result.meanLogFoldChange.toExponential(3) + '</td>' +
-							'<td>' + result.resultsUsedCount + '</td>' +
+							'<td ' + stringHtmlStyle + '>' + result.gene.officialSymbol + '</td>' +
+							'<td ' + stringHtmlStyle + '>' + result.gene.officialName + '</td>' +
+							'<td ' + numberHtmlStyle + '>' + result.metaPvalue.toExponential(2) + '</td>' +
+							'<td ' + numberHtmlStyle + '>' + result.metaQvalue.toExponential(2) + '</td>' +
+							'<td ' + numberHtmlStyle + '>' + result.meanLogFoldChange.toFixed(2) + '</td>' +
+							'<td ' + numberHtmlStyle + '>' + result.resultsUsedCount + '</td>' +
 						'</tr>';
 				});
 				

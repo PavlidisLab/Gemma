@@ -45,6 +45,7 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 	
 	public class IncludedResultSetDetail {
 		private Long experimentId;
+		private Long analysisId;
 		private Long resultSetId;
 		
 		public Long getExperimentId() {
@@ -52,6 +53,12 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 		}
 		public void setExperimentId(Long experimentId) {
 			this.experimentId = experimentId;
+		}
+		public Long getAnalysisId() {
+			return analysisId;
+		}
+		public void setAnalysisId(Long analysisId) {
+			this.analysisId = analysisId;
 		}
 		public Long getResultSetId() {
 			return this.resultSetId;
@@ -76,6 +83,7 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 		for (ExpressionAnalysisResultSet resultSetIncluded: resultSetsIncluded) {
 			IncludedResultSetDetail includedResultSetDetail = new IncludedResultSetDetail();
 			includedResultSetDetail.setExperimentId(resultSetIncluded.getAnalysis().getExperimentAnalyzed().getId());
+			includedResultSetDetail.setAnalysisId(resultSetIncluded.getAnalysis().getId());
 			includedResultSetDetail.setResultSetId(resultSetIncluded.getId());
 			this.includedResultSetDetails.add(includedResultSetDetail);
 		}

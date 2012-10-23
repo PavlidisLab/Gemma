@@ -63,7 +63,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
         		border: false
         	});
         	
-			var totalRadioCount = 0;
+			var totalResultSetCount = 0;
         	
 			if (experimentDetails.differentialExpressionAnalyses.length == 0) {
 				experimentResultSetsPanel.add(new Ext.form.Label({
@@ -78,24 +78,21 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			    	style: 'padding-bottom: 20px;'
 			    });
 			    
-			    var generateRadio = function(text, marginLeft, notSuitableForAnalysisMessage, inputValue) {
-					var shouldRadioChecked = false;
-					if (this.metaAnalysis) {
-						for (var i = 0; i < this.metaAnalysis.includedResultSetDetails.length; i++) {
-							if (this.metaAnalysis.includedResultSetDetails[i].experimentId == experimentDetails.id) {
-								if (this.metaAnalysis.includedResultSetDetails[i].resultSetId == inputValue) {
-									shouldRadioChecked = true;
-								}
-								break;
-							}
-						}
-					}			    	
-					return new Ext.form.Radio({
-						checked: shouldRadioChecked,
-						boxLabel: text + (notSuitableForAnalysisMessage == null ?  
-							'' :
-							' <i>' + notSuitableForAnalysisMessage + '</i>'),
+				var generateResultSetComponent = function(text, marginLeft, notSuitableForAnalysisMessage, inputValue, shouldResultSetSelected) {
+					// When users click on any icons following the text for each result set, radio buttons should not
+					// be selected. Assume this text ends right before the first html tag span. indexOfFirstSpan is
+					// used to store the start index of the first html tag span. Radio button will be created using
+					// this text only. However, if a radio button will be disabled, this radio button will use both
+					// this text and html code for all icons because these icons should look disabled.
+					var indexOfFirstSpan = text.indexOf('<span');
+					var radio = new Ext.form.Radio({
+						checked: shouldResultSetSelected,
+						boxLabel: (notSuitableForAnalysisMessage ?
+									text + ' <i>' + notSuitableForAnalysisMessage + '</i>' :
+									text.substring(0, indexOfFirstSpan)),
 						name: (this.metaAnalysis ?
+							// Meta-analysis id should be used because another window may have the same set
+							// of radio buttons for the same experiment.
 							this.metaAnalysis.id + '-' + experimentDetails.id :
 							experimentDetails.id),
 						style: 'margin-left: ' + marginLeft + 'px;',
@@ -110,14 +107,29 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 								}
 							}
 						}
-					});	
+					});
+					var items = [ radio ];
+					if (!notSuitableForAnalysisMessage) {
+						// Put all icons in another component placed after the radio button.
+						items.push({
+							xtype: 'displayfield',
+							value: text.substring(indexOfFirstSpan), // text only and without any icons
+							style: 'margin-top: -5px;'
+						});
+					}
+					return {
+						border: false,
+						layout: 'hbox',
+						getRadio: function() { return radio; },
+					    items: items
+					};
 			    }.createDelegate(this);
 			    
 			    var checkSuitableForAnalysis = function(attributes) {
 			    	var notSuitableForAnalysisMessage = null;
 					if (attributes.numberOfFactors > 1) {
-						notSuitableForAnalysisMessage = '(Not suitable - Analysis uses more than 1 factor)';
-					} else if (attributes.numberOfFactorValues == null || attributes.numberOfFactorValues != 2) {
+						notSuitableForAnalysisMessage = '(Not suitable - Analysis used more than 1 factor)';
+					} else if (attributes.numberOfFactorValues == null || attributes.numberOfFactorValues > 2) {
 						notSuitableForAnalysisMessage = '(Not suitable - Analysis based on more than 2 groups)';
 					}
 					
@@ -136,37 +148,69 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 									0);
 				}); 
 
-				Ext.each(analysesSummaryTree.root.childNodes, function(factorGroup, factorGroupIndex) {
-					if (factorGroup.childNodes.length > 0) {
+				var checkResultSetAvailability = function(analysisId, resultSetId) {
+					var shouldResultSetCreated = true;
+					var shouldResultSetSelected = false;
+					if (this.metaAnalysis) {
+						for (var i = 0; i < this.metaAnalysis.includedResultSetDetails.length; i++) {
+							var currIncludedResultSetDetails = this.metaAnalysis.includedResultSetDetails[i];
+							
+							if (currIncludedResultSetDetails.experimentId == experimentDetails.id) {
+								shouldResultSetCreated = (currIncludedResultSetDetails.analysisId === analysisId);
+								shouldResultSetSelected = (currIncludedResultSetDetails.resultSetId === resultSetId);
+
+								break;
+							}
+						}
+					}
+					return {
+						shouldResultSetCreated: shouldResultSetCreated,
+						shouldResultSetSelected: shouldResultSetSelected
+					};
+				}.createDelegate(this);
+				
+				Ext.each(analysesSummaryTree.root.childNodes, function(resultSetParent, unusedI) {
+					if (resultSetParent.childNodes.length > 0) {
 						var label = new Ext.form.Label({
-							html: factorGroup.text + '<br />'
+							html: resultSetParent.text + '<br />'
 						});
 						experimentResultSetsPanel.add(label);
 						
-						var factorRadioCount = 0;
-						Ext.each(factorGroup.childNodes, function(factor, factorIndex) {
-							var notSuitableForAnalysisMessage = checkSuitableForAnalysis(factor.attributes); 
+						var currResultSetCount = 0;
+						Ext.each(resultSetParent.childNodes, function(resultSet, unusedJ) {
+							radioAvailability = checkResultSetAvailability(resultSet.attributes.analysisId, resultSet.attributes.resultSetId);							
+							if (radioAvailability.shouldResultSetCreated) {
+								var notSuitableForAnalysisMessage = checkSuitableForAnalysis(resultSet.attributes); 
+									
+								if (notSuitableForAnalysisMessage == null) {
+									currResultSetCount++;
+									totalResultSetCount++;
+								}
+								var resultSetComponent = generateResultSetComponent(resultSet.text, 15, notSuitableForAnalysisMessage,
+															resultSet.attributes.resultSetId, radioAvailability.shouldResultSetSelected);							
+								radioGroup.items.push(resultSetComponent.getRadio());
+								experimentResultSetsPanel.add(resultSetComponent);
+							}
+						},
+						this); // scope
+
+						label.setDisabled(currResultSetCount === 0);
+					} else {
+						radioAvailability = checkResultSetAvailability(resultSetParent.attributes.analysisId, resultSetParent.attributes.resultSetId);							
+						if (radioAvailability.shouldResultSetCreated) {
+							var notSuitableForAnalysisMessage = checkSuitableForAnalysis(resultSetParent.attributes); 
 								
 							if (notSuitableForAnalysisMessage == null) {
-								factorRadioCount++;
-								totalRadioCount++;
+								totalResultSetCount++;
 							}
-							var radio = generateRadio(factor.text, 15, notSuitableForAnalysisMessage, factor.attributes.resultSetId);							
-							radioGroup.items.push(radio);
-							experimentResultSetsPanel.add(radio);
-						});
-						label.setDisabled(factorRadioCount === 0);
-					} else {
-						var notSuitableForAnalysisMessage = checkSuitableForAnalysis(factorGroup.attributes); 
-							
-						if (notSuitableForAnalysisMessage == null) {
-							totalRadioCount++;
+							var resultSetComponent = generateResultSetComponent(resultSetParent.text, 0, notSuitableForAnalysisMessage,
+														resultSetParent.attributes.resultSetId, radioAvailability.shouldResultSetSelected);
+							radioGroup.items.push(resultSetComponent.getRadio());						
+							experimentResultSetsPanel.add(resultSetComponent);
 						}
-						var radio = generateRadio(factorGroup.text, 0, notSuitableForAnalysisMessage, factorGroup.attributes.resultSetId);
-						radioGroup.items.push(radio);						
-						experimentResultSetsPanel.add(radio);
 					}
-				});
+				},
+				this); // scope
 
 				experimentResultSetsPanel.on('afterlayout', function() {
 						analysesSummaryTree.drawPieCharts();    
@@ -176,12 +220,12 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 					});
 			} 
 			
-			if (totalRadioCount === 0) {
+			if (totalResultSetCount === 0) {
 				experimentTitleComponent.setDisabled(true);
 			}
 			
 			return { 
-				hasEnabledRadioButtons: (totalRadioCount > 0),
+				hasEnabledRadioButtons: (totalResultSetCount > 0),
 				experimentTitleComponent: experimentTitleComponent,
 				experimentResultSetsPanel: experimentResultSetsPanel
 			}
@@ -238,6 +282,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		}.createDelegate(this);
 		
 		var analyzableExperimentsPanel = new Ext.Panel({
+			header: (!this.metaAnalysis),
 			title: 'Analyzable experiments',
             region: 'center',
 			autoScroll: true,
@@ -355,23 +400,14 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				return selectedResultSetIds;
 			},
 			items: thisPanelItems,
-			tbar: [{
-				xtype: 'checkbox',
-				boxLabel: 'Hide non-analyzable experiments and factors',
-				listeners: {
-					check: function(checkbox, checked) {
-						nonAnalyzableExperimentsPanel.setVisible(!checked);
-						setDisabledChildComponentsVisible(this, !checked);
-						this.doLayout();
-					},
-					scope: this
-				}
-			}],
 			setSelectedExperimentIds: function(expressionExperimentIds) {
 				showExperiments(expressionExperimentIds);
 			},
 			setPanelReadOnly: function(msg, msgCls) {
-				analyzableExperimentsPanel.header.mask(msg, msgCls);
+				if (analyzableExperimentsPanel.header) {
+					analyzableExperimentsPanel.header.mask(msg, msgCls);
+				}
+				
 				setPanelReadOnly(analyzableExperimentsPanel, true);
 				
 				if (!this.metaAnalysis) {				
@@ -388,6 +424,24 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			}			
 		});
 		
+
+		if (!this.metaAnalysis) {
+			Ext.apply(this, {
+				tbar: [{
+					xtype: 'checkbox',
+					boxLabel: 'Hide non-analyzable experiments and factors',
+					listeners: {
+						check: function(checkbox, checked) {
+							nonAnalyzableExperimentsPanel.setVisible(!checked);
+							setDisabledChildComponentsVisible(this, !checked);
+							this.doLayout();
+						},
+						scope: this
+					}
+				}]
+			});
+		}
+
 		Gemma.MetaAnalysisSelectFactorPanel.superclass.initComponent.call(this);
 	}
 });

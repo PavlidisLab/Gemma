@@ -332,24 +332,31 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param request
-     * @param response
+     * @param id
+     * @param analysisId
+     * @param factorName
+     * @param size
+     * @param os
      * @return
      * @throws Exception
      */
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
-    public ModelAndView visualizePvalueDist( Long id, OutputStream os ) throws Exception {
+    public ModelAndView visualizePvalueDist( Long id, Long analysisId, String factorName, Integer size, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
-        boolean ok = this.writePValueHistImages( os, ee );
-
-        if ( !ok ) {
-            writePlaceholderImage( os );
-        }
+        if (size == null) {
+        	if (!this.writePValueHistImages( os, ee, analysisId, factorName )) {
+        		writePlaceholderImage( os );
+        	}
+        } else {
+			if (!this.writePValueHistThumbnailImage( os, ee, analysisId, factorName, size )) {
+				writePlaceholderThumbnailImage( os, size );
+			}
+		}
 
         return null; // nothing to return;
     }
@@ -503,13 +510,15 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * @param ee
+     * @param analysisId
+     * @param factorName
      * @return Collection of JFreeChart XYSeries representing the histograms (one for each ResultSet.
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private Collection<XYSeries> getDiffExPvalueHists( ExpressionExperiment ee ) throws FileNotFoundException,
+    private Collection<XYSeries> getDiffExPvalueHists( ExpressionExperiment ee, Long analysisId, String factorName ) throws FileNotFoundException,
             IOException {
-        Collection<File> fs = this.locatePvalueDistFiles( ee );
+        Collection<File> fs = this.locatePvalueDistFiles( ee, analysisId );
 
         /*
          * new format is to have just one file?
@@ -522,19 +531,29 @@ public class ExpressionExperimentQCController extends BaseController {
             BufferedReader in = new BufferedReader( new FileReader( fs.iterator().next() ) );
             List<String> factorNames = new ArrayList<String>();
 
+            int factorNameIndex = -1;
+
             boolean readHeader = false;
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) continue;
-                String[] split = StringUtils.split( line );
+                String[] split = StringUtils.split( line, "\t" );
                 if ( split.length < 2 ) continue;
 
                 if ( !readHeader ) {
                     for ( int i = 1; i < split.length; i++ ) {
-                        String factorName = split[i];
+                        String currFactorName = split[i];
+
+						if (factorName != null &&
+							// currFactorName may have suffix such as __3.
+							currFactorName.length() >= factorName.length() &&
+							factorName.equals(currFactorName.substring(0, factorName.length()))) {
+							factorNameIndex = i;
+						}
+
                         // note that this might include
                         // DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID
-                        factorNames.add( factorName );
+                        factorNames.add( currFactorName );
                     }
                     readHeader = true;
                     continue;
@@ -543,50 +562,27 @@ public class ExpressionExperimentQCController extends BaseController {
                 try {
                     double x = Double.parseDouble( split[0] );
 
-                    for ( int i = 1; i < split.length; i++ ) {
-                        double y = Double.parseDouble( split[i] );
-
-                        if ( results.size() < i ) {
-                            results.add( new XYSeries( factorNames.get( i - 1 ), true, true ) );
-                        }
-
-                        results.get( i - 1 ).add( x, y );
-                    }
+                    if (factorName == null) {
+	                    for ( int i = 1; i < split.length; i++ ) {
+	                        double y = Double.parseDouble( split[i] );
+	
+	                        if ( results.size() < i ) {
+	                            results.add( new XYSeries( factorNames.get( i - 1 ), true, true ) );
+	                        }
+	
+	                        results.get( i - 1 ).add( x, y );
+	                    }
+					} else if (factorNameIndex >= 0 ){
+					    double y = Double.parseDouble( split[factorNameIndex] );
+					    if ( results.size() == 0 ) {
+					    	results.add( new XYSeries( factorName, true, true ) );
+					    }
+					    results.get( 0 ).add( x, y );
+					}
 
                 } catch ( NumberFormatException e ) {
                     // line wasn't useable.. no big deal. Heading is included.
                 }
-            }
-
-        } else {
-            /*
-             * old format, one file per series.
-             */
-            for ( File f : fs ) {
-                XYSeries series = new XYSeries( ee.getId(), true, true );
-                BufferedReader in = new BufferedReader( new FileReader( f ) );
-                boolean readHeader = false;
-                while ( in.ready() ) {
-                    String line = in.readLine().trim();
-                    if ( line.startsWith( "#" ) ) continue;
-                    String[] split = StringUtils.split( line );
-                    if ( split.length < 2 ) continue;
-
-                    if ( !readHeader ) {
-                        String factorName = split[1];
-                        series.setKey( factorName );
-                        readHeader = true;
-                        continue;
-                    }
-                    try {
-                        double x = Double.parseDouble( split[0] );
-                        double y = Double.parseDouble( split[1] );
-                        series.add( x, y );
-                    } catch ( NumberFormatException e ) {
-                        // line wasn't useable.. no big deal. Heading is included.
-                    }
-                }
-                results.add( series );
             }
         }
         return results;
@@ -711,39 +707,26 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * @param ee
+     * @param analysisId
      * @return
      */
-    private Collection<File> locatePvalueDistFiles( ExpressionExperiment ee ) {
+    private Collection<File> locatePvalueDistFiles( ExpressionExperiment ee, Long analysisId ) {
         String shortName = ee.getShortName();
 
         Collection<File> files = new HashSet<File>();
         File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-        if ( !directory.exists() ) {
+        if ( analysisId == null || !directory.exists() ) {
             return files;
         }
 
         String[] fileNames = directory.list();
-        String suffix = ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        for ( String fileName : fileNames ) {
-            if ( !fileName.endsWith( suffix ) ) {
+        String filename = shortName + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        for ( String currFileName : fileNames ) {
+            if ( !currFileName.equals( filename ) ) {
                 continue;
             }
-            File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+            File f = new File( directory.getAbsolutePath() + File.separatorChar + currFileName );
             files.add( f );
-        }
-
-        if ( files.isEmpty() ) {
-            /*
-             * Try old format - one file per resultset for backwards compatibility.
-             */
-            suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-            for ( String fileName : fileNames ) {
-                if ( !fileName.endsWith( suffix ) ) {
-                    continue;
-                }
-                File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
-                files.add( f );
-            }
         }
 
         return files;
@@ -1144,6 +1127,27 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * Write a blank thumbnail image so user doesn't see the broken icon.
+     * 
+     * @param os
+     * @param placeholderSize
+     * @throws IOException
+     */
+    private void writePlaceholderThumbnailImage( OutputStream os, int placeholderSize ) throws IOException {
+		// Make the image a bit bigger to account for the empty space around the generated image.
+		// If we can find a way to remove this empty space, we don't need to make the chart bigger.
+        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9 , BufferedImage.TYPE_INT_RGB );
+        Graphics g = buffer.createGraphics();
+        g.setColor( Color.white );        
+        g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
+		g.setColor( Color.black );        
+		Font font = g.getFont();
+		g.setFont(new Font(font.getName(), font.getStyle(), 8));
+		g.drawString( "N/A", placeholderSize / 2 + 1, placeholderSize + 1 );
+        ImageIO.write( buffer, "png", os );
+    }
+
+    /**
      * @param response
      * @param ee
      */
@@ -1172,13 +1176,19 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Has to handle the situation where there might be more than one ResultSet.
      * 
-     * @param response
+     * @param os
      * @param ee
+     * @param analysisId
+     * @param factorName
      * @throws IOException
      */
-    private boolean writePValueHistImages( OutputStream os, ExpressionExperiment ee ) throws IOException {
+    private boolean writePValueHistImages( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName ) throws IOException {
 
-        Collection<XYSeries> series = getDiffExPvalueHists( ee );
+        Collection<XYSeries> series = getDiffExPvalueHists( ee, analysisId, factorName );
+
+		if (series.size() == 0) {
+			return false;
+		}
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         for ( XYSeries s : series ) {
@@ -1189,7 +1199,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
-                PlotOrientation.VERTICAL, true, false, false );
+                PlotOrientation.VERTICAL, factorName == null, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
@@ -1200,4 +1210,46 @@ public class ExpressionExperimentQCController extends BaseController {
         return true;
     }
 
+    /**
+     * Write p-value histogram thumbnail image.
+     * 
+     * @param os
+     * @param ee
+     * @param analysisId
+     * @param factorName
+     * @param size
+     * @throws IOException
+     */
+    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName, int size ) throws IOException {
+        Collection<XYSeries> series = getDiffExPvalueHists( ee, analysisId, factorName );
+
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
+        
+		if (series.size() == 0) {
+			return false;
+		}
+
+        for ( XYSeries s : series ) {
+            xySeriesCollection.addSeries( s );
+            if ( s.getItemCount() == 0 ) {
+                return false;
+            }
+        }
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection,
+                PlotOrientation.VERTICAL, false, false, false );
+        chart.getXYPlot().setRangeGridlinesVisible( false );
+        chart.getXYPlot().setDomainGridlinesVisible( false );
+		chart.getXYPlot().setOutlineVisible(false);
+		chart.getXYPlot().getRangeAxis().setTickMarksVisible(false);
+		chart.getXYPlot().getRangeAxis().setTickLabelsVisible(false);
+		chart.getXYPlot().getDomainAxis().setTickMarksVisible(false);
+		chart.getXYPlot().getDomainAxis().setTickLabelsVisible(false);
+
+		// Make the chart a bit bigger to account for the empty space around the generated image.
+		// If we can find a way to remove this empty space, we don't need to make the chart bigger.
+        ChartUtilities.writeChartAsPNG( os, chart, size + 16, size + 9 );
+	        
+        return true;
+    }
 }
