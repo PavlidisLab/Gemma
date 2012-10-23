@@ -50,12 +50,12 @@ public abstract class DataVectorValueObject implements Serializable {
     // FIXME Replace with a valueobject
     protected BioAssayDimension bioAssayDimension;
 
-    
     public DataVectorValueObject() {
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
         this.bioAssayDimension = dedv.getBioAssayDimension();
+        assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );

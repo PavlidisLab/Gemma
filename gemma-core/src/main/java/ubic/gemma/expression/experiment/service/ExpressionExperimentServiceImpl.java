@@ -70,9 +70,9 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDaoImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -130,6 +130,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private RawExpressionDataVectorDao vectorDao;
+
+    @Autowired
+    private ProcessedExpressionDataVectorDao processedVectorDao;
 
     @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
@@ -884,15 +887,32 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
-            Collection<RawExpressionDataVector> vectors ) {
+            Collection<RawExpressionDataVector> newVectors ) {
 
-        if ( vectors == null || vectors.isEmpty() ) {
+        if ( newVectors == null || newVectors.isEmpty() ) {
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
+        ExpressionExperiment eeToUpdate = this.load( ee.getId() );
+
+        // remove old vectors.
+        Collection<QuantitationType> qtsToRemove = new HashSet<QuantitationType>();
+        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
+            qtsToRemove.add( oldvec.getQuantitationType() );
+        }
+        vectorDao.remove( eeToUpdate.getRawExpressionDataVectors() );
+        processedVectorDao.remove( eeToUpdate.getProcessedExpressionDataVectors() );
+        eeToUpdate.getProcessedExpressionDataVectors().clear();
+        eeToUpdate.getRawExpressionDataVectors().clear();
+
+        for ( QuantitationType oldqt : qtsToRemove ) {
+            quantitationTypeDao.remove( oldqt );
+        }
+
+        // make new stuff.
         Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
         Collection<QuantitationType> qts = new HashSet<QuantitationType>();
-        for ( RawExpressionDataVector vec : vectors ) {
+        for ( RawExpressionDataVector vec : newVectors ) {
             bads.add( vec.getBioAssayDimension() );
             qts.add( vec.getQuantitationType() );
         }
@@ -906,39 +926,22 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                     "Can only replace with one type of vector (only one quantitation type)" );
         }
 
-        ExpressionExperiment eeToUpdate = this.load( ee.getId() );
         BioAssayDimension bad = bads.iterator().next();
         bad = this.bioAssayDimensionDao.create( bad );
+        assert bad.getBioAssays().size() > 0;
 
-        QuantitationType qt = qts.iterator().next();
+        QuantitationType newQt = qts.iterator().next();
 
-        qt = this.quantitationTypeDao.create( qt );
+        assert newQt.getId() == null;
+        newQt = this.quantitationTypeDao.create( newQt );
 
-        for ( RawExpressionDataVector vec : vectors ) {
+        for ( RawExpressionDataVector vec : newVectors ) {
             vec.setBioAssayDimension( bad );
-            vec.setQuantitationType( qt );
+            vec.setQuantitationType( newQt );
         }
 
-        Collection<QuantitationType> toRemove = new HashSet<QuantitationType>();
-        for ( RawExpressionDataVector oldvec : vectors ) {
-            toRemove.add( oldvec.getQuantitationType() );
-        }
-
-        eeToUpdate.getProcessedExpressionDataVectors().clear();
-        eeToUpdate.getRawExpressionDataVectors().clear();
-
-        /*
-         * Have to delete the vectors here, to get the ordering of events right (can't rely on flush)
-         */
-        vectorDao.remove( vectors );
-
-        for ( QuantitationType oldqt : toRemove ) {
-            // cannot do this if the vectors are left there.
-            quantitationTypeDao.remove( oldqt );
-        }
-
-        eeToUpdate.getRawExpressionDataVectors().addAll( vectors );
-        ArrayDesign vectorAd = vectors.iterator().next().getDesignElement().getArrayDesign();
+        eeToUpdate.getRawExpressionDataVectors().addAll( newVectors );
+        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
 
         if ( ad == null ) {
             for ( BioAssay ba : eeToUpdate.getBioAssays() ) {
@@ -967,44 +970,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @param auditEventDao the auditEventDao to set
-     */
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
-     */
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    /**
-     * Sets the reference to <code>expressionExperiment</code>'s DAO.
+     * Needed for tests.
      */
     public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
         this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @param expressionExperimentSetDao the expressionExperimentSetDao to set
-     */
-    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
-        this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
-
-    public void setGeneCoexpressionAnalysisDao( GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao ) {
-        this.geneCoexpressionAnalysisDao = geneCoexpressionAnalysisDao;
-    }
-
-    /**
-     * Sets the reference to <code>probe2ProbeCoexpression</code>'s DAO.
-     */
-    public void setProbe2ProbeCoexpressionDao(
-            ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao ) {
-        this.probe2ProbeCoexpressionDao = probe2ProbeCoexpressionDao;
     }
 
     /**

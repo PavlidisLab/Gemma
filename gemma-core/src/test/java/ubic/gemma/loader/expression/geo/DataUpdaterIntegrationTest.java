@@ -228,9 +228,11 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setScale( ScaleType.LINEAR );
         qt.setIsBackground( false );
+        qt.setIsRatio( false );
         qt.setIsBackgroundSubtracted( true );
         qt.setIsNormalized( true );
         qt.setIsMaskedPreferred( true );
+        qt.setIsBatchCorrected( false );
         qt.setIsPreferred( true );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );

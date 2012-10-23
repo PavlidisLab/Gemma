@@ -107,24 +107,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         log.info( "Computing processed expression vectors for " + expressionExperiment );
 
-        /*
-         * Figure out if it is two-channel
-         */
-        boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment,
-                this.getSession() );
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            TechnologyType technologyType = ad.getTechnologyType();
-
-            if ( technologyType == null ) {
-                throw new IllegalStateException(
-                        "Array designs must have a technology type assigned before processed vector computation" );
-            }
-
-            if ( !technologyType.equals( TechnologyType.ONECOLOR ) ) {
-                isTwoChannel = true;
-            }
-        }
+        boolean isTwoChannel = isTwoChannel( expressionExperiment );
 
         Collection<RawExpressionDataVector> missingValueVectors = new HashSet<RawExpressionDataVector>();
         if ( isTwoChannel ) {
@@ -180,6 +163,28 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return expressionExperiment;
 
+    }
+
+    private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
+        /*
+         * Figure out if it is two-channel
+         */
+        boolean isTwoChannel = false;
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment,
+                this.getSession() );
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            TechnologyType technologyType = ad.getTechnologyType();
+
+            if ( technologyType == null ) {
+                throw new IllegalStateException(
+                        "Array designs must have a technology type assigned before processed vector computation" );
+            }
+
+            if ( !technologyType.equals( TechnologyType.ONECOLOR ) ) {
+                isTwoChannel = true;
+            }
+        }
+        return isTwoChannel;
     }
 
     @Override
@@ -1127,6 +1132,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<CompositeSequence, DoubleVectorValueObject> unpackedData = unpack( preferredData );
 
         if ( missingValueData.size() == 0 ) {
+            log.info( "There is no seprate missing data information, simply using the data as is" );
             for ( DoubleVectorValueObject rv : unpackedData.values() ) {
                 rv.setMasked( true );
             }

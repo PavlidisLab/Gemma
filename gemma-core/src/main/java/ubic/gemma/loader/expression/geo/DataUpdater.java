@@ -169,6 +169,8 @@ public class DataUpdater {
 
         bioAssayDimension = assayDimensionService.findOrCreate( bioAssayDimension );
 
+        assert !bioAssayDimension.getBioAssays().isEmpty();
+
         for ( int i = 0; i < data.rows(); i++ ) {
             byte[] bdata = bArrayConverter.doubleArrayToBytes( data.getRow( i ) );
 
@@ -198,7 +200,7 @@ public class DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        experimentService.replaceVectors( ee, targetPlatform, vectors );
+        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
 
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -255,7 +257,7 @@ public class DataUpdater {
                 /*
                  * Ok, we have to 'reload it' and add the compositeSequences.
                  */
-                geoService.addElements( targetPlatform  );
+                geoService.addElements( targetPlatform );
             }
         } else {
             log.warn( "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );
