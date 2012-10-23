@@ -1140,10 +1140,13 @@ public class ExpressionExperimentQCController extends BaseController {
         Graphics g = buffer.createGraphics();
         g.setColor( Color.white );        
         g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
-		g.setColor( Color.black );        
+		g.setColor( Color.gray );
+		g.drawLine( 8, placeholderSize + 5, placeholderSize + 8, placeholderSize + 5 ); // x-axis		
+		g.drawLine( 8, 5, 8, placeholderSize + 5 ); // y-axis
+		g.setColor( Color.black );
 		Font font = g.getFont();
 		g.setFont(new Font(font.getName(), font.getStyle(), 8));
-		g.drawString( "N/A", placeholderSize / 2 + 1, placeholderSize + 1 );
+		g.drawString( "N/A", 9, placeholderSize );
         ImageIO.write( buffer, "png", os );
     }
 
