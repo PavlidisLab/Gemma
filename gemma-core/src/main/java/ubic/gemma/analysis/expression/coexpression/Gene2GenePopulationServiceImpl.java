@@ -148,7 +148,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return
      */
     private static List<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector ) {
-        List<Long> ids = new ArrayList<Long>();
+        List<Long> ids = new ArrayList<Long>(positionToIDMap.size());
         boolean[] asBools = BitUtil.asBools( bitvector );
         assert asBools.length >= positionToIDMap.size(); // padding at the end.
         for ( int i = 0; i < positionToIDMap.size(); i++ ) {
