@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.geo;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,6 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author paul
@@ -65,6 +67,16 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     private ProcessedExpressionDataVectorService dataVectorService;
 
+    private boolean hasApt = false;
+
+    @org.junit.Before
+    public void startup() {
+        String apt = ConfigUtils.getString( "affy.power.tools.exec" );
+        if ( new File( apt ).canExecute() ) {
+            hasApt = true;
+        }
+    }
+
     /**
      * Test method for
      * {@link ubic.gemma.loader.expression.geo.DataUpdater#addAffyExonArrayData(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
@@ -72,6 +84,11 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {
+
+        if ( !hasApt ) {
+            return;
+        }
+
         ExpressionExperiment ee;
         try {
             String path = getTestFileBasePath();
@@ -90,8 +107,14 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
     }
 
+    /**
+     * 
+     */
     @Test
     public void testAddAffyExonHuman() {
+        if ( !hasApt ) {
+            return;
+        }
         ExpressionExperiment ee; // GSE22498
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -104,8 +127,14 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
     }
 
+    /**
+     * 
+     */
     @Test
     public void testAddAffyExonRat() {
+        if ( !hasApt ) {
+            return;
+        }
         ExpressionExperiment ee; // GSE33597
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -119,23 +148,9 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    @Test
-    public void testReplaceData() {
-
-        /*
-         * Load a regular data set that has one array design
-         */
-
-        /*
-         * make up some fake data on another platform.
-         */
-
-        /*
-         * Replace it.
-         */
-
-    }
-
+    /**
+     * @throws Exception
+     */
     @Test
     public void testAddData() throws Exception {
 
@@ -146,7 +161,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
         ExpressionExperiment ee;
 
-        ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
+        // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
         // if ( oldee != null ) experimentService.delete( oldee ); // maybe okay?
 
         try {
