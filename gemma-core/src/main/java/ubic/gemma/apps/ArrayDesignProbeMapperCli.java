@@ -392,8 +392,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         Option directAnnotation = OptionBuilder
                 .withDescription(
-                        "Import annotations from a file rather than our own analysis. You must provide the taxon option" )
-                .hasArg().withArgName( "file" ).create( "import" );
+                        "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
+                                + "File format: 2 columns with column 1= probe name in Gemma, "
+                                + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
+                                + " column 3 = gene symbol (will be matched to that in Gemma)" ).hasArg()
+                .withArgName( "file" ).create( "import" );
 
         addOption( directAnnotation );
 
