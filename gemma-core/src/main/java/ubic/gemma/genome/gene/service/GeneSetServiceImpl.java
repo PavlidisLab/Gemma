@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 
 import org.apache.commons.lang.StringUtils;
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
     @Override
@@ -83,6 +85,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -92,6 +95,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -110,6 +114,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -119,6 +124,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @Override
@@ -129,6 +135,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
      */
     @Override
@@ -138,6 +145,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
     @Override
@@ -147,6 +155,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -156,6 +165,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
     @Override
@@ -165,6 +175,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -184,6 +195,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     @Override
@@ -193,6 +205,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -206,6 +219,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
      */
     @Override
@@ -216,6 +230,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -254,6 +269,12 @@ public class GeneSetServiceImpl implements GeneSetService {
         // If no gene Ids just create group and return.
         if ( geneIds != null && !geneIds.isEmpty() ) {
             Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+            if ( geneIds.size() != genes.size() ) {
+                Log.warn( "Not all genes were found by id: " + geneIds.size() + " ids, " + genes.size()
+                        + " genes fetched" );
+            }
+
             Collection<GeneSetMember> geneMembers = new HashSet<GeneSetMember>();
             for ( Gene g : genes ) {
                 GeneSetMember gmember = GeneSetMember.Factory.newInstance();
@@ -487,11 +508,11 @@ public class GeneSetServiceImpl implements GeneSetService {
         }
 
         Collection<GeneSet> geneSets = new LinkedList<GeneSet>();
-        
+
         if ( privateOnly ) {
             // gets all groups user can see (includes: owned by user, shared with user & public)
             geneSets = loadAll( tax );
-            
+
             // this filtering is to filter out public sets
             try {
                 if ( !geneSets.isEmpty() ) {
@@ -500,10 +521,10 @@ public class GeneSetServiceImpl implements GeneSetService {
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-        }else if ( sharedPublicOnly ){
+        } else if ( sharedPublicOnly ) {
             // gets all groups shared with the user and all groups owned by the user, except public ones
             geneSets = loadMySharedGeneSets( tax );
-        }else{
+        } else {
             geneSets = loadAll( tax );
         }
 
