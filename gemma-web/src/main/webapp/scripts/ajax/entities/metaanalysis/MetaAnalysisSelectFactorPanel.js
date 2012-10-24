@@ -21,7 +21,11 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			    items: []
 			});
 			
-			var experimentTitle = '<b>' + experimentDetails.accession + ' ' + experimentDetails.name + '</b>';
+			var experimentTitle =
+				'<b>' + '<a ext:qtip="Click for details on experiment (opens in new window)" target="_blank"  href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='
+							+ experimentDetails.id + '">'
+							+ experimentDetails.accession + '</a> ' 
+							+ experimentDetails.name + '</b>';
 
 			var experimentTitleComponent;
 			if (this.metaAnalysis) {
@@ -79,17 +83,14 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			    });
 			    
 				var generateResultSetComponent = function(text, marginLeft, notSuitableForAnalysisMessage, inputValue, shouldResultSetSelected) {
-					// When users click on any icons following the text for each result set, radio buttons should not
-					// be selected. Assume this text ends right before the first html tag span. indexOfFirstSpan is
-					// used to store the start index of the first html tag span. Radio button will be created using
-					// this text only. However, if a radio button will be disabled, this radio button will use both
-					// this text and html code for all icons because these icons should look disabled.
+					// When icons placed after radio buttons are clicked, these radio buttons should not be selected.
+					// So, radio buttons should contain text only.
+					// Assume all text ends right before the first html tag "span". indexOfFirstSpan is used to store
+					// the start index of the first html tag "span". Radio button will be created using this text only.
 					var indexOfFirstSpan = text.indexOf('<span');
 					var radio = new Ext.form.Radio({
 						checked: shouldResultSetSelected,
-						boxLabel: (notSuitableForAnalysisMessage ?
-									text + ' <i>' + notSuitableForAnalysisMessage + '</i>' :
-									text.substring(0, indexOfFirstSpan)),
+						boxLabel: text.substring(0, indexOfFirstSpan),  // text only and without any icons
 						name: (this.metaAnalysis ?
 							// Meta-analysis id should be used because another window may have the same set
 							// of radio buttons for the same experiment.
@@ -108,17 +109,24 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 							}
 						}
 					});
-					var items = [ radio ];
-					if (!notSuitableForAnalysisMessage) {
-						// Put all icons in another component placed after the radio button.
-						items.push({
-							xtype: 'displayfield',
-							value: text.substring(indexOfFirstSpan), // text only and without any icons
-							style: 'margin-top: -5px;'
-						});
-					}
+					var items = [ radio, {// Put all icons and not for analysis messages (if any) in a new panel.
+						xtype: 'displayfield',
+						value: text.substring(indexOfFirstSpan) + 
+							(notSuitableForAnalysisMessage ?
+								' <i>' + notSuitableForAnalysisMessage + '</i>' :
+								''),
+						// Note that icons should not be put inside radio buttons even if these radio buttons
+						// are disabled because cursor for icons will not be changed to pointer. So, I have 
+						// to make all text and icons look disabled manually.
+						style: 'margin-top: -5px;' +
+							(notSuitableForAnalysisMessage ?
+								' color: gray; opacity: 0.6;' :  
+								'')
+					}];					
+					
 					return {
 						border: false,
+						bodyStyle: 'background-color: transparent;',						
 						layout: 'hbox',
 						getRadio: function() { return radio; },
 					    items: items
@@ -328,11 +336,21 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		};
 
 		var	setPanelReadOnly = function(panel, isReadOnly) {
-			panel.items.each(function(item)  {
+			var radioButtons = panel.findByType('radio');
+			Ext.each(radioButtons, function(radio, index) {
 				if (isReadOnly) {
-					item.body.mask();
+					radio.el.parent().mask();
 				} else {
-					item.body.unmask();
+					radio.el.parent().unmask();
+				}
+			});
+
+			var checkboxButtons = panel.findByType('checkbox');
+			Ext.each(checkboxButtons, function(checkbox, index) {
+				if (isReadOnly) {
+					checkbox.el.parent().mask();
+				} else {
+					checkbox.el.parent().unmask();
 				}
 			});
 		}
@@ -412,7 +430,6 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				
 				if (!this.metaAnalysis) {				
 					buttonPanel.body.mask();
-					setPanelReadOnly(nonAnalyzableExperimentsPanel, true);
 				}
 			},
 			unsetPanelReadOnly: function() {

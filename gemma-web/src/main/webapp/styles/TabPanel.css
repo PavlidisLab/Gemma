@@ -17,10 +17,9 @@
 	text-decoration: none;
 }
 
-/* mask() is called on the panel to make it read-only. Change the opacity so that the panel looks like 
-   read-only rather than masked. */
+/* mask() is called on a panel to make the panel read-only. */
 .wizardTabPanel .ext-el-mask {
-	opacity: 0.15;
+	background-color: transparent;
 }
 
 .wizardTabPanel .read-only-warning {

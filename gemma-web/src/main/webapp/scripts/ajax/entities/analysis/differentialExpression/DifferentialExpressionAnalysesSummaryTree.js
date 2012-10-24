@@ -564,7 +564,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 					showPValueDistributionWindow: function(factorName, imageUrl) {
 						var eeInfoTitle =
 							"P-value distribution for " + factorName + " in: "
-							+ "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+							+ "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
 							+ this.ee.id
 							+ "'>"
 							+ this.ee.shortName
