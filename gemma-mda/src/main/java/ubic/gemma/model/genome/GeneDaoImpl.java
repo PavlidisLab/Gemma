@@ -377,23 +377,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#findOrCreate(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    public Gene findOrCreate( Gene gene ) {
-        Gene existingGene = this.find( gene );
-        if ( existingGene != null ) {
-            return existingGene;
-        }
-        // We consider this abnormal because we expect most genes to have been
-        // loaded into the system already.
-        log.warn( "*** Creating new gene: " + gene + " ***" );
-        return create( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection)
      */
     @Override

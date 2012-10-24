@@ -108,11 +108,6 @@ public interface GeneDao extends BaseDao<Gene> {
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
     /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
-
-    /**
      * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
      * value is a Map of CoexpressionCollectionValueObjects.
      * 
@@ -123,9 +118,8 @@ public interface GeneDao extends BaseDao<Gene> {
      *        gene is entered
      * @return
      */
-    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes(
-            Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
-            java.lang.Integer stringency, boolean interGeneOnly );
+    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<ubic.gemma.model.genome.Gene> genes,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean interGeneOnly );
 
     /**
      * <p>

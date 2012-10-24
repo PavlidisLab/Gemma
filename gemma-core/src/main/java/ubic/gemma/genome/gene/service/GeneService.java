@@ -146,13 +146,6 @@ public interface GeneService {
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
     /**
-     * @param gene
-     * @return
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public Gene findOrCreate( Gene gene );
-
-    /**
      * @param genes
      * @param ees
      * @param stringency

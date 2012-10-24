@@ -276,16 +276,6 @@ public class GeneServiceImpl implements GeneService {
     // return this.getGeneDao().loadProbeAlignedRegions( taxon );
     // }
 
-    /**
-     * This was created because calling saveGene from Spring causes caching errors. I left saveGene in place on the
-     * assumption that Kiran's loaders use it with success.
-     * 
-     * @see gene.GeneService#createGene(Gene)
-     */
-    protected Gene handleSaveGene( Gene gene ) {
-        return this.getGeneDao().create( gene );
-    }
-
     @Override
     public Collection<? extends Gene> findByEnsemblId( String exactString ) {
         return this.getGeneDao().findByEnsemblId( exactString );
@@ -467,14 +457,7 @@ public class GeneServiceImpl implements GeneService {
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }
-
-    /**
-     * @see GeneService#findOrCreate(Gene)
-     */
-    @Override
-    public Gene findOrCreate( final Gene gene ) {
-        return this.getGeneDao().findOrCreate( gene );
-    }
+ 
 
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
@@ -489,8 +472,8 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
+    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
+            final Integer stringency ) {
         return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }
 
