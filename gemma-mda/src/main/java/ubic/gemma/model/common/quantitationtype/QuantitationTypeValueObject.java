@@ -31,14 +31,13 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  * @author thea
  */
 public class QuantitationTypeValueObject {
-    
-     
+
     private String name;
-    
+
     private String description;
-    
+
     private String generalType;
-   
+
     private boolean isBackground;
 
     private boolean isBackgroundSubtracted;
@@ -61,212 +60,185 @@ public class QuantitationTypeValueObject {
 
     /**
      * No-arg constructor added to satisfy javabean contract
+     * 
      * @author thea
      */
-     public QuantitationTypeValueObject() {}
+    public QuantitationTypeValueObject() {
+    }
 
+    /**
+     * Constructor to build value object from QuantitationType
+     * 
+     * @param gs
+     */
+    public QuantitationTypeValueObject( QuantitationType qt ) {
+        this.setName( qt.getName() );
+        this.setDescription( qt.getDescription() );
+        this.setGeneralType( qt.getGeneralType().toString() );
+        this.setIsBackground( qt.getIsBackground() != null && qt.getIsBackground() );
+        this.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted() );
+        this.setIsBatchCorrected( qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected() );
+        this.setIsMaskedPreferred( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() );
+        this.setIsNormalized( qt.getIsNormalized() != null && qt.getIsNormalized() );
+        this.setIsPreferred( qt.getIsPreferred() != null && qt.getIsPreferred() );
+        this.setIsRatio( qt.getIsRatio() != null && qt.getIsRatio() );
+        this.setRepresentation( qt.getRepresentation().toString() );
+        this.setScale( qt.getScale().toString() );
+        this.setType( qt.getType().toString() );
+    }
 
-     /**
-      * Constructor to build value object from QuantitationType
-      * 
-      * @param gs
-      */
-     public QuantitationTypeValueObject( QuantitationType qt ) {
-         this.setName( qt.getName() );
-         this.setDescription( qt.getDescription() );
-         this.setGeneralType( qt.getGeneralType().toString() );
-         this.setIsBackground( (qt.getIsBackground() != null)?qt.getIsBackground():false );
-         this.setIsBackgroundSubtracted( (qt.getIsBackgroundSubtracted() != null)?qt.getIsBackgroundSubtracted() : false );
-         this.setIsBatchCorrected( (qt.getIsBatchCorrected() != null)? qt.getIsBatchCorrected() : false );
-         this.setIsMaskedPreferred( (qt.getIsMaskedPreferred())?qt.getIsMaskedPreferred():false );
-         this.setIsNormalized( (qt.getIsNormalized())?qt.getIsNormalized():false );
-         this.setIsPreferred( (qt.getIsPreferred())?qt.getIsPreferred():false );
-         this.setIsRatio( (qt.getIsRatio())?qt.getIsRatio():false );
-         this.setRepresentation( qt.getRepresentation().toString() );
-         this.setScale( qt.getScale().toString() );
-         this.setType( qt.getType().toString() );
-     }
-     
-     public static Collection<QuantitationTypeValueObject> convert2ValueObjects( Collection<QuantitationType> qts) {
-         List<QuantitationTypeValueObject> results = new ArrayList<QuantitationTypeValueObject>();
+    public static Collection<QuantitationTypeValueObject> convert2ValueObjects( Collection<QuantitationType> qts ) {
+        List<QuantitationTypeValueObject> results = new ArrayList<QuantitationTypeValueObject>();
 
-         for ( QuantitationType qt : qts ) {
-             if(qt!=null){
-             results.add( new QuantitationTypeValueObject( qt ) );
-             }
-         }
+        for ( QuantitationType qt : qts ) {
+            if ( qt != null ) {
+                results.add( new QuantitationTypeValueObject( qt ) );
+            }
+        }
 
-         Collections.sort( results, new Comparator<QuantitationTypeValueObject>() {
-             @Override
-             public int compare( QuantitationTypeValueObject o1,QuantitationTypeValueObject o2 ) {
-                 return -o1.getName().compareTo( o2.getName() );
-             }
-         } );
-         return results;
-     }
-     
+        Collections.sort( results, new Comparator<QuantitationTypeValueObject>() {
+            @Override
+            public int compare( QuantitationTypeValueObject o1, QuantitationTypeValueObject o2 ) {
+                return -o1.getName().compareTo( o2.getName() );
+            }
+        } );
+        return results;
+    }
+
     /**
      * 
      */
-    public String getGeneralType()
-    {
+    public String getGeneralType() {
         return this.generalType;
     }
 
     /**
      * 
      */
-    public boolean getIsBackground()
-    {
+    public boolean getIsBackground() {
         return this.isBackground;
     }
 
     /**
      * 
      */
-    public boolean getIsBackgroundSubtracted()
-    {
+    public boolean getIsBackgroundSubtracted() {
         return this.isBackgroundSubtracted;
     }
 
     /**
      * 
      */
-    public boolean getIsBatchCorrected()
-    {
+    public boolean getIsBatchCorrected() {
         return this.isBatchCorrected;
     }
 
     /**
      * <p>
-     * If the data represented is a missing-value masked version of the
-     * preferred data.
+     * If the data represented is a missing-value masked version of the preferred data.
      * </p>
      */
-    public boolean getIsMaskedPreferred()
-    {
+    public boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
     }
 
     /**
      * 
      */
-    public boolean getIsNormalized()
-    {
+    public boolean getIsNormalized() {
         return this.isNormalized;
     }
 
     /**
      * 
      */
-    public boolean getIsPreferred()
-    {
+    public boolean getIsPreferred() {
         return this.isPreferred;
     }
 
     /**
      * <p>
-     * Indicates whether the quantitation type is expressed as a ratio.
-     * This has a natural impact on the interpretation. If false, the
-     * value is "absolute".
+     * Indicates whether the quantitation type is expressed as a ratio. This has a natural impact on the interpretation.
+     * If false, the value is "absolute".
      * </p>
      */
-    public boolean getIsRatio()
-    {
+    public boolean getIsRatio() {
         return this.isRatio;
     }
 
-    public String getRepresentation()
-    {
+    public String getRepresentation() {
         return this.representation;
     }
 
-    public String getScale()
-    {
+    public String getScale() {
         return this.scale;
     }
 
     /**
      * 
      */
-    public String getType()
-    {
+    public String getType() {
         return this.type;
     }
 
-    public void setGeneralType(String generalType)
-    {
+    public void setGeneralType( String generalType ) {
         this.generalType = generalType;
     }
 
-    public void setIsBackground(boolean isBackground)
-    {
+    public void setIsBackground( boolean isBackground ) {
         this.isBackground = isBackground;
     }
 
-    public void setIsBackgroundSubtracted(boolean isBackgroundSubtracted)
-    {
+    public void setIsBackgroundSubtracted( boolean isBackgroundSubtracted ) {
         this.isBackgroundSubtracted = isBackgroundSubtracted;
     }
 
-    public void setIsBatchCorrected(boolean isBatchCorrected)
-    {
+    public void setIsBatchCorrected( boolean isBatchCorrected ) {
         this.isBatchCorrected = isBatchCorrected;
     }
 
-    public void setIsMaskedPreferred(boolean isMaskedPreferred)
-    {
+    public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
         this.isMaskedPreferred = isMaskedPreferred;
     }
 
-    public void setIsNormalized(boolean isNormalized)
-    {
+    public void setIsNormalized( boolean isNormalized ) {
         this.isNormalized = isNormalized;
     }
 
-    public void setIsPreferred(boolean isPreferred)
-    {
+    public void setIsPreferred( boolean isPreferred ) {
         this.isPreferred = isPreferred;
     }
 
-    public void setIsRatio(boolean isRatio)
-    {
+    public void setIsRatio( boolean isRatio ) {
         this.isRatio = isRatio;
     }
 
-    public void setRepresentation(String representation)
-    {
+    public void setRepresentation( String representation ) {
         this.representation = representation;
     }
 
-    public void setScale(String scale)
-    {
+    public void setScale( String scale ) {
         this.scale = scale;
     }
 
-    public void setType(String type)
-    {
+    public void setType( String type ) {
         this.type = type;
     }
-
 
     public void setDescription( String description ) {
         this.description = description;
     }
 
-
     public String getDescription() {
         return description;
     }
-
 
     public void setName( String name ) {
         this.name = name;
     }
 
-
     public String getName() {
         return name;
     }
-  
+
 }
