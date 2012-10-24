@@ -151,8 +151,8 @@ public class AuditAdvice {
         try {
             auditHelper.addCreateAuditEvent( auditable, details, user );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
-                        + auditable.getId() + " by " + user.getUserName() );
+                log.debug( "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on "
+                        + auditable.getClass().getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
             }
 
         } catch ( UsernameNotFoundException e ) {
@@ -160,6 +160,10 @@ public class AuditAdvice {
         }
     }
 
+    /**
+     * @param auditable
+     * @return
+     */
     private boolean isNullOrTransient( final Auditable auditable ) {
         return auditable == null || auditable.getId() == null;
     }
@@ -224,17 +228,21 @@ public class AuditAdvice {
     }
 
     /**
+     * Check if the associated object needs to be 'create audited'. Example: gene products are created by cascade when
+     * calling update on a gene.
+     * 
      * @param object
      * @param auditable
      * @param auditTrail
      */
     private void maybeAddCascadeCreateEvent( Object object, Auditable auditable, User user ) {
+        if ( log.isDebugEnabled() )
+            log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
 
         // TODO: I don't think we need this.
         if ( !Hibernate.isInitialized( auditable ) ) {
             return;
         }
-
         if ( auditable.getAuditTrail() == null || auditable.getAuditTrail().getEvents().isEmpty() ) {
             addCreateAuditEvent( auditable, user, " - created by cascade from " + object );
         }
@@ -323,6 +331,7 @@ public class AuditAdvice {
                     } catch ( HibernateException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
+                        log.warn( "What am I doing here? " + e.getMessage() );
                     }
 
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
@@ -339,6 +348,7 @@ public class AuditAdvice {
                                     maybeAddCascadeCreateEvent( object, auditable, user );
                                     processAssociations( methodName, collectionMember, user );
                                 } catch ( HibernateException e ) {
+                                    log.warn( "What am I doing here? " + e.getMessage() );
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
                                 }
@@ -348,6 +358,7 @@ public class AuditAdvice {
                     } catch ( HibernateException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
+                        log.warn( "What am I doing here? " + e.getMessage() );
                     }
 
                 }
