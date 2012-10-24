@@ -18,8 +18,14 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,9 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
 /**
+ * This test relies on having blat actually runnning.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -54,15 +65,16 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
      * .
      */
     @Test
-    public final void testProcessArrayDesign() {
+    public final void testProcessArrayDesign() throws Exception {
         if ( !fastaCmdExecutableExists() ) return;
         if ( ad == null ) return;
 
         try {
             ad = this.arrayDesignService.thaw( ad );
-            app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                    ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
-                    false );
+            Collection<BioSequence> sequences = app.processArrayDesign( ad, new String[] { "testblastdb",
+                    "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                    + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
+            assertEquals( 243, sequences.size() );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 return;
@@ -78,10 +90,18 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
                 log.warn( "Blat server not available? Skipping test" );
                 return;
             }
+            log.error( e, e );
+            fail();
         }
 
         // real stuff.
         arrayDesignProbeMapperService.processArrayDesign( ad );
+
+        Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
+        assertEquals( 100, alignments.size() );
+        for ( CompositeSequence cs : alignments.keySet() ) {
+            assertTrue( !alignments.get( cs ).isEmpty() );
+        }
 
     }
 

@@ -18,12 +18,15 @@
  */
 package ubic.gemma.analysis.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.junit.Before;
@@ -152,6 +155,12 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         assertNotNull( genes );
         // assertEquals( genes.size(), 1 );
         // assertEquals( genes.iterator().next().getName(), geneOfficialSymbol );
+
+        Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
+        assertEquals( 0, alignments.size() );
+        for ( CompositeSequence c : alignments.keySet() ) {
+            assertTrue( !alignments.get( c ).isEmpty() );
+        }
     }
 
     /**

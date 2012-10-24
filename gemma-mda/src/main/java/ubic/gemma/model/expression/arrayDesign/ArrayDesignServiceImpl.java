@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author klc
@@ -712,6 +713,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
         this.getArrayDesignDao().addProbes( arrayDesign, newprobes );
+    }
+
+    @Override
+    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign ) {
+        return this.getArrayDesignDao().loadAlignments( arrayDesign );
     }
 
 }

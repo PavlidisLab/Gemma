@@ -375,10 +375,10 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public java.util.Collection<CompositeSequence> loadCompositeSequences(
+    public java.util.Collection<CompositeSequence> getCompositeSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleLoadCompositeSequences( arrayDesign );
@@ -825,7 +825,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadAllValueObjects();
 
     /**
-     * Performs the core logic for {@link #loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * Performs the core logic for {@link #getCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract java.util.Collection<CompositeSequence> handleLoadCompositeSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );

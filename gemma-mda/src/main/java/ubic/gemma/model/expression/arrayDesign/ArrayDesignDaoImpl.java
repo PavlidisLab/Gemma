@@ -53,6 +53,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
@@ -1050,6 +1051,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     }
 
+    /**
+     * @param arrayDesign
+     */
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
@@ -1290,7 +1294,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     protected Collection<CompositeSequence> handleLoadCompositeSequences( Long id ) {
-        final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
+        final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
@@ -1792,4 +1796,25 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return bb;
     }
 
+    @Override
+    public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
+        List<Object[]> m = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select cs, br from CompositeSequenceImpl cs "
+                                + " join fetch cs.biologicalCharacteristic bs join fetch bs.bioSequence2GeneProduct bs2gp join fetch bs2gp.blatResult br "
+                                + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign.id=:adid", "adid",
+                        arrayDesign.getId() );
+
+        Map<CompositeSequence, Collection<BlatResult>> result = new HashMap<CompositeSequence, Collection<BlatResult>>();
+        for ( Object[] objects : m ) {
+            CompositeSequence cs = ( CompositeSequence ) objects[0];
+            BlatResult br = ( BlatResult ) objects[1];
+            if ( !result.containsKey( cs ) ) {
+                result.put( cs, new HashSet<BlatResult>() );
+            }
+            result.get( cs ).add( br );
+        }
+        return result;
+    }
 }

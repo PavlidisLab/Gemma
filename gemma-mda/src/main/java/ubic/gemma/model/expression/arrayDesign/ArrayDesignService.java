@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @version $Id$
@@ -259,7 +260,13 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
+
+    /**
+     * @param arrayDesign
+     * @return map of compositesequences to alignments, if available.
+     */
+    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -275,6 +282,7 @@ public interface ArrayDesignService {
      * </p>
      */
     public ArrayDesignValueObject loadValueObject( Long id );
+
     /**
      * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.

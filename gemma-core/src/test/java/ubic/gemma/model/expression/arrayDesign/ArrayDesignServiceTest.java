@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
@@ -43,6 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -119,6 +121,12 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         assertNotNull( cs.getId() );
         assertNotNull( cs.getArrayDesign().getId() );
+
+        Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
+        /*
+         * This will be empty
+         */
+        assertNotNull( alignments );
     }
 
     @Test
@@ -322,7 +330,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testLoadCompositeSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection<CompositeSequence> actualValue = arrayDesignService.loadCompositeSequences( ad );
+        Collection<CompositeSequence> actualValue = arrayDesignService.getCompositeSequences( ad );
         assertEquals( 3, actualValue.size() );
     }
 
