@@ -20,7 +20,7 @@
 <table class="detail">
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.accession" />
+			<label key="expressionExperimentLoad.accession" />
 		</th>
 		<td>
 			<input type="text" name="accession" id="accession" size="40" value="<c:out value="${status.value}"/>" />
@@ -29,7 +29,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.arrayExpress" />
+			<label key="expressionExperimentLoad.arrayExpress" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -43,7 +43,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.platformOnly" />
+			<label key="expressionExperimentLoad.platformOnly" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -57,7 +57,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.suppressMatching" />
+			<label key="expressionExperimentLoad.suppressMatching" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check this box if you know that samples were run on only one platform each. Otherwise an attempt will be made to identify biological replicates on different platforms.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -71,7 +71,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.splitByPlatform" />
+			<label key="expressionExperimentLoad.splitByPlatform" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -85,7 +85,7 @@
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.allowSuperSeries" />
+			<label key="expressionExperimentLoad.allowSuperSeries" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'If series is a superseries in GEO, allow it to load; leave this unchecked to prevent accidental superseries loading.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -101,7 +101,7 @@
 	
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.allowArrayExpressDesign" />
+			<label key="expressionExperimentLoad.allowArrayExpressDesign" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'When loading from ArrayExpress, allow the array design to be imported. It must not be an array design already in Gemma!'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -116,7 +116,7 @@
 
 	<tr>
 		<th>
-			<Gemma:label key="expressionExperimentLoad.arrayDesign" />
+			<label key="expressionExperimentLoad.arrayDesign" />
 		</th>
 		<td>
 			<div id="arrayDesignCombo"></div>

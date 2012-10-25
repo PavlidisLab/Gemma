@@ -11,7 +11,7 @@
 	<table class="detail">
 		<tr>
 			<th>
-				<Gemma:label key="person.firstName" />
+				<label key="person.firstName" />
 			</th>
 
 			<td alignment="right" width="31%">
@@ -34,7 +34,7 @@
 
 		<tr>
 			<th>
-				<Gemma:label key="person.middleName" />
+				<label key="person.middleName" />
 			</th>
 
 			<td alignment="right" width="31%">
@@ -57,7 +57,7 @@
 		<tr>
 
 			<th>
-				<Gemma:label key="person.lastName" />
+				<label key="person.lastName" />
 			</th>
 
 			<td align="right" width="31%">

@@ -20,7 +20,7 @@
 
 	<ul>
 		<li>
-			<Gemma:label styleClass="desc" key="arrayDesign" />
+			<label styleClass="desc" key="arrayDesign" />
 			<spring:bind path="arrayDesignAddCommand.arrayDesign">
 				<select name="${status.expression}">
 					<c:forEach items="${arrayDesigns}" var="arrayDesign">
@@ -35,7 +35,7 @@
 		</li>
 
 		<li>
-			<Gemma:label styleClass="desc" key="taxon" />
+			<label styleClass="desc" key="taxon" />
 			<spring:bind path="arrayDesignAddCommand.taxon">
 				<select name="${status.expression}">
 					<c:forEach items="${taxa}" var="taxon">
@@ -51,7 +51,7 @@
 
 
 		<li>
-			<Gemma:label styleClass="desc" key="file" />
+			<label styleClass="desc" key="file" />
 			<spring:bind path="arrayDesignSequenceCommand.file.file">
 				<input type="file" size=30 name="<c:out value="${status.expression}" />" value="<c:out value="${status.value}" />" />
 				<span class="fieldError">${status.errorMessage}</span>

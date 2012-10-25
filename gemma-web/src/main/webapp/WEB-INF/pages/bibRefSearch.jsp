@@ -21,7 +21,7 @@
 	action="<c:url value="/bibRefSearch.html"/>">
 	<table>
 		<tr>
-			<td><Gemma:label styleClass="desc" key="pubMed.id" /></td>
+			<td><label styleClass="desc" key="pubMed.id" /></td>
 
 			<td><spring:bind path="searchCriteria.accession">
 					<input type="text" name="${status.expression}"
