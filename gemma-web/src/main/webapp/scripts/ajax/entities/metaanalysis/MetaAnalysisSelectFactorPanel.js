@@ -83,53 +83,77 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			    });
 			    
 				var generateResultSetComponent = function(text, marginLeft, notSuitableForAnalysisMessage, inputValue, shouldResultSetSelected) {
-					// When icons placed after radio buttons are clicked, these radio buttons should not be selected.
-					// So, radio buttons should contain text only.
-					// Assume all text ends right before the first html tag "span". indexOfFirstSpan is used to store
-					// the start index of the first html tag "span". Radio button will be created using this text only.
-					var indexOfFirstSpan = text.indexOf('<span');
-					var radio = new Ext.form.Radio({
-						checked: shouldResultSetSelected,
-						boxLabel: text.substring(0, indexOfFirstSpan),  // text only and without any icons
-						name: (this.metaAnalysis ?
-							// Meta-analysis id should be used because another window may have the same set
-							// of radio buttons for the same experiment.
-							this.metaAnalysis.id + '-' + experimentDetails.id :
-							experimentDetails.id),
-						style: 'margin-left: ' + marginLeft + 'px;',
-						disabled: notSuitableForAnalysisMessage != null,
-						inputValue: inputValue,
-						listeners: {
-							check: function(radio, checked) {
-								if (checked) {
-									if (experimentTitleComponent.isXType(Ext.form.Checkbox)) {									
-										experimentTitleComponent.setValue(true);
+					var resultSetComponent;
+					var resultSetRadio = null; // If this panel is editable, it will be set and stored as a component inside resultSetComponent.
+					if (this.metaAnalysis) {
+						resultSetComponent = {
+							xtype: 'displayfield',
+							value:
+								(shouldResultSetSelected ?
+									'<img src="/Gemma/images/icons/ok16.png" />' :
+									'<span style="margin-left: 16px;" />') + '&nbsp;' +
+								text + 
+								(notSuitableForAnalysisMessage ?
+									' <i>' + notSuitableForAnalysisMessage + '</i>' :
+									''),
+							// Note that this displayfield should not be disabled because cursors for icons will not be changed to pointers.
+							// So, I have to make all text and icons look disabled manually.
+							style: 'margin-left: ' + marginLeft + 'px;' +
+								(notSuitableForAnalysisMessage ?
+									' color: gray; opacity: 0.6;' :  // Make component look disabled
+									'')
+						};
+					} else {
+						// When icons placed after radio buttons are clicked, these radio buttons should not be selected.
+						// So, radio buttons should contain text only.
+						// Assume all text ends right before the first html tag "span". indexOfFirstSpan is used to store
+						// the start index of the first html tag "span". Radio button will be created using this text only.
+						var indexOfFirstSpan = text.indexOf('<span');
+						
+						resultSetRadio = new Ext.form.Radio({
+							checked: shouldResultSetSelected,
+							boxLabel: text.substring(0, indexOfFirstSpan),  // text only and without any icons
+							name: (this.metaAnalysis ?
+								// Meta-analysis id should be used because another window may have the same set
+								// of radio buttons for the same experiment.
+								this.metaAnalysis.id + '-' + experimentDetails.id :
+								experimentDetails.id),
+							style: 'margin-left: ' + marginLeft + 'px;',
+							disabled: notSuitableForAnalysisMessage != null,
+							inputValue: inputValue,
+							listeners: {
+								check: function(radio, checked) {
+									if (checked) {
+										if (experimentTitleComponent.isXType(Ext.form.Checkbox)) {									
+											experimentTitleComponent.setValue(true);
+										}
 									}
 								}
 							}
-						}
-					});
-					var items = [ radio, {// Put all icons and not for analysis messages (if any) in a new panel.
-						xtype: 'displayfield',
-						value: text.substring(indexOfFirstSpan) + 
-							(notSuitableForAnalysisMessage ?
-								' <i>' + notSuitableForAnalysisMessage + '</i>' :
-								''),
-						// Note that icons should not be put inside radio buttons even if these radio buttons
-						// are disabled because cursor for icons will not be changed to pointer. So, I have 
-						// to make all text and icons look disabled manually.
-						style: 'margin-top: -5px;' +
-							(notSuitableForAnalysisMessage ?
-								' color: gray; opacity: 0.6;' :  
-								'')
-					}];					
+						});
+	
+						resultSetComponent = [ resultSetRadio, {// Put all icons and not for analysis messages (if any) in a new panel.
+							xtype: 'displayfield',
+							value: text.substring(indexOfFirstSpan) + 
+								(notSuitableForAnalysisMessage ?
+									' <i>' + notSuitableForAnalysisMessage + '</i>' :
+									''),
+							// Note that icons should not be put inside radio buttons even if these radio buttons
+							// are disabled because cursors for icons will not be changed to pointers. So, I have 
+							// to make all text and icons look disabled manually.
+							style: 'margin-top: -5px;' +
+								(notSuitableForAnalysisMessage ?
+									' color: gray; opacity: 0.6;' : // Make component look disabled
+									'')
+						}];
+					}
 					
 					return {
 						border: false,
 						bodyStyle: 'background-color: transparent;',						
 						layout: 'hbox',
-						getRadio: function() { return radio; },
-					    items: items
+						getRadio: function() { return resultSetRadio; },
+						items: resultSetComponent
 					};
 			    }.createDelegate(this);
 			    
@@ -195,8 +219,12 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 									totalResultSetCount++;
 								}
 								var resultSetComponent = generateResultSetComponent(resultSet.text, 15, notSuitableForAnalysisMessage,
-															resultSet.attributes.resultSetId, radioAvailability.shouldResultSetSelected);							
-								radioGroup.items.push(resultSetComponent.getRadio());
+															resultSet.attributes.resultSetId, radioAvailability.shouldResultSetSelected);
+
+								var resultSetRadio = resultSetComponent.getRadio();
+								if (resultSetRadio != null) {
+									radioGroup.items.push(resultSetRadio);
+								}
 								experimentResultSetsPanel.add(resultSetComponent);
 							}
 						},
@@ -213,7 +241,11 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 							}
 							var resultSetComponent = generateResultSetComponent(resultSetParent.text, 0, notSuitableForAnalysisMessage,
 														resultSetParent.attributes.resultSetId, radioAvailability.shouldResultSetSelected);
-							radioGroup.items.push(resultSetComponent.getRadio());						
+
+							var resultSetRadio = resultSetComponent.getRadio();
+							if (resultSetRadio != null) {
+								radioGroup.items.push(resultSetRadio);
+							}
 							experimentResultSetsPanel.add(resultSetComponent);
 						}
 					}
@@ -391,21 +423,6 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			];
 		}
 		
-		this.on({
-			afterrender: function() {
-				if (this.metaAnalysis) {
-					// Defer the call. Otherwise, this panel cannot be set read-only.
-					Ext.defer(
-						function() {
-							this.setPanelReadOnly();
-						},
-						1000,
-						this);
-				}
-			}
-		});		
-
-
 		Ext.apply(this, {
 			height: 600,
 			layout: 'border',
