@@ -310,6 +310,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             diffExpressionEvidenceValueObject
                     .setGeneDifferentialExpressionMetaAnalysisResult( differentialExpressionEvidence
                             .getGeneDifferentialExpressionMetaAnalysisResult() );
+            diffExpressionEvidenceValueObject.setSelectionThreshold( differentialExpressionEvidence
+                    .getSelectionThreshold() );
 
         } else if ( phenotypeAssociation instanceof GenericEvidence ) {
             // nothing special to do
@@ -365,6 +367,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         differentialExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisResult( evidenceValueObject
                 .getGeneDifferentialExpressionMetaAnalysisResult() );
+
+        differentialExpressionEvidence.setSelectionThreshold( evidenceValueObject.getSelectionThreshold() );
 
         return differentialExpressionEvidence;
     }

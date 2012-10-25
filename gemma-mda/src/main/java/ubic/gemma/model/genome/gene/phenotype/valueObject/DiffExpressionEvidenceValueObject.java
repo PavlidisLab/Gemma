@@ -31,7 +31,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
-    private Double thresholdChosen;
+    private Double selectionThreshold;
 
     private GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult = null;
 
@@ -53,10 +53,10 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource,
             GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
-            Double thresholdChosen ) {
+            Double selectionThreshold ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
 
-        this.thresholdChosen = thresholdChosen;
+        this.selectionThreshold = selectionThreshold;
 
         this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
     }
@@ -70,12 +70,12 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
     }
 
-    public Double getThresholdChosen() {
-        return this.thresholdChosen;
+    public Double getSelectionThreshold() {
+        return this.selectionThreshold;
     }
 
-    public void setThresholdChosen( Double thresholdChosen ) {
-        this.thresholdChosen = thresholdChosen;
+    public void setSelectionThreshold( Double selectionThreshold ) {
+        this.selectionThreshold = selectionThreshold;
     }
 
     public Long getGeneDifferentialExpressionMetaAnalysisId() {
@@ -92,13 +92,13 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         int result = super.hashCode();
         result = prime
                 * result
-                + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ? 0 : this.geneDifferentialExpressionMetaAnalysisId
-                        .hashCode() );
+                + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ? 0
+                        : this.geneDifferentialExpressionMetaAnalysisId.hashCode() );
         result = prime
                 * result
                 + ( ( this.geneDifferentialExpressionMetaAnalysisResult == null ) ? 0
                         : this.geneDifferentialExpressionMetaAnalysisResult.hashCode() );
-        result = prime * result + ( ( getThresholdChosen() == null ) ? 0 : this.thresholdChosen.hashCode() );
+        result = prime * result + ( ( this.selectionThreshold == null ) ? 0 : this.selectionThreshold.hashCode() );
         return result;
     }
 
@@ -106,7 +106,5 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
     public boolean equals( Object obj ) {
         return false;
     }
-    
-    
 
 }

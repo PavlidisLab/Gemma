@@ -69,6 +69,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
@@ -763,7 +764,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double thresholdChosen ) {
+            Double selectionThreshold ) {
 
         GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
                 .load( geneDifferentialExpressionMetaAnalysisId );
@@ -773,12 +774,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult : geneDifferentialExpressionMetaAnalysis
                 .getResults() ) {
 
-            // TODO change TAS when we know what to put there
-            if ( geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue() <= thresholdChosen ) {
+            if ( geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue() <= selectionThreshold ) {
                 DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject(
                         geneDifferentialExpressionMetaAnalysisResult.getGene().getNcbiGeneId(), phenotypes,
-                        geneDifferentialExpressionMetaAnalysis.getDescription(), "TAS", false, null,
-                        geneDifferentialExpressionMetaAnalysisResult, thresholdChosen );
+                        geneDifferentialExpressionMetaAnalysis.getDescription(), "IEP", false, null,
+                        geneDifferentialExpressionMetaAnalysisResult, selectionThreshold );
+
+                // set the score
+                ScoreValueObject scoreValueObject = new ScoreValueObject( null,
+                        geneDifferentialExpressionMetaAnalysisResult.getMetaPvalue().toString(), "P-value" );
+
+                diffExpressionEvidenceValueObject.setScoreValueObject( scoreValueObject );
 
                 diffExpressionEvidenceValueObjects.add( diffExpressionEvidenceValueObject );
             }
