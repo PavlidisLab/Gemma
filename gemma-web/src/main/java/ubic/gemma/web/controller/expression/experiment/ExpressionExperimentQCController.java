@@ -342,14 +342,14 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
     public ModelAndView visualizePvalueDist( Long id, Long analysisId, String factorName, Integer size, OutputStream os ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = this.expressionExperimentService.load( id );
         if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
+            this.log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
         if (size == null) {
-        	if (!this.writePValueHistImages( os, ee, analysisId, factorName )) {
+        	if (!this.writePValueHistImage( os, ee, analysisId, factorName )) {
         		writePlaceholderImage( os );
         	}
         } else {
@@ -512,24 +512,22 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param ee
      * @param analysisId
      * @param factorName
-     * @return Collection of JFreeChart XYSeries representing the histograms (one for each ResultSet.
+     * @return JFreeChart XYSeries representing the histogram for the requested result set
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private Collection<XYSeries> getDiffExPvalueHists( ExpressionExperiment ee, Long analysisId, String factorName ) throws FileNotFoundException,
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, String factorName ) throws FileNotFoundException,
             IOException {
-        Collection<File> fs = this.locatePvalueDistFiles( ee, analysisId );
+        if ( ee == null || analysisId == null || factorName == null ) {
+        	return null;
+        }
+        
+    	XYSeries xySeries = null;
+        File file = this.locatePvalueDistFile( ee, analysisId );
 
-        /*
-         * new format is to have just one file?
-         */
-
-        List<XYSeries> results = new ArrayList<XYSeries>();
-
-        if ( fs.size() == 1 ) {
-
-            BufferedReader in = new BufferedReader( new FileReader( fs.iterator().next() ) );
-            List<String> factorNames = new ArrayList<String>();
+         // Current format is to have just one file for each analysis.
+        if ( file != null ) {
+            BufferedReader in = new BufferedReader( new FileReader( file ) );
 
             int factorNameIndex = -1;
 
@@ -544,48 +542,35 @@ public class ExpressionExperimentQCController extends BaseController {
                     for ( int i = 1; i < split.length; i++ ) {
                         String currFactorName = split[i];
 
-						if (factorName != null &&
-							// currFactorName may have suffix such as __3.
-							currFactorName.length() >= factorName.length() &&
+                        // Note that currFactorName may have suffix such as __3
+                        // (DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID).
+						if (currFactorName.length() >= factorName.length() &&
 							factorName.equals(currFactorName.substring(0, factorName.length()))) {
 							factorNameIndex = i;
 						}
-
-                        // note that this might include
-                        // DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID
-                        factorNames.add( currFactorName );
                     }
                     readHeader = true;
-                    continue;
+					if ( factorNameIndex < 0 ) {
+						// If factorName cannot be found, don't need to continue reading file.
+						break;
+					}
+					continue;
                 }
 
                 try {
                     double x = Double.parseDouble( split[0] );
-
-                    if (factorName == null) {
-	                    for ( int i = 1; i < split.length; i++ ) {
-	                        double y = Double.parseDouble( split[i] );
-	
-	                        if ( results.size() < i ) {
-	                            results.add( new XYSeries( factorNames.get( i - 1 ), true, true ) );
-	                        }
-	
-	                        results.get( i - 1 ).add( x, y );
-	                    }
-					} else if (factorNameIndex >= 0 ){
-					    double y = Double.parseDouble( split[factorNameIndex] );
-					    if ( results.size() == 0 ) {
-					    	results.add( new XYSeries( factorName, true, true ) );
-					    }
-					    results.get( 0 ).add( x, y );
-					}
+				    double y = Double.parseDouble( split[factorNameIndex] );
+				    if ( xySeries == null ) {
+				    	xySeries = new XYSeries( factorName, true, true );
+				    }
+				    xySeries.add( x, y );
 
                 } catch ( NumberFormatException e ) {
                     // line wasn't useable.. no big deal. Heading is included.
                 }
             }
         }
-        return results;
+        return xySeries;
     }
 
     /**
@@ -710,26 +695,20 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param analysisId
      * @return
      */
-    private Collection<File> locatePvalueDistFiles( ExpressionExperiment ee, Long analysisId ) {
-        String shortName = ee.getShortName();
+    private File locatePvalueDistFile( ExpressionExperiment ee, Long analysisId ) {
+    	File file = null;
 
-        Collection<File> files = new HashSet<File>();
-        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-        if ( analysisId == null || !directory.exists() ) {
-            return files;
+        if ( ee != null && analysisId != null ) {
+	        String shortName = ee.getShortName();
+	        file = new File(DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName ),
+	        				shortName + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX);
+
+	        if (!file.exists()) {
+	        	file = null;
+	        }
         }
 
-        String[] fileNames = directory.list();
-        String filename = shortName + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        for ( String currFileName : fileNames ) {
-            if ( !currFileName.equals( filename ) ) {
-                continue;
-            }
-            File f = new File( directory.getAbsolutePath() + File.separatorChar + currFileName );
-            files.add( f );
-        }
-
-        return files;
+        return file;
     }
 
     /**
@@ -1185,24 +1164,19 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param factorName
      * @throws IOException
      */
-    private boolean writePValueHistImages( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName ) throws IOException {
+    private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName ) throws IOException {
 
-        Collection<XYSeries> series = getDiffExPvalueHists( ee, analysisId, factorName );
+        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, factorName );
 
-		if (series.size() == 0) {
+		if (series == null) {
 			return false;
 		}
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
-        for ( XYSeries s : series ) {
-            xySeriesCollection.addSeries( s );
-            if ( s.getItemCount() == 0 ) {
-                return false;
-            }
-        }
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(series);
+        
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
-                PlotOrientation.VERTICAL, factorName == null, false, false );
+                PlotOrientation.VERTICAL, false, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
@@ -1224,20 +1198,14 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws IOException
      */
     private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName, int size ) throws IOException {
-        Collection<XYSeries> series = getDiffExPvalueHists( ee, analysisId, factorName );
+        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, factorName );
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
-        
-		if (series.size() == 0) {
+		if (series == null) {
 			return false;
 		}
 
-        for ( XYSeries s : series ) {
-            xySeriesCollection.addSeries( s );
-            if ( s.getItemCount() == 0 ) {
-                return false;
-            }
-        }
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(series);
+        
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );

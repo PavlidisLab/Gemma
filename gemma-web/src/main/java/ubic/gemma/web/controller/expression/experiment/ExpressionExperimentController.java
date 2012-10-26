@@ -714,7 +714,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
-        qc.setHasPvalueDist( ExpressionExperimentQCUtils.hasPvalueDistFiles( ee ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         return qc.getQChtml();
     }

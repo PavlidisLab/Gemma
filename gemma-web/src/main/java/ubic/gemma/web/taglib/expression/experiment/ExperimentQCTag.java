@@ -40,8 +40,6 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasPCA = false;
 
-    private boolean hasPvalueDist = false;
-
     private String eeManagerId = "";
 
     public void setEeManagerId( String eeManagerId ) {
@@ -85,13 +83,6 @@ public class ExperimentQCTag extends TagSupport {
      */
     public void setHasPCA( boolean value ) {
         this.hasPCA = value;
-    }
-
-    /**
-     * @param value
-     */
-    public void setHasPvalueDist( boolean value ) {
-        this.hasPvalueDist = value;
     }
 
     public void setHasNodeDegreeDist( boolean value ) {
@@ -149,7 +140,7 @@ public class ExperimentQCTag extends TagSupport {
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
-                + "<th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th>" + "</tr>" );
+                + "</tr>" );
 
         buf.append( "<tr>" );
 
@@ -243,13 +234,6 @@ public class ExperimentQCTag extends TagSupport {
 
         if ( hasCorrDist ) {
             buf.append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
-                    + this.eeid + "\" /></td>" );
-        } else {
-            buf.append( placeHolder );
-        }
-
-        if ( hasPvalueDist ) {
-            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Differential expression value distribution' src=\"/Gemma/expressionExperiment/visualizePvalueDist.html?id="
                     + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
