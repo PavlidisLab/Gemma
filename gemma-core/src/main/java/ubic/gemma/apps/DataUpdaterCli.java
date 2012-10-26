@@ -59,7 +59,8 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
 
                 ArrayDesign ad = arrayDesignsUsed.iterator().next();
 
-                if ( ad.getDescription().contains( "Exon" ) && ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+                if ( ad.getName().toLowerCase().contains( "exon" )
+                        && ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
                     log.info( thawedEe + " looks like affy exon array" );
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
