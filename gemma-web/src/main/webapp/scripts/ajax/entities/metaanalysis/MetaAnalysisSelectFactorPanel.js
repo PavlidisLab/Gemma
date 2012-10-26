@@ -90,7 +90,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 							xtype: 'displayfield',
 							value:
 								(shouldResultSetSelected ?
-									'<img src="/Gemma/images/icons/ok16.png" />' :
+									'<img src="/Gemma/images/icons/ok16.png" width="16" height="16" />' :
 									'<span style="margin-left: 16px;" />') + '&nbsp;' +
 								text + 
 								(notSuitableForAnalysisMessage ?
