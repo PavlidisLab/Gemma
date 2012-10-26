@@ -396,6 +396,35 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
+    /**
+     * 
+     */
+    @Test
+    public void testLoadGSE30521ExonArray() {
+        String path = ConfigUtils.getString( "gemma.home" );
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE30521", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE30521 was already loaded - clean the DB before running the test" );
+            return;
+        }
+        ee = eeService.thawLite( ee );
+
+        /*
+         * Should load okay, but should not load the data.
+         */
+        try {
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            fail( "Should not have any data vectors for exon arrays on first loading" );
+        } catch ( Exception e ) {
+            // OK
+        }
+
+    }
+
     /*
      * Please leave this here, we use it to load data sets for chopping.
      */
@@ -406,7 +435,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void test() {
-        fetchASeries( "GSE7540" );
+        fetchASeries( "GSE30521" );
     }
 
 }
