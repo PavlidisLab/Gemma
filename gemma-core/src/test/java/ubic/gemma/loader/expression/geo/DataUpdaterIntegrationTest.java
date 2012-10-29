@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -224,6 +225,11 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment updatedee = experimentService.thaw( experimentService.load( ee.getId() ) );
 
         assertEquals( 100, updatedee.getRawExpressionDataVectors().size() );
+
+        for ( RawExpressionDataVector v : updatedee.getRawExpressionDataVectors() ) {
+            assertTrue( v.getQuantitationType().getIsPreferred() );
+        }
+
         assertEquals( 100, updatedee.getProcessedExpressionDataVectors().size() );
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
@@ -231,9 +237,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             BioAssayDimension bad = v.getBioAssayDimension();
             assertEquals( 31, bad.getBioAssays().size() );
-
         }
-
     }
 
     private QuantitationType makeQt() {
@@ -247,6 +251,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         qt.setIsBackgroundSubtracted( true );
         qt.setIsNormalized( true );
         qt.setIsMaskedPreferred( true );
+        qt.setIsPreferred( true );
         qt.setIsBatchCorrected( false );
         qt.setIsPreferred( true );
         qt.setType( StandardQuantitationType.AMOUNT );

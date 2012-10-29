@@ -956,6 +956,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         for ( BioAssay ba : eeToUpdate.getBioAssays() ) {
             ba.setArrayDesignUsed( ad );
         }
+
+        // this is a denormalization; easy to forget to update this.
+        ee.getQuantitationTypes().add( newQt );
+
         this.update( eeToUpdate );
         ee = eeToUpdate;
 
