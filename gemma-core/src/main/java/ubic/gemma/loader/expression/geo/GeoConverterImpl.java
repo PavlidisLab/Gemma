@@ -1341,9 +1341,12 @@ public class GeoConverterImpl implements GeoConverter {
                 // mrna_assignment is less strict than gene_assignement
 
                 // salvage it if it has a gene assignment.
-                if ( platform.getColumnNames().contains( "gene_assignment" ) ) {
-                    String cd = platform.getColumnData( "gene_assignment" ).get( i );
+                // String filteringColumn = "gene_assignment";
+                String filteringColumn = "gene_assignment";
+                if ( platform.getColumnNames().contains( filteringColumn ) ) {
+                    String cd = platform.getColumnData( filteringColumn ).get( i );
                     if ( StringUtils.isBlank( cd ) || cd.equals( "---" ) ) {
+
                         skipped.add( id );
                         if ( skipped.size() % 10000 == 0 ) {
                             log.info( "Skipped " + skipped.size() + " elements due to strict selection; last was " + id );

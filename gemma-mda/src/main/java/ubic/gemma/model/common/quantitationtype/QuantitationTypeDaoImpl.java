@@ -93,7 +93,6 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
         log.error( sb.toString() );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<QuantitationType> loadByDescription( String description ) {
         final String query = "from QuantitationTypeImpl q where q.description like :description";
