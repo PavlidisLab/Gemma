@@ -28,11 +28,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
@@ -99,8 +99,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private boolean allowSubSeriesLoad = false;
     private boolean suppressPostProcessing = false;
 
-    @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SVDService svdService;
 
     @Override
     public String getShortDesc() {
@@ -136,6 +136,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         sampleCoexpressionMatrixService.findOrCreate( ee );
+
+        svdService.svd( ee.getId() );
     }
 
     /**
@@ -423,6 +425,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         this.processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
         this.tcmv = this.getBean( TwoChannelMissingValues.class );
         this.sampleCoexpressionMatrixService = getBean( SampleCoexpressionMatrixService.class );
+        this.svdService = getBean( SVDService.class );
     }
 
     /**

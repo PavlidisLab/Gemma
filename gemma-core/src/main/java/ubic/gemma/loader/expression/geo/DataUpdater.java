@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.AffyPowerToolsProbesetSummarize;
@@ -62,6 +63,9 @@ public class DataUpdater {
 
     @Autowired
     private ExpressionExperimentService experimentService;
+
+    @Autowired
+    private SVDService svdService;
 
     @Autowired
     private GeoService geoService;
@@ -126,7 +130,14 @@ public class DataUpdater {
 
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform );
 
+        postprocess( ee );
+
+    }
+
+    public void postprocess( ExpressionExperiment ee ) {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        sampleCoexpressionMatrixService.create( ee, true );
+        svdService.svd( ee.getId() );
     }
 
     /**
@@ -217,9 +228,7 @@ public class DataUpdater {
 
         audit( ee, "Data vector replacement for " + targetPlatform );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-
-        sampleCoexpressionMatrixService.create( ee, true );
+        postprocess( ee );
 
     }
 

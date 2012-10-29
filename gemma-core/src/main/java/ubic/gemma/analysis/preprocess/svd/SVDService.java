@@ -19,11 +19,19 @@ import java.util.Map;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 
+/**
+ * @author paul
+ * @version $Id$
+ */
 public interface SVDService {
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count );
+
     public boolean hasPca( Long eeId );
+
     public SVDValueObject getSvd( Long eeId );
-    public SVDValueObject svd( Long eeId );   
+
+    public SVDValueObject svd( Long eeId );
+
     public SVDValueObject getSvdFactorAnalysis( Long eeId );
 
 }
