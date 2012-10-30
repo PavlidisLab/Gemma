@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -45,52 +44,14 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * </p>
  * <p>
  * For 3' arrays, here is an example:
- *</p>
+ * </p>
  * 
  * <pre>
  * 1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense
  * </pre>
  * <p>
- * For exon arrays, the format is described in the README files that come with the sequence Zips. As in the 3' array
- * files, the probes are arranged 5' -> 3', but the probes are given in the 'wrong' sense compared to the 3' arrays and
- * the coordinates are from the point of view of the genome, not the transcript, so probes on the - strand have to be
- * assembled in the reverse orientation.
- * </p>
- * 
- * <pre>
- *    The probe tabular data file contains all probe sequences from the
- *    array in tab-delimited format. Column headers are indicated in the
- *    first line.
- * 
- *    I.B.1. Column header line
- * 
- *       Column Name                        Description
- *     -----------------       ------------------------------------------
- *       Probe ID               Probe identifier (integer)
- *       Probe Set ID           Probe set identifier (integer)
- *       probe x                X coordinate for probe location on array
- *       probe y                Y coordinate for probe location on array
- *       assembly               Genome assembly version from array design time
- *       seqname                Sequence name for genomic location of probe 
- *       start                  Starting coordinate of probe genomic location (1-based)
- *       stop                   Ending coordinate of probe genomic location (1-based)
- *       strand                 Sequence strand of probe genomic location (+ or -)
- *       probe sequence         Probe sequence
- *       target strandedness    Strandedness of the target which the probe detects
- *       category               Array design category of the probe (described below)
- * 
- * 
- *    I.B.2. Example entry
- * 
- *    Shown is an example column header line and data line from the human
- *    exon array. 
- * 
- * Probe ID    Probe Set ID    probe x probe y assembly    seqname start   stop    strand  probe sequence  target strandedness category
- * 494998  2315101 917 193 build-34/hg16   chr1    1788    1812    +   CACGGGAAGTCTGGGCTAAGAGACA   Sense   main
- * </pre>
- * 
- * Because AFFX controls have no 'start' and 'end' sequences recorded in Exon array files, they are skipped by the
- * parser.
+ * For exon arrays, we create the equivalent files from the GFF files provided by Affymetrix. The files are created
+ * off-line using a PERL script.
  * 
  * @author pavlidis
  * @version $Id$
@@ -155,11 +116,6 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
 
         String probeSetId = sArray[0];
         if ( probeSetId.startsWith( "Probe" ) ) {
-            if ( sArray[1].equals( "Probe Set ID" ) || sArray[1].equals( "Transcript Cluster ID" ) ) {
-                log.info( "Exon array format detected" );
-                sequenceField = 9;
-            }
-            // skip header row.
             return null;
         }
 
@@ -178,27 +134,11 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
         String ycoord;
         String startInSequence;
         String index = null;
-        boolean flip = false;
 
         if ( sequenceField == 4 ) {
             xcoord = sArray[1];
             ycoord = sArray[2];
             startInSequence = sArray[3];
-        } else if ( sequenceField == 9 ) {
-            // Exon array
-            probeSetId = sArray[1];
-            startInSequence = sArray[6]; // 7 is end, 8 is strand, 9 is sequence
-            xcoord = sArray[2];
-            ycoord = sArray[3];
-
-            /*
-             * For exon arrays, if the sequence is on the - strand we have to also reverse the ordering of the probes
-             */
-            flip = sArray[sequenceField - 1].equals( "-" );
-
-            if ( sArray[sequenceField + 1].equalsIgnoreCase( "sense" ) ) { // ???
-                sequence = SequenceManipulation.reverseComplement( sequence );
-            }
         } else {
             index = sArray[1];
             xcoord = sArray[2];
@@ -220,9 +160,6 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
 
         try {
             reporter.setStartInBioChar( Long.parseLong( startInSequence ) );
-            if ( flip ) {
-                reporter.setStartInBioChar( -reporter.getStartInBioChar() );
-            }
         } catch ( NumberFormatException e ) {
 
             if ( startInSequence.equals( "---" ) ) {
