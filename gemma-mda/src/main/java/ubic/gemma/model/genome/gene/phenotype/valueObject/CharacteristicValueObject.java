@@ -88,7 +88,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         super();
         this.valueUri = valueUri;
         if ( this.valueUri != null && !this.valueUri.equals( "" ) && this.valueUri.indexOf( "#" ) > 0 ) {
-            this.urlId = this.valueUri.substring( this.valueUri.indexOf( "#" ) + 1, this.valueUri.length() );
+            this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
+        } else if ( this.valueUri.lastIndexOf( "/" ) > 0 ) {
+            this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
         }
     }
 

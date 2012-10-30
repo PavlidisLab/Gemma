@@ -1490,13 +1490,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         TreeCharacteristicValueObject[] customOntologyTrees = new TreeCharacteristicValueObject[3];
 
         for ( TreeCharacteristicValueObject tree : ontologyTrees ) {
-            if ( tree.getValueUri().equals( "http://purl.org/obo/owl/DOID#DOID_4" ) ) {
+            if ( tree.getValueUri().indexOf( "DOID" ) != -1 ) {
                 tree.setValue( "Disease Ontology" );
                 customOntologyTrees[0] = tree;
-            } else if ( tree.getValueUri().equals( "http://purl.org/obo/owl/HP#HP_0000001" ) ) {
+            } else if ( tree.getValueUri().indexOf( "HP" ) != -1 ) {
                 tree.setValue( "Human Phenotype Ontology" );
                 customOntologyTrees[1] = tree;
-            } else if ( tree.getValueUri().equals( "http://purl.org/obo/owl/MP#MP_0000001" ) ) {
+            } else if ( tree.getValueUri().indexOf( "MP" ) != -1 ) {
                 tree.setValue( "Mammalian Phenotype Ontology" );
                 customOntologyTrees[2] = tree;
             }

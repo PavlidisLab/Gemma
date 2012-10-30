@@ -39,13 +39,12 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneDifferentialExpressionMetaAnalysis analysis );
 
-    @Secured({ "GROUP_USER" })
     public Collection<GeneDifferentialExpressionMetaAnalysisValueObject> loadMyAnalysisVOs();
-    
+
     @Secured({ "GROUP_USER" })
-    public void delete(Long id);
-    
+    public void delete( Long id );
+
     @Secured({ "GROUP_USER" })
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
-    
+
 }
