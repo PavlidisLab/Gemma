@@ -16,15 +16,6 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		deferEmptyText: false,
 		emptyText: 'No meta-analysis to display'
     },
-	store: new Ext.data.JsonStore({
-		autoLoad: true,
-		proxy: new Ext.data.DWRProxy(ExpressionExperimentController.loadMyAnalyses),
-		fields: [ 'id',
-			{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
-			'description', 'numGenesAnalyzed', 'numResultsInitially', 'includedResultSetDetails', 'results' ],
-		idProperty: 'id',
-		sortInfo: { field: 'name', direction: 'ASC'	}
-	}),
 	removeAnalysis: function(id) {
 		Ext.MessageBox.confirm('Confirm',
 			'Are you sure you want to remove this meta-analysis?',
@@ -80,6 +71,15 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
     	
     	
 		Ext.apply(this, {
+			store: new Ext.data.JsonStore({
+				autoLoad: true,
+				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.loadMyAnalyses),
+				fields: [ 'id',
+					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
+					'description', 'numGenesAnalyzed', 'numResultsInitially', 'includedResultSetDetails', 'results' ],
+				idProperty: 'id',
+				sortInfo: { field: 'name', direction: 'ASC'	}
+			}),
 			columns:[{
 					header: 'Name',
 					dataIndex: 'name',
