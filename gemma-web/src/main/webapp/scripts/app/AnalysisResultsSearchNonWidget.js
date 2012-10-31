@@ -170,6 +170,7 @@ Ext.onReady(function() {
 			if (coexpressionSearchData.coexGridCoexCommand.displayStringency > highestResultStringency){
 				coexpressionSearchData.coexGridCoexCommand.displayStringency = highestResultStringency;
 				coexpressionSearchData.cytoscapeCoexCommand.displayStringency = highestResultStringency;
+				coexpressionSearchData.cytoscapeCoexCommand.stringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(highestResultStringency);
 			}
 						
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
