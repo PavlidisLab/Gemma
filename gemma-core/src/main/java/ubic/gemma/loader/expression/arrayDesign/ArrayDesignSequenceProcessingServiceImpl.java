@@ -215,6 +215,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
                 if ( force ) {
+                    // FIXME I don't think 'force' works right for affymetrix arrays - old sequences are still there.
+                    // Anyway, we don't need it very badly as it was easy to clean up 'manually'.
                     collapsed = persistSequence( collapsed );
                     assert collapsed.getTaxon().equals( taxon );
                 }
@@ -652,46 +654,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     + "please specify which taxon to run" );
         }
         return taxon;
-    }
-
-    /**
-     * Create a new Affymetrix design from scratch, given the name.
-     * 
-     * @param arrayDesignName design name.
-     * @param arrayDesignFile design file in our 'old fashioned' format, but sequence information is ignored.
-     * @param probeSequenceFile probe file
-     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
-     *         filled in.
-     * @deprecated This method creates the Affymetrix array design using an input file format we no longer really
-     *             support, so it should be avoided (for Affymetrix).
-     */
-    @Deprecated
-    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, Taxon taxon, InputStream arrayDesignFile,
-            InputStream probeSequenceFile ) throws IOException {
-        ArrayDesign result = ArrayDesign.Factory.newInstance();
-        result.setName( arrayDesignName );
-        result.setPrimaryTaxon( taxon );
-
-        Contact contact = Contact.Factory.newInstance();
-        contact.setName( "Affymetrix" );
-
-        result.setDesignProvider( contact );
-
-        CompositeSequenceParser csp = new CompositeSequenceParser();
-        csp.setTaxon( taxon );
-        csp.parse( arrayDesignFile );
-        Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
-        for ( CompositeSequence sequence : rawCompositeSequences ) {
-            sequence.setArrayDesign( result );
-            sequence.setBiologicalCharacteristic( null ); // we don't want the sequence information from these files.
-        }
-        result.setCompositeSequences( rawCompositeSequences );
-
-        result = ( ArrayDesign ) persisterHelper.persist( result );
-        taxon = validateTaxon( taxon, result );
-        this.processAffymetrixDesign( result, probeSequenceFile, taxon, false );
-
-        return result;
     }
 
     /**
