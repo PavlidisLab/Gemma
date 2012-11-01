@@ -21,6 +21,8 @@ package ubic.gemma.apps;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -35,6 +37,23 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
 
+    private String aptFile = null;
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        super.addOption( "aptFile", true,
+                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( "aptfile" ) ) {
+            this.aptFile = getOptionValue( "aptfile" );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -45,6 +64,33 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
         super.processCommandLine( "DataUpdater", args );
 
         DataUpdater serv = getBean( DataUpdater.class );
+
+        if ( StringUtils.isNotBlank( aptFile ) ) {
+            if ( this.expressionExperiments.size() > 1 ) {
+
+                throw new IllegalArgumentException( "Can't use -aptfile unless you are doing just one experiment" );
+            }
+            BioAssaySet ee = this.expressionExperiments.iterator().next();
+            ExpressionExperiment thawedEe = this.eeService.thawLite( ( ExpressionExperiment ) ee );
+
+            Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
+
+            if ( arrayDesignsUsed.size() > 1 ) {
+                throw new IllegalArgumentException( "Cannot update data for experiment that uses multiple platforms" );
+            }
+
+            ArrayDesign ad = arrayDesignsUsed.iterator().next();
+            try {
+                if ( ad.getName().toLowerCase().contains( "exon" ) ) {
+                    serv.addAffyExonArrayData( thawedEe, aptFile );
+                    this.successObjects.add( thawedEe.toString() );
+                } else {
+                    throw new IllegalArgumentException( "Option -aptfile only valid if you are using an exon array." );
+                }
+            } catch ( Exception e ) {
+                this.errorObjects.add( ee + " " + e.getLocalizedMessage() );
+            }
+        }
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
             try {

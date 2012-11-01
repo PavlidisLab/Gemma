@@ -16,6 +16,7 @@ package ubic.gemma.loader.expression;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -141,80 +142,7 @@ public class AffyPowerToolsProbesetSummarize {
             String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
 
-            DoubleMatrix<String, String> matrix = parse( new FileInputStream( outputPath + File.separator + METHOD
-                    + ".summary.txt" ) );
-
-            if ( matrix.rows() == 0 ) {
-                throw new IllegalStateException( "Matrix from APT had no rows" );
-            }
-            if ( matrix.columns() == 0 ) {
-                throw new IllegalStateException( "Matrix from APT had no columns" );
-            }
-            if ( matrix.columns() != bioAssays.size() ) {
-                throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
-            }
-
-            BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-            bad.setName( "For " + ee.getShortName() );
-            bad.setDescription( "Generated from output of apt-probeset-summarize" );
-
-            /*
-             * Add them ...
-             */
-
-            Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
-            for ( BioAssay bioAssay : bioAssays ) {
-
-                if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
-                        || bmap.containsKey( bioAssay.getName() ) ) {
-                    throw new IllegalStateException( "Duplicate" );
-                }
-                bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
-                bmap.put( bioAssay.getName(), bioAssay );
-            }
-
-            // if ( log.isDebugEnabled() )
-            log.info( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                    + StringUtils.join( bmap.keySet(), "\n" ) );
-
-            for ( int i = 0; i < matrix.columns(); i++ ) {
-                String columnName = matrix.getColName( i );
-
-                String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
-
-                /*
-                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
-                 */
-                BioAssay assay = null;
-                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-                    String geoAcc = sampleName.split( "_" )[0];
-
-                    log.info( "Found column for " + geoAcc );
-                    if ( bmap.containsKey( geoAcc ) ) {
-                        assay = bmap.get( geoAcc );
-                    } else {
-                        log.warn( "No bioassay for " + geoAcc );
-                    }
-                } else {
-
-                    /*
-                     * Sometimes column names are like Aud_19L.CEL or
-                     */
-                    assay = bmap.get( sampleName );
-                }
-
-                if ( assay == null ) {
-                    throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
-                            + sampleName );
-                }
-
-                log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
-                        + assay.getAccession().getAccession() + "]" );
-
-                assay.setArrayDesignUsed( targetPlatform ); // OK?
-                bad.getBioAssays().add( assay );
-            }
-            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
+            return processExonArrayData( ee, outputPath, targetPlatform );
 
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
@@ -222,6 +150,93 @@ public class AffyPowerToolsProbesetSummarize {
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * @param ee
+     * @param aptOutputFileToRead
+     * @param targetPlatform
+     * @return
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
+            String aptOutputFileToRead, ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
+        DoubleMatrix<String, String> matrix = parse( new FileInputStream( aptOutputFileToRead + File.separator + METHOD
+                + ".summary.txt" ) );
+
+        if ( matrix.rows() == 0 ) {
+            throw new IllegalStateException( "Matrix from APT had no rows" );
+        }
+        if ( matrix.columns() == 0 ) {
+            throw new IllegalStateException( "Matrix from APT had no columns" );
+        }
+
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+
+        if ( matrix.columns() != bioAssays.size() ) {
+            throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
+        }
+
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setName( "For " + ee.getShortName() );
+        bad.setDescription( "Generated from output of apt-probeset-summarize" );
+
+        /*
+         * Add them ...
+         */
+
+        Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
+        for ( BioAssay bioAssay : bioAssays ) {
+
+            if ( bmap.containsKey( bioAssay.getAccession().getAccession() ) || bmap.containsKey( bioAssay.getName() ) ) {
+                throw new IllegalStateException( "Duplicate" );
+            }
+            bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
+            bmap.put( bioAssay.getName(), bioAssay );
+        }
+
+        // if ( log.isDebugEnabled() )
+        log.info( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                + StringUtils.join( bmap.keySet(), "\n" ) );
+
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            String columnName = matrix.getColName( i );
+
+            String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
+
+            /*
+             * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+             */
+            BioAssay assay = null;
+            if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
+                String geoAcc = sampleName.split( "_" )[0];
+
+                log.info( "Found column for " + geoAcc );
+                if ( bmap.containsKey( geoAcc ) ) {
+                    assay = bmap.get( geoAcc );
+                } else {
+                    log.warn( "No bioassay for " + geoAcc );
+                }
+            } else {
+
+                /*
+                 * Sometimes column names are like Aud_19L.CEL or
+                 */
+                assay = bmap.get( sampleName );
+            }
+
+            if ( assay == null ) {
+                throw new IllegalStateException( "No bioassay could be matched to CEL file identified by " + sampleName );
+            }
+
+            log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
+                    + assay.getAccession().getAccession() + "]" );
+
+            assay.setArrayDesignUsed( targetPlatform ); // OK?
+            bad.getBioAssays().add( assay );
+        }
+        return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
     }
 
     private void checkFileReadable( String pgf ) {

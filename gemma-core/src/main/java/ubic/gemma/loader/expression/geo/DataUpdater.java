@@ -14,6 +14,8 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -85,7 +87,7 @@ public class DataUpdater {
     public void addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
         addAffyExonArrayData( ee, ads.iterator().next() );
     }
@@ -129,6 +131,55 @@ public class DataUpdater {
         }
 
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform );
+
+        postprocess( ee );
+
+    }
+
+    /**
+     * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have them and we ran
+     * apt-probeset-summarize ourselves.
+     * 
+     * @param ee
+     * @param pathToAptOutputFile
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile )
+            throws FileNotFoundException, IOException {
+
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
+        }
+
+        ArrayDesign ad = ads.iterator().next();
+
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        Taxon primaryTaxon = ad.getPrimaryTaxon();
+
+        ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
+        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+        Collection<RawExpressionDataVector> vectors = apt
+                .processExonArrayData( ee, pathToAptOutputFile, targetPlatform );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
+
+        experimentService.replaceVectors( ee, targetPlatform, vectors );
+
+        if ( !targetPlatform.equals( ad ) ) {
+            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+            auditTrailService.addUpdateEvent( ee, eventType,
+                    "Switched in course of updating vectors using AffyPowerTools (from " + ad.getShortName() + " to "
+                            + targetPlatform.getShortName() + ")" );
+        }
+
+        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
 
         postprocess( ee );
 
