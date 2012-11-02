@@ -142,7 +142,7 @@ public class AffyPowerToolsProbesetSummarize {
             String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
 
-            return processExonArrayData( ee, outputPath, targetPlatform );
+            return processExonArrayData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
 
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
@@ -162,8 +162,7 @@ public class AffyPowerToolsProbesetSummarize {
      */
     public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
             String aptOutputFileToRead, ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
-        DoubleMatrix<String, String> matrix = parse( new FileInputStream( aptOutputFileToRead + File.separator + METHOD
-                + ".summary.txt" ) );
+        DoubleMatrix<String, String> matrix = parse( new FileInputStream( aptOutputFileToRead ) );
 
         if ( matrix.rows() == 0 ) {
             throw new IllegalStateException( "Matrix from APT had no rows" );

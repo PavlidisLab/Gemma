@@ -28,9 +28,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis
