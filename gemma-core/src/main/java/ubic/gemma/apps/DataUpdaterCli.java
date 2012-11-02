@@ -37,20 +37,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String APT_FILE_OPT = "aptFile";
     private String aptFile = null;
 
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        super.addOption( "aptFile", true,
+        super.addOption( APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( "aptfile" ) ) {
-            this.aptFile = getOptionValue( "aptfile" );
+        if ( hasOption( APT_FILE_OPT ) ) {
+            this.aptFile = getOptionValue( APT_FILE_OPT );
         }
     }
 
@@ -89,7 +90,9 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
                 }
             } catch ( Exception e ) {
                 this.errorObjects.add( ee + " " + e.getLocalizedMessage() );
+                return e;
             }
+            return null;
         }
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
