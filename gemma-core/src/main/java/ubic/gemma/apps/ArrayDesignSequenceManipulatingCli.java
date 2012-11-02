@@ -165,7 +165,14 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      */
     protected ArrayDesign locateArrayDesign( String name ) {
 
-        ArrayDesign arrayDesign = arrayDesignService.findByName( name.trim().toUpperCase() );
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
 
         if ( arrayDesign == null ) {
             arrayDesign = arrayDesignService.findByShortName( name );

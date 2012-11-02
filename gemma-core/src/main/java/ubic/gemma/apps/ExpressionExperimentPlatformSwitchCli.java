@@ -18,6 +18,8 @@
  */
 package ubic.gemma.apps;
 
+import java.util.Collection;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
@@ -82,8 +84,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             return exp;
         }
 
-        serv = this
-                .getBean( ExpressionExperimentPlatformSwitchService.class );
+        serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
@@ -106,7 +107,14 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
      */
     protected ArrayDesign locateArrayDesign( String name ) {
 
-        ArrayDesign arrayDesign = arrayDesignService.findByName( name.trim().toUpperCase() );
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
 
         if ( arrayDesign == null ) {
             arrayDesign = arrayDesignService.findByShortName( name );

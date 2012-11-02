@@ -311,7 +311,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String)
      */
     @Override
-    public ArrayDesign findByName( final java.lang.String name ) {
+    public Collection<ArrayDesign> findByName( final java.lang.String name ) {
         return this.findByName( "from ArrayDesignImpl a where a.name=:name", name );
     }
 
@@ -319,24 +319,14 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String, java.lang.String)
      */
 
-    public ArrayDesign findByName( final java.lang.String queryString, final java.lang.String name ) {
+    public Collection<ArrayDesign> findByName( final java.lang.String queryString, final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ArrayDesign result = null;
+        return this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        return result;
     }
 
     /**

@@ -627,8 +627,21 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
             request.setAttribute( "id", idStr );
         } else if ( name != null ) {
-            arrayDesign = arrayDesignService.findByName( name );
+            arrayDesign = arrayDesignService.findByShortName( name );
             request.setAttribute( "name", name );
+
+            if ( arrayDesign == null ) {
+                Collection<ArrayDesign> byname = arrayDesignService.findByName( name );
+                if ( byname.isEmpty() ) {
+                    return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                            "message", "Unable to load platform with name: " + name + ". Displaying all platforms" );
+                } else if ( byname.size() > 1 ) {
+                    return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                            "message", "Unable to load single platform with name: " + name
+                                    + ". Displaying all platforms" );
+                }
+                arrayDesign = byname.iterator().next();
+            }
         }
 
         if ( arrayDesign == null ) {

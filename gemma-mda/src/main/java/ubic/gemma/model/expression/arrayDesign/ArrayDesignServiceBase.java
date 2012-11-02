@@ -148,7 +148,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
      */
     @Override
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( final java.lang.String name ) {
+    public Collection<ArrayDesign> findByName( final java.lang.String name ) {
 
         return this.handleFindByName( name );
 
@@ -710,7 +710,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByName( java.lang.String name );
+    protected abstract Collection<ArrayDesign> handleFindByName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #findByShortName(java.lang.String)}

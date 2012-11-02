@@ -320,14 +320,23 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
     private ArrayDesign getSelectedArrayDesign( String adAccession, boolean allowArrayExpressDesign ) {
         ArrayDesign selectedAd = null;
         if ( adAccession != null ) {
-            selectedAd = this.arrayDesignService.findByName( adAccession );
 
             // what if short name was specified....
-            if ( selectedAd == null ) selectedAd = this.arrayDesignService.findByShortName( adAccession );
+            selectedAd = this.arrayDesignService.findByShortName( adAccession );
 
             if ( selectedAd == null ) {
-                throw new IllegalArgumentException( "The array design selected doesn't exist in the system: "
-                        + adAccession + ", halting processing" );
+
+                Collection<ArrayDesign> byname = arrayDesignService.findByName( adAccession );
+                if ( byname.size() > 1 ) {
+                    throw new IllegalArgumentException( "Ambiguous name: " + adAccession );
+                } else if ( byname.size() == 1 ) {
+                    selectedAd = byname.iterator().next();
+                }
+            }
+
+            if ( selectedAd == null ) {
+                throw new IllegalArgumentException( "The array design selected couldn't be found: " + adAccession
+                        + ", halting processing" );
             }
         }
 
@@ -520,8 +529,8 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
             LocalFile compositeSequenceFile = null;
 
             if ( designFiles.size() == 0 ) {
-                throw new IllegalStateException(
-                        "Could not locate the platform details file from ArrayExpress for " + design );
+                throw new IllegalStateException( "Could not locate the platform details file from ArrayExpress for "
+                        + design );
             }
 
             if ( designFiles.size() > 1 ) {

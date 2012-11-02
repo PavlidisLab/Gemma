@@ -685,8 +685,10 @@ public class SearchServiceImpl implements SearchService {
         if ( shortNameResult != null ) {
             results.add( new SearchResult( shortNameResult, 1.0 ) );
         } else {
-            ArrayDesign nameResult = arrayDesignService.findByName( searchString );
-            if ( nameResult != null ) results.add( new SearchResult( nameResult, 1.0 ) );
+            Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
+            if ( nameResult != null ) for ( ArrayDesign ad : nameResult ) {
+                results.add( new SearchResult( ad, 1.0 ) );
+            }
         }
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );

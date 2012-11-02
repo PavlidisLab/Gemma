@@ -270,7 +270,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         makeUser( "unauthorizedTestUser" );
         this.runAsUser( "unauthorizedTestUser" ); // test setup.
 
-        ArrayDesign ad = this.arrayDesignService.findByName( this.arrayDesignName );
+        ArrayDesign ad = this.arrayDesignService.findByName( this.arrayDesignName ).iterator().next();
 
         try {
             this.securityService.makePrivate( ad );

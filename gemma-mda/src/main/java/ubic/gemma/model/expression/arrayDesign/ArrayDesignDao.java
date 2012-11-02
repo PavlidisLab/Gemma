@@ -89,7 +89,7 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     /**
      * 
      */
-    public ArrayDesign findByName( String name );
+    public Collection<ArrayDesign> findByName( String name );
 
     /**
      * 

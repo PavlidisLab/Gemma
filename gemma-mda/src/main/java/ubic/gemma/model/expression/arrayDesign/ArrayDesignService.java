@@ -102,8 +102,8 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    public ArrayDesign findByName( String name );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> findByName( String name );
 
     /**
      * 

@@ -164,7 +164,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByName( String name ) {
+    protected Collection<ArrayDesign> handleFindByName( String name ) {
         return this.getArrayDesignDao().findByName( name );
     }
 
