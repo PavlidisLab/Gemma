@@ -95,9 +95,9 @@ public class DatasetCombiner {
     private static final String PUNCTUATION_REGEXP = "[\\(\\)\\s-\\._]";
 
     /**
-     * 
+     * Careful, GEO changes this sometimes.
      */
-    private static final String GSE_RECORD_REGEXP = "(GSE\\d+)\\srecord";
+    private static final String GSE_RECORD_REGEXP = "(GSE\\d+)";
     /**
      * 
      */
