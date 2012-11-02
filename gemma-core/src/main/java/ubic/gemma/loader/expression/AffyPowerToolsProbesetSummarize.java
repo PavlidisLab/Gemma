@@ -207,6 +207,7 @@ public class AffyPowerToolsProbesetSummarize {
                     + StringUtils.join( bmap.keySet(), "\n" ) );
 
         int found = 0;
+        List<String> columnsToKeep = new ArrayList<String>();
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String columnName = matrix.getColName( i );
 
@@ -248,6 +249,7 @@ public class AffyPowerToolsProbesetSummarize {
             log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
                     + assay.getAccession().getAccession() + "]" );
 
+            columnsToKeep.add( columnName );
             assay.setArrayDesignUsed( targetPlatform ); // OK?
             bad.getBioAssays().add( assay );
             found++;
@@ -255,6 +257,10 @@ public class AffyPowerToolsProbesetSummarize {
 
         if ( found != bioAssays.size() ) {
             throw new IllegalStateException( "Failed to find a data column for every bioassay" );
+        }
+
+        if ( columnsToKeep.size() < matrix.columns() ) {
+            matrix = matrix.subsetColumns( columnsToKeep );
         }
 
         return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
