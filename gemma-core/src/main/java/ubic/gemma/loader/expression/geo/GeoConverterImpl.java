@@ -1459,6 +1459,9 @@ public class GeoConverterImpl implements GeoConverter {
                             + ", no biological characteristic can be added." );
                 }
             } else if ( probeTaxon == null ) {
+                /*
+                 * FIXME we might want to just skip the probe entirely.
+                 */
                 if ( log.isDebugEnabled() ) {
                     log.debug( "No valid taxon identified for " + cs + " on " + arrayDesign
                             + ", no biological characteristic can be added." );

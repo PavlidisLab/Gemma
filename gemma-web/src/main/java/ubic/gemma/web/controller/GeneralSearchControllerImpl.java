@@ -61,6 +61,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -460,8 +462,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
                     .load( EntityUtils.getIds( results ) ) );
             vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
+        } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
+            Collection<FactorValueValueObject> fvo = new ArrayList<FactorValueValueObject>();
+            for ( SearchResult sr : results ) {
+                fvo.add( new FactorValueValueObject( ( FactorValue ) sr.getResultObject() ) );
+            }
+            vos = fvo;
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
+        }
+
+        if ( vos == null || vos.isEmpty() ) {
+            return;
         }
 
         // retained objects...

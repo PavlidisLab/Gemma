@@ -520,18 +520,11 @@ public class SearchServiceImpl implements SearchService {
             }
             return results;
         }
+
         /*
          * Not searching for a gene.
          */
-        matchingTerm = this.ontologyService.getTerm( uriString );
-        if ( matchingTerm == null || matchingTerm.getUri() == null ) return results;
-
-        log.info( "Found ontology term: " + matchingTerm );
-
-        // Was a URI from a loaded ontology soo get the children.
-        Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
-        terms2Search4.add( matchingTerm );
-
+        Collection<SearchResult> matchingResults;
         Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
         if ( settings.isSearchExperiments() ) {
             classesToSearch.add( ExpressionExperiment.class ); // not sure ...
@@ -542,8 +535,26 @@ public class SearchServiceImpl implements SearchService {
             classesToSearch.add( PhenotypeAssociationImpl.class );
         }
 
-        Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners( classesToSearch,
-                terms2Search4 );
+        matchingTerm = this.ontologyService.getTerm( uriString );
+        if ( matchingTerm == null || matchingTerm.getUri() == null ) {
+            /*
+             * Maybe the ontology isn't loaded. Look anyway.
+             */
+
+            Map<Characteristic, Object> parentMap = characteristicService.getParents( classesToSearch,
+                    characteristicService.findByUri( classesToSearch, uriString ) );
+            matchingResults = filterCharacteristicOwnersByClass( classesToSearch, parentMap );
+
+        } else {
+
+            log.info( "Found ontology term: " + matchingTerm );
+
+            // Was a URI from a loaded ontology soo get the children.
+            Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
+            terms2Search4.add( matchingTerm );
+
+            matchingResults = this.databaseCharacteristicExactUriSearchForOwners( classesToSearch, terms2Search4 );
+        }
 
         for ( SearchResult searchR : matchingResults ) {
             if ( results.containsKey( searchR.getResultClass() ) ) {
