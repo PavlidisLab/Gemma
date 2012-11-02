@@ -162,6 +162,9 @@ public class AffyPowerToolsProbesetSummarize {
      */
     public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
             String aptOutputFileToRead, ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
+
+        log.info( "Parsing " + aptOutputFileToRead );
+
         DoubleMatrix<String, String> matrix = parse( new FileInputStream( aptOutputFileToRead ) );
 
         if ( matrix.rows() == 0 ) {
@@ -173,9 +176,13 @@ public class AffyPowerToolsProbesetSummarize {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
 
-        if ( matrix.columns() != bioAssays.size() ) {
+        if ( matrix.columns() < bioAssays.size() ) {
+            // having > is okay, there can be extra.
             throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
         }
+
+        log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
+                + " samples..." );
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         bad.setName( "For " + ee.getShortName() );
@@ -195,9 +202,9 @@ public class AffyPowerToolsProbesetSummarize {
             bmap.put( bioAssay.getName(), bioAssay );
         }
 
-        // if ( log.isDebugEnabled() )
-        log.info( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                + StringUtils.join( bmap.keySet(), "\n" ) );
+        if ( log.isDebugEnabled() )
+            log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                    + StringUtils.join( bmap.keySet(), "\n" ) );
 
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String columnName = matrix.getColName( i );
