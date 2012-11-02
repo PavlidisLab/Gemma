@@ -1460,14 +1460,13 @@ public class GeoConverterImpl implements GeoConverter {
                 }
             } else if ( probeTaxon == null ) {
                 if ( log.isDebugEnabled() ) {
-                    log.debug( "No taxon for " + cs + " on " + arrayDesign
+                    log.debug( "No valid taxon identified for " + cs + " on " + arrayDesign
                             + ", no biological characteristic can be added." );
                 }
             } else if ( probeTaxon.getId() != null ) {
                 // IF there is no taxon given for probe do not create a biosequence otherwise bombs as there is no taxon
                 // to persist
                 cs.setBiologicalCharacteristic( bs );
-
             }
 
             compositeSequences.add( cs );
@@ -1596,8 +1595,10 @@ public class GeoConverterImpl implements GeoConverter {
                 } else {
 
                     // if probe organism can not be found i.e it is not a known abbreviation or scientific name
-                    // and it was not already created during platform organism processing then warn user
-                    throw new IllegalArgumentException( "'" + probeOrganism + "' is not recognized as a taxon in Gemma" );
+                    // and it was not already created during platform organism processing then warn user. Examples would
+                    // be "taxa" like "ILMN Controls". See bug 3207 (we used to throw an exception)
+                    log.warn( "'" + probeOrganism + "' is not recognized as a taxon in Gemma" );
+                    return null;
                 }
             }
         }
@@ -2447,6 +2448,10 @@ public class GeoConverterImpl implements GeoConverter {
         return arrayDesign;
     }
 
+    /**
+     * @param taxon Can be null, we will discard this
+     * @return
+     */
     private BioSequence createMinimalBioSequence( Taxon taxon ) {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setTaxon( taxon );
