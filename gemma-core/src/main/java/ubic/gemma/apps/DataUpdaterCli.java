@@ -90,7 +90,7 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
                     throw new IllegalArgumentException( "Option -aptfile only valid if you are using an exon array." );
                 }
             } catch ( Exception e ) {
-                this.errorObjects.add( ee + " " + e.getLocalizedMessage() );
+                log.error( e, e );
                 return e;
             }
             return null;

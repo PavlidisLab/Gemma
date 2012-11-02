@@ -206,6 +206,7 @@ public class AffyPowerToolsProbesetSummarize {
             log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
                     + StringUtils.join( bmap.keySet(), "\n" ) );
 
+        int found = 0;
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String columnName = matrix.getColName( i );
 
@@ -233,7 +234,15 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             if ( assay == null ) {
-                throw new IllegalStateException( "No bioassay could be matched to CEL file identified by " + sampleName );
+                /*
+                 * This is okay, if we have extras
+                 */
+                if ( matrix.columns() == bioAssays.size() ) {
+                    throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
+                            + sampleName );
+                }
+                log.warn( "No bioassay for " + sampleName );
+                continue;
             }
 
             log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
@@ -241,7 +250,13 @@ public class AffyPowerToolsProbesetSummarize {
 
             assay.setArrayDesignUsed( targetPlatform ); // OK?
             bad.getBioAssays().add( assay );
+            found++;
         }
+
+        if ( found != bioAssays.size() ) {
+            throw new IllegalStateException( "Failed to find a data column for every bioassay" );
+        }
+
         return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
     }
 
