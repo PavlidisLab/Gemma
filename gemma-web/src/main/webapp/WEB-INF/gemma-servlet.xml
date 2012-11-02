@@ -299,10 +299,6 @@
 
 	<bean id="expressionExperimentController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController">
 		<dwr:remote javascript="ExpressionExperimentController">
-			<dwr:include method="analyzeResultSets" />
-			<dwr:include method="loadMyAnalyses" />
-			<dwr:include method="removeAnalysis" />
-			<dwr:include method="saveResultSets" />
 			<dwr:include method="deleteById" />
 			<dwr:include method="find" />
 			<dwr:include method="searchExpressionExperiments" />
@@ -548,6 +544,15 @@
 			<dwr:include method="runCustom" />
 			<dwr:include method="determineAnalysisType" />
 			<dwr:include method="remove" />
+		</dwr:remote>
+	</bean>
+
+	<bean id="diffExMetaAnalyzerController" class="ubic.gemma.web.controller.diff.DiffExMetaAnalyzerController">
+		<dwr:remote javascript="DiffExMetaAnalyzerController">
+			<dwr:include method="analyzeResultSets" />
+			<dwr:include method="loadMyAnalyses" />
+			<dwr:include method="removeAnalysis" />
+			<dwr:include method="saveResultSets" />
 		</dwr:remote>
 	</bean>
 

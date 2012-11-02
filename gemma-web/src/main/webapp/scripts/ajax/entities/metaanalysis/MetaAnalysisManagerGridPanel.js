@@ -21,11 +21,11 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			'Are you sure you want to remove this meta-analysis?',
 			function(button) {
 				if (button === 'yes') {
-					ExpressionExperimentController.removeAnalysis(id, function() {
+					DiffExMetaAnalyzerController.removeAnalysis(id, function() {
 						this.store.reload();
 					}.createDelegate(this));
 // TODO: the following code was copied from phenotype section. Should do something similar.					
-//							ExpressionExperimentController.removeAnalysis(id, function(validateEvidenceValueObject) {
+//							DiffExMetaAnalyzerController.removeAnalysis(id, function(validateEvidenceValueObject) {
 //								if (validateEvidenceValueObject == null) {
 //									this.fireEvent('phenotypeAssociationChanged');
 //								} else {
@@ -73,7 +73,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.data.JsonStore({
 				autoLoad: true,
-				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.loadMyAnalyses),
+				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.loadMyAnalyses),
 				fields: [ 'id',
 					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
 					'description', 'numGenesAnalyzed', 'numResultsInitially', 'includedResultSetDetails', 'results' ],

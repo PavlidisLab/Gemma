@@ -60,14 +60,12 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 				});
 				
 				resultText += '</table>';
+				nextButton.setDisabled(false);
 			} else {
 				resultText += 'No results were significant.';
 				nextButton.setDisabled(true);
 			}
 			resultLabel.setText(resultText, false);
-			
-			this.unmaskWindow();					
-			
 		}.createDelegate(this);		
 		
 		
@@ -116,16 +114,26 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 				var saveResultWindow = new Gemma.MetaAnalysisSaveResultWindow({
 					listeners: {
 						okButtonClicked: function(name, description) {
-							this.maskWindow('Saving results ...');
-							
-							ExpressionExperimentController.saveResultSets(resultSetIdsToBeSaved, name, description, function(geneDifferentialExpressionMetaAnalysis) {
-								// Assume if it is not null, saving result is successful.
-								if (geneDifferentialExpressionMetaAnalysis != null) {
-									this.fireEvent('resultSaved');
-								}
-								
-								this.unmaskWindow();
-							}.createDelegate(this));
+                            var callParams = [];
+                            callParams.push(resultSetIdsToBeSaved);
+                            callParams.push(name);
+                            callParams.push(description);
+                            callParams.push({
+                                callback : function(data) {
+                                    var k = new Gemma.WaitHandler();
+                                    k.handleWait(data, true);
+                                    k.on('done', function(geneDifferentialExpressionMetaAnalysis) {
+										// Assume if it is not null, saving result is successful.
+										if (geneDifferentialExpressionMetaAnalysis != null) {
+											this.fireEvent('resultSaved');
+										}
+                                    }.createDelegate(this));
+                                }.createDelegate(this),
+                                errorHandler : function(error) {
+									Ext.Msg.alert("Result sets cannot be saved", error);
+                                }.createDelegate(this)
+                            });
+                            DiffExMetaAnalyzerController.saveResultSets.apply(this, callParams);
 						},
 						scope: this
 					}
@@ -135,32 +143,26 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 			layout: 'border',
 			items: thisPanelItems,
 			setResultSetIds: function(resultSetIds) {
-				this.maskWindow('Running meta-analysis ...');
-				
 				resultSetIdsToBeSaved = resultSetIds;
 
 				resultLabel.setText('', false);
 				
-				ExpressionExperimentController.analyzeResultSets(resultSetIds, this.numResultsRequired, {
-					callback: function(geneDifferentialExpressionMetaAnalysis) {
-							showResults(geneDifferentialExpressionMetaAnalysis);					
-						}.createDelegate(this),
-					timeout: 900000, // = 15 * 60 * 1000 (15 minutes)
-					errorHandler: function(result) {
-							Ext.Msg.show({
-								title: Gemma.HelpText.CommonWarnings.Timeout.title,
-								msg: Gemma.HelpText.CommonWarnings.Timeout.text,
-								buttons: Ext.Msg.OK,
-								fn: function(btn, text, opt) {
-									if (btn == 'ok'){
-								    	this.unmaskWindow();
-								        this.fireEvent('modifySelectionButtonClicked');
-								    }
-							   	},
-							   scope: this
-							});						
-						}.createDelegate(this)
-				});
+                var callParams = [];
+                callParams.push(resultSetIds);
+                callParams.push(this.numResultsRequired);
+                callParams.push({
+                    callback : function(data) {
+                        var k = new Gemma.WaitHandler();
+                        k.handleWait(data, true);
+                        k.on('done', function(geneDifferentialExpressionMetaAnalysis) {
+                        	showResults(geneDifferentialExpressionMetaAnalysis);
+                        }.createDelegate(this));
+                    }.createDelegate(this),
+                    errorHandler : function(error) {
+						Ext.Msg.alert("Result sets cannot be analyzed", error);
+                    }.createDelegate(this)
+                });
+                DiffExMetaAnalyzerController.analyzeResultSets.apply(this, callParams);
 			}
 		});
 

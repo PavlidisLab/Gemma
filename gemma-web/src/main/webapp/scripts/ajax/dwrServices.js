@@ -314,6 +314,26 @@ DifferentialExpressionSearchController.getDiffExpSearchTaskProgress = function(p
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDiffExpSearchTaskProgress', p0, callback);
 }
+// ====================================================================================
+if (DiffExMetaAnalyzerController == null)
+	var DiffExMetaAnalyzerController = {};
+DiffExMetaAnalyzerController._path = '/Gemma/dwr';
+DiffExMetaAnalyzerController.analyzeResultSets = function(p0, p1, callback) {
+	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
+			'analyzeResultSets', p0, p1, callback);
+};
+DiffExMetaAnalyzerController.loadMyAnalyses = function(callback) {
+	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
+			'loadMyAnalyses', callback);
+};
+DiffExMetaAnalyzerController.removeAnalysis = function(p0, callback) {
+	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
+			'removeAnalysis', p0, callback);
+};
+DiffExMetaAnalyzerController.saveResultSets = function(p0, p1, p2, callback) {
+	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
+			'saveResultSets', p0, p1, p2, callback);
+};
 
 // ====================================================================================
 if (ExperimentalDesignController == null)
@@ -395,18 +415,6 @@ ExpressionDataFileUploadController.validate = function(p0, callback) {
 if (ExpressionExperimentController == null)
 	var ExpressionExperimentController = {};
 ExpressionExperimentController._path = '/Gemma/dwr';
-ExpressionExperimentController.analyzeResultSets = function(p0, p1, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'analyzeResultSets', p0, p1, callback);
-};
-ExpressionExperimentController.loadMyAnalyses = function(callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadMyAnalyses', callback);
-}
-ExpressionExperimentController.removeAnalysis = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'removeAnalysis', p0, callback);
-};
-ExpressionExperimentController.saveResultSets = function(p0, p1, p2, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',	'saveResultSets', p0, p1, p2, callback);
-};
 ExpressionExperimentController.getAnnotation = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getAnnotation', p0,
 			callback);

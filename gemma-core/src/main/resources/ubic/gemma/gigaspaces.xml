@@ -69,6 +69,7 @@
 				<value>ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask</value>
 				<value>ubic.gemma.tasks.maintenance.IndexerTask</value>
 				<value>ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask</value>
+				<value>ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTask</value>
 				<value>ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask</value>
 				<value>ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask</value>
 				<value>ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask</value>
@@ -133,6 +134,16 @@
 		</property>
 		<property name="businessInterface">
 			<value>ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask</value>
+		</property>
+	</bean>
+
+	<bean id="diffExMetaAnalyzerWorker" class="ubic.gemma.job.grid.worker.CustomDelegatingWorker" scope="prototype">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="diffExMetaAnalyzerTask" />
+		</property>
+		<property name="businessInterface">
+			<value>ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTask</value>
 		</property>
 	</bean>
 
