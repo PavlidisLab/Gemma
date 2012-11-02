@@ -41,67 +41,6 @@ public class AffyProbeReaderTest extends TestCase {
     AffyProbeReader apr;
     InputStream is;
 
-    /*
-     * Test of human exon array
-     */
-    public final void testReadExonArray() throws Exception {
-
-        InputStream ist = AffyProbeReaderTest.class
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx1_0SampleProbe.txt" );
-
-        apr.parse( ist );
-
-        ist.close();
-
-        // reverse complement of "CGGTGCTGGGTCAGGGATCGACTGA";
-        String expectedValue = "TCAGTCGATCCCTGACCCAGCACCG";
-
-        CompositeSequence cs = getProbeMatchingName( "2315108" );
-
-        assertNotNull( cs );
-
-        boolean foundIt = false;
-        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
-            Reporter element = iter.next();
-            if ( element.getName().equals( "2315108:814:817" ) ) {
-                String actualValue = element.getImmobilizedCharacteristic().getSequence();
-                assertEquals( expectedValue, actualValue );
-                foundIt = true;
-                break;
-            }
-        }
-        assertTrue( "Didn't find the probe ", foundIt );
-
-        for ( CompositeSequence c : apr.getKeySet() ) {
-            BioSequence collapsed = SequenceManipulation.collapse( apr.get( c ) );
-
-            if ( c.getName().equals( "2315357" ) ) {
-
-                /*
-                 * On + genomic strand. Note that Affy says the target sequence is
-                 * "ttttaattgatgataagctggaataatattaatacacacaaagcacgtgttgtaactttcatt", which slightly differs from our
-                 * assembly,we resolve an TA ... TA to TA, while they have TATA. The latter is correct based on the
-                 * targeted alignment, but given we only have the probes, it's reasonable. See
-                 * https://www.affymetrix.com/analysis/netaffx/exon/probe_set.affx?pk=1:2315357
-                 */
-                assertEquals( "TTTTAATTGATGATAAGCTGGAATAATATTACACACAAAGCACGTGTTGTAACTTTCATT", collapsed.getSequence() );
-            }
-
-            if ( c.getName().equals( "2390604" ) ) {
-                /*
-                 * On - genomic strand As for the above example, the precise assembly might be different than the affy
-                 * target
-                 */
-                assertEquals(
-                        "ACTTCTCTGACACCGCGTTGGGTTCGGGCTCCGAGCACTTCGAAAGTATAACCGCGGTCCCAAAGAGGCGTGCTCCTGGGAGTGCACGGTTTACATTCT",
-                        collapsed.getSequence() );
-
-            }
-
-        }
-
-    }
-
     private CompositeSequence getProbeMatchingName( String name ) {
         Collection<CompositeSequence> keySet = apr.getKeySet();
 
@@ -113,66 +52,6 @@ public class AffyProbeReaderTest extends TestCase {
             }
         }
         return cs;
-    }
-
-    /*
-     * Test of mouse gene exon array
-     */
-    public final void testReadExonArray2() throws Exception {
-
-        InputStream ist = AffyProbeReaderTest.class
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/MoGeneSampleProbe.txt" );
-
-        apr.parse( ist );
-
-        ist.close();
-
-        // reverse complement of "CGTTCAAAATTTAGTGTATGTGTTG";
-        String expectedValue = "CAACACATACACTAAATTTTGAACG";
-        CompositeSequence cs = getProbeMatchingName( "10344616" );
-
-        assertTrue( "CompositeSequence was null", cs != null );
-
-        boolean foundIt = false;
-        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
-            Reporter element = iter.next();
-            if ( element.getName().equals( "10344616:975:165" ) ) {
-                String actualValue = element.getImmobilizedCharacteristic().getSequence();
-                assertEquals( expectedValue, actualValue );
-                foundIt = true;
-                break;
-            }
-        }
-        assertTrue( "Didn't find the probe ", foundIt );
-
-        boolean found = false;
-        for ( CompositeSequence c : apr.getKeySet() ) {
-            BioSequence collapsed = SequenceManipulation.collapse( apr.get( c ) );
-
-            if ( c.getName().equals( "10344614" ) ) {
-                // on + strand
-
-                String expected = "AGTTAACACAGGTGAATTTGAGCCCCCTCCCTGGAGAGCGCATAGCCCAAGCCTTA"
-                        + "TATGAAAGAGGAGCGAGGACCTTCCTCCCTGGGATCTAACTGATTCATGGCCCATGCCGACTTT"
-                        + "GCTCCTGGATACCAGGGCAGATGTGACAGTAATTTCCTCAACACATTGGCCTGCAGCCTGCCCT"
-                        + "TACAGCCCACTAAGGGATGGTGTAATCCACTGATCATAAAATTTACTTCTAAGGGGAGAAACTTAGAGGCTTGA";
-
-                assertEquals( expected, collapsed.getSequence() );
-            }
-
-            if ( c.getName().equals( "10353672" ) ) {
-                found = true;
-                // on - genomic strand, confirmed in blat. Affy target sequence is
-                // "gtctagggccataccaccctgaacgcgcccaatctcgtctgttctcagaagctaagcagggttgggcctggttagtacttggatgggagactgtccaggattaccgggtgctgtaggat".
-                String expected = "ACGCGCCCAATCTCGTCTGTTCTCAGAAGCTAACTTGGATGGGAGACTGTCCAGGATTACCGGGTGCTGTAG";
-                assertEquals( expected, collapsed.getSequence() );
-
-            }
-
-        }
-
-        assertTrue( found );
-
     }
 
     /*
