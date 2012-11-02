@@ -630,19 +630,8 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public boolean isObsolete( String uri ) {
         OntologyTerm t = this.getTerm( uri );
-        if ( t != null ) {
-            Collection<OntologyTerm> parents = t.getParents( false );
-            assert parents != null;
-            for ( OntologyTerm p : parents ) {
-                if ( StringUtils.isBlank( p.getUri() ) ) {
-                    log.info( "URI is blank for " + p );
-                    continue;
-                }
-                if ( p.getUri().equals( "http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" ) ) {
-                    return true;
-                }
-            }
-        }
+        if ( t != null && t.isTermObsolete() ) return true;
+
         return false;
     }
 
