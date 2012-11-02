@@ -22,7 +22,7 @@
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/monitoring" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
-		<s:intercept-url pattern="/expressionExperiment/metaAnalysisManager.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/metaAnalysisManager.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
