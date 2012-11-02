@@ -76,12 +76,6 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
 
     private String numProbesToGenes;
 
-    private String numProbesToKnownGenes;
-
-    private String numProbesToPredictedGenes;
-
-    private String numProbesToProbeAlignedRegions;
-
     private String shortName;
 
     private Boolean troubled = false;
@@ -118,20 +112,17 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
                 otherBean.getExpressionExperimentCount(), otherBean.getHasSequenceAssociations(), otherBean
                         .getHasBlatAssociations(), otherBean.getHasGeneAssociations(), otherBean.getId(), otherBean
                         .getColor(), otherBean.getNumProbeSequences(), otherBean.getNumProbeAlignments(), otherBean
-                        .getNumProbesToGenes(), otherBean.getNumProbesToProbeAlignedRegions(), otherBean
-                        .getNumProbesToPredictedGenes(), otherBean.getNumProbesToKnownGenes(), otherBean.getNumGenes(),
-                otherBean.getDateCached(), otherBean.getLastSequenceUpdate(), otherBean.getLastSequenceAnalysis(),
-                otherBean.getLastGeneMapping(), otherBean.getIsSubsumed(), otherBean.getIsSubsumer(), otherBean
-                        .getIsMerged(), otherBean.getIsMergee(), otherBean.getLastRepeatMask(),
-                otherBean.getTroubled(), otherBean.getValidated(), otherBean.getDateCreated(), otherBean
-                        .getDescription(), otherBean.getTechnologyType() );
+                        .getNumProbesToGenes(), otherBean.getNumGenes(), otherBean.getDateCached(), otherBean
+                        .getLastSequenceUpdate(), otherBean.getLastSequenceAnalysis(), otherBean.getLastGeneMapping(),
+                otherBean.getIsSubsumed(), otherBean.getIsSubsumer(), otherBean.getIsMerged(), otherBean.getIsMergee(),
+                otherBean.getLastRepeatMask(), otherBean.getTroubled(), otherBean.getValidated(), otherBean
+                        .getDateCreated(), otherBean.getDescription(), otherBean.getTechnologyType() );
     }
 
     public ArrayDesignValueObject( String name, String shortName, Long designElementCount, String taxon,
             Long expressionExperimentCount, Boolean hasSequenceAssociations, Boolean hasBlatAssociations,
             Boolean hasGeneAssociations, Long id, String color, String numProbeSequences, String numProbeAlignments,
-            String numProbesToGenes, String numProbesToProbeAlignedRegions, String numProbesToPredictedGenes,
-            String numProbesToKnownGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
+            String numProbesToGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
             java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
             Boolean isSubsumer, Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask,
             boolean troubleEvent, boolean validationEvent, java.util.Date dateCreated, String description,
@@ -149,9 +140,6 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
         this.numProbeSequences = numProbeSequences;
         this.numProbeAlignments = numProbeAlignments;
         this.numProbesToGenes = numProbesToGenes;
-        this.numProbesToProbeAlignedRegions = numProbesToProbeAlignedRegions;
-        this.numProbesToPredictedGenes = numProbesToPredictedGenes;
-        this.numProbesToKnownGenes = numProbesToKnownGenes;
         this.numGenes = numGenes;
         this.dateCached = dateCached;
         this.lastSequenceUpdate = lastSequenceUpdate;
@@ -187,9 +175,6 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
             this.setNumProbeSequences( otherBean.getNumProbeSequences() );
             this.setNumProbeAlignments( otherBean.getNumProbeAlignments() );
             this.setNumProbesToGenes( otherBean.getNumProbesToGenes() );
-            this.setNumProbesToProbeAlignedRegions( otherBean.getNumProbesToProbeAlignedRegions() );
-            this.setNumProbesToPredictedGenes( otherBean.getNumProbesToPredictedGenes() );
-            this.setNumProbesToKnownGenes( otherBean.getNumProbesToKnownGenes() );
             this.setNumGenes( otherBean.getNumGenes() );
             this.setDateCached( otherBean.getDateCached() );
             this.setLastSequenceUpdate( otherBean.getLastSequenceUpdate() );
@@ -416,33 +401,6 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
     }
 
     /**
-     * <p>
-     * The number of probes that map to known genes.
-     * </p>
-     */
-    public String getNumProbesToKnownGenes() {
-        return this.numProbesToKnownGenes;
-    }
-
-    /**
-     * <p>
-     * The number of probes that map to predicted genes.
-     * </p>
-     */
-    public String getNumProbesToPredictedGenes() {
-        return this.numProbesToPredictedGenes;
-    }
-
-    /**
-     * <p>
-     * The number of probes that map to probe-aligned regions.
-     * </p>
-     */
-    public String getNumProbesToProbeAlignedRegions() {
-        return this.numProbesToProbeAlignedRegions;
-    }
-
-    /**
      * 
      */
     public String getShortName() {
@@ -592,18 +550,6 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
 
     public void setNumProbesToGenes( String numProbesToGenes ) {
         this.numProbesToGenes = numProbesToGenes;
-    }
-
-    public void setNumProbesToKnownGenes( String numProbesToKnownGenes ) {
-        this.numProbesToKnownGenes = numProbesToKnownGenes;
-    }
-
-    public void setNumProbesToPredictedGenes( String numProbesToPredictedGenes ) {
-        this.numProbesToPredictedGenes = numProbesToPredictedGenes;
-    }
-
-    public void setNumProbesToProbeAlignedRegions( String numProbesToProbeAlignedRegions ) {
-        this.numProbesToProbeAlignedRegions = numProbesToProbeAlignedRegions;
     }
 
     public void setShortName( String shortName ) {

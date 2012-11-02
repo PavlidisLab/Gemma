@@ -114,7 +114,7 @@ Gemma.ArrayDesignsStore = Ext.extend(Ext.data.Store, {
 				return v;
 			}
 		},{
-			name: "numProbesToKnownGenes",
+			name: "numProbesToGenes",
 			defaultValue:'[not avail.]',
 			useNull: true,
 			convert: function(v, record){
@@ -650,7 +650,7 @@ Gemma.ArrayDesignsSummaryWindow = Ext.extend(Ext.Window,{
 	defaultData:{
 		numProbeSequences: '<span style="color:grey">[Not avail.]</span>',
 		numProbeAlignments: '<span style="color:grey">[Not avail.]</span>',
-		numProbesToKnownGenes: '<span style="color:grey">[Not avail.]</span>',
+		numProbesToGenes: '<span style="color:grey">[Not avail.]</span>',
 		numGenes: '<span style="color:grey">[Not avail.]</span>',
 		dateCached: '<span style="color:grey">[Not avail.]</span>',
 	},

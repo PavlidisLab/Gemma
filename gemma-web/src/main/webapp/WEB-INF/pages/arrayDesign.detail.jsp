@@ -82,8 +82,8 @@
 							<td align="right">${summary.numProbeAlignments}</td>
 						</tr>
 						<tr>
-							<td>Mapped to known genes</td>
-							<td align="right">${summary.numProbesToKnownGenes}</td>
+							<td>Mapped to genes</td>
+							<td align="right">${summary.numProbesToGenes}</td>
 						</tr>
 						<tr>
 							<td>Unique genes</td>
@@ -266,39 +266,19 @@
 <security:authorize access="hasRole('GROUP_ADMIN')">
 	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
-	<input type="hidden" name="auditableClass" id="auditableClass" value="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
+	<input type="hidden" name="auditableClass" id="auditableClass"
+		value="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 </security:authorize>
 
-<div style="padding-top: 20px;">
-	<table>
-		<tr>
-			<td colspan="2">
-				<hr />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<div align="left">
-					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
-				</div>
-			</td>
-			<security:authorize access="hasRole('GROUP_ADMIN')">
-				<td colspan="2">
-					<div align="left">
-						<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">
-					</div>
-				</td>
-			</security:authorize>
-		</tr>
-	</table>
-</div>
+<security:authorize access="hasRole('GROUP_ADMIN')">
+	<div style="padding-top: 20px;">
+		<td colspan="2">
+			<div align="left">
+				<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">
+			</div>
+		</td>
+	</div>
+</security:authorize>
 
-<div style="padding-top: 20px;">
-	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
-		<h4>
-			Enter search criteria for finding another array design here
-		</h4>
-		<input type="text" name="filter" size="66" />
-		<input type="submit" value="Find" />
-	</form>
-</div>
+
+

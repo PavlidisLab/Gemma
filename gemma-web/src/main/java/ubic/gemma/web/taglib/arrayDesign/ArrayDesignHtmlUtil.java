@@ -51,7 +51,7 @@ public class ArrayDesignHtmlUtil {
                 + "<tr><td title=\"Number of elements mapped to genes\">"
                 + "Mapped to known genes"
                 + "</td><td align=\"right\" >"
-                + object.getNumProbesToKnownGenes()
+                + object.getNumProbesToGenes()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of unique genes represented on the platform\" >"
                 + "Unique genes"

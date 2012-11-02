@@ -211,10 +211,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             if ( cachedVo != null ) {
                 origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
                 origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
-                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
-                origVo.setNumProbesToKnownGenes( cachedVo.getNumProbesToKnownGenes() );
-                origVo.setNumProbesToPredictedGenes( cachedVo.getNumProbesToPredictedGenes() );
-                origVo.setNumProbesToProbeAlignedRegions( cachedVo.getNumProbesToProbeAlignedRegions() );
+                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() ); 
                 origVo.setNumGenes( cachedVo.getNumGenes() );
                 origVo.setDateCached( cachedVo.getDateCached() );
                 origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
