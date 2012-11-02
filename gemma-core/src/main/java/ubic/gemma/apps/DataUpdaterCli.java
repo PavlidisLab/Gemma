@@ -83,6 +83,7 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
             try {
                 if ( ad.getName().toLowerCase().contains( "exon" ) ) {
+                    log.info( "Loading data from " + aptFile );
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                     this.successObjects.add( thawedEe.toString() );
                 } else {
