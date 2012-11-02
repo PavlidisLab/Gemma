@@ -87,10 +87,12 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public CharacteristicValueObject( String valueUri ) {
         super();
         this.valueUri = valueUri;
-        if ( this.valueUri != null && !this.valueUri.equals( "" ) && this.valueUri.indexOf( "#" ) > 0 ) {
-            this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
-        } else if ( this.valueUri.lastIndexOf( "/" ) > 0 ) {
-            this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
+        if ( this.valueUri != null ) {
+            if ( !this.valueUri.equals( "" ) && this.valueUri.indexOf( "#" ) > 0 ) {
+                this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
+            } else if ( this.valueUri.lastIndexOf( "/" ) > 0 ) {
+                this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
+            }
         }
     }
 
