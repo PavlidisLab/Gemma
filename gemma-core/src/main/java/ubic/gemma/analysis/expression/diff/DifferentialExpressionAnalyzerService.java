@@ -28,44 +28,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface DifferentialExpressionAnalyzerService {
 
-    public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
-
-    /**
-     * Delete all the differential expression analyses for the experiment.
-     * 
-     * @param expressionExperiment
-     * @return how many analyses were deleted.
-     */
-    public abstract int deleteOldAnalyses( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Delete all the differential expression analyses for the experiment that use the given set of factors.
-     * 
-     * @param expressionExperiment
-     * @param newAnalysis
-     * @param factors
-     * @return how many analyses were deleted.
-     */
-    public abstract int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors );
-
-    /**
-     * Delete an old analysis.
-     * 
-     * @param expressionExperiment
-     * @param existingAnalysis
-     */
-    public abstract void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis existingAnalysis );
-
-    /**
-     * Run differential expression on the {@link ExpressionExperiment}.
-     * 
-     * @param expressionExperiment
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment );
-
     /**
      * Run differential expression on the {@link ExpressionExperiment} using the given factor(s)
      * 
@@ -100,24 +62,6 @@ public interface DifferentialExpressionAnalyzerService {
      * @return
      */
     public abstract Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
-
-    /**
-     * @param expressionExperiment
-     * @param diffExpressionAnalysis
-     * @return
-     */
-    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis diffExpressionAnalysis );
-
-    /**
-     * Run the differential expression analysis, attempting to identify the appropriate analysis automatically. First
-     * deletes ALL the old differential expression analyses for this experiment, if any.
-     * 
-     * @param expressionExperiment
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment );
 
     /**
      * Run the differential expression analysis. First deletes the matching existing differential expression analysis,

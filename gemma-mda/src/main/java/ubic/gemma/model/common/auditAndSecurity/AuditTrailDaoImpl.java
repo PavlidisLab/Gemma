@@ -73,19 +73,23 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
 
         Hibernate.initialize( auditable );
 
-        if ( auditable.getAuditTrail() == null ) {
+        AuditTrail trail = auditable.getAuditTrail();
+
+        if ( trail == null ) {
             /*
              * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
              * defensive.
              */
-            auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+            trail = AuditTrail.Factory.newInstance();
+            auditable.setAuditTrail( trail );
         } else if ( auditable.getAuditTrail().getId() != null ) {
-            this.getSession().buildLockRequest( LockOptions.NONE ).lock( auditable.getAuditTrail() );
+            trail = ( AuditTrail ) this.getSession().get( AuditTrailImpl.class, auditable.getAuditTrail().getId() );
+            this.getSession().buildLockRequest( LockOptions.NONE ).lock( trail );
         }
 
-        auditable.getAuditTrail().addEvent( auditEvent );
+        trail.addEvent( auditEvent );
 
-        this.getHibernateTemplate().saveOrUpdate( auditable.getAuditTrail() );
+        this.getHibernateTemplate().saveOrUpdate( trail );
 
         return auditEvent;
     }

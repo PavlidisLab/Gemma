@@ -22,7 +22,7 @@ package ubic.gemma.apps;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -49,8 +49,8 @@ public class DeleteAnalysesThatDontHaveHitLists extends ExpressionExperimentMani
         super.processCommandLine( "populate differential expression hit lists", args );
 
         DifferentialExpressionAnalysisService diffS = this.getBean( DifferentialExpressionAnalysisService.class );
-
-        DifferentialExpressionAnalyzerService analyzer = this.getBean( DifferentialExpressionAnalyzerService.class );
+        DifferentialExpressionAnalysisHelperService analyzerHelper = this
+                .getBean( DifferentialExpressionAnalysisHelperService.class );
 
         Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> allAnalyses = diffS
                 .getAnalyses( this.expressionExperiments );
@@ -80,7 +80,7 @@ public class DeleteAnalysesThatDontHaveHitLists extends ExpressionExperimentMani
                     }
                 }
                 if ( doDelete ) {
-                    analyzer.deleteOldAnalysis( expressionExperiment, analysis );
+                    analyzerHelper.deleteOldAnalysis( expressionExperiment, analysis );
                 }
             }
 

@@ -62,6 +62,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
     @Autowired
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalyzerHelperService = null;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Autowired
@@ -109,7 +112,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
         ee = expressionExperimentService.thawLite( ee );
-        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+        differentialExpressionAnalyzerHelperService.deleteOldAnalyses( ee );
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -128,7 +131,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assert ee.getId() != null;
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee );
+                .runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign().getExperimentalFactors() );
         assertNotNull( analyses );
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
@@ -147,10 +150,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 100, readIn.rows() );
-        assertEquals( 4, readIn.columns() ); // no interactions.
+        assertEquals( 6, readIn.columns() ); // interactions will be included by default.
 
         // / delete the analysis
-        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+        int numDeleted = differentialExpressionAnalyzerHelperService.deleteOldAnalyses( ee );
         assertTrue( numDeleted > 0 );
 
         // this is kind of thrown in here
@@ -168,10 +171,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee );
+                .runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign().getExperimentalFactors() );
         assertTrue( !analyses.isEmpty() );
-        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee, analyses.iterator().next(), ee
-                .getExperimentalDesign().getExperimentalFactors() );
+        int numDeleted = differentialExpressionAnalyzerHelperService.deleteOldAnalyses( ee, analyses.iterator().next(),
+                ee.getExperimentalDesign().getExperimentalFactors() );
         assertTrue( numDeleted > 0 );
     }
 
@@ -197,7 +200,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .runDifferentialExpressionAnalyses( ee, config );
 
         assertTrue( !analyses.isEmpty() );
-        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee, analyses.iterator().next(),
+        int numDeleted = differentialExpressionAnalyzerHelperService.deleteOldAnalyses( ee, analyses.iterator().next(),
                 factorsToUse );
         assertTrue( numDeleted > 0 );
     }
@@ -233,7 +236,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertNotNull( is );
         experimentalDesignImporter.importDesign( ee, is );
 
-        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+        differentialExpressionAnalyzerHelperService.deleteOldAnalyses( ee );
 
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 3, experimentalFactors.size() );
@@ -278,7 +281,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @Test
     public void testWritePValuesHistogram() throws Exception {
 
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign()
+                .getExperimentalFactors() );
         differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
 
     }
