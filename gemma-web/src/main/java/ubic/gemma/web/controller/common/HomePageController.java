@@ -100,22 +100,27 @@ public class HomePageController {
 
         long expressionExperimentCount = expressionExperimentService.countAll();
 
-        double groupBelow = 0.1; // if a taxa has less then this percent of total count, group into 'other'
+        double groupBelow = 0.1; // if a taxon has less then this percent of total count, group into 'other'
         String googleData = encodeDataForGoogle( eesPerTaxonValueSorted.descendingSet(), expressionExperimentCount,
                 groupBelow );
         List<String> googleLabelsColls = new ArrayList<String>();
         boolean grouped = false;
         List<String> others = new ArrayList<String>();
         for ( Entry<Taxon, Long> entry : eesPerTaxonValueSorted.descendingSet() ) {
+            String tname = entry.getKey().getCommonName();
+            if ( StringUtils.isBlank( tname ) ) tname = entry.getKey().getScientificName();
+
+            if ( entry.getValue() == 0 ) continue;
+
             if ( groupIntoOther( entry.getValue(), expressionExperimentCount, groupBelow ) ) {
                 grouped = true;
-                others.add( entry.getKey().getCommonName() );
+                others.add( tname );
             } else {
-                googleLabelsColls.add( entry.getKey().getCommonName() );
+                googleLabelsColls.add( tname );
             }
         }
         if ( grouped ) {
-            googleLabelsColls.add( StringUtils.join( others, ", " ) );
+            googleLabelsColls.add( StringUtils.abbreviate( StringUtils.join( others, ", " ), 50 ) );
         }
         String googleLabels = StringUtils.join( googleLabelsColls, '|' );
 

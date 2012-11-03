@@ -5,18 +5,17 @@
 	<h2 style="text-align:center;color:grey;font-size:1.8em">Tools and database for meta-analysis of functional genomics data</h2>
 </div>
 <div id="frontPageSlideShow" width="100%" align="center" style="background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom:30px; border-top: 1px solid gainsboro; border-bottom:1px solid gainsboro;">
-<!-- div width="100%" align="center" style="background: #c1d1d5"-->
-	<div id="features" style="overflow: hidden;">
+ 	<div id="features" style="overflow: hidden;">
 		<div title="1" id="dataChart">
 			<table>
 				<tr>
 					<td class="slideImageTD">
-						
+						<%-- Width here needs to be enough to fit the labels at left and right edges --%>
 						<img
-							src="http://chart.apis.google.com/chart?chs=280x240&cht=p&chco=224499&chd=${ googleData}
+							src="http://chart.apis.google.com/chart?chs=340x240&cht=p&chco=224499&chd=${ googleData}
 									&chds=a&chdl=${ googleLabels}&chf=bg,s,FFFFFF00
 									&chdlp=b|l&chdls=2f2f2f,13"
-							width="280" height="240" alt="" />
+							width="340" height="240" alt="" />
 						<img style="position:absolute;top:123px;left:250px" src="/Gemma/images/slideShow/humanOutline_35_3.png"/>
 						<img style="position:absolute;top:60px;left:200px" src="/Gemma/images/slideShow/mouseOutline65_simplified.png"/>
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
