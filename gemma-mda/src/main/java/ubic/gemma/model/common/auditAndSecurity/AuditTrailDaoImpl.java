@@ -91,6 +91,8 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
 
         this.getHibernateTemplate().saveOrUpdate( trail );
 
+        auditable.setAuditTrail( trail );
+
         return auditEvent;
     }
 
