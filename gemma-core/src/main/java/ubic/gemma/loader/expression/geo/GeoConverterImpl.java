@@ -2261,7 +2261,7 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
             mgedTerm = "GrowthCondition";
         } else if ( varType.equals( VariableType.individual ) ) {
-            mgedTerm = "Individiual";
+            mgedTerm = "Individual";
         } else if ( varType.equals( VariableType.infection ) ) {
             mgedTerm = "Phenotype";
         } else if ( varType.equals( VariableType.isolate ) ) {
