@@ -15,7 +15,6 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
@@ -98,7 +97,7 @@ public interface DiffExAnalyzer {
      * @param results
      * @return
      */
-    Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results,
+    Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
 
     // this is needed so we can alter this in tests

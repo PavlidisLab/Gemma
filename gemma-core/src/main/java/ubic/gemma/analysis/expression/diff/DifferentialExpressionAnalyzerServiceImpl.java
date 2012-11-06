@@ -83,43 +83,17 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#doDifferentialExpressionAnalysis(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
     }

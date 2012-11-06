@@ -92,6 +92,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             differentialExpressionResultService.thaw( rs );
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
             for ( DifferentialExpressionAnalysisResult r : results ) {
+                assert r != null;
                 CompositeSequence probe = r.getProbe();
                 probes.add( probe );
                 res2set.put( r, rs ); // temporary data structure
@@ -106,6 +107,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
             for ( DifferentialExpressionAnalysisResult r : results ) {
+                assert r != null;
                 CompositeSequence probe = r.getProbe();
                 Collection<Gene> genes = cs2genes.get( probe );
                 if ( genes == null || genes.isEmpty() ) continue;

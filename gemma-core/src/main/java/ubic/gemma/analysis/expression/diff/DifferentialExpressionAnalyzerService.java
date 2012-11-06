@@ -29,35 +29,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalyzerService {
 
     /**
-     * Run differential expression on the {@link ExpressionExperiment} using the given factor(s)
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors );
-
-    /**
-     * Run differential expression on the {@link ExpressionExperiment} using the given factor(s) and analysis type.
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @param type
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type );
-
-    /**
-     * @param expressionExperiment
-     * @param config
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
-
-    /**
      * @param expressionExperiment
      * @return
      */
@@ -69,7 +40,7 @@ public interface DifferentialExpressionAnalyzerService {
      * 
      * @param expressionExperiment
      * @param factors
-     * @return
+     * @return persistent analyses
      */
     public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors );
@@ -81,7 +52,7 @@ public interface DifferentialExpressionAnalyzerService {
      * @param expressionExperiment
      * @param factors
      * @param type
-     * @return
+     * @return persistent analyses
      */
     public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type );
@@ -89,7 +60,7 @@ public interface DifferentialExpressionAnalyzerService {
     /**
      * @param expressionExperiment
      * @param config
-     * @return
+     * @return persistent analyses
      */
     public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
