@@ -1,0 +1,1 @@
+~/java/workspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 1000 -s GSE2018_family.soft.gz GDS999.soft.gz
