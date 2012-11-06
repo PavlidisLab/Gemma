@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import net.sf.ehcache.Element;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -147,20 +145,20 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
          * Check cache and initialize the result data structure.
          */
         Collection<Long> geneIdsNeeded = new HashSet<Long>();
-        
+
         Collection<Long> allGeneIds = new HashSet<Long>();
 
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
 
         Map<Gene, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-        
-     // WARNING we assume the genes are from the same taxon.
+
+        // WARNING we assume the genes are from the same taxon.
         String className = getClassName( genes.iterator().next() );
-        
+
         for ( Gene g : genes ) {
-        	
-        	allGeneIds.add(g.getId());
-        	
+
+            allGeneIds.add( g.getId() );
+
             Element e = this.getGene2GeneCoexpressionCache().getCache()
                     .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
             if ( e != null ) {
@@ -184,12 +182,13 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 batch.add( gid );
                 count++;
                 if ( count % CHUNK_SIZE == 0 ) {
-                	StopWatch timer = new StopWatch();
-                	timer.start();                	
+                    StopWatch timer = new StopWatch();
+                    timer.start();
                     rawResults.addAll( getCoexpressionRelationshipsFromDB( batch, sourceAnalysis, className ) );
-                    
+
                     if ( timer.getTime() > 100 ) {
-                        log.info( "getCoexpressionRelationshipsFromDB for genes:"+Arrays.toString(batch.toArray())+" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+                        log.info( "getCoexpressionRelationshipsFromDB for genes:" + Arrays.toString( batch.toArray() )
+                                + " and sourceAnalysis" + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
                     }
                     batch.clear();
                 }
@@ -203,9 +202,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         /*
          * Filter
          */
-        
+
         StopWatch timer = new StopWatch();
-    	timer.start();     
+        timer.start();
         Collection<GeneLink> seen = new HashSet<GeneLink>();
         Collections.sort( rawResults, new SupportComparator() );
         for ( Gene2GeneCoexpression g2g : rawResults ) {
@@ -240,9 +239,10 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 finalResult.get( secondGene ).add( g2g );
             }
         }
-        
+
         if ( timer.getTime() > 100 ) {
-            log.info( "Filtering "+rawResults.size()+" results for genes:"+Arrays.toString(genes.toArray())+" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+            log.info( "Filtering " + rawResults.size() + " results for genes:" + Arrays.toString( genes.toArray() )
+                    + " and sourceAnalysis" + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
         }
 
         return finalResult;
@@ -280,17 +280,17 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
-        
+
         List<Long> geneIds = new ArrayList<Long>();
-        
-        for (Gene g: genes){
-        	
-        	geneIds.add(g.getId());
-        	
+
+        for ( Gene g : genes ) {
+
+            geneIds.add( g.getId() );
+
         }
 
-        Collection<Long> unseen = new HashSet<Long>();        
-        
+        Collection<Long> unseen = new HashSet<Long>();
+
         unseen.addAll( geneIds );
 
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
@@ -303,8 +303,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                  * find results for the cached result that include the second gene at the appropriate stringency.
                  */
                 for ( Gene2GeneCoexpression g2g : ( List<Gene2GeneCoexpression> ) e.getValue() ) {
-                    if ( geneIds.contains( g2g.getFirstGene().getId() ) && geneIds.contains( g2g.getSecondGene().getId() )
-                            && g2g.getNumDataSets() >= stringency ) rawResults.add( g2g );
+                    if ( geneIds.contains( g2g.getFirstGene().getId() )
+                            && geneIds.contains( g2g.getSecondGene().getId() ) && g2g.getNumDataSets() >= stringency )
+                        rawResults.add( g2g );
                 }
             } else {
                 genesNeeded.add( gid );
@@ -351,32 +352,35 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             log.debug( queryGeneId );
 
             StopWatch timer = new StopWatch();
-    		timer.start();
-    		
+            timer.start();
+
             Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                     new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } );
             if ( timer.getTime() > 1000 ) {
-                log.info(firstQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+                log.info( firstQueryString + " for genes " + Arrays.toString( genes.toArray() ) + " and sourceAnalysis"
+                        + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
             }
-            
+
             if ( !SINGLE_QUERY_FOR_LINKS ) {
-            	timer.reset();
-            	timer.start();
-            	
+                timer.reset();
+                timer.start();
+
                 r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
                         new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                         new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } ) );
-                
+
                 if ( timer.getTime() > 1000 ) {
-                    log.info("!SINGLE_QUERY_FOR_LINKS "+secondQueryString +" for genes "+Arrays.toString(genes.toArray()) +" and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+                    log.info( "!SINGLE_QUERY_FOR_LINKS " + secondQueryString + " for genes "
+                            + Arrays.toString( genes.toArray() ) + " and sourceAnalysis" + sourceAnalysis.getId()
+                            + " took " + timer.getTime() + "ms" );
                 }
             }
 
-            Collection<GeneLink> seen = new HashSet<GeneLink>(r.size()*2);
-            
+            Collection<GeneLink> seen = new HashSet<GeneLink>( r.size() * 2 );
+
             timer.reset();
-        	timer.start();
+            timer.start();
 
             for ( Gene2GeneCoexpression g2g : r ) {
 
@@ -395,7 +399,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 seen.add( link );
             }
             if ( timer.getTime() > 1000 ) {
-                log.info("Query genes only, Listing both ways loop for "+r.size()+" results and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+                log.info( "Query genes only, Listing both ways loop for " + r.size() + " results and sourceAnalysis"
+                        + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
             }
 
             /*
@@ -405,18 +410,18 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         }
 
         StopWatch timerMapMaker = new StopWatch();
-		timerMapMaker.start();
-        
+        timerMapMaker.start();
+
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-        
-        for (Gene g: genes){
-        	result.put(g, resultById.get(g.getId()));
+
+        for ( Gene g : genes ) {
+            result.put( g, resultById.get( g.getId() ) );
         }
-        
+
         if ( timerMapMaker.getTime() > 1000 ) {
-            log.info("Generating g2gcoex map took " + timerMapMaker.getTime() + "ms" );
+            log.info( "Generating g2gcoex map took " + timerMapMaker.getTime() + "ms" );
         }
-        
+
         return result;
 
     }
@@ -469,42 +474,41 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 + " as g2g where g2g.secondGene.id in (:geneIds) and g2g.sourceAnalysis = :sourceAnalysis";
 
         List<Gene2GeneCoexpression> r = new ArrayList<Gene2GeneCoexpression>();
-		StopWatch timer = new StopWatch();
-		timer.start();		
-		
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "geneIds", "sourceAnalysis" }, new Object[] { geneIds, sourceAnalysis } ) );
         if ( timer.getTime() > 1000 ) {
-            log.info(queryStringFirstVector +" for "+geneIds.size() +"genes and sourceAnalysis "+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+            log.info( queryStringFirstVector + " for " + geneIds.size() + "genes and sourceAnalysis "
+                    + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
         }
         if ( !SINGLE_QUERY_FOR_LINKS ) {
-        	timer.reset();
-        	timer.start();        	
-        	
+            timer.reset();
+            timer.start();
+
             r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                     new String[] { "geneIds", "sourceAnalysis" }, new Object[] { geneIds, sourceAnalysis } ) );
             if ( timer.getTime() > 1000 ) {
-            	log.info("!SINGLE_QUERY_FOR_LINKS "+queryStringFirstVector +" for "+ geneIds.size() +" genes and sourceAnalysis"+sourceAnalysis.getId()+" took " + timer.getTime() + "ms" );
+                log.info( "!SINGLE_QUERY_FOR_LINKS " + queryStringFirstVector + " for " + geneIds.size()
+                        + " genes and sourceAnalysis" + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
             }
         } else {
             if ( r.isEmpty() ) return r;
 
             /*
              * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
-             */           
-            
-            
+             */
+
             timer.reset();
-        	timer.start();
+            timer.start();
             int removed = 0;
-            HashSet<GeneLink> allSeen = new HashSet<GeneLink>(r.size()*2);
+            HashSet<GeneLink> allSeen = new HashSet<GeneLink>( r.size() * 2 );
             for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
                 Gene2GeneCoexpression g2g = iterator.next();
 
                 GeneLink seen = new GeneLink( g2g );
-                
-            	boolean contains = allSeen.contains( seen );
-                
+
                 if ( allSeen.contains( seen ) ) {
                     iterator.remove();
                     ++removed;
@@ -513,23 +517,23 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
                 allSeen.add( seen );
             }
-            
+
             if ( timer.getTime() > 1000 ) {
-            	log.info("Removing duplicates for "+r.size()+" results: "+timer.getTime()+"ms");
+                log.info( "Removing duplicates for " + r.size() + " results: " + timer.getTime() + "ms" );
             }
             if ( removed > 0 ) log.info( "Removed " + removed + " duplicate links" );
 
             if ( r.isEmpty() ) throw new IllegalStateException( "Removed everything!" );
         }
-        
-        Collections.sort( r, new SupportComparator() );        
+
+        Collections.sort( r, new SupportComparator() );
 
         timer.reset();
-    	timer.start();
+        timer.start();
         cacheCoexpression( geneIds, sourceAnalysis, r );
-        
+
         if ( timer.getTime() > 1000 ) {
-        	log.info("caching "+ r.size()+" results took: "+timer.getTime()+"ms");
+            log.info( "caching " + r.size() + " results took: " + timer.getTime() + "ms" );
         }
 
         return r;
@@ -540,13 +544,12 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             List<Gene2GeneCoexpression> r ) {
         /*
          * Cache all values.
-         */    	
-    	
-    	
-    	StopWatch timer = new StopWatch();
-        
+         */
+
+        StopWatch timer = new StopWatch();
+
         timer.reset();
-    	timer.start();
+        timer.start();
         Map<Long, List<Gene2GeneCoexpression>> forCache = new HashMap<Long, List<Gene2GeneCoexpression>>();
         for ( Gene2GeneCoexpression g2g : r ) {
 
@@ -569,26 +572,24 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             }
 
         }
-        
+
         if ( timer.getTime() > 1000 ) {
-        	log.info("pre-processing "+ r.size()+" results to be cached took: "+timer.getTime()+"ms");
+            log.info( "pre-processing " + r.size() + " results to be cached took: " + timer.getTime() + "ms" );
         }
 
-        log.info("Begin caching results for "+forCache.keySet().size()+" genes ");
-        int totalResultsCached=0;
+        log.info( "Begin caching results for " + forCache.keySet().size() + " genes " );
+        int totalResultsCached = 0;
         for ( Long geneId : forCache.keySet() ) {
-        	
-        	List<Gene2GeneCoexpression> resultsToCache = forCache.get( geneId );
-        	
-        	
-        	
+
+            List<Gene2GeneCoexpression> resultsToCache = forCache.get( geneId );
+
             this.getGene2GeneCoexpressionCache().getCache()
                     .put( new Element( new GeneCached( geneId, sourceAnalysis.getId() ), resultsToCache ) );
-            
-            totalResultsCached = totalResultsCached+resultsToCache.size();
+
+            totalResultsCached = totalResultsCached + resultsToCache.size();
         }
-        log.info("Done caching "+totalResultsCached+" results for "+forCache.keySet().size()+" genes ");
-        
+        log.info( "Done caching " + totalResultsCached + " results for " + forCache.keySet().size() + " genes " );
+
     }
 
     @Override
@@ -648,7 +649,7 @@ class GeneLink {
             if ( other.g2 != null ) return false;
         } else if ( !g2.equals( other.g2 ) ) return false;
         if ( positive != other.positive ) return false;
-        
+
         return true;
     }
 

@@ -55,8 +55,6 @@ import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
-import ubic.gemma.model.common.auditAndSecurity.Status;
-import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -112,9 +110,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
     @Autowired
     private TfGeneAssociationService tfGeneAssociationService;
-
-    @Autowired
-    private StatusService statusService;
 
     @Autowired
     private GeneLightWeightCache geneLightWeightCache;
@@ -1032,7 +1027,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             return ecvos;
         }
 
-        if ( timerGeneLoad.getTime() > 100 ) {            
+        if ( timerGeneLoad.getTime() > 100 ) {
             log.info( "Loading and caching query genes took " + timerGeneLoad.getTime() + "ms" );
         }
 
@@ -1204,8 +1199,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                         continue;
 
-                    } else if ( numSupportingDatasets < stringency ) {// check in case any data sets were filtered out.(i.e., we're not
-                                                                      // interested in the full set of data sets that were used in the
+                    } else if ( numSupportingDatasets < stringency ) {// check in case any data sets were filtered
+                                                                      // out.(i.e., we're not
+                                                                      // interested in the full set of data sets that
+                                                                      // were used in the
                                                                       // original analysis.
                         continue;
                     }
@@ -1284,7 +1281,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             Collections.sort( ecvos );
 
-            
         } // Over querygenes
 
         populateNodeDegree( ecvos, allUsedGenes, filteredEeIds );
@@ -1410,30 +1406,29 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         /* security will filter experiments */
         Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
-        
+
         Collection<Long> filteredIds = new HashSet<Long>();
         for ( ExpressionExperiment ee : experiments ) {
             filteredIds.add( ee.getId() );
         }
         List<ExpressionExperimentValueObject> securityFilteredEevos = new ArrayList<ExpressionExperimentValueObject>(
                 expressionExperimentService.loadValueObjects( filteredIds, false ) );
-        
+
         List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>();
-        
+
         StopWatch timerFilterTroubled = new StopWatch();
         timerFilterTroubled.start();
-        
-        //only keep untroubled experiments
-        for (ExpressionExperimentValueObject eevo: securityFilteredEevos){
-            if(!eevo.getTroubled()){
+
+        // only keep untroubled experiments
+        for ( ExpressionExperimentValueObject eevo : securityFilteredEevos ) {
+            if ( !eevo.getTroubled() ) {
                 eevos.add( eevo );
             }
         }
 
-        if ( timerFilterTroubled.getTime() > 100 ) {            
+        if ( timerFilterTroubled.getTime() > 100 ) {
             log.info( "Filtering troubled eevos took " + timerFilterTroubled.getTime() + "ms" );
         }
-        
 
         Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
             @Override
