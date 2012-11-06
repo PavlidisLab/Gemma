@@ -752,13 +752,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
 
         Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, Collection<DifferentialExpressionAnalysisResult>>();
-        Map<String, Collection<Double>> pvaluesForQvalue = new HashMap<String, Collection<Double>>();
+        Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
         for ( String factorName : label2Factors.keySet() ) {
             if ( properDesignMatrix.getDroppedFactors().contains( factorName ) ) {
                 continue;
             }
             resultLists.put( factorName, new HashSet<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( factorName, new HashSet<Double>() );
+            pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
         addinteraction: for ( String[] fs : interactionFactorLists ) {
             for ( String f : fs ) {
@@ -768,7 +768,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
             String intF = StringUtils.join( fs, ":" );
             resultLists.put( intF, new HashSet<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( intF, new HashSet<Double>() );
+            pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
 
         if ( pvaluesForQvalue.isEmpty() ) {
@@ -1073,7 +1073,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param pvaluesForQvalue Map of factorName to results.
      */
     private void getRanksAndQvalues( Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists,
-            Map<String, Collection<Double>> pvaluesForQvalue ) {
+            Map<String, List<Double>> pvaluesForQvalue ) {
         /*
          * qvalues and ranks, requires second pass over the result objects.
          */
@@ -1098,7 +1098,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 continue;
             }
 
+            assert pvalArray.length == resultLists.get( fName ).size() : pvalArray.length + " != "
+                    + resultLists.get( fName ).size();
+
+            assert pvalArray.length == ranks.length;
+
             double[] qvalues = super.benjaminiHochberg( pvalArray );
+
+            assert qvalues.length == resultLists.get( fName ).size();
 
             if ( qvalues == null ) {
                 log.warn( "Corrected pvalues could not be computed for " + fName );
