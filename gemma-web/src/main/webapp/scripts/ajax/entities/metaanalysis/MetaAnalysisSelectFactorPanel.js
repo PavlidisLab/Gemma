@@ -67,7 +67,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
         		border: false
         	});
         	
-			var totalResultSetCount = 0;
+			var totalSuitableResultSetCount = 0;
         	
 			if (experimentDetails.differentialExpressionAnalyses.length == 0) {
 				experimentResultSetsPanel.add(new Ext.form.Label({
@@ -208,15 +208,19 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 						});
 						experimentResultSetsPanel.add(label);
 						
-						var currResultSetCount = 0;
+						var currSuitableResultSetCount = 0;
+						var currCreatedResultSetCount = 0;
+
 						Ext.each(resultSetParent.childNodes, function(resultSet, unusedJ) {
 							radioAvailability = checkResultSetAvailability(resultSet.attributes.analysisId, resultSet.attributes.resultSetId);							
 							if (radioAvailability.shouldResultSetCreated) {
+								currCreatedResultSetCount++;
+
 								var notSuitableForAnalysisMessage = checkSuitableForAnalysis(resultSet.attributes); 
 									
 								if (notSuitableForAnalysisMessage == null) {
-									currResultSetCount++;
-									totalResultSetCount++;
+									currSuitableResultSetCount++;
+									totalSuitableResultSetCount++;
 								}
 								var resultSetComponent = generateResultSetComponent(resultSet.text, 15, notSuitableForAnalysisMessage,
 															resultSet.attributes.resultSetId, radioAvailability.shouldResultSetSelected);
@@ -230,14 +234,19 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 						},
 						this); // scope
 
-						label.setDisabled(currResultSetCount === 0);
+						label.setDisabled(currSuitableResultSetCount === 0);
+
+						// If no result sets are created, we should remove the experiment label added earlier.
+						if (currCreatedResultSetCount === 0) {
+							experimentResultSetsPanel.remove(label);
+						}
 					} else {
 						radioAvailability = checkResultSetAvailability(resultSetParent.attributes.analysisId, resultSetParent.attributes.resultSetId);							
 						if (radioAvailability.shouldResultSetCreated) {
 							var notSuitableForAnalysisMessage = checkSuitableForAnalysis(resultSetParent.attributes); 
 								
 							if (notSuitableForAnalysisMessage == null) {
-								totalResultSetCount++;
+								totalSuitableResultSetCount++;
 							}
 							var resultSetComponent = generateResultSetComponent(resultSetParent.text, 0, notSuitableForAnalysisMessage,
 														resultSetParent.attributes.resultSetId, radioAvailability.shouldResultSetSelected);
@@ -260,12 +269,12 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 					});
 			} 
 			
-			if (totalResultSetCount === 0) {
+			if (totalSuitableResultSetCount === 0) {
 				experimentTitleComponent.setDisabled(true);
 			}
 			
 			return { 
-				hasEnabledRadioButtons: (totalResultSetCount > 0),
+				hasEnabledRadioButtons: (totalSuitableResultSetCount > 0),
 				experimentTitleComponent: experimentTitleComponent,
 				experimentResultSetsPanel: experimentResultSetsPanel
 			}
