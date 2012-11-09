@@ -508,8 +508,6 @@ Ext.Panel, {
     	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(this.coexpressionSearchData.cytoscapeResults.knownGeneResults,
     			this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
     
-    	trimmed.trimmedNodeIds;
-    	
     	var restrictedNodes = [];
     	var i;
     	
@@ -528,6 +526,15 @@ Ext.Panel, {
     	
     },
 
+    getVisibleNodeIds: function (){
+    	
+    	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResultsWithQueryGenes(this.coexpressionSearchData.cytoscapeResults.knownGeneResults,
+    			this.coexpressionSearchData.coexGridCoexCommand.geneIds, this.coexpressionSearchData.cytoscapeCoexCommand.displayStringency);
+    	
+    	return trimmed.trimmedNodeIds;
+    	
+    },    
+    
     drawGraph: function () {
         this.display.drawGraph(this.coexpressionSearchData);        
         this.loadMask.hide();

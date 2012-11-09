@@ -508,6 +508,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 								this.symbolListButton.hide();
 								this.doLayout();
 								
+								//currently the event 'geneSelected' is just used for GeneSetOverlayPicker
+								this.fireEvent('geneSelected');
+								
 							},
 							this
 						);
@@ -542,6 +545,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.setSelectedGeneSetValueObject(newSets[i]);
 				}
 			}
+			//currently the event 'geneSelected' is just used for GeneSetOverlayPicker
+			this.fireEvent('geneSelected');
 		}, this);
 
 		this.preview.on('maskParentContainer', function() {

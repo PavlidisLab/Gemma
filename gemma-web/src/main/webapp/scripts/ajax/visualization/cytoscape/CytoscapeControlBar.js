@@ -89,7 +89,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 		
                 		
                 	}
-                	this.geneSetOverlayPicker.show();
+                	this.geneSetOverlayPicker.reactivateOverlayPicker();
                 },
                 scope: this
             }, {

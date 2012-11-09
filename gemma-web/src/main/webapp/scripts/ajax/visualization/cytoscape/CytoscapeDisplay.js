@@ -613,6 +613,44 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     	
     },
     
+    getMatchedNodeCountForGeneListOverlay:function(geneIdsToOverlay){
+    	
+    	var nodeIds = this.controller.getVisibleNodeIds();
+    	
+    	var numNodesMatched=0;
+    	
+    	for (var i=0; i< nodeIds.length;i++){
+    		
+    		if (geneIdsToOverlay.indexOf(nodeIds[i])!== -1){    			
+    			
+    			numNodesMatched=numNodesMatched + 1;
+    		}
+    		
+    	}
+    	
+    	return numNodesMatched;
+    	
+    },
+    
+    getMatchedNodeCountForGeneListOverlayWithHiddenGenes:function(geneIdsToOverlay){
+    	
+    	var nodes = this.visualization.nodes();
+    	
+    	var numNodesMatched=0;
+    	
+    	for (var i=0; i< nodes.length;i++){
+    		
+    		if (geneIdsToOverlay.indexOf(nodes[i].data.geneid)!== -1){    			
+    			
+    			numNodesMatched=numNodesMatched + 1;
+    		}
+    		
+    	}
+    	
+    	return numNodesMatched;
+    	
+    },
+    
     clearGeneListOverlay: function(){
     	
     	var bypass = { nodes: { }, edges: { } };

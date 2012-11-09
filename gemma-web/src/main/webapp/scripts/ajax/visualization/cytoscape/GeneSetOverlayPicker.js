@@ -1,12 +1,13 @@
 Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 
+	titleText: "Select genes for graph overlay",
 	title : "Select genes for graph overlay",
 	modal : true,
 	layout : 'fit',
 	stateful : false,
 	autoHeight : false,
 	width : 360,
-	height : 300,
+	height : 400,
 	closeAction : 'hide',
 	easing : 3,
 	lastOverlayedIds: [],
@@ -60,7 +61,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	reset : function() {
 		this.geneChoosers.removeAll();
 		this.addGeneChooser();
-
+		this.setTitle(this.titleText);
 	},
 
 	applyOverlay : function() {
@@ -78,6 +79,37 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 		this.hide();
 
 	},
+	
+	getTextForTitle: function(numNodesMatched, numNodesMatchedWithHidden){
+		
+		var textForTitle =this.titleText+"<br/> ("+numNodesMatched+" gene matches in the graph";
+		
+		if (numNodesMatchedWithHidden>numNodesMatched){
+			
+			var hidden = numNodesMatchedWithHidden-numNodesMatched;
+			
+			textForTitle = textForTitle + ", "+hidden+" hidden due to stringency)";
+		} else {
+			textForTitle = textForTitle + ")";
+		}
+		
+		return textForTitle;
+		
+	},
+	
+	reactivateOverlayPicker : function(){
+		
+		if (this.getSelectedIds().length > 0){
+		
+			var numNodesMatched = this.display.getMatchedNodeCountForGeneListOverlay(this.getSelectedIds());
+		
+			var numNodesMatchedWithHidden = this.display.getMatchedNodeCountForGeneListOverlayWithHiddenGenes(this.getSelectedIds());
+		
+			this.setTitle(this.getTextForTitle(numNodesMatched, numNodesMatchedWithHidden));
+		}
+		
+		this.show();
+	},
 
 	addGeneChooser : function() {
 		this.geneChooserIndex++;
@@ -89,10 +121,12 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 			taxonId : this.taxonId,
 			showTaxonCombo : false,
 			listeners : {
-				madeFirstSelection : function() {
-					// allows multiple set selections,
-					// functionality removed for now
-					// this.searchForm.addGeneChooser();
+				geneSelected : function() {
+					
+					var numNodesMatched = this.searchForm.display.getMatchedNodeCountForGeneListOverlay(this.searchForm.getSelectedIds());
+					var numNodesMatchedWithHidden = this.searchForm.display.getMatchedNodeCountForGeneListOverlayWithHiddenGenes(this.searchForm.getSelectedIds());					
+					this.searchForm.setTitle(this.searchForm.getTextForTitle(numNodesMatched, numNodesMatchedWithHidden));
+					
 				},
 				removeGene : function() {
 					this.searchForm.removeGeneChooser(this.getId());
