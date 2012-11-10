@@ -266,7 +266,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
             if ( c == null ) {
-                log.warn( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
+                if ( log.isDebugEnabled() )
+                    log.debug( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
                 numSkipped++;
                 continue;
             }
@@ -331,6 +332,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                 bs = bioSequenceService.create( bs );
 
+                c.setBiologicalCharacteristic( bs );
+
+                // fixme: possibly move outside the loop if that's faster.
+                compositeSequenceService.update( c );
             }
 
             assert bs.getId() != null;

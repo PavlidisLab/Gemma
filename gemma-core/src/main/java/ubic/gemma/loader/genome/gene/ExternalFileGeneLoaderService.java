@@ -14,37 +14,13 @@
  */
 package ubic.gemma.loader.genome.gene;
 
-import java.util.Collection;
-
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneProduct;
+import java.io.InputStream;
 
 /**
- * @author paul
+ * @author paul, Louise
  * @version $Id$
  */
 public interface ExternalFileGeneLoaderService {
-
-    /**
-     * Creates a gene, where gene name and official gene symbol is set to gene symbol(from file) and official name is
-     * set to geneName(from file). The gene description is set to a message indicating that the gene was imported from
-     * an external file and the associated uniprot id.
-     * 
-     * @param fields A string array containing gene symbol, gene name and uniprot id.
-     * @param taxon Taxon relating to gene
-     * @return Gene with associated gene product for loading into Gemma.
-     */
-    public abstract Gene createGene( String[] fields, Taxon taxon );
-
-    /**
-     * When loading genes with a file each gene will have just 1 gene product. The gene product is a filler taking its
-     * details from the gene.
-     * 
-     * @param gene The gene associated to this gene product
-     * @return Collection of gene products in this case just 1.
-     */
-    public abstract Collection<GeneProduct> createGeneProducts( Gene gene );
 
     /**
      * Work flow is: The file is first checked to see if readable, and the taxon checked to see it is in Gemma. If
@@ -60,21 +36,11 @@ public interface ExternalFileGeneLoaderService {
     public abstract int load( String geneFile, String taxonName ) throws Exception;
 
     /**
-     * Method to update taxon to indicate that genes have been loaded for that taxon. If the taxon has children taxa
-     * then those child genes should not be used and the flag for those child taxon set to false.
-     * 
-     * @param taxon The taxon to update
-     * @exception Thrown if error accessing updating taxon details
+     * @param geneInputStream
+     * @param taxonName
+     * @return number of genes loaded
+     * @throws Exception
      */
-    public abstract void updateTaxonWithGenesLoaded( Taxon taxon ) throws Exception;
-
-    /**
-     * Method to validate that taxon is held in system.
-     * 
-     * @param taxonName Taxon common name
-     * @return Full Taxon details
-     * @exception If taxon is not found in the system.
-     */
-    public abstract Taxon validateTaxon( String taxonName ) throws IllegalArgumentException;
+    public abstract int load( InputStream geneInputStream, String taxonName ) throws Exception;
 
 }

@@ -22,6 +22,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -57,22 +59,51 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     private static Log log = LogFactory.getLog( ExternalFileGeneLoaderServiceImpl.class.getName() );
 
     @Autowired
+    private GeneService geneService;
+
+    @Autowired
     private Persister persisterHelper;
 
     @Autowired
     private TaxonService taxonService;
 
-    @Autowired
-    private GeneService geneService;
+    @Override
+    public int load( InputStream geneInputStream, String taxonName ) throws Exception {
+        BufferedReader b = new BufferedReader( new InputStreamReader( geneInputStream ) );
+        Taxon taxon = validateTaxon( taxonName );
+        log.info( "Taxon and file validation passed for taxon " + taxonName );
+        return load( b, taxon );
+    }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#createGene(java.lang.String[],
-     * ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#load(java.lang.String, java.lang.String)
      */
     @Override
-    public Gene createGene( String[] fields, Taxon taxon ) {
+    public int load( String geneFile, String taxonName ) throws Exception {
+
+        log.info( "Starting loading gene file " + geneFile + " for taxon " + taxonName );
+        BufferedReader bufferedReaderGene = readFile( geneFile );
+        Taxon taxon = validateTaxon( taxonName );
+        log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
+        int loadedGeneCount = load( bufferedReaderGene, taxon );
+        return loadedGeneCount;
+    }
+
+    /**
+     * Creates a gene, where gene name and official gene symbol is set to gene symbol(from file) and official name is
+     * set to geneName(from file). The gene description is set to a message indicating that the gene was imported from
+     * an external file and the associated uniprot id.
+     * 
+     * @param fields A string array containing gene symbol, gene name and uniprot id.
+     * @param taxon Taxon relating to gene
+     * @return Gene with associated gene product for loading into Gemma.
+     */
+    private Gene createGene( String[] fields, Taxon taxon ) {
+
+        assert fields.length > 1;
+
         String geneSymbol = fields[0];
         String geneName = fields[1];
         String uniProt = "";
@@ -80,7 +111,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         Gene gene = null;
         // need at least the gene symbol and gene name
         if ( !StringUtils.isBlank( geneSymbol ) && !StringUtils.isBlank( geneName ) ) {
-            log.debug( "Creating gene " + geneSymbol );
+            if ( log.isDebugEnabled() ) log.debug( "Creating gene " + geneSymbol );
             gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
             if ( gene != null ) return null; // no need to create it.
             gene = Gene.Factory.newInstance();
@@ -97,13 +128,14 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return gene;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * When loading genes with a file each gene will have just 1 gene product. The gene product is a filler taking its
+     * details from the gene.
      * 
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#createGeneProducts(ubic.gemma.model.genome.Gene)
+     * @param gene The gene associated to this gene product
+     * @return Collection of gene products in this case just 1.
      */
-    @Override
-    public Collection<GeneProduct> createGeneProducts( Gene gene ) {
+    private Collection<GeneProduct> createGeneProducts( Gene gene ) {
         Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
         geneProduct.setType( GeneProductType.RNA );
@@ -114,20 +146,16 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return geneProducts;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#load(java.lang.String, java.lang.String)
+    /**
+     * @param bufferedReaderGene
+     * @param taxon
+     * @return
+     * @throws IOException
      */
-    @Override
-    public int load( String geneFile, String taxonName ) throws Exception {
+    private int load( BufferedReader bufferedReaderGene, Taxon taxon ) throws IOException {
+        int loadedGeneCount = 0;
         String line = null;
         int linesSkipped = 0;
-        log.info( "Starting loading gene file " + geneFile + " for taxon " + taxonName );
-        BufferedReader bufferedReaderGene = readFile( geneFile );
-        Taxon taxon = validateTaxon( taxonName );
-        log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
-        int loadedGeneCount = 0;
         while ( ( line = bufferedReaderGene.readLine() ) != null ) {
             String[] lineContents = readLine( line );
             if ( lineContents != null ) {
@@ -141,52 +169,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             }
         }
         updateTaxonWithGenesLoaded( taxon );
-        log.info( "Finished loading gene file " + geneFile + " for taxon " + taxon + ". " + " Genes loaded: "
-                + loadedGeneCount + " ,Lines skipped: " + linesSkipped );
+        log.info( "Genes loaded: " + loadedGeneCount + " ,Lines skipped: " + linesSkipped );
         return loadedGeneCount;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#updateTaxonWithGenesLoaded(ubic.gemma.model.genome
-     * .Taxon)
-     */
-    @Override
-    public void updateTaxonWithGenesLoaded( Taxon taxon ) {
-        Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
-        // if this taxon has children flag not to use their genes
-        if ( childTaxa != null && !childTaxa.isEmpty() ) {
-            for ( Taxon childTaxon : childTaxa ) {
-                if ( childTaxon != null && childTaxon.getIsGenesUsable() ) {
-                    childTaxon.setIsGenesUsable( false );
-                    taxonService.update( childTaxon );
-                    log.warn( "Child taxa" + childTaxon + " genes have been loaded parent taxa should superseed" );
-                }
-            }
-        }
-        // set taxon flag indicating that use these taxons genes
-        if ( !taxon.getIsGenesUsable() ) {
-            taxon.setIsGenesUsable( true );
-            taxonService.update( taxon );
-            log.info( "Updating taxon genes loaded to true for taxon " + taxon );
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService#validateTaxon(java.lang.String)
-     */
-    @Override
-    public Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {
-        Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "No taxon with common name " + taxonName + " found" );
-        }
-        return taxon;
     }
 
     /**
@@ -228,6 +212,49 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         }
         return fields;
 
+    }
+
+    /**
+     * Method to update taxon to indicate that genes have been loaded for that taxon. If the taxon has children taxa
+     * then those child genes should not be used and the flag for those child taxon set to false.
+     * 
+     * @param taxon The taxon to update
+     * @exception Thrown if error accessing updating taxon details
+     */
+    private void updateTaxonWithGenesLoaded( Taxon taxon ) {
+        Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
+        // if this taxon has children flag not to use their genes
+        if ( childTaxa != null && !childTaxa.isEmpty() ) {
+            for ( Taxon childTaxon : childTaxa ) {
+                if ( childTaxon != null && childTaxon.getIsGenesUsable() ) {
+                    childTaxon.setIsGenesUsable( false );
+                    taxonService.update( childTaxon );
+                    log.warn( "Child taxa" + childTaxon + " genes have been loaded parent taxa should superseed" );
+                }
+            }
+        }
+        // set taxon flag indicating that use this taxon's genes
+        if ( !taxon.getIsGenesUsable() ) {
+            taxon.setIsGenesUsable( true );
+            taxonService.update( taxon );
+            log.info( "Updating taxon genes loaded to true for taxon " + taxon );
+        }
+
+    }
+
+    /**
+     * Method to validate that taxon is held in system.
+     * 
+     * @param taxonName Taxon common name
+     * @return Full Taxon details
+     * @exception If taxon is not found in the system.
+     */
+    private Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {
+        Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "No taxon with common name " + taxonName + " found" );
+        }
+        return taxon;
     }
 
 }

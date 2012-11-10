@@ -106,6 +106,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<Gene, Collection<DifferentialExpressionAnalysisResult>>();
 
         // second pass: organize by gene
+        int numWithGenes = 0;
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
             for ( DifferentialExpressionAnalysisResult r : results ) {
@@ -119,7 +120,13 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                     gene2result.put( gene, new HashSet<DifferentialExpressionAnalysisResult>() );
                 }
                 gene2result.get( gene ).add( r );
+                numWithGenes++;
             }
+        }
+
+        if ( numWithGenes == 0 ) {
+            log.warn( "No probes were associated with genes" );
+            return null;
         }
 
         log.info( "Computing pvalues ..." );
