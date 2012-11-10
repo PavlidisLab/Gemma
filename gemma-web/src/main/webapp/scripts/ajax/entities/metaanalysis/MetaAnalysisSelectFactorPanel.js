@@ -353,9 +353,10 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 					if (item) {
 						if (item.items && item.items.length > 0) {
 							setDisabledChildComponentsVisible(item, visible);
-						} else if (item.disabled &&
-								   (item instanceof Ext.form.Checkbox || item instanceof Ext.form.Label)) {
-							item.setVisible(visible);
+						} else if (item.disabled && item instanceof Ext.form.Radio) {
+							// Besides radio button, its parent should be set visible/invisible
+							// because its parent also contains icons and text related to it.
+							item.ownerCt.setVisible(visible);
 						}
 					}
 				});
