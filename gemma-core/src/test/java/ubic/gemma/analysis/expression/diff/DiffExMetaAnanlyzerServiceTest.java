@@ -72,14 +72,14 @@ public class DiffExMetaAnanlyzerServiceTest extends BaseSpringContextTest {
         ExpressionAnalysisResultSet rs1 = ds1Analyses.iterator().next().getResultSets().iterator().next();
         ExpressionAnalysisResultSet rs2 = ds2Analyses.iterator().next().getResultSets().iterator().next();
         ExpressionAnalysisResultSet rs3 = ds3Analyses.iterator().next().getResultSets().iterator().next();
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        resultSets.add( rs1 );
-        resultSets.add( rs2 );
-        resultSets.add( rs3 );
+		Collection<Long> analysisResultSetIds = new HashSet<Long>();
+		analysisResultSetIds.add( rs1.getId() );
+		analysisResultSetIds.add( rs2.getId() );
+		analysisResultSetIds.add( rs3.getId() );
         /*
          * Perform the meta-analysis without saving it.
          */
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( resultSets, null, null );
+		GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( analysisResultSetIds, null, null );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 

@@ -16,7 +16,6 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 
 /**
@@ -27,6 +26,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 public interface DiffExMetaAnalyzerService {
 
-    public GeneDifferentialExpressionMetaAnalysis analyze (Collection<ExpressionAnalysisResultSet> resultSets, String name, String description);
+    public GeneDifferentialExpressionMetaAnalysis analyze(Collection<Long> analysisResultSetIds, String name, String description);
 
 }

@@ -19,28 +19,16 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.analysis.AnalysisService;
+import java.util.Collection;
 
 /**
  * TODO Document Me
  * 
- * @author Paul
+ * @author frances
  * @version $Id$
  */
-public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis> {
-
-    @Secured({ "GROUP_USER" })
-    public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( GeneDifferentialExpressionMetaAnalysis analysis );
-
-    @Secured({ "GROUP_USER" })
-    public void delete( Long id );
-
-    @Secured({ "GROUP_USER" })
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
-
+public interface GeneDiffExMetaAnalysisHelperService {
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis(Long id);
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses();
+	public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(GeneDifferentialExpressionMetaAnalysis metaAnalysis);
 }

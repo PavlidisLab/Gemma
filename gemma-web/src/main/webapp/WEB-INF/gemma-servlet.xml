@@ -550,8 +550,9 @@
 	<bean id="diffExMetaAnalyzerController" class="ubic.gemma.web.controller.diff.DiffExMetaAnalyzerController">
 		<dwr:remote javascript="DiffExMetaAnalyzerController">
 			<dwr:include method="analyzeResultSets" />
-			<dwr:include method="loadMyAnalyses" />
-			<dwr:include method="removeAnalysis" />
+			<dwr:include method="getMetaAnalysis" />
+			<dwr:include method="getMyMetaAnalyses" />
+			<dwr:include method="removeMetaAnalysis" />
 			<dwr:include method="saveResultSets" />
 		</dwr:remote>
 	</bean>
@@ -929,8 +930,9 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject$IncludedResultSetDetail" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject" />		
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject$IncludedResultSetDetail" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />

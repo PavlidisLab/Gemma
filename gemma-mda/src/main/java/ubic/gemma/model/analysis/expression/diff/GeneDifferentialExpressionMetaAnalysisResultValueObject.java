@@ -40,19 +40,8 @@ public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements	
 	private Double metaPvalue;
 	private Double metaPvalueRank;
 	private Double metaQvalue;
-	private Integer resultsUsedCount;
+	private Integer numResultsUsed;
 	private Boolean upperTail;
-	
-	public GeneDifferentialExpressionMetaAnalysisResultValueObject(GeneDifferentialExpressionMetaAnalysisResult result) {
-		this.id = result.getId();
-		this.gene = new GeneValueObject(result.getGene());
-		this.meanLogFoldChange = result.getMeanLogFoldChange();
-		this.metaPvalue = result.getMetaPvalue();
-		this.metaPvalueRank = result.getMetaPvalueRank();
-		this.metaQvalue = result.getMetaQvalue();
-		this.resultsUsedCount = result.getResultsUsed().size();
-		this.upperTail = result.getUpperTail();
-	}
 	
 	public Long getId() {
 		return this.id;
@@ -90,11 +79,11 @@ public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements	
 	public void setMetaQvalue(Double metaQvalue) {
 		this.metaQvalue = metaQvalue;
 	}
-	public Integer getResultsUsedCount() {
-		return this.resultsUsedCount;
+	public Integer getNumResultsUsed() {
+		return this.numResultsUsed;
 	}
-	public void setResultsUsedCount(Integer resultsUsedCount) {
-		this.resultsUsedCount = resultsUsedCount;
+	public void setNumResultsUsed(Integer numResultsUsed) {
+		this.numResultsUsed = numResultsUsed;
 	}
 	public Boolean getUpperTail() {
 		return this.upperTail;

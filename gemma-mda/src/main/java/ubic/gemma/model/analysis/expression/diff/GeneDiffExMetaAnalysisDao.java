@@ -65,4 +65,7 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
     /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
+    public int getNumResults(GeneDifferentialExpressionMetaAnalysis analysis);
+    public int getNumResultSetsIncluded(GeneDifferentialExpressionMetaAnalysis analysis);
+    public int getNumResultsUsed(GeneDifferentialExpressionMetaAnalysisResult result);
 }

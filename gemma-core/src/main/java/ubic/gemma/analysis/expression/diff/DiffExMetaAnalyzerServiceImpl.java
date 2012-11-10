@@ -75,9 +75,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @see ubic.gemma.analysis.expression.diff.DiffExMetaAnalyserService#analyze(java.util.Collection)
      */
     @Override
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<ExpressionAnalysisResultSet> resultSets,
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds,
             String name, String description ) {
 
+    	Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet(analysisResultSetIds);
+    	
         if ( resultSets.size() < 2 ) {
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
         }
@@ -249,6 +251,22 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         return analysis;
     }
+
+	private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet(Collection<Long> analysisResultSetIds) {
+		Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+		
+		for (Long analysisResultSetId : analysisResultSetIds) {
+			ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService.loadAnalysisResultSet(analysisResultSetId);
+			
+	        if ( expressionAnalysisResultSet == null ) {
+	            log.warn( "No diff ex result set with ID=" + analysisResultSetId );
+                throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
+	        }
+		
+	        resultSets.add(expressionAnalysisResultSet);
+		}
+		return resultSets;
+	}
 
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();

@@ -9,7 +9,6 @@ Ext.namespace('Gemma');
 Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 	title: 'Results',
 	nextButtonText: 'Save results',
-	numResultsRequired: 100,
 	metaAnalysis: null,
 	initComponent: function() {
 		var nextButton = this.createNextButton();
@@ -25,14 +24,8 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 			if (geneDifferentialExpressionMetaAnalysis) {
 				resultText += 
 					'<b>Number of genes analyzed</b>: ' + geneDifferentialExpressionMetaAnalysis.numGenesAnalyzed + '<br />' +
-					'<b>Number of genes with q-value < 0.1</b>: ' + geneDifferentialExpressionMetaAnalysis.numResultsInitially + '<br />' 
+					'<b>Number of genes with q-value < 0.1</b>: ' + geneDifferentialExpressionMetaAnalysis.results.length + '<br />' 
 					
-				if (geneDifferentialExpressionMetaAnalysis.numResultsInitially > this.numResultsRequired) {
-					resultText += '<b>Only the top 100 results are displayed.</b><br />';
-				}
-					
-				resultText += '<br />';
-				
 				var stringHtmlStyle = 'style="padding: 0 10px 0 10px;"'; 
 				var numberHtmlStyle = 'style="padding: 0 10px 0 10px; text-align: right;"';
 				
@@ -55,7 +48,7 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 							'<td ' + numberHtmlStyle + '>' + result.metaPvalue.toExponential(2) + '</td>' +
 							'<td ' + numberHtmlStyle + '>' + result.metaQvalue.toExponential(2) + '</td>' +
 							'<td ' + numberHtmlStyle + '>' + result.meanLogFoldChange.toFixed(2) + '</td>' +
-							'<td ' + numberHtmlStyle + '>' + result.resultsUsedCount + '</td>' +
+							'<td ' + numberHtmlStyle + '>' + result.numResultsUsed + '</td>' +
 						'</tr>';
 				});
 				
@@ -146,10 +139,12 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 				resultSetIdsToBeSaved = resultSetIds;
 
 				resultLabel.setText('', false);
+
+				var numResultsRequired = -1;
 				
                 var callParams = [];
                 callParams.push(resultSetIds);
-                callParams.push(this.numResultsRequired);
+                callParams.push(numResultsRequired); // TODO: This should be removed after server code is updated not to require it.
                 callParams.push({
                     callback : function(data) {
                         var k = new Gemma.WaitHandler();

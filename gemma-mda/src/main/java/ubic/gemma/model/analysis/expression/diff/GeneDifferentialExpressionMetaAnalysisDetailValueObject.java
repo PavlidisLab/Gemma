@@ -21,13 +21,12 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * @author frances
  * @version $Id$
  */
-public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serializable {
+public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements Serializable {
 
 	/**
 	 * The serial version UID of this class. Needed for serialization.
@@ -38,7 +37,6 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 	private String name;
 	private String description;
 	private Integer numGenesAnalyzed;
-	private Integer numResultsInitially;
 	private Double qvalueThresholdForStorage;
 	private Collection<IncludedResultSetDetail> includedResultSetDetails;
 	private Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results;
@@ -55,7 +53,7 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 			this.experimentId = experimentId;
 		}
 		public Long getAnalysisId() {
-			return analysisId;
+			return this.analysisId;
 		}
 		public void setAnalysisId(Long analysisId) {
 			this.analysisId = analysisId;
@@ -65,32 +63,6 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 		}
 		public void setResultSetId(Long resultSetId) {
 			this.resultSetId = resultSetId;
-		}
-	}
-	
-	public GeneDifferentialExpressionMetaAnalysisValueObject(GeneDifferentialExpressionMetaAnalysis metaAnalysis) {
-		this.id = metaAnalysis.getId();
-		this.name = metaAnalysis.getName();
-		this.description = metaAnalysis.getDescription();
-		this.numGenesAnalyzed = metaAnalysis.getNumGenesAnalyzed();
-		this.numResultsInitially = metaAnalysis.getResults().size();
-		this.qvalueThresholdForStorage = metaAnalysis.getQvalueThresholdForStorage();
-		
-		Collection<ExpressionAnalysisResultSet> resultSetsIncluded = metaAnalysis.getResultSetsIncluded();
-		
-		this.includedResultSetDetails = new HashSet<IncludedResultSetDetail>(resultSetsIncluded.size());
-		
-		for (ExpressionAnalysisResultSet resultSetIncluded: resultSetsIncluded) {
-			IncludedResultSetDetail includedResultSetDetail = new IncludedResultSetDetail();
-			includedResultSetDetail.setExperimentId(resultSetIncluded.getAnalysis().getExperimentAnalyzed().getId());
-			includedResultSetDetail.setAnalysisId(resultSetIncluded.getAnalysis().getId());
-			includedResultSetDetail.setResultSetId(resultSetIncluded.getId());
-			this.includedResultSetDetails.add(includedResultSetDetail);
-		}
-		
-		this.results = new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>();
-		for (GeneDifferentialExpressionMetaAnalysisResult result : metaAnalysis.getResults()) {
-			this.results.add(new GeneDifferentialExpressionMetaAnalysisResultValueObject(result));
 		}
 	}
 	
@@ -126,14 +98,6 @@ public class GeneDifferentialExpressionMetaAnalysisValueObject implements Serial
 		this.numGenesAnalyzed = numGenesAnalyzed;
 	}
 	
-	public Integer getNumResultsInitially() {
-		return this.numResultsInitially;
-	}
-
-	public void setNumResultsInitially(Integer numResultsInitially) {
-		this.numResultsInitially = numResultsInitially;
-	}
-
 	public Double getQvalueThresholdForStorage() {
 		return this.qvalueThresholdForStorage;
 	}

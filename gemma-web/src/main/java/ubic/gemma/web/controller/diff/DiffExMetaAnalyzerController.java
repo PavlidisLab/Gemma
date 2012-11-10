@@ -32,8 +32,10 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTask;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 import ubic.gemma.util.ConfigUtils;
@@ -87,6 +89,9 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
+    @Autowired
+    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
+    
     /**
      * Show meta-analysis manager
      * 
@@ -101,7 +106,7 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
     
 	public String analyzeResultSets(Collection<Long> analysisResultSetIds, int resultSetCount) {
 		DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, resultSetCount );
-		return super.run( cmd );
+		return super.run( cmd ); 
     }
     
 	public String saveResultSets(Collection<Long> analysisResultSetIds, String name, String description) {
@@ -109,8 +114,12 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
 		return super.run( cmd );
 	}
 
-	public Collection<GeneDifferentialExpressionMetaAnalysisValueObject> loadMyAnalyses() {
-		return this.geneDiffExMetaAnalysisService.loadMyAnalysisVOs();
+	public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis(Long id) {
+		return this.geneDiffExMetaAnalysisHelperService.getMetaAnalysis(id);
+	}
+	
+	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses() {
+		return this.geneDiffExMetaAnalysisHelperService.getMyMetaAnalyses();
 	}
 
 	// TODO: should do something if analysis cannot be removed.

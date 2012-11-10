@@ -50,11 +50,15 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	},
 	viewAnalysis: function(id) {
 		var recordData = this.store.getById(id).data;
-		var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
-			title: 'View Meta-analysis for ' + recordData.name,
-			metaAnalysis: recordData			
-		});  
-		viewMetaAnalysisWindow.show();
+		
+		DiffExMetaAnalyzerController.getMetaAnalysis(recordData.id, function(analysis) {
+			var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
+				title: 'View Meta-analysis for ' + analysis.name,
+				metaAnalysis: analysis
+				
+			});  
+			viewMetaAnalysisWindow.show();
+		});
 	},
     initComponent: function() {
     	var metaAnalysisWindow;
@@ -73,10 +77,10 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.data.JsonStore({
 				autoLoad: true,
-				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.loadMyAnalyses),
+				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.getMyMetaAnalyses),
 				fields: [ 'id',
 					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
-					'description', 'numGenesAnalyzed', 'numResultsInitially', 'includedResultSetDetails', 'results' ],
+					'description', 'numGenesAnalyzed', 'numResults', 'numResultSetsIncluded' ],
 				idProperty: 'id',
 				sortInfo: { field: 'name', direction: 'ASC'	}
 			}),
@@ -98,18 +102,12 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					width: 0.2
 				}, {
 					header: 'Genes with q-value < 0.1',
-					dataIndex: 'results',
-					width: 0.2,
-					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						return value.length;
-					}
+					dataIndex: 'numResults',
+					width: 0.25
 				}, {
 					header: 'Result sets included',
-					dataIndex: 'includedResultSetDetails',
-					width: 0.2,
-					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						return value.length;
-					}
+					dataIndex: 'numResultSetsIncluded',
+					width: 0.2
 				}, {
 					header: 'Admin',
 					id: 'id',
