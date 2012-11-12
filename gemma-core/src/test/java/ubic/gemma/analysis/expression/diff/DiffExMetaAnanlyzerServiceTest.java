@@ -43,7 +43,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -143,6 +142,14 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         deleteSet( "GSE2018" );
         deleteSet( "GSE2111" );
         deleteSet( "GSE6344" );
+        for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( arrayDesignService
+                .findByShortName( "GPL97" ) ) ) {
+            experimentService.delete( ee );
+        }
+        for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( arrayDesignService
+                .findByShortName( "GPL96" ) ) ) {
+            experimentService.delete( ee );
+        }
     }
 
     private void deleteSet( String shortName ) {
@@ -169,11 +176,6 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds1 );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds2 );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds3 );
-
-        /*
-         * Add experimental designs if needed
-         */
-        //
 
         /*
          * Run differential analyses.
@@ -205,15 +207,16 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         ExpressionAnalysisResultSet rs2 = ds2Analyses.iterator().next().getResultSets().iterator().next();
         ExpressionAnalysisResultSet rs3 = ds3Analyses.iterator().next().getResultSets().iterator().next();
 
-		Collection<Long> analysisResultSetIds = new HashSet<Long>();
-		analysisResultSetIds.add( rs1.getId() );
-		analysisResultSetIds.add( rs2.getId() );
-		analysisResultSetIds.add( rs3.getId() );
+        Collection<Long> analysisResultSetIds = new HashSet<Long>();
+        analysisResultSetIds.add( rs1.getId() );
+        analysisResultSetIds.add( rs2.getId() );
+        analysisResultSetIds.add( rs3.getId() );
 
         /*
          * Perform the meta-analysis without saving it.
          */
-		GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( analysisResultSetIds, null, null );
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService
+                .analyze( analysisResultSetIds, null, null );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 
