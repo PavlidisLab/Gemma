@@ -150,6 +150,9 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
                 .findByShortName( "GPL96" ) ) ) {
             experimentService.delete( ee );
         }
+
+        arrayDesignService.remove( arrayDesignService.findByShortName( "GPL96" ) );
+        arrayDesignService.remove( arrayDesignService.findByShortName( "GPL97" ) );
     }
 
     private void deleteSet( String shortName ) {
