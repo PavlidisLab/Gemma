@@ -137,6 +137,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
         Collection<Gene> genes = geneService.loadAll( testTaxon );
 
+        genes = geneService.thawLite( genes );
+
         assertEquals( 120, genes.size() );
 
         for ( Gene gene : genes ) {
