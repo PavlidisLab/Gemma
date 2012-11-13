@@ -50,15 +50,24 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	},
 	viewAnalysis: function(id) {
 		var recordData = this.store.getById(id).data;
-		
+
+		if (!this.loadMask) {
+			this.loadMask = new Ext.LoadMask(this.getEl(), {
+				msg: "Loading ..."
+			});
+		}
+		this.loadMask.show();
+
 		DiffExMetaAnalyzerController.getMetaAnalysis(recordData.id, function(analysis) {
+			this.loadMask.hide();			
+			
 			var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
 				title: 'View Meta-analysis for ' + analysis.name,
 				metaAnalysis: analysis
 				
 			});  
 			viewMetaAnalysisWindow.show();
-		});
+		}.createDelegate(this));
 	},
     initComponent: function() {
     	var metaAnalysisWindow;
