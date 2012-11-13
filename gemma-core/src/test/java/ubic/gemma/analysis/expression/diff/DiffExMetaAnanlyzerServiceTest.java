@@ -240,10 +240,11 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
         }
 
-        // exercises ancillary methods.
-        Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
-                .getMyMetaAnalyses();
-        assertTrue( myMetaAnalyses.size() > 0 );
+        // // exercises ancillary methods.
+        // Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses =
+        // geneDiffExMetaAnalysisHelperService
+        // .getMyMetaAnalyses();
+        // assertTrue( myMetaAnalyses.size() > 0 );
     }
 
     private void deleteSet( String shortName ) {
