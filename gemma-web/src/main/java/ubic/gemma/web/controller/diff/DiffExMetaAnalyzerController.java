@@ -123,7 +123,7 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
 	}
 
 	// TODO: should do something if analysis cannot be removed.
-	public void removeAnalysis(Long id) {
+	public void removeMetaAnalysis(Long id) {
 		this.geneDiffExMetaAnalysisService.delete(id);
 	}
 	

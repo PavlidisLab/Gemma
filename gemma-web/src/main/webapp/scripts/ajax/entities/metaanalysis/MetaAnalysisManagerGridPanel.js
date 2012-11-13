@@ -16,16 +16,16 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		deferEmptyText: false,
 		emptyText: 'No meta-analysis to display'
     },
-	removeAnalysis: function(id) {
+	removeMetaAnalysis: function(id) {
 		Ext.MessageBox.confirm('Confirm',
 			'Are you sure you want to remove this meta-analysis?',
 			function(button) {
 				if (button === 'yes') {
-					DiffExMetaAnalyzerController.removeAnalysis(id, function() {
+					DiffExMetaAnalyzerController.removeMetaAnalysis(id, function() {
 						this.store.reload();
 					}.createDelegate(this));
 // TODO: the following code was copied from phenotype section. Should do something similar.					
-//							DiffExMetaAnalyzerController.removeAnalysis(id, function(validateEvidenceValueObject) {
+//							DiffExMetaAnalyzerController.removeMetaAnalysis(id, function(validateEvidenceValueObject) {
 //								if (validateEvidenceValueObject == null) {
 //									this.fireEvent('phenotypeAssociationChanged');
 //								} else {
@@ -124,7 +124,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-	            		adminLinks += generateLink('removeAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis');
+	            		adminLinks += generateLink('removeMetaAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis');
 		            	
 						return adminLinks;
 		            },

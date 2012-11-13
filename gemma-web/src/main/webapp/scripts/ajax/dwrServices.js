@@ -330,9 +330,9 @@ DiffExMetaAnalyzerController.getMyMetaAnalyses = function(callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
 			'getMyMetaAnalyses', callback);
 };
-DiffExMetaAnalyzerController.removeAnalysis = function(p0, callback) {
+DiffExMetaAnalyzerController.removeMetaAnalysis = function(p0, callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
-			'removeAnalysis', p0, callback);
+			'removeMetaAnalysis', p0, callback);
 };
 DiffExMetaAnalyzerController.saveResultSets = function(p0, p1, p2, callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
