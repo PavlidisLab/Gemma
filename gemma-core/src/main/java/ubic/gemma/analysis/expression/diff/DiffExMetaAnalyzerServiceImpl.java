@@ -75,11 +75,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @see ubic.gemma.analysis.expression.diff.DiffExMetaAnalyserService#analyze(java.util.Collection)
      */
     @Override
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds,
-            String name, String description ) {
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds, String name,
+            String description ) {
 
-    	Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet(analysisResultSetIds);
-    	
+        Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet( analysisResultSetIds );
+
         if ( resultSets.size() < 2 ) {
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
         }
@@ -137,6 +137,10 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsDown = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
         for ( Gene g : gene2result.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> res4gene = gene2result.get( g );
+
+            // FIXME this might be avoidable, could be slow. Better to do in bulk elsewhere.
+            differentialExpressionResultService.thaw( res4gene );
+
             Map<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>> results4geneInOneResultSet = new HashMap<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>>();
             for ( DifferentialExpressionAnalysisResult r : res4gene ) {
                 Collection<ContrastResult> contrasts = r.getContrasts();
@@ -259,21 +263,22 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         return analysis;
     }
 
-	private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet(Collection<Long> analysisResultSetIds) {
-		Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-		
-		for (Long analysisResultSetId : analysisResultSetIds) {
-			ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService.loadAnalysisResultSet(analysisResultSetId);
-			
-	        if ( expressionAnalysisResultSet == null ) {
-	            log.warn( "No diff ex result set with ID=" + analysisResultSetId );
+    private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet( Collection<Long> analysisResultSetIds ) {
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+
+        for ( Long analysisResultSetId : analysisResultSetIds ) {
+            ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService
+                    .loadAnalysisResultSet( analysisResultSetId );
+
+            if ( expressionAnalysisResultSet == null ) {
+                log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
-	        }
-		
-	        resultSets.add(expressionAnalysisResultSet);
-		}
-		return resultSets;
-	}
+            }
+
+            resultSets.add( expressionAnalysisResultSet );
+        }
+        return resultSets;
+    }
 
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();
