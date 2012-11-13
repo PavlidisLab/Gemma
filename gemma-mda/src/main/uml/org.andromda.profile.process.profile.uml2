@@ -1,70 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527578125_463523_83" name="process" metamodelReference="_11_5_e240333_1154527578125_463523_83_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_2AL0gi0dEeKKpNxXBGS1hw" source="attributes">
-    <details xmi:id="_2AL0gy0dEeKKpNxXBGS1hw" key="version" value="0"/>
+  <eAnnotations xmi:id="_4qLlmy0xEeKKpNxXBGS1hw" source="attributes">
+    <details xmi:id="_4qLlnC0xEeKKpNxXBGS1hw" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_2AL0hC0dEeKKpNxXBGS1hw" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_2AL0hS0dEeKKpNxXBGS1hw" name="process_0" nsURI="http:///process_0_1-VaUC0dEeKKpNxXBGS1hw.profile.uml2" nsPrefix="process_0">
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AL0hi0dEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtaskblocking">
-        <eAnnotations xmi:id="_2AL0hy0dEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_345527_11"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_2AL0iC0dEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtaskblocking" ordered="false" lowerBound="1" defaultValueLiteral="false">
-          <eAnnotations xmi:id="_2AL0iS0dEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_2AL0ii0dEeKKpNxXBGS1hw" key="documentation" value="Denotes this task to block signalling it's state unless it has ended."/>
+  <eAnnotations xmi:id="_4qLlnS0xEeKKpNxXBGS1hw" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_4qLlni0xEeKKpNxXBGS1hw" name="process_0" nsURI="http:///process_0_4pzyAC0xEeKKpNxXBGS1hw.profile.uml2" nsPrefix="process_0">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlny0xEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtaskblocking">
+        <eAnnotations xmi:id="_4qLloC0xEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_345527_11"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4qLloS0xEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtaskblocking" ordered="false" lowerBound="1" defaultValueLiteral="false">
+          <eAnnotations xmi:id="_4qLloi0xEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4qLloy0xEeKKpNxXBGS1hw" key="documentation" value="Denotes this task to block signalling it's state unless it has ended."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AL0iy0dEeKKpNxXBGS1hw" name="process__BusinessProcess">
-        <eAnnotations xmi:id="_2AL0jC0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568518_911545_8"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlpC0xEeKKpNxXBGS1hw" name="process__BusinessProcess">
+        <eAnnotations xmi:id="_4qLlpS0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568518_911545_8"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AL0jS0dEeKKpNxXBGS1hw" name="process__NodeLeave">
-        <eAnnotations xmi:id="_2AL0ji0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568393_539365_7"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlpi0xEeKKpNxXBGS1hw" name="process__NodeLeave">
+        <eAnnotations xmi:id="_4qLlpy0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568393_539365_7"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AL0jy0dEeKKpNxXBGS1hw" name="process__Timer">
-        <eAnnotations xmi:id="_2AL0kC0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1120030836093_315389_0"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlqC0xEeKKpNxXBGS1hw" name="process__Timer">
+        <eAnnotations xmi:id="_4qLlqS0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1120030836093_315389_0"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AL0kS0dEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimertransition">
-        <eAnnotations xmi:id="_2AL0ki0dEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_517863_14"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_2AL0ky0dEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimertransition" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_2AL0lC0dEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_2AMbgC0dEeKKpNxXBGS1hw" key="documentation" value="The outgoing transition to take after the timer has executed."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlqi0xEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimertransition">
+        <eAnnotations xmi:id="_4qLlqy0xEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_517863_14"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4qLlrC0xEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimertransition" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4qLlrS0xEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4qLlri0xEeKKpNxXBGS1hw" key="documentation" value="The outgoing transition to take after the timer has executed."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbgS0dEeKKpNxXBGS1hw" name="process__BeforeSignal">
-        <eAnnotations xmi:id="_2AMbgi0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129567612_128908_4"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlry0xEeKKpNxXBGS1hw" name="process__BeforeSignal">
+        <eAnnotations xmi:id="_4qLlsC0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129567612_128908_4"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbgy0dEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimerduedate">
-        <eAnnotations xmi:id="_2AMbhC0dEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_812393_17"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_2AMbhS0dEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimerduedate" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_2AMbhi0dEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_2AMbhy0dEeKKpNxXBGS1hw" key="documentation" value="When this timer is due, the value of this field requires to be in the specific jBpm format."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlsS0xEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimerduedate">
+        <eAnnotations xmi:id="_4qLlsi0xEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_812393_17"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4qLlsy0xEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimerduedate" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4qLltC0xEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4qLltS0xEeKKpNxXBGS1hw" key="documentation" value="When this timer is due, the value of this field requires to be in the specific jBpm format."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbiC0dEeKKpNxXBGS1hw" name="process__Task">
-        <eAnnotations xmi:id="_2AMbiS0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129548521_871830_1"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlti0xEeKKpNxXBGS1hw" name="process__Task">
+        <eAnnotations xmi:id="_4qLlty0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129548521_871830_1"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbii0dEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimerrepeat">
-        <eAnnotations xmi:id="_2AMbiy0dEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_300330_20"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_2AMbjC0dEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimerrepeat" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_2AMbjS0dEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_2AMbji0dEeKKpNxXBGS1hw" key="documentation" value="The number of times to repeat this timer."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLluC0xEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmtimerrepeat">
+        <eAnnotations xmi:id="_4qLluS0xEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_300330_20"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4qLlui0xEeKKpNxXBGS1hw" name="_andromdaprocessjbpmtimerrepeat" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4qLluy0xEeKKpNxXBGS1hw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4qLlvC0xEeKKpNxXBGS1hw" key="documentation" value="The number of times to repeat this timer."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbjy0dEeKKpNxXBGS1hw" name="process__NodeEnter">
-        <eAnnotations xmi:id="_2AMbkC0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568378_575653_6"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlvS0xEeKKpNxXBGS1hw" name="process__NodeEnter">
+        <eAnnotations xmi:id="_4qLlvi0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129568378_575653_6"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbkS0dEeKKpNxXBGS1hw" name="process__AfterSignal">
-        <eAnnotations xmi:id="_2AMbki0dEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129567784_936874_5"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlvy0xEeKKpNxXBGS1hw" name="process__AfterSignal">
+        <eAnnotations xmi:id="_4qLlwC0xEeKKpNxXBGS1hw" source="stereotype" references="_9_0_1fe00f9_1119129567784_936874_5"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_2AMbky0dEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmassignmentexpression">
-        <eAnnotations xmi:id="_2AMblC0dEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_297219_4"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_2AMblS0dEeKKpNxXBGS1hw" name="_andromdaprocessjbpmassignmentexpression" ordered="false" upperBound="-1" defaultValueLiteral="">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4qLlwS0xEeKKpNxXBGS1hw" name="process___andromdaprocessjbpmassignmentexpression">
+        <eAnnotations xmi:id="_4qLlwi0xEeKKpNxXBGS1hw" source="stereotype" references="_11_5_e240333_1154527555484_297219_4"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4qLlwy0xEeKKpNxXBGS1hw" name="_andromdaprocessjbpmassignmentexpression" ordered="false" upperBound="-1" defaultValueLiteral="">
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>

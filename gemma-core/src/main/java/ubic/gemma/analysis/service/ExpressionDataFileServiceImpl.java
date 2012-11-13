@@ -45,7 +45,6 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -53,10 +52,10 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.ProbeLink;
 import ubic.gemma.model.common.description.Characteristic;
@@ -426,30 +425,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 + "_diffExpAnalysis_" + diff.getId() + DATA_ARCHIVE_FILE_SUFFIX;
     }
 
-    /**
-     * @param diff
-     * @return
-     */
-    private String getDiffExFileName( DifferentialExpressionAnalysis diff ) {
-        BioAssaySet experimentAnalyzed = diff.getExperimentAnalyzed();
-
-        if ( experimentAnalyzed instanceof ExpressionExperiment ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) experimentAnalyzed;
-            return experimentAnalyzed.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" )
-                    + "_diffExpAnalysis_" + diff.getId() + DATA_FILE_SUFFIX;
-
-        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
-            ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) experimentAnalyzed;
-            ExpressionExperiment ee = subset.getSourceExperiment();
-
-            return ee.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" ) + "_subset_" + subset.getId()
-                    + "_diffExpAnalysis_" + diff.getId() + DATA_FILE_SUFFIX;
-        } else {
-            throw new UnsupportedOperationException( "Don't know about " + experimentAnalyzed.getClass().getName() );
-        }
-
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -551,34 +526,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         writer.write( buf.toString() );
         writer.flush();
         writer.close();
-
-    }
-
-    private void writeDiffExpressionData( File f, DifferentialExpressionAnalysis analysis ) {
-        Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
-        try {
-            if ( results == null || results.isEmpty() ) {
-                log.warn( "No differential expression results found for " + analysis );
-                return;
-            }
-
-            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( analysis
-                    .getExperimentAnalyzed() );
-            Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
-
-            // Write header
-            StringBuilder buf = new StringBuilder();
-            buf.append( makeDiffExpressionFileHeader( analysis, geneAnnotations ) );
-
-            analysisResultSetsToString( results, geneAnnotations, buf );
-
-            Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( f ) ) );
-            writer.write( buf.toString() );
-            writer.flush();
-            writer.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
 
     }
 
@@ -734,32 +681,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         } // ears.getResults loop
         return sortedFirstColumnOfResults;
-    }
-
-    /**
-     * @param probeAnalysisResult
-     * @return
-     */
-    private String formatDiffExResult( ExpressionExperiment ee,
-            DifferentialExpressionAnalysisResult probeAnalysisResult, String factorName, String factorURI,
-            String baselineDescription ) {
-
-        CompositeSequence cs = probeAnalysisResult.getProbe();
-
-        Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-
-        StringBuilder buf = new StringBuilder();
-        for ( ContrastResult cr : contrasts ) {
-            FactorValue factorValue = cr.getFactorValue();
-
-            String direction = cr.getLogFoldChange() < 0 ? "-" : "+";
-
-            String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
-
-            // FIXME
-        }
-
-        return buf.toString();
     }
 
     /**
@@ -1024,6 +945,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 
+    /**
+     * @param resultSet
+     * @param geneAnnotations
+     * @return
+     */
     public String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
             Map<Long, String[]> geneAnnotations ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
@@ -1043,6 +969,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         buf.append( '\n' );
+
+        differentialExpressionResultService.thaw( resultSet.getResults() );
 
         // Generate probe details
         for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
