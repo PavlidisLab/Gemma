@@ -28,7 +28,22 @@ import java.util.Collection;
  * @version $Id$
  */
 public interface GeneDiffExMetaAnalysisHelperService {
-    public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis(Long id);
+
+    /**
+     * @param id
+     * @return
+     */
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis( Long id );
+
+    /**
+     * @return
+     */
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses();
-	public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(GeneDifferentialExpressionMetaAnalysis metaAnalysis);
+
+    /**
+     * @param metaAnalysis
+     * @return
+     */
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
+            GeneDifferentialExpressionMetaAnalysis metaAnalysis );
 }

@@ -27,68 +27,89 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @author frances
  * @version $Id$
  */
-public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements	Serializable {
+public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements Serializable,
+        Comparable<GeneDifferentialExpressionMetaAnalysisResultValueObject> {
 
-	/**
-	 * The serial version UID of this class. Needed for serialization.
-	 */
-	private static final long serialVersionUID = 6099286095885830140L;
-	
-	private Long id;
-	private GeneValueObject gene;
-	private Double meanLogFoldChange;
-	private Double metaPvalue;
-	private Double metaPvalueRank;
-	private Double metaQvalue;
-	private Integer numResultsUsed;
-	private Boolean upperTail;
-	
-	public Long getId() {
-		return this.id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public GeneValueObject getGene() {
-		return this.gene;
-	}
-	public void setGene(GeneValueObject gene) {
-		this.gene = gene;
-	}
-	public Double getMeanLogFoldChange() {
-		return this.meanLogFoldChange;
-	}
-	public void setMeanLogFoldChange(Double meanLogFoldChange) {
-		this.meanLogFoldChange = meanLogFoldChange;
-	}
-	public Double getMetaPvalue() {
-		return this.metaPvalue;
-	}
-	public void setMetaPvalue(Double metaPvalue) {
-		this.metaPvalue = metaPvalue;
-	}
-	public Double getMetaPvalueRank() {
-		return this.metaPvalueRank;
-	}
-	public void setMetaPvalueRank(Double metaPvalueRank) {
-		this.metaPvalueRank = metaPvalueRank;
-	}
-	public Double getMetaQvalue() {
-		return this.metaQvalue;
-	}
-	public void setMetaQvalue(Double metaQvalue) {
-		this.metaQvalue = metaQvalue;
-	}
-	public Integer getNumResultsUsed() {
-		return this.numResultsUsed;
-	}
-	public void setNumResultsUsed(Integer numResultsUsed) {
-		this.numResultsUsed = numResultsUsed;
-	}
-	public Boolean getUpperTail() {
-		return this.upperTail;
-	}
-	public void setUpperTail(Boolean upperTail) {
-		this.upperTail = upperTail;
-	}
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 6099286095885830140L;
+
+    private Long id;
+    private GeneValueObject gene;
+    private Double meanLogFoldChange;
+    private Double metaPvalue;
+    private Double metaPvalueRank;
+    private Double metaQvalue;
+    private Integer numResultsUsed;
+    private Boolean upperTail;
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public GeneValueObject getGene() {
+        return this.gene;
+    }
+
+    public void setGene( GeneValueObject gene ) {
+        this.gene = gene;
+    }
+
+    public Double getMeanLogFoldChange() {
+        return this.meanLogFoldChange;
+    }
+
+    public void setMeanLogFoldChange( Double meanLogFoldChange ) {
+        this.meanLogFoldChange = meanLogFoldChange;
+    }
+
+    public Double getMetaPvalue() {
+        return this.metaPvalue;
+    }
+
+    public void setMetaPvalue( Double metaPvalue ) {
+        this.metaPvalue = metaPvalue;
+    }
+
+    public Double getMetaPvalueRank() {
+        return this.metaPvalueRank;
+    }
+
+    public void setMetaPvalueRank( Double metaPvalueRank ) {
+        this.metaPvalueRank = metaPvalueRank;
+    }
+
+    public Double getMetaQvalue() {
+        return this.metaQvalue;
+    }
+
+    public void setMetaQvalue( Double metaQvalue ) {
+        this.metaQvalue = metaQvalue;
+    }
+
+    public Integer getNumResultsUsed() {
+        return this.numResultsUsed;
+    }
+
+    public void setNumResultsUsed( Integer numResultsUsed ) {
+        this.numResultsUsed = numResultsUsed;
+    }
+
+    public Boolean getUpperTail() {
+        return this.upperTail;
+    }
+
+    public void setUpperTail( Boolean upperTail ) {
+        this.upperTail = upperTail;
+    }
+
+    @Override
+    public int compareTo( GeneDifferentialExpressionMetaAnalysisResultValueObject other ) {
+        return this.getMetaPvalue().compareTo( other.getMetaPvalue() );
+    }
 }

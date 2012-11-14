@@ -47,32 +47,35 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
     @Autowired
     public GeneDiffExMetaAnalysisDaoImpl( SessionFactory sessionFactory ) {
-    	super( GeneDifferentialExpressionMetaAnalysisImpl.class );
+        super( GeneDifferentialExpressionMetaAnalysisImpl.class );
         super.setSessionFactory( sessionFactory );
     }
 
     @Override
-    public int getNumResults(GeneDifferentialExpressionMetaAnalysis analysis) {
-        final String queryString = "select count(r) from GeneDifferentialExpressionMetaAnalysisImpl g inner join g.results r where g=:g";
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
-        return ( ( Long ) list.iterator().next() ).intValue();
-    }
-    
-    @Override
-    public int getNumResultSetsIncluded(GeneDifferentialExpressionMetaAnalysis analysis) {
-        final String queryString = "select count(r) from GeneDifferentialExpressionMetaAnalysisImpl g inner join g.resultSetsIncluded r where g=:g";
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
-        return ( ( Long ) list.iterator().next() ).intValue();
+    public int getNumResults( GeneDifferentialExpressionMetaAnalysis analysis ) {
+        assert analysis != null;
+        final String queryString = "select count(r) from GeneDifferentialExpressionMetaAnalysisImpl g inner join g.results r where g.id=:id";
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", analysis.getId() );
+        return ( ( Long ) list.get( 0 ) ).intValue();
     }
 
-    // TODO: NOT USED FOR NOW and can be removed: it is even slower if I use it.			
     @Override
-    public int getNumResultsUsed(GeneDifferentialExpressionMetaAnalysisResult result) {
-        final String queryString = "select count(r) from GeneDifferentialExpressionMetaAnalysisResultImpl g inner join g.resultsUsed r where g=:g";
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "g", result );
-        return ( ( Long ) list.iterator().next() ).intValue();
+    public int getNumResultSetsIncluded( GeneDifferentialExpressionMetaAnalysis analysis ) {
+        assert analysis != null;
+        final String queryString = "select count(r) from GeneDifferentialExpressionMetaAnalysisImpl g inner join g.resultSetsIncluded r where g.id=:id";
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", analysis.getId() );
+        return ( ( Long ) list.get( 0 ) ).intValue();
     }
-    
+
+    // TODO: NOT USED FOR NOW and can be removed: it is even slower if I use it.
+    @Override
+    public int getNumResultsUsed( GeneDifferentialExpressionMetaAnalysisResult result ) {
+        assert result != null;
+        final String queryString = "select count(re) from GeneDifferentialExpressionMetaAnalysisResultImpl r inner join r.resultsUsed re where r.id=:id";
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", result.getId() );
+        return ( ( Long ) list.get( 0 ) ).intValue();
+    }
+
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation ) {
         Long id = investigation.getId();
@@ -150,8 +153,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
         return results;
     }
-    
-    
+
     /** loads a DifferentialExpressionMetaAnalysis containing a specifc result */
     @Override
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {

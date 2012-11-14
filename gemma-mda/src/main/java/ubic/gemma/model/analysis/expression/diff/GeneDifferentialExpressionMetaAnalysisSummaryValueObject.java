@@ -26,64 +26,83 @@ import java.io.Serializable;
  * @version $Id$
  */
 public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements Serializable {
-	/**
-	 * The serial version UID of this class. Needed for serialization.
-	 */
-	private static final long serialVersionUID = -1856182824742323129L;
-	
-	private Long id;
-	private String name;
-	private String description;
-	private Integer numGenesAnalyzed;
-	private Integer numResults;
-	private Integer numResultSetsIncluded;
-	
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -1856182824742323129L;
 
-	public Long getId() {
-		return this.id;
-	}
+    private String description;
+    private Long id;
+    private String name;
+    private Integer numGenesAnalyzed;
+    private Integer numResults;
+    private Integer numResultSetsIncluded;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        GeneDifferentialExpressionMetaAnalysisSummaryValueObject other = ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) return false;
+        } else if ( !id.equals( other.id ) ) return false;
+        return true;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getDescription() {
+        return this.description;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public Long getId() {
+        return this.id;
+    }
 
-	public String getDescription() {
-		return this.description;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public Integer getNumGenesAnalyzed() {
+        return this.numGenesAnalyzed;
+    }
 
-	public Integer getNumGenesAnalyzed() {
-		return this.numGenesAnalyzed;
-	}
-	
-	public void setNumGenesAnalyzed(Integer numGenesAnalyzed) {
-		this.numGenesAnalyzed = numGenesAnalyzed;
-	}
+    public Integer getNumResults() {
+        return this.numResults;
+    }
 
-	public Integer getNumResults() {
-		return this.numResults;
-	}
+    public Integer getNumResultSetsIncluded() {
+        return this.numResultSetsIncluded;
+    }
 
-	public void setNumResults(Integer numResults) {
-		this.numResults = numResults;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
+    }
 
-	public Integer getNumResultSetsIncluded() {
-		return this.numResultSetsIncluded;
-	}
+    public void setDescription( String description ) {
+        this.description = description;
+    }
 
-	public void setNumResultSetsIncluded(Integer numResultSetsIncluded) {
-		this.numResultSetsIncluded = numResultSetsIncluded;
-	}
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
+        this.numGenesAnalyzed = numGenesAnalyzed;
+    }
+
+    public void setNumResults( Integer numResults ) {
+        this.numResults = numResults;
+    }
+
+    public void setNumResultSetsIncluded( Integer numResultSetsIncluded ) {
+        this.numResultSetsIncluded = numResultSetsIncluded;
+    }
 }

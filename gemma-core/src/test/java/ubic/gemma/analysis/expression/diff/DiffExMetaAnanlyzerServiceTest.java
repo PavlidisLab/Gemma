@@ -37,9 +37,11 @@ import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
@@ -100,6 +102,11 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
 
     @After
     public void after() {
+
+        for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : geneDiffExMetaAnalysisHelperService
+                .getMyMetaAnalyses() ) {
+            analysisService.delete( vo.getId() );
+        }
         deleteSet( "GSE2018" );
         deleteSet( "GSE2111" );
         deleteSet( "GSE6344" );
@@ -238,14 +245,28 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
+
+            for ( DifferentialExpressionAnalysisResult res : r.getResultsUsed() ) {
+                res.getPvalue();
+            }
         }
 
+        metaAnalysis = analysisService.create( metaAnalysis );
+
+        assertNotNull( metaAnalysis.getId() );
+
         // // exercises ancillary methods.
-        // Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses =
-        // geneDiffExMetaAnalysisHelperService
-        // .getMyMetaAnalyses();
-        // assertTrue( myMetaAnalyses.size() > 0 );
+        Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
+                .getMyMetaAnalyses();
+        assertTrue( myMetaAnalyses.size() > 0 );
+
+        // assertEquals( myMetaAnalyses.iterator().next(),
+        // geneDiffExMetaAnalysisHelperService.getMetaAnalysis( metaAnalysis.getId() ) );
+
     }
+
+    @Autowired
+    private GeneDiffExMetaAnalysisService analysisService;
 
     private void deleteSet( String shortName ) {
         ExpressionExperiment set = experimentService.findByShortName( shortName );
