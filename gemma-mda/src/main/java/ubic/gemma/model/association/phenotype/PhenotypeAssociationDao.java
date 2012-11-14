@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.BaseDao;
 
@@ -62,6 +64,12 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable );
+
+    /** finds all external databases used by neurocarta */
+    public Collection<ExternalDatabase> findNeurocartaExternalDatabases();
+
+    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
+    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,

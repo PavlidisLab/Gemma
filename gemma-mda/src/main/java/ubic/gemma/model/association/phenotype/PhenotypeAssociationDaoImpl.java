@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,10 +32,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
@@ -101,7 +105,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds, Long taxonId,
             Integer limit ) {
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
-        if ( limit == 0 || ( paIds != null && paIds.size() == 0 )) return new ArrayList<PhenotypeAssociation>();
+        if ( limit == 0 || ( paIds != null && paIds.size() == 0 ) ) return new ArrayList<PhenotypeAssociation>();
         Session s = this.getSession();
         String queryString = "select p from PhenotypeAssociationImpl p " + "join p.status s "
                 + ( paIds != null || taxonId != null ? "where " : "" )
@@ -182,6 +186,48 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .add( Restrictions.isNull( "evidenceSource" ) );
 
         return geneQueryCriteria.list();
+    }
+
+    /** finds all external databases used by neurocarta */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<ExternalDatabase> findNeurocartaExternalDatabases() {
+        return this.getHibernateTemplate().find(
+                "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociationImpl as p" );
+    }
+
+    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
+    @SuppressWarnings("unchecked")
+    @Override
+    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase ) {
+
+        Long numEvidence = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase.id ="
+                        + externalDatabase.getId() ).iterator().next();
+
+        Long numGenes = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource.externalDatabase.id ="
+                        + externalDatabase.getId() ).iterator().next();
+
+        Long numPhenotypes = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase.id ="
+                        + externalDatabase.getId() ).iterator().next();
+
+        HibernateTemplate tpl = this.getHibernateTemplate();
+        tpl.setMaxResults( 1 );
+        String lastUpdateDate = ( ( Timestamp ) tpl
+                .find( "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase.id ="
+                        + externalDatabase.getId() + " order by p.status.lastUpdateDate desc" ).iterator().next() )
+                .toString();
+
+        ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
+                externalDatabase.getName(), numEvidence, numGenes, numPhenotypes, lastUpdateDate );
+
+        return externalDatabaseStatisticsValueObject;
+
     }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */

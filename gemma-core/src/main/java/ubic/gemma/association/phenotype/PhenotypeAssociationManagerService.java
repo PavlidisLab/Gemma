@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
@@ -209,17 +210,24 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
 
     /** return the list of the owners that have evidence in the system */
-    public  Collection<String> findEvidenceOwners();
-    
-    
-    /** creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis  
+    public abstract Collection<String> findEvidenceOwners();
+
+    /**
+     * find statistic on an external database that is used in neurocarta
+     * 
+     * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
+     */
+    public abstract Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics();
+
+    /**
+     * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis
      * 
      * @param geneDifferentialExpressionMetaAnalysisId id of the DiffExpressionMetaAnalysis
      * @param phenotypes phenotypes chosen
      * @param thresholdChosen threshold chosen to keep certain results
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
-    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+    public abstract ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
             Double thresholdChosen );
 

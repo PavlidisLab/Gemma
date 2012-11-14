@@ -53,6 +53,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -66,6 +67,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidence
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
@@ -96,10 +98,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private PhenotypeAssociationService associationService;
 
     @Autowired
-    private GeneService geneService = null;
+    private GeneService geneService;
 
     @Autowired
-    private HomologeneService homologeneService = null;
+    private HomologeneService homologeneService;
 
     @Autowired
     private PhenotypeAssoManagerServiceHelper phenotypeAssoManagerServiceHelper;
@@ -828,6 +830,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
 
         return this.convert2ValueObjects( phenotypeAssociations );
+    }
+
+    /**
+     * find statistic on an external database that is used in neurocarta
+     * 
+     * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
+     */
+    @Override
+    public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
+
+        Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new HashSet<ExternalDatabaseStatisticsValueObject>();
+
+        // all external sources use by Neurocarta
+        Collection<ExternalDatabase> externalDatabases = this.associationService.findNeurocartaExternalDatabases();
+
+        for ( ExternalDatabase externalDatabase : externalDatabases ) {
+
+            // find statistics for a neurocarta external datbase (numGene, numPhenotypes, etc.)
+            externalDatabaseStatisticsValueObjects.add( this.associationService
+                    .findStatisticsOnDatabase( externalDatabase ) );
+        }
+        return externalDatabaseStatisticsValueObjects;
     }
 
     /**
