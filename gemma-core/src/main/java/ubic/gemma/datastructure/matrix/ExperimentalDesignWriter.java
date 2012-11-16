@@ -95,8 +95,8 @@ public class ExperimentalDesignWriter {
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
 
             /* column 0 of the design matrix */
-            String rowName = ExpressionDataWriterUtils.constructBioAssayName( bioMaterial, bioMaterials
-                    .get( bioMaterial ) );
+            String rowName = ExpressionDataWriterUtils.constructBioAssayName( bioMaterial,
+                    bioMaterials.get( bioMaterial ) );
             buf.append( rowName );
 
             buf.append( "\t" );
@@ -128,6 +128,7 @@ public class ExperimentalDesignWriter {
         if ( log.isDebugEnabled() ) log.debug( buf.toString() );
 
         writer.write( buf.toString() );
+        writer.flush();
 
     }
 
