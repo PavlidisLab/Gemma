@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,21 +33,24 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
+import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
@@ -60,7 +62,10 @@ import ubic.gemma.util.ConfigUtils;
  * @author Paul
  * @version $Id$
  */
-public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
+public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
+
+    @Autowired
+    private GeneDiffExMetaAnalysisService analysisService;
 
     @Autowired
     private DiffExMetaAnalyzerService analyzerService;
@@ -72,6 +77,9 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
     private ArrayDesignService arrayDesignService;
 
     @Autowired
+    private ExperimentalDesignImporter designImporter;
+
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
@@ -79,6 +87,9 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ExternalDatabaseService edService;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
     private ExpressionExperimentService experimentService;
@@ -100,7 +111,6 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private TableMaintenenceUtil tableMaintenenceUtil;
 
-    @After
     public void after() {
 
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : geneDiffExMetaAnalysisHelperService
@@ -149,37 +159,11 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         loadSet( "GSE2111" );
         loadSet( "GSE6344" );
 
-        // fill this in with whatever.
-        ExternalDatabase genbank = edService.find( "genbank" );
-        assert genbank != null;
-
-        Taxon human = taxonService.findByCommonName( "human" );
-        assert human != null;
-
-        /*
-         * Add gene annotations. Requires removing old sequence associations.
-         */
-
-        File annotationFile = new File( this.getClass()
-                .getResource( "/data/loader/expression/geo/meta-analysis/human.probes.for.import.txt" ).toURI() );
-
-        ArrayDesign gpl96 = arrayDesignService.findByShortName( "GPL96" );
-        assertNotNull( gpl96 );
-
-        ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
-        assertNotNull( gpl97 );
-
-        arrayDesignService.removeBiologicalCharacteristics( gpl96 );
-        arrayDesignProbeMapperService.processArrayDesign( gpl96, human, annotationFile, genbank, false );
-
-        arrayDesignService.removeBiologicalCharacteristics( gpl97 );
-        arrayDesignProbeMapperService.processArrayDesign( gpl97, human, annotationFile, genbank, false );
-
-        tableMaintenenceUtil.updateGene2CsEntries();
+        addGenes();
     }
 
     @Test
-    public void testAnalyze() {
+    public void testAnalyze() throws Exception {
 
         ExpressionExperiment ds1 = experimentService.findByShortName( "GSE2018" );
         ExpressionExperiment ds2 = experimentService.findByShortName( "GSE6344" );
@@ -198,6 +182,37 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds3 );
 
         /*
+         * Delete the experimental design and reload. the new designs have been modified to have just one factor with
+         * two levels. (The data sets have nothing to do with each other, it's just a test)
+         */
+        for ( ExperimentalFactor ef : ds1.getExperimentalDesign().getExperimentalFactors() ) {
+            experimentalFactorService.delete( ef );
+        }
+        for ( ExperimentalFactor ef : ds2.getExperimentalDesign().getExperimentalFactors() ) {
+            experimentalFactorService.delete( ef );
+        }
+        for ( ExperimentalFactor ef : ds3.getExperimentalDesign().getExperimentalFactors() ) {
+            experimentalFactorService.delete( ef );
+        }
+
+        ds1 = experimentService.thawLite( ds1 );
+        ds2 = experimentService.thawLite( ds2 );
+        ds3 = experimentService.thawLite( ds3 );
+
+        designImporter.importDesign( ds1,
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
+
+        designImporter.importDesign( ds2,
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse6344.design.txt" ) );
+
+        designImporter.importDesign( ds3,
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) );
+
+        ds1 = experimentService.thawLite( ds1 );
+        ds2 = experimentService.thawLite( ds2 );
+        ds3 = experimentService.thawLite( ds3 );
+
+        /*
          * Run differential analyses.
          */
         differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds1, ds1.getExperimentalDesign()
@@ -207,7 +222,9 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds3, ds3.getExperimentalDesign()
                 .getExperimentalFactors() );
 
-        // ready for test.
+        /*
+         * Prepare for meta-analysis.
+         */
         Collection<DifferentialExpressionAnalysis> ds1Analyses = differentialExpressionAnalysisService
                 .findByInvestigation( ds1 );
         Collection<DifferentialExpressionAnalysis> ds2Analyses = differentialExpressionAnalysisService
@@ -240,40 +257,80 @@ public class DiffExMetaAnanlyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 
-        // not checked by hand
-        assertEquals( 48, metaAnalysis.getResults().size() );
+        assertEquals( 279, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
 
-            for ( DifferentialExpressionAnalysisResult res : r.getResultsUsed() ) {
-                res.getPvalue();
+            String gene = r.getGene().getOfficialSymbol();
+
+            if ( gene.equals( "ACLY" ) ) {
+                assertEquals( 3.25e-6, r.getMetaPvalue(), 0.001 );
             }
+
         }
 
+        /*
+         * Test ancillary methods
+         */
         metaAnalysis = analysisService.create( metaAnalysis );
 
         assertNotNull( metaAnalysis.getId() );
 
-        // // exercises ancillary methods.
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
                 .getMyMetaAnalyses();
         assertTrue( myMetaAnalyses.size() > 0 );
 
-        // assertEquals( myMetaAnalyses.iterator().next(),
-        // geneDiffExMetaAnalysisHelperService.getMetaAnalysis( metaAnalysis.getId() ) );
+        GeneDifferentialExpressionMetaAnalysisDetailValueObject mdvo = geneDiffExMetaAnalysisHelperService
+                .getMetaAnalysis( metaAnalysis.getId() );
+        assertNotNull( mdvo );
 
     }
 
-    @Autowired
-    private GeneDiffExMetaAnalysisService analysisService;
+    /**
+     * Add gene annotations. Requires removing old sequence associations.
+     * 
+     * @throws Exception
+     */
+    private void addGenes() throws Exception {
+        // fill this in with whatever.
+        ExternalDatabase genbank = edService.find( "genbank" );
+        assert genbank != null;
 
+        Taxon human = taxonService.findByCommonName( "human" );
+        assert human != null;
+
+        File annotationFile = new File( this.getClass()
+                .getResource( "/data/loader/expression/geo/meta-analysis/human.probes.for.import.txt" ).toURI() );
+
+        ArrayDesign gpl96 = arrayDesignService.findByShortName( "GPL96" );
+        assertNotNull( gpl96 );
+
+        ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
+        assertNotNull( gpl97 );
+
+        arrayDesignService.removeBiologicalCharacteristics( gpl96 );
+        arrayDesignProbeMapperService.processArrayDesign( gpl96, human, annotationFile, genbank, false );
+
+        arrayDesignService.removeBiologicalCharacteristics( gpl97 );
+        arrayDesignProbeMapperService.processArrayDesign( gpl97, human, annotationFile, genbank, false );
+
+        tableMaintenenceUtil.updateGene2CsEntries();
+    }
+
+    /**
+     * @param shortName
+     */
     private void deleteSet( String shortName ) {
         ExpressionExperiment set = experimentService.findByShortName( shortName );
         if ( set != null ) experimentService.delete( set );
 
     }
 
+    /**
+     * @param acc
+     * @return
+     */
     private Collection<?> loadSet( String acc ) {
         String path = ConfigUtils.getString( "gemma.home" );
 

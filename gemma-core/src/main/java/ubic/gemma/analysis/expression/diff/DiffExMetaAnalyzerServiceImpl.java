@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -58,16 +60,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     private static Log log = LogFactory.getLog( DiffExMetaAnalyzerServiceImpl.class );
 
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
+    private static final double QVALUE_FOR_STORAGE_THRESHOLD = 0.1;
 
     @Autowired
     private GeneDiffExMetaAnalysisService analysisService;
 
     @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
+    private CompositeSequenceService compositeSequenceService;
 
-    private static final double QVALUE_FOR_STORAGE_THRESHOLD = 0.1;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     /*
      * (non-Javadoc)
@@ -83,15 +85,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         if ( resultSets.size() < 2 ) {
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
         }
-        /*
-         * FIXME: add validation such as checking that the factors have two levels.
-         */
 
         log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
         Map<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> res2set = new HashMap<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>();
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
+
             differentialExpressionResultService.thaw( rs );
+
+            validate( rs );
+
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 assert r != null;
@@ -171,18 +174,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 Collection<DifferentialExpressionAnalysisResult> res = results4geneInOneResultSet.get( rs );
                 Double pvalue4GeneInOneResultSetUp = aggregatePvaluesForGeneWithinResultSet( res, true );
 
-                if ( pvalue4GeneInOneResultSetUp == null ) continue; // FIXME temporary
-
                 Double pvalue4GeneInOneResultSetDown = aggregatePvaluesForGeneWithinResultSet( res, false );
                 Double foldChange4GeneInOneResultSet = aggregateFoldChangeForGeneWithinResultSet( res );
 
-                if ( foldChange4GeneInOneResultSet == null ) continue; // FIXME temporary
-
+                // results used for this one gene's meta-analysis.
                 resultsUsed.addAll( res );
-
-                /*
-                 * FIXME blunt very low pvalues? Or do a jackknife?
-                 */
 
                 // If we have missing values, skip them.
                 if ( Double.isNaN( pvalue4GeneInOneResultSetUp ) || Double.isNaN( pvalue4GeneInOneResultSetDown ) ) {
@@ -200,11 +196,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
             Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
 
-            double fisherPvalueUp = pvalues4geneUp.size() == 1 ? pvalues4geneUp.get( 0 ) : MetaAnalysis
-                    .fisherCombinePvalues( pvalues4geneUp );
+            /*
+             * FIXME what to do if there is just one pvalue for the gene? Is this it?
+             */
+            if ( pvalues4geneUp.size() < 2 ) {
+                continue;
+            }
 
-            double fisherPvalueDown = pvalues4geneDown.size() == 1 ? pvalues4geneDown.get( 0 ) : MetaAnalysis
-                    .fisherCombinePvalues( pvalues4geneDown );
+            double fisherPvalueUp = MetaAnalysis.fisherCombinePvalues( pvalues4geneUp );
+
+            double fisherPvalueDown = MetaAnalysis.fisherCombinePvalues( pvalues4geneDown );
 
             if ( Double.isNaN( fisherPvalueUp ) || Double.isNaN( fisherPvalueDown ) || Double.isNaN( meanLogFoldChange ) ) {
                 continue;
@@ -220,9 +221,22 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                     resultsUsed, meanLogFoldChange, fisherPvalueDown, false );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
+            // debug code.
+            // System.err.println( String.format( "%s.up<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)", g.getOfficialSymbol(),
+            // StringUtils.join( pvalues4geneUp.toList(), ',' ), pvalues4geneUp.size() ) );
+            // System.err.println( String.format( "%s.down<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)",
+            // g.getOfficialSymbol(),
+            // StringUtils.join( pvalues4geneDown.toList(), ',' ), pvalues4geneDown.size() ) );
+
             if ( log.isDebugEnabled() )
                 log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
                         fisherPvalueUp, fisherPvalueDown ) );
+        } // end loop over genes.
+
+        if ( metaAnalysisResultsDown.isEmpty() ) {
+            // can happen if platforms dont' match etc.
+            log.warn( "No meta-analysis results were obtained" );
+            return null;
         }
 
         assert metaAnalysisResultsUp.size() == metaAnalysisResultsDown.size();
@@ -245,11 +259,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         selectValues( metaAnalysisResultsDown, qvaluesDown, analysis );
 
         if ( analysis.getResults().isEmpty() ) {
-            log.warn( "No results were significant, the analysis will not be saved" );
+            log.warn( "No results were significant, the analysis will not be completed" );
             return null;
         }
 
-        // Save results only when name is specified.
+        // Save results only when name is specified. FIXME this is a very obscure way to trigger this.
         if ( name != null ) {
             analysis.setName( name );
             analysis.setDescription( description );
@@ -261,23 +275,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
 
         return analysis;
-    }
-
-    private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet( Collection<Long> analysisResultSetIds ) {
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-
-        for ( Long analysisResultSetId : analysisResultSetIds ) {
-            ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService
-                    .loadAnalysisResultSet( analysisResultSetId );
-
-            if ( expressionAnalysisResultSet == null ) {
-                log.warn( "No diff ex result set with ID=" + analysisResultSetId );
-                throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
-            }
-
-            resultSets.add( expressionAnalysisResultSet );
-        }
-        return resultSets;
     }
 
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
@@ -321,9 +318,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             }
 
             /*
-             * Pvalues stored are two-sided. To convert to a one-sided value, we consider just one tail.
+             * Pvalues stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
+             * consider just one tail. However, because each gene gets two chances to be significant (up and down) we
+             * _also_ do an implicit bonferroni correction. So we end up leaving it as is.
              */
-            pvalue /= 2.0;
+            // pvalue /= 2.0;
 
             if ( pvalue < bestPvalue ) {
                 assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
@@ -352,7 +351,29 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         assert bestPvalue <= 1.0 && bestPvalue >= 0.0;
         // Bonferonni correct across multiple pvalues.
-        return Math.min( bestPvalue * res.size(), 1.0 );
+        double pvalue = Math.min( bestPvalue * res.size(), 1.0 );
+
+        // clip really small pvalues to avoid them taking over. FIXME adjust this!
+        pvalue = Math.max( pvalue, GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD );
+
+        return pvalue;
+    }
+
+    private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet( Collection<Long> analysisResultSetIds ) {
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+
+        for ( Long analysisResultSetId : analysisResultSetIds ) {
+            ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService
+                    .loadAnalysisResultSet( analysisResultSetId );
+
+            if ( expressionAnalysisResultSet == null ) {
+                log.warn( "No diff ex result set with ID=" + analysisResultSetId );
+                throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
+            }
+
+            resultSets.add( expressionAnalysisResultSet );
+        }
+        return resultSets;
     }
 
     /**
@@ -388,10 +409,34 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         int i = 0;
         assert metaAnalysisResults.size() == qvalues.size();
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysisResults ) {
-            r.setMetaQvalue( qvalues.get( i ) );
+            double metaQvalue = qvalues.get( i );
+            r.setMetaQvalue( metaQvalue );
 
-            if ( qvalues.get( i ) < QVALUE_FOR_STORAGE_THRESHOLD ) analysis.getResults().add( r );
+            if ( metaQvalue < QVALUE_FOR_STORAGE_THRESHOLD ) {
+                analysis.getResults().add( r );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Keeping " + r.getGene().getOfficialSymbol() + ", q=" + metaQvalue );
+            }
             i++;
+        }
+    }
+
+    /**
+     * @param rs
+     */
+    private void validate( ExpressionAnalysisResultSet rs ) {
+        if ( rs.getExperimentalFactors().size() > 1 ) {
+            throw new IllegalArgumentException( "Cannot do a meta-analysis on interaction terms" );
+        }
+
+        ExperimentalFactor factor = rs.getExperimentalFactors().iterator().next();
+        if ( factor.getFactorValues().size() > 2 ) {
+            /*
+             * Note that this doesn't account for continuous factors.
+             */
+            throw new IllegalArgumentException(
+                    "Cannot do a meta-analysis including a factor that has more than two levels: " + factor + " has "
+                            + factor.getFactorValues().size() + " levels" );
         }
     }
 }

@@ -153,15 +153,8 @@ public class DifferentialExpressionAnalysisUtil {
             return true;
         }
 
-        // redundant check.
-        // for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
-        // if ( fv.getMeasurement() != null ) {
-        // return true; // assume it's all like this.
-        // }
-        // }
-
         /*
-         * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
+         * Check to make sure more than one factor value is actually used.
          */
         boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
@@ -185,7 +178,8 @@ public class DifferentialExpressionAnalysisUtil {
         }
 
         if ( counts.size() < 2 ) {
-            log.warn( experimentalFactor + " has only one level used in the current set, it cannot be analyzed" );
+            log.warn( experimentalFactor + " has only " + counts.size()
+                    + " levels used in the current set, it cannot be analyzed" );
             return false;
         }
 

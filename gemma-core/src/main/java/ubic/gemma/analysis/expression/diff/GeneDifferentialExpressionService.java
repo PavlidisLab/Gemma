@@ -30,6 +30,14 @@ import ubic.gemma.model.genome.Gene;
 public interface GeneDifferentialExpressionService {
 
     /**
+     * p values smaller than this will be treated as this value in a meta-analysis. The reason is to avoid extremely low
+     * pvalues from driving meta-pvalues down too fast. This is suggested by the fact that very small pvalues presume an
+     * extremely high precision in agreement between the tails of the true null distribution and the analytic
+     * distribution used to compute the pvalues (e.g., F or t).
+     */
+    public static final double PVALUE_CLIP_THRESHOLD = 1e-8;
+
+    /**
      * @param ef
      * @return
      */

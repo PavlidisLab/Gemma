@@ -38,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -60,35 +59,10 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
- * <p>
- * Parse a description of ExperimentalFactors from a file, and associate it with a given ExpressionExperiment. The
- * format is specified by {@link ExperimentalDesignWriter}
- * </p>
- * <p>
- * Example of format, where 'Category' is an MGED term and 'Type' is either "Categorical' or 'Continuous' with no extra
- * white space around the '='s. The ID column MUST match the names on the BioAssays the design will be attached to. Main
- * section is tab-delimited. Column headings in the main table must match the identifiers given in the header.
- * </p>
- * 
- * <pre>
- *    #$ Age : Category=Age Type=Continuous                
- *    #$ Profile : Category=DiseaseState Type=Categorical              
- *    #$ PMI (h) : Category=EnvironmentalHistory Type=Continuous              
- *    #$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
- *    #ID  Age     Profile     PMI (h)     Lifetime Alcohol    
- *    f-aa     50  Bipolar     48  Moderate present 
- *    f-ab     50  Bipolar     60  Heavy in present 
- *    f-ac     55  Schizophrenia   26  Little or none 
- *    f-ad     35  Bipolar     28  Unknown 
- *    f-af     60  Bipolar     70  Little or none
- * </pre>
- * <p>
- * Note: Files downloaded from Gemma may have an "ExternalID" column after the first column. This is allowed in the
- * import format.
+ * See interface for docs.
  * 
  * @author Paul
  * @version $Id$
- * @see ExperimentalDesignWriter
  */
 @Service
 public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporter {
@@ -107,7 +81,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
     @Autowired
     private OntologyService ontologyService;
-    
+
     @Autowired
     FactorValueService factorValueServiceService = null;
 
@@ -115,6 +89,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     ExpressionExperimentService expressionExperimentService;
 
     private MgedOntologyService mgedOntologyService;
+
     /*
      * (non-Javadoc)
      * 
@@ -127,38 +102,17 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         this.importDesign( experiment, is, false );
     }
 
-    /**
-     * This is the main builder director method of the application: It processes the input file containing information
-     * about the experimental design for a given expression experiment. There are 3 main steps in the workflow:
-     * <p>
-     * Step1 - validate the the 3 components of the file which should contain: The first component is the experimental
-     * factor lines marked with a $# there are as many lines as experimental factors - (experimentalFactorLines). Then
-     * one line containing header information indicating the order of the experimental factors in the file -
-     * sampleHeaderLine Finally factor values, the first column of which is the sample or biomaterial ids and thereafter
-     * factor values.
-     * </p>
-     * <p>
-     * Step 2 the file components are mapped to objects to populate the experimental design, before addition of objects
-     * to the composite existing values are checked for. The expression experiment composite: ExpressionExperiments have
-     * an experimental design which have experimental factors. Experimental factors have factor values. BioMaterials
-     * have factor values. Bioassays have biomaterials, bioassays are in an expression experiment which completes the
-     * circle.
-     * </p>
-     * <p>
-     * Step 3 on successful validation and object creation the experimental design is persisted following a strict
-     * order, expression factors first then biomaterial details.
-     * </p>
+    /*
+     * (non-Javadoc)
      * 
-     * @param Expression experiment the one to add the experimental design
-     * @param is File to process
-     * @param dryRunboolean a bit redundant dry run
-     * @see ubic.gemma.loader.expression.simple.ExperimentalDesignImporter
-     *      #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
+     * @see
+     * ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.io.InputStream, boolean)
      */
     @Override
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
         this.mgedOntologyService = this.ontologyService.getMgedOntologyService();
-        
+
         log.debug( "Parsing input file" );
         boolean readHeader = false;
 
@@ -169,6 +123,11 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         }
 
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
+
+        if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
+            log.warn( "Experimental design already has factors, import will add new ones" );
+        }
+
         experimentalDesign.setDescription( "Parsed from file." );
 
         List<String> experimentalFactorLines = new ArrayList<String>();
@@ -213,8 +172,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             // just a debugging sanity check.
             BioMaterial bbm = this.bioMaterialService.load( bioMaterial.getId() );
-            log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
-                    + StringUtils.join( bbm.getFactorValues(), " ; " ) );
+            if ( log.isDebugEnabled() )
+                log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
+                        + StringUtils.join( bbm.getFactorValues(), " ; " ) );
         }
 
     }
@@ -548,7 +508,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         }
 
         if ( bioMaterial == null && StringUtils.isNotBlank( externalId ) ) {
-            bioMaterial = biomaterialsInExpressionExperiment.get( externalId );
+            // FIXME document this better. If there are two or more GSM's grouped together we list them in the file
+            // separated by '/'.
+            String[] externalIds = StringUtils.split( externalId, "/" );
+
+            for ( String id : externalIds ) {
+                bioMaterial = biomaterialsInExpressionExperiment.get( id );
+                if ( bioMaterial != null ) break;
+            }
+
         }
 
         return bioMaterial;
@@ -599,9 +567,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         for ( BioMaterial bm : bioMaterials ) {
             biomaterialsInExpressionExperiment.put( bm.getName(), bm );
 
-            if ( bm.getBioAssaysUsedIn().size() == 1 ) {
-
-                BioAssay ba = bm.getBioAssaysUsedIn().iterator().next();
+            // we allow multiple bioassays per biomaterial - e.g. two platforms run on the sa
+            for ( BioAssay ba : bm.getBioAssaysUsedIn() ) {
 
                 /*
                  * Allow matches to the accession (external id) of the bioassay; trying to be flexible! This _could_
