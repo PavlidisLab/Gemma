@@ -393,7 +393,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         return result;
     }
-    
+
     @Override
     public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
 
@@ -558,7 +558,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         return result;
     }
-    
+
     @Override
     public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {
         Collection<Gene> result = new HashSet<Gene>();
@@ -638,17 +638,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     public Gene thawLite( final Gene gene ) {
         return this.thaw( gene );
     }
-    
+
     @Override
     public Gene thawLiter( final Gene gene ) {
-    	if ( gene.getId() == null ) return gene;
+        if ( gene.getId() == null ) return gene;
 
-        List<?> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct g from GeneImpl g "                                
-                                + " left join fetch g.taxon" + " where g.id=:gid",
-                        "gid", gene.getId() );
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from GeneImpl g " + " left join fetch g.taxon" + " where g.id=:gid", "gid",
+                gene.getId() );
 
         return ( Gene ) res.iterator().next();
     }
@@ -1158,12 +1155,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
                         + "where g.id in (:gids)", "gids", ids );
     }
-    
+
     private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam(
-                "select g from GeneImpl g left "
-                        + "join fetch g.taxon t "
-                        + "where g.id in (:gids)", "gids", ids );
+                "select g from GeneImpl g left " + "join fetch g.taxon t " + "where g.id in (:gids)", "gids", ids );
     }
 
     /**
