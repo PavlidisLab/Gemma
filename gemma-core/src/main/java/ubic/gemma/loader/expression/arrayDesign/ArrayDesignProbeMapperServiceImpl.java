@@ -292,7 +292,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             }
 
             if ( geneListProbe.size() == 0 ) {
-                log.warn( "No gene found for '" + geneSymbol + "' in " + taxon + ", skipping" );
+                log.warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
                 numSkipped++;
                 continue;
             } else if ( geneListProbe.size() > 1 ) {
