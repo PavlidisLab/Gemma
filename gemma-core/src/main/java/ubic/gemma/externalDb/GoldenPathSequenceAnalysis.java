@@ -326,7 +326,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * Generic method to retrive Genes from the GoldenPath database. The query given must have the appropriate form.
+     * Generic method to retrieve Genes from the GoldenPath database. The query given must have the appropriate form.
      * 
      * @param starti
      * @param endi
@@ -458,14 +458,21 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
 
         /*
-         * TODO For Rat, we now have to use RGD genes, as the knownGene track
+         * For Rat, we now have to use RGD genes, as the knownGene track - there is no "knownToRefSeq" any more. that
+         * table had just two columns.
          * "The Old Known Genes track shows genes from the 2006 Known Genes build. RGD Genes has now replaced Known Genes as the main gene track for rat."
          */
 
+        /*
+         * So the equivalent is rgdGene2ToRefSeq. So instead of knownGene we would use rgdGene2; for knownToRefSeq we
+         * use rgdGene2ToRefSeq; for kgxref.kgID kgxRef.description we create a new table. See updateGoldenPath.sh
+         */
+
         Collection<GeneProduct> result = new HashSet<GeneProduct>();
+
         /*
          * Many known genes map to refseq genes. We use those gene symbols instead. Use kgXRef only to get the
-         * description
+         * description.
          */
         String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgr.description) "
                 + " FROM knownGene as kg INNER JOIN knownToRefSeq kr on kr.name=kg.name inner join kgXref kgr on kgr.kgID=kg.name "
@@ -598,9 +605,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         /*
-         * Use kgXRef only to get the description - sometimes missing thus the outer join. Note that
+         * Use kgXRef only to get the description - sometimes missing thus the outer join.
          */
-        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
+        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgXref.description) "
                 + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol "
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
