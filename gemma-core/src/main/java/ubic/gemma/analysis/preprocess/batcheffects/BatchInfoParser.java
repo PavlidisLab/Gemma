@@ -65,7 +65,7 @@ public class BatchInfoParser {
                             + ee.getShortName() );
         }
 
-        Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFilse( files, assayAccessions );
+        Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFiles( files, assayAccessions );
 
         /*
          * Check if we should go on
@@ -168,6 +168,11 @@ public class BatchInfoParser {
                         log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
                         scanDateExtractor = new GenericScanFileDateExtractor();
                     } else {
+                        /*
+                         * We can attempt to use the slide number as the key, if the data is in the beadarray file
+                         * format.s
+                         */
+
                         throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
                                 + " not matched to a supported platform type for scan date extraction for " + ba
                                 + "(Illumina files do not contain dates)" );
@@ -224,7 +229,7 @@ public class BatchInfoParser {
      * @param assayAccessions
      * @return
      */
-    private Map<BioAssay, File> matchBioAssaysToRawDataFilse( Collection<LocalFile> files,
+    private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files,
             Map<String, BioAssay> assayAccessions ) {
 
         Pattern regex = Pattern.compile( "(GSM[0-9]+).+" );
