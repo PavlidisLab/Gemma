@@ -203,31 +203,35 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Long numEvidence = ( Long ) this
                 .getHibernateTemplate()
-                .find( "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase.id ="
-                        + externalDatabase.getId() ).iterator().next();
+                .findByNamedParam(
+                        "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase = :e",
+                        "e", externalDatabase ).iterator().next();
 
         Long numGenes = ( Long ) this
                 .getHibernateTemplate()
-                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource.externalDatabase.id ="
-                        + externalDatabase.getId() ).iterator().next();
+                .findByNamedParam(
+                        "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource.externalDatabase = :e",
+                        "e", externalDatabase ).iterator().next();
 
         Long numPhenotypes = ( Long ) this
                 .getHibernateTemplate()
-                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase.id ="
-                        + externalDatabase.getId() ).iterator().next();
+                .findByNamedParam(
+                        "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase = :e",
+                        "e", externalDatabase ).iterator().next();
 
-        HibernateTemplate tpl = this.getHibernateTemplate();
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setMaxResults( 1 );
+
         String lastUpdateDate = ( ( Timestamp ) tpl
-                .find( "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase.id ="
-                        + externalDatabase.getId() + " order by p.status.lastUpdateDate desc" ).iterator().next() )
-                .toString();
+                .findByNamedParam(
+                        "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase = :e order by p.status.lastUpdateDate desc",
+                        "e", externalDatabase ).iterator().next() ).toString();
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                externalDatabase.getName(), numEvidence, numGenes, numPhenotypes, lastUpdateDate );
+                externalDatabase.getName(), externalDatabase.getDescription(), externalDatabase.getWebUri(),
+                numEvidence, numGenes, numPhenotypes, lastUpdateDate );
 
         return externalDatabaseStatisticsValueObject;
-
     }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */

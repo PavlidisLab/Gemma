@@ -86,6 +86,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentSetManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentsWithQC.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/externalDatabasesStatistics.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -372,6 +373,7 @@
 			<dwr:include method="findEvidenceByFilters" />
 			<dwr:include method="findCandidateGenes" />
 			<dwr:include method="findExperimentMgedCategory" />
+			<dwr:include method="calculateExternalDatabasesStatistics" />
 			<dwr:include method="findExperimentOntologyValue" />
 			<dwr:include method="findEvidenceOwners" />
 			<dwr:include method="loadAllPhenotypesByTree" />
@@ -758,6 +760,8 @@
 			javascript="ExpressionExperimentSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
 			javascript="ExpressionExperimentValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject"
+			javascript="ExternalDatabaseStatisticsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />

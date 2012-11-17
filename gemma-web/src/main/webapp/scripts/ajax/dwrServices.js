@@ -1068,6 +1068,9 @@ PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
 PhenotypeController.findExperimentMgedCategory = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentMgedCategory', callback);
 }
+PhenotypeController.calculateExternalDatabasesStatistics = function(callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'calculateExternalDatabasesStatistics', callback);
+}
 PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentOntologyValue', p0, p1, p2, callback);
 }

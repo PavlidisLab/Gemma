@@ -17,15 +17,19 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 public class ExternalDatabaseStatisticsValueObject {
 
     private String name = "";
+    private String description = "";
+    private String webUri = "";
     private Long numEvidence = 0L;
     private Long numGenes = 0L;
     private Long numPhenotypes = 0L;
     private String lastUpdateDate = "";
 
-    public ExternalDatabaseStatisticsValueObject( String name, Long numEvidence, Long numGenes, Long numPhenotypes,
-            String lastUpdateDate ) {
+    public ExternalDatabaseStatisticsValueObject( String name, String description, String webUri, Long numEvidence,
+            Long numGenes, Long numPhenotypes, String lastUpdateDate ) {
         super();
         this.name = name;
+        this.description = description;
+        this.webUri = webUri;
         this.numEvidence = numEvidence;
         this.numGenes = numGenes;
         this.numPhenotypes = numPhenotypes;
@@ -38,6 +42,22 @@ public class ExternalDatabaseStatisticsValueObject {
 
     public void setName( String name ) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public String getWebUri() {
+        return this.webUri;
+    }
+
+    public void setWebUri( String webUri ) {
+        this.webUri = webUri;
     }
 
     public Long getNumEvidence() {
@@ -70,12 +90,6 @@ public class ExternalDatabaseStatisticsValueObject {
 
     public void setLastUpdateDate( String lastUpdateDate ) {
         this.lastUpdateDate = lastUpdateDate;
-    }
-
-    @Override
-    public String toString() {
-        return "name=" + this.name + ", numEvidence=" + this.numEvidence + ", numGenes=" + this.numGenes
-                + ", numPhenotypes=" + this.numPhenotypes + ", lastUpdateDate=" + this.lastUpdateDate;
     }
 
 }

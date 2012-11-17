@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
@@ -157,20 +158,21 @@ public class PhenotypeController extends BaseController {
         return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
                 taxonId );
     }
-    
+
     /**
-     * Returns a collection of users who own evidence. Note that a collection 
-     * of value objects instead of strings is returned for front end convenience.
+     * Returns a collection of users who own evidence. Note that a collection of value objects instead of strings is
+     * returned for front end convenience.
+     * 
      * @return a collection of users who own evidence
      */
     public Collection<UserValueObject> findEvidenceOwners() {
-    	Collection<UserValueObject> userVOs = new ArrayList<UserValueObject>();
-    	
-    	for (String userName : this.phenotypeAssociationManagerService.findEvidenceOwners()) {
-    		UserValueObject userVO = new UserValueObject();
-    		userVO.setUserName(userName);
-    		userVOs.add( userVO );
-    	}
+        Collection<UserValueObject> userVOs = new ArrayList<UserValueObject>();
+
+        for ( String userName : this.phenotypeAssociationManagerService.findEvidenceOwners() ) {
+            UserValueObject userVO = new UserValueObject();
+            userVO.setUserName( userName );
+            userVOs.add( userVO );
+        }
         return userVOs;
     }
 
@@ -210,5 +212,9 @@ public class PhenotypeController extends BaseController {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
+    }
+
+    public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
+        return this.phenotypeAssociationManagerService.calculateExternalDatabasesStatistics();
     }
 }
