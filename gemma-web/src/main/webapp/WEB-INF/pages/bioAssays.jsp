@@ -41,7 +41,7 @@
 </p>
 
 <Gemma:expressionQC ee="${expressionExperiment.id}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
-	hasPCA="${hasPCA}" numFactors="${numFactors}" size="small" hasPvalueDist="false" hasCorrDist="false"
+	hasPCA="${hasPCA}" numFactors="${numFactors}" size="small" hasCorrDist="false"
 	eeManagerId="eemanager" />
 
 <div style="padding: 20px; margin: 10px;" id="bioAssayTable" />

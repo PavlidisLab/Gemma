@@ -286,11 +286,7 @@
 			<name>hasPCA</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
-		<attribute>
-			<description>default=false</description>
-			<name>hasPvalueDist</name>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
+		
 		<attribute>
 			<description>default=false</description>
 			<name>hasNodeDegreeDist</name>
