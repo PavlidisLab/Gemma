@@ -170,20 +170,49 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             DoubleArrayList foldChanges4gene = new DoubleArrayList();
             Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<DifferentialExpressionAnalysisResult>();
 
+            if ( g.getOfficialSymbol().equals( "TCEB2" ) ) {
+                log.info( "yay" );
+            }
+
             for ( ExpressionAnalysisResultSet rs : results4geneInOneResultSet.keySet() ) {
                 Collection<DifferentialExpressionAnalysisResult> res = results4geneInOneResultSet.get( rs );
-                Double pvalue4GeneInOneResultSetUp = aggregatePvaluesForGeneWithinResultSet( res, true );
 
-                Double pvalue4GeneInOneResultSetDown = aggregatePvaluesForGeneWithinResultSet( res, false );
+                if ( res.isEmpty() ) {
+                    // shouldn't happen?
+                    log.warn( "Unexpectedly no results in resultSet for gene " + g );
+                    continue;
+                }
+
                 Double foldChange4GeneInOneResultSet = aggregateFoldChangeForGeneWithinResultSet( res );
 
-                // results used for this one gene's meta-analysis.
-                resultsUsed.addAll( res );
+                // we use the pvalue for the 'best' direction, and set the other to be 1- that. An alternative would be
+                // to use _only_ the best one.
+                Double pvalue4GeneInOneResultSetUp;
+                Double pvalue4GeneInOneResultSetDown;
+                if ( foldChange4GeneInOneResultSet < 0 ) {
+                    pvalue4GeneInOneResultSetDown = aggregatePvaluesForGeneWithinResultSet( res, false );
+                    assert pvalue4GeneInOneResultSetDown != null;
+                    pvalue4GeneInOneResultSetUp = 1.0 - pvalue4GeneInOneResultSetDown;
+                } else {
+                    pvalue4GeneInOneResultSetUp = aggregatePvaluesForGeneWithinResultSet( res, true );
+                    assert pvalue4GeneInOneResultSetUp != null;
+                    pvalue4GeneInOneResultSetDown = 1.0 - pvalue4GeneInOneResultSetUp;
+                }
 
-                // If we have missing values, skip them.
+                // If we have missing values, skip them. (this should be impossible!)
                 if ( Double.isNaN( pvalue4GeneInOneResultSetUp ) || Double.isNaN( pvalue4GeneInOneResultSetDown ) ) {
                     continue;
                 }
+
+                /*
+                 * Now when we correct, we have to 1) bonferroni correct for multiple probes and 2) clip really small
+                 * pvalues. We do this now, so that we don't skew the converse pvalues (up vs down).
+                 */
+                pvalue4GeneInOneResultSetDown = correctAndClip( res, pvalue4GeneInOneResultSetDown );
+                pvalue4GeneInOneResultSetUp = correctAndClip( res, pvalue4GeneInOneResultSetUp );
+
+                // results used for this one gene's meta-analysis.
+                resultsUsed.addAll( res );
 
                 pvalues4geneUp.add( pvalue4GeneInOneResultSetUp );
                 pvalues4geneDown.add( pvalue4GeneInOneResultSetDown );
@@ -194,34 +223,52 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                             pvalue4GeneInOneResultSetDown, foldChange4GeneInOneResultSet ) );
             }
 
-            Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
+            /*
+             * This might not be the right thing to compute. We really only care about the relevant sign.
+             */
+            // Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
 
             /*
-             * FIXME what to do if there is just one pvalue for the gene? Is this it?
+             * FIXME what to do if there is just one pvalue for the gene? Is this good enough?
              */
             if ( pvalues4geneUp.size() < 2 ) {
                 continue;
             }
 
             double fisherPvalueUp = MetaAnalysis.fisherCombinePvalues( pvalues4geneUp );
-
             double fisherPvalueDown = MetaAnalysis.fisherCombinePvalues( pvalues4geneDown );
 
-            if ( Double.isNaN( fisherPvalueUp ) || Double.isNaN( fisherPvalueDown ) || Double.isNaN( meanLogFoldChange ) ) {
+            if ( Double.isNaN( fisherPvalueUp ) || Double.isNaN( fisherPvalueDown ) ) {
                 continue;
             }
 
+            // if ( fisherPvalueUp == fisherPvalueDown || ( fisherPvalueUp < fisherPvalueDown && meanLogFoldChange < 0 )
+            // || ( fisherPvalueUp > fisherPvalueDown && meanLogFoldChange > 0 ) ) {
+            // /*
+            // * InconsistentResult/illogical results. Is this the right thing to do? Might be better to simply store
+            // * the direction, without the mean.
+            // */
+            // log.info( "Skipping result for " + g.getOfficialSymbol()
+            // + " because results are too inconsistent (mean log fold change is not consistent with pvalue)" );
+            // continue;
+            // }
+
             pvaluesUp.add( fisherPvalueUp );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultUp = makeMetaAnalysisResult( g, resultsUsed,
-                    meanLogFoldChange, fisherPvalueUp, true );
+                    1.0, fisherPvalueUp, true );
             metaAnalysisResultsUp.add( metaAnalysisResultUp );
 
             pvaluesDown.add( fisherPvalueDown );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultDown = makeMetaAnalysisResult( g,
-                    resultsUsed, meanLogFoldChange, fisherPvalueDown, false );
+                    resultsUsed, -1.0, fisherPvalueDown, false );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
-            // debug code.
+            // // debug code.
+            // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
+            // + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
+            // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
+            // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
+
             // System.err.println( String.format( "%s.up<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)", g.getOfficialSymbol(),
             // StringUtils.join( pvalues4geneUp.toList(), ',' ), pvalues4geneUp.size() ) );
             // System.err.println( String.format( "%s.down<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)",
@@ -234,12 +281,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         } // end loop over genes.
 
         if ( metaAnalysisResultsDown.isEmpty() ) {
-            // can happen if platforms dont' match etc.
+            // can happen if platforms don't have any genes that match etc.
             log.warn( "No meta-analysis results were obtained" );
             return null;
         }
 
+        // FIXME it might be possible for a gene to show up on both up and down lists. It can also happen that the
+
         assert metaAnalysisResultsUp.size() == metaAnalysisResultsDown.size();
+
+        log.info( metaAnalysisResultsUp.size() + " initial meta-analysis results" );
 
         DoubleArrayList qvaluesUp = MultipleTestCorrection.benjaminiHochberg( pvaluesUp );
         assert qvaluesUp.size() == metaAnalysisResultsUp.size();
@@ -255,6 +306,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         analysis.setQvalueThresholdForStorage( QVALUE_FOR_STORAGE_THRESHOLD );
         analysis.getResultSetsIncluded().addAll( resultSets );
 
+        // reject values that don't meet the threshold
         selectValues( metaAnalysisResultsUp, qvaluesUp, analysis );
         selectValues( metaAnalysisResultsDown, qvaluesDown, analysis );
 
@@ -263,24 +315,47 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             return null;
         }
 
+        log.info( "Found " + analysis.getResults().size() + " results meeting meta-qvalue of "
+                + QVALUE_FOR_STORAGE_THRESHOLD );
+
         // Save results only when name is specified. FIXME this is a very obscure way to trigger this.
         if ( name != null ) {
+            // FIXME do this in a separate method.
             analysis.setName( name );
             analysis.setDescription( description );
-
-            // FIXME might not want to save this here.
-            log.info( "Saving " + analysis.getResults().size() + " results meeting meta-qvalue of "
-                    + QVALUE_FOR_STORAGE_THRESHOLD );
             analysis = analysisService.create( analysis );
         }
 
         return analysis;
     }
 
+    /**
+     * Bonferonni correct across multiple pvalues. and clip really small pvalues to avoid them taking over.
+     * 
+     * @param res
+     * @param pvalue4GeneInOneResultSetDown
+     * @return FIXME make clipping adjustable.
+     */
+    private Double correctAndClip( Collection<DifferentialExpressionAnalysisResult> res,
+            Double pvalue4GeneInOneResultSetDown ) {
+
+        pvalue4GeneInOneResultSetDown = Math.min( pvalue4GeneInOneResultSetDown * res.size(), 1.0 );
+
+        pvalue4GeneInOneResultSetDown = Math.max( pvalue4GeneInOneResultSetDown,
+                GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD );
+        return pvalue4GeneInOneResultSetDown;
+    }
+
+    /**
+     * @param res
+     * @return
+     */
+    @SuppressWarnings("null")
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();
         Double bestPvalue = Double.MAX_VALUE;
-        DifferentialExpressionAnalysisResult best = res.iterator().next();
+        DifferentialExpressionAnalysisResult best = null;
+
         for ( DifferentialExpressionAnalysisResult r : res ) {
             Double pvalue = r.getPvalue();
             assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
@@ -300,7 +375,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     /**
      * For cases where there is more than one result for a gene in a data set (due to multiple probes), we aggregate
-     * them. Method: take the best pvalue, but Bonferonni correct it.
+     * them. Method: take the best pvalue.
      * 
      * @param res
      * @return
@@ -320,15 +395,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             /*
              * Pvalues stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
              * consider just one tail. However, because each gene gets two chances to be significant (up and down) we
-             * _also_ do an implicit bonferroni correction. So we end up leaving it as is.
+             * _also_ do an implicit Bonferroni correction. So we end up leaving it as is.
              */
             // pvalue /= 2.0;
 
             if ( pvalue < bestPvalue ) {
                 assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
-
-                // temporary, as my test database doesn't have all contrasts computed.
-                if ( r.getContrasts().isEmpty() ) return null;
 
                 Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
 
@@ -350,15 +422,14 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
 
         assert bestPvalue <= 1.0 && bestPvalue >= 0.0;
-        // Bonferonni correct across multiple pvalues.
-        double pvalue = Math.min( bestPvalue * res.size(), 1.0 );
 
-        // clip really small pvalues to avoid them taking over. FIXME adjust this!
-        pvalue = Math.max( pvalue, GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD );
-
-        return pvalue;
+        return bestPvalue;
     }
 
+    /**
+     * @param analysisResultSetIds
+     * @return
+     */
     private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet( Collection<Long> analysisResultSetIds ) {
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -399,13 +470,15 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     }
 
     /**
+     * Extract the results we keep, that meet the threshold for qvalue
+     * 
      * @param metaAnalysisResults
      * @param qvalues
      * @param analysis
      */
     private void selectValues( List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResults,
             DoubleArrayList qvalues, GeneDifferentialExpressionMetaAnalysis analysis ) {
-        // Extract the results we keep
+        //
         int i = 0;
         assert metaAnalysisResults.size() == qvalues.size();
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysisResults ) {
@@ -417,6 +490,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 if ( log.isDebugEnabled() )
                     log.debug( "Keeping " + r.getGene().getOfficialSymbol() + ", q=" + metaQvalue );
             }
+
             i++;
         }
     }
