@@ -170,10 +170,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             DoubleArrayList foldChanges4gene = new DoubleArrayList();
             Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<DifferentialExpressionAnalysisResult>();
 
-            if ( g.getOfficialSymbol().equals( "TCEB2" ) ) {
-                log.info( "yay" );
-            }
-
             for ( ExpressionAnalysisResultSet rs : results4geneInOneResultSet.keySet() ) {
                 Collection<DifferentialExpressionAnalysisResult> res = results4geneInOneResultSet.get( rs );
 
