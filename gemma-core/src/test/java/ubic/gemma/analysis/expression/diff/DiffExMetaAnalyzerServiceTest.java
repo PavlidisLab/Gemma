@@ -259,7 +259,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 
         // for upregulated genes, length(which (p.adjust(apply(tup, 1, function(x) 1 -
-        // pchisq(-2*sum(log(x)), 2*length(x)) ), method="BY") < 0.1))
+        // pchisq(-2*sum(log(x)), 2*length(x)) ), method="BH") < 0.1))
 
         // get 41.
 
@@ -273,77 +273,56 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             // System.err.println( gene + "\t" + r.getMetaPvalue() + "\t" + r.getMetaQvalue() + "\t"
             // + r.getMeanLogFoldChange() );
 
-            // these pvalues are computed in R. For example ... (this doesn't take into account the clipping we do, but
-            // that's done to the data before we entered into R)
+            // these pvalues are computed in R. For example:
             /*
              * apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["TCEB2"]
              */
             if ( gene.equals( "ACLY" ) ) {
 
-                logComponentResults( r, gene );
-
                 foundTests++;
-                assertEquals( 3.25e-6, r.getMetaPvalue(), 0.001 );
-                log.debug( "----" );
+                assertEquals( logComponentResults( r, gene ), 1.833343e-06, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "ABCF1" ) ) {
-                logComponentResults( r, gene );
 
                 foundTests++;
-                assertEquals( 0.0006160855, r.getMetaPvalue(), 0.001 );
-                log.debug( "----" );
+                assertEquals( logComponentResults( r, gene ), 0.0006160855, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "TCEB2" ) ) {
 
-                logComponentResults( r, gene );
                 foundTests++;
                 assertTrue( r.getMeanLogFoldChange() < 0 );
-                assertEquals( 1.261979e-02, r.getMetaPvalue(), 0.001 );
-
-                log.debug( "----" );
+                assertEquals( logComponentResults( r, gene ), 0.01562953, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "SLC2A1" ) ) {
-                logComponentResults( r, gene );
+
                 foundTests++;
                 assertTrue( r.getMeanLogFoldChange() < 0 );
-                assertEquals( 0.002368357, r.getMetaPvalue(), 0.001 );
-
-                log.debug( "----" );
+                assertEquals( logComponentResults( r, gene ), 0.001334221, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "SEPW1" ) ) {
-                logComponentResults( r, gene );
                 foundTests++;
-                assertEquals( 1.038296e-02, r.getMetaPvalue(), 0.001 );
-
-                log.debug( "----" );
+                assertEquals( logComponentResults( r, gene ), 0.00383366, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "SSR2" ) ) {
-                logComponentResults( r, gene );
                 foundTests++;
-                assertEquals( 0.0006207671, r.getMetaPvalue(), 0.001 );
+                assertEquals( logComponentResults( r, gene ), 0.0006207671, r.getMetaPvalue(), 0.001 );
 
-                log.debug( "----" );
             } else if ( gene.equals( "PDHA1" ) ) {
-                logComponentResults( r, gene );
                 foundTests++;
-                assertEquals( 4.543676e-06, r.getMetaPvalue(), 0.001 );
-
-                log.debug( "----" );
-
+                assertEquals( 1.312606e-06, r.getMetaPvalue(), 0.001 );
             }
 
             if ( r.getMeanLogFoldChange() > 0 ) {
                 numUp++;
-
             } else {
                 numDown++;
             }
         }
 
         assertEquals( 7, foundTests );
-        assertEquals( 74, numUp ); // R agrees
-        assertEquals( 201, numDown ); // R says 202, close enough.
-        assertEquals( 275, metaAnalysis.getResults().size() );
+        assertEquals( 90, numUp ); // R
+        assertEquals( 258, numDown ); // R
+        assertEquals( 348, metaAnalysis.getResults().size() );
 
         /*
          * Test ancillary methods
@@ -365,14 +344,17 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     /**
      * @param r
      * @param gene
+     * @return details
      */
-    private void logComponentResults( GeneDifferentialExpressionMetaAnalysisResult r, String gene ) {
-        if ( !log.isDebugEnabled() ) return;
+    private String logComponentResults( GeneDifferentialExpressionMetaAnalysisResult r, String gene ) {
+        StringBuilder buf = new StringBuilder();
         for ( DifferentialExpressionAnalysisResult rr : r.getResultsUsed() ) {
-            log.debug( String.format( "%s  %s fv=%d  p=%.4f t=%.2f", gene, rr.getProbe().getName(), rr.getContrasts()
+            buf.append( String.format( "%s  %s fv=%d  p=%.4f t=%.2f", gene, rr.getProbe().getName(), rr.getContrasts()
                     .iterator().next().getFactorValue().getId(), rr.getPvalue(), rr.getContrasts().iterator().next()
-                    .getCoefficient() ) );
+                    .getCoefficient() )
+                    + "\n" );
         }
+        return buf.toString();
     }
 
     /**

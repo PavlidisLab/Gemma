@@ -26,14 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
@@ -48,10 +44,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
+import cern.colt.list.DoubleArrayList;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
  * @version $Id$
  */
@@ -282,8 +277,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             return null;
         }
 
-        // FIXME it might be possible for a gene to show up on both up and down lists. It can also happen that the
-
         assert metaAnalysisResultsUp.size() == metaAnalysisResultsDown.size();
 
         log.info( metaAnalysisResultsUp.size() + " initial meta-analysis results" );
@@ -356,9 +349,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             Double pvalue = r.getPvalue();
             assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
 
-            // temporary, as my test database doesn't have all contrasts computed.
-            if ( r.getContrasts().isEmpty() ) return null;
-
             if ( pvalue < bestPvalue ) {
                 bestPvalue = pvalue;
                 best = r;
@@ -389,36 +379,35 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             }
 
             /*
-             * Pvalues stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
-             * consider just one tail. However, because each gene gets two chances to be significant (up and down) we
-             * _also_ do an implicit Bonferroni correction. So we end up leaving it as is.
+             * P-values stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
+             * consider just one tail.
              */
-            // pvalue /= 2.0;
+            pvalue /= 2.0;
+
+            /*
+             * Next decide if we should use the "up" or "down" part of the pvalue. We examine the fold change, and
+             * associate the original pvalue with that tail. We then switch tails if necessary.
+             */
+            assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
+            Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
+
+            if ( ( upperTail && logFoldChange < 0 ) || ( !upperTail && logFoldChange > 0 ) ) {
+                pvalue = 1.0 - pvalue;
+            }
 
             if ( pvalue < bestPvalue ) {
-                assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
-
-                Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
-
-                if ( upperTail ) {
-                    if ( logFoldChange < 0 ) {
-                        bestPvalue = 1.0 - pvalue;
-                    } else {
-                        bestPvalue = pvalue;
-                    }
-                } else {
-                    if ( logFoldChange < 0 ) {
-                        bestPvalue = pvalue;
-                    } else {
-                        bestPvalue = 1.0 - pvalue;
-                    }
-                }
-
+                bestPvalue = pvalue;
             }
         }
 
         assert bestPvalue <= 1.0 && bestPvalue >= 0.0;
 
+        /*
+         * Because each gene gets two chances to be significant (up and down) we considered to _also_ do a Bonferroni
+         * correction. This would be too conservative because the pair of pvalues are correlated. If one pvalue is good
+         * the other is bad. There is no need for this correction.
+         */
+        // return Math.min( 1.0, 2.0 * bestPvalue );
         return bestPvalue;
     }
 
