@@ -78,15 +78,15 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             }
         }
 
-        OntologyTerm t1 = os.getTerm( "http://purl.org/obo/owl/DOID#DOID_0050001" );
+        OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
         assertNotNull( t1 );
 
         // Actinomadura madurae infectious disease
-        assertTrue( os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050001" ) );
+        assertTrue( os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050001" ) );
 
-        // inflammatory diarrhea, not obolete as of May 2012.
-        assertNotNull( os.getTerm( "http://purl.org/obo/owl/DOID#DOID_0050132" ) );
-        assertTrue( !os.isObsolete( "http://purl.org/obo/owl/DOID#DOID_0050132" ) );
+        // inflammatory diarrhea, not obsolete as of May 2012.
+        assertNotNull( os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
+        assertTrue( !os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
 
     }
 }
