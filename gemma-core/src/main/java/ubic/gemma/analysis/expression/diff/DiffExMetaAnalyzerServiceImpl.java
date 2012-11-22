@@ -216,17 +216,18 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             }
 
             /*
-             * Note that this value can be misleading. It should not be used to determine the change that was
-             * "looked for". Use the 'upperTail' field instead.
-             */
-            Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
-
-            /*
              * FIXME what to do if there is just one pvalue for the gene? Is this good enough?
              */
             if ( pvalues4geneUp.size() < 2 ) {
                 continue;
             }
+
+            /*
+             * Note that this value can be misleading. It should not be used to determine the change that was
+             * "looked for". Use the 'upperTail' field instead.
+             */
+            Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
+            assert meanLogFoldChange != null;
 
             double fisherPvalueUp = MetaAnalysis.fisherCombinePvalues( pvalues4geneUp );
             double fisherPvalueDown = MetaAnalysis.fisherCombinePvalues( pvalues4geneDown );

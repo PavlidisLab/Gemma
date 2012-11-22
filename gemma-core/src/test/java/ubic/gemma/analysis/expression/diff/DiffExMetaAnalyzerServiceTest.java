@@ -270,8 +270,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
 
             String gene = r.getGene().getOfficialSymbol();
-            // System.err.println( gene + "\t" + r.getMetaPvalue() + "\t" + r.getMetaQvalue() + "\t"
-            // + r.getMeanLogFoldChange() );
 
             // these pvalues are computed in R. For example:
             /*
@@ -290,13 +288,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             } else if ( gene.equals( "TCEB2" ) ) {
 
                 foundTests++;
-                assertTrue( r.getMeanLogFoldChange() < 0 );
+                assertTrue( !r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.01562953, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "SLC2A1" ) ) {
 
                 foundTests++;
-                assertTrue( r.getMeanLogFoldChange() < 0 );
+                assertTrue( !r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.001334221, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "SEPW1" ) ) {
@@ -312,7 +310,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 assertEquals( 1.312606e-06, r.getMetaPvalue(), 0.001 );
             }
 
-            if ( r.getMeanLogFoldChange() > 0 ) {
+            if ( r.getUpperTail() ) {
                 numUp++;
             } else {
                 numDown++;

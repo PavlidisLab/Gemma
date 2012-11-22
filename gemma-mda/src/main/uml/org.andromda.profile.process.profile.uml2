@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527578125_463523_83" name="process" metamodelReference="_11_5_e240333_1154527578125_463523_83_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_hk9KizQqEeKIfu4DuKvdCA" source="attributes">
-    <details xmi:id="_hk9KjDQqEeKIfu4DuKvdCA" key="version" value="0"/>
+  <eAnnotations xmi:id="_m1B2wjQ4EeKIfu4DuKvdCA" source="attributes">
+    <details xmi:id="_m1B2wzQ4EeKIfu4DuKvdCA" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_hk9KjTQqEeKIfu4DuKvdCA" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_hk9KjjQqEeKIfu4DuKvdCA" name="process_0" nsURI="http:///process_0_hk43wDQqEeKIfu4DuKvdCA.profile.uml2" nsPrefix="process_0"/>
+  <eAnnotations xmi:id="_m1B2xDQ4EeKIfu4DuKvdCA" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_m1B2xTQ4EeKIfu4DuKvdCA" name="process_0" nsURI="http:///process_0_m0-I8DQ4EeKIfu4DuKvdCA.profile.uml2" nsPrefix="process_0"/>
   </eAnnotations>
   <packageImport xmi:id="_11_5_e240333_1154527578125_463523_83_packageImportcreatedOnLoad">
     <importedPackage xmi:type="uml:Model" href="pathmap://UML2_METAMODELS/UML2.metamodel.uml2#_m8qbA686EdiEh75YJ_3n8g"/>
