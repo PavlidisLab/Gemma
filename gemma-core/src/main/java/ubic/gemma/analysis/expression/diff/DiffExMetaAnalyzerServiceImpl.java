@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 
 /**
  * @author Paul
@@ -215,9 +216,10 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             }
 
             /*
-             * This might not be the right thing to compute. We really only care about the relevant sign.
+             * Note that this value can be misleading. It should not be used to determine the change that was
+             * "looked for". Use the 'upperTail' field instead.
              */
-            // Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
+            Double meanLogFoldChange = Descriptive.mean( foldChanges4gene );
 
             /*
              * FIXME what to do if there is just one pvalue for the gene? Is this good enough?
@@ -233,38 +235,15 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 continue;
             }
 
-            // if ( fisherPvalueUp == fisherPvalueDown || ( fisherPvalueUp < fisherPvalueDown && meanLogFoldChange < 0 )
-            // || ( fisherPvalueUp > fisherPvalueDown && meanLogFoldChange > 0 ) ) {
-            // /*
-            // * InconsistentResult/illogical results. Is this the right thing to do? Might be better to simply store
-            // * the direction, without the mean.
-            // */
-            // log.info( "Skipping result for " + g.getOfficialSymbol()
-            // + " because results are too inconsistent (mean log fold change is not consistent with pvalue)" );
-            // continue;
-            // }
-
             pvaluesUp.add( fisherPvalueUp );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultUp = makeMetaAnalysisResult( g, resultsUsed,
-                    1.0, fisherPvalueUp, true );
+                    meanLogFoldChange, fisherPvalueUp, true );
             metaAnalysisResultsUp.add( metaAnalysisResultUp );
 
             pvaluesDown.add( fisherPvalueDown );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultDown = makeMetaAnalysisResult( g,
-                    resultsUsed, -1.0, fisherPvalueDown, false );
+                    resultsUsed, meanLogFoldChange, fisherPvalueDown, false );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
-
-            // // debug code.
-            // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
-            // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
-
-            // System.err.println( String.format( "%s.up<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)", g.getOfficialSymbol(),
-            // StringUtils.join( pvalues4geneUp.toList(), ',' ), pvalues4geneUp.size() ) );
-            // System.err.println( String.format( "%s.down<-1 - pchisq(-2*sum(log(c(%s))), 2*%d)",
-            // g.getOfficialSymbol(),
-            // StringUtils.join( pvalues4geneDown.toList(), ',' ), pvalues4geneDown.size() ) );
 
             if ( log.isDebugEnabled() )
                 log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
@@ -448,7 +427,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 .newInstance();
         metaAnalysisResult.setMetaPvalue( fisherPvalue );
         metaAnalysisResult.getResultsUsed().addAll( resultsUsed );
-        metaAnalysisResult.setMeanLogFoldChange( meanLogFoldChange );
         metaAnalysisResult.setGene( g );
         metaAnalysisResult.setUpperTail( upperTail );
         return metaAnalysisResult;
