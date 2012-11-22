@@ -238,12 +238,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
             pvaluesUp.add( fisherPvalueUp );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultUp = makeMetaAnalysisResult( g, resultsUsed,
-                    meanLogFoldChange, fisherPvalueUp, true );
+                    meanLogFoldChange, fisherPvalueUp, Boolean.TRUE );
             metaAnalysisResultsUp.add( metaAnalysisResultUp );
 
             pvaluesDown.add( fisherPvalueDown );
             GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResultDown = makeMetaAnalysisResult( g,
-                    resultsUsed, meanLogFoldChange, fisherPvalueDown, false );
+                    resultsUsed, meanLogFoldChange, fisherPvalueDown, Boolean.FALSE );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
             if ( log.isDebugEnabled() )

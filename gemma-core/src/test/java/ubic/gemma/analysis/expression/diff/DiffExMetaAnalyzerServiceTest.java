@@ -310,6 +310,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 assertEquals( 1.312606e-06, r.getMetaPvalue(), 0.001 );
             }
 
+            assertNotNull( r.getUpperTail() );
+
             if ( r.getUpperTail() ) {
                 numUp++;
             } else {
