@@ -44,6 +44,7 @@ public class GroupEvidenceValueObject extends EvidenceValueObject {
         this.setScoreValueObject( litEvidenceValueObject.getScoreValueObject() );
         this.setTaxonCommonName( litEvidenceValueObject.getTaxonCommonName() );
         this.setContainQueryPhenotype( litEvidenceValueObject.isContainQueryPhenotype() );
+        this.setLastUpdated( litEvidenceValueObject.getLastUpdated() );
     }
 
     public Collection<LiteratureEvidenceValueObject> getLiteratureEvidences() {
