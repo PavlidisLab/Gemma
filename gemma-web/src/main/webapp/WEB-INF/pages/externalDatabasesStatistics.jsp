@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-    <title>External Databases Statistics</title>
+    <title>Neurocarta Statistics</title>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	

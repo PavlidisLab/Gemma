@@ -53,7 +53,6 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -833,24 +832,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * find statistic on an external database that is used in neurocarta
+     * find statistics on evidence used in neurocarta
      * 
      * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
      */
     @Override
-    public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
+    public Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics() {
 
-        Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new HashSet<ExternalDatabaseStatisticsValueObject>();
+        Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
 
-        // all external sources use by Neurocarta
-        Collection<ExternalDatabase> externalDatabases = this.associationService.findNeurocartaExternalDatabases();
+        // find statistics the external databases sources
+        externalDatabaseStatisticsValueObjects.addAll( this.associationService.loadStatisticsOnExternalDatabases() );
 
-        for ( ExternalDatabase externalDatabase : externalDatabases ) {
+        // manual curation
+        externalDatabaseStatisticsValueObjects.add( this.associationService.loadStatisticsOnManualCuration() );
 
-            // find statistics for a neurocarta external datbase (numGene, numPhenotypes, etc.)
-            externalDatabaseStatisticsValueObjects.add( this.associationService
-                    .findStatisticsOnDatabase( externalDatabase ) );
-        }
         return externalDatabaseStatisticsValueObjects;
     }
 

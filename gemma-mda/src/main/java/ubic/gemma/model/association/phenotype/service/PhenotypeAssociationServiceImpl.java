@@ -32,7 +32,6 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -206,16 +205,16 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidenceOwners();
     }
 
-    /** finds all external databases used by neurocarta */
+    /** finds all external databases statistics used in neurocarta */
     @Override
-    public Collection<ExternalDatabase> findNeurocartaExternalDatabases() {
-        return this.phenotypeAssociationDao.findNeurocartaExternalDatabases();
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases() {
+        return this.phenotypeAssociationDao.loadStatisticsOnExternalDatabases();
     }
 
-    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
+    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     @Override
-    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase ) {
-        return this.phenotypeAssociationDao.findStatisticsOnDatabase( externalDatabase );
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
+        return this.phenotypeAssociationDao.loadStatisticsOnManualCuration();
     }
 
 }

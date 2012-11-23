@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -65,11 +64,11 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable );
 
-    /** finds all external databases used by neurocarta */
-    public Collection<ExternalDatabase> findNeurocartaExternalDatabases();
+    /** finds all external databases statistics used in neurocarta */
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases();
 
-    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
-    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase );
+    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,

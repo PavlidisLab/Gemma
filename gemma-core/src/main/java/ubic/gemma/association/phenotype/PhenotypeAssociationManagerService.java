@@ -213,11 +213,11 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<String> findEvidenceOwners();
 
     /**
-     * find statistic on an external database that is used in neurocarta
+     * find statistics on evidence used in neurocarta
      * 
      * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
      */
-    public abstract Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics();
+    public abstract Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics();
 
     /**
      * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis

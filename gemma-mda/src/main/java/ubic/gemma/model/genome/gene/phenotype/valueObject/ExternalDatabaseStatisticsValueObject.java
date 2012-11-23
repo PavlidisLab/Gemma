@@ -14,7 +14,9 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-public class ExternalDatabaseStatisticsValueObject {
+import java.util.Date;
+
+public class ExternalDatabaseStatisticsValueObject implements Comparable<ExternalDatabaseStatisticsValueObject> {
 
     private String name = "";
     private String description = "";
@@ -22,10 +24,15 @@ public class ExternalDatabaseStatisticsValueObject {
     private Long numEvidence = 0L;
     private Long numGenes = 0L;
     private Long numPhenotypes = 0L;
-    private String lastUpdateDate = "";
+    private Long numPublications = 0L;
+    private Date lastUpdateDate = null;
+
+    public ExternalDatabaseStatisticsValueObject() {
+        super();
+    }
 
     public ExternalDatabaseStatisticsValueObject( String name, String description, String webUri, Long numEvidence,
-            Long numGenes, Long numPhenotypes, String lastUpdateDate ) {
+            Long numGenes, Long numPhenotypes, Long numPublications, Date lastUpdateDate ) {
         super();
         this.name = name;
         this.description = description;
@@ -33,6 +40,7 @@ public class ExternalDatabaseStatisticsValueObject {
         this.numEvidence = numEvidence;
         this.numGenes = numGenes;
         this.numPhenotypes = numPhenotypes;
+        this.numPublications = numPublications;
         this.lastUpdateDate = lastUpdateDate;
     }
 
@@ -84,12 +92,34 @@ public class ExternalDatabaseStatisticsValueObject {
         this.numPhenotypes = numPhenotypes;
     }
 
-    public String getLastUpdateDate() {
+    public Long getNumPublications() {
+        return this.numPublications;
+    }
+
+    public void setNumPublications( Long numPublications ) {
+        this.numPublications = numPublications;
+    }
+
+    public Date getLastUpdateDate() {
         return this.lastUpdateDate;
     }
 
-    public void setLastUpdateDate( String lastUpdateDate ) {
+    public void setLastUpdateDate( Date lastUpdateDate ) {
         this.lastUpdateDate = lastUpdateDate;
+    }
+
+    public void addNumPublications( Long addNumPublications ) {
+        this.numPublications += addNumPublications;
+    }
+
+    @Override
+    public int compareTo( ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject ) {
+
+        if ( this.webUri.equals( "" ) ) {
+            return 1;
+        }
+
+        return this.getName().toLowerCase().compareTo( externalDatabaseStatisticsValueObject.getName().toLowerCase() );
     }
 
 }

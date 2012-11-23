@@ -18,8 +18,10 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -188,48 +190,128 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
     }
 
-    /** finds all external databases used by neurocarta */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<ExternalDatabase> findNeurocartaExternalDatabases() {
-        return this.getHibernateTemplate().find(
-                "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociationImpl as p" );
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases() {
+
+        HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<String, ExternalDatabaseStatisticsValueObject>();
+
+        List<Object[]> numEvidence = this
+                .getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociationImpl as p group by p.evidenceSource.externalDatabase order by p.status.lastUpdateDate desc" );
+
+        for ( Object[] o : numEvidence ) {
+
+            ExternalDatabase externalDatabase = ( ExternalDatabase ) o[0];
+            Long count = ( Long ) o[1];
+
+            ExternalDatabaseStatisticsValueObject externalDatabaseStatistics = new ExternalDatabaseStatisticsValueObject();
+            externalDatabaseStatistics.setDescription( externalDatabase.getDescription() );
+            externalDatabaseStatistics.setName( externalDatabase.getName() );
+            externalDatabaseStatistics.setLastUpdateDate( ( Date ) o[2] );
+            externalDatabaseStatistics.setWebUri( externalDatabase.getWebUri() );
+            externalDatabaseStatistics.setNumEvidence( count );
+            externalDatabasesStatistics.put( externalDatabase.getName(), externalDatabaseStatistics );
+        }
+
+        List<Object[]> numGenes = this
+                .getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct g) from GeneImpl as g join g.phenotypeAssociations as p group by p.evidenceSource.externalDatabase" );
+
+        for ( Object[] o : numGenes ) {
+            String externalDatabaseName = ( String ) o[0];
+            externalDatabasesStatistics.get( externalDatabaseName ).setNumGenes( ( Long ) o[1] );
+        }
+
+        List<Object[]> numPhenotypes = this
+                .getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct c.valueUri) from PhenotypeAssociationImpl as p join p.phenotypes as c group by p.evidenceSource.externalDatabase" );
+
+        for ( Object[] o : numPhenotypes ) {
+            String externalDatabaseName = ( String ) o[0];
+            externalDatabasesStatistics.get( externalDatabaseName ).setNumPhenotypes( ( Long ) o[1] );
+        }
+
+        List<Object[]> numPublicationsLiterature = this
+                .getHibernateTemplate()
+                .find( "select l.evidenceSource.externalDatabase.name, count (distinct l.citation.pubAccession.accession) from LiteratureEvidenceImpl as l group by l.evidenceSource.externalDatabase" );
+
+        for ( Object[] o : numPublicationsLiterature ) {
+            String externalDatabaseName = ( String ) o[0];
+            externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
+        }
+
+        List<Object[]> numPublicationsExperimentalPrimary = this
+                .getHibernateTemplate()
+                .find( "select ex.evidenceSource.externalDatabase.name, count (distinct ex.experiment.primaryPublication.pubAccession.accession) from ExperimentalEvidenceImpl as ex group by ex.evidenceSource.externalDatabase" );
+
+        for ( Object[] o : numPublicationsExperimentalPrimary ) {
+            String externalDatabaseName = ( String ) o[0];
+            externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
+        }
+
+        List<Object[]> numPublicationsExperimentalSecondary = this
+                .getHibernateTemplate()
+                .find( "select ex.evidenceSource.externalDatabase.name, count (o.pubAccession.accession) from ExperimentalEvidenceImpl as ex join ex.experiment.otherRelevantPublications as o group by ex.evidenceSource.externalDatabase" );
+
+        for ( Object[] o : numPublicationsExperimentalSecondary ) {
+            String externalDatabaseName = ( String ) o[0];
+            externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
+        }
+
+        return externalDatabasesStatistics.values();
     }
 
-    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
+    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     @SuppressWarnings("unchecked")
     @Override
-    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase ) {
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
 
-        Long numEvidence = ( Long ) this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase = :e",
-                        "e", externalDatabase ).iterator().next();
+        Long numEvidence = ( Long ) this.getHibernateTemplate()
+                .find( "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource is null" )
+                .iterator().next();
 
         Long numGenes = ( Long ) this
                 .getHibernateTemplate()
-                .findByNamedParam(
-                        "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource.externalDatabase = :e",
-                        "e", externalDatabase ).iterator().next();
+                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource is null" )
+                .iterator().next();
 
         Long numPhenotypes = ( Long ) this
                 .getHibernateTemplate()
-                .findByNamedParam(
-                        "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource.externalDatabase = :e",
-                        "e", externalDatabase ).iterator().next();
+                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource is null" )
+                .iterator().next();
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setMaxResults( 1 );
 
-        String lastUpdateDate = ( ( Timestamp ) tpl
-                .findByNamedParam(
-                        "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p where p.evidenceSource.externalDatabase = :e order by p.status.lastUpdateDate desc",
-                        "e", externalDatabase ).iterator().next() ).toString();
+        Date lastUpdatedDate = ( ( Timestamp ) tpl
+                .find( "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p where p.evidenceSource is null order by p.status.lastUpdateDate desc" )
+                .iterator().next() );
+
+        Collection<String> publicationsLiterature = this
+                .getHibernateTemplate()
+                .find( "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l where l.evidenceSource is null" );
+
+        // find all primary pubmed for ExperimentalEvidence
+        Collection<String> publicationsExperimentalPrimary = this
+                .getHibernateTemplate()
+                .find( "select distinct ex.experiment.primaryPublication.pubAccession.accession from ExperimentalEvidenceImpl as ex where ex.evidenceSource is null" );
+
+        // find all secondary pubmed for ExperimentalEvidence
+        Collection<String> publicationsExperimentalSecondary = this
+                .getHibernateTemplate()
+                .find( "select distinct o.pubAccession.accession from ExperimentalEvidenceImpl as ex join ex.experiment.otherRelevantPublications as o where ex.evidenceSource is null" );
+
+        Set<String> publications = new HashSet<String>();
+        publications.addAll( publicationsLiterature );
+        publications.addAll( publicationsExperimentalPrimary );
+        publications.addAll( publicationsExperimentalSecondary );
+
+        Long numPublications = new Long( publications.size() );
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                externalDatabase.getName(), externalDatabase.getDescription(), externalDatabase.getWebUri(),
-                numEvidence, numGenes, numPhenotypes, lastUpdateDate );
+                "Manual Curation", "Evidence curated manually through literature review", "", numEvidence, numGenes,
+                numPhenotypes, numPublications, lastUpdatedDate );
 
         return externalDatabaseStatisticsValueObject;
     }

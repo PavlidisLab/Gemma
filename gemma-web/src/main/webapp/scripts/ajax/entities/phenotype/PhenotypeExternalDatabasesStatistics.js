@@ -15,8 +15,11 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 		name : "numPhenotypes",
 		type : "int"
 	}, {
+		name : "numPublications",
+		type : "int"
+	}, {
 		name : "lastUpdateDate",
-		type : "string"
+		type : "date"
 	} ]),
 	initComponent : function() {
 
@@ -30,18 +33,17 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 
 			reader : new Ext.data.JsonReader({
 				fields : [ 'name', 'description', 'webUri', 'numEvidence',
-						'numGenes', 'numPhenotypes', 'lastUpdateDate' ]
+						'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate' ]
 			}),
-
-			sortInfo : {
-				field : 'name',
-				direction : 'ASC'
-			}
 
 		});
 
 		function renderDatabase(val, metaData, record, row, col, store,
 				gridView) {
+			if( record.data.webUri==""){
+				return val;
+			}
+			
 			return '<A HREF=\'' + record.data.webUri + '\'>' + val + '</A>';
 		}
 
@@ -57,7 +59,7 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 
 				columns : [ {
 
-					header : "External database",
+					header : "Data source",
 					dataIndex : "name",
 					renderer : renderDatabase,
 					width : 0.55
@@ -83,11 +85,15 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 					width : 0.55
 				}, {
 
-					header : "Last updated date",
-					dataIndex : "lastUpdateDate",
+					header : "Number of publications",
+					dataIndex : "numPublications",
 					width : 0.55
+				}, {
+					header : "Last updated",
+					dataIndex : "lastUpdateDate",
+					width : 0.55,
+					renderer : Ext.util.Format.dateRenderer('Y/M/d')
 				}
-
 				]
 			})
 		});

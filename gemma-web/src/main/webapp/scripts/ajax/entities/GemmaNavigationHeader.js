@@ -226,7 +226,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                             text : 'QC updates',
                             href : "/Gemma/expressionExperimentsWithQC.html"
                         }, {
-                            text : 'Neurocarta External Sources',
+                            text : 'Neurocarta Statistics',
                             href : "/Gemma/externalDatabasesStatistics.html"
                         } ],
                 listeners : {

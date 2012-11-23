@@ -215,6 +215,6 @@ public class PhenotypeController extends BaseController {
     }
 
     public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
-        return this.phenotypeAssociationManagerService.calculateExternalDatabasesStatistics();
+        return this.phenotypeAssociationManagerService.loadNeurocartaStatistics();
     }
 }

@@ -26,7 +26,6 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -146,10 +145,10 @@ public interface PhenotypeAssociationService {
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
 
-    /** finds all external databases used by neurocarta */
-    public Collection<ExternalDatabase> findNeurocartaExternalDatabases();
+    /** finds all external databases statistics used in neurocarta */
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases();
 
-    /** find statistics for a neurocarta external database (numGene, numPhenotypes, etc.) */
-    public ExternalDatabaseStatisticsValueObject findStatisticsOnDatabase( ExternalDatabase externalDatabase );
+    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
 
 }
