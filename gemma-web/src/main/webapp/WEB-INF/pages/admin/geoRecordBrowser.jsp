@@ -25,20 +25,21 @@
 				xtype : 'button',
 				text : 'Back',
 				handler : function() {
-					grid.back(0);
+					grid.back(Ext.get('skip-field').getValue());
+					Ext.getCmp('skip-field').setValue('');
 				},
 				width : 50
-
 			}, {
 				id : 'next',
 				xtype : 'button',
 				text : 'Next',
 				handler : function() {
-					grid.proceed(Ext.get('skip').getValue());
+					grid.proceed(Ext.get('skip-field').getValue());
+					Ext.getCmp('skip-field').setValue('');
 				},
 				width : 50
 			}, {
-				id : 'skip',
+				id : 'skip-field',
 				xtype : 'textfield',
 				name : 'Skip',
 				fieldLabel : 'Skip',
@@ -47,6 +48,7 @@
 					specialKey : function(field, eventObj) {
 						if (eventObj.getKey() == Ext.EventObject.ENTER) {
 							grid.proceed(field.getValue());
+							field.setValue('');
 						}
 					}
 				},
@@ -81,9 +83,9 @@
 	<p>
 		Note: Records are not shown for taxa not in the Gemma system. If you choose to load an experiment, please be careful:
 		experiments that have two (or more) array designs should be loaded using the regular load form if you need to suppress
-		the sample-matching functions. <strong>Click on a row</strong> to display more information about the dataset, if available
-		from GEO, including information about platforms. This information is often not available for a day or two after the
-		data sets becomes publicly available.
+		the sample-matching functions. <strong>Click on a row</strong> to display more information about the dataset, if
+		available from GEO, including information about platforms. This information is often not available for a day or two
+		after the data sets becomes publicly available.
 	</p>
 	<div id="taskId" style="display: none;"></div>
 </body>

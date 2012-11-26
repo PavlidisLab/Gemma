@@ -44,30 +44,25 @@ public class GeoRecordBrowserController {
     /**
      * AJAX
      * 
-     * @param start
-     * @param count
-     * @param skip
-     * @return
+     * @param start starting record number
+     * @param count how many records to retrieve "per page"
+     * @return GEO series records fetch from GEO.
      * @throws IOException
      * @throws ParseException
      */
-    public Collection<GeoRecord> browse( int start, int count, int skip ) throws IOException, ParseException {
+    public Collection<GeoRecord> browse( int start, int count ) throws IOException, ParseException {
         if ( count == 0 ) {
             count = 20; // sorry.
         }
         if ( start < 0 ) {
             start = 0;
         }
-        if ( skip < 0 ) {
-            skip = 0;
-        }
-        if ( skip > 10000 ) {
-            skip = 10000;
-        }
-        int startPage = ( ( start + skip ) / count ) + 1;
+
+        int startPage = start / count + 1;
         log.debug( "Start page = " + startPage );
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
+        log.info( "Returning " + geoRecords.size() + " records on page=" + startPage );
         return geoRecords;
     }
 
