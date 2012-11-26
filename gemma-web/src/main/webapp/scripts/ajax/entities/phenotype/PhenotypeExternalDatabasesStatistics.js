@@ -44,7 +44,9 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 				return val;
 			}
 			
-			return '<A HREF=\'' + record.data.webUri + '\'>' + val + '</A>';
+			var imageSrc = '/Gemma/images/icons/externallink.png';
+			
+			return val+ ' <A HREF=\'' + record.data.webUri + '\'><img src="' + imageSrc + '" /></A>';
 		}
 
 		Ext.apply(this, {
