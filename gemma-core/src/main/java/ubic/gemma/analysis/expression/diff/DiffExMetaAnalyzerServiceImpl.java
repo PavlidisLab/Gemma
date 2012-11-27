@@ -177,6 +177,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
                 Double foldChange4GeneInOneResultSet = aggregateFoldChangeForGeneWithinResultSet( res );
 
+                if ( foldChange4GeneInOneResultSet == null ) {
+                    // we can't go on.
+                    continue;
+                }
+
                 // we use the pvalue for the 'best' direction, and set the other to be 1- that. An alternative would be
                 // to use _only_ the best one.
                 Double pvalue4GeneInOneResultSetUp;
