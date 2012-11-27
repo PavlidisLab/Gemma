@@ -1,6 +1,7 @@
 Ext.namespace('Gemma');
 
-Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
+Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
+	title: 'Neurocarta Statistics',
 	loadMask : true,
 	record : Ext.data.Record.create([ {
 		name : "name",
@@ -23,7 +24,7 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 	} ]),
 	initComponent : function() {
 
-		Gemma.ExternalDatabasesStatistics.superclass.initComponent.call(this);
+		Gemma.NeurocartaStatistics.superclass.initComponent.call(this);
 
 		var store = new Ext.data.Store({
 			autoLoad : true,
@@ -34,8 +35,7 @@ Gemma.ExternalDatabasesStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 			reader : new Ext.data.JsonReader({
 				fields : [ 'name', 'description', 'webUri', 'numEvidence',
 						'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate' ]
-			}),
-
+			})
 		});
 
 		function renderDatabase(val, metaData, record, row, col, store,

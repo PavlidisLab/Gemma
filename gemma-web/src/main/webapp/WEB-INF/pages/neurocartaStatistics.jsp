@@ -15,7 +15,7 @@
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 	
 			new Gemma.GemmaViewPort({
-				centerPanelConfig: new Gemma.ExternalDatabasesStatistics()
+				centerPanelConfig: new Gemma.NeurocartaStatistics()
 			});
 		});
 	</script>

@@ -162,7 +162,13 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 				updateFiltersStatus();
 			},
 			items: [			
-				filterButton
+				filterButton,
+				'->',
+				'<a target="_blank" href="' + 
+					(Gemma.isRunningOutsideOfGemma() ?
+						'http://www.chibi.ubc.ca' :
+						'') +
+					'/Gemma/neurocartaStatistics.html">Neurocarta Statistics</a>'			
             ]
 		});
 

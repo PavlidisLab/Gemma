@@ -94,6 +94,11 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
+    @RequestMapping(value = "/neurocartaStatistics.html", method = RequestMethod.GET)
+    public ModelAndView showNeurocartaStatistics() {
+        return new ModelAndView( "neurocartaStatistics" );
+    }
+
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
