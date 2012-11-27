@@ -64,6 +64,7 @@ public class ExpressionDataMatrixColumnSort {
          */
         controlGroupTerms.add( "control group" );
         controlGroupTerms.add( "control" );
+        controlGroupTerms.add( "normal" );
         controlGroupTerms.add( "untreated" );
         controlGroupTerms.add( "baseline" );
         controlGroupTerms.add( "control_group" );
