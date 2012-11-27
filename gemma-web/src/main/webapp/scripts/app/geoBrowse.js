@@ -51,9 +51,7 @@ Gemma.GeoBrowseGrid = Ext
 					proceed : function(s) {
 						// new start
 						this.start = Number(s) > 0 ? this.start + Number(s)
-								: (this.start + this.count);
-						console.log("skip=" + Number(s) + " start="
-								+ this.start);
+								: (this.start + this.count); 
 
 						this.store.load({
 							params : [ this.start, this.count ]
@@ -71,9 +69,7 @@ Gemma.GeoBrowseGrid = Ext
 						// new start. Either go to the skip, or go back one
 						// 'page', make sure greater than zero.
 						this.start = Math.max(0, Number(s) > 0 ? this.start
-								- Number(s) : this.start - this.count);
-						console.log("skip=" + Number(s) + " start="
-								+ this.start);
+								- Number(s) : this.start - this.count); 
 
 						this.store.load({
 							params : [ this.start, this.count ]
