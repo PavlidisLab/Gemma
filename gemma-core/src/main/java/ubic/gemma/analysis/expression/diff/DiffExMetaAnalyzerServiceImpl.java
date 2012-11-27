@@ -324,7 +324,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @param res
      * @return
      */
-    @SuppressWarnings("null")
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();
         Double bestPvalue = Double.MAX_VALUE;
@@ -332,6 +331,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         for ( DifferentialExpressionAnalysisResult r : res ) {
             Double pvalue = r.getPvalue();
+            if ( pvalue == null ) continue;
+
             assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
 
             if ( pvalue < bestPvalue ) {
@@ -339,6 +340,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 best = r;
             }
         }
+
+        if ( best == null ) return null;
 
         assert best != null && best.getContrasts().size() == 1;
         return best.getContrasts().iterator().next().getLogFoldChange();

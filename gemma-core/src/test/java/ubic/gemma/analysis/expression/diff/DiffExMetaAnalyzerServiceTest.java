@@ -283,7 +283,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 assertEquals( logComponentResults( r, gene ), 1.833343e-06, r.getMetaPvalue(), 0.001 );
 
             } else if ( gene.equals( "ABCF1" ) ) {
-
+                log.info( logComponentResults( r, gene ) );
                 foundTests++;
                 assertEquals( logComponentResults( r, gene ), 0.0006160855, r.getMetaPvalue(), 0.001 );
 
