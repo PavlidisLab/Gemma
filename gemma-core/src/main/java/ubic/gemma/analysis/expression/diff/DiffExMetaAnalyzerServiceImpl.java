@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -253,10 +254,10 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
             // debug code.
-            // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
-            // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
+            System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
+                    + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
+            System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
+                    + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
 
             if ( log.isDebugEnabled() )
                 log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),

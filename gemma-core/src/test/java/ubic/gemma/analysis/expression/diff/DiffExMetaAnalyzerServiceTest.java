@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,8 +261,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         // for upregulated genes, length(which (p.adjust(apply(tup, 1, function(x) 1 -
         // pchisq(-2*sum(log(x)), 2*length(x)) ), method="BH") < 0.1))
 
-        // get 41.
-
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
@@ -328,7 +327,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         /*
          * Test ancillary methods
          */
-        metaAnalysis = analysisService.create( metaAnalysis );
+        metaAnalysis.setName( RandomStringUtils.random( 10 ) );
+        metaAnalysis = analyzerService.persist( metaAnalysis );
 
         assertNotNull( metaAnalysis.getId() );
 
