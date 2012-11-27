@@ -46,7 +46,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 			
 			var imageSrc = '/Gemma/images/icons/externallink.png';
 			
-			return val+ ' <A HREF=\'' + record.data.webUri + '\'><img src="' + imageSrc + '" /></A>';
+			return val+ ' <A HREF=\'' + record.data.webUri + '\' TARGET="_blank"><img src="' + imageSrc + '" /></A>';
 		}
 
 		Ext.apply(this, {
