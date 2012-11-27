@@ -58,11 +58,10 @@ public class GeoRecordBrowserController {
             start = 0;
         }
 
-        int startPage = start / count + 1;
-        log.debug( "Start page = " + startPage );
+        int startPage = start / count + 1; 
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
-        log.info( "Returning " + geoRecords.size() + " records on page=" + startPage );
+        log.debug( "Returning " + geoRecords.size() + " records on page=" + startPage );
         return geoRecords;
     }
 
