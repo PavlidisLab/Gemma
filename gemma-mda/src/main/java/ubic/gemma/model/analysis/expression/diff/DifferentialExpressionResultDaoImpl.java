@@ -804,14 +804,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             Hibernate.initialize( result );
             CompositeSequence cs = result.getProbe();
             Hibernate.initialize( cs );
-
             Hibernate.initialize( result.getContrasts() );
-
-            // for ( ContrastResult contrast : result.getContrasts() ) {
-            // FactorValue f = contrast.getFactorValue();
-            // Hibernate.initialize( f );
-            // f.getIsBaseline();
-            // }
         }
 
     }

@@ -67,14 +67,18 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
+    @Override
+    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
+        return analysisService.create( analysis );
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.expression.diff.DiffExMetaAnalyserService#analyze(java.util.Collection)
      */
     @Override
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds, String name,
-            String description ) {
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
         Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet( analysisResultSetIds );
 
@@ -136,9 +140,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsDown = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
         for ( Gene g : gene2result.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> res4gene = gene2result.get( g );
-
-            // FIXME this might be avoidable, could be slow. Better to do in bulk elsewhere.
-            differentialExpressionResultService.thaw( res4gene );
 
             Map<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>> results4geneInOneResultSet = new HashMap<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>>();
             for ( DifferentialExpressionAnalysisResult r : res4gene ) {
@@ -251,6 +252,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                     resultsUsed, meanLogFoldChange, fisherPvalueDown, Boolean.FALSE );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
+            // debug code.
+            // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
+            // + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
+            // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
+            // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
+
             if ( log.isDebugEnabled() )
                 log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
                         fisherPvalueUp, fisherPvalueDown ) );
@@ -291,14 +298,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         log.info( "Found " + analysis.getResults().size() + " results meeting meta-qvalue of "
                 + QVALUE_FOR_STORAGE_THRESHOLD );
-
-        // Save results only when name is specified. FIXME this is a very obscure way to trigger this.
-        if ( name != null ) {
-            // FIXME do this in a separate method.
-            analysis.setName( name );
-            analysis.setDescription( description );
-            analysis = analysisService.create( analysis );
-        }
 
         return analysis;
     }

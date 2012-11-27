@@ -36,31 +36,42 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     private int resultSetCount;
     private String name;
     private String description;
+    private boolean persist = false;
+
+    public boolean isPersist() {
+        return persist;
+    }
+
+    public void setPersist( boolean persist ) {
+        this.persist = persist;
+    }
 
     public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds, int resultSetCount ) {
         this.analysisResultSetIds = analysisResultSetIds;
         this.resultSetCount = resultSetCount;
     }
 
-    public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds, String name, String description) {
+    public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds, String name, String description,
+            boolean persist ) {
         this.analysisResultSetIds = analysisResultSetIds;
-    	this.name = name;
-    	this.description = description;
+        this.name = name;
+        this.description = description;
+        this.persist = persist;
     }
 
-	public Collection<Long> getAnalysisResultSetIds() {
-		return this.analysisResultSetIds;
-	}
+    public Collection<Long> getAnalysisResultSetIds() {
+        return this.analysisResultSetIds;
+    }
 
-	public int getResultSetCount() {
-		return this.resultSetCount;
-	}
+    public int getResultSetCount() {
+        return this.resultSetCount;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	public String getDescription() {
-		return this.description;
-	}
+    public String getDescription() {
+        return this.description;
+    }
 }

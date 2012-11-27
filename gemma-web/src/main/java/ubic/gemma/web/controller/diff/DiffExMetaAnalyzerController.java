@@ -23,6 +23,7 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,8 +50,18 @@ import ubic.gemma.util.ConfigUtils;
 @Controller
 public class DiffExMetaAnalyzerController extends AbstractTaskService {
 
-    public DiffExMetaAnalyzerController() {
-        this.setBusinessInterface( DiffExMetaAnalyzerTask.class );
+    /**
+     * Local task.
+     */
+    private class DiffExMetaAnalyzerJob extends BackgroundJob<DiffExMetaAnalyzerTaskCommand> {
+        public DiffExMetaAnalyzerJob( DiffExMetaAnalyzerTaskCommand commandObj ) {
+            super( commandObj );
+        }
+
+        @Override
+        public TaskResult processJob() {
+            return diffExMetaAnalyzerTask.execute( command );
+        }
     }
 
     /**
@@ -69,29 +80,68 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
         }
     }
 
-    /**
-     * Local task.
-     */
-    private class DiffExMetaAnalyzerJob extends BackgroundJob<DiffExMetaAnalyzerTaskCommand> {
-        public DiffExMetaAnalyzerJob( DiffExMetaAnalyzerTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return diffExMetaAnalyzerTask.execute( command );
-        }
-    }
-
     @Autowired
     private DiffExMetaAnalyzerTask diffExMetaAnalyzerTask;
 
     @Autowired
-    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
 
     @Autowired
-    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
-    
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+
+    public DiffExMetaAnalyzerController() {
+        this.setBusinessInterface( DiffExMetaAnalyzerTask.class );
+    }
+
+    /**
+     * @param analysisResultSetIds
+     * @param resultSetCount
+     * @return
+     */
+    public String analyzeResultSets( Collection<Long> analysisResultSetIds, int resultSetCount ) {
+        DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, resultSetCount );
+        return super.run( cmd );
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis( Long id ) {
+        return this.geneDiffExMetaAnalysisHelperService.getMetaAnalysis( id );
+    }
+
+    /**
+     * @return
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses() {
+        return this.geneDiffExMetaAnalysisHelperService.getMyMetaAnalyses();
+    }
+
+    /**
+     * @param id
+     */
+    public void removeMetaAnalysis( Long id ) {
+        try {
+            this.geneDiffExMetaAnalysisService.delete( id );
+        } catch ( Exception e ) {
+            // TODO: should do something if analysis cannot be removed.
+        }
+    }
+
+    /**
+     * @param analysisResultSetIds
+     * @param name
+     * @param description
+     * @return
+     */
+    public String saveResultSets( Collection<Long> analysisResultSetIds, String name, String description ) {
+        boolean persist = StringUtils.isNotBlank( name );
+        DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, name, description,
+                persist );
+        return super.run( cmd );
+    }
+
     /**
      * Show meta-analysis manager
      * 
@@ -99,34 +149,16 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
      * @param response
      * @return ModelAndView
      */
-	@RequestMapping(value = { "/metaAnalysisManager.html" })
-	public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
-	    return new ModelAndView( "metaAnalysisManager" );
-	}
-    
-	public String analyzeResultSets(Collection<Long> analysisResultSetIds, int resultSetCount) {
-		DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, resultSetCount );
-		return super.run( cmd ); 
+    @RequestMapping(value = { "/metaAnalysisManager.html" })
+    public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "metaAnalysisManager" );
     }
-    
-	public String saveResultSets(Collection<Long> analysisResultSetIds, String name, String description) {
-		DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, name, description );
-		return super.run( cmd );
-	}
 
-	public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis(Long id) {
-		return this.geneDiffExMetaAnalysisHelperService.getMetaAnalysis(id);
-	}
-	
-	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses() {
-		return this.geneDiffExMetaAnalysisHelperService.getMyMetaAnalyses();
-	}
-
-	// TODO: should do something if analysis cannot be removed.
-	public void removeMetaAnalysis(Long id) {
-		this.geneDiffExMetaAnalysisService.delete(id);
-	}
-	
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
+     */
     @Override
     protected BackgroundJob<DiffExMetaAnalyzerTaskCommand> getInProcessRunner( TaskCommand command ) {
         if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" ) ) {
@@ -135,6 +167,11 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
         return new DiffExMetaAnalyzerJob( ( DiffExMetaAnalyzerTaskCommand ) command );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
+     */
     @Override
     protected BackgroundJob<DiffExMetaAnalyzerTaskCommand> getSpaceRunner( TaskCommand command ) {
         return new DiffExMetaAnalyzerSpaceJob( ( DiffExMetaAnalyzerTaskCommand ) command );

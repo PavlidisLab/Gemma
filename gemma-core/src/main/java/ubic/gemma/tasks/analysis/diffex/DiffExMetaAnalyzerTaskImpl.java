@@ -36,22 +36,27 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 @Component
 public class DiffExMetaAnalyzerTaskImpl implements DiffExMetaAnalyzerTask {
-	
-	@Autowired
-	private DiffExMetaAnalyzerService diffExMetaAnalyzerService;
-	
-	@Autowired
-	private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService; 
+
+    @Autowired
+    private DiffExMetaAnalyzerService diffExMetaAnalyzerService;
+
+    @Autowired
+    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
 
     @Override
     @TaskMethod
     public TaskResult execute( DiffExMetaAnalyzerTaskCommand command ) {
-		GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze(
-				command.getAnalysisResultSetIds(), command.getName(), command.getDescription());
-	
-		GeneDifferentialExpressionMetaAnalysisDetailValueObject metaAnalysisVO = (metaAnalysis == null ?
-				null :
-				this.geneDiffExMetaAnalysisHelperService.convertToValueObject(metaAnalysis));
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( command
+                .getAnalysisResultSetIds() );
+        metaAnalysis.setName( command.getName() );
+        metaAnalysis.setDescription( command.getDescription() );
+
+        if ( command.isPersist() ) {
+            metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
+        }
+
+        GeneDifferentialExpressionMetaAnalysisDetailValueObject metaAnalysisVO = ( metaAnalysis == null ? null
+                : this.geneDiffExMetaAnalysisHelperService.convertToValueObject( metaAnalysis ) );
 
         return new TaskResult( command, metaAnalysisVO );
     }

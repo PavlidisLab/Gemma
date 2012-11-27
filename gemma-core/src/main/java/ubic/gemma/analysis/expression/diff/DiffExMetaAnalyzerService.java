@@ -33,7 +33,12 @@ public interface DiffExMetaAnalyzerService {
      * @param description
      * @return
      */
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds, String name,
-            String description );
+    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds );
+
+    /**
+     * @param analysis
+     * @return
+     */
+    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis );
 
 }

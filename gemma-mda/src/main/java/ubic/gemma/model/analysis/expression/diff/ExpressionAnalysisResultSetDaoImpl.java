@@ -69,11 +69,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         timer.start();
         this.thawLite( resultSet );
 
-        List<ExpressionAnalysisResultSet> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select r from ExpressionAnalysisResultSetImpl r join fetch r.results res join fetch res.probe where r = :rs ",
-                        "rs", resultSet );
+        List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
+                "select r from ExpressionAnalysisResultSetImpl r join fetch r.results res "
+                        + "join fetch res.probe join fetch res.contrasts where r = :rs ", "rs", resultSet );
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );

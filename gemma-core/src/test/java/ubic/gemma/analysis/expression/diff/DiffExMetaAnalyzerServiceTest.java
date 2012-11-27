@@ -253,8 +253,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         /*
          * Perform the meta-analysis without saving it.
          */
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService
-                .analyze( analysisResultSetIds, null, null );
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( analysisResultSetIds );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
 
@@ -266,7 +265,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        assertEquals( 348, metaAnalysis.getResults().size() );
+        assertEquals( 324, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -277,39 +276,40 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             /*
              * apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["TCEB2"]
              */
-            if ( gene.equals( "ACLY" ) ) {
-
+            if ( gene.equals( "CAPRIN1" ) ) {
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 1.833343e-06, r.getMetaPvalue(), 0.001 );
+                assertTrue( r.getUpperTail() );
+                assertEquals( logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
 
             } else if ( gene.equals( "ABCF1" ) ) {
-                log.info( logComponentResults( r, gene ) );
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 0.0006160855, r.getMetaPvalue(), 0.001 );
+                assertEquals( logComponentResults( r, gene ), 0.01664992, r.getMetaPvalue(), 0.00001 );
 
-            } else if ( gene.equals( "TCEB2" ) ) {
-
-                foundTests++;
-                assertTrue( !r.getUpperTail() );
-                assertEquals( logComponentResults( r, gene ), 0.01562953, r.getMetaPvalue(), 0.001 );
-
-            } else if ( gene.equals( "SLC2A1" ) ) {
+            } else if ( gene.equals( "THRA" ) ) {
 
                 foundTests++;
                 assertTrue( !r.getUpperTail() );
-                assertEquals( logComponentResults( r, gene ), 0.001334221, r.getMetaPvalue(), 0.001 );
+                assertEquals( logComponentResults( r, gene ), 0.007901338, r.getMetaPvalue(), 0.00001 );
+
+            } else if ( gene.equals( "PPM1G" ) ) {
+
+                foundTests++;
+                assertTrue( !r.getUpperTail() );
+                assertEquals( logComponentResults( r, gene ), 0.001611389, r.getMetaPvalue(), 0.00001 );
 
             } else if ( gene.equals( "SEPW1" ) ) {
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 0.00383366, r.getMetaPvalue(), 0.001 );
+                assertTrue( r.getUpperTail() );
+                assertEquals( logComponentResults( r, gene ), 0.006142644, r.getMetaPvalue(), 0.0001 );
 
-            } else if ( gene.equals( "SSR2" ) ) {
+            } else if ( gene.equals( "GUK1" ) ) {
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 0.0006207671, r.getMetaPvalue(), 0.001 );
+                assertEquals( logComponentResults( r, gene ), 2.866101e-06, r.getMetaPvalue(), 1e-8 );
 
-            } else if ( gene.equals( "PDHA1" ) ) {
+            } else if ( gene.equals( "KXD1" ) ) {
                 foundTests++;
-                assertEquals( 1.312606e-06, r.getMetaPvalue(), 0.001 );
+                assertTrue( r.getUpperTail() );
+                assertEquals( 3.78401e-06, r.getMetaPvalue(), 1e-8 );
             }
 
             assertNotNull( r.getUpperTail() );
@@ -322,8 +322,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         }
 
         assertEquals( 7, foundTests );
-        assertEquals( 90, numUp ); // R
-        assertEquals( 258, numDown ); // R
+        assertEquals( 219, numUp ); // R
+        assertEquals( 105, numDown ); // R
 
         /*
          * Test ancillary methods
