@@ -78,9 +78,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadSuperSeries() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "GSE11897SuperSeriesShort" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                getTestFileBasePath( "GSE11897SuperSeriesShort" ) ) );
         try {
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE11897", false, true, false, false, true, false );
@@ -99,10 +98,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testFetchAndLoadSuperSeriesB() throws Exception {
-
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse14618superser" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                getTestFileBasePath( "gse14618superser" ) ) );
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GSE14618", false, true, false, false, true, false );

@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -72,8 +73,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         try {
             ad = this.arrayDesignService.thaw( ad );
             Collection<BioSequence> sequences = app.processArrayDesign( ad, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
+                    "testblastdbPartTwo" }, FileTools.resourceToPath( "data/loader/genome/blast" ), true );
             assertEquals( 243, sequences.size() );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {

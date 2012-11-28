@@ -30,13 +30,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -83,17 +83,18 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
         loader.setTaxonService( taxonService );
 
-        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.human.sample";
-        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.human.sample";
-        String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_history.human.sample";
+        String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";
+        String gene2AccTestFile = "/data/loader/genome/gene/gene2accession.human.sample";
+        String geneHistoryFile = "/data/loader/genome/gene/gene_history.human.sample";
 
         // threaded load
-        String basePath = ConfigUtils.getString( "gemma.home" );
+
         Taxon ta = taxonService.findByCommonName( "human" );
 
         assertNotNull( ta );
 
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile, null, ta );
+        loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
+                FileTools.resourceToPath( geneHistoryFile ), null, ta );
 
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
@@ -140,13 +141,13 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
          * Test history change. One gene has been updated, from 7003 to 44444 (fake), and mimic adding ensembl
          */
 
-        geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.human.changed.sample";
-        gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.human.changed.sample";
-        String updatedHistory = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_history.human.changed.sample";
-        String geneEnsemblFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2ensembl.human.sample";
+        geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.changed.sample";
+        gene2AccTestFile = "/data/loader/genome/gene/gene2accession.human.changed.sample";
+        String updatedHistory = "/data/loader/genome/gene/gene_history.human.changed.sample";
+        String geneEnsemblFile = "/data/loader/genome/gene/gene2ensembl.human.sample";
 
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + updatedHistory, basePath
-                + geneEnsemblFile, ta );
+        loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
+                FileTools.resourceToPath( updatedHistory ), FileTools.resourceToPath( geneEnsemblFile ), ta );
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
             Thread.sleep( 100 );

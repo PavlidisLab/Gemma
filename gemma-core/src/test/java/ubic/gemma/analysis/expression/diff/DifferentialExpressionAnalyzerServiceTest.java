@@ -101,9 +101,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ee = expressionExperimentService.findByShortName( "GSE1611" );
 
         if ( ee == null ) {
-            String path = getTestFileBasePath();
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gds994Short" ) );
+
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gds994Short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
@@ -213,10 +213,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @Test
     public void testAnalyzeWithSubsetWhenOneIsNotUsableAndWithInteractionInTheOther() throws Exception {
         ee = expressionExperimentService.findByShortName( "GSE32136" );
-        String path = getTestFileBasePath();
+
         if ( ee == null ) {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 

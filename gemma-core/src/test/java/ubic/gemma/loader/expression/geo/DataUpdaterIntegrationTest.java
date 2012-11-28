@@ -92,8 +92,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
 
         ExpressionExperiment ee;
         try {
-            String path = getTestFileBasePath();
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -158,8 +157,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         /*
          * Load a regular data set that has no data. Platform is (basically) irrelevant.
          */
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         ExpressionExperiment ee;
 
         // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );

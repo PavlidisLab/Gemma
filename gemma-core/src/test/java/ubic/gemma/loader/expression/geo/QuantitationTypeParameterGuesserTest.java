@@ -19,7 +19,6 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,12 +31,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author Paul
@@ -189,9 +188,9 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
      */
     @Test
     public void testTortureQuantitationTypes() throws Exception {
-        String path = ConfigUtils.getString( "gemma.home" );
-        path = path + File.separatorChar + "gemma-core/src/test/resources/data/loader/expression/quantitationTypes.txt";
-        InputStream is = new FileInputStream( path );
+
+        InputStream is = new FileInputStream(
+                FileTools.resourceToPath( "/data/loader/expression/quantitationTypes.txt" ) );
         BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
         dis.readLine(); // throw away header.
         String line = null;

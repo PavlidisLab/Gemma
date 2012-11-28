@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.designElement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
@@ -31,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -44,7 +44,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.TableMaintenenceUtil;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -87,11 +86,10 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             NcbiGeneLoader loader = new NcbiGeneLoader();
             loader.setTaxonService( this.getBean( TaxonService.class ) );
             loader.setPersisterHelper( persisterHelper );
-            String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
-            filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
-            String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
-            String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-            String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
+
+            String geneInfoFile = FileTools.resourceToPath( "/data/loader/genome/gene/selected_gene_info.gz" );
+            String gene2AccFile = FileTools.resourceToPath( "/data/loader/genome/gene/selected_gene2accession.gz" );
+            String geneHistoryFile = FileTools.resourceToPath( "/data/loader/genome/gene/selected_gene_history.gz" );
 
             loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, null, true );
 

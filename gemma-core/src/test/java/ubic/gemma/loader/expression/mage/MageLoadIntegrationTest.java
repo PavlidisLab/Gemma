@@ -21,7 +21,6 @@ package ubic.gemma.loader.expression.mage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -30,11 +29,11 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -77,8 +76,8 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
                 + "E-WMIT-4.xml" );
 
         MageMLConverter mageMLConverter = new MageMLConverter();
-        mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
-                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-WMIT-4" );
+        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( "/resources" + MAGE_DATA_RESOURCE_PATH
+                + "E-WMIT-4" ) );
 
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();

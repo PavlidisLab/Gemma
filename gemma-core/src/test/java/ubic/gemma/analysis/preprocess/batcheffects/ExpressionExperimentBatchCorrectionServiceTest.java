@@ -62,9 +62,8 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     @Test
     public void testComBatOnEE() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse18162Short" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                getTestFileBasePath( "gse18162Short" ) ) );
         ExpressionExperiment newee;
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE18162", false, true, false, false );

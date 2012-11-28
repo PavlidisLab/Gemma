@@ -18,8 +18,6 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-
 import junit.framework.TestCase;
 
 import org.apache.commons.configuration.CompositeConfiguration;
@@ -29,6 +27,8 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+
+import ubic.basecode.util.FileTools;
 
 /**
  * @author pavlidis
@@ -49,11 +49,9 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
         CompositeConfiguration config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
         config.addConfiguration( new PropertiesConfiguration( "Gemma.properties" ) );
-        String home = ConfigUtils.getString( "gemma.home" );
 
         // InputStream doesn't work for maven...get 'don't read twice' error.
-        Resource testConfig = new FileSystemResource( home + File.separatorChar
-                + "gemma-util/src/test/resources/test.spring.config.xml" );
+        Resource testConfig = new FileSystemResource( FileTools.resourceToPath( "/test.spring.config.xml" ) );
 
         bf = new XmlBeanFactory( testConfig );
     }

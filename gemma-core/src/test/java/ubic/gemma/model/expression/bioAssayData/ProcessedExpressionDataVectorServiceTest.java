@@ -51,15 +51,13 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.TableMaintenenceUtil;
-import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
 /**
  * @author Paul
  * @version $Id$
  */
-public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextTest {
+public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
@@ -137,12 +135,11 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
      */
     private Collection<ExpressionExperiment> getDataset() throws Exception {
         // Dataset uses spotted arrays, 11 samples.
-        String path = ConfigUtils.getString( "gemma.home" );
-        assert path != null;
+
         ExpressionExperiment newee;
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse432Short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE432", false, true, false, false );
             newee = results.iterator().next();

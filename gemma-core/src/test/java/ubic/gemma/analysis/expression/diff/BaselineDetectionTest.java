@@ -16,7 +16,6 @@ package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author paul
@@ -81,10 +80,9 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
             }
         }
 
-        String path = ConfigUtils.getString( "gemma.home" );
+        String path = FileTools.resourceToPath( "/data/loader/expression/geo/gse18162Short" );
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + File.separator + "gse18162Short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE18162", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {

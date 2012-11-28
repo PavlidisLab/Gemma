@@ -41,9 +41,7 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadGPL101Short() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "platform" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
         geoService.fetchAndLoad( "GPL101", true, true, false, false );
     }
 }

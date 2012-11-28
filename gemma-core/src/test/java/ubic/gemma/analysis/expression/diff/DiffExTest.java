@@ -73,12 +73,12 @@ public class DiffExTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testGSE35930() throws Exception {
-        String path = getTestFileBasePath();
+
         ExpressionExperiment ee;
         // eeService.delete( eeService.findByShortName( "GSE35930" ) );
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "GSE35930" ) );
+            geoService
+                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE35930", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 

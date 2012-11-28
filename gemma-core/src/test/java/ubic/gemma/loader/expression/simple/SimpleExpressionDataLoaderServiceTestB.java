@@ -80,8 +80,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
         /*
          * Load the array design (platform).
          */
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         geoService.fetchAndLoad( "GPL2716", true, true, false, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2716" );
 

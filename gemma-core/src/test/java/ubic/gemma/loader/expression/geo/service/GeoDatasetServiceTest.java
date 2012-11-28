@@ -50,7 +50,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.
@@ -89,9 +88,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadGSE1133() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse1133Short" ) );
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse1133Short" ) ) );
         Collection<?> results = null;
 
         try {
@@ -123,8 +121,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadGSE37646RNASEQ() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
@@ -137,8 +134,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadGSE12135EXON() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
@@ -152,9 +148,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadGSE2122SAGE() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse2122shortSage" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                getTestFileBasePath( "gse2122shortSage" ) ) );
         Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
         ee = eeService.thawLite( ee );
@@ -170,10 +165,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testFetchAndLoadGSE13657() throws Exception {
-        String path = ConfigUtils.getString( "gemma.home" );
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE13657", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -197,11 +190,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testFetchAndLoadGSE9048() {
-        String path = ConfigUtils.getString( "gemma.home" );
+    public void testFetchAndLoadGSE9048() throws Exception {
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+
             Collection<?> results = geoService.fetchAndLoad( "GSE9048", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -237,11 +229,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * For bug 2312 - qts getting dropped.
      */
     @Test
-    public void testFetchAndLoadGSE18707() {
-        String path = ConfigUtils.getString( "gemma.home" );
+    public void testFetchAndLoadGSE18707() throws Exception {
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+
             Collection<?> results = geoService.fetchAndLoad( "GSE18707", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -271,11 +262,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testFetchAndLoadGSE5949() {
-        String path = ConfigUtils.getString( "gemma.home" );
+    public void testFetchAndLoadGSE5949() throws Exception {
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "GSE5949short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -290,9 +280,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "shortTest" ) );
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "shortTest" ) ) );
 
         /*
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
@@ -400,11 +389,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * 
      */
     @Test
-    public void testLoadGSE30521ExonArray() {
-        String path = ConfigUtils.getString( "gemma.home" );
+    public void testLoadGSE30521ExonArray() throws Exception {
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE30521", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {

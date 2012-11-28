@@ -51,8 +51,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     @Test
     public void testLoad() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         ExpressionExperiment newee;
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE26903", false, true, false, false );
@@ -77,8 +76,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     @Test
     public void testLoadCommandConsoleFormat() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
         ExpressionExperiment newee;
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE20219", false, true, false, false );

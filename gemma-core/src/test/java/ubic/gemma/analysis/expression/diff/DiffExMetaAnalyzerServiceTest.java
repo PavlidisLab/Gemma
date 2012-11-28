@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Currently this test requires the 'test' miniGemma DB.
@@ -402,11 +401,12 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
      * @param acc
      * @return
      */
-    private Collection<?> loadSet( String acc ) {
-        String path = ConfigUtils.getString( "gemma.home" );
+    private Collection<?> loadSet( String acc ) throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + File.separator + "meta-analysis" ) );
+        String path = new File( this.getClass().getResource( "/data/loader/expression/geo/meta-analysis" ).toURI() )
+                .getAbsolutePath();
+
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path ) );
 
         try {
             return geoService.fetchAndLoad( acc, false, true, false, false );

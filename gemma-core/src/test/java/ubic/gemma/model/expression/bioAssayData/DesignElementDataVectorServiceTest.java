@@ -47,14 +47,12 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author joseph
  * @version $Id$
  */
-public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
+public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
@@ -93,13 +91,12 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByQt() {
+    public void testFindByQt() throws Exception {
 
         try {
-            String path = ConfigUtils.getString( "gemma.home" );
-            assert path != null;
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
+
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse432Short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
 

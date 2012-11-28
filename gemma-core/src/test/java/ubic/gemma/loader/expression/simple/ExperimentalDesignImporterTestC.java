@@ -127,9 +127,8 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         /*
          * Load the array design (platform).
          */
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "designLoadTests" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                getTestFileBasePath( "designLoadTests" ) ) );
         geoService.fetchAndLoad( "GPL2899", true, true, false, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2899" );
 

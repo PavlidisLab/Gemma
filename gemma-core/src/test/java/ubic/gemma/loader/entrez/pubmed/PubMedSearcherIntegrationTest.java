@@ -18,7 +18,11 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
-import ubic.gemma.apps.AbstractCLITestCase;
+import static org.junit.Assert.fail;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
 /**
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
@@ -26,12 +30,15 @@ import ubic.gemma.apps.AbstractCLITestCase;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedSearcherIntegrationTest extends AbstractCLITestCase {
+public class PubMedSearcherIntegrationTest {
+
+    private static Log log = LogFactory.getLog( PubMedSearcherIntegrationTest.class );
     PubMedSearcher p = new PubMedSearcher();
 
     /**
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
+    @Test
     public final void testMain() {
 
         Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );

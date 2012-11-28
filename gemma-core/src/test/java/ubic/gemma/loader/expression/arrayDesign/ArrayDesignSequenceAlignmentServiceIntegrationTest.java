@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
@@ -67,8 +68,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
         ad = arrayDesignService.thaw( ad );
         try {
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                    ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
-                    false );
+                    FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
 
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {

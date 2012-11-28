@@ -54,9 +54,8 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     @Test
     public void testsvd() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "shortTest" ) );
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "shortTest" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
             Collection<?> results = geoService.fetchAndLoad( "GDS472", false, true, false, false );
@@ -89,9 +88,8 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     @Test
     public void testsvdGapped() throws Exception {
 
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gse482short" ) );
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false, false );

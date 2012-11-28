@@ -18,10 +18,10 @@
  */
 package ubic.gemma.loader.expression.geo;
 
-import java.io.IOException;
+import java.net.URISyntaxException;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -29,14 +29,26 @@ import ubic.gemma.util.ConfigUtils;
  */
 public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
 
-    public static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";
+    private static final String GEO_TEST_DATA_ROOT = "/data/loader/expression/geo/";
 
-    protected String getTestFileBasePath() throws IOException {
-        String path = ConfigUtils.getString( "gemma.home" );
-        if ( path == null ) {
-            throw new IOException( "You must define the 'gemma.home' variable in your Gemma.properties file" );
-        }
-        return path;
+    /**
+     * @return
+     * @throws URISyntaxException
+     */
+    protected String getTestFileBasePath() throws URISyntaxException {
+
+        return FileTools.resourceToPath( GEO_TEST_DATA_ROOT );
+
     }
 
+    /**
+     * @param subPath
+     * @return
+     * @throws URISyntaxException
+     */
+    protected String getTestFileBasePath( String subPath ) throws URISyntaxException {
+
+        return FileTools.resourceToPath( GEO_TEST_DATA_ROOT + subPath );
+
+    }
 }

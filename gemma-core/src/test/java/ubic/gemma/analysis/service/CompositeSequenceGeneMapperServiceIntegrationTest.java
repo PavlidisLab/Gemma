@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
@@ -51,7 +52,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * This integration test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene
@@ -92,14 +92,12 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     @Before
     public void setup() throws Exception {
 
-        String path = getTestFileBasePath();
-
         ad = arrayDesignService.findByShortName( arrayAccession );
 
         if ( !alreadyPersistedData ) {
             // first load small two-color
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "platform" ) );
+            geoService
+                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
                     true, true, false, false );
             ad = ads.iterator().next();
@@ -207,12 +205,13 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      * 
      *
      */
-    private void loadGeneData() {
+    private void loadGeneData() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.persisterHelper );
-        String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
-        filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
+
+        String filePath = FileTools.resourceToPath( "/data/loader/genome/gene" );
+
         String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
         String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
         String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";

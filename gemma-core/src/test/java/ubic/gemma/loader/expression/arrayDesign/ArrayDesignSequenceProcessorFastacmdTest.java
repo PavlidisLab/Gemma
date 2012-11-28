@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
@@ -53,8 +54,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         try {
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
+                    "testblastdbPartTwo" }, FileTools.resourceToPath( "data/loader/genome/blast" ), false );
             if ( res == null ) {
                 // data already filled in by some other test.
             } else {

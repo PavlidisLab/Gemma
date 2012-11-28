@@ -95,11 +95,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     @Test
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
-        String path = getTestFileBasePath();
-
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "GSE5949short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "GSE5949short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE5949", false, true, false, false );
             this.ee = results.iterator().next();
@@ -129,11 +127,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     @Test
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
 
-        String path = getTestFileBasePath();
-
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse482short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse482short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE482", false, true, false, false );
             this.ee = results.iterator().next();
@@ -236,16 +232,14 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     @Test
     public void testReorder() throws Exception {
 
-        String path = getTestFileBasePath();
-
         ExpressionExperiment old = eeService.findByShortName( "GSE404" );
         if ( old != null ) {
             eeService.delete( old );
         }
 
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse404Short" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse404Short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE404", false, true, false, false );
             this.ee = results.iterator().next();

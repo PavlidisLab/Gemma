@@ -18,12 +18,19 @@
  */
 package ubic.gemma.loader.genome;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
 
@@ -31,14 +38,13 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class SimpleFastaCmdTest extends TestCase {
+public class SimpleFastaCmdTest {
 
-    private static final String TEST_RESOURCE_PATH = ConfigUtils.getString( "gemma.home" )
-            + "/gemma-core/src/test/resources/data/loader/genome/blast";
     private static final String TESTBLASTDB = "testblastdb";
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultiple() {
+    @Test
+    public void testGetMultiple() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -54,7 +60,8 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultipleAcc() {
+    @Test
+    public void testGetMultipleAcc() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -69,7 +76,8 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( 2, bs.size() );
     }
 
-    public void testGetMultipleAccSomeNotFound() {
+    @Test
+    public void testGetMultipleAccSomeNotFound() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
@@ -86,10 +94,12 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( 2, bs.size() );
     }
 
-    public void testGetSingle() {
+    @Test
+    public void testGetSingle() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
+
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
@@ -102,12 +112,14 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
-    public void testGetSingleAcc() {
+    @Test
+    public void testGetSingleAcc() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         String accession = "AA000002";
+
         BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( "fastacmd failed to find " + accession, bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
@@ -119,14 +131,28 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
-    public void testGetSingleAccNotFound() {
+    @Test
+    public void testGetSingleAccNotFound() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
             return;
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
         BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNull( bs );
     }
+
+    /**
+     * @return
+     * @throws URISyntaxException
+     */
+    @Before
+    public void setup() throws URISyntaxException {
+        TEST_RESOURCE_PATH = FileTools.resourceToPath( "/data/loader/genome/blast" );
+
+    }
+
+    String TEST_RESOURCE_PATH;
 
     private boolean fastaCmdExecutableExists() {
 

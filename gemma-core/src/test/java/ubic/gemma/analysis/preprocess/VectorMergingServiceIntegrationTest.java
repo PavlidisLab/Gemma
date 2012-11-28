@@ -82,9 +82,8 @@ public class VectorMergingServiceIntegrationTest extends AbstractGeoServiceTest 
 
         if ( ee == null ) {
 
-            String path = getTestFileBasePath();
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse3443merge" ) );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse3443merge" ) ) );
 
             Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();

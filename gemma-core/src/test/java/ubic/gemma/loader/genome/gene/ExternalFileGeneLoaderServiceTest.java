@@ -1,6 +1,18 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2012 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
+
 package ubic.gemma.loader.genome.gene;
 
 import static org.junit.Assert.assertEquals;
@@ -13,11 +25,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Test that Gemma can load genes from an external gene file with format : #GeneSymbol GeneName Uniprot ZYX ZYXIN Q15942
@@ -41,15 +53,17 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     String geneFile = null;
 
     @Before
-    public void setup() {
-        geneFile = ( ConfigUtils.getString( "gemma.home" ) )
-                .concat( "/gemma-core/src/test/resources/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
+    public void setup() throws Exception {
+        geneFile = FileTools.resourceToPath( "/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
         try {
             Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYX" );
             if ( !zyx.isEmpty() ) geneService.remove( zyx );
-            Collection<Gene> zxdc = geneService.findByOfficialSymbol( "ZXDC" );
-            if ( !zxdc.isEmpty() ) geneService.remove( zxdc );
+            zyx = geneService.findByOfficialSymbol( "ZXDC" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            zyx = geneService.findByOfficialSymbol( "ZYXIN" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
         } catch ( Exception e ) {
+            log.warn( e );
             // this test may fail if we don't start with an empty database.
         }
     }
@@ -60,8 +74,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     @Test
     public void testFileIncorrectFormatIllegalArgumentExceptionException() {
         try {
-            String ncbiFile = ( ConfigUtils.getString( "gemma.home" ) )
-                    .concat( "/gemma-core/src/test/resources/data/loader/genome/gene/geneloadtest.txt" );
+            String ncbiFile = FileTools.resourceToPath( "/data/loader/genome/gene/geneloadtest.txt" );
             externalFileGeneLoaderService.load( ncbiFile, TAXON_NAME );
         } catch ( IOException e ) {
             assertEquals( "Illegal format, expected three columns, got 13", e.getMessage() );

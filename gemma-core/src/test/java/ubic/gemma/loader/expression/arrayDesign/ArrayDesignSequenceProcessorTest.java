@@ -28,10 +28,12 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -42,14 +44,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
+public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
     InputStream seqFile;
@@ -143,10 +144,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
             return;
         }
 
-        String path = ConfigUtils.getString( "gemma.home" );
         GeoService geoService = this.getBean( GeoService.class );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
 
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false, true, true );
@@ -156,8 +155,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         // have to specify taxon as this has two taxons in it
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
-                "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast", taxon, true );
+                "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
         assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );
@@ -168,12 +166,11 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFetchAndLoadWithSequences() {
+    public void testFetchAndLoadWithSequences() throws Exception {
 
-        String path = ConfigUtils.getString( "gemma.home" );
         GeoService geoService = this.getBean( GeoService.class );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false );
         result = ads.iterator().next();
@@ -181,17 +178,17 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         result = arrayDesignService.thaw( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
+                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
             }
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "not found" ) ) {
+            if ( StringUtils.isNotBlank( e.getMessage() ) && e.getMessage().contains( "not found" ) ) {
                 log.error( "fastacmd is not installed or is misconfigured.  Test skipped" );
                 return;
             }
+            throw e;
         }
 
     }

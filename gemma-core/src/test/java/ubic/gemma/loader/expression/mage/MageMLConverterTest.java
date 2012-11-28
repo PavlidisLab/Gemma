@@ -22,13 +22,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ChannelUtils;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -491,8 +490,8 @@ public class MageMLConverterTest extends AbstractMageTest {
         /* CONVERTING */
         log.info( "***** CONVERTING ***** " );
 
-        mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
-                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-MEXP-955" );
+        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( "/resources" + MAGE_DATA_RESOURCE_PATH
+                + "E-MEXP-955" ) );
 
         ExpressionExperiment expressionExperiment = null;
         Collection<Object> gemmaObjects = null;
