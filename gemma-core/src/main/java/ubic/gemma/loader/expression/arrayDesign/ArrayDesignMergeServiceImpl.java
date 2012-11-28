@@ -19,7 +19,6 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,9 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -64,6 +60,9 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     @Autowired
     private ArrayDesignReportService arrayDesignReportService;
+
+    @Autowired
+    private ArrayDesignMergeHelperService mergeServiceHelper;
 
     /*
      * (non-Javadoc)
@@ -121,20 +120,6 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
     }
 
     /**
-     * Add an ArrayDesignMergeEvent event to the audit trail. Does not persist it.
-     * 
-     * @param arrayDesign
-     */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( new ArrayDesignMergeEventImpl() );
-        auditEvent.setNote( note );
-        arrayDesign.getAuditTrail().addEvent( auditEvent );
-    }
-
-    /**
      * @param arrayDesign
      * @param otherArrayDesigns
      * @param globalBsMap
@@ -150,7 +135,8 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
         Collection<CompositeSequence> newProbes = makeNewProbes( result, globalBsMap, mergeWithExisting );
 
-        result = persistMerging( result, arrayDesign, otherArrayDesigns, mergeWithExisting, newProbes );
+        result = mergeServiceHelper.persistMerging( result, arrayDesign, otherArrayDesigns, mergeWithExisting,
+                newProbes );
 
         arrayDesignReportService.generateArrayDesignReport( result.getId() );
 
@@ -299,50 +285,4 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         return newProbes;
     }
 
-    /**
-     * Finalize the assembly and persistence of the merged array design.
-     * 
-     * @param result the final merged design
-     * @param arrayDesign
-     * @param otherArrayDesigns
-     * @param mergeWithExisting
-     * @param newProbes Probes that have to be added to make up the merged design. In the case of "mergeWithExisting",
-     *        this might even be empty.
-     * @return the final persistent merged design
-     */
-    private ArrayDesign persistMerging( ArrayDesign result, ArrayDesign arrayDesign,
-            Collection<ArrayDesign> otherArrayDesigns, boolean mergeWithExisting,
-            Collection<CompositeSequence> newProbes ) {
-
-        for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
-            otherArrayDesign.setMergedInto( result );
-            audit( otherArrayDesign, "Merged into " + result );
-        }
-
-        result.getMergees().addAll( otherArrayDesigns );
-        result.getCompositeSequences().addAll( newProbes );
-
-        if ( mergeWithExisting ) {
-            /* we're merging into the given arrayDesign. */
-            assert result.equals( arrayDesign );
-            assert result.getId() != null;
-            assert !result.getCompositeSequences().isEmpty();
-
-            audit( result, "More array design(s) added to merge" );
-
-            arrayDesignService.update( result );
-        } else {
-            /* we're making a new one. In this case arrayDesign is treated just like the other ones, so we pile it in. */
-
-            assert result.getId() == null;
-
-            result.getMergees().add( arrayDesign );
-            arrayDesign.setMergedInto( result );
-            audit( arrayDesign, "Merged into " + result );
-
-            result = arrayDesignService.create( result );
-        }
-
-        return result;
-    }
 }

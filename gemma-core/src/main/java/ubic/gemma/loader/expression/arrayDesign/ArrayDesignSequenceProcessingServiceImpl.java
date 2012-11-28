@@ -43,7 +43,6 @@ import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.ProbeSequenceParser;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
