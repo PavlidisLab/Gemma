@@ -8,6 +8,22 @@ Ext.namespace('Gemma');
 
 Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 	nextButtonText: 'Run meta-analysis',
+	listeners: {
+		render: function(thisPanel) {
+			if (!thisPanel.loadMask) {
+				var element = thisPanel.getEl();
+				
+				 // Set height so that load mask is in the middle.
+				element.setHeight(thisPanel.height / 2 + 200);
+				
+				thisPanel.loadMask = new Ext.LoadMask(element, {
+					msg: "Loading ..."
+				});
+			}
+			// This load mask will be shown for viewing analysis.
+			thisPanel.loadMask.show();
+		}
+	},
 	initComponent: function() {
 		var experimentSelectedCount = 0;
 		
@@ -24,7 +40,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			var experimentTitle =
 				'<b>' + '<a ext:qtip="Click for details on experiment (opens in new window)" target="_blank"  href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='
 							+ experimentDetails.id + '">'
-							+ experimentDetails.accession + '</a> ' 
+							+ experimentDetails.shortName + '</a> ' 
 							+ experimentDetails.name + '</b>';
 
 			var experimentTitleComponent;
@@ -184,12 +200,12 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 					var shouldResultSetCreated = true;
 					var shouldResultSetSelected = false;
 					if (this.metaAnalysis) {
-						for (var i = 0; i < this.metaAnalysis.includedResultSetDetails.length; i++) {
-							var currIncludedResultSetDetails = this.metaAnalysis.includedResultSetDetails[i];
+						for (var i = 0; i < this.metaAnalysis.includedResultSetsInfo.length; i++) {
+							var currIncludedResultSetsInfo = this.metaAnalysis.includedResultSetsInfo[i];
 							
-							if (currIncludedResultSetDetails.experimentId == experimentDetails.id) {
-								shouldResultSetCreated = (currIncludedResultSetDetails.analysisId === analysisId);
-								shouldResultSetSelected = (currIncludedResultSetDetails.resultSetId === resultSetId);
+							if (currIncludedResultSetsInfo.experimentId == experimentDetails.id) {
+								shouldResultSetCreated = (currIncludedResultSetsInfo.analysisId === analysisId);
+								shouldResultSetSelected = (currIncludedResultSetsInfo.resultSetId === resultSetId);
 
 								break;
 							}
@@ -289,6 +305,11 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 			nextButton.setDisabled(true);
 
 			ExpressionExperimentController.loadExpressionExperiments(expressionExperimentIds, function(experiments) {
+				// Sort experiment by short name.
+				experiments.sort(function(experiment1, experiment2) {
+		            return experiment1.shortName.localeCompare(experiment2.shortName);  
+				});				
+				
 				var nonAnalyzableExperimentComponents = [];
 				
 				var addExperimentComponentsToPanel = function(experimentComponents, containerPanel, componentIndex) {
@@ -324,9 +345,10 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 				
 				
 				this.doLayout();
-				
-				this.unmaskWindow();					
-				
+
+				// Hide the mask created for adding new analysis or viewing analysis.
+				this.unmaskWindow();
+				this.loadMask.hide();				
 			}.createDelegate(this));
 		}.createDelegate(this);
 		
@@ -411,8 +433,8 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 		if (this.metaAnalysis) {
 			var expressionExperimentIds = [];
 			
-			Ext.each(this.metaAnalysis.includedResultSetDetails, function(includedResultSetDetail, index) {
-				expressionExperimentIds.push(includedResultSetDetail.experimentId);
+			Ext.each(this.metaAnalysis.includedResultSetsInfo, function(includedResultSetInfo, index) {
+				expressionExperimentIds.push(includedResultSetInfo.experimentId);
 			});
 			
 			showExperiments(expressionExperimentIds);

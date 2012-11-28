@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -33,10 +34,12 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTask;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 import ubic.gemma.util.ConfigUtils;
@@ -89,6 +92,27 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
+    @Autowired
+    private UserManager userManager;
+
+    private BaseValueObject generateBaseValueObject( Throwable throwable ) {
+        final BaseValueObject baseValueObject = new BaseValueObject();
+        baseValueObject.setErrorFound(true);
+
+        if ( throwable instanceof AccessDeniedException ) {
+            if ( this.userManager.loggedIn() ) {
+                baseValueObject.setAccessDenied( true );
+            } else {
+                baseValueObject.setUserNotLoggedIn( true );
+            }
+        } else {
+            // If type of throwable is not known, log it.
+            log.error( throwable.getMessage(), throwable );
+        }
+
+        return baseValueObject;
+    }
+
     public DiffExMetaAnalyzerController() {
         this.setBusinessInterface( DiffExMetaAnalyzerTask.class );
     }
@@ -107,27 +131,44 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
      * @param id
      * @return
      */
-    public GeneDifferentialExpressionMetaAnalysisDetailValueObject getMetaAnalysis( Long id ) {
-        return this.geneDiffExMetaAnalysisHelperService.getMetaAnalysis( id );
-    }
-
+	public BaseValueObject findDetailMetaAnalysisById(Long id) {
+		BaseValueObject baseValueObject = new BaseValueObject();
+		
+        try {
+        	GeneDifferentialExpressionMetaAnalysisDetailValueObject analysisVO = this.geneDiffExMetaAnalysisHelperService.findDetailMetaAnalysisById(id);        	
+        	
+        	if (analysisVO == null) {
+        		baseValueObject.setErrorFound(true);
+        		baseValueObject.setObjectAlreadyRemoved(true);
+        	} else {
+            	baseValueObject.setValueObject(analysisVO);
+        	}
+        } catch ( Throwable throwable ) {
+            baseValueObject = generateBaseValueObject( throwable );
+        }
+        return baseValueObject;
+	}
+	
     /**
      * @return
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> getMyMetaAnalyses() {
-        return this.geneDiffExMetaAnalysisHelperService.getMyMetaAnalyses();
-    }
+	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMyMetaAnalyses() {
+		return this.geneDiffExMetaAnalysisHelperService.findMyMetaAnalyses();
+	}
 
     /**
      * @param id
      */
-    public void removeMetaAnalysis( Long id ) {
+	public BaseValueObject removeMetaAnalysis(Long id) {
+		BaseValueObject baseValueObject;
+		
         try {
-            this.geneDiffExMetaAnalysisService.delete( id );
-        } catch ( Exception e ) {
-            // TODO: should do something if analysis cannot be removed.
+            baseValueObject = this.geneDiffExMetaAnalysisService.delete(id);
+        } catch ( Throwable throwable ) {
+            baseValueObject = generateBaseValueObject( throwable );
         }
-    }
+        return baseValueObject;
+	}
 
     /**
      * @param analysisResultSetIds

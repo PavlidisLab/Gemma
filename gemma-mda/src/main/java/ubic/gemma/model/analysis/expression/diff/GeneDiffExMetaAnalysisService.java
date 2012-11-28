@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.AnalysisService;
 
 /**
@@ -38,9 +39,12 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     public void update( GeneDifferentialExpressionMetaAnalysis analysis );
 
     @Secured({ "GROUP_USER" })
-    public void delete( Long id );
+    public BaseValueObject delete( Long id );
 
     @Secured({ "GROUP_USER" })
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+
+    @Secured({ "GROUP_USER" })
+    public GeneDifferentialExpressionMetaAnalysis load( java.lang.Long id );
 
 }

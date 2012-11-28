@@ -43,6 +43,8 @@ import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.Describable;
@@ -82,6 +84,9 @@ public class SecurityControllerImpl implements SecurityController {
     @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    
     @Autowired
     private GeneSetService geneSetService = null;
 
@@ -676,6 +681,8 @@ public class SecurityControllerImpl implements SecurityController {
             s = expressionExperimentSetService.load( ed.getId() );
         } else if ( PhenotypeAssociation.class.isAssignableFrom( clazz ) ) {
             s = phenotypeAssociationService.load( ed.getId() );
+        } else if ( GeneDifferentialExpressionMetaAnalysis.class.isAssignableFrom( clazz ) ) {
+            s = geneDiffExMetaAnalysisService.load( ed.getId() );
         } else {
             throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
         }

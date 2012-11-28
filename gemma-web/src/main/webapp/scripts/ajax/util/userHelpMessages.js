@@ -199,7 +199,23 @@ Gemma.HelpText.CommonErrors = {
 		title: "Cannot save an empty group",
 		text: "You cannot save an empty group. No changes have been saved.<br>"+
 				" Add experiments to group {0} or delete it."
-	}
+	},
+    accessDenied: {
+    	title: "Cannot {0}",
+    	text: 'Your access is denied.'
+    },
+    objectAlreadyRemoved: {
+    	title: "Cannot {0}",
+    	text: 'This {0} cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest records.'
+    },
+    userNotLoggedIn: {
+    	title: "Cannot {0}",
+    	text: 'You are not logged in. Please log in to try again.'
+    },
+    errorUnknown: {
+    	title: "Cannot {0}",
+    	text: 'System error has occurred. Please contact the system administrator for assistance.'
+    }
 };
 
 Gemma.HelpText.WidgetDefaults = {
@@ -369,7 +385,7 @@ Gemma.HelpText.WidgetDefaults = {
 	ExperimentalFactorAddWindow: {
 		descriptionEmptyText: "A short phrase such as 'control vs. drug'",
 		descriptionUnique: "Description must be unique among factors",
-		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked.",
+		continuousCheckboxTT: "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked."
 	},
 	ExperimentalFactorChooserPanel:{
 		helpTitle: "Help for factor choose",

@@ -86,7 +86,6 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentSetManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentsWithQC.html" />
-	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/externalDatabasesStatistics.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -552,8 +551,8 @@
 	<bean id="diffExMetaAnalyzerController" class="ubic.gemma.web.controller.diff.DiffExMetaAnalyzerController">
 		<dwr:remote javascript="DiffExMetaAnalyzerController">
 			<dwr:include method="analyzeResultSets" />
-			<dwr:include method="getMetaAnalysis" />
-			<dwr:include method="getMyMetaAnalyses" />
+			<dwr:include method="findDetailMetaAnalysisById" />
+			<dwr:include method="findMyMetaAnalyses" />
 			<dwr:include method="removeMetaAnalysis" />
 			<dwr:include method="saveResultSets" />
 		</dwr:remote>
@@ -713,6 +712,7 @@
 			<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />
 			<dwr:converter id="diffAnalysisTypeConverter" class="ubic.gemma.web.remote.DiffAnalysisTypeConverter" />
 		</dwr:init>
+
 
 		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
 			javascript="FreeTextExpressionExperimentResultsValueObject" />
@@ -925,6 +925,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.BaseValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.DatabaseEntryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.ExternalDatabaseValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.CompositeSequenceValueObject" />
@@ -936,7 +937,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject" />		
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject$IncludedResultSetDetail" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />

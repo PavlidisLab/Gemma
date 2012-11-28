@@ -10,7 +10,7 @@ Gemma.MetaAnalysisWindow = Ext.extend(Ext.Window, {
 	metaAnalysis: null, // It can be set to use this window to display included result sets.
 	layout: 'fit',
 	constrain: true,  // Should not be modal so that other window can be opened.
-	width: 900,
+	width: 740,
 	height: 600,
 	shadow: true,
 	closeAction: 'close',

@@ -132,7 +132,18 @@ public class ProgressManager {
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
 
-        ProgressData data = new ProgressData( progressJob.getTaskId(), 100, "Job failed: " + cause.getMessage(), true );
+		final String errorMessage;
+		if ( cause.getCause() instanceof AccessDeniedException ) {
+		    if ( userManager.loggedIn() ) {
+		    	errorMessage = "Access is denied.";
+		    } else {
+		    	errorMessage = "You are not logged in. Please log in to try again.";
+		    }
+		} else {
+		    errorMessage = cause.getMessage();
+		}
+        
+		ProgressData data = new ProgressData( progressJob.getTaskId(), 100, "Job failed: " + errorMessage, true );
         data.setFailed( true );
         data.setForwardingURL( toForwardTo );
         progressJob.updateProgress( data );

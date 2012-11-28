@@ -32,87 +32,28 @@ public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements 
 	 * The serial version UID of this class. Needed for serialization.
 	 */
 	private static final long serialVersionUID = 3868004995989355452L;
-	
-	private Long id;
-	private String name;
-	private String description;
+
 	private Integer numGenesAnalyzed;
-	private Double qvalueThresholdForStorage;
-	private Collection<IncludedResultSetDetail> includedResultSetDetails;
+
+	private Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> includedResultSetsInfo;
 	private Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results;
 	
-	public class IncludedResultSetDetail {
-		private Long experimentId;
-		private Long analysisId;
-		private Long resultSetId;
-		
-		public Long getExperimentId() {
-			return this.experimentId;
-		}
-		public void setExperimentId(Long experimentId) {
-			this.experimentId = experimentId;
-		}
-		public Long getAnalysisId() {
-			return this.analysisId;
-		}
-		public void setAnalysisId(Long analysisId) {
-			this.analysisId = analysisId;
-		}
-		public Long getResultSetId() {
-			return this.resultSetId;
-		}
-		public void setResultSetId(Long resultSetId) {
-			this.resultSetId = resultSetId;
-		}
-	}
 	
-	public Long getId() {
-		return this.id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDescription() {
-		return this.description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
 	public Integer getNumGenesAnalyzed() {
 		return this.numGenesAnalyzed;
 	}
-	
+
 	public void setNumGenesAnalyzed(Integer numGenesAnalyzed) {
 		this.numGenesAnalyzed = numGenesAnalyzed;
 	}
-	
-	public Double getQvalueThresholdForStorage() {
-		return this.qvalueThresholdForStorage;
-	}
-	
-	public void setQvalueThresholdForStorage(Double qvalueThresholdForStorage) {
-		this.qvalueThresholdForStorage = qvalueThresholdForStorage;
+
+	public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> getIncludedResultSetsInfo() {
+		return this.includedResultSetsInfo;
 	}
 
-	public Collection<IncludedResultSetDetail> getIncludedResultSetDetails() {
-		return this.includedResultSetDetails;
-	}
-
-	public void setIncludedResultSetDetails(
-			Collection<IncludedResultSetDetail> includedResultSetDetails) {
-		this.includedResultSetDetails = includedResultSetDetails;
+	public void setIncludedResultSetsInfo(
+			Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> includedResultSetsInfo) {
+		this.includedResultSetsInfo = includedResultSetsInfo;
 	}
 
 	public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> getResults() {

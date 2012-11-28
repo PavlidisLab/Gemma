@@ -21,34 +21,18 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			'Are you sure you want to remove this meta-analysis?',
 			function(button) {
 				if (button === 'yes') {
-					DiffExMetaAnalyzerController.removeMetaAnalysis(id, function() {
-						this.store.reload();
+					DiffExMetaAnalyzerController.removeMetaAnalysis(id, function(baseValueObject) {
+						if (baseValueObject.errorFound) {						
+							Gemma.alertUserToError(baseValueObject, [ 'remove meta-analysis', 'meta-analysis' ]);
+						} else {
+							this.store.reload();
+						}
 					}.createDelegate(this));
-// TODO: the following code was copied from phenotype section. Should do something similar.					
-//							DiffExMetaAnalyzerController.removeMetaAnalysis(id, function(validateEvidenceValueObject) {
-//								if (validateEvidenceValueObject == null) {
-//									this.fireEvent('phenotypeAssociationChanged');
-//								} else {
-//									if (validateEvidenceValueObject.evidenceNotFound) {
-//										// We still need to fire event to let listeners know that it has been removed.
-//										this.fireEvent('phenotypeAssociationChanged');
-//										Ext.Msg.alert('Evidence already removed', 'This evidence has already been removed by someone else.');
-//									} else {
-//										Ext.Msg.alert('Cannot remove evidence', Gemma.convertToEvidenceError(validateEvidenceValueObject).errorMessage,
-//											function() {
-//												if (validateEvidenceValueObject.userNotLoggedIn) {
-//													Gemma.AjaxLogin.showLoginWindowFn();
-//												}
-//											}
-//										);
-//									}
-//								}
-//							}.createDelegate(this));
 				}
 			},
 			this);
 	},
-	viewAnalysis: function(id) {
+	viewAnalysis: function(id, analysisName, numGenesAnalyzed) {
 		var recordData = this.store.getById(id).data;
 
 		if (!this.loadMask) {
@@ -58,15 +42,23 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		}
 		this.loadMask.show();
 
-		DiffExMetaAnalyzerController.getMetaAnalysis(recordData.id, function(analysis) {
+		DiffExMetaAnalyzerController.findDetailMetaAnalysisById(recordData.id, function(baseValueObject) {
 			this.loadMask.hide();			
 			
-			var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
-				title: 'View Meta-analysis for ' + analysis.name,
-				metaAnalysis: analysis
+			if (baseValueObject.errorFound) {						
+				Gemma.alertUserToError(baseValueObject, [ 'view meta-analysis detail', 'meta-analysis' ]);
+			} else {
+				var analysis = baseValueObject.valueObject;
 				
-			});  
-			viewMetaAnalysisWindow.show();
+				analysis.numGenesAnalyzed = numGenesAnalyzed;
+	
+				var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
+					title: 'View Meta-analysis for ' + analysisName,
+					metaAnalysis: analysis
+					
+				});  
+				viewMetaAnalysisWindow.show();
+			}			
 		}.createDelegate(this));
 	},
     initComponent: function() {
@@ -82,14 +74,19 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 		}.createDelegate(this);
     	
-    	
+    	var numberColumnRenderer = function(value, metaData, record, rowIndex, colIndex, store) {
+        	metaData.attr = 'style="padding-right: 15px;"';
+			return value;
+    	};
+		
 		Ext.apply(this, {
 			store: new Ext.data.JsonStore({
 				autoLoad: true,
-				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.getMyMetaAnalyses),
+				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.findMyMetaAnalyses),
 				fields: [ 'id',
 					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
-					'description', 'numGenesAnalyzed', 'numResults', 'numResultSetsIncluded' ],
+					'description', 'numGenesAnalyzed', 'numResults', 'numResultSetsIncluded',
+					'public', 'shared', 'ownedByCurrentUser' ],
 				idProperty: 'id',
 				sortInfo: { field: 'name', direction: 'ASC'	}
 			}),
@@ -98,7 +95,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					dataIndex: 'name',
 					width: 0.4,
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-						return value + ' ' + generateLink('viewAnalysis(' + record.data.id + ');',
+						return value + ' ' + generateLink('viewAnalysis(' + record.data.id + ', \'' + record.data.name + '\', ' + record.data.numGenesAnalyzed + ');',   
 							'/Gemma/images/icons/magnifier.png', 'View included result sets and results', 10, 10);		            	
 		            }
 				}, {
@@ -107,16 +104,22 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					width: 0.75
 				}, {
 					header: 'Genes analyzed',
+					align: "right",
 					dataIndex: 'numGenesAnalyzed',
-					width: 0.2
+					width: 0.2,
+		            renderer: numberColumnRenderer
 				}, {
 					header: 'Genes with q-value < 0.1',
+					align: "right",
 					dataIndex: 'numResults',
-					width: 0.25
+					width: 0.25,
+		            renderer: numberColumnRenderer
 				}, {
 					header: 'Result sets included',
+					align: "right",
 					dataIndex: 'numResultSetsIncluded',
-					width: 0.2
+					width: 0.2,
+		            renderer: numberColumnRenderer
 				}, {
 					header: 'Admin',
 					id: 'id',
@@ -124,8 +127,19 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 		            	var adminLinks = '';
 		            	
-	            		adminLinks += generateLink('removeMetaAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis');
-		            	
+	            		adminLinks += generateLink('removeMetaAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis') + ' ';
+	            		
+	            		adminLinks += Gemma.SecurityManager.getSecurityLink(
+							'ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl',
+							record.data.id,
+							record.data.public,
+							record.data.shared,
+							record.data.ownedByCurrentUser, // Can current user edit?
+							null,
+							null,
+							null, // It is title in Security dialog. Specify null to use the object name.
+							record.data.ownedByCurrentUser); // Is current user owner? 
+
 						return adminLinks;
 		            },
 					sortable: false

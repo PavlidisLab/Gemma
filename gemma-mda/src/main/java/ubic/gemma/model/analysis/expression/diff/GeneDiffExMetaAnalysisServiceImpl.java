@@ -25,6 +25,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.genome.Taxon;
 
@@ -116,13 +117,19 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
 	@Override
-	public void delete(Long id) {
+	public BaseValueObject delete(Long id) {
 		GeneDifferentialExpressionMetaAnalysis metaAnalysis = load( id );
 		
-		// TODO: Should throw exception if the meta-analysis cannot be deleted.
-		if (metaAnalysis != null) {
+		BaseValueObject baseValueObject = new BaseValueObject();
+		
+		if (metaAnalysis == null) {
+			baseValueObject.setErrorFound(true);
+			baseValueObject.setObjectAlreadyRemoved(true);
+		} else {
 			delete(metaAnalysis);
 		}
+		
+		return baseValueObject;
 	}
 	
     @Override
