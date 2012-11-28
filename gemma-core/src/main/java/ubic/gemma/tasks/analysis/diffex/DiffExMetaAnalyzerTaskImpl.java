@@ -22,9 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.expression.diff.DiffExMetaAnalyzerService;
+import ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 

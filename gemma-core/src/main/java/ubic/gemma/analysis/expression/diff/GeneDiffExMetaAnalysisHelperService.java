@@ -17,9 +17,13 @@
  *
  */
 
-package ubic.gemma.model.analysis.expression.diff;
+package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
+
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 
 /**
  * TODO Document Me

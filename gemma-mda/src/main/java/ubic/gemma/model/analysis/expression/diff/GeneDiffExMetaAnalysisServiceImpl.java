@@ -53,6 +53,22 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    public BaseValueObject delete( Long id ) {
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = load( id );
+
+        BaseValueObject baseValueObject = new BaseValueObject();
+
+        if ( metaAnalysis == null ) {
+            baseValueObject.setErrorFound( true );
+            baseValueObject.setObjectAlreadyRemoved( true );
+        } else {
+            delete( metaAnalysis );
+        }
+
+        return baseValueObject;
+    }
+
+    @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation ) {
         return geneDiffExMetaAnalysisDao.findByInvestigation( investigation );
     }
@@ -91,6 +107,23 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+            long analysisId ) {
+        return this.geneDiffExMetaAnalysisDao.findIncludedResultSetsInfoById( analysisId );
+    }
+
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+            Collection<Long> metaAnalysisIds ) {
+        return this.geneDiffExMetaAnalysisDao.findMetaAnalyses( metaAnalysisIds );
+    }
+
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId ) {
+        return this.geneDiffExMetaAnalysisDao.findResultsById( analysisId );
+    }
+
+    @Override
     public GeneDifferentialExpressionMetaAnalysis load( Long id ) {
         return geneDiffExMetaAnalysisDao.load( id );
     }
@@ -111,31 +144,13 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
+        return this.geneDiffExMetaAnalysisDao.loadWithResultId( idResult );
+    }
+
+    @Override
     public void update( GeneDifferentialExpressionMetaAnalysis analysis ) {
         geneDiffExMetaAnalysisDao.update( analysis );
 
     }
-
-	@Override
-	public BaseValueObject delete(Long id) {
-		GeneDifferentialExpressionMetaAnalysis metaAnalysis = load( id );
-		
-		BaseValueObject baseValueObject = new BaseValueObject();
-		
-		if (metaAnalysis == null) {
-			baseValueObject.setErrorFound(true);
-			baseValueObject.setObjectAlreadyRemoved(true);
-		} else {
-			delete(metaAnalysis);
-		}
-		
-		return baseValueObject;
-	}
-	
-    @Override
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
-        return this.geneDiffExMetaAnalysisDao.loadWithResultId( idResult );
-    }
 }
-
-
