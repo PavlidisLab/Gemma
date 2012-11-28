@@ -57,6 +57,7 @@
 					<include>**/*.pnd</include>
 					<include>**/*.psd</include>
 					<include>**/*.psq</include>
+					<include>**/*.sample</include>
 				</includes>
 			</testResource>
 		</testResources>
