@@ -54,8 +54,10 @@
 					<include>**/*.sql</include>
 					<include>**/*.phr</include>
 					<include>**/*.pin</include>
+					<include>**/*.pni</include>
 					<include>**/*.pnd</include>
 					<include>**/*.psd</include>
+					<include>**/*.psi</include>
 					<include>**/*.psq</include>
 					<include>**/*.sample</include>
 				</includes>
