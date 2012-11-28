@@ -118,7 +118,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
         Collection<ArrayDesign> others = new HashSet<ArrayDesign>();
         others.add( ( ArrayDesign ) arrayDesignsUsed.toArray()[1] );
 
-        ArrayDesign merged = adms.merge( ( ArrayDesign ) arrayDesignsUsed.toArray()[0], others,
+        ArrayDesign arrayDesign = ( ArrayDesign ) arrayDesignsUsed.toArray()[0];
+        ArrayDesign merged = adms.merge( arrayDesign, others,
                 RandomStringUtils.randomAlphabetic( 5 ), RandomStringUtils.randomAlphabetic( 5 ), false );
 
         eepss.switchExperimentToArrayDesign( ee, merged );

@@ -54,7 +54,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         try {
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, FileTools.resourceToPath( "data/loader/genome/blast" ), false );
+                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
             if ( res == null ) {
                 // data already filled in by some other test.
             } else {

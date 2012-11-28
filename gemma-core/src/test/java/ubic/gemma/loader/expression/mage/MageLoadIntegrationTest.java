@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.mage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -76,8 +77,8 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
                 + "E-WMIT-4.xml" );
 
         MageMLConverter mageMLConverter = new MageMLConverter();
-        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( "/resources" + MAGE_DATA_RESOURCE_PATH
-                + "E-WMIT-4" ) );
+        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( MAGE_DATA_RESOURCE_PATH ) + File.separator
+                + "E-WMIT-4" );
 
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();

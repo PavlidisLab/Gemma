@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -490,8 +491,8 @@ public class MageMLConverterTest extends AbstractMageTest {
         /* CONVERTING */
         log.info( "***** CONVERTING ***** " );
 
-        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( "/resources" + MAGE_DATA_RESOURCE_PATH
-                + "E-MEXP-955" ) );
+        mageMLConverter.addLocalExternalDataPath( FileTools.resourceToPath( MAGE_DATA_RESOURCE_PATH ) + File.separator
+                + "E-MEXP-955" );
 
         ExpressionExperiment expressionExperiment = null;
         Collection<Object> gemmaObjects = null;
