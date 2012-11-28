@@ -57,7 +57,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 
 /**
- * Currently this test requires the 'test' miniGemma DB.
+ * This is a test that requires complex setup: loading several data sets, information on genes, array design
+ * annotations, conducting differential expression, and finally the meta-analysis.
  * 
  * @author Paul
  * @version $Id$
@@ -111,39 +112,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private TableMaintenenceUtil tableMaintenenceUtil;
 
-    public void after() {
-
-        for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : geneDiffExMetaAnalysisHelperService
-                .findMyMetaAnalyses() ) {
-            analysisService.delete( vo.getId() );
-        }
-    	
-        deleteSet( "GSE2018" );
-        deleteSet( "GSE2111" );
-        deleteSet( "GSE6344" );
-
-        ArrayDesign gpl96 = arrayDesignService.findByShortName( "GPL96" );
-        ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
-        if ( gpl96 != null ) {
-            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl96 ) ) {
-                experimentService.delete( ee );
-            }
-
-            arrayDesignService.remove( gpl96 );
-        }
-
-        if ( gpl97 != null ) {
-            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl97 ) ) {
-                experimentService.delete( ee );
-            }
-            arrayDesignService.remove( gpl97 );
-        }
-
-    }
-
     @Before
     public void before() throws Exception {
-        after(); // in case.
+        cleanup();
 
         /*
          * Add genes.
@@ -263,7 +234,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        assertEquals( 324, metaAnalysis.getResults().size() );
+        assertEquals( logFailure( metaAnalysis ), 324, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -338,24 +309,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         GeneDifferentialExpressionMetaAnalysisDetailValueObject mdvo = geneDiffExMetaAnalysisHelperService
                 .findDetailMetaAnalysisById( metaAnalysis.getId() );
         assertNotNull( mdvo );
-        
 
-    }
-
-    /**
-     * @param r
-     * @param gene
-     * @return details
-     */
-    private String logComponentResults( GeneDifferentialExpressionMetaAnalysisResult r, String gene ) {
-        StringBuilder buf = new StringBuilder();
-        for ( DifferentialExpressionAnalysisResult rr : r.getResultsUsed() ) {
-            buf.append( String.format( "%s  %s fv=%d  p=%.4f t=%.2f", gene, rr.getProbe().getName(), rr.getContrasts()
-                    .iterator().next().getFactorValue().getId(), rr.getPvalue(), rr.getContrasts().iterator().next()
-                    .getCoefficient() )
-                    + "\n" );
-        }
-        return buf.toString();
     }
 
     /**
@@ -389,6 +343,36 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         tableMaintenenceUtil.updateGene2CsEntries();
     }
 
+    private void cleanup() {
+
+        for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : geneDiffExMetaAnalysisHelperService
+                .findMyMetaAnalyses() ) {
+            analysisService.delete( vo.getId() );
+        }
+
+        deleteSet( "GSE2018" );
+        deleteSet( "GSE2111" );
+        deleteSet( "GSE6344" );
+
+        ArrayDesign gpl96 = arrayDesignService.findByShortName( "GPL96" );
+        ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
+        if ( gpl96 != null ) {
+            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl96 ) ) {
+                experimentService.delete( ee );
+            }
+
+            arrayDesignService.remove( gpl96 );
+        }
+
+        if ( gpl97 != null ) {
+            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl97 ) ) {
+                experimentService.delete( ee );
+            }
+            arrayDesignService.remove( gpl97 );
+        }
+
+    }
+
     /**
      * @param shortName
      */
@@ -416,5 +400,32 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             return null;
         }
 
+    }
+
+    /**
+     * @param r
+     * @param gene
+     * @return details
+     */
+    private String logComponentResults( GeneDifferentialExpressionMetaAnalysisResult r, String gene ) {
+        StringBuilder buf = new StringBuilder();
+        for ( DifferentialExpressionAnalysisResult rr : r.getResultsUsed() ) {
+            buf.append( String.format( "%s  %s fv=%d  p=%.4f t=%.2f", gene, rr.getProbe().getName(), rr.getContrasts()
+                    .iterator().next().getFactorValue().getId(), rr.getPvalue(), rr.getContrasts().iterator().next()
+                    .getCoefficient() )
+                    + "\n" );
+        }
+        return buf.toString();
+    }
+
+    private String logFailure( GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
+        StringBuilder buf = new StringBuilder();
+        for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
+            buf.append( "----" );
+            String gene = r.getGene().getOfficialSymbol();
+            buf.append( logComponentResults( r, gene ) );
+        }
+
+        return buf.toString();
     }
 }
