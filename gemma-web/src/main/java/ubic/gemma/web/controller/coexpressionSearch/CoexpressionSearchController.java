@@ -90,13 +90,12 @@ public class CoexpressionSearchController {
 
     @Autowired
     private SearchService searchService = null;
-    
+
     @Autowired
     private GeneLightWeightCache geneLightWeightCache;
-    
-    
-    public GeneLightWeightCache getGeneLightWeightCache(){
-    	return geneLightWeightCache;
+
+    public GeneLightWeightCache getGeneLightWeightCache() {
+        return geneLightWeightCache;
     }
 
     /**
@@ -174,41 +173,41 @@ public class CoexpressionSearchController {
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
 
         restrictSearchOptionsQueryGenes( searchOptions, queryGeneIds );
-        
+
         Collection<Gene> genes = new HashSet<Gene>();
-        
+
         Collection<Long> gidsNeeded = new HashSet<Long>();
-        
-        for (Long gid : searchOptions.getGeneIds()){        	
-        	Element e = this.getGeneLightWeightCache().getCache().get(gid);
-        	
-        	if ( e != null){
-        		genes.add((Gene)e.getValue());
-        	} else {
-        		gidsNeeded.add(gid);
-        	}       	
-        	
+
+        for ( Long gid : searchOptions.getGeneIds() ) {
+            Element e = this.getGeneLightWeightCache().getCache().get( gid );
+
+            if ( e != null ) {
+                genes.add( ( Gene ) e.getValue() );
+            } else {
+                gidsNeeded.add( gid );
+            }
+
         }
         StopWatch timer = new StopWatch();
         timer.start();
 
-        if (!gidsNeeded.isEmpty()){        	
-        	Collection<Gene> recentGenesLoaded = geneService.loadThawedLiter( gidsNeeded );
-        	genes.addAll(recentGenesLoaded);        	
-        	
-        	for (Gene g: recentGenesLoaded){
-        		this.getGeneLightWeightCache().getCache().put(new Element(g.getId(), g));        		
-        	}        	
+        if ( !gidsNeeded.isEmpty() ) {
+            Collection<Gene> recentGenesLoaded = geneService.loadThawedLiter( gidsNeeded );
+            genes.addAll( recentGenesLoaded );
+
+            for ( Gene g : recentGenesLoaded ) {
+                this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
+            }
         }
 
-        if ( genes == null || genes.isEmpty() ) {
+        if ( genes.isEmpty() ) {
             result.setErrorState( "Invalid gene id(s) - no genes found" );
             return result;
 
         }
-        
+
         if ( timer.getTime() > 100 ) {
-            log.info( "Loading and caching "+gidsNeeded.size()+" genes" + timer.getTime() + "ms" );
+            log.info( "Loading and caching " + gidsNeeded.size() + " genes" + timer.getTime() + "ms" );
         }
 
         boolean skipCoexpressionDetails = false;
