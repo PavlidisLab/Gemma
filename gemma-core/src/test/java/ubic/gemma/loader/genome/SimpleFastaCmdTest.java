@@ -54,7 +54,7 @@ public class SimpleFastaCmdTest {
         input.add( 1435867 );
         input.add( 1435868 );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, testBlastDbPath );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
@@ -71,7 +71,7 @@ public class SimpleFastaCmdTest {
         input.add( "AA000002.1" );
         input.add( "AA000003.1" );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, testBlastDbPath );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
@@ -89,7 +89,7 @@ public class SimpleFastaCmdTest {
         input.add( "FAKE.1" );
         input.add( "AA000003.1" );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, testBlastDbPath );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
@@ -101,7 +101,7 @@ public class SimpleFastaCmdTest {
         }
 
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
+        BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, testBlastDbPath );
         assertNotNull( bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
@@ -120,7 +120,7 @@ public class SimpleFastaCmdTest {
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         String accession = "AA000002";
 
-        BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, TEST_RESOURCE_PATH );
+        BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, testBlastDbPath );
         assertNotNull( "fastacmd failed to find " + accession, bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
@@ -138,7 +138,7 @@ public class SimpleFastaCmdTest {
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
 
-        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, TEST_RESOURCE_PATH );
+        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, testBlastDbPath );
         assertNull( bs );
     }
 
@@ -148,11 +148,10 @@ public class SimpleFastaCmdTest {
      */
     @Before
     public void setup() throws URISyntaxException {
-        TEST_RESOURCE_PATH = FileTools.resourceToPath( "/data/loader/genome/blast" );
-
+        testBlastDbPath = FileTools.resourceToPath( "/data/loader/genome/blast" );
     }
 
-    String TEST_RESOURCE_PATH;
+    private String testBlastDbPath;
 
     private boolean fastaCmdExecutableExists() {
 
