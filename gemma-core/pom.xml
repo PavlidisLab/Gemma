@@ -52,6 +52,11 @@
 					<include>**/*.nib</include>
 					<include>**/*.gff</include>
 					<include>**/*.sql</include>
+					<include>**/*.phr</include>
+					<include>**/*.pin</include>
+					<include>**/*.pnd</include>
+					<include>**/*.psd</include>
+					<include>**/*.psq</include>
 				</includes>
 			</testResource>
 		</testResources>
@@ -181,11 +186,7 @@
 			<artifactId>colt</artifactId>
 			<version>1.2.0</version>
 		</dependency>
-		<!-- <dependency>
-			NO longer needed
-			<groupId>commons-dbutils</groupId>
-			<artifactId>commons-dbutils</artifactId>
-			<version>1.0</version>
+		<!-- <dependency> NO longer needed <groupId>commons-dbutils</groupId> <artifactId>commons-dbutils</artifactId> <version>1.0</version> 
 			</dependency> -->
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -244,7 +245,7 @@
 			<artifactId>limpopo</artifactId>
 			<version>1.1.1</version>
 			<exclusions>
-				<exclusion> 
+				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>jcl104-over-slf4j</artifactId>
 				</exclusion>
