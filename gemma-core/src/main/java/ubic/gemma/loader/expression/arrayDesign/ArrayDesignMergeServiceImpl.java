@@ -28,7 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     private static Log log = LogFactory.getLog( ArrayDesignMergeServiceImpl.class.getName() );
@@ -231,6 +231,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      */
     private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap, ArrayDesign arrayDesign ) {
         Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        arrayDesign = this.arrayDesignService.thaw( arrayDesign );
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();

@@ -115,13 +115,6 @@ public class VectorMergingServiceIntegrationTest extends AbstractGeoServiceTest 
 
         assertEquals( 50, processedDataArrays.size() );
 
-        /*
-         * check results
-         */
-        // for ( DoubleVectorValueObject v : processedDataArrays ) {
-        // System.err.println( StringUtils.join( v.getData(), '\t' ) );
-        // }
-
     }
 
     @After

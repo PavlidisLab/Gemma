@@ -100,7 +100,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             bail( ErrorCode.INVALID_OPTION );
             return err;
         }
-
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
 
         return null;

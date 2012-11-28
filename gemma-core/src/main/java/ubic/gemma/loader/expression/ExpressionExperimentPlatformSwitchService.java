@@ -26,19 +26,14 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -61,8 +56,10 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
+
+    private static Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
 
     /**
      * Used to identify design elements that have no sequence associated with them.
@@ -75,22 +72,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         NULL_BIOSEQUENCE.setId( -1L );
     }
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
-
-    @Autowired
-    BioAssayService bioAssayService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private AnalysisUtilService analysisUtilService;
+    private ExperimentPlatformSwitchHelperService helperService;
 
     /**
      * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
@@ -191,34 +180,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     throw new IllegalStateException( "There were " + unMatched.size()
                             + " vectors that couldn't be matched to the new design for: " + type );
                 }
-
-                // log.info( "Updating " + count + " vectors for " + type );
-                // if ( vectorClass != null ) {
-                // if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
-                // designElementDataVectorService.update( vectorsForQt );
-                // } else {
-                // processedExpressionDataVectorService
-                // .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
-                // }
-                // }
             }
         }
 
-        log.info( "Updating bioAssays ... " );
         for ( BioAssay assay : expExp.getBioAssays() ) {
             assay.setArrayDesignUsed( arrayDesign );
             // bioAssayService.update( assay );
         }
-
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
                 + " by Gemma]" );
-        expressionExperimentService.update( expExp );
 
-        analysisUtilService.deleteOldAnalyses( expExp );
-
-        log.info( "Done switching " + expExp );
-
-        audit( expExp, "Switch to use " + arrayDesign.getShortName() );
+        helperService.persist( expExp, arrayDesign );
     }
 
     /**
@@ -230,14 +202,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
         this.switchExperimentToArrayDesign( expExp, arrayDesign );
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
