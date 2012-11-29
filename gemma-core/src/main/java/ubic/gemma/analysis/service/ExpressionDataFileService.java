@@ -15,6 +15,7 @@
 package ubic.gemma.analysis.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +34,13 @@ public interface ExpressionDataFileService {
 
     public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
     public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
-    
+
     public static final String JSON_FILE_SUFFIX = ".data.json.gz";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
-    public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n" +
-            "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. " +
-            "Bioinformatics, 2012. \n";
+    public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n"
+            + "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. "
+            + "Bioinformatics, 2012. \n";
 
     /**
      * @param ee
@@ -66,9 +67,21 @@ public interface ExpressionDataFileService {
      * 
      * @param ee
      * @param forceWrite
+     * @param filtered
      * @return
      */
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+
+    /**
+     * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only).
+     * 
+     * @param ee
+     * @param filtered
+     * @param fileName
+     * @return
+     */
+    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName ) throws IOException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -88,7 +101,7 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
-    
+
     /**
      * @param ee
      * @param forceWrite
@@ -112,13 +125,12 @@ public interface ExpressionDataFileService {
      * @return collection of files, one per analysis.
      */
     public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
-    
+
     /**
-     * Locate or create the differential expression data file(s) for a given experiment.
-     * We generate an archive that contains following files:
-     *  - differential expression analysis file (q-values per factor)
-     *  - file for each result set with contrasts info (such as fold change for each factor value)
-     *  
+     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
+     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
+     * set with contrasts info (such as fold change for each factor value)
+     * 
      * @param analysis
      * @param forceRewrite
      * @return
@@ -157,8 +169,8 @@ public interface ExpressionDataFileService {
      * @param sortedFirstColumnOfResults
      * @return
      */
-    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString(
-            ExpressionAnalysisResultSet ears, Map<Long, String[]> geneAnnotations, StringBuilder buf,
-            Map<Long, StringBuilder> probe2String, List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
+    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
+            Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
+            List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
 
 }

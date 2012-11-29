@@ -253,7 +253,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             } else if ( gene.equals( "ABCF1" ) ) {
                 foundTests++;
                 assertEquals( logComponentResults( r, gene ), 0.01664992, r.getMetaPvalue(), 0.00001 );
-
+            } else if ( gene.equals( "ACLY" ) ) {
+                foundTests++;
+                assertEquals( logComponentResults( r, gene ), 1.505811e-06, r.getMetaPvalue(), 0.00001 );
+            } else if ( gene.equals( "ACTA2" ) ) {
+                foundTests++;
+                assertEquals( logComponentResults( r, gene ), 0.0002415006, r.getMetaPvalue(), 0.00001 );
+            } else if ( gene.equals( "ACO2" ) ) {
+                foundTests++;
+                assertEquals( logComponentResults( r, gene ), 0.002218716, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "THRA" ) ) {
 
                 foundTests++;
@@ -290,7 +298,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-        assertEquals( 7, foundTests );
+        assertEquals( 10, foundTests );
         assertEquals( 219, numUp ); // R
         assertEquals( 105, numDown ); // R
 

@@ -20,8 +20,10 @@ package ubic.gemma.loader.expression.geo.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.util.Collection;
 
 import org.junit.After;
@@ -32,6 +34,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -78,6 +81,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     ExpressionExperimentLoadTask expressionExperimentLoadTask;
+
+    @Autowired
+    ExpressionDataFileService dataFileService;
 
     @Autowired
     AclTestUtils aclTestUtils;
@@ -222,7 +228,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 19, qts.size() );
-
+        File f = dataFileService.writeOrLocateDataFile( ee, true, true );
+        assertTrue( f.canRead() );
+        assertTrue( f.length() > 0 );
     }
 
     /**

@@ -341,6 +341,10 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
         return startTask( runner );
     }
 
+    /**
+     * @param filename
+     * @return
+     */
     public File getOutputFile( String filename ) {
         String fullFilePath = DATA_DIR + filename;
         File f = new File( fullFilePath );

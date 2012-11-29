@@ -72,6 +72,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Date autoTagDate;
 
+    private String batchFetchEventType;
+
     private Integer bioAssayCount;
 
     private Integer bioMaterialCount = null;
@@ -86,6 +88,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Date dateArrayDesignLastUpdated;
 
+    private Date dateBatchFetch;
+
     private Date dateCached;
 
     private Date dateCreated;
@@ -94,13 +98,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Date dateLastUpdated;
 
-    private Date datePcaAnalysis;
-
-    private Date dateBatchFetch;
-
     private Date dateLinkAnalysis;
 
     private Date dateMissingValueAnalysis;
+
+    private Date datePcaAnalysis;
 
     private Date dateProcessedDataVectorComputation;
 
@@ -142,6 +144,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private String owner;
 
+    private String pcaAnalysisEventType;
+
     private String processedDataVectorComputationEventType;
 
     private Integer processedExpressionVectorCount = null;
@@ -162,15 +166,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private String technologyType;
 
-    private String troubleDetails = "(Reason for trouble not populated)";
-
     private boolean troubled = false;
 
+    private String troubleDetails = "(Reason for trouble not populated)";
+
     private boolean validated = false;
-
-    private String pcaAnalysisEventType;
-
-    private String batchFetchEventType;
 
     public ExpressionExperimentValueObject() {
     }
@@ -276,11 +276,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.troubleDetails = troubleDetails;
     }
 
-    @Override
-    public String toString() {
-        return this.getShortName() + " (id = " + this.getId() + ")";
-    }
-
     /**
      * @param sampleRemovedFlags
      */
@@ -292,6 +287,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         }
 
         this.sampleRemovedFlags = converted;
+    }
+
+    @Override
+    public int compareTo( ExpressionExperimentValueObject arg0 ) {
+        return this.getId().compareTo( arg0.getId() );
     }
 
     /**
@@ -346,6 +346,18 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
             this.setTroubleDetails( otherBean.getTroubleDetails() );
         }
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) return false;
+        } else if ( !id.equals( other.id ) ) return false;
+        return true;
     }
 
     /**
@@ -405,6 +417,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     public Boolean getCurrentUserHasWritePermission() {
         return currentUserHasWritePermission;
+    }
+
+    public Boolean getCurrentUserIsOwner() {
+        return currentUserIsOwner;
     }
 
     /**
@@ -696,6 +712,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         return this.validated;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
+    }
+
     /**
      * @return the currentUserHasWritePermission
      */
@@ -778,6 +802,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     public void setCurrentUserHasWritePermission( Boolean currentUserHasWritePermission ) {
         this.currentUserHasWritePermission = currentUserHasWritePermission;
+    }
+
+    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
+        this.currentUserIsOwner = currentUserIsOwner;
     }
 
     public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
@@ -960,12 +988,12 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.technologyType = technologyType;
     }
 
-    public void setTroubleDetails( String troubleDetails ) {
-        this.troubleDetails = troubleDetails;
-    }
-
     public void setTroubled( Boolean troubleFlag ) {
         this.troubled = troubleFlag;
+    }
+
+    public void setTroubleDetails( String troubleDetails ) {
+        this.troubleDetails = troubleDetails;
     }
 
     public void setValidated( Boolean validatedFlag ) {
@@ -973,16 +1001,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
     }
 
     @Override
-    public int compareTo( ExpressionExperimentValueObject arg0 ) {
-        return this.getId().compareTo( arg0.getId() );
-    }
-
-    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
-    }
-
-    public Boolean getCurrentUserIsOwner() {
-        return currentUserIsOwner;
+    public String toString() {
+        return this.getShortName() + " (id = " + this.getId() + ")";
     }
 
 }

@@ -238,16 +238,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         return dir;
     }
 
-    /**
-     * Avoid getting file names with spaces etc.
-     * 
-     * @param ee
-     * @return
-     */
-    private String cleanShortName( ExpressionExperiment ee ) {
-        return ee.getShortName().replaceAll( "[\\s\'\";,]", "_" );
-    }
-
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
@@ -378,8 +368,8 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
         boolean deleted = false;
 
-        String histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "pvalues"
-                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "."
+                + "pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         File oldf = new File( f, histFileName );
         if ( oldf.exists() ) {
             deleted = oldf.delete();
@@ -388,7 +378,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             }
         }
 
-        histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "qvalues"
+        histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "qvalues"
                 + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         oldf = new File( f, histFileName );
         if ( oldf.exists() ) {
@@ -397,7 +387,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
                 log.warn( "Could not delete: " + oldf );
             }
         }
-        histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "scores"
+        histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "scores"
                 + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         oldf = new File( f, histFileName );
         if ( oldf.exists() ) {
@@ -426,8 +416,8 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
         File f = prepareDirectoryForDistributions( expressionExperiment );
 
-        String histFileName = cleanShortName( expressionExperiment ) + ".an" + analysisId + "." + extraSuffix
-                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String histFileName = FileTools.cleanForFileName( expressionExperiment.getShortName() ) + ".an" + analysisId
+                + "." + extraSuffix + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         File outputFile = new File( f, histFileName );
 

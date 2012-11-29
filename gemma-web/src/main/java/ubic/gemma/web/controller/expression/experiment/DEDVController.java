@@ -195,9 +195,12 @@ public class DEDVController {
             dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees, geneIds );
         }
 
-        // FIXME
-        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvMap );
+        /*
+         * Don't reorganize them -- the headings will be wrong.
+         */
+        Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        //
+        // layouts= experimentalDesignVisualizationService .sortVectorDataByDesign( dedvMap );
 
         watch.stop();
         Long time = watch.getTime();
@@ -206,7 +209,7 @@ public class DEDVController {
             log.info( "Retrieved " + dedvMap.size() + " DEDVs from " + eeIds.size() + " EEs in " + time + " ms." );
         }
 
-        return makeVectorMap( dedvMap );
+        return makeVectorMap( dedvMap, layouts );
 
     }
 
@@ -701,6 +704,7 @@ public class DEDVController {
             result.put( ee, gmap );
 
         } else {
+            // Generic listing.
             result = getDEDV( eeIds, geneIds );
         }
 
@@ -1277,6 +1281,14 @@ public class DEDVController {
      * @return
      */
     private String makeHeader( DoubleVectorValueObject dedv ) {
+
+        if ( dedv.isReorganized() ) {
+            /*
+             * FIXME we should output the names in the 'right' order.
+             */
+            return "Gene Symbol\tGene Name\tProbe\n";
+        }
+
         StringBuilder buf = new StringBuilder();
         ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
         buf.append( "# " + ee.getShortName() + " : " + ee.getName() + "\n" );
@@ -1303,11 +1315,17 @@ public class DEDVController {
 
     /**
      * @param newResults
+     * @param layouts
      * @return
      */
     private Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> makeVectorMap(
-            Collection<DoubleVectorValueObject> newResults ) {
+            Collection<DoubleVectorValueObject> newResults,
+            Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+
+        // FIXME use the layouts.
+
         Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result = new HashMap<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>>();
+
         for ( DoubleVectorValueObject v : newResults ) {
             ExpressionExperimentValueObject e = v.getExpressionExperiment();
             if ( !result.containsKey( e ) ) {
@@ -1326,7 +1344,9 @@ public class DEDVController {
                 innerMap.get( g ).add( v );
             }
         }
+
         return result;
+
     }
 
     /**

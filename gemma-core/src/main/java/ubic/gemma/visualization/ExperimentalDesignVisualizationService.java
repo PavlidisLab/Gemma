@@ -56,7 +56,8 @@ public interface ExperimentalDesignVisualizationService {
     public abstract void plotExperimentalDesign( ExpressionExperiment e );
 
     /**
-     * Put data vectors in the order you'd want to display the experimental design.
+     * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag
+     * of the dedvs to be set to true.
      * 
      * @param dedvs
      * @return Map of EE ids to Map of BioAssays ...

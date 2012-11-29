@@ -19,24 +19,15 @@
 package ubic.gemma.apps;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.MatrixWriter;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * Prints preferred data matrix to a file.
@@ -58,11 +49,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     private boolean filter = false;
 
-    private boolean addGeneInfo = false;
-
     @Override
     public String getShortDesc() {
-        return "Prints preferred data matrix to a file.";
+        return "Prints preferred data matrix to a file; gene information is included if available.";
     }
 
     @Override
@@ -71,66 +60,43 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         super.buildOptions();
         Option outputFileOption = OptionBuilder
                 .hasArg()
-                .withArgName( "outFilePrefix" )
+                .withArgName( "outFileName" )
                 .withDescription(
-                        "File prefix for saving the output (short name will be appended); if not supplied, output to stdout" )
-                .withLongOpt( "outFilePrefix" ).create( 'o' );
+                        "File name. If omitted, the file name will be based on the short name of the experiment." )
+                .withLongOpt( "outFileName" ).create( 'o' );
         addOption( outputFileOption );
-
-        Option geneInfoOption = OptionBuilder.withDescription(
-                "Write the gene information.  If not set, the gene information will not be written." ).create( 'g' );
-        addOption( geneInfoOption );
 
         Option filteredOption = OptionBuilder.withDescription( "Filter expression matrix under default parameters" )
                 .create( "filter" );
         addOption( filteredOption );
-
     }
+
+    private ExpressionDataFileService fs;
 
     @Override
     protected Exception doWork( String[] args ) {
-        FilterConfig fCon = new FilterConfig();
+
         Exception err = processCommandLine( "expressionDataMatrixWriterCLI", args );
         if ( err != null ) return err;
 
-        ExpressionDataMatrixService ahs = this.getBean( ExpressionDataMatrixService.class );
+        fs = this.getBean( ExpressionDataFileService.class );
 
-        CompositeSequenceService css = this.getBean( CompositeSequenceService.class );
-
+        if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {
+            throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
+        }
         for ( BioAssaySet ee : expressionExperiments ) {
-            ExpressionDataDoubleMatrix dataMatrix;
-            if ( filter ) {// filtered expression matrix desired
-                dataMatrix = ahs.getFilteredMatrix( ( ExpressionExperiment ) ee, fCon );
+
+            String fileName;
+            if ( StringUtils.isNotBlank( outFileName ) ) {
+                fileName = outFileName;
             } else {
-                dataMatrix = ahs.getProcessedExpressionDataMatrix( ( ExpressionExperiment ) ee );
+                fileName = FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() ) + ".txt";
             }
 
-            int rows = dataMatrix.rows();
-            Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
-            for ( int j = 0; j < rows; j++ ) {
-                CompositeSequence probeForRow = dataMatrix.getDesignElementForRow( j );
-                probes.add( probeForRow );
-            }
-
-            Map<CompositeSequence, Collection<Gene>> genes = css.getGenes( probes );
-
-            Writer writer;
             try {
-                MatrixWriter out = new MatrixWriter();
-
-                if ( outFileName == null ) {
-                    writer = new PrintWriter( System.out );
-                } else {
-                    writer = new PrintWriter( outFileName + "_"
-                            + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
-                }
-                out.write( writer, dataMatrix, genes, true, false, addGeneInfo, true );
-                writer.flush();
-                writer.close();
+                fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName );
             } catch ( IOException e ) {
-                return e;
-            } finally {
-
+                this.errorObjects.add( ee + ": " + e );
             }
         }
 
@@ -141,8 +107,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected void processOptions() {
         super.processOptions();
         outFileName = getOptionValue( 'o' );
-
-        addGeneInfo = hasOption( 'g' );
         if ( hasOption( "filter" ) ) {
             filter = true;
         }

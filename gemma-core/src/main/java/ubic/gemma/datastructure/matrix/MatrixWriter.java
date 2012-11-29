@@ -20,13 +20,13 @@ package ubic.gemma.datastructure.matrix;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.jfree.util.Log;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -38,11 +38,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  */
 public class MatrixWriter {
-
-    private static NumberFormat nf = NumberFormat.getInstance();
-    static {
-        nf.setMaximumFractionDigits( 4 );
-    }
 
     /**
      * @param writer
@@ -130,6 +125,8 @@ public class MatrixWriter {
 
         }
         writer.write( buf.toString() );
+        writer.flush();
+        Log.debug( "Done writing" );
     }
 
     /**
@@ -188,6 +185,8 @@ public class MatrixWriter {
 
         }
         writer.write( buf.toString() );
+        writer.flush();
+        Log.debug( "Done writing" );
     }
 
     private List<BioMaterial> getBioMaterialsInRequestedOrder( ExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
