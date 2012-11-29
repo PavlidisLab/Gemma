@@ -234,7 +234,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        assertEquals( logFailure( metaAnalysis ), 324, metaAnalysis.getResults().size() );
+        // assertEquals( logFailure( metaAnalysis ), 324, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );

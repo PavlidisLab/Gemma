@@ -111,14 +111,22 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         // second pass: organize by gene
         int numWithGenes = 0;
+        int numWithoutGenes = 0;
+        int numWithMultipleGenes = 0;
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 assert r != null;
                 CompositeSequence probe = r.getProbe();
                 Collection<Gene> genes = cs2genes.get( probe );
-                if ( genes == null || genes.isEmpty() ) continue;
-                if ( genes.size() > 1 ) continue;
+                if ( genes == null || genes.isEmpty() ) {
+                    numWithoutGenes++;
+                    continue;
+                }
+                if ( genes.size() > 1 ) {
+                    numWithMultipleGenes++;
+                    continue;
+                }
                 Gene gene = genes.iterator().next();
                 if ( !gene2result.containsKey( gene ) ) {
                     gene2result.put( gene, new HashSet<DifferentialExpressionAnalysisResult>() );
@@ -133,12 +141,17 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             return null;
         }
 
+        log.info( numWithGenes + " of the results had genes; " + numWithoutGenes + " had no gene; "
+                + numWithMultipleGenes + " had more than one gene" );
+
         log.info( "Computing pvalues ..." );
         DoubleArrayList pvaluesUp = new DoubleArrayList();
         DoubleArrayList pvaluesDown = new DoubleArrayList();
+
         // third pass: collate to get pvalues. First we have to aggregate within experiment
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsUp = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsDown = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
+        int numWithMultipleContrasts = 0;
         for ( Gene g : gene2result.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> res4gene = gene2result.get( g );
 
@@ -147,6 +160,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 Collection<ContrastResult> contrasts = r.getContrasts();
                 if ( contrasts.size() > 1 ) {
                     // This is not allowed!
+                    numWithMultipleContrasts++;
                     continue;
                 }
 
@@ -263,6 +277,9 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
                         fisherPvalueUp, fisherPvalueDown ) );
         } // end loop over genes.
+        if ( numWithMultipleContrasts > 0 )
+            log.info( numWithMultipleContrasts
+                    + " results were skipped because they had more than one contrast [this should be an error]" );
 
         if ( metaAnalysisResultsDown.isEmpty() ) {
             // can happen if platforms don't have any genes that match etc.
