@@ -36,7 +36,6 @@ import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImp
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -75,32 +74,29 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     protected DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
-    /*
-     * Used when processing a single experiment.
-     */
-    private AnalysisType type = null;
-    private List<Long> factorIds = new ArrayList<Long>();
-    private List<String> factorNames = new ArrayList<String>();
-
     /**
      * Whether batch factors should be included (if they exist)
      */
     protected boolean ignoreBatch = true;
-
-    /**
-     * If there are too many factors, try to do the analysis the way it was done before ('redo')
-     */
-    private boolean tryToCopyOld = false;
+    private boolean delete = false;
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService;
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService;
+    private List<Long> factorIds = new ArrayList<Long>();
 
-    private boolean delete = false;
+    private List<String> factorNames = new ArrayList<String>();
 
     private Long subsetFactorId;
 
     private String subsetFactorName;
+
+    private boolean tryToCopyOld = false;
+
+    /*
+     * Used when processing a single experiment.
+     */
+    private AnalysisType type = null;
 
     /*
      * (non-Javadoc)
@@ -138,9 +134,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption( null );
 
-        // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
-        // super.addOption( forceAnalysisOpt );
-
         Option factors = OptionBuilder.hasArg()
                 .withDescription( "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
 
@@ -172,11 +165,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( "nodb", false, "Output only to STDOUT instead of database" );
 
-        super.addOption(
-                "redo",
-                false,
-                "If using automatic analysis "
-                        + "try to base the analysis on a previous analysis. Only works if there is just one old analysis, but is okay even if there are more than three factors." );
+        super.addOption( "redo", false, "If using automatic analysis "
+                + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
 
         super.addOption( "delete", false,
                 "Instead of running the analyssi on the given experiments, delete the old analyses. Use with care!" );
@@ -532,56 +522,15 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @return
      */
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
-        Collection<DifferentialExpressionAnalysis> results;
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( ee );
 
-        if ( oldAnalyses.size() > 1 ) {
-            throw new RuntimeException(
-                    "There is more than one old analysis on which to base the new one, cannot proceed with 'redo'" );
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+        for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
+            results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe ) );
         }
-
-        if ( oldAnalyses.isEmpty() ) {
-            throw new IllegalArgumentException(
-                    "There is no analysis on which to base a new one, cannot proceed with 'redo'" );
-        }
-
-        /*
-         * FIXME: we don't use the baseline settings from the previous analysis, but I'm not sure we use that yet
-         * anyway.
-         */
-
-        DifferentialExpressionAnalysis copyMe = oldAnalyses.iterator().next();
-        differentialExpressionAnalysisService.thaw( copyMe );
-
-        log.info( "Will base analysis on old one: " + copyMe );
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
-        if ( copyMe.getSubsetFactorValue() != null ) {
-            config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
-        }
-
-        Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
-        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
-            factorsFromOldExp.addAll( oldfactors );
-
-            /*
-             * If we included the interaction before, include it again.
-             */
-            if ( oldfactors.size() == 2 ) {
-                log.info( "Including interaction term" );
-                config.getInteractionsToInclude().add( oldfactors );
-            }
-
-        }
-        if ( factorsFromOldExp.isEmpty() ) {
-            throw new IllegalStateException( "Old analysis didn't have any factors" );
-        }
-
-        config.getFactorsToInclude().addAll( factorsFromOldExp );
-        results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
         return results;
+
     }
+
 }
