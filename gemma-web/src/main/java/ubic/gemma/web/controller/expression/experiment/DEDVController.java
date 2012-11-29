@@ -1033,12 +1033,12 @@ public class DEDVController {
          */
         for ( DoubleVectorValueObject dedv : dedvs ) {
             ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
-            if ( dedv.getGenes().contains( queryGene ) ) {
+            if ( dedv.getGenes().contains( queryGene.getId() ) ) {
                 if ( !queryEE2ProbeIds.containsKey( ee.getId() ) ) {
                     queryEE2ProbeIds.put( ee.getId(), new HashSet<Long>() );
                 }
                 queryEE2ProbeIds.get( ee.getId() ).add( dedv.getDesignElement().getId() );
-            } else if ( dedv.getGenes().contains( coexpressedGene ) ) {
+            } else if ( dedv.getGenes().contains( coexpressedGene.getId() ) ) {
                 if ( !coexpressedEE2ProbeIds.containsKey( ee.getId() ) ) {
                     coexpressedEE2ProbeIds.put( ee.getId(), new HashSet<Long>() );
                 }
