@@ -18,8 +18,12 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -28,12 +32,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -47,8 +57,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
-
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
 
     /**
      * Defines the different types of analyses our linear modeling framework supports:
@@ -71,6 +79,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                                                                                                                  */
     }
 
+    private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
+
+    @Autowired
+    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
+
     @Autowired
     private AuditTrailService auditTrailService = null;
 
@@ -78,25 +91,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
-    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
-
-    @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
-    }
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
-    }
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
-    }
 
     /*
      * (non-Javadoc)
@@ -111,6 +106,59 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .getAnalyses( expressionExperiment );
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
         return expressionAnalyses;
+    }
+
+    /**
+     * @param ee
+     * @param copyMe
+     * @return
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe ) {
+        Collection<DifferentialExpressionAnalysis> results;
+
+        if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
+            throw new IllegalArgumentException(
+                    "Cannot redo the analysis because it is included in a meta-analysis (or something). "
+                            + "Delete the constraining entity first." );
+        }
+
+        differentialExpressionAnalysisService.thaw( copyMe );
+
+        log.info( "Will base analysis on old one: " + copyMe );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        if ( copyMe.getSubsetFactorValue() != null ) {
+            config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
+        }
+
+        Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
+        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
+            factorsFromOldExp.addAll( oldfactors );
+
+            /*
+             * If we included the interaction before, include it again.
+             */
+            if ( oldfactors.size() == 2 ) {
+                log.info( "Including interaction term" );
+                config.getInteractionsToInclude().add( oldfactors );
+            }
+
+        }
+        if ( factorsFromOldExp.isEmpty() ) {
+            throw new IllegalStateException( "Old analysis didn't have any factors" );
+        }
+
+        config.getFactorsToInclude().addAll( factorsFromOldExp );
+        results = this.runDifferentialExpressionAnalyses( ee, config );
+        if ( !results.isEmpty() ) {
+            log.info( "Deleting old analysis" );
+            differentialExpressionAnalysisService.delete( copyMe );
+        }
+        return results;
     }
 
     /*
@@ -213,47 +261,67 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma
-     * .model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee ) {
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( ee );
-
-        return !expressionAnalyses.isEmpty();
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
+        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
     }
 
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
+        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
+    }
+
+    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
+        return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
+    }
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+
     /*
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#wasDifferentialAnalysisRun(ubic.gemma
-     * .model.expression.experiment.ExpressionExperiment, java.util.Collection)
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#updateSummaries(ubic.gemma.model.analysis
+     * .expression.diff.DifferentialExpressionAnalysis)
      */
     @Override
-    public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee, Collection<ExperimentalFactor> factors ) {
+    public void updateSummaries( DifferentialExpressionAnalysis analysis ) {
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( ee );
+        DiffExAnalyzer lma = analysisSelectionAndExecutionService.getAnalyzer();
+        Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
 
-        for ( DifferentialExpressionAnalysis de : expressionAnalyses ) {
-            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
-            for ( ExpressionAnalysisResultSet resultSet : de.getResultSets() ) {
-                factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
+        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            differentialExpressionResultService.thaw( resultSet );
+            List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
+                    resultSet.getResults() );
+            for ( DifferentialExpressionAnalysisResult d : results ) {
+                CompositeSequence probe = d.getProbe();
+                probe2GeneMap.put( probe, new HashSet<Gene>() );
             }
-
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) ) {
-                return true;
-            }
-
         }
-        return false;
+
+        probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
+
+        if ( probe2GeneMap.isEmpty() ) throw new IllegalStateException( "The probes do not map to genes" );
+
+        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
+                    resultSet.getResults() );
+            Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
+            resultSet.getHitListSizes().clear();
+            resultSet.getHitListSizes().addAll( hitlists );
+            resultSet.setNumberOfGenesTested( lma.getNumberOfGenesTested( results, probe2GeneMap ) );
+            resultSet.setNumberOfProbesTested( results.size() );
+            differentialExpressionResultService.update( resultSet );
+        }
+
+        helperService.writeDistributions( analysis.getExperimentAnalyzed(), analysis );
+
     }
 
 }

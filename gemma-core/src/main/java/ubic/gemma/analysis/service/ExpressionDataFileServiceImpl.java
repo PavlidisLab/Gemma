@@ -446,9 +446,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName ) throws IOException {
+    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+            throws IOException {
         File f = new File( fileName );
-        return writeDataFile( ee, filtered, f );
+        return writeDataFile( ee, filtered, f, compress );
     }
 
     /*
@@ -497,7 +498,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 log.info( f + " exists, not regenerating" );
                 return f;
             }
-            return writeDataFile( ee, filtered, f );
+            return writeDataFile( ee, filtered, f, true );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -1006,12 +1007,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param ee
      * @param filtered
      * @param f
+     * @param compress if true, file will be output in GZIP format.
      * @return
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private File writeDataFile( ExpressionExperiment ee, boolean filtered, File f ) throws IOException,
-            FileNotFoundException {
+    private File writeDataFile( ExpressionExperiment ee, boolean filtered, File f, boolean compress )
+            throws IOException, FileNotFoundException {
         log.info( "Creating new expression data file: " + f.getName() );
         ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 

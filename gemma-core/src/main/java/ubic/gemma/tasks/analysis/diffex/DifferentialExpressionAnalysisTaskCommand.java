@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -57,9 +58,27 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private ExperimentalFactor subsetFactor;
 
+    private DifferentialExpressionAnalysis toRedo;
+
+    private boolean updateStatsOnly = true;
+
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
+    }
+
+    /**
+     * @param ee
+     * @param toRedo
+     * @param updateAnalysis if true, the analysis is updated. If false, only the summary statistics are updated (e.g.,
+     *        the pvalue distribution ).
+     */
+    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee, DifferentialExpressionAnalysis toRedo,
+            boolean updateAnalysis ) {
+        super();
+        this.expressionExperiment = ee;
+        this.toRedo = toRedo;
+        this.updateStatsOnly = !updateAnalysis;
     }
 
     /**
@@ -94,12 +113,20 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return subsetFactor;
     }
 
+    public DifferentialExpressionAnalysis getToRedo() {
+        return toRedo;
+    }
+
     public boolean isForceAnalysis() {
         return forceAnalysis;
     }
 
     public boolean isIncludeInteractions() {
         return includeInteractions;
+    }
+
+    public boolean isUpdateStatsOnly() {
+        return updateStatsOnly;
     }
 
     public void setAnalysisType( AnalysisType analysisType ) {
@@ -127,6 +154,14 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
         this.subsetFactor = subsetFactor;
+    }
+
+    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
+        this.toRedo = toRedo;
+    }
+
+    public void setUpdateStatsOnly( boolean updateStatsOnly ) {
+        this.updateStatsOnly = updateStatsOnly;
     }
 
 }

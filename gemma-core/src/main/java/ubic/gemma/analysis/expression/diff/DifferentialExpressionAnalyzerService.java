@@ -72,20 +72,17 @@ public interface DifferentialExpressionAnalyzerService {
     public abstract void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException;
 
     /**
-     * Returns true if any differential expression data exists for the experiment, else false.
-     * 
      * @param ee
+     * @param copyMe
      * @return
      */
-    public abstract boolean wasDifferentialAnalysisRun( ExpressionExperiment ee );
+    public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe );
 
     /**
-     * Returns true if differential expression data exists for the experiment with the given factors, else false.
-     * 
-     * @param ee
-     * @param factors
-     * @return
+     * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use redoAnalysis but this should be faster.
+     * @param toUpdate
      */
-    public abstract boolean wasDifferentialAnalysisRun( ExpressionExperiment ee, Collection<ExperimentalFactor> factors );
+    public abstract void updateSummaries( DifferentialExpressionAnalysis toUpdate );
 
 }

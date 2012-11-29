@@ -63,7 +63,7 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
+     * expression applied (currently supports default settings only). It will be gzip-compressed.
      * 
      * @param ee
      * @param forceWrite
@@ -79,9 +79,11 @@ public interface ExpressionDataFileService {
      * @param ee
      * @param filtered
      * @param fileName
+     * @param compress
      * @return
      */
-    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName ) throws IOException;
+    public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
+            throws IOException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it

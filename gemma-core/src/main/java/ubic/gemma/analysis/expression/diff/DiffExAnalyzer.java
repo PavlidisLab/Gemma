@@ -97,7 +97,17 @@ public interface DiffExAnalyzer {
      * @param results
      * @return
      */
-    Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
+    public Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
+
+    /**
+     * Utility method
+     * 
+     * @param resultList
+     * @param probeToGeneMap
+     * @return
+     */
+    public int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
 
     // this is needed so we can alter this in tests

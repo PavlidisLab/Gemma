@@ -17,6 +17,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -42,8 +43,7 @@ public interface DifferentialExpressionAnalysisHelperService {
      * @param ee
      * @param differentialExpressionAnalysis
      */
-    public void writeDistributions( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    public void writeDistributions( BioAssaySet ee, DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
      * Delete all the differential expression analyses for the experiment.

@@ -138,4 +138,13 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionAnalysisResultSet a );
 
+    /**
+     * Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.
+     * 
+     * @param toDelete
+     * @return
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
 }

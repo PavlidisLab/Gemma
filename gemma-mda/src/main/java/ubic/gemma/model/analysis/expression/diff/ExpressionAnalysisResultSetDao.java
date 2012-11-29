@@ -27,8 +27,7 @@ import ubic.gemma.persistence.BaseDao;
 public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalysisResultSet> {
 
     /**
-     * @return 
-     * 
+     * @return
      */
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
@@ -36,5 +35,7 @@ public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalys
      * @param resultSet Only thaws the factor not the probe information
      */
     public void thawLite( ExpressionAnalysisResultSet resultSet );
+
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
 }

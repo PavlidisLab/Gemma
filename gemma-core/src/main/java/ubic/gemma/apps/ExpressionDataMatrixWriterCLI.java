@@ -94,7 +94,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             }
 
             try {
-                fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName );
+                fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
             } catch ( IOException e ) {
                 this.errorObjects.add( ee + ": " + e );
             }

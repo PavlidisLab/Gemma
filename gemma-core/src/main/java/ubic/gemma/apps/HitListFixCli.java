@@ -19,26 +19,15 @@
 
 package ubic.gemma.apps;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * Used to delete results that were not run after institution of precomputed hitlists, and for whatever reason will not
@@ -71,14 +60,11 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
 
         super.processCommandLine( "populate differential expression hit lists", args );
 
+        DifferentialExpressionAnalyzerService diffXs = this.getBean( DifferentialExpressionAnalyzerService.class );
         DifferentialExpressionAnalysisService diffS = this.getBean( DifferentialExpressionAnalysisService.class );
-        DifferentialExpressionResultService diffrS = this.getBean( DifferentialExpressionResultService.class );
-        CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> allAnalyses = diffS
                 .getAnalyses( this.expressionExperiments );
-
-        DiffExAnalyzer lma = this.getBean( DiffExAnalyzer.class );
 
         for ( Iterator<BioAssaySet> it = this.expressionExperiments.iterator(); it.hasNext(); ) {
             BioAssaySet bas = it.next();
@@ -98,40 +84,9 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
 
                 log.info( "Processing analyses for " + bas );
 
-                diffS.thaw( analyses );
                 for ( DifferentialExpressionAnalysis analysis : analyses ) {
 
-                    Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
-
-                    for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-
-                        diffrS.thaw( resultSet );
-
-                        List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
-                                resultSet.getResults() );
-                        for ( DifferentialExpressionAnalysisResult d : results ) {
-                            CompositeSequence probe = d.getProbe();
-                            probe2GeneMap.put( probe, new HashSet<Gene>() );
-                        }
-                    }
-
-                    probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
-                    log.info( "Got probe/gene info" );
-
-                    assert !probe2GeneMap.isEmpty();
-
-                    for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-                        List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
-                                resultSet.getResults() );
-                        Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
-                        resultSet.getHitListSizes().clear();
-                        resultSet.getHitListSizes().addAll( hitlists );
-                        resultSet.setNumberOfGenesTested( getNumberOfGenesTested( results, probe2GeneMap ) );
-                        resultSet.setNumberOfProbesTested( results.size() );
-                        diffS.update( resultSet ); // cascades. But this updates the diff ex set from scratch, so it is
-                                                   // costly.
-                        log.info( "Did result set" );
-                    }
+                    diffXs.updateSummaries( analysis );
 
                 }
 
@@ -148,23 +103,4 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
         return null;
     }
 
-    /**
-     * code borrowed from LinearModelAnalyzer.
-     * 
-     * @param resultList
-     * @param probeToGeneMap
-     * @return
-     */
-    private int getNumberOfGenesTested( List<DifferentialExpressionAnalysisResult> resultList,
-            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
-
-        Collection<Gene> gs = new HashSet<Gene>();
-        for ( DifferentialExpressionAnalysisResult d : resultList ) {
-            CompositeSequence probe = d.getProbe();
-            if ( probeToGeneMap.containsKey( probe ) ) {
-                gs.addAll( probeToGeneMap.get( probe ) );
-            }
-        }
-        return gs.size();
-    }
 }

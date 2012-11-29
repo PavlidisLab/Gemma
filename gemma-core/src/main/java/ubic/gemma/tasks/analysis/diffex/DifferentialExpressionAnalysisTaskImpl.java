@@ -110,6 +110,17 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     private Collection<DifferentialExpressionAnalysis> doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
         ExpressionExperiment ee = command.getExpressionExperiment();
 
+        if ( command.getToRedo() != null ) {
+            if ( command.isUpdateStatsOnly() ) {
+                differentialExpressionAnalyzerService.updateSummaries( command.getToRedo() );
+                Collection<DifferentialExpressionAnalysis> result = new HashSet<DifferentialExpressionAnalysis>();
+                result.add( command.getToRedo() );
+                return result;
+            } else {
+                return differentialExpressionAnalyzerService.redoAnalysis( ee, command.getToRedo() );
+            }
+        }
+
         ee = expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
@@ -131,6 +142,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         assert factors != null;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
         config.setAnalysisType( analyzer );
         config.setFactorsToInclude( factors );
         config.setSubsetFactor( command.getSubsetFactor() );
@@ -159,5 +171,4 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         return results;
     }
-
 }

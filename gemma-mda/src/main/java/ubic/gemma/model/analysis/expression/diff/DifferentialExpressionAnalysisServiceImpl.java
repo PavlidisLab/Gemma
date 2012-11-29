@@ -247,4 +247,9 @@ public class DifferentialExpressionAnalysisServiceImpl implements
 
     }
 
+    @Override
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.getExpressionAnalysisResultSetDao().canDelete( differentialExpressionAnalysis );
+    }
+
 }

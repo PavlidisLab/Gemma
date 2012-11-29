@@ -71,7 +71,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
-        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+        Collection<DifferentialExpressionAnalysis> analyses = this.getAnalyzer()
                 .run( expressionExperiment );
 
         return analyses;
@@ -403,6 +403,11 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public DiffExAnalyzer  getAnalyzer() {
+        return this.applicationContext.getBean( DiffExAnalyzer.class );
     }
 
 }

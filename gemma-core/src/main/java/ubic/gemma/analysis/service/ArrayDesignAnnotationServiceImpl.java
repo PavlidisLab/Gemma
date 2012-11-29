@@ -279,6 +279,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
             }
 
+            is.close();
+
             return results;
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );

@@ -45,6 +45,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao#canDelete(ubic.gemma.model.analysis.
+     * expression.diff.DifferentialExpressionAnalysis)
+     */
+    @Override
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        final String queryString = "select a from GeneDifferentialExpressionMetaAnalysisImpl a"
+                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an";
+
+        List<GeneDifferentialExpressionMetaAnalysis> qresult = this.getHibernateTemplate().findByNamedParam(
+                queryString, "an", differentialExpressionAnalysis );
+        return qresult.isEmpty();
+    }
+
     @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 

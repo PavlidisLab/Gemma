@@ -152,7 +152,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * @param diffExpressionAnalysis - could be on a subset of the experiment.
      */
     @Override
-    public void writeDistributions( ExpressionExperiment expressionExperiment,
+    public void writeDistributions( BioAssaySet expressionExperiment,
             DifferentialExpressionAnalysis diffExpressionAnalysis ) {
 
         /*
@@ -232,10 +232,24 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * @param expressionExperiment
      * @return the directory where the files should be written.
      */
-    private File prepareDirectoryForDistributions( ExpressionExperiment expressionExperiment ) {
-        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
-        FileTools.createDir( dir.toString() );
-        return dir;
+    private File prepareDirectoryForDistributions( BioAssaySet expressionExperiment ) {
+        if ( expressionExperiment instanceof ExpressionExperimentSubSet ) {
+            ExpressionExperimentSubSet ss = ( ExpressionExperimentSubSet ) expressionExperiment;
+            ExpressionExperiment source = ss.getSourceExperiment();
+
+            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools.cleanForFileName( source
+                    .getShortName() ) + ".Subset" + ss.getId() );
+            FileTools.createDir( dir.toString() );
+            return dir;
+        } else if ( expressionExperiment instanceof ExpressionExperiment ) {
+            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools
+                    .cleanForFileName( ( ( ExpressionExperiment ) expressionExperiment ).getShortName() ) );
+            FileTools.createDir( dir.toString() );
+            return dir;
+        } else {
+            throw new IllegalStateException( "Cannot handle bioassay sets of type=" + expressionExperiment.getClass() );
+        }
+
     }
 
     @Autowired
@@ -410,14 +424,26 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * @param resulstsets in the same order as columns in the
      */
     private void saveDistributionMatrixToFile( String extraSuffix, DoubleMatrix<String, String> histograms,
-            ExpressionExperiment expressionExperiment, List<ExpressionAnalysisResultSet> resultSetList ) {
+            BioAssaySet expressionExperiment, List<ExpressionAnalysisResultSet> resultSetList ) {
 
         Long analysisId = resultSetList.iterator().next().getAnalysis().getId();
 
         File f = prepareDirectoryForDistributions( expressionExperiment );
 
-        String histFileName = FileTools.cleanForFileName( expressionExperiment.getShortName() ) + ".an" + analysisId
-                + "." + extraSuffix + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String shortName = null;
+
+        if ( expressionExperiment instanceof ExpressionExperimentSubSet ) {
+            ExpressionExperimentSubSet ss = ( ExpressionExperimentSubSet ) expressionExperiment;
+            ExpressionExperiment source = ss.getSourceExperiment();
+            shortName = source.getShortName();
+        } else if ( expressionExperiment instanceof ExpressionExperiment ) {
+            shortName = ( ( ExpressionExperiment ) expressionExperiment ).getShortName();
+        } else {
+            throw new IllegalStateException( "Cannot handle bioassay sets of type=" + expressionExperiment.getClass() );
+        }
+
+        String histFileName = FileTools.cleanForFileName( shortName ) + ".an" + analysisId + "." + extraSuffix
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         File outputFile = new File( f, histFileName );
 
@@ -430,8 +456,8 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             out.write( "# Gemma: differential expression statistics - " + extraSuffix + "\n" );
             out.write( "# Generated=" + ( new Date() ) + "\n" );
             out.write( ExpressionDataFileService.DISCLAIMER );
-            out.write( "# exp=" + expressionExperiment.getId() + " " + expressionExperiment.getShortName() + " "
-                    + expressionExperiment.getName() + " \n" );
+            out.write( "# exp=" + expressionExperiment.getId() + " " + shortName + " " + expressionExperiment.getName()
+                    + " \n" );
 
             for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
                 BioAssaySet analyzedSet = resultSet.getAnalysis().getExperimentAnalyzed();

@@ -1031,7 +1031,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param probeToGeneMap
      * @return
      */
-    private int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
+    @Override
+    public int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
 
         Collection<Gene> gs = new HashSet<Gene>();

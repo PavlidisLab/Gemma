@@ -85,4 +85,11 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
             Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
             boolean includeInteractions );
 
+    /**
+     * Return a new instance of a linearmodel analyzer.
+     * 
+     * @return
+     */
+    public abstract DiffExAnalyzer getAnalyzer();
+
 }
