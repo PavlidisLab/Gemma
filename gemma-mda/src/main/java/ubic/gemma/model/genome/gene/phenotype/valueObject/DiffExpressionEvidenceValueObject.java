@@ -20,8 +20,8 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.SortedSet;
 
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 
 /**
  * TODO Document Me
@@ -41,12 +41,13 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         super();
     }
 
-    public DiffExpressionEvidenceValueObject(
-            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
-            GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis ) {
-        super();
-        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysis.getId();
-        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
+    public DiffExpressionEvidenceValueObject( DifferentialExpressionEvidence differentialExpressionEvidence,
+            Double selectionThreshold, Long geneDifferentialExpressionMetaAnalysisId ) {
+        super( differentialExpressionEvidence );
+        this.selectionThreshold = selectionThreshold;
+        this.geneDifferentialExpressionMetaAnalysisResult = differentialExpressionEvidence
+                .getGeneDifferentialExpressionMetaAnalysisResult();
+        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysisId;
     }
 
     public DiffExpressionEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,

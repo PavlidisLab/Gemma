@@ -46,6 +46,7 @@ import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -1287,7 +1288,24 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             for ( PhenotypeAssociation phe : phenotypeAssociations ) {
 
-                EvidenceValueObject evidence = EvidenceValueObject.convert2ValueObjects( phe );
+                EvidenceValueObject evidence = null;
+
+                if ( phe instanceof DifferentialExpressionEvidence ) {
+
+                    DifferentialExpressionEvidence differentialExpressionEvidence = ( DifferentialExpressionEvidence ) phe;
+
+                    GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
+                            .loadWithResultId( differentialExpressionEvidence
+                                    .getGeneDifferentialExpressionMetaAnalysisResult().getId() );
+
+                    evidence = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
+                            geneDifferentialExpressionMetaAnalysis.getQvalueThresholdForStorage(),
+                            geneDifferentialExpressionMetaAnalysis.getId() );
+                } else {
+
+                    evidence = EvidenceValueObject.convert2ValueObjects( phe );
+                }
+
                 findEvidencePermissions( phe, evidence );
 
                 if ( evidence != null ) {
