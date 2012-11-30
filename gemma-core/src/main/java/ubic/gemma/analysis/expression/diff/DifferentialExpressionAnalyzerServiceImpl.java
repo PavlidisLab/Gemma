@@ -295,6 +295,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DiffExAnalyzer lma = analysisSelectionAndExecutionService.getAnalyzer();
         Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
 
+        log.info( "Reading the analysis ..." );
+        differentialExpressionAnalysisService.thaw( analysis );
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
             differentialExpressionResultService.thaw( resultSet );
             List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
@@ -305,11 +307,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             }
         }
 
+        log.info( "Retrieving gene-element information ..." );
         probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
 
         if ( probe2GeneMap.isEmpty() ) throw new IllegalStateException( "The probes do not map to genes" );
 
+        int i = 1;
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            log.info( "Updating stats for " + i + "/" + analysis.getResultSets().size()
+                    + " resultsets for the analysis" );
             List<DifferentialExpressionAnalysisResult> results = new ArrayList<DifferentialExpressionAnalysisResult>(
                     resultSet.getResults() );
             Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
@@ -318,9 +324,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             resultSet.setNumberOfGenesTested( lma.getNumberOfGenesTested( results, probe2GeneMap ) );
             resultSet.setNumberOfProbesTested( results.size() );
             differentialExpressionResultService.update( resultSet );
+            i++;
         }
 
+        log.info( "Writing distributions" );
         helperService.writeDistributions( analysis.getExperimentAnalyzed(), analysis );
+        log.info( "Done" );
 
     }
 

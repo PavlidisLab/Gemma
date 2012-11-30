@@ -249,12 +249,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 							} 
 							
 							var deleteText = '';
+							var redoText = '';
+							var refreshStatsText = '';
 							if(this.editable){
 								deleteText = this.getDeleteLink( analysis );
+								redoText = this.getRedoLink( analysis );
+								refreshStatsText = this.getRefreshStatsLink( analysis );
 							}
 
 							parentNode.setText(analysisDesc + parentText
-									+ subsetText + " " + parentNode.text + deleteText);
+									+ subsetText + " " + parentNode.text + deleteText + redoText + refreshStatsText);
 
 							// if this parent node has an interaction child,
 							// that child should
@@ -382,7 +386,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 						return base;
 					},
 					getDeleteLink: function( analysis ){
-						// prepare download link
 						var manager = new Gemma.EEManager({id: "eemanager"});
 						manager.on('deletedAnalysis', function(){
 			                manager.updateEEReport( this.ee.id );
@@ -392,10 +395,43 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 						}, this);
 						return String.format(
 										"<span style='cursor:pointer' ext:qtip='Delete this analysis' "+
-										"onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'> &nbsp; "+
-										"<img src='/Gemma/images/icons/cross.png'/> &nbsp;  </span>",
+										"onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'>"+
+										"<img src='/Gemma/images/icons/cross.png'/></span>",
 										this.ee.id, analysis.id);						
 					},
+					
+					getRedoLink : function ( analysis ) {
+						var manager = new Gemma.EEManager({id: "eemanager"});
+						manager.on('differential', function(){
+			                manager.updateEEReport( this.ee.id );
+						}, this);
+						manager.on('reportUpdated', function(){
+							this.fireEvent('analysisRedone');
+						}, this);
+						return String.format(
+										"<span style='cursor:pointer' ext:qtip='Re-run this analysis' "+
+										"onClick='Ext.getCmp(&quot;eemanager&quot;).redoExperimentAnalysis({0},{1},false)'>"+
+										"<img src='/Gemma/images/icons/arrow_refresh_small.png'/></span>",
+										this.ee.id, analysis.id);						
+					},
+					
+					getRefreshStatsLink : function ( analysis ) {
+						var manager = new Gemma.EEManager({id: "eemanager"});
+						
+						// maybe don't need to do this; also not the right event, perhaps.
+						manager.on('differential', function(){
+			                manager.updateEEReport( this.ee.id );
+						}, this);
+						manager.on('reportUpdated', function(){
+							this.fireEvent('analysisRedone');
+						}, this);
+						return String.format(
+										"<span style='cursor:pointer' ext:qtip='Refresh the summary stats' "+
+										"onClick='Ext.getCmp(&quot;eemanager&quot;).refreshDiffExStats({0},{1},false)'>"+
+										"<img src='/Gemma/images/icons/database_refresh.png'/></span>", /* FIXME use different icon */
+										this.ee.id, analysis.id);						
+					},
+					
 					calculateChartId: function(eeId, nodeId) {
 						// Because this tree can be used in another window, getId() is used so that the returned id is unique across all opened windows.
 						return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div'; 

@@ -152,6 +152,14 @@ Gemma.HelpText.CommonWarnings = {
 		title: 'Comfirm Deletion',
 		text: "Are you sure you want to delete this {0}? This cannot be undone."
 	},
+	Redo : {
+		title: 'Confirm redo',
+		text: "Are you sure you want to redo this {0}? This cannot be undone."
+	},
+	RefreshStats : {
+		title: 'Confirm refresh',
+		text: "Are you sure you want to refresh statistics for this {0}? This cannot be undone."
+	},
 	ReIndexing: {
 		title: 'Comfirm Re-Indexing',
 		text: "Are you sure you want to rebuild the {0} indicies? This will delete current indicies."+

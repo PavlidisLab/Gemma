@@ -392,6 +392,81 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                     icon : Ext.MessageBox.WARNING
                 });
     },
+    
+    redoExperimentAnalysis : function(eeId, analysisId, redirectHome) {
+        Ext.Msg.show({
+                    title : Gemma.HelpText.CommonWarnings.Redo.title,
+                    msg : String.format(Gemma.HelpText.CommonWarnings.Redo.text, 'analysis'),
+                    buttons : Ext.Msg.YESNO,
+                    fn : function(btn, text) {
+                        if (btn == 'yes') {
+                            var callParams = [];
+                            callParams.push(eeId);
+                            callParams.push(analysisId);
+                            Ext.getBody().mask();
+                            callParams.push({
+                                        callback : function(data) {
+                                            var k = new Gemma.WaitHandler();
+                                            k.handleWait(data, true);
+                                            this.relayEvents(k, ['done', 'fail']);
+                                            Ext.getBody().unmask();
+                                            k.on('done', function(payload) {
+                                                        this.fireEvent('differential', payload);
+                                                    }.createDelegate(this));
+                                        }.createDelegate(this),
+                                        errorHandler : function(error) {
+                                            Ext.Msg.alert("Redo failed", error);
+                                            Ext.getBody().unmask();
+                                        }.createDelegate(this)
+                                    });
+                            DifferentialExpressionAnalysisController.redo.apply(this, callParams);
+
+                        }
+                    },
+                    scope : this,
+                    animEl : 'elId',
+                    icon : Ext.MessageBox.WARNING
+                });
+    },
+    
+    refreshDiffExStats : function(eeId, analysisId, redirectHome) {
+        Ext.Msg.show({
+                    title : Gemma.HelpText.CommonWarnings.RefreshStats.title,
+                    msg : String.format(Gemma.HelpText.CommonWarnings.RefreshStats.text, 'analysis'),
+                    buttons : Ext.Msg.YESNO,
+                    fn : function(btn, text) {
+                        if (btn == 'yes') {
+                            var callParams = [];
+                            callParams.push(eeId);
+                            callParams.push(analysisId);
+                            Ext.getBody().mask();
+                            callParams.push({
+                                        callback : function(data) {
+                                            var k = new Gemma.WaitHandler();
+                                            k.handleWait(data, true);
+                                            this.relayEvents(k, ['done', 'fail']);
+                                            Ext.getBody().unmask();
+                                            k.on('done', function(payload) {
+                                            	// this isn't necessarily the right event, but seems reasonable.
+                                                        this.fireEvent('differential', payload);
+                                                    }.createDelegate(this));
+                                        }.createDelegate(this),
+                                        errorHandler : function(error) {
+                                            Ext.Msg.alert("Refresh failed", error);
+                                            Ext.getBody().unmask();
+                                        }.createDelegate(this)
+                                    });
+                            DifferentialExpressionAnalysisController.refreshStats.apply(this, callParams);
+
+                        }
+                    },
+                    scope : this,
+                    animEl : 'elId',
+                    icon : Ext.MessageBox.WARNING
+                });
+    },
+    
+    
 
     markOutlierBioAssay : function(bioAssayId) {
         Ext.Msg.show({
@@ -898,7 +973,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                             closable : true,
                             title : 'Differential expression analysis',
                             html : 'Please confirm. The analysis performed will be a ' + analysisType
-                                    + '. If there is an existing analysis on the same factor(s), it will be deleted.',
+                                    + '. If there is an existing analysis on the same factor(s), it will be deleted. ' + 
+                                    'To redo or refresh a specific analysis, use the controls on the experiment\'s main tab.',
                             buttons : [{
                                         text : 'Proceed',
                                         handler : function(btn, text) {

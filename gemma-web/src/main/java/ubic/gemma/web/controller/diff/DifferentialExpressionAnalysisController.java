@@ -167,6 +167,48 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     }
 
     /**
+     * AJAX entry point to redo an analysis.
+     * 
+     * @param eeId
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public String redo( Long eeId, Long id ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+        }
+
+        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService.load( id );
+        if ( toRedo == null ) {
+            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
+        }
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo, true );
+        return super.run( cmd );
+    }
+
+    /**
+     * @param eeId
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public String refreshStats( Long eeId, Long id ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+        }
+
+        DifferentialExpressionAnalysis toRefresh = differentialExpressionAnalysisService.load( id );
+        if ( toRefresh == null ) {
+            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
+        }
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh , false);
+        return super.run( cmd );
+    }
+
+    /**
      * AJAX entry point when running completely automatically.
      * 
      * @param cmd

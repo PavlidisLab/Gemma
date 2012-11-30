@@ -4,7 +4,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
-	
+
 	xsi:schemaLocation="http://www.springframework.org/schema/beans 
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context 
@@ -181,7 +181,7 @@
 		</property>
 		<property name="persisterHelper">
 			<ref bean="persisterHelper" />
-		</property> 
+		</property>
 		<property name="quantitationTypeService">
 			<ref bean="quantitationTypeService" />
 		</property>
@@ -194,7 +194,7 @@
 		</bean> -->
 	<bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer" />
 
- 
+
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 
 		<property name="commandName">
@@ -214,8 +214,8 @@
 			<ref bean="arrayDesignService" />
 		</property>
 	</bean>
- 
-  
+
+
 
 	<!-- ============================================ -->
 	<!-- DWR CONFIGURATION -->
@@ -490,7 +490,7 @@
 	</bean>
 
 	<bean id="progressStatusService" class="ubic.gemma.job.progress.ProgressStatusServiceImpl">
-		<aop:scoped-proxy/>
+		<aop:scoped-proxy />
 		<dwr:remote javascript="ProgressStatusService">
 			<dwr:include method="getProgressStatus" />
 			<dwr:include method="cancelJob" />
@@ -542,6 +542,8 @@
 	<bean id="differentialExpressionAnalysisController" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController">
 		<dwr:remote javascript="DifferentialExpressionAnalysisController">
 			<dwr:include method="run" />
+			<dwr:include method="redo" />
+			<dwr:include method="refreshStats" />
 			<dwr:include method="runCustom" />
 			<dwr:include method="determineAnalysisType" />
 			<dwr:include method="remove" />
@@ -613,14 +615,14 @@
 			<dwr:include method="addAuditEvent" />
 		</dwr:remote>
 	</bean>
-	
+
 	<bean id="geoBrowserController" class="ubic.gemma.web.controller.expression.experiment.GeoRecordBrowserController">
 		<dwr:remote javascript="GeoRecordBrowserController">
 			<dwr:include method="browse" />
 			<dwr:include method="getDetails" />
 			<dwr:include method="toggleUsability" />
 		</dwr:remote>
-	</bean> 
+	</bean>
 
 	<bean id="dEDVController" class="ubic.gemma.web.controller.expression.experiment.DEDVController">
 		<dwr:remote javascript="DEDVController">
@@ -638,12 +640,12 @@
 
 	<bean id="systemMonitorController" class="ubic.gemma.web.controller.monitoring.SystemMonitorController">
 		<dwr:remote javascript="SystemMonitorController">
-			<dwr:include method="getHibernateStatus" />   
-			<dwr:include method="getCacheStatus" />   
-			<dwr:include method="getSpaceStatus" />   
-			<dwr:include method="clearCache" />   
-			<dwr:include method="clearAllCaches" />   
-			<dwr:include method="resetHibernateStatus" />   
+			<dwr:include method="getHibernateStatus" />
+			<dwr:include method="getCacheStatus" />
+			<dwr:include method="getSpaceStatus" />
+			<dwr:include method="clearCache" />
+			<dwr:include method="clearAllCaches" />
+			<dwr:include method="resetHibernateStatus" />
 			<dwr:include method="enableStatistics" />
 			<dwr:include method="disableStatistics" />
 		</dwr:remote>
@@ -730,8 +732,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" 
-			javascript="CitationValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" javascript="CitationValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject" />
@@ -760,8 +761,8 @@
 			javascript="ExpressionExperimentSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
 			javascript="ExpressionExperimentValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject"
-			javascript="ExternalDatabaseStatisticsValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject" javascript="ExternalDatabaseStatisticsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
@@ -784,9 +785,9 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
-		
-		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoRecord" >
-			<dwr:exclude method="contact"/>
+
+		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoRecord">
+			<dwr:exclude method="contact" />
 		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.search.SearchResultDisplayObject" />
@@ -841,11 +842,11 @@
 		<dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
-		
+
 		<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand">
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
-		
+
 		<dwr:convert type="bean" class="ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand">
 			<dwr:exclude method="securityContext" />
 		</dwr:convert>
@@ -934,12 +935,17 @@
 		<dwr:convert type="bean" class="ubic.gemma.image.LinkOutValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject" />		
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
-		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator" />

@@ -267,6 +267,14 @@ DifferentialExpressionAnalysisController.remove = function(p0, p1, callback) {
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'remove', p0, p1, callback);
 };
+DifferentialExpressionAnalysisController.redo = function(p0, p1, callback) {
+	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
+			'redo', p0, p1, callback);
+};
+DifferentialExpressionAnalysisController.refreshStats = function(p0, p1, callback) {
+	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
+			'refreshStats', p0, p1, callback);
+};
 // ====================================================================================
 if (DifferentialExpressionSearchController == null)
 	var DifferentialExpressionSearchController = {};

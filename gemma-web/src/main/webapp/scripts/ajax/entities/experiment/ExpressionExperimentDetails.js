@@ -229,6 +229,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         }
     },
 
+    // FIXME is this used?
     differentialAnalysisRenderer : function(ee) {
         var id = ee.id;
         var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
@@ -782,5 +783,4 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     }, // end of initComponent
     adjustForIsEditable : function(editable) {
         this.fieldPanel.getTopToolbar().setVisible(editable);
-    }
-});
+                    } });
