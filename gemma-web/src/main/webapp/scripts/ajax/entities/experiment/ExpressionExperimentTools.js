@@ -2,12 +2,13 @@ Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 /**
  *
- * Used as one tab of the EE page
+ * Used as one tab of the EE page - the "Admin" tab.
  *
  * pass in the ee details obj as experimentDetails
  *
  * @class Gemma.ExpressionExperimentDetails
  * @extends Ext.Panel
+ * version $Id$
  *
  */
 Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
@@ -30,7 +31,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
         var refreshButton = new Ext.Button({
             text: 'Refresh',
             icon: '/Gemma/images/icons/arrow_refresh_small.png',
-            tootltip: 'Refresh statistics',
+            tooltip: 'Refresh statistics (not including the differential expression ones)',
             handler: function(){
                 manager.updateEEReport(this.experimentDetails.id);
             },
