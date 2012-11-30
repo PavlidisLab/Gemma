@@ -234,7 +234,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        // assertEquals( logFailure( metaAnalysis ), 324, metaAnalysis.getResults().size() );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -299,8 +298,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         }
 
         assertEquals( 10, foundTests );
-        assertEquals( 219, numUp ); // R
-        assertEquals( 105, numDown ); // R
+        assertEquals( 215, numUp ); // R, minus 4 that we skip as they are duplicated genes.
+        assertEquals( 101, numDown ); // R
+        assertEquals( logFailure( metaAnalysis ), 316, metaAnalysis.getResults().size() );
 
         /*
          * Test ancillary methods
