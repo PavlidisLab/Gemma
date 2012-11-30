@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -40,7 +41,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
     protected FMAOntologyService fmaOntologyService = null;
     protected TaxonService taxonService = null;
 
-    protected String errorMessage = "";
+    protected Set<String> errorMessage = new TreeSet<String>();
     protected String warningMessage = "";
     protected BufferedWriter logger = null;
     protected HashMap<String, Integer> mapColumns = new HashMap<String, Integer>();
@@ -365,26 +366,21 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
                         return ontologyTerm;
                     }
                 }
-            } else if ( search.equalsIgnoreCase( "spondyloepiphyseal dysplasia congenita" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/DOID#DOID_14789" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            } else if ( search.equalsIgnoreCase( "polycystic kidney disease" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/DOID#DOID_898" ) ) {
-                        return ontologyTerm;
-                    }
-                }
             }
         }
 
         if ( ontologyKept.size() > 1 ) {
+
+            if ( search.equalsIgnoreCase( "apraxia" ) ) {
+
+                for ( OntologyTerm o : ontologyKept ) {
+                    if ( o.getLabel().equalsIgnoreCase( "apraxia" )
+                            && o.getUri().equalsIgnoreCase( "http://purl.obolibrary.org/obo/DOID_4019" ) ) {
+                        return o;
+                    }
+                }
+            }
+
             writeError( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
 
             for ( OntologyTerm o : ontologyKept ) {
@@ -403,12 +399,38 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI
         this.logger.flush();
     }
 
-    protected void writeError( String message ) throws IOException {
+    protected void writeError( String message ) {
 
         System.err.println( message );
-        this.errorMessage += "\n" + message;
-        this.logger.write( "\n" + message );
-        this.logger.flush();
+        this.errorMessage.add( message );
     }
 
+    protected void writeAllExceptions() throws IOException {
+
+        for ( String message : this.errorMessage ) {
+            this.logger.write( "\n" + message );
+            this.logger.flush();
+
+        }
+    }
+
+    protected void checkEvidenceCodeExits( String evidenceCode ) {
+
+        if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" )
+                || evidenceCode.equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" )
+                || evidenceCode.equalsIgnoreCase( "IGI" ) || evidenceCode.equalsIgnoreCase( "IMP" )
+                || evidenceCode.equalsIgnoreCase( "IPI" ) || evidenceCode.equalsIgnoreCase( "ISS" )
+                || evidenceCode.equalsIgnoreCase( "NAS" ) || evidenceCode.equalsIgnoreCase( "ND" )
+                || evidenceCode.equalsIgnoreCase( "RCA" ) || evidenceCode.equalsIgnoreCase( "TAS" )
+                || evidenceCode.equalsIgnoreCase( "NR" ) || evidenceCode.equalsIgnoreCase( "EXP" )
+                || evidenceCode.equalsIgnoreCase( "ISA" ) || evidenceCode.equalsIgnoreCase( "ISM" )
+                || evidenceCode.equalsIgnoreCase( "IGC" ) || evidenceCode.equalsIgnoreCase( "ISO" )
+                || evidenceCode.equalsIgnoreCase( "IIA" ) || evidenceCode.equalsIgnoreCase( "IBA" )
+                || evidenceCode.equalsIgnoreCase( "IBD" ) || evidenceCode.equalsIgnoreCase( "IKR" )
+                || evidenceCode.equalsIgnoreCase( "IRD" ) || evidenceCode.equalsIgnoreCase( "IMR" )
+                || evidenceCode.equalsIgnoreCase( "IED" ) || evidenceCode.equalsIgnoreCase( "IAGP" )
+                || evidenceCode.equalsIgnoreCase( "IPM" ) || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
+            writeError( "evidenceCode not in gemma: " + evidenceCode );
+        }
+    }
 }
