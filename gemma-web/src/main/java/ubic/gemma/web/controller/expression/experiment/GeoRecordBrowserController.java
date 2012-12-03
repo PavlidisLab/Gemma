@@ -69,8 +69,12 @@ public class GeoRecordBrowserController {
      * @param accession
      * @return
      */
-    public String getDetails( String accession ) throws IOException {
-        return geoBrowserService.getDetails( accession );
+    public String getDetails( String accession ) {
+        try {
+            return geoBrowserService.getDetails( accession );
+        } catch ( IOException e ) {
+            return "No result";
+        }
     }
 
     /**
