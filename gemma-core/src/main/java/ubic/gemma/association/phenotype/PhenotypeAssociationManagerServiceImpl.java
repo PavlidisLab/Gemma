@@ -762,11 +762,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param phenotypes phenotypes chosen
      * @param thresholdChosen threshold chosen to keep certain results
      * @return ValidateEvidenceValueObject flags of information to show user messages
+     * @throws Exception
      */
     @Override
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double selectionThreshold ) {
+            Double selectionThreshold ) throws Exception {
 
         GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
                 .load( geneDifferentialExpressionMetaAnalysisId );
@@ -789,7 +790,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 ValidateEvidenceValueObject validateEvidenceValueObject = makeEvidence( diffExpressionEvidenceValueObject );
 
                 if ( validateEvidenceValueObject != null ) {
-                    return validateEvidenceValueObject;
+                    // since this method created multiple evidence, if a problem is detected stop the transaction
+                    throw new Exception(
+                            "makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis() problem detected" );
                 }
             }
         }

@@ -226,9 +226,10 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypes phenotypes chosen
      * @param thresholdChosen threshold chosen to keep certain results
      * @return ValidateEvidenceValueObject flags of information to show user messages
+     * @throws Exception
      */
     public abstract ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double thresholdChosen );
+            Double thresholdChosen ) throws Exception;
 
 }
