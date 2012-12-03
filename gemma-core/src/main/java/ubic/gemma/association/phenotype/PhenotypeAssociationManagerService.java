@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -231,5 +232,15 @@ public interface PhenotypeAssociationManagerService {
     public abstract ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
             Double thresholdChosen ) throws Exception;
+
+    /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId id of the GeneDifferentialExpressionMetaAnalysis
+     * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
+     */
+    public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId );
 
 }

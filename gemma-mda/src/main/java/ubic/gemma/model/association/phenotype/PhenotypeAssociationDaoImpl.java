@@ -441,6 +441,26 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return owners;
     }
 
+    @Override
+    /** returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis) */
+    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId ) {
+
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setMaxResults( 1 );
+
+        @SuppressWarnings("unchecked")
+        List<DifferentialExpressionEvidence> differentialExpressionEvidenceCollection = tpl
+                .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + geneDifferentialExpressionMetaAnalysisId + ")" );
+
+        if ( !differentialExpressionEvidenceCollection.isEmpty() ) {
+            return differentialExpressionEvidenceCollection.iterator().next();
+        }
+
+        return null;
+    }
+
     /** basic sql command to deal with security */
     private String getPhenotypesGenesAssociationsBeginQuery() {
         String queryString = "";

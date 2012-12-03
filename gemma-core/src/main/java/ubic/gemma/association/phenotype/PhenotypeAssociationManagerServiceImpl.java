@@ -800,6 +800,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId id of the GeneDifferentialExpressionMetaAnalysis
+     * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
+     */
+    @Override
+    public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId ) {
+
+        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+
+        return this.convertDifferentialExpressionEvidence2ValueObject( differentialExpressionEvidence );
+    }
+
+    /**
      * For a given search string look in the database and Ontology for matches
      * 
      * @param givenQueryString the search query
@@ -1290,12 +1307,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     DifferentialExpressionEvidence differentialExpressionEvidence = ( DifferentialExpressionEvidence ) phe;
 
-                    GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
-                            .loadWithResultId( differentialExpressionEvidence
-                                    .getGeneDifferentialExpressionMetaAnalysisResult().getId() );
+                    evidence = convertDifferentialExpressionEvidence2ValueObject( differentialExpressionEvidence );
 
-                    evidence = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
-                            geneDifferentialExpressionMetaAnalysis.getId() );
                 } else {
 
                     evidence = EvidenceValueObject.convert2ValueObjects( phe );
@@ -1309,6 +1322,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
         return returnEvidenceVO;
+    }
+
+    private DiffExpressionEvidenceValueObject convertDifferentialExpressionEvidence2ValueObject(
+            DifferentialExpressionEvidence differentialExpressionEvidence ) {
+
+        DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = null;
+        if ( differentialExpressionEvidence != null ) {
+
+            GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
+                    .loadWithResultId( differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
+                            .getId() );
+
+            diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
+                    geneDifferentialExpressionMetaAnalysis.getId() );
+        }
+
+        return diffExpressionEvidenceValueObject;
     }
 
     /** Determine permissions for an PhenotypeAssociation */

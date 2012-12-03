@@ -80,4 +80,11 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
 
+    /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     */
+    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId );
+
 }

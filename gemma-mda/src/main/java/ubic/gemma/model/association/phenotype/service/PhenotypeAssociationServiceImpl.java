@@ -22,6 +22,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidenceDao;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
@@ -215,6 +216,17 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
         return this.phenotypeAssociationDao.loadStatisticsOnManualCuration();
+    }
+
+    /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     */
+    @Override
+    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId ) {
+        return this.phenotypeAssociationDao
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
     }
 
 }

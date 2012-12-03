@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
@@ -150,5 +151,12 @@ public interface PhenotypeAssociationService {
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
+
+    /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     */
+    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId );
 
 }
