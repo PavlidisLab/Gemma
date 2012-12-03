@@ -427,7 +427,7 @@ Gemma.HelpText.WidgetDefaults = {
 					+ '<li>Most of the descriptive text you enter can be modified later. '
 					+ 'The taxon, platform and the data themselves cannot easily be altered after submission.</li>'
 					+ '<li>For help with the file data file format, see '
-					+ '<a target="_blank" href="/Gemma/static/expressionExperiment/upload_help.html">this page</a>.</li> '
+					+ '<a target="_blank" href="http://gemma-doc.chibi.ubc.ca/managing-and-editing-data/data-uploads/">this page</a>.</li> '
 					+ '<li>The probe identifiers in your file must match those in the platform on record.</li>'
 					+ '<li>If you used more than one platform in your study, there may be a "combined" platform that will take care of your case. If not, let us know.</li>'
 					+ '<li>Problems? Questions? Please <a href="mailto:gemma@ubic.ca">contact us</a></li></ul>',
