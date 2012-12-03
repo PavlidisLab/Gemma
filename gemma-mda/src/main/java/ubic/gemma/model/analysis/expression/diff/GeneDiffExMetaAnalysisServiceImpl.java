@@ -149,6 +149,11 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
+        return this.geneDiffExMetaAnalysisDao.loadResult( idResult );
+    }
+
+    @Override
     public void update( GeneDifferentialExpressionMetaAnalysis analysis ) {
         geneDiffExMetaAnalysisDao.update( analysis );
 

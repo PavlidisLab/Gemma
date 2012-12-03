@@ -60,26 +60,30 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
      * @return
      */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
-    
-    
+
     /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
+    /** loads a neDifferentialExpressionMetaAnalysisResult */
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+
     /**
      * @param metaAnalysisIds
-     * @return a collection of summary value objects using the given ids of meta-analyses 
+     * @return a collection of summary value objects using the given ids of meta-analyses
      */
-	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(Collection<Long> metaAnalysisIds);
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+            Collection<Long> metaAnalysisIds );
 
     /**
      * @param analysisId
-     * @return a collection of included result set info value objects using the given meta-analysis id 
+     * @return a collection of included result set info value objects using the given meta-analysis id
      */
-	public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(long analysisId);
-	
+    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+            long analysisId );
+
     /**
      * @param analysisId
-     * @return a collection of result value objects using the given meta-analysis id 
+     * @return a collection of result value objects using the given meta-analysis id
      */
-	public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById(long analysisId);
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 }

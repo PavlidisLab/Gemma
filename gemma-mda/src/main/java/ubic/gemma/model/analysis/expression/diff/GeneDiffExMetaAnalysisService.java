@@ -43,8 +43,9 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     @Secured({ "GROUP_USER" })
     public BaseValueObject delete( Long id );
 
-    @Secured({ "GROUP_USER" })
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
     /**
      * @param analysisId

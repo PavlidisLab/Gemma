@@ -35,6 +35,7 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -93,6 +94,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
@@ -301,18 +305,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             // relevant bibliographic references
             experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
-        }
-
-        else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
-
-            DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = ( DiffExpressionEvidenceValueObject ) evidenceValueObject;
-            DifferentialExpressionEvidence differentialExpressionEvidence = ( DifferentialExpressionEvidence ) phenotypeAssociation;
-            diffExpressionEvidenceValueObject
-                    .setGeneDifferentialExpressionMetaAnalysisResult( differentialExpressionEvidence
-                            .getGeneDifferentialExpressionMetaAnalysisResult() );
-            diffExpressionEvidenceValueObject.setSelectionThreshold( differentialExpressionEvidence
-                    .getSelectionThreshold() );
-
         } else if ( phenotypeAssociation instanceof GenericEvidence ) {
             // nothing special to do
         }
@@ -365,8 +357,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         // populate common field to evidence
         populatePhenotypeAssociation( differentialExpressionEvidence, evidenceValueObject );
 
-        differentialExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisResult( evidenceValueObject
-                .getGeneDifferentialExpressionMetaAnalysisResult() );
+        differentialExpressionEvidence
+                .setGeneDifferentialExpressionMetaAnalysisResult( this.geneDiffExMetaAnalysisService
+                        .loadResult( evidenceValueObject.getGeneDifferentialExpressionMetaAnalysisResultId() ) );
 
         differentialExpressionEvidence.setSelectionThreshold( evidenceValueObject.getSelectionThreshold() );
 

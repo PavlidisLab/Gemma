@@ -771,16 +771,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
                 .load( geneDifferentialExpressionMetaAnalysisId );
 
-        Collection<DiffExpressionEvidenceValueObject> diffExpressionEvidenceValueObjects = new HashSet<DiffExpressionEvidenceValueObject>();
-
         for ( GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult : geneDifferentialExpressionMetaAnalysis
                 .getResults() ) {
 
             if ( geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue() <= selectionThreshold ) {
+
                 DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject(
-                        geneDifferentialExpressionMetaAnalysisResult.getGene().getNcbiGeneId(), phenotypes,
-                        geneDifferentialExpressionMetaAnalysis.getDescription(), "IEP", false, null,
-                        geneDifferentialExpressionMetaAnalysisResult, selectionThreshold );
+                        geneDifferentialExpressionMetaAnalysis, geneDifferentialExpressionMetaAnalysisResult,
+                        phenotypes, "IEP", selectionThreshold );
 
                 // set the score
                 ScoreValueObject scoreValueObject = new ScoreValueObject( null,
@@ -788,16 +786,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 diffExpressionEvidenceValueObject.setScoreValueObject( scoreValueObject );
 
-                diffExpressionEvidenceValueObjects.add( diffExpressionEvidenceValueObject );
-            }
-        }
+                ValidateEvidenceValueObject validateEvidenceValueObject = makeEvidence( diffExpressionEvidenceValueObject );
 
-        for ( DiffExpressionEvidenceValueObject diffExpressionEvidenceValueObject : diffExpressionEvidenceValueObjects ) {
-
-            ValidateEvidenceValueObject validateEvidenceValueObject = makeEvidence( diffExpressionEvidenceValueObject );
-
-            if ( validateEvidenceValueObject != null ) {
-                return validateEvidenceValueObject;
+                if ( validateEvidenceValueObject != null ) {
+                    return validateEvidenceValueObject;
+                }
             }
         }
         return null;
@@ -1299,7 +1292,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                     .getGeneDifferentialExpressionMetaAnalysisResult().getId() );
 
                     evidence = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
-                            geneDifferentialExpressionMetaAnalysis.getQvalueThresholdForStorage(),
                             geneDifferentialExpressionMetaAnalysis.getId() );
                 } else {
 

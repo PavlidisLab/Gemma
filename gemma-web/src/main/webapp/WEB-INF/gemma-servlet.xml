@@ -755,8 +755,6 @@
 			javascript="LiteratureEvidenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject"
 			javascript="DiffExpressionEvidenceValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"
-			javascript="GeneDifferentialExpressionMetaAnalysisResult" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
 			javascript="ExpressionExperimentSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"

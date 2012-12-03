@@ -144,98 +144,102 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
         return ( GeneDifferentialExpressionMetaAnalysis ) geneQueryMetaAnalysis.list().iterator().next();
     }
 
-	@Override
-	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
-			Collection<Long> metaAnalysisIds) {
-		Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = new HashSet<GeneDifferentialExpressionMetaAnalysisSummaryValueObject>();
-		
-		if (metaAnalysisIds.size() > 0) {
-			final String queryString = "select a.id, a.name, a.description, a.numGenesAnalyzed, "
-					+ "count(distinct rs), count(distinct r) "
-					+ "from GeneDifferentialExpressionMetaAnalysisImpl a "
-					+ "left join a.resultSetsIncluded rs "
-					+ "left join a.results r "
-					+ "where a.id in (:aIds) "
-					+ "group by a.id ";
+    /** loads a neDifferentialExpressionMetaAnalysisResult */
+    @Override
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
 
-			Session s = this.getSession();
-			Query q = s.createQuery( queryString );
-			q.setParameterList( "aIds", metaAnalysisIds );
-			    
-			List<Object[]> queryResults = q.list();
-	    
-		    for ( Object[] queryResult : queryResults ) {
-		    	GeneDifferentialExpressionMetaAnalysisSummaryValueObject myMetaAnalysis = new GeneDifferentialExpressionMetaAnalysisSummaryValueObject();
-		    	int index = 0;
-		    	myMetaAnalysis.setId((Long)queryResult[index++]);
-		    	myMetaAnalysis.setName((String)queryResult[index++]);
-		    	myMetaAnalysis.setDescription((String)queryResult[index++]);
-		    	myMetaAnalysis.setNumGenesAnalyzed((Integer)queryResult[index++]);
-		    	myMetaAnalysis.setNumResultSetsIncluded(((Long)queryResult[index++]).intValue());
-		    	myMetaAnalysis.setNumResults(((Long)queryResult[index++]).intValue());
-		    	myMetaAnalyses.add(myMetaAnalysis);
-		    }
-		}
-	    return myMetaAnalyses;
-	}
-    
-	@Override
-	public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(long analysisId) {
-	    final String queryString = 
-	    		  "select ra.experimentAnalyzed.id, ra.experimentAnalyzed.sourceExperiment.id, ra.id, rs.id "
-	    		+ "from GeneDifferentialExpressionMetaAnalysisImpl a "
-	            + "join a.resultSetsIncluded rs "
-	    		+ "join rs.analysis ra " 
-	    		+ "where a.id = :aId ";            
-	
-	    List<Object[]> qresult = this.getHibernateTemplate().findByNamedParam(queryString, "aId", analysisId );
-	    
-	    Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> allIncludedResultSetsInfo = new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(qresult.size());
-	    
-		for ( Object[] object : qresult ) {
-			int index = 0;
-			
-			GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject includedResultSetInfo = new GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject();
-			
-			final Long experimentId = (Long)object[index++];
-			final Long subsetExperimentId = (Long)object[index++];
-			
-			includedResultSetInfo.setExperimentId(subsetExperimentId == null ?
-					experimentId :
-					subsetExperimentId);
-			includedResultSetInfo.setAnalysisId((Long)object[index++]);
-			includedResultSetInfo.setResultSetId((Long)object[index++]);
-			
-			allIncludedResultSetsInfo.add(includedResultSetInfo);
-		}
-		
-	    return allIncludedResultSetsInfo;
-	}
+        Criteria geneQueryMetaAnalysis = super.getSession()
+                .createCriteria( GeneDifferentialExpressionMetaAnalysisResult.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+                .add( Restrictions.like( "id", idResult ) );
 
-	@Override
-	public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById(long analysisId) {
-	    final String query = 
-	    		"select r.gene.officialSymbol, r.gene.officialName, "
-	    			+ "r.metaPvalue, r.metaQvalue, r.upperTail "
-	    		+ "from GeneDifferentialExpressionMetaAnalysisImpl a "
-	    		+ "left join a.results r "
-	    		+ "where a.id = :aId "
-	    		+ "group by r ";
-	
-	    List<Object[]> queryResults = this.getHibernateTemplate().findByNamedParam(query, "aId", analysisId);
-	    
-		Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> metaAnalysisResults = new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>(queryResults.size());
-	    
-	    for ( Object[] queryResult : queryResults ) {
-	    	GeneDifferentialExpressionMetaAnalysisResultValueObject metaAnalysisResult = new GeneDifferentialExpressionMetaAnalysisResultValueObject();
-	    	int index = 0;
-	    	metaAnalysisResult.setGeneSymbol((String)queryResult[index++]);
-	    	metaAnalysisResult.setGeneName((String)queryResult[index++]);
-	    	metaAnalysisResult.setMetaPvalue((Double)queryResult[index++]);
-	    	metaAnalysisResult.setMetaQvalue((Double)queryResult[index++]);
-	    	metaAnalysisResult.setUpperTail((Boolean)queryResult[index++]);
-	    	metaAnalysisResults.add(metaAnalysisResult);
-	    }
-	    return metaAnalysisResults;
-	}
+        return ( GeneDifferentialExpressionMetaAnalysisResult ) geneQueryMetaAnalysis.list().iterator().next();
+    }
+
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+            Collection<Long> metaAnalysisIds ) {
+        Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = new HashSet<GeneDifferentialExpressionMetaAnalysisSummaryValueObject>();
+
+        if ( metaAnalysisIds.size() > 0 ) {
+            final String queryString = "select a.id, a.name, a.description, a.numGenesAnalyzed, "
+                    + "count(distinct rs), count(distinct r) " + "from GeneDifferentialExpressionMetaAnalysisImpl a "
+                    + "left join a.resultSetsIncluded rs " + "left join a.results r " + "where a.id in (:aIds) "
+                    + "group by a.id ";
+
+            Session s = this.getSession();
+            Query q = s.createQuery( queryString );
+            q.setParameterList( "aIds", metaAnalysisIds );
+
+            List<Object[]> queryResults = q.list();
+
+            for ( Object[] queryResult : queryResults ) {
+                GeneDifferentialExpressionMetaAnalysisSummaryValueObject myMetaAnalysis = new GeneDifferentialExpressionMetaAnalysisSummaryValueObject();
+                int index = 0;
+                myMetaAnalysis.setId( ( Long ) queryResult[index++] );
+                myMetaAnalysis.setName( ( String ) queryResult[index++] );
+                myMetaAnalysis.setDescription( ( String ) queryResult[index++] );
+                myMetaAnalysis.setNumGenesAnalyzed( ( Integer ) queryResult[index++] );
+                myMetaAnalysis.setNumResultSetsIncluded( ( ( Long ) queryResult[index++] ).intValue() );
+                myMetaAnalysis.setNumResults( ( ( Long ) queryResult[index++] ).intValue() );
+                myMetaAnalyses.add( myMetaAnalysis );
+            }
+        }
+        return myMetaAnalyses;
+    }
+
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+            long analysisId ) {
+        final String queryString = "select ra.experimentAnalyzed.id, ra.experimentAnalyzed.sourceExperiment.id, ra.id, rs.id "
+                + "from GeneDifferentialExpressionMetaAnalysisImpl a "
+                + "join a.resultSetsIncluded rs "
+                + "join rs.analysis ra " + "where a.id = :aId ";
+
+        List<Object[]> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "aId", analysisId );
+
+        Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> allIncludedResultSetsInfo = new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
+                qresult.size() );
+
+        for ( Object[] object : qresult ) {
+            int index = 0;
+
+            GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject includedResultSetInfo = new GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject();
+
+            final Long experimentId = ( Long ) object[index++];
+            final Long subsetExperimentId = ( Long ) object[index++];
+
+            includedResultSetInfo.setExperimentId( subsetExperimentId == null ? experimentId : subsetExperimentId );
+            includedResultSetInfo.setAnalysisId( ( Long ) object[index++] );
+            includedResultSetInfo.setResultSetId( ( Long ) object[index++] );
+
+            allIncludedResultSetsInfo.add( includedResultSetInfo );
+        }
+
+        return allIncludedResultSetsInfo;
+    }
+
+    @Override
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId ) {
+        final String query = "select r.gene.officialSymbol, r.gene.officialName, "
+                + "r.metaPvalue, r.metaQvalue, r.upperTail " + "from GeneDifferentialExpressionMetaAnalysisImpl a "
+                + "left join a.results r " + "where a.id = :aId " + "group by r ";
+
+        List<Object[]> queryResults = this.getHibernateTemplate().findByNamedParam( query, "aId", analysisId );
+
+        Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> metaAnalysisResults = new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>(
+                queryResults.size() );
+
+        for ( Object[] queryResult : queryResults ) {
+            GeneDifferentialExpressionMetaAnalysisResultValueObject metaAnalysisResult = new GeneDifferentialExpressionMetaAnalysisResultValueObject();
+            int index = 0;
+            metaAnalysisResult.setGeneSymbol( ( String ) queryResult[index++] );
+            metaAnalysisResult.setGeneName( ( String ) queryResult[index++] );
+            metaAnalysisResult.setMetaPvalue( ( Double ) queryResult[index++] );
+            metaAnalysisResult.setMetaQvalue( ( Double ) queryResult[index++] );
+            metaAnalysisResult.setUpperTail( ( Boolean ) queryResult[index++] );
+            metaAnalysisResults.add( metaAnalysisResult );
+        }
+        return metaAnalysisResults;
+    }
 }

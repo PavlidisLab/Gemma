@@ -20,6 +20,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.SortedSet;
 
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 
@@ -33,42 +34,71 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
     private Double selectionThreshold;
 
-    private GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult = null;
-
     private Long geneDifferentialExpressionMetaAnalysisId = null;
+
+    private Double metaPvalue;
+
+    private Double metaQvalue;
+
+    private Double meanLogFoldChange;
+
+    private Double metaPvalueRank;
+
+    private Long geneDifferentialExpressionMetaAnalysisResultId;
 
     public DiffExpressionEvidenceValueObject() {
         super();
     }
 
     public DiffExpressionEvidenceValueObject( DifferentialExpressionEvidence differentialExpressionEvidence,
-            Double selectionThreshold, Long geneDifferentialExpressionMetaAnalysisId ) {
+            Long geneDifferentialExpressionMetaAnalysisId ) {
         super( differentialExpressionEvidence );
-        this.selectionThreshold = selectionThreshold;
-        this.geneDifferentialExpressionMetaAnalysisResult = differentialExpressionEvidence
-                .getGeneDifferentialExpressionMetaAnalysisResult();
+
         this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysisId;
+        this.metaPvalue = differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
+                .getMetaPvalue();
+        this.metaQvalue = differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
+                .getMetaQvalue();
+        this.meanLogFoldChange = differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
+                .getMeanLogFoldChange();
+        this.metaPvalueRank = differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
+                .getMetaPvalueRank();
+        this.geneDifferentialExpressionMetaAnalysisResultId = differentialExpressionEvidence
+                .getGeneDifferentialExpressionMetaAnalysisResult().getId();
+        this.selectionThreshold = differentialExpressionEvidence.getSelectionThreshold();
+    }
+
+    public DiffExpressionEvidenceValueObject(
+            GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis,
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
+            SortedSet<CharacteristicValueObject> phenotypes, String evidenceCode, Double selectionThreshold ) {
+
+        super( geneDifferentialExpressionMetaAnalysisResult.getGene().getNcbiGeneId(), phenotypes,
+                geneDifferentialExpressionMetaAnalysis.getDescription(), evidenceCode, false, null );
+
+        this.selectionThreshold = selectionThreshold;
+        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysis.getId();
+        this.metaPvalue = geneDifferentialExpressionMetaAnalysisResult.getMetaPvalue();
+        this.metaQvalue = geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue();
+        this.meanLogFoldChange = geneDifferentialExpressionMetaAnalysisResult.getMeanLogFoldChange();
+        this.metaPvalueRank = geneDifferentialExpressionMetaAnalysisResult.getMetaPvalueRank();
+        this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResult.getId();
     }
 
     public DiffExpressionEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource,
-            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
-            Double selectionThreshold ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
+            String description, String evidenceCode, Long geneDifferentialExpressionMetaAnalysisId,
+            Double selectionThreshold,
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult ) {
+        super( geneNCBI, phenotypes, description, evidenceCode, false, null );
 
         this.selectionThreshold = selectionThreshold;
+        this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysisId;
 
-        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
-    }
-
-    public GeneDifferentialExpressionMetaAnalysisResult getGeneDifferentialExpressionMetaAnalysisResult() {
-        return this.geneDifferentialExpressionMetaAnalysisResult;
-    }
-
-    public void setGeneDifferentialExpressionMetaAnalysisResult(
-            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult ) {
-        this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
+        this.metaPvalue = geneDifferentialExpressionMetaAnalysisResult.getMetaPvalue();
+        this.metaQvalue = geneDifferentialExpressionMetaAnalysisResult.getMetaQvalue();
+        this.meanLogFoldChange = geneDifferentialExpressionMetaAnalysisResult.getMeanLogFoldChange();
+        this.metaPvalueRank = geneDifferentialExpressionMetaAnalysisResult.getMetaPvalueRank();
+        this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResult.getId();
     }
 
     public Double getSelectionThreshold() {
@@ -87,25 +117,44 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         this.geneDifferentialExpressionMetaAnalysisId = geneDifferentialExpressionMetaAnalysisId;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime
-                * result
-                + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ? 0
-                        : this.geneDifferentialExpressionMetaAnalysisId.hashCode() );
-        result = prime
-                * result
-                + ( ( this.geneDifferentialExpressionMetaAnalysisResult == null ) ? 0
-                        : this.geneDifferentialExpressionMetaAnalysisResult.hashCode() );
-        result = prime * result + ( ( this.selectionThreshold == null ) ? 0 : this.selectionThreshold.hashCode() );
-        return result;
+    public Double getMetaPvalue() {
+        return this.metaPvalue;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        return false;
+    public void setMetaPvalue( Double metaPvalue ) {
+        this.metaPvalue = metaPvalue;
+    }
+
+    public Double getMetaQvalue() {
+        return this.metaQvalue;
+    }
+
+    public void setMetaQvalue( Double metaQvalue ) {
+        this.metaQvalue = metaQvalue;
+    }
+
+    public Double getMeanLogFoldChange() {
+        return this.meanLogFoldChange;
+    }
+
+    public void setMeanLogFoldChange( Double meanLogFoldChange ) {
+        this.meanLogFoldChange = meanLogFoldChange;
+    }
+
+    public Double getMetaPvalueRank() {
+        return this.metaPvalueRank;
+    }
+
+    public void setMetaPvalueRank( Double metaPvalueRank ) {
+        this.metaPvalueRank = metaPvalueRank;
+    }
+
+    public Long getGeneDifferentialExpressionMetaAnalysisResultId() {
+        return this.geneDifferentialExpressionMetaAnalysisResultId;
+    }
+
+    public void setGeneDifferentialExpressionMetaAnalysisResultId( Long geneDifferentialExpressionMetaAnalysisResultId ) {
+        this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResultId;
     }
 
 }
