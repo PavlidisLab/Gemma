@@ -40,15 +40,24 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
         });
         
         this.getTopToolbar().addButton(refreshButton);
+        
         this.add({
-            html: '<h4>Analyses:<br></h4>'
+            html: '<h4>Preprocessing:<br></h4>'
         });
-		
-		
 		var missingValueInfo = this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager);
 		this.add(missingValueInfo);
 		var processedVectorInfo = this.processedVectorCreatePanelRenderer(this.experimentDetails, manager);
 		this.add(processedVectorInfo);
+		// PCA analysis
+		var pcaInfo = this.pcaPanelRenderer(this.experimentDetails, manager);
+		this.add(pcaInfo);
+		// Batch information
+		var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
+		this.add(batchInfo);
+		
+		this.add({
+            html: '&nbsp;<h4>Analyses:<br></h4>'
+        });
 		var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
 		this.add(differentialAnalysisInfo);
 		var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
@@ -179,7 +188,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
 				padding:2
 			},
 			items: [{
-				html: 'Proccessed Vector Computation: '
+				html: 'Processed Vector Computation: '
 			}]
 		});
         var id = ee.id;
@@ -272,8 +281,104 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
             return panel;
         }
     },
+    
     renderProcessedExpressionVectorCount: function(e){
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
+    } ,
+    
+    /*
+     * Get the last date PCA was run, add a button to run PCA 
+     */
+    pcaPanelRenderer: function(ee, manager){
+    	var panel = new Ext.Panel({
+			layout: 'hbox',
+			defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Principal Component Analysis: '
+			}]
+		});
+        var id = ee.id;
+		var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'principal component analysis',
+			// See EEManger.js doPca(id, hasPca)
+			handler: manager.doPca.createDelegate(this,[id, true]),
+			scope:this,
+			cls:'transparent-btn'
+		});
+		
+		// Get date and info
+		if (ee.datePcaAnalysis) {
+			var type = ee.pcaAnalysisEventType;
+			
+			var color = "#000";
+			var qtip = 'ext:qtip="OK"';
+			var suggestRun = true;
+			
+			if (type == 'FailedPCAAnalysisEventImpl') {
+                color = 'red';
+                qtip = 'ext:qtip="Failed"';
+			}
+			panel.add({html:'<span style="color:' + color + ';" ' + qtip + '>' + 
+				Ext.util.Format.date(ee.datePcaAnalysis, 'y/M/d') + '&nbsp;'});
+		}
+		else panel.add({html:'<span style="color:#3A3;">Needed</span>&nbsp;' });
+		
+		panel.add(runBtn);
+		return panel;
+        
+    } ,
+    
+    /*
+     * Get the last date batch info was downloaded, add a button to download
+     */
+    batchPanelRenderer: function(ee, manager){
+    	var panel = new Ext.Panel({
+    		layout: 'hbox',
+    		defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Batch Information: '
+			}]
+    	});
+    	var id = ee.id;
+    	var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'batch information',
+			// See EEManager.js doBatchInfoFetch(id)
+			handler: manager.doBatchInfoFetch.createDelegate(this,[id]),
+			scope:this,
+			cls:'transparent-btn'
+    	});
+    	
+    	// Get date and info
+		if (ee.dateBatchFetch) {
+			var type = ee.batchFetchEventType;
+			
+			var color = "#000";
+			var qtip = 'ext:qtip="OK"';
+			var suggestRun = true;
+			
+			if (type == 'FailedBatchInformationFetchingEventImpl') {
+                color = 'red';
+                qtip = 'ext:qtip="Failed"';
+			} else if (type == 'FailedBatchInformationMissingEventImpl') {
+				color = '#CCC';
+                qtip = 'ext:qtip="Raw data files not available from source"';
+			}
+			
+			panel.add({html:'<span style="color:' + color + ';" ' + qtip + '>' + 
+				Ext.util.Format.date(ee.dateBatchFetch, 'y/M/d') + '&nbsp;'});
+		}
+		else panel.add({html:'<span style="color:#3A3;">Needed</span>&nbsp;' });
+		
+    	panel.add(runBtn);
+    	return panel;
     }
 });
 
