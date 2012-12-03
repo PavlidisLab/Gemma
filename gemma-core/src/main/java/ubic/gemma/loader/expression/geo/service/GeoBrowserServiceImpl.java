@@ -128,7 +128,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * @see ubic.gemma.loader.expression.geo.service.GeoBrowserService#getDetails(java.lang.String)
      */
     @Override
-    public String getDetails( String accession ) {
+    public String getDetails( String accession ) throws IOException {
         /*
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
@@ -324,8 +324,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * 
      * @param details XML from eSummary
      * @return HTML-formatted
+     * @throws IOException
      */
-    protected String formatDetails( String details ) {
+    protected String formatDetails( String details ) throws IOException {
         try {
 
             /*
@@ -335,6 +336,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
             DocumentBuilder builder = factory.newDocumentBuilder();
             StringInputStream is = new StringInputStream( details );
+
             Document document = builder.parse( is );
 
             NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
@@ -374,8 +376,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         } catch ( ParserConfigurationException e ) {
             throw new RuntimeException( e );
         } catch ( SAXException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
             throw new RuntimeException( e );
         } catch ( XPathExpressionException e ) {
             throw new RuntimeException( e );

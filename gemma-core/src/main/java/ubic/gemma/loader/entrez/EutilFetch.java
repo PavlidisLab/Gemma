@@ -19,18 +19,22 @@
 package ubic.gemma.loader.entrez;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.pubmed.XMLUtils;
 
@@ -55,8 +59,9 @@ public class EutilFetch {
      * @param searchString
      * @param limit - Maximum number of records to return.
      * @return
+     * @throws IOException
      */
-    public static String fetch( String db, String searchString, int limit ) {
+    public static String fetch( String db, String searchString, int limit ) throws IOException {
         return fetch( db, searchString, Mode.TEXT, limit );
     }
 
@@ -67,8 +72,10 @@ public class EutilFetch {
      * @param limit - Maximum number of records to return.
      * @see {@link http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html}
      * @return XML
+     * @throws IOException
      */
-    public static String fetch( String db, String searchString, Mode mode, int limit ) {
+    public static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
+
         try {
             URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
             URLConnection conn = searchUrl.openConnection();
@@ -88,10 +95,10 @@ public class EutilFetch {
             try {
                 count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
             } catch ( NumberFormatException e ) {
-                return "No results [count was " + XMLUtils.getTextValue( ( Element ) countEl );
+                throw new IOException( "Could not parse count from: " + searchUrl );
             }
 
-            if ( count == 0 ) return "No results";
+            if ( count == 0 ) throw new IOException( "Got no records from: " + searchUrl );
 
             NodeList qnode = document.getElementsByTagName( "QueryKey" );
 
@@ -120,10 +127,14 @@ public class EutilFetch {
                 // }
             }
             return buf.toString();
-
-        } catch ( Exception e ) {
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        } catch ( ParserConfigurationException e ) {
+            throw new RuntimeException( e );
+        } catch ( SAXException e ) {
             throw new RuntimeException( e );
         }
+
     }
 
     static void printElements( Document doc ) {

@@ -80,7 +80,8 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
     public final void testGetRecentRecords() throws Exception {
 
         try {
-            List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 10, 10 );
+            // I changed the skip because the very newest records can cause a problem with fetching details.
+            List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 100, 10 );
 
             if ( recentGeoRecords.isEmpty() ) {
                 log.warn( "Skipping test: no GEO records returned, check test settings" );
@@ -118,8 +119,10 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
-                    || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage().contains( "503" ) ) {
+            if ( e.getCause() != null
+                    && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
+                            || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
+                            .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }

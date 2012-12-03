@@ -58,7 +58,7 @@ public class GeoRecordBrowserController {
             start = 0;
         }
 
-        int startPage = start / count + 1; 
+        int startPage = start / count + 1;
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
         log.debug( "Returning " + geoRecords.size() + " records on page=" + startPage );
@@ -69,7 +69,7 @@ public class GeoRecordBrowserController {
      * @param accession
      * @return
      */
-    public String getDetails( String accession ) {
+    public String getDetails( String accession ) throws IOException {
         return geoBrowserService.getDetails( accession );
     }
 

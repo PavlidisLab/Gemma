@@ -31,8 +31,9 @@ public interface GeoBrowserService {
      * 
      * @param accession
      * @return
+     * @throws IOException
      */
-    public abstract String getDetails( String accession );
+    public abstract String getDetails( String accession ) throws IOException;
 
     /**
      * @param start page number, not starting record
