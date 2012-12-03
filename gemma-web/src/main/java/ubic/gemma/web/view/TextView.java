@@ -44,9 +44,9 @@ public class TextView extends AbstractView {
             HttpServletResponse response ) throws Exception {
         String textToRender = ( String ) model.get( TEXT_PARAM );
         response.setContentType( "text/plain" );
-        response.setContentLength( textToRender.getBytes().length );
-        response.getOutputStream().print( textToRender );
-        response.getOutputStream().flush();
+        response.setContentLength( textToRender.getBytes().length );        
+        response.getWriter().print( textToRender );
+        response.getWriter().flush();
     }
 
 }
