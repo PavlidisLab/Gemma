@@ -29,7 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
@@ -45,16 +45,20 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.Persister; 
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Aligns sequences from array designs to the genome, using blat, and persists the blat results.
+ * <p>
+ * Note: to avoid having very long transactions, this does not run transactionally at the level of a platform. Thus it
+ * is possible for it to die with a platform half-processed. But if we don't do this the transactions are too big and
+ * cause various deadlocking problems.
  * 
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSequenceAlignmentService {
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentServiceImpl.class.getName() );
@@ -74,8 +78,12 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     @Autowired
     ArrayDesignReportService arrayDesignReportService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, boolean)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign, boolean)
      */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive ) {
@@ -140,8 +148,12 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.util.Collection)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.util.Collection)
      */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon, Collection<BlatResult> rawBlatResults ) {
@@ -212,8 +224,12 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         return results;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#validateTaxaForBlatFile(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#validateTaxaForBlatFile(ubic.gemma
+     * .model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon ) {
@@ -424,8 +440,12 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign)
      */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
