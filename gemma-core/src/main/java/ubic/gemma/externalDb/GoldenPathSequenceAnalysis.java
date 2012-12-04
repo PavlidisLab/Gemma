@@ -506,30 +506,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * @param chromosome
-     * @param start
-     * @param end
-     * @param strand
-     * @return Collection of GeneProducts.
-     * @deprecated Update Dec 2012. The miRNAs are now part of the refseq , so we don't need to do this; for mm10, the
-     *             miRNA table is gone.
-     */
-    public Collection<GeneProduct> findMicroRNAGenesByLocation( String chromosome, Long start, Long end, String strand ) {
-        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT DISTINCT wg.name, wg.name, wg.chromStart, wg.chromEnd, wg.strand, NULL, NULL, 'micro RNA or sno RNA' "
-                + " FROM miRNA as wg WHERE "
-                + "((wg.chromStart >= ? AND wg.chromEnd <= ?) OR (wg.chromStart <= ? AND wg.chromEnd >= ?) OR "
-                + "(wg.chromStart >= ?  AND wg.chromStart <= ?) OR  (wg.chromEnd >= ? AND  wg.chromEnd <= ? )) and wg.chrom = ? ";
-
-        query = query + " and " + SequenceBinUtils.addBinToQuery( "wg", start, end );
-
-        if ( strand != null ) {
-            query = query + " AND strand = ? ";
-        }
-        return findGenesByQuery( start, end, searchChrom, strand, query );
-    }
-
-    /**
      * Uses a query that can retrieve BlatResults from GoldenPath. The query must have the appropriate form.
      * 
      * @param query
@@ -938,11 +914,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             // get known genes as well, in case all we got was an intron.
             geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
-
-        // if ( config.isUseMiRNA() ) {
-        // // microRNAs - no longer valid for mm10, and unnecessary for others.
-        // geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
-        // }
 
         if ( geneProducts.size() == 0 ) return null;
 
