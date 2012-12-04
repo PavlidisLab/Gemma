@@ -128,11 +128,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
                         + "; analysis id=" + savedResults.getId() );
 
         /*
-         * Save histograms
-         */
-        writeDistributions( expressionExperiment, savedResults );
-
-        /*
          * Update the report
          */
         expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
@@ -304,7 +299,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         }
 
         if ( numDeleted == 0 ) {
-            log.info( "None of the existing analyses were eligible for deletion" );
+            log.info( "None of the other existing analyses were eligible for deletion" );
         }
         return numDeleted;
     }

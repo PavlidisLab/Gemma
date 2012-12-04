@@ -175,7 +175,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
                     expressionExperiment, factors );
 
-            return helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses, factors );
+            diffExpressionAnalyses = helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
+                    factors );
+            /*
+             * Save histograms . Do this here, outside of the other transaction .
+             */
+            for ( DifferentialExpressionAnalysis a : diffExpressionAnalyses ) {
+                helperService.writeDistributions( expressionExperiment, a );
+            }
+            return diffExpressionAnalyses;
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( expressionExperiment,
                     FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
@@ -202,6 +210,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
             Collection<DifferentialExpressionAnalysis> results = helperService.persistAnalyses( expressionExperiment,
                     diffExpressionAnalyses, factors );
+            /*
+             * Save histograms. Do this here, outside of the other transaction.
+             */
+            for ( DifferentialExpressionAnalysis a : results ) {
+                helperService.writeDistributions( expressionExperiment, a );
+            }
+
             return results;
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( expressionExperiment,
@@ -227,8 +242,16 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
                     expressionExperiment, config );
 
-            return helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
+            diffExpressionAnalyses = helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
                     config.getFactorsToInclude() );
+
+            /*
+             * Save histograms . Do this here, outside of the other transaction .
+             */
+            for ( DifferentialExpressionAnalysis a : diffExpressionAnalyses ) {
+                helperService.writeDistributions( expressionExperiment, a );
+            }
+            return diffExpressionAnalyses;
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( expressionExperiment,
                     FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),

@@ -97,12 +97,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             validate( rs );
 
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 assert r != null;
                 CompositeSequence probe = r.getProbe();
+                assert probe != null;
                 probes.add( probe );
                 res2set.put( r, rs ); // temporary data structure
             }
+            log.info( results.size() + " results checked for resultset with ID=" + rs.getId() + ", found "
+                    + probes.size() + " probes/elements so far for " + res2set.size() + " results in total ..." );
         }
 
         Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = organizeResultsByGene( resultSets,
@@ -265,7 +269,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     }
 
     /**
-     * * Organize the results by gene. Results that have more than one gene (or no gene) are skipped.
+     * Organize the results by gene. Results that have more than one gene (or no gene) are skipped.
      * 
      * @param resultSets
      * @param probes

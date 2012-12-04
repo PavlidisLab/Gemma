@@ -297,10 +297,10 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-//        assertEquals( 10, foundTests );
-//        assertEquals( 215, numUp ); // R, minus 4 that we skip as they are duplicated genes.
-//        assertEquals( 101, numDown ); // R
-//        assertEquals( 316, metaAnalysis.getResults().size() );
+        assertEquals( 10, foundTests );
+        assertEquals( 215, numUp ); // R, minus 4 that we skip as they are duplicated genes.
+        assertEquals( 101, numDown ); // R
+        assertEquals( 316, metaAnalysis.getResults().size() );
 
         /*
          * Test ancillary methods
