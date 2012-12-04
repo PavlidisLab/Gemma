@@ -506,15 +506,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * Implementation note: The table in goldenpath for microRNAs is called wgRna for hg18, but miRNA in mouse and rat.
-     * We rename the table to miRNA for hg18. hg19 lacks the track entirely as of 5/2010. Futhermore, the rat and mouse
-     * databases lack the "type" field, so we can't use that very easily and put in a dummy description.
-     * 
      * @param chromosome
      * @param start
      * @param end
      * @param strand
      * @return Collection of GeneProducts.
+     * @deprecated Update Dec 2012. The miRNAs are now part of the refseq , so we don't need to do this; for mm10, the
+     *             miRNA table is gone.
      */
     public Collection<GeneProduct> findMicroRNAGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
@@ -941,10 +939,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
 
-        if ( config.isUseMiRNA() ) {
-            // microRNAs
-            geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
-        }
+        // if ( config.isUseMiRNA() ) {
+        // // microRNAs - no longer valid for mm10, and unnecessary for others.
+        // geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        // }
 
         if ( geneProducts.size() == 0 ) return null;
 

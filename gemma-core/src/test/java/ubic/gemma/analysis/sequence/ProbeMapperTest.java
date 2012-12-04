@@ -125,22 +125,6 @@ public class ProbeMapperTest extends TestCase {
         assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
-    /**
-     * @
-     */
-    public void testLocateMiRNA() {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because  human db could not be configured" );
-            return;
-        }
-
-        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133303415 ), new Long(
-                133303418 ), "-" );
-        assertEquals( 1, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011, hg19.
-    }
-
     public void testProcessBlatResults() {
         if ( !hasMousegp ) {
             log.warn( "Skipping test because mm could not be configured" );
