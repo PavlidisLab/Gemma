@@ -46,6 +46,7 @@ import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
@@ -448,6 +449,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
         }
 
+        if ( modifedEvidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
+            throw new IllegalArgumentException( "DiffExpressionEvidence type cannot be updated" );
+        }
+
         if ( modifedEvidenceValueObject.getGeneNCBI() == null ) {
             throw new IllegalArgumentException( "Evidence not linked to a Gene" );
         }
@@ -771,6 +776,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
                 .load( geneDifferentialExpressionMetaAnalysisId );
+
+        // check that no evidence already exists with that metaAnalysis
+        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+
+        if ( differentialExpressionEvidence != null ) {
+            ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setSameEvidenceFound( true );
+            return validateEvidenceValueObject;
+        }
 
         for ( GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult : geneDifferentialExpressionMetaAnalysis
                 .getResults() ) {
@@ -1334,8 +1349,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .loadWithResultId( differentialExpressionEvidence.getGeneDifferentialExpressionMetaAnalysisResult()
                             .getId() );
 
+            Collection<Long> ids = new HashSet<Long>();
+            ids.add( geneDifferentialExpressionMetaAnalysis.getId() );
+
+            GeneDifferentialExpressionMetaAnalysisSummaryValueObject geneDiffExMetaAnalysisSummaryValueObject = this.geneDiffExMetaAnalysisService
+                    .findMetaAnalyses( ids ).iterator().next();
+
             diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
-                    geneDifferentialExpressionMetaAnalysis.getId() );
+                    geneDiffExMetaAnalysisSummaryValueObject );
         }
 
         return diffExpressionEvidenceValueObject;
