@@ -75,7 +75,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	enableKeyEvents : true,
-	loadingText : 'Still searching...',
+	loadingText : 'Searching...',
 
 	emptyText : "Search genes by keyword",
 	listEmptyText : 'No results found',
