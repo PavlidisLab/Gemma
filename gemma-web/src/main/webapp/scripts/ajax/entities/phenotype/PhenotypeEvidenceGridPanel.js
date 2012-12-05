@@ -424,7 +424,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					
 					switch (value) {
 						case 'DiffExpressionEvidenceValueObject' :
-							typeColumnHtml = 'Differential Expression';
+							typeColumnHtml = 'Differential Expression Meta-analysis';
 							break;
 						
 						case 'ExperimentalEvidenceValueObject' :
