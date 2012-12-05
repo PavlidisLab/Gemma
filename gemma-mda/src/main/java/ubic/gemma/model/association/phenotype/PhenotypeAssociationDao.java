@@ -87,4 +87,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
 
+    /** deletes all differentialExpressionEvidence from a specific metaAnalysis */
+    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
+
 }

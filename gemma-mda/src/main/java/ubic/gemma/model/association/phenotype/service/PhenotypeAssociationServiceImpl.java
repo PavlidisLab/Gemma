@@ -229,4 +229,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                 .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
     }
 
+    /** removes all differentialExpressionEvidence from a specific metaAnalysis */
+    @Override
+    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
+        this.phenotypeAssociationDao
+                .deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+    }
+
 }

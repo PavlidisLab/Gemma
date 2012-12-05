@@ -159,4 +159,7 @@ public interface PhenotypeAssociationService {
     public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
 
+    /** removes all differentialExpressionEvidence from a specific metaAnalysis */
+    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
+
 }

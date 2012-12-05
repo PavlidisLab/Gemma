@@ -18,17 +18,12 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
-import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.association.phenotype.GenericEvidence;
-import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
@@ -40,51 +35,6 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
  * @author nicolas
  */
 public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
-
-    /**
-     * Convert an collection of evidence entities to their corresponding value objects
-     * 
-     * @param phenotypeAssociations The List of entities we need to convert to value object
-     * @return Collection<EvidenceValueObject> the converted results
-     */
-    public static Collection<EvidenceValueObject> convert2ValueObjects(
-            Collection<PhenotypeAssociation> phenotypeAssociations ) {
-
-        Collection<EvidenceValueObject> returnEvidenceVO = new HashSet<EvidenceValueObject>();
-
-        if ( phenotypeAssociations != null ) {
-
-            for ( PhenotypeAssociation phe : phenotypeAssociations ) {
-
-                EvidenceValueObject evidence = convert2ValueObjects( phe );
-
-                if ( evidence != null ) {
-                    returnEvidenceVO.add( evidence );
-                }
-            }
-        }
-        return returnEvidenceVO;
-    }
-
-    /**
-     * Convert an evidence entity to its corresponding value object
-     * 
-     * @param phe The phenotype Entity
-     * @return Collection<EvidenceValueObject> its corresponding value object
-     */
-    public static EvidenceValueObject convert2ValueObjects( PhenotypeAssociation phe ) {
-
-        EvidenceValueObject evidence = null;
-
-        if ( phe instanceof ExperimentalEvidence ) {
-            evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
-        } else if ( phe instanceof GenericEvidence ) {
-            evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
-        } else if ( phe instanceof LiteratureEvidence ) {
-            evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-        } 
-        return evidence;
-    }
 
     private Long id = null;
     private String description = "";

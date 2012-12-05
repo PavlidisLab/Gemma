@@ -461,6 +461,19 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return null;
     }
 
+    /** deletes all differentialExpressionEvidence from a specific metaAnalysis */
+    @Override
+    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
+
+        // TODO MUST DELETE CHARACTERISTIC TOO BEFORE
+
+        this.getHibernateTemplate()
+                .bulkUpdate(
+                        "delete DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult.id in (select r.id from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                                + geneDifferentialExpressionMetaAnalysisId + ")" );
+
+    }
+
     /** basic sql command to deal with security */
     private String getPhenotypesGenesAssociationsBeginQuery() {
         String queryString = "";

@@ -48,6 +48,9 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
+import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
+import ubic.gemma.model.association.phenotype.GenericEvidence;
+import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -70,6 +73,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
@@ -419,6 +423,45 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
+     * Removes an evidence
+     * 
+     * @param id The Evidence database id
+     * @throws Exception
+     */
+    @Override
+    public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId )
+            throws Exception {
+
+        ValidateEvidenceValueObject validateEvidenceValueObject = null;
+
+        // checking if there is something to delete
+        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+        if ( differentialExpressionEvidence == null ) {
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setEvidenceNotFound( true );
+            return validateEvidenceValueObject;
+        }
+
+        // deletes all evidences that came from a specific meta analysis
+        this.associationService
+                .deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+
+        // makes sure it works
+        differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+
+        if ( differentialExpressionEvidence != null ) {
+
+            throw new Exception(
+                    "The method removeAllEvidenceFromMetaAnalysis() failed to remove all evidence for the metaAnalysis: "
+                            + geneDifferentialExpressionMetaAnalysisId );
+        }
+
+        return validateEvidenceValueObject;
+    }
+
+    /**
      * Load an evidence
      * 
      * @param id The Evidence database id
@@ -427,7 +470,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public EvidenceValueObject load( Long id ) {
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
-        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
+
+        EvidenceValueObject evidenceValueObject = convert2ValueObjects( phenotypeAssociation );
+
         if ( evidenceValueObject != null ) {
             findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
         }
@@ -483,7 +528,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return validateEvidenceValueObject;
         }
 
-        EvidenceValueObject evidenceValueObject = EvidenceValueObject.convert2ValueObjects( phenotypeAssociation );
+        EvidenceValueObject evidenceValueObject = convert2ValueObjects( phenotypeAssociation );
 
         // evidence type changed
         if ( !evidenceValueObject.getClass().equals( modifedEvidenceValueObject.getClass() ) ) {
@@ -640,8 +685,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             genes.add( ( Gene ) sr.getResultObject() );
         }
 
-        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = GeneEvidenceValueObject
-                .convert2GeneEvidenceValueObjects( genes );
+        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = new HashSet<GeneEvidenceValueObject>();
+
+        for ( Gene g : genes ) {
+            GeneEvidenceValueObject geneEvidenceValueObject = new GeneEvidenceValueObject( g,
+                    convert2ValueObjects( g.getPhenotypeAssociations() ) );
+            geneEvidenceValueObjects.add( geneEvidenceValueObject );
+        }
 
         Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidenceValueObject>();
 
@@ -1316,18 +1366,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             for ( PhenotypeAssociation phe : phenotypeAssociations ) {
 
-                EvidenceValueObject evidence = null;
-
-                if ( phe instanceof DifferentialExpressionEvidence ) {
-
-                    DifferentialExpressionEvidence differentialExpressionEvidence = ( DifferentialExpressionEvidence ) phe;
-
-                    evidence = convertDifferentialExpressionEvidence2ValueObject( differentialExpressionEvidence );
-
-                } else {
-
-                    evidence = EvidenceValueObject.convert2ValueObjects( phe );
-                }
+                EvidenceValueObject evidence = convert2ValueObjects( phe );
 
                 findEvidencePermissions( phe, evidence );
 
@@ -1337,6 +1376,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
         return returnEvidenceVO;
+    }
+
+    /**
+     * Convert an evidence entity to its corresponding value object
+     * 
+     * @param phe The phenotype Entity
+     * @return Collection<EvidenceValueObject> its corresponding value object
+     */
+    private EvidenceValueObject convert2ValueObjects( PhenotypeAssociation phe ) {
+
+        EvidenceValueObject evidence = null;
+
+        if ( phe instanceof ExperimentalEvidence ) {
+            evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
+        } else if ( phe instanceof GenericEvidence ) {
+            evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
+        } else if ( phe instanceof LiteratureEvidence ) {
+            evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
+        } else if ( phe instanceof DifferentialExpressionEvidence ) {
+            evidence = convertDifferentialExpressionEvidence2ValueObject( ( DifferentialExpressionEvidence ) phe );
+        }
+
+        return evidence;
     }
 
     private DiffExpressionEvidenceValueObject convertDifferentialExpressionEvidence2ValueObject(
@@ -1548,8 +1610,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI() );
 
-        Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject
-                .convert2ValueObjects( phenotypeAssociations );
+        Collection<EvidenceValueObject> evidenceValueObjects = convert2ValueObjects( phenotypeAssociations );
 
         // verify that the evidence is not a duplicate
         for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {

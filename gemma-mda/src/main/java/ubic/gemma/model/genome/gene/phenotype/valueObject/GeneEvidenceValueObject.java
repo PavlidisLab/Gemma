@@ -43,9 +43,9 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         super();
     }
 
-    public GeneEvidenceValueObject( Gene gene ) {
+    public GeneEvidenceValueObject( Gene gene, Collection<EvidenceValueObject> evidence ) {
         super( gene );
-        this.evidence = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+        this.evidence = evidence;
     }
 
     public GeneEvidenceValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
@@ -77,26 +77,6 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         }
 
         return allPhenotypesOnGene;
-    }
-
-    public static Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes ) {
-        Collection<GeneEvidenceValueObject> converted = new HashSet<GeneEvidenceValueObject>();
-        if ( genes == null ) return converted;
-
-        for ( Gene g : genes ) {
-            if ( g != null ) {
-
-                Collection<EvidenceValueObject> evidenceFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
-                        .getPhenotypeAssociations() );
-
-                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
-                        .getNcbiGeneId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
-                        .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
-                        evidenceFromPhenotype ) );
-            }
-        }
-
-        return converted;
     }
 
     public Set<String> getPhenotypesValueUri() {
