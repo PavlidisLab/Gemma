@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -138,13 +139,6 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
-
-    /**
-     * Delete the differential expression file for the given experiment
-     * 
-     * @param ee
-     */
-    public void deleteDiffExFile( ExpressionExperiment ee );
 
     /**
      * Write or located the coexpression data file for a given experiment

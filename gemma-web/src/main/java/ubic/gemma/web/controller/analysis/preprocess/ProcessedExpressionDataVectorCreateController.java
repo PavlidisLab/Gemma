@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -38,14 +39,6 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
  */
 @Controller
 public class ProcessedExpressionDataVectorCreateController extends AbstractTaskService {
-
-    public ProcessedExpressionDataVectorCreateController() {
-        super();
-        this.setBusinessInterface( ProcessedExpressionDataVectorCreateTask.class );
-    }
-
-    @Autowired
-    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
      *  
@@ -87,7 +80,18 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
     }
 
     @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+
+    public ProcessedExpressionDataVectorCreateController() {
+        super();
+        this.setBusinessInterface( ProcessedExpressionDataVectorCreateTask.class );
+    }
 
     /**
      * AJAX entry point.
@@ -104,7 +108,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
 
         ee = expressionExperimentService.thawLite( ee );
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
-
+        experimentReportService.evictFromCache( id );
         return super.run( cmd );
     }
 

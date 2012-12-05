@@ -27,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
@@ -105,6 +106,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
      * 
@@ -163,6 +167,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         }
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
+        this.experimentReportService.evictFromCache( ee.getId() );
         return super.run( cmd );
     }
 
@@ -184,6 +189,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( toRedo == null ) {
             throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
         }
+        this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo, true );
         return super.run( cmd );
     }
@@ -204,7 +210,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( toRefresh == null ) {
             throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
         }
-        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh , false);
+        this.experimentReportService.evictFromCache( ee.getId() );
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh,
+                false );
         return super.run( cmd );
     }
 
@@ -221,6 +229,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
+        this.experimentReportService.evictFromCache( ee.getId() );
         ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
@@ -302,15 +311,8 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );
+        this.experimentReportService.evictFromCache( ee.getId() );
         return super.run( cmd );
-    }
-
-    public void setDifferentialExpressionAnalyzer( AnalysisSelectionAndExecutionService differentialExpressionAnalyzer ) {
-        this.analysisSelectionAndExecutionService = differentialExpressionAnalyzer;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     /*

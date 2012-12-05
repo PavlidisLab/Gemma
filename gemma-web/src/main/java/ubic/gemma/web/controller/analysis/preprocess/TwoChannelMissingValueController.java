@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -77,6 +78,8 @@ public class TwoChannelMissingValueController extends AbstractTaskService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
 
     /**
      * AJAX entry point. -- uses default settings
@@ -94,12 +97,8 @@ public class TwoChannelMissingValueController extends AbstractTaskService {
         ee = expressionExperimentService.thawLite( ee );
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
-
+        experimentReportService.evictFromCache( id );
         return super.run( cmd );
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     @Override

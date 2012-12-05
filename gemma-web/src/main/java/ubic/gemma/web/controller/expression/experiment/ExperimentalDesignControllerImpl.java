@@ -147,19 +147,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     }
 
-    /**
-     * AJAX clear entries in caches relevant to experimental design for the experiment passed in. The caches cleared are
-     * the processedDataVectorCache and the caches held in ExperimentalDesignVisualizationService
-     * 
-     * @param eeId
-     * @return msg if error occurred or empty string if successful
-     */
-    @Override
-    public String clearDesignCaches( Long eeId ) {
-        experimentReportService.evictFromCache( eeId );
-        return experimentalDesignService.clearDesignCaches( eeId );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -189,8 +176,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         experimentalDesignService.update( ed );
 
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
-        this.experimentalDesignService.clearDesignCaches( ee );
-        experimentReportService.evictFromCache( ee.getId() );
+        this.experimentReportService.evictFromCache( ee.getId() );
 
     }
 
@@ -292,8 +278,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( ExperimentalFactor ef : toDelete ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-            experimentalDesignService.clearDesignCaches( ee );
-            experimentReportService.evictFromCache( ee.getId() );
+            this.experimentReportService.evictFromCache( ee.getId() );
         }
     }
 
@@ -331,7 +316,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( Long fvId : fvCol ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
-            this.experimentalDesignService.clearDesignCaches( ee );
+            this.experimentReportService.evictFromCache( ee.getId() );
         }
 
         factorValueDeletion.deleteFactorValues( fvCol );
@@ -527,8 +512,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         BioMaterial bm = biomaterials.iterator().next();
         ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        this.experimentalDesignService.clearDesignCaches( ee );
-        experimentReportService.evictFromCache( ee.getId() );
+        if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        this.experimentReportService.evictFromCache( ee.getId() );
     }
 
     /*
@@ -601,8 +586,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-        this.experimentalDesignService.clearDesignCaches( ee );
-        experimentReportService.evictFromCache( ee.getId() );
+        if ( ee == null ) throw new IllegalArgumentException( "No experiment for factor: " + ef );
+        this.experimentReportService.evictFromCache( ee.getId() );
     }
 
     /*
@@ -691,8 +676,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         FactorValue fv = this.factorValueService.load( fvvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-        this.experimentalDesignService.clearDesignCaches( ee );
-        experimentReportService.evictFromCache( ee.getId() );
+        this.experimentReportService.evictFromCache( ee.getId() );
 
     }
 

@@ -80,10 +80,6 @@ public class ArrayDesignRepeatScanController extends AbstractTaskService {
         return super.run( cmd );
     }
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
     /*
      * (non-Javadoc)
      * 

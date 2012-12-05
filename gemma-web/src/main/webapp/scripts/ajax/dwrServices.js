@@ -407,10 +407,6 @@ ExperimentalDesignController.updateFactorValueCharacteristics = function(p0, cal
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'updateFactorValueCharacteristics', p0, callback);
 }
-ExperimentalDesignController.clearDesignCaches = function(p0, callback ) {
-	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
-			'clearDesignCaches', p0, callback);
-}
 // ====================================================================================
 if (ExpressionDataFileUploadController == null)
 	var ExpressionDataFileUploadController = {};
@@ -502,6 +498,10 @@ ExpressionExperimentController.updateAllReports = function(callback) {
 ExpressionExperimentController.updateBasics = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
+};
+ExpressionExperimentController.clearFromCaches = function(p0, callback ) {
+    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
+            'clearFromCaches', p0, callback);
 };
 // ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
 // dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',

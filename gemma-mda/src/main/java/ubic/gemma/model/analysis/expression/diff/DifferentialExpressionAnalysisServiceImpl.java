@@ -42,7 +42,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
 
     @Autowired
-    ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     @Autowired
     private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;

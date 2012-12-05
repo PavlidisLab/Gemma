@@ -43,18 +43,7 @@ public interface DifferentialExpressionAnalysisHelperService {
      * @param expressionExperiment
      * @return how many analyses were deleted.
      */
-    public abstract int deleteOldAnalyses( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Delete all the differential expression analyses for the experiment that use the given set of factors.
-     * 
-     * @param expressionExperiment
-     * @param newAnalysis
-     * @param factors
-     * @return how many analyses were deleted.
-     */
-    public abstract int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors );
+    public abstract int deleteAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * Delete an old analysis.
@@ -62,7 +51,7 @@ public interface DifferentialExpressionAnalysisHelperService {
      * @param expressionExperiment
      * @param existingAnalysis
      */
-    public abstract void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
+    public abstract void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis );
 
     /**

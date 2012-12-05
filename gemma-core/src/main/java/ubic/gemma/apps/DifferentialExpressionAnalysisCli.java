@@ -225,7 +225,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( delete ) {
                 log.info( "Deleting any analyses for experiment=" + ee );
-                differentialExpressionAnalysisHelperService.deleteOldAnalyses( ee );
+                differentialExpressionAnalysisHelperService.deleteAnalyses( ee );
                 successObjects.add( "Deleted analysis for: " + ee.toString() );
                 return;
             }

@@ -80,7 +80,7 @@ public class DeleteAnalysesThatDontHaveHitLists extends ExpressionExperimentMani
                     }
                 }
                 if ( doDelete ) {
-                    analyzerHelper.deleteOldAnalysis( expressionExperiment, analysis );
+                    analyzerHelper.deleteAnalysis( expressionExperiment, analysis );
                 }
             }
 

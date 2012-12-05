@@ -62,11 +62,13 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEv
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
+import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -91,6 +93,18 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     private String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
 
+    /**
+     * Batch of classes we can get events for all at once.
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
+            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedAnnotations.class,
+            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
+            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+
+    @Autowired
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -100,16 +114,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
 
     @Autowired
-    private SecurityService securityService;
+    private ProcessedDataVectorCache processedDataVectorCache;
 
-    /**
-     * Batch of classes we can get events for all at once.
-     */
-    @SuppressWarnings("unchecked")
-    private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
-            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedAnnotations.class,
-            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
-            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+    @Autowired
+    private SecurityService securityService;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -128,6 +136,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         boolean overFlowToDisk = false;
         int diskExpiryThreadIntervalSeconds = 600;
         int maxElementsOnDisk = 10000;
+        int secondsToLive = 300;
         boolean terracottaCoherentReads = false;
         boolean clearOnFlush = false;
 
@@ -138,11 +147,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             config.setOverflowToDisk( false );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( 0 );
+            config.setTimeToLiveSeconds( secondsToLive );
             config.setMaxElementsOnDisk( maxElementsOnDisk );
             config.addTerracotta( new TerracottaConfiguration() );
             config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
             config.clearOnFlush( clearOnFlush );
-            config.setTimeToLiveSeconds( 0 );
+
             config.getTerracottaConfiguration().setClustered( true );
             config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
             NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
@@ -151,18 +161,79 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             nonstopConfiguration.addTimeoutBehavior( tobc );
             config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.statsCache = new Cache( config );
-
-            // this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
-            // overFlowToDisk, null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
-            // maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
         } else {
             this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
-                    overFlowToDisk, null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+                    overFlowToDisk, null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds,
+                    null );
         }
 
         cacheManager.addCache( statsCache );
         this.statsCache = cacheManager.getCache( EESTATS_CACHE_NAME );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#evictFromCache(java.lang.Long)
+     */
+    @Override
+    public void evictFromCache( Long id ) {
+        this.statsCache.remove( id );
+
+        processedDataVectorCache.clearCache( id );
+        experimentalDesignVisualizationService.clearCaches( id );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
+     */
+    @Override
+    public ExpressionExperimentValueObject generateSummary( Long id ) {
+        assert id != null;
+        Collection<Long> ids = new ArrayList<Long>();
+        ids.add( id );
+        Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
+        if ( results.size() > 0 ) {
+            return results.iterator().next();
+        }
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
+     */
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    public void generateSummaryObjects() {
+        Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
+        getStats( vos );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects(java.util.Collection)
+     */
+    @Override
+    public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
+
+        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds,
+                false );
+        getStats( vos );
+
+        for ( ExpressionExperimentValueObject vo : vos ) {
+            evictFromCache( vo.getId() );
+            statsCache.put( new Element( vo.getId(), vo ) );
+        }
+        return vos;
     }
 
     /**
@@ -384,24 +455,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return results;
     }
 
-    private Collection<Long> getValidated( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> result = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject ee : vos ) {
-
-            if ( ee.getValidated() ) {
-                result.add( ee.getId() );
-            }
-        }
-        return result;
-    }
-
-    private Collection<Long> getTroubled( Collection<ExpressionExperiment> ees ) {
-        Collection<Long> ids = EntityUtils.getIds( ees );
-        Collection<Long> untroubled = expressionExperimentService.getUntroubled( ids );
-        ids.removeAll( untroubled );
-        return ids;
-    }
-
     /**
      * Fills in link analysis and other info from the report.
      * 
@@ -451,56 +504,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
-     */
-    @Override
-    public ExpressionExperimentValueObject generateSummary( Long id ) {
-        assert id != null;
-        Collection<Long> ids = new ArrayList<Long>();
-        ids.add( id );
-        Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
-        if ( results.size() > 0 ) {
-            return results.iterator().next();
-        }
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
-     */
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    public void generateSummaryObjects() {
-        Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
-        getStats( vos );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects(java.util.Collection)
-     */
-    @Override
-    public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
-
-        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds,
-                false );
-        getStats( vos );
-
-        for ( ExpressionExperimentValueObject vo : vos ) {
-            evictFromCache( vo.getId() );
-            statsCache.put( new Element( vo.getId(), vo ) );
-        }
-        return vos;
     }
 
     /*
@@ -563,33 +566,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#evictFromCache(java.lang.Long)
-     */
-    @Override
-    public void evictFromCache( Long id ) {
-        this.statsCache.remove( id );
-    }
-
-    /**
-     * @param ids
-     * @return
-     */
-    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
-        /*
-         * Because this method returns the results, we have to screen.
-         */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
-
-        Collection<Long> filteredIds = new HashSet<Long>();
-        for ( ExpressionExperiment ee : securityScreened ) {
-            filteredIds.add( ee.getId() );
-        }
-        return filteredIds;
-    }
-
     /**
      * Compute statistics for EEs, that aren't immediately part of the value object.
      * 
@@ -631,6 +607,41 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         assert eeVo.getDateCreated() != null;
         assert eeVo.getDateLastUpdated() != null;
 
+    }
+
+    private Collection<Long> getTroubled( Collection<ExpressionExperiment> ees ) {
+        Collection<Long> ids = EntityUtils.getIds( ees );
+        Collection<Long> untroubled = expressionExperimentService.getUntroubled( ids );
+        ids.removeAll( untroubled );
+        return ids;
+    }
+
+    private Collection<Long> getValidated( Collection<ExpressionExperimentValueObject> vos ) {
+        Collection<Long> result = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject ee : vos ) {
+
+            if ( ee.getValidated() ) {
+                result.add( ee.getId() );
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+        /*
+         * Because this method returns the results, we have to screen.
+         */
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : securityScreened ) {
+            filteredIds.add( ee.getId() );
+        }
+        return filteredIds;
     }
 
 }

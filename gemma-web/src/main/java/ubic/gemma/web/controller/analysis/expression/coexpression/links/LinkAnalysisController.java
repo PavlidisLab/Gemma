@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -81,10 +82,13 @@ public class LinkAnalysisController extends AbstractTaskService {
     }
 
     @Autowired
-    LinkAnalysisTask linkAnalysisTask;
+    private LinkAnalysisTask linkAnalysisTask;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
 
     public LinkAnalysisController() {
         super();
@@ -107,16 +111,14 @@ public class LinkAnalysisController extends AbstractTaskService {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        //ee = expressionExperimentService.thawLite( ee );
+        experimentReportService.evictFromCache( id );
+
+        // ee = expressionExperimentService.thawLite( ee );
         LinkAnalysisConfig lac = new LinkAnalysisConfig();
         FilterConfig fc = new FilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( ee, lac, fc );
 
         return super.run( cmd );
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     /*

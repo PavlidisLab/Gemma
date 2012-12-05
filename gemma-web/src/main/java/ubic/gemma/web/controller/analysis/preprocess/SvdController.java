@@ -22,6 +22,7 @@ package ubic.gemma.web.controller.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -80,6 +81,9 @@ public class SvdController extends AbstractTaskService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+
     public SvdController() {
         super();
         this.setBusinessInterface( SvdTask.class );
@@ -88,17 +92,18 @@ public class SvdController extends AbstractTaskService {
     /**
      * AJAX entry point.
      * 
-     * @param id 
+     * @param id
      * @return
      * @throws Exception
      */
-    public String run( Long id  ) throws Exception {
+    public String run( Long id ) throws Exception {
         if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
-        SvdTaskCommand cmd = new SvdTaskCommand( ee  );
+        experimentReportService.evictFromCache( id );
+        SvdTaskCommand cmd = new SvdTaskCommand( ee );
 
         return super.run( cmd );
     }

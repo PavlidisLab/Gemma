@@ -98,6 +98,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
 
+            log.info( results.size() + " results to check ..." );
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 assert r != null;
                 CompositeSequence probe = r.getProbe();

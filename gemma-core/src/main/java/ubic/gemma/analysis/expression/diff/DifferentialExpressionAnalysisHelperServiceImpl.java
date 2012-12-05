@@ -57,7 +57,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.Persister;
 
 /**
- * TODO Document Me
+ * Transactional methods for dealing with differential expression analyses.
  * 
  * @author Paul
  * @version $Id$
@@ -75,9 +75,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-
-    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -93,7 +90,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * expression.experiment.ExpressionExperiment)
      */
     @Override
-    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
+    public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
 
@@ -108,28 +105,20 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
                     + expressionExperiment.getShortName() + ": Analysis ID=" + de.getId() );
             differentialExpressionAnalysisService.delete( de );
 
-            deleteOldDistributionMatrices( expressionExperiment, de );
+            deleteStatistics( expressionExperiment, de );
             result++;
         }
-
-        /*
-         * Delete old flat files.
-         */
-        expressionDataFileService.deleteDiffExFile( expressionExperiment );
 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment,
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
+    /**
+     * @param expressionExperiment
+     * @param newAnalysis
+     * @param factors
+     * @return
      */
-    @Override
-    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
+    protected int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -159,7 +148,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
                     && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting.equals( newAnalysis
                             .getSubsetFactorValue() ) ) ) {
 
-                deleteOldAnalysis( expressionExperiment, existingAnalysis );
+                deleteAnalysis( expressionExperiment, existingAnalysis );
 
                 numDeleted++;
             }
@@ -180,21 +169,13 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
     @Override
-    public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
+    public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
         log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName()
                 + " Analysis ID=" + existingAnalysis.getId() );
         differentialExpressionAnalysisService.delete( existingAnalysis );
 
-        /*
-         * Delete old flat files. This deletes them all, could be fixed but not a big deal.
-         */
-        expressionDataFileService.deleteDiffExFile( expressionExperiment );
-
-        /*
-         * Delete the old statistic distributions.
-         */
-        deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
+        deleteStatistics( expressionExperiment, existingAnalysis );
     }
 
     /**
@@ -209,7 +190,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
 
-            // FIXME: be able to suppress this deletion.
             deleteOldAnalyses( expressionExperiment, analysis, factors );
 
             DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
@@ -308,7 +288,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * @param ee
      * @param analysis
      */
-    private void deleteOldDistributionMatrices( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
+    private void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
 
         File f = prepareDirectoryForDistributions( ee );
 

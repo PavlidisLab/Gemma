@@ -22,6 +22,7 @@ package ubic.gemma.web.controller.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
@@ -56,7 +57,6 @@ public class BatchInfoFetchController extends AbstractTaskService {
         }
 
     }
-
     /**
      * Job that loads in a javaspace.
      */
@@ -74,9 +74,11 @@ public class BatchInfoFetchController extends AbstractTaskService {
         }
 
     }
-
     @Autowired
     private BatchInfoFetchTask batchInfoFetchTask;
+
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -109,7 +111,7 @@ public class BatchInfoFetchController extends AbstractTaskService {
         }
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
-
+        experimentReportService.evictFromCache( id );
         return super.run( cmd );
     }
 

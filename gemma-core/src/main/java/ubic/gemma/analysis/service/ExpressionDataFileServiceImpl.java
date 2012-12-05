@@ -325,25 +325,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#deleteDiffExFile(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
-     */
-    @Override
-    public void deleteDiffExFile( ExpressionExperiment ee ) {
-        File f = getOutputFile( getDiffExFileName( ee ) );
-        if ( f.exists() ) {
-            if ( f.delete() ) {
-                log.info( "Deleted: " + f );
-            } else {
-                log.info( "Failed to delete: " + f );
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
      * ubic.gemma.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFile(ubic.gemma.model.analysis
      * .expression.diff.DifferentialExpressionAnalysis, boolean)
      */
@@ -750,13 +731,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     /**
-     * @param ee
+     * @param fv
      * @return
      */
-    private String getDiffExFileName( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" ) + "_diffExp" + DATA_FILE_SUFFIX;
-    }
-
     private String getFactorValueString( FactorValue fv ) {
         if ( fv == null ) return "null";
 

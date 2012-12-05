@@ -454,6 +454,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
+     * AJAX clear entries in caches relevant to experimental design for the experiment passed in. The caches cleared are
+     * the processedDataVectorCache and the caches held in ExperimentalDesignVisualizationService
+     * 
+     * @param eeId
+     * @return msg if error occurred or empty string if successful
+     */
+    public void clearFromCaches( Long eeId ) {
+        experimentReportService.evictFromCache( eeId );
+    }
+
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+
+    /**
      * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
      * 
      * @param
@@ -1170,7 +1184,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
         // create SearchResultDisplayObjects
-         if ( sessionResult != null && sessionResult.size() > 0 ) {
+        if ( sessionResult != null && sessionResult.size() > 0 ) {
             for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
                 SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
                 srdo.setUserOwned( true );
@@ -1186,10 +1200,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         return displayResults;
     }
-    
-    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {        
 
-        return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId ) ;
+    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
+
+        return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId );
     }
 
     /**
@@ -2092,11 +2106,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 orderBy = "taxon";
             } else if ( o.equals( "troubled" ) ) {
                 orderBy = "troubled";
-            } else if ( o.equals( "dateLastUpdated" ) || o.equals("modDate") ) {
+            } else if ( o.equals( "dateLastUpdated" ) || o.equals( "modDate" ) ) {
                 orderBy = "dateLastUpdated";
                 descending = !descending;
             } else {
-                log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: "+orderBy);
+                log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: " + orderBy );
             }
 
             if ( ids != null ) {

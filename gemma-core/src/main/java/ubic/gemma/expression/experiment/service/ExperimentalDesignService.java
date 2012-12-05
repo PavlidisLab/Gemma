@@ -34,56 +34,49 @@ public interface ExperimentalDesignService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExperimentalDesign create( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalDesign findByName( String name );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
      * Gets the expression experiment for the specified experimental design object
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalDesign load( Long id );
 
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Collection<ExperimentalDesign> loadAll();
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExperimentalDesign experimentalDesign );
-
-    public String clearDesignCaches( Long eeId );
-
-    public void clearDesignCaches( ExpressionExperiment ee );
-
-    public void clearDesignCaches();
-    
 
 }

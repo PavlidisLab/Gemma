@@ -328,6 +328,7 @@
 			<dwr:include method="browseByTaxon" />
 			<dwr:include method="loadCountsForDataSummaryTable" />
 			<dwr:include method="loadExpressionExperimentsWithQcIssues" />
+			<dwr:include method="clearFromCaches" />
 		</dwr:remote>
 	</bean>
 
@@ -471,7 +472,6 @@
 			<dwr:include method="updateFactorValueCharacteristics" />
 			<dwr:include method="getBioMaterials" />
 			<dwr:include method="updateBioMaterials" />
-			<dwr:include method="clearDesignCaches" />
 		</dwr:remote>
 	</bean>
 
