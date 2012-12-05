@@ -66,6 +66,18 @@ import ubic.gemma.persistence.Persister;
 public class DifferentialExpressionAnalysisHelperServiceImpl implements DifferentialExpressionAnalysisHelperService {
 
     @Autowired
+    private AuditTrailService auditTrailService = null;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -73,8 +85,117 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     @Autowired
     private Persister persisterHelper = null;
 
-    @Autowired
-    private AuditTrailService auditTrailService = null;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
+                .findByInvestigation( expressionExperiment );
+
+        int result = 0;
+        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
+            log.debug( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            return result;
+        }
+
+        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
+            log.info( "Deleting old differential expression analysis for experiment "
+                    + expressionExperiment.getShortName() + ": Analysis ID=" + de.getId() );
+            differentialExpressionAnalysisService.delete( de );
+
+            deleteOldDistributionMatrices( expressionExperiment, de );
+            result++;
+        }
+
+        /*
+         * Delete old flat files.
+         */
+        expressionDataFileService.deleteDiffExFile( expressionExperiment );
+
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
+     */
+    @Override
+    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( expressionExperiment );
+        int numDeleted = 0;
+        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
+            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            return numDeleted;
+        }
+
+        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
+
+        for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
+
+            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
+
+            for ( ExpressionAnalysisResultSet resultSet : existingAnalysis.getResultSets() ) {
+                factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
+            }
+
+            FactorValue subsetFactorValueForExisting = existingAnalysis.getSubsetFactorValue();
+
+            /*
+             * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
+             */
+            if ( factorsInAnalysis.size() == factors.size()
+                    && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting.equals( newAnalysis
+                            .getSubsetFactorValue() ) ) ) {
+
+                deleteOldAnalysis( expressionExperiment, existingAnalysis );
+
+                numDeleted++;
+            }
+        }
+
+        if ( numDeleted == 0 ) {
+            log.info( "None of the other existing analyses were eligible for deletion" );
+        }
+        return numDeleted;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalysis(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     */
+    @Override
+    public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis existingAnalysis ) {
+        log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName()
+                + " Analysis ID=" + existingAnalysis.getId() );
+        differentialExpressionAnalysisService.delete( existingAnalysis );
+
+        /*
+         * Delete old flat files. This deletes them all, could be fixed but not a big deal.
+         */
+        expressionDataFileService.deleteDiffExFile( expressionExperiment );
+
+        /*
+         * Delete the old statistic distributions.
+         */
+        deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
+    }
 
     /**
      * @param expressionExperiment
@@ -85,58 +206,16 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     public Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses, Collection<ExperimentalFactor> factors ) {
 
-        for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-            deleteOldAnalyses( expressionExperiment, analysis, factors );
-        }
-
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis,
-                    factors );
+
+            // FIXME: be able to suppress this deletion.
+            deleteOldAnalyses( expressionExperiment, analysis, factors );
+
+            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
             results.add( persistentAnalysis );
         }
         return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService#persistAnalysis(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment,
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    @Override
-    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis diffExpressionAnalysis, Collection<ExperimentalFactor> factors ) {
-
-        deleteOldAnalyses( expressionExperiment, diffExpressionAnalysis, factors );
-
-        assert expressionExperiment.getId() != null;
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        log.info( "Saving new results" );
-        DifferentialExpressionAnalysis savedResults = ( DifferentialExpressionAnalysis ) persisterHelper
-                .persist( diffExpressionAnalysis );
-
-        /*
-         * Audit event
-         */
-        auditTrailService.addUpdateEvent( expressionExperiment,
-                DifferentialExpressionAnalysisEvent.Factory.newInstance(), savedResults.getDescription()
-                        + "; analysis id=" + savedResults.getId() );
-
-        /*
-         * Update the report
-         */
-        expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
-
-        if ( timer.getTime() > 10000 ) {
-            log.info( "Done saving analysis in " + timer.getTime() + "ms" );
-        }
-
-        return savedResults;
     }
 
     /**
@@ -224,148 +303,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     }
 
     /**
-     * @param expressionExperiment
-     * @return the directory where the files should be written.
-     */
-    private File prepareDirectoryForDistributions( BioAssaySet expressionExperiment ) {
-        if ( expressionExperiment instanceof ExpressionExperimentSubSet ) {
-            ExpressionExperimentSubSet ss = ( ExpressionExperimentSubSet ) expressionExperiment;
-            ExpressionExperiment source = ss.getSourceExperiment();
-
-            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools.cleanForFileName( source
-                    .getShortName() ) + ".Subset" + ss.getId() );
-            FileTools.createDir( dir.toString() );
-            return dir;
-        } else if ( expressionExperiment instanceof ExpressionExperiment ) {
-            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools
-                    .cleanForFileName( ( ( ExpressionExperiment ) expressionExperiment ).getShortName() ) );
-            FileTools.createDir( dir.toString() );
-            return dir;
-        } else {
-            throw new IllegalStateException( "Cannot handle bioassay sets of type=" + expressionExperiment.getClass() );
-        }
-
-    }
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-
-    @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment,
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
-     */
-    @Override
-    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
-        int numDeleted = 0;
-        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
-            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
-            return numDeleted;
-        }
-
-        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
-
-        for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
-
-            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
-
-            for ( ExpressionAnalysisResultSet resultSet : existingAnalysis.getResultSets() ) {
-                factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
-            }
-
-            FactorValue subsetFactorValueForExisting = existingAnalysis.getSubsetFactorValue();
-
-            /*
-             * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
-             */
-            if ( factorsInAnalysis.size() == factors.size()
-                    && factorsInAnalysis.containsAll( factors )
-                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting.equals( newAnalysis
-                            .getSubsetFactorValue() ) ) ) {
-
-                deleteOldAnalysis( expressionExperiment, existingAnalysis );
-
-                numDeleted++;
-            }
-        }
-
-        if ( numDeleted == 0 ) {
-            log.info( "None of the other existing analyses were eligible for deletion" );
-        }
-        return numDeleted;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalyses(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    public int deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
-        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
-
-        int result = 0;
-        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
-            log.debug( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
-            return result;
-        }
-
-        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
-            log.info( "Deleting old differential expression analysis for experiment "
-                    + expressionExperiment.getShortName() + ": Analysis ID=" + de.getId() );
-            differentialExpressionAnalysisService.delete( de );
-
-            deleteOldDistributionMatrices( expressionExperiment, de );
-            result++;
-        }
-
-        /*
-         * Delete old flat files.
-         */
-        expressionDataFileService.deleteDiffExFile( expressionExperiment );
-
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#deleteOldAnalysis(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment,
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    @Override
-    public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis existingAnalysis ) {
-        log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName()
-                + " Analysis ID=" + existingAnalysis.getId() );
-        differentialExpressionAnalysisService.delete( existingAnalysis );
-
-        /*
-         * Delete old flat files. This deletes them all, could be fixed but not a big deal.
-         */
-        expressionDataFileService.deleteDiffExFile( expressionExperiment );
-
-        /*
-         * Delete the old statistic distributions.
-         */
-        deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
-    }
-
-    /**
      * Remove old files which will otherwise be cruft.
      * 
      * @param ee
@@ -407,8 +344,84 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         }
     }
 
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
+    /**
+     * @param factorNames
+     * @param histograms
+     * @param dists
+     */
+    private void fillDists( List<String> factorNames, List<Histogram> histograms, DoubleMatrix<String, String> dists ) {
+
+        assert !histograms.isEmpty();
+
+        int i = 0;
+        for ( Histogram h : histograms ) {
+            if ( i == 0 ) {
+                dists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
+                dists.setColumnNames( factorNames );
+            }
+
+            double[] binHeights = h.getArray();
+            for ( int j = 0; j < binHeights.length; j++ ) {
+                dists.set( j, i, binHeights[j] );
+
+            }
+            i++;
+        }
+    }
+
+    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis diffExpressionAnalysis ) {
+
+        assert expressionExperiment.getId() != null;
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        log.info( "Saving new results" );
+        DifferentialExpressionAnalysis savedResults = ( DifferentialExpressionAnalysis ) persisterHelper
+                .persist( diffExpressionAnalysis );
+
+        /*
+         * Audit event
+         */
+        auditTrailService.addUpdateEvent( expressionExperiment,
+                DifferentialExpressionAnalysisEvent.Factory.newInstance(), savedResults.getDescription()
+                        + "; analysis id=" + savedResults.getId() );
+
+        /*
+         * Update the report
+         */
+        expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
+
+        if ( timer.getTime() > 10000 ) {
+            log.info( "Done saving analysis in " + timer.getTime() + "ms" );
+        }
+
+        return savedResults;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @return the directory where the files should be written.
+     */
+    private File prepareDirectoryForDistributions( BioAssaySet expressionExperiment ) {
+        if ( expressionExperiment instanceof ExpressionExperimentSubSet ) {
+            ExpressionExperimentSubSet ss = ( ExpressionExperimentSubSet ) expressionExperiment;
+            ExpressionExperiment source = ss.getSourceExperiment();
+
+            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools.cleanForFileName( source
+                    .getShortName() ) + ".Subset" + ss.getId() );
+            FileTools.createDir( dir.toString() );
+            return dir;
+        } else if ( expressionExperiment instanceof ExpressionExperiment ) {
+            File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( FileTools
+                    .cleanForFileName( ( ( ExpressionExperiment ) expressionExperiment ).getShortName() ) );
+            FileTools.createDir( dir.toString() );
+            return dir;
+        } else {
+            throw new IllegalStateException( "Cannot handle bioassay sets of type=" + expressionExperiment.getClass() );
+        }
+
+    }
 
     /**
      * Print the distributions to a file.
@@ -474,31 +487,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             throw new RuntimeException( e );
         }
 
-    }
-
-    /**
-     * @param factorNames
-     * @param histograms
-     * @param dists
-     */
-    private void fillDists( List<String> factorNames, List<Histogram> histograms, DoubleMatrix<String, String> dists ) {
-
-        assert !histograms.isEmpty();
-
-        int i = 0;
-        for ( Histogram h : histograms ) {
-            if ( i == 0 ) {
-                dists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
-                dists.setColumnNames( factorNames );
-            }
-
-            double[] binHeights = h.getArray();
-            for ( int j = 0; j < binHeights.length; j++ ) {
-                dists.set( j, i, binHeights[j] );
-
-            }
-            i++;
-        }
     }
 
 }

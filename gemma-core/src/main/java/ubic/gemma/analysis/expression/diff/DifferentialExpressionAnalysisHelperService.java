@@ -32,14 +32,6 @@ public interface DifferentialExpressionAnalysisHelperService {
     public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
 
     /**
-     * @param expressionExperiment
-     * @param diffExpressionAnalysis
-     * @return
-     */
-    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis diffExpressionAnalysis, Collection<ExperimentalFactor> factors );
-
-    /**
      * @param ee
      * @param differentialExpressionAnalysis
      */

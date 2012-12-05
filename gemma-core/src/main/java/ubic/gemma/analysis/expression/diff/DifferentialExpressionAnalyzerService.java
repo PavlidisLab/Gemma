@@ -17,7 +17,6 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.IOException;
 import java.util.Collection;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,18 +45,6 @@ public interface DifferentialExpressionAnalyzerService {
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors );
 
     /**
-     * Runs the differential expression analysis, then deletes the matching old differential expression analysis (if
-     * any).
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @param type
-     * @return persistent analyses
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type );
-
-    /**
      * @param expressionExperiment
      * @param config
      * @return persistent analyses
@@ -80,7 +67,9 @@ public interface DifferentialExpressionAnalyzerService {
             DifferentialExpressionAnalysis copyMe );
 
     /**
-     * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use redoAnalysis but this should be faster.
+     * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use
+     * redoAnalysis but this should be faster.
+     * 
      * @param toUpdate
      */
     public abstract void updateSummaries( DifferentialExpressionAnalysis toUpdate );

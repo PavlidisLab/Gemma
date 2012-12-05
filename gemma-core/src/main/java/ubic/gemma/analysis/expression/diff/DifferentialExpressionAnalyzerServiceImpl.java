@@ -155,8 +155,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         config.getFactorsToInclude().addAll( factorsFromOldExp );
         results = this.runDifferentialExpressionAnalyses( ee, config );
         if ( !results.isEmpty() ) {
-            log.info( "Deleting old analysis" );
-            differentialExpressionAnalysisService.delete( copyMe );
+            // log.info( "Deleting old analysis" );
+            // differentialExpressionAnalysisService.delete( copyMe );
+            // The existing analysis will already have been deleted.
         }
         return results;
     }
@@ -190,41 +191,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                     ExceptionUtils.getFullStackTrace( e ) );
             throw new RuntimeException( e );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
-
-        try {
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
-                    expressionExperiment, factors, type );
-
-            Collection<DifferentialExpressionAnalysis> results = helperService.persistAnalyses( expressionExperiment,
-                    diffExpressionAnalyses, factors );
-            /*
-             * Save histograms. Do this here, outside of the other transaction.
-             */
-            for ( DifferentialExpressionAnalysis a : results ) {
-                helperService.writeDistributions( expressionExperiment, a );
-            }
-
-            return results;
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment,
-                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
-            throw new RuntimeException( e );
-        }
-
     }
 
     /*
@@ -287,11 +253,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
-    }
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors, AnalysisType type ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors, type );
     }
 
     private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
