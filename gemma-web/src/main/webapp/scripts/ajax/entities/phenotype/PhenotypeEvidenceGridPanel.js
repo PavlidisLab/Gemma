@@ -592,7 +592,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	            	var adminLinks = '';
 	            	
 	            	// Don't display anything if this column is hidden because users can still show this column manually.
-					if (!this.hidden) {		            	
+					if (!this.hidden && record.data.className !== 'DiffExpressionEvidenceValueObject') {		            	
 						adminLinks += Gemma.SecurityManager.getSecurityLink(
 							'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl',
 							record.data.id,
